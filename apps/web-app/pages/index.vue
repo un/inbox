@@ -98,7 +98,7 @@ async function registerWaitlist() {
     class="w-screen h-screen bg-gradient-to-b from-black/5 to-sky-500/30 from-80% flex flex-col items-center justify-center relative overflow-hidden">
     <ClientOnly>
       <UButton
-        :icon="isDark ? 'i-heroicons-moon' : 'i-heroicons-sun'"
+        :icon="isDark ? 'i-mdi-weather-night' : 'i-mdi-white-balance-sunny'"
         color="gray"
         variant="ghost"
         aria-label="Theme"
