@@ -34,7 +34,6 @@ export default defineNuxtConfig({
       {
         name: 'CalSans',
         weight: 800,
-        // path must point to a public font file
         path: '/assets/fonts/CalSans-SemiBold.ttf'
       }
     ]

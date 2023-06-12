@@ -9,7 +9,7 @@ node_modules
 .nuxt
 .nitro
 .cache
-.output
+# .output
 dist
 nuxt.d.ts
 framework
