@@ -6,14 +6,12 @@ useSeoMeta({
   title: 'UnInbox',
   description: 'Open Source Email + Chat communication platform'
 });
-defineOgImageScreenshot();
-
-// defineOgImageStatic({
-//   component: 'LandingOG',
-//   description: 'Open Source Email + Chat communication platform',
-//   sub: 'hey.com & front.com alternative',
-//   cta: 'Join the waitlist'
-// });
+defineOgImageStatic({
+  component: 'LandingOG',
+  description: 'Open Source Email + Chat communication platform',
+  sub: 'hey.com & front.com alternative',
+  cta: 'Join the waitlist'
+});
 
 // Glow effect from learnvue.co
 const { x, y } = useMouse();

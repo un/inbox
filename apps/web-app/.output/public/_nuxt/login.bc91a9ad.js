@@ -1,1 +1,0 @@
-import{f as o,o as n,b as t,e}from"./entry.d61c7a91.js";const s=e("h1",null,"Home",-1),a=e("hanko-auth",null,null,-1),_=[s,a],i=o({__name:"login",setup(l){return(c,r)=>(n(),t("div",null,_))}});export{i as default};
