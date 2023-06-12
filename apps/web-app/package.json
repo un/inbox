@@ -9,13 +9,13 @@
     "postinstall": "nuxt prepare"
   },
   "devDependencies": {
-    "@iconify/json": "^2.2.76",
+    "@iconify/json": "^2.2.77",
     "@nuxt/devtools": "^0.5.5",
     "@nuxthq/ui": "npm:@nuxthq/ui-edge@latest",
     "@pinia-plugin-persistedstate/nuxt": "^1.1.1",
     "@tailwindcss/container-queries": "^0.1.1",
-    "@types/node": "^20.2.6",
-    "nuxt": "^3.5.2",
+    "@types/node": "^20.3.0",
+    "nuxt": "^3.5.3",
     "nuxt-hanko": "^0.2.0",
     "nuxt-og-image": "2.0.0-beta.58",
     "nuxt-security": "^0.13.0",
@@ -24,8 +24,8 @@
   "packageManager": "pnpm@8.5.1",
   "dependencies": {
     "@pinia/nuxt": "^0.4.11",
-    "@trpc/client": "^10.28.0",
-    "@trpc/server": "^10.28.0",
+    "@trpc/client": "^10.30.0",
+    "@trpc/server": "^10.30.0",
     "@vueuse/nuxt": "^10.1.2",
     "cal-sans": "^1.0.1",
     "mysql2": "^3.3.4",

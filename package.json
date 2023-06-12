@@ -1,7 +1,7 @@
 {
-  "name": "mailoso",
+  "name": "uninbox",
   "version": "0.0.1",
-  "description": "A PoC for next gen mail experience - WIP",
+  "description": "email + chat communications platform",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -11,7 +11,7 @@
   "devDependencies": {
     "@nuxt/eslint-config": "^0.1.1",
     "@nuxtjs/eslint-config-typescript": "^12.0.0",
-    "@types/node": "^20.2.6",
+    "@types/node": "^20.3.0",
     "@unocss/eslint-config": "^0.53.1",
     "eslint": "^8.42.0",
     "eslint-config-prettier": "^8.8.0",
