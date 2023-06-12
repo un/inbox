@@ -1,0 +1,48 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": [
+    "**/.env.*local"
+  ],
+  "pipeline": {
+    "build": {
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [
+        "dist/**",
+        ".nuxt/**"
+      ]
+    },
+    "db:migrate": {
+      "cache": false
+    },
+    "db:generate": {
+      "cache": false
+    },
+    "db:push": {
+      "cache": false
+    },
+    "db:studio": {
+      "cache": false
+    },
+    "lint": {
+      "outputs": []
+    },
+    "dev": {
+      "dependsOn": [
+        "dock",
+        "^db:generate"
+      ],
+      "cache": false
+    },
+    "cloud": {
+      "cache": false
+    },
+    "dock": {
+      "cache": false
+    },
+    "undock": {
+      "cache": false
+    }
+  }
+}

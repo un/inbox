@@ -1,0 +1,6 @@
+@font-face {
+  font-family: 'CalSans';
+  src: url(/assets/fonts/CalSans-SemiBold.woff2) format('woff2'),
+    url(/assets/fonts/CalSans-SemiBold.woff) format('woff'),
+    url(/assets/fonts/CalSans-SemiBold.ttf) format('truetype');
+}

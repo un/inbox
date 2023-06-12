@@ -1,0 +1,23 @@
+{
+  "name": "mailoso",
+  "version": "0.0.1",
+  "description": "A PoC for next gen mail experience - WIP",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "Omar McPizza - @McPizza0",
+  "license": "AGPLv3",
+  "devDependencies": {
+    "@nuxt/eslint-config": "^0.1.1",
+    "@nuxtjs/eslint-config-typescript": "^12.0.0",
+    "@types/node": "^20.2.6",
+    "@unocss/eslint-config": "^0.53.1",
+    "eslint": "^8.42.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "prettier": "^2.8.8",
+    "prettier-eslint": "^15.0.1"
+  },
+  "packageManager": "pnpm@8.5.1"
+}

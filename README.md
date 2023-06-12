@@ -52,7 +52,7 @@ We bring email up to the modern standards and expectations of communication - bl
 - [Nitro](https://nitro.unjs.io/) Public API
 - [TailwindCSS](https://tailwindcss.com/) CSS Engine (tailwind compatiable)
 - [tRPC](https://trpc.io/) Typesafe APIs
-- [DrizzleORM](https://orm.drizzle.team/) ORM + Postgres
+- [DrizzleORM](https://orm.drizzle.team/) ORM + MySQL
 - [Hanko.io](https://hanko.io/) User Authentication (PassKeys)
 
 Things will change over time!
