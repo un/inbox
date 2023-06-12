@@ -16,7 +16,7 @@ export default defineEventHandler(async (event) => {
   });
 
   try {
-    const email = await $fetch(config.emailApiUrl, {
+    await $fetch(config.emailApiUrl, {
       method: 'POST',
       headers: {
         'X-Server-API-Key': `${config.emailApiKey}`,

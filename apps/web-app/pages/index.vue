@@ -33,6 +33,7 @@ const email = ref('');
 const showConfirmation = ref(false);
 const invalidEmail = ref(false);
 const submitError = ref(false);
+const loading = ref(false);
 
 const colorMode = useColorMode();
 const isDark = computed({
@@ -57,8 +58,10 @@ defineShortcuts({
 
 async function registerWaitlist() {
   umTrackEvent('Signup');
+  loading.value = true;
   const parsedEmail = z.string().email().safeParse(email.value);
   if (!parsedEmail.success) {
+    loading.value = false;
     invalidEmail.value = true;
     return;
   }
@@ -78,6 +81,7 @@ async function registerWaitlist() {
       color: 'red',
       timeout: 90000
     });
+    loading.value = false;
     submitError.value = true;
     showConfirmation.value = true;
   }
@@ -89,6 +93,7 @@ async function registerWaitlist() {
       timeout: 60000
     });
     showConfirmation.value = true;
+    loading.value = false;
   }
 }
 </script>
@@ -133,7 +138,9 @@ async function registerWaitlist() {
           placeholder="hello@email.com"
           :disabled="showConfirmation"
           name="emailInput" />
-        <UButton @click="registerWaitlist()" :disabled="showConfirmation">Join Waitlist</UButton>
+        <UButton @click="registerWaitlist()" :disabled="showConfirmation" :loading="loading"
+          >Join Waitlist</UButton
+        >
       </div>
 
       <UBadge color="red" variant="solid" v-if="invalidEmail">Invalid email address</UBadge>
