@@ -138,7 +138,11 @@ async function registerWaitlist() {
           placeholder="hello@email.com"
           :disabled="showConfirmation"
           name="emailInput" />
-        <UButton @click="registerWaitlist()" :disabled="showConfirmation" :loading="loading"
+        <UButton
+          @click="registerWaitlist()"
+          :disabled="showConfirmation"
+          :loading="loading"
+          loading-icon="i-mdi-refresh"
           >Join Waitlist</UButton
         >
       </div>
