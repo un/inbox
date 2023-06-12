@@ -123,13 +123,15 @@ async function registerWaitlist() {
         width: `${size}px`,
         height: `${size}px`
       }" />
-    <div class="h-screen w-full flex flex-col items-center justify-center gap-8 z-10 overflow-auto">
-      <h1 class="font-display text-9xl glow mt-24">UnInbox</h1>
+    <div class="h-screen w-full flex flex-col items-center justify-center gap-8 z-10 overflow-auto p-5">
+      <h1 class="font-display text-6xl md:text-9xl glow mt-24">UnInbox</h1>
       <div class="flex flex-col gap-2 items-center">
-        <h2 class="text-lg">Open Source <b>Email</b> + <b>Chat</b> communication platform</h2>
+        <h2 class="text-lg text-center">Open Source <b>Email</b> + <b>Chat</b> communication platform</h2>
         <h3 class="text italic">hey.com & front.com alternative</h3>
       </div>
-      <div class="flex gap-4 transition-all duration-600 cursor-none" :disabled="showConfirmation">
+      <div
+        class="flex flex-col md:flex-row gap-4 transition-all duration-600 cursor-none"
+        :disabled="showConfirmation">
         <UInput
           v-model="email"
           icon="i-mdi-email-outline"
@@ -156,7 +158,7 @@ async function registerWaitlist() {
         <p v-if="!submitError">
           We've sent you a confirmation. In the mean time, heres how you can follow the progress.
         </p>
-        <div class="flex gap-4">
+        <div class="flex gap-4 flex-col md:flex-row max-w-max">
           <div
             class="border-2 p-8 rounded-md border-gray-600 flex flex-col items-center gap-4 bg-blue-500/10 hover:border-gray-400 transition-colors cursor-pointer"
             @click="navigateTo('https://twitter.com/UnInbox', { external: true })">
