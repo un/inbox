@@ -1,0 +1,9 @@
+{
+  "version": "0.2",
+  "ignorePaths": [],
+  "dictionaryDefinitions": [],
+  "dictionaries": [],
+  "words": ["hanko", "Hanko", "nuxt", "nuxthq", "pinia", "Pinia", "trpc", "Typesafe", "vueuse"],
+  "ignoreWords": [],
+  "import": []
+}
