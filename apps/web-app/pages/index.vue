@@ -115,7 +115,7 @@ async function registerWaitlist() {
       </template>
     </ClientOnly>
     <div
-      class="absolute bg-sky-500/30 rounded-full -translate-x-1/2 -translate-y-1/2 pointer-events-none blur-3xl"
+      class="absolute bg-sky-500/30 rounded-full -translate-x-1/2 -translate-y-1/2 pointer-events-none blur-3xl hidden md:visible"
       :style="{
         opacity,
         left: `${x}px`,

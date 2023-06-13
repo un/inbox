@@ -1,0 +1,19 @@
+{
+  "name": "database",
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "scripts": {
+    "db:migrate": "prisma migrate dev",
+    "db:generate": "prisma generate",
+    "db:push": "drizzle-kit push:pg",
+    "db:studio": "prisma studio"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.26.5",
+    "nanoid": "^4.0.2",
+    "postgres": "^3.3.5"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.18.1"
+  }
+}
