@@ -2,6 +2,10 @@
 import { z } from 'zod';
 import { useMouse, useWindowSize } from '@vueuse/core';
 
+definePageMeta({
+  layout: false
+});
+
 useSeoMeta({
   title: 'UnInbox',
   description: 'Open Source Email + Chat communication platform'
@@ -23,7 +27,7 @@ const size = computed(() => Math.max(400 - distance.value / 2, 150));
 const opacity = computed(() => Math.min(Math.max(size.value / 300, 0.7), 1));
 const logo = ref<HTMLElement>();
 const logoGradient = computed(() => {
-  let rect = logo.value?.getBoundingClientRect();
+  const rect = logo.value?.getBoundingClientRect();
   const xPos = x.value - (rect?.left ?? 0);
   const yPos = y.value - (rect?.top ?? 0);
   return `radial-gradient(circle at ${xPos}px ${yPos}px, black 30%, transparent 100%)`;
@@ -141,20 +145,22 @@ async function registerWaitlist() {
           :disabled="showConfirmation"
           name="emailInput" />
         <UButton
-          @click="registerWaitlist()"
           :disabled="showConfirmation"
           :loading="loading"
           loading-icon="i-mdi-refresh"
-          >Join Waitlist</UButton
-        >
+          @click="registerWaitlist()">
+          Join Waitlist
+        </UButton>
       </div>
 
-      <UBadge color="red" variant="solid" v-if="invalidEmail">Invalid email address</UBadge>
-      <UBadge color="red" variant="solid" v-if="submitError">Something went wrong, please contact us</UBadge>
+      <UBadge v-if="invalidEmail" color="red" variant="solid"> Invalid email address </UBadge>
+      <UBadge v-if="submitError" color="red" variant="solid">
+        Something went wrong, please contact us
+      </UBadge>
       <div
         class="flex flex-col gap-4 items-center border-t-2 border-gray-400 pt-6 transition-all duration-1000"
         :class="!showConfirmation ? 'opacity-0 hidden' : 'opacity-100 visible'">
-        <p class="font-display text-2xl" v-if="!submitError">Nice email!</p>
+        <p v-if="!submitError" class="font-display text-2xl">Nice email!</p>
         <p v-if="!submitError">
           We've sent you a confirmation. In the mean time, heres how you can follow the progress.
         </p>

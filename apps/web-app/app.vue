@@ -1,7 +1,7 @@
 <template>
-  <div>
+  <NuxtLayout>
     <NuxtPage />
 
     <UNotifications />
-  </div>
+  </NuxtLayout>
 </template>
