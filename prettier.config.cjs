@@ -4,11 +4,15 @@ module.exports = {
   singleQuote: true,
   jsxSingleQuote: false,
   trailingComma: 'none',
+  endOfLine: 'lf',
   semi: true,
-  printWidth: 110,
+  printWidth: 80,
+  tabWidth: 2,
   arrowParens: 'always',
   importOrder: [],
   importOrderSeparation: true,
   plugins: [],
-  overrides: []
+  overrides: [],
+  vueIndentScriptAndStyle: true,
+  singleAttributePerLine: true
 };
