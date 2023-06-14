@@ -40,18 +40,7 @@ export default defineNuxtConfig({
     ]
   },
 
-  nitro: {
-    prerender: {
-      crawlLinks: true // recommended
-    }
-  },
-
-  // import the Pinia stores
-  imports: {
-    dirs: ['stores']
-  },
-
-  // Configs
+  // Nitro/Build Configs
 
   build: {
     transpile: ['trpc-nuxt']
@@ -59,7 +48,15 @@ export default defineNuxtConfig({
   typescript: {
     shim: false
   },
-
+  // import the Pinia stores
+  imports: {
+    dirs: ['stores']
+  },
+  nitro: {
+    prerender: {
+      crawlLinks: true // recommended
+    }
+  },
   /**
    * * Module Configurations
    */

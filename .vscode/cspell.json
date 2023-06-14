@@ -3,7 +3,19 @@
   "ignorePaths": [],
   "dictionaryDefinitions": [],
   "dictionaries": [],
-  "words": ["hanko", "Hanko", "nuxt", "nuxthq", "pinia", "Pinia", "trpc", "Typesafe", "vueuse"],
+  "words": [
+    "hanko",
+    "Hanko",
+    "nuxt",
+    "nuxthq",
+    "pinia",
+    "Pinia",
+    "trpc",
+    "Typesafe",
+    "uninbox",
+    "vueuse",
+    "waitlist"
+  ],
   "ignoreWords": [],
   "import": []
 }

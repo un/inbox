@@ -13,7 +13,7 @@ defineOgImageStatic({
   cta: 'Join the waitlist'
 });
 
-// Glow effect from learnvue.co
+// Glow effect from https://learnvue.co
 const { x, y } = useMouse();
 const { width, height } = useWindowSize();
 const dx = computed(() => Math.abs(x.value - width.value / 2));
