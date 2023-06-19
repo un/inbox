@@ -6,7 +6,7 @@ export default defineNuxtConfig({
     '@nuxthq/ui',
     '@vueuse/nuxt',
     'nuxt-security',
-    'nuxt-hanko',
+    // 'nuxt-hanko',
     'nuxt-og-image',
     ['@pinia/nuxt', { autoImports: ['defineStore', 'acceptHMRUpdate'] }]
   ],
@@ -78,7 +78,10 @@ export default defineNuxtConfig({
   security: {
     headers: {
       crossOriginEmbedderPolicy: {
-        value: process.env.NODE_ENV === 'development' ? 'unsafe-none' : 'require-corp',
+        value:
+          process.env.NODE_ENV === 'development'
+            ? 'unsafe-none'
+            : 'require-corp',
         route: '/**'
       }
     }
