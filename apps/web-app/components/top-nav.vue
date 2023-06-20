@@ -19,13 +19,13 @@
     <div class="flex flex-row gap-8 items-center">
       <div
         class="cursor-pointer"
-        @click="navigateTo('/oss-friends')">
-        OSS FRIENDS
+        @click="navigateTo('/a/manifesto')">
+        MANIFESTO
       </div>
       <div
         class="cursor-pointer"
-        @click="navigateTo('/a/manifesto')">
-        MANIFESTO
+        @click="navigateTo('/oss-friends')">
+        OSS FRIENDS
       </div>
     </div>
     <div class="flex flex-row gap-4 items-center">
