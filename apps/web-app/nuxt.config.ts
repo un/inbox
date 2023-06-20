@@ -6,7 +6,7 @@ export default defineNuxtConfig({
     '@nuxthq/ui',
     '@vueuse/nuxt',
     'nuxt-security',
-    'nuxt-hanko',
+    // 'nuxt-hanko',
     'nuxt-og-image',
     ['@pinia/nuxt', { autoImports: ['defineStore', 'acceptHMRUpdate'] }]
   ],
@@ -16,7 +16,9 @@ export default defineNuxtConfig({
     databaseUrl: process.env.NUXT_DATABASE_URL || '',
     emailApiUrl: process.env.NUXT_EMAIL_API_URL || '',
     emailApiKey: process.env.NUXT_EMAIL_API_KEY || '',
-    public: {}
+    public: {
+      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'https://uninbox.com'
+    }
   },
 
   // Styling
@@ -40,18 +42,7 @@ export default defineNuxtConfig({
     ]
   },
 
-  nitro: {
-    prerender: {
-      crawlLinks: true // recommended
-    }
-  },
-
-  // import the Pinia stores
-  imports: {
-    dirs: ['stores']
-  },
-
-  // Configs
+  // Nitro/Build Configs
 
   build: {
     transpile: ['trpc-nuxt']
@@ -59,18 +50,26 @@ export default defineNuxtConfig({
   typescript: {
     shim: false
   },
-
+  // import the Pinia stores
+  imports: {
+    dirs: ['stores']
+  },
+  nitro: {
+    prerender: {
+      crawlLinks: true // recommended
+    }
+  },
   /**
    * * Module Configurations
    */
 
   //* Hanko
-  hanko: {
-    redirects: {
-      login: '/login',
-      success: '/dashboard'
-    }
-  },
+  // hanko: {
+  //   redirects: {
+  //     login: '/login',
+  //     success: '/dashboard'
+  //   }
+  // },
 
   //* Pinia
   pinia: {
@@ -81,7 +80,10 @@ export default defineNuxtConfig({
   security: {
     headers: {
       crossOriginEmbedderPolicy: {
-        value: process.env.NODE_ENV === 'development' ? 'unsafe-none' : 'require-corp',
+        value:
+          process.env.NODE_ENV === 'development'
+            ? 'unsafe-none'
+            : 'require-corp',
         route: '/**'
       }
     }

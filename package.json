@@ -3,6 +3,10 @@
   "version": "0.0.1",
   "description": "email + chat communications platform",
   "scripts": {
+    "build": "turbo run build",
+    "clean": "find . -name node_modules -o -name .nuxt -o -name .output -o -name .turbo -o -name dist -type d -prune | xargs rm -rf",
+    "dev": "turbo run dev",
+    "dev:i": "infisical run -- turbo run dev",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -10,14 +14,13 @@
   "license": "AGPLv3",
   "devDependencies": {
     "@nuxt/eslint-config": "^0.1.1",
-    "@nuxtjs/eslint-config-typescript": "^12.0.0",
     "@types/node": "^20.3.0",
-    "@unocss/eslint-config": "^0.53.1",
-    "eslint": "^8.42.0",
+    "dotenv-cli": "^7.2.1",
+    "eslint": "^8.43.0",
     "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-prettier": "^4.2.1",
     "prettier": "^2.8.8",
-    "prettier-eslint": "^15.0.1"
+    "typescript": "^5.1.3"
   },
   "packageManager": "pnpm@8.5.1"
 }

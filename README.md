@@ -50,7 +50,7 @@ We bring email up to the modern standards and expectations of communication - bl
 
 - [Nuxt JS (VueJS)](https://nuxt.com) FrontEnd & Backend + modules
 - [Nitro](https://nitro.unjs.io/) Public API
-- [TailwindCSS](https://tailwindcss.com/) CSS Engine (tailwind compatiable)
+- [TailwindCSS](https://tailwindcss.com/) CSS Engine (tailwind compatible)
 - [tRPC](https://trpc.io/) Typesafe APIs
 - [DrizzleORM](https://orm.drizzle.team/) ORM + MySQL
 - [Hanko.io](https://hanko.io/) User Authentication (PassKeys)
