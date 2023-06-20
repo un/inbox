@@ -9,7 +9,7 @@
         "^build"
       ],
       "outputs": [
-        "dist/**",
+        ".output/**",
         ".nuxt/**"
       ]
     },
