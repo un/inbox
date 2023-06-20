@@ -32,6 +32,7 @@
     "pinia": "^2.1.4",
     "superjson": "^1.12.3",
     "trpc-nuxt": "^0.10.5",
+    "vue-wrap-balancer": "^1.0.0",
     "zod": "^3.21.4"
   },
   "packageManager": "pnpm@8.5.1"
