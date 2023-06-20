@@ -15,40 +15,74 @@
 <template>
   <div>
     <div
-      class="flex flex-col justify-center items-center gap-8 container m-auto mb-16 p-6">
-      <h1 class="text-7xl font-display mt-16 text-center">
+      class="container m-auto mb-16 flex flex-col items-center justify-center gap-8 p-6">
+      <h1 class="font-display mt-16 text-center text-7xl">
         The UnInbox Manifesto
       </h1>
-      <p
-        class="max-w-prose text-lg md:text-xl font-normal text-sand-12 text-center md:text-left">
-        Email is the standard, the de facto, the default<br />
-        A technology to reflect a 2000 year old system<br />
-        An invention modeled on the physical world<br />
-        A time before realizing the power of the internet<br />
+      <div
+        class="text-sand-12 flex max-w-prose flex-col items-center gap-2 text-center text-xl font-normal">
+        <p class="w-64 pb-1 leading-tight md:w-full md:pb-0">
+          Email is the standard, the de facto, the default
+        </p>
+        <p class="w-64 pb-1 leading-tight md:w-full md:pb-0">
+          A technology to reflect a 2000 year old system
+        </p>
+        <p class="w-64 pb-1 leading-tight md:w-full md:pb-0">
+          An invention modeled on the physical world
+        </p>
+        <p class="w-64 pb-1 leading-tight md:w-full md:pb-0">
+          A time before realizing the power of the internet
+        </p>
         <br />
-        Inboxes are overflowing with anything and everything<br />
-        A chaotic mixture of news, updates and conversations<br />
-        An open door for anyone anywhere to disrupt our flow<br />
-        Where important things are too easily pushed out of view<br />
+        <p class="w-64 pb-1 leading-tight md:w-full md:pb-0">
+          Inboxes are overflowing with anything and everything
+        </p>
+        <p class="w-64 pb-1 leading-tight md:w-full md:pb-0">
+          A chaotic mixture of news, updates and conversations
+        </p>
+        <p class="w-64 pb-1 leading-tight md:w-full md:pb-0">
+          An open door for anyone anywhere to disrupt our flow
+        </p>
+        <p class="w-64 pb-1 leading-tight md:w-full md:pb-0">
+          Where important things are too easily pushed out of view
+        </p>
         <br />
-        An inbox gives the world control over your communications<br />
-        What you receive, should be your own choice<br />
-        When you see it should be a decision made by you<br />
-        How you process it should be however you want<br />
+        <p class="w-72 pb-1 leading-tight md:w-full md:pb-0">
+          An inbox gives the world control over your communications
+        </p>
+        <p class="w-64 pb-1 leading-tight md:w-full md:pb-0">
+          What you receive should be your own choice
+        </p>
+        <p class="w-64 pb-1 leading-tight md:w-full md:pb-0">
+          When you see it should be a decision made by you
+        </p>
+        <p class="w-64 pb-1 leading-tight md:w-full md:pb-0">
+          How you process it should be however you want
+        </p>
         <br />
-        If we free ourselves from the idea of an inbox<br />
-        Free ourselves from restrictive technology<br />
-        Free ourselves from an outdated system<br />
-        We have conversations without the cons<br />
+        <p class="w-60 pb-1 leading-tight md:w-full md:pb-0">
+          If we free ourselves from the idea of an inbox
+        </p>
+        <p class="w-64 pb-1 leading-tight md:w-full md:pb-0">
+          Free ourselves from restrictive technology
+        </p>
+        <p class="w-64 pb-1 leading-tight md:w-full md:pb-0">
+          Free ourselves from an outdated system
+        </p>
+        <p class="w-64 pb-1 leading-tight md:w-full md:pb-0">
+          We have conversations without the cons
+        </p>
         <br />
-        When we <span class="font-display">UnInbox</span> - we are back in
-        control
-      </p>
+        <p class="w-48 pb-1 leading-tight md:w-full md:pb-0">
+          When we <span class="font-display">UnInbox</span> - we are back in
+          control
+        </p>
+      </div>
 
       <div
-        class="grid grid-flow-row gap-8 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 mt-16">
+        class="mt-16 grid grid-flow-row gap-8 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         <div
-          class="border-2 p-8 rounded-md border-gray-600 flex flex-col items-center gap-4 bg-blue-500/10 hover:border-gray-400 transition-colors cursor-pointer">
+          class="flex cursor-pointer flex-col items-center gap-4 rounded-md border-2 border-gray-600 bg-blue-500/10 p-8 transition-colors hover:border-gray-400">
           <h3 class="font-display text-2xl">Now?</h3>
           <p class="max-w-prose">
             The first email was sent almost 45 years ago (1979), before the
@@ -62,7 +96,7 @@
           </p>
         </div>
         <div
-          class="border-2 p-8 rounded-md border-gray-600 flex flex-col items-center gap-4 bg-blue-500/10 hover:border-gray-400 transition-colors cursor-pointer">
+          class="flex cursor-pointer flex-col items-center gap-4 rounded-md border-2 border-gray-600 bg-blue-500/10 p-8 transition-colors hover:border-gray-400">
           <h3 class="font-display text-2xl">How?</h3>
           <p class="max-w-prose whitespace-pre-line">
             We are a communications platform with a connection to legacy email
@@ -76,7 +110,7 @@
           </p>
         </div>
         <div
-          class="border-2 p-8 rounded-md border-gray-600 flex flex-col items-center gap-4 bg-blue-500/10 hover:border-gray-400 transition-colors cursor-pointer">
+          class="flex cursor-pointer flex-col items-center gap-4 rounded-md border-2 border-gray-600 bg-blue-500/10 p-8 transition-colors hover:border-gray-400">
           <h3 class="font-display text-2xl">Wow?</h3>
           <p class="max-w-prose whitespace-pre-line">
             Your communications should feel intuitive and natural, be calm and
