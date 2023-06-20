@@ -62,12 +62,12 @@ export default defineNuxtConfig({
    */
 
   //* Hanko
-  hanko: {
-    redirects: {
-      login: '/login',
-      success: '/dashboard'
-    }
-  },
+  // hanko: {
+  //   redirects: {
+  //     login: '/login',
+  //     success: '/dashboard'
+  //   }
+  // },
 
   //* Pinia
   pinia: {
