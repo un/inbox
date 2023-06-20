@@ -16,7 +16,9 @@ export default defineNuxtConfig({
     databaseUrl: process.env.NUXT_DATABASE_URL || '',
     emailApiUrl: process.env.NUXT_EMAIL_API_URL || '',
     emailApiKey: process.env.NUXT_EMAIL_API_KEY || '',
-    public: {}
+    public: {
+      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'https://uninbox.com'
+    }
   },
 
   // Styling
