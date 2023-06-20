@@ -10,7 +10,8 @@
   });
 </script>
 <template>
-  <div class="m-4 w-auto flex flex-row justify-between">
+  <div
+    class="m-4 w-auto flex flex-col gap-4 items-center md:flex-row justify-between">
     <div
       class="font-display text-3xl cursor-pointer p-1"
       @click="navigateTo('/')">

@@ -15,9 +15,12 @@
 <template>
   <div>
     <div
-      class="flex flex-col justify-center items-center gap-8 container m-auto mb-16">
-      <h1 class="text-7xl font-display mt-16">The UnInbox Manifesto</h1>
-      <p class="max-w-prose text-xl font-normal text-sand-12">
+      class="flex flex-col justify-center items-center gap-8 container m-auto mb-16 p-6">
+      <h1 class="text-7xl font-display mt-16 text-center">
+        The UnInbox Manifesto
+      </h1>
+      <p
+        class="max-w-prose text-lg md:text-xl font-normal text-sand-12 text-center md:text-left">
         Email is the standard, the de facto, the default<br />
         A technology to reflect a 2000 year old system<br />
         An invention modeled on the physical world<br />
