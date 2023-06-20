@@ -9,11 +9,11 @@
     "db:studio": "prisma studio"
   },
   "dependencies": {
-    "drizzle-orm": "^0.26.5",
+    "drizzle-orm": "^0.27.0",
     "nanoid": "^4.0.2",
     "postgres": "^3.3.5"
   },
   "devDependencies": {
-    "drizzle-kit": "^0.18.1"
+    "drizzle-kit": "^0.19.1"
   }
 }
