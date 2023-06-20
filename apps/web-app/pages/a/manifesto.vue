@@ -2,13 +2,13 @@
   definePageMeta({ auth: false });
 
   useSeoMeta({
-    title: 'UnInbox - OSS Friends',
-    description: 'Our amazing open source friends'
+    title: 'The UnInbox Manifesto',
+    description: "It's time to rethink email"
   });
   defineOgImageStatic({
     component: 'LandingOG',
-    description: 'Our amazing open source friends',
-    sub: 'Open Source Email + Chat communication platform'
+    description: 'The UnInbox Manifesto',
+    sub: "It's time to rethink email"
   });
 </script>
 
