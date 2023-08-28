@@ -16,12 +16,10 @@
     "@pinia-plugin-persistedstate/nuxt": "^1.1.1",
     "@types/node": "^20.5.7",
     "@unocss/nuxt": "^0.55.3",
-    "@unocss/preset-icons": "^0.55.3",
     "@unocss/preset-uno": "^0.55.3",
     "@unocss/transformer-variant-group": "^0.55.3",
     "nuxt": "^3.7.0",
     "nuxt-icon": "^0.5.0",
-    "nuxt-og-image": "2.0.20",
     "nuxt-prepare": "^0.1.2",
     "nuxt-security": "^0.14.4",
     "uncrypto": "^0.1.3",
@@ -46,7 +44,6 @@
     "radix-vue": "^0.1.27",
     "superjson": "^1.13.1",
     "trpc-nuxt": "^0.10.12",
-    "vue-wrap-balancer": "^1.1.3",
     "zod": "^3.22.2"
   },
   "packageManager": "pnpm@8.5.1"
