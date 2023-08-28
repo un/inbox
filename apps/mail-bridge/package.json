@@ -1,0 +1,22 @@
+{
+  "name": "@uninbox/mail-bridge",
+  "private": true,
+  "types": "types.ts",
+  "scripts": {
+    "dev": "PORT=3002 npx nitropack dev",
+    "build": "npx nitropack build",
+    "preview": "node .output/server/index.mjs"
+  },
+  "dependencies": {
+    "@trpc/client": "^10.38.0",
+    "@trpc/server": "^10.38.0",
+    "@uninbox/database": "workspace:*",
+    "@uninbox/postal-puppet": "workspace:*",
+    "@uninbox/types": "workspace:*",
+    "@uninbox/utils": "workspace:*",
+    "nitropack": "^2.6.0",
+    "superjson": "^1.13.1",
+    "trpc-nuxt": "^0.10.12",
+    "zod": "^3.22.2"
+  }
+}
