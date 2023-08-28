@@ -42,7 +42,7 @@
       v-model:valid="usernameValid"
       icon="ph:at"
       label="Username"
-      helper="This will be your username across the Un ecosystem. It must be unique and can only contain letters and numbers. Usernames less than 5 characters long are available for premium users, 2 or less characters requires a lifetime licence."
+      helper="This will be your username across the Un ecosystem. It must be unique and can only contain letters and numbers. Usernames less than 5 characters long are available for premium users, 3 or less characters are reserved for lifetime license users."
       placeholder="Enter a cool username"
       :schema="
         z

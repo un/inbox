@@ -7,7 +7,6 @@ export default defineNuxtConfig({
     '@nuxtjs/color-mode',
     '@vueuse/nuxt',
     'nuxt-security',
-    'nuxt-og-image',
     'nuxt-prepare',
     ['@pinia/nuxt', { autoImports: ['defineStore', 'acceptHMRUpdate'] }]
   ],
@@ -38,18 +37,6 @@ export default defineNuxtConfig({
   },
   colorMode: {
     classSuffix: ''
-  },
-  ogImage: {
-    host: 'https://uninbox.com',
-    fonts: [
-      'Inter:400',
-      {
-        name: 'CalSans',
-        weight: 800,
-        // path must point to a public font file
-        path: '/fonts/CalSans-SemiBold.ttf'
-      }
-    ]
   },
 
   // Nitro/Build Configs
