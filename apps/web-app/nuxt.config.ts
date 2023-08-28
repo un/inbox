@@ -10,7 +10,8 @@ export default defineNuxtConfig({
     'nuxt-security',
     'nuxt-prepare',
     '@nuxtjs/turnstile',
-    ['@pinia/nuxt', { autoImports: ['defineStore', 'acceptHMRUpdate'] }]
+    '@pinia/nuxt',
+    '@pinia-plugin-persistedstate/nuxt'
   ],
 
   runtimeConfig: {
@@ -66,7 +67,7 @@ export default defineNuxtConfig({
 
   //* Pinia
   pinia: {
-    autoImports: [['defineStore', 'definePiniaStore']]
+    autoImports: [['defineStore', 'definePiniaStore'], 'acceptHMRUpdate']
   },
 
   //* Nuxt-Security
