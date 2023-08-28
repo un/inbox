@@ -4,9 +4,7 @@
     "description": "Bootstrap the code needed for a Vue.js Pinia Setup Store file",
     "scope": "",
     "body": [
-      "import { defineStore, acceptHMRUpdate } from 'pinia'",
-      "",
-      "export const use${TM_FILENAME_BASE/^(.*)$/${1:/pascalcase}/}Store = defineStore('$TM_FILENAME_BASE', () => {",
+      "export const use${TM_FILENAME_BASE/^(.*)$/${1:/pascalcase}/}Store = definePiniaStore('$TM_FILENAME_BASE', () => {",
       "  $0",
       "  return {}",
       "})",
