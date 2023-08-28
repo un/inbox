@@ -1,7 +1,8 @@
 <template>
   <NuxtLayout>
-    <TopNav />
+    <!-- <TopNav /> -->
     <NuxtPage />
-    <UNotifications />
+    <!-- <UNotifications /> -->
   </NuxtLayout>
 </template>
+<style></style>

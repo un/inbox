@@ -1,42 +1,37 @@
-import * as mysql from 'mysql2';
+// import * as mysql from 'mysql2';
 
 export default defineEventHandler(async (event) => {
-  const config = useRuntimeConfig();
-  const db = await mysql.createConnection(config.databaseUrl);
-
-  await db.connect();
-
-  const body = await readBody(event);
-
-  await db.execute(`INSERT INTO waitlist (email) VALUES ('${body.email}')`, (error) => {
-    if (error) {
-      console.error(`user tried to register with ${body.email} but got an error`, error);
-      return { success: false, error };
-    }
-  });
-
-  try {
-    await $fetch(config.emailApiUrl, {
-      method: 'POST',
-      headers: {
-        'X-Server-API-Key': `${config.emailApiKey}`,
-
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        to: [`${body.email}`],
-        from: 'UnInbox Waitlist <hello@uninbox.com>',
-        sender: 'hello@uninbox.com',
-        subject: 'Welcome to the UnInbox Waitlist! 🎉',
-        plain_body: emailPlain,
-        html_body: emailHtml
-      })
-    });
-  } catch (error) {
-    console.error(`user tried to register with ${body.email} but got an error`, error);
-    return { success: false, error };
-  }
-  return { success: true, error: null };
+  // const config = useRuntimeConfig();
+  // const db = await mysql.createConnection(config.databaseUrl);
+  // await db.connect();
+  // const body = await readBody(event);
+  // await db.execute(`INSERT INTO waitlist (email) VALUES ('${body.email}')`, (error) => {
+  //   if (error) {
+  //     console.error(`user tried to register with ${body.email} but got an error`, error);
+  //     return { success: false, error };
+  //   }
+  // });
+  // try {
+  //   await $fetch(config.emailApiUrl, {
+  //     method: 'POST',
+  //     headers: {
+  //       'X-Server-API-Key': `${config.emailApiKey}`,
+  //       'Content-Type': 'application/json'
+  //     },
+  //     body: JSON.stringify({
+  //       to: [`${body.email}`],
+  //       from: 'UnInbox Waitlist <hello@uninbox.com>',
+  //       sender: 'hello@uninbox.com',
+  //       subject: 'Welcome to the UnInbox Waitlist! 🎉',
+  //       plain_body: emailPlain,
+  //       html_body: emailHtml
+  //     })
+  //   });
+  // } catch (error) {
+  //   console.error(`user tried to register with ${body.email} but got an error`, error);
+  //   return { success: false, error };
+  // }
+  // return { success: true, error: null };
 });
 
 // email content

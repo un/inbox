@@ -1,23 +1,33 @@
 export default defineNuxtConfig({
-  // extends: ['../../layers/landing'],
-  extends: ['nuxt-umami'],
+  extends: ['../../nuxt-layers/landing-page'],
   modules: [
     '@nuxt/devtools',
-    '@nuxthq/ui',
+    '@unocss/nuxt',
+    'nuxt-icon',
+    '@nuxtjs/color-mode',
     '@vueuse/nuxt',
     'nuxt-security',
-    // 'nuxt-hanko',
     'nuxt-og-image',
+    'nuxt-prepare',
     ['@pinia/nuxt', { autoImports: ['defineStore', 'acceptHMRUpdate'] }]
   ],
 
   runtimeConfig: {
     // paths: [...pagePaths],
-    databaseUrl: process.env.NUXT_DATABASE_URL || '',
-    emailApiUrl: process.env.NUXT_EMAIL_API_URL || '',
-    emailApiKey: process.env.NUXT_EMAIL_API_KEY || '',
+    recoverySecret: process.env.WEBAPP_RECOVERY_SECRET || '',
+    sessionSecret: process.env.WEBAPP_SESSION_SECRET || '',
+    turnstileKey: process.env.WEBAPP_TURNSTIL_SITE_KEY || '',
+    jwks: '',
+    realtimeUrl: process.env.WEBAPP_REALTIME_URL || '',
+    realtimeKey: process.env.WEBAPP_REALTIME_KEY || '',
+    mailBridgeUrl: process.env.WEBAPP_MAILBRIDGE_URL || '',
+    mailBridgeKey: process.env.WEBAPP_MAILBRIDGE_KEY || '',
     public: {
-      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'https://uninbox.com'
+      siteUrl: process.env.WEBAPP_URL || 'https://uninbox.com',
+      hanko: {
+        apiURL: process.env.WEBAPP_HANKO_API_URL || '',
+        cookieName: process.env.NUXT_PUBLIC_HANKO_COOKIE_NAME || 'hanko'
+      }
     }
   },
 
@@ -26,8 +36,8 @@ export default defineNuxtConfig({
   app: {
     pageTransition: { name: 'page', mode: 'out-in', duration: 300 }
   },
-  ui: {
-    icons: 'mdi'
+  colorMode: {
+    classSuffix: ''
   },
   ogImage: {
     host: 'https://uninbox.com',
@@ -62,14 +72,6 @@ export default defineNuxtConfig({
   /**
    * * Module Configurations
    */
-
-  //* Hanko
-  // hanko: {
-  //   redirects: {
-  //     login: '/login',
-  //     success: '/dashboard'
-  //   }
-  // },
 
   //* Pinia
   pinia: {
