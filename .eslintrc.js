@@ -1,10 +1,9 @@
 module.exports = {
   root: true,
   plugins: ['@typescript-eslint', 'prettier'],
-  extends: ['@nuxt/eslint-config', 'prettier'],
+  extends: ['@nuxt/eslint-config', 'prettier', '@unocss'],
   rules: {
-    semi: [2, 'always'],
-    'space-before-function-paren': ['error', 'never']
+    semi: [2, 'always']
   },
   overrides: [
     {
