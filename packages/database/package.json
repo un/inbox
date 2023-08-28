@@ -1,19 +1,21 @@
 {
-  "name": "database",
+  "name": "@uninbox/database",
+  "private": true,
   "main": "./index.ts",
   "types": "./index.ts",
   "scripts": {
-    "db:migrate": "prisma migrate dev",
-    "db:generate": "prisma generate",
-    "db:push": "drizzle-kit push:pg",
-    "db:studio": "prisma studio"
+    "db:generate": "drizzle-kit generate:mysql --config=drizzle.config.ts",
+    "db:push": "drizzle-kit push:mysql --config=drizzle.config.ts",
+    "db:check": "drizzle-kit check:mysql --config=drizzle.config.ts",
+    "db:up": "drizzle-kit up:mysql --config=drizzle.config.ts",
+    "db:drop": "drizzle-kit drop --config=drizzle.config.ts",
+    "db:studio": "pnpm drizzle-kit studio --port 3333  --config=drizzle.config.ts"
   },
   "dependencies": {
-    "drizzle-orm": "^0.27.0",
-    "nanoid": "^4.0.2",
-    "postgres": "^3.3.5"
+    "@planetscale/database": "^1.11.0",
+    "drizzle-orm": "^0.28.5"
   },
   "devDependencies": {
-    "drizzle-kit": "^0.19.1"
+    "drizzle-kit": "^0.19.13"
   }
 }
