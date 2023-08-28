@@ -1,21 +1,33 @@
 {
   "version": "0.2",
-  "ignorePaths": [],
+  "ignorePaths": [
+    "package.json"
+  ],
   "dictionaryDefinitions": [],
   "dictionaries": [],
   "words": [
+    "Authed",
     "hanko",
     "Hanko",
+    "mediumint",
+    "nitropack",
     "nuxt",
     "nuxthq",
+    "nuxtjs",
     "pinia",
     "Pinia",
+    "planetscale",
+    "superjson",
     "trpc",
     "Typesafe",
     "uninbox",
+    "unocss",
+    "unref",
     "vueuse",
     "waitlist"
   ],
-  "ignoreWords": [],
+  "ignoreWords": [
+    "ABCDEFGHJKMNPQRSTVWXYZ"
+  ],
   "import": []
 }
