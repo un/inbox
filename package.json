@@ -24,10 +24,10 @@
   "license": "AGPLv3",
   "devDependencies": {
     "@nuxt/eslint-config": "^0.1.1",
-    "@types/node": "^20.5.6",
-    "@unocss/eslint-config": "^0.55.2",
+    "@types/node": "^20.5.7",
+    "@unocss/eslint-config": "^0.55.3",
     "dotenv-cli": "^7.3.0",
-    "eslint": "^8.47.0",
+    "eslint": "^8.48.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-prettier": "^5.0.0",
     "prettier": "^3.0.2",
