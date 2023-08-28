@@ -1,5 +1,6 @@
 export default defineNuxtConfig({
-  extends: ['../../nuxt-layers/landing-page'],
+  // extends: ['../../nuxt-layers/landing-page'],
+
   modules: [
     '@nuxt/devtools',
     '@unocss/nuxt',
@@ -8,6 +9,7 @@ export default defineNuxtConfig({
     '@vueuse/nuxt',
     'nuxt-security',
     'nuxt-prepare',
+    '@nuxtjs/turnstile',
     ['@pinia/nuxt', { autoImports: ['defineStore', 'acceptHMRUpdate'] }]
   ],
 
@@ -15,7 +17,6 @@ export default defineNuxtConfig({
     // paths: [...pagePaths],
     recoverySecret: process.env.WEBAPP_RECOVERY_SECRET || '',
     sessionSecret: process.env.WEBAPP_SESSION_SECRET || '',
-    turnstileKey: process.env.WEBAPP_TURNSTIL_SITE_KEY || '',
     jwks: '',
     realtimeUrl: process.env.WEBAPP_REALTIME_URL || '',
     realtimeKey: process.env.WEBAPP_REALTIME_KEY || '',
@@ -27,6 +28,9 @@ export default defineNuxtConfig({
         apiURL: process.env.WEBAPP_HANKO_API_URL || '',
         cookieName: process.env.NUXT_PUBLIC_HANKO_COOKIE_NAME || 'hanko'
       }
+    },
+    turnstile: {
+      secretKey: process.env.WEBAPP_TURNSTILE_SECRET_KEY || ''
     }
   },
 
@@ -66,6 +70,9 @@ export default defineNuxtConfig({
   },
 
   //* Nuxt-Security
+  turnstile: {
+    siteKey: process.env.WEBAPP_TURNSTILE_SITE_KEY || ''
+  },
   security: {
     headers: {
       crossOriginEmbedderPolicy: {

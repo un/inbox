@@ -13,6 +13,7 @@
     "@iconify-json/ph": "^1.1.6",
     "@nuxt/devtools": "^0.8.1",
     "@nuxtjs/color-mode": "^3.3.0",
+    "@nuxtjs/turnstile": "^0.6.3",
     "@pinia-plugin-persistedstate/nuxt": "^1.1.1",
     "@types/node": "^20.5.7",
     "@unocss/nuxt": "^0.55.3",

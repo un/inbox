@@ -168,6 +168,9 @@ importers:
       '@nuxtjs/color-mode':
         specifier: ^3.3.0
         version: 3.3.0
+      '@nuxtjs/turnstile':
+        specifier: ^0.6.3
+        version: 0.6.3
       '@pinia-plugin-persistedstate/nuxt':
         specifier: ^1.1.1
         version: 1.1.1(@pinia/nuxt@0.4.11)(pinia@2.1.6)
@@ -1783,6 +1786,17 @@ packages:
     dependencies:
       '@nuxt/kit': 3.7.0
       lodash.template: 4.5.0
+      pathe: 1.1.1
+    transitivePeerDependencies:
+      - rollup
+      - supports-color
+    dev: true
+
+  /@nuxtjs/turnstile@0.6.3:
+    resolution: {integrity: sha512-POo7J6mlN4apRKQQziyvbBN7IsOtDiDuH0euAWrFv5LUBuBlPcARJMsBhziYWp7hTSGpqS/DHj8/5mrVltQdzg==}
+    dependencies:
+      '@nuxt/kit': 3.7.0
+      defu: 6.1.2
       pathe: 1.1.1
     transitivePeerDependencies:
       - rollup
