@@ -56,7 +56,7 @@
   const editModeEnabled = ref(false);
   const inputField = ref();
   // const valid = ref(props.valid);
-  const validationMessage = ref(props.validationMessage);
+  // const validationMessage = ref(props.validationMessage);
   const initialValue = unref(props.value);
 
   // Switch Focus to input field when edit mode is enabled
@@ -99,9 +99,16 @@
     return inputClasses({ color: 'default' });
   });
 
-  const emit = defineEmits(['update:value', 'update:valid']);
+  const emit = defineEmits([
+    'update:value',
+    'update:valid',
+    'update:validationMessage'
+  ]);
   const data = useVModel(props, 'value', emit, { passive: true });
   const valid = useVModel(props, 'valid', emit, { passive: true });
+  const validationMessage = useVModel(props, 'validationMessage', emit, {
+    passive: true
+  });
 
   // Locally Validate input against schema via props
   watchDebounced(
