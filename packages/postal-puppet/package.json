@@ -64,6 +64,6 @@
     "*": "eslint --fix"
   },
   "dependencies": {
-    "puppeteer": "^21.1.0"
+    "puppeteer": "^21.1.1"
   }
 }

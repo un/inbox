@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "build": "nuxt build",
-    "dev": "PORT=3000 nuxt dev",
+    "dev": "PORT=3000 nuxt dev --host",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare"
@@ -11,7 +11,7 @@
   "devDependencies": {
     "@iconify-json/mdi": "^1.1.54",
     "@iconify-json/ph": "^1.1.6",
-    "@nuxt/devtools": "^0.8.1",
+    "@nuxt/devtools": "^0.8.2",
     "@nuxtjs/color-mode": "^3.3.0",
     "@nuxtjs/turnstile": "^0.6.3",
     "@pinia-plugin-persistedstate/nuxt": "^1.1.1",
@@ -29,9 +29,9 @@
   },
   "dependencies": {
     "@pinia/nuxt": "^0.4.11",
-    "@teamhanko/hanko-frontend-sdk": "^0.8.2",
-    "@trpc/client": "^10.38.0",
-    "@trpc/server": "^10.38.0",
+    "@teamhanko/hanko-frontend-sdk": "^0.8.3",
+    "@trpc/client": "^10.38.1",
+    "@trpc/server": "^10.38.1",
     "@uninbox/database": "workspace:*",
     "@uninbox/trpc": "workspace:*",
     "@uninbox/types": "workspace:*",
@@ -42,7 +42,7 @@
     "class-variance-authority": "^0.7.0",
     "jose": "^4.14.4",
     "pinia": "^2.1.6",
-    "radix-vue": "^0.1.27",
+    "radix-vue": "^0.1.29",
     "superjson": "^1.13.1",
     "trpc-nuxt": "^0.10.12",
     "zod": "^3.22.2"

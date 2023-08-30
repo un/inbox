@@ -23,14 +23,14 @@
   "author": "Omar McAdam - @McPizza0",
   "license": "AGPLv3",
   "devDependencies": {
-    "@nuxt/eslint-config": "^0.1.1",
+    "@nuxt/eslint-config": "^0.2.0",
     "@types/node": "^20.5.7",
     "@unocss/eslint-config": "^0.55.3",
     "dotenv-cli": "^7.3.0",
     "eslint": "^8.48.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-prettier": "^5.0.0",
-    "prettier": "^3.0.2",
+    "prettier": "^3.0.3",
     "prettier-plugin-tailwindcss": "^0.5.3",
     "typescript": "^5.2.2"
   },
