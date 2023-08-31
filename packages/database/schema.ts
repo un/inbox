@@ -52,10 +52,6 @@ export const users = mysqlTable(
 
 export const usersRelations = relations(users, ({ one, many }) => ({
   authIdentities: many(userAuthIdentities),
-  recoveryEmails: one(userRecoveryEmails, {
-    fields: [users.id],
-    references: [userRecoveryEmails.userId]
-  }),
   orgMemberships: many(orgMembers),
   profile: many(userProfiles),
   defaultProfile: one(userProfiles, {
@@ -63,35 +59,6 @@ export const usersRelations = relations(users, ({ one, many }) => ({
     references: [userProfiles.userId]
   })
 }));
-
-export const userRecoveryEmails = mysqlTable(
-  'user_recovery_emails',
-  {
-    id: serial('id').primaryKey(),
-    userId: foreignKey('user_id').notNull(),
-    emailHash: varchar('email', { length: 255 }).notNull(),
-    lastUpdatedAt: timestamp('last_updated_at')
-      .default(sql`CURRENT_TIMESTAMP`)
-      .notNull(), // This will be used to determine the secret version that was used for hashing
-    verifyLastDismissedAt: timestamp('last_dismissed_at'),
-    createdAt: timestamp('created_at')
-      .default(sql`CURRENT_TIMESTAMP`)
-      .notNull()
-  },
-  (table) => ({
-    userIdIndex: index('user_id_idx').on(table.userId),
-    lastUpdatedAtIndex: index('last_updated_at_idx').on(table.lastUpdatedAt)
-  })
-);
-export const userRecoveryEmailsRelations = relations(
-  userRecoveryEmails,
-  ({ one }) => ({
-    user: one(users, {
-      fields: [userRecoveryEmails.userId],
-      references: [users.id]
-    })
-  })
-);
 
 // Identity table (user logins)
 export const userAuthIdentities = mysqlTable(

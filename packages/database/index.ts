@@ -17,3 +17,4 @@ const connectionOptions = {
 };
 
 export const db = drizzle(connection, connectionOptions);
+export type DBType = typeof db;
