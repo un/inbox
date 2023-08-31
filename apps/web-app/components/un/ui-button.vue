@@ -69,6 +69,7 @@
           primary: '',
           red: '',
           green: '',
+          orange: '',
           base: ''
         },
         variant: {
@@ -108,6 +109,12 @@
         },
         {
           variant: 'solid',
+          color: 'orange',
+          class:
+            'bg-orange-9 text-white enabled:(hover:bg-orange-10 active:bg-orange-11)'
+        },
+        {
+          variant: 'solid',
           color: 'base',
           class:
             'bg-base-9 text-black enabled:(hover:bg-base-10 active:bg-base-11)'
@@ -132,6 +139,12 @@
         },
         {
           variant: 'outline',
+          color: 'orange',
+          class:
+            'bg-orange-1 text-orange-11 border border-orange-7 enabled:(hover:(bg-orange-2 border-orange-8) active:bg-orange-3)'
+        },
+        {
+          variant: 'outline',
           color: 'base',
           class:
             'bg-base-1 text-base-11 border border-base-7 enabled:(hover:(bg-base-2 border-base-8) active:bg-base-3)'
@@ -152,6 +165,12 @@
           color: 'green',
           class:
             'bg-green-3 text-green-11 enabled:(hover:bg-green-4 active:bg-green-5)'
+        },
+        {
+          variant: 'soft',
+          color: 'orange',
+          class:
+            'bg-orange-3 text-orange-11 enabled:(hover:bg-orange-4 active:bg-orange-5)'
         },
         {
           variant: 'soft',
