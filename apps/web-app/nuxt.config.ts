@@ -18,20 +18,34 @@ export default defineNuxtConfig({
     // paths: [...pagePaths],
     recoverySecret: process.env.WEBAPP_RECOVERY_SECRET || '',
     sessionSecret: process.env.WEBAPP_SESSION_SECRET || '',
-    jwks: '',
     realtimeUrl: process.env.WEBAPP_REALTIME_URL || '',
     realtimeKey: process.env.WEBAPP_REALTIME_KEY || '',
     mailBridgeUrl: process.env.WEBAPP_MAILBRIDGE_URL || '',
     mailBridgeKey: process.env.WEBAPP_MAILBRIDGE_KEY || '',
     public: {
-      siteUrl: process.env.WEBAPP_URL || 'https://uninbox.com',
+      siteUrl: process.env.WEBAPP_URL || '',
       hanko: {
         apiURL: process.env.WEBAPP_HANKO_API_URL || '',
-        cookieName: process.env.NUXT_PUBLIC_HANKO_COOKIE_NAME || 'hanko'
+        cookieName: process.env.WEBAPP_HANKO_COOKIE_NAME || 'hanko'
       }
     },
     turnstile: {
       secretKey: process.env.WEBAPP_TURNSTILE_SECRET_KEY || ''
+    },
+    auth: {
+      // The session cookie name
+      name: 'un-session',
+      password: process.env.WEBAPP_SESSION_SECRET || '',
+      maxAge:
+        process.env.NODE_ENV === 'development'
+          ? 60 * 60 * 12
+          : 60 * 60 * 24 * 30,
+
+      cookie: {
+        sameSite: 'lax',
+        //@ts-ignore
+        domain: process.env.PRIMARY_DOMAIN
+      }
     }
   },
 
@@ -57,6 +71,13 @@ export default defineNuxtConfig({
     dirs: ['stores']
   },
   nitro: {
+    storage: {
+      sessions: {
+        driver: 'redis',
+        base: 'sessions',
+        url: process.env.DB_REDIS_URL
+      }
+    },
     prerender: {
       crawlLinks: true // recommended
     }
