@@ -1,15 +1,15 @@
 import { inferAsyncReturnType } from '@trpc/server';
 import type { H3Event } from 'h3';
-import type { AuthH3SessionData } from '@uninbox/types/auth';
 import { db } from '@uninbox/database';
+import { ValidatedAuthSessionObject } from '../utils/auth';
 
 //  * Creates context for an incoming request
 //  * @link https://trpc.io/docs/context
 
 export const createContext = async (event: H3Event) => {
-  const session = event.context?.sessionData as AuthH3SessionData;
-
-  return { db, session };
+  const user: ValidatedAuthSessionObject = event.context.user;
+  const hankoId = event.context.hankoId || null;
+  return { db, user, hankoId };
 };
 
 export type Context = inferAsyncReturnType<typeof createContext>;
