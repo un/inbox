@@ -1,6 +1,7 @@
 import { defineEventHandler } from 'h3';
-import { verifyHankoEvent } from '../utils/auth';
+import { validateAuthSession } from '../utils/auth';
 
 export default defineEventHandler(async (event) => {
-  event.context.hanko = await verifyHankoEvent(event).catch(() => undefined);
+  const validatedSession = await validateAuthSession(event);
+  event.context.user = validatedSession;
 });
