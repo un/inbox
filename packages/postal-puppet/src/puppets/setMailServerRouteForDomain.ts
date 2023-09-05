@@ -1,12 +1,12 @@
 import type { PuppetInstance } from '../index';
 
-export async function setMailServerRouteForDomain(
-  puppetInstance: PuppetInstance,
-  orgId: number,
-  orgPublicId: string,
-  serverId: string,
-  domainName: string
-): Promise<{
+export async function setMailServerRouteForDomain(options: {
+  puppetInstance: PuppetInstance;
+  orgId: number;
+  orgPublicId: string;
+  serverId: string;
+  domainName: string;
+}): Promise<{
   data: {
     orgId: number;
     serverId: string;
@@ -16,16 +16,16 @@ export async function setMailServerRouteForDomain(
   error: Error | null;
 }> {
   try {
-    puppetInstance.page.on('dialog', async (dialog) => {
+    options.puppetInstance.page.on('dialog', async (dialog) => {
       await dialog.accept();
     });
 
     // get ID of http endpoint matching name 'uninbox-mail-bridge-http'
-    await puppetInstance.page.goto(
-      `${puppetInstance.url}/org/${orgPublicId}/servers/${serverId}/http_endpoints` as string
+    await options.puppetInstance.page.goto(
+      `${options.puppetInstance.url}/org/${options.orgPublicId}/servers/${options.serverId}/http_endpoints` as string
     );
-    await puppetInstance.page.waitForNetworkIdle();
-    await puppetInstance.page.waitForFunction(
+    await options.puppetInstance.page.waitForNetworkIdle();
+    await options.puppetInstance.page.waitForFunction(
       () =>
         //@ts-expect-error - TS doesn't know it's running in the browser context
         document.querySelectorAll(
@@ -33,29 +33,29 @@ export async function setMailServerRouteForDomain(
         ).length
     );
 
-    const configuredEndpoint = await puppetInstance.page.$(
+    const configuredEndpoint = await options.puppetInstance.page.$(
       'a div ::-p-text(uninbox-mail-bridge-http)'
     );
 
     if (!configuredEndpoint)
       throw new Error(
-        `No httpEndpoints were found when adding mail server route for: ${serverId}`
+        `No httpEndpoints were found when adding mail server route for: ${options.serverId}`
       );
 
-    await puppetInstance.page
+    await options.puppetInstance.page
       .locator('a div ::-p-text(uninbox-mail-bridge-http)')
       .click();
 
-    await puppetInstance.page.waitForNetworkIdle();
-    const pageUrl = puppetInstance.page.url();
+    await options.puppetInstance.page.waitForNetworkIdle();
+    const pageUrl = options.puppetInstance.page.url();
     const httpEndpointId = pageUrl.match(/\/http_endpoints\/(.*?)\/edit/)?.[1];
 
     // check if route for domain already exists
-    await puppetInstance.page.goto(
-      `${puppetInstance.url}/org/${orgPublicId}/servers/${serverId}/routes` as string
+    await options.puppetInstance.page.goto(
+      `${options.puppetInstance.url}/org/${options.orgPublicId}/servers/${options.serverId}/routes` as string
     );
-    await puppetInstance.page.waitForNetworkIdle();
-    await puppetInstance.page.waitForFunction(
+    await options.puppetInstance.page.waitForNetworkIdle();
+    await options.puppetInstance.page.waitForFunction(
       () =>
         //@ts-expect-error - TS doesn't know it's running in the browser context
         document.querySelectorAll(
@@ -63,35 +63,37 @@ export async function setMailServerRouteForDomain(
         ).length
     );
 
-    const existingDomainRoute = await puppetInstance.page.$(
-      `::-p-text(\\*\\@${domainName})`
+    const existingDomainRoute = await options.puppetInstance.page.$(
+      `::-p-text(\\*\\@${options.domainName})`
     );
 
     // if route exists, edit it and set the endpoint to the correct one
     if (existingDomainRoute) {
       await existingDomainRoute.click();
-      await puppetInstance.page.waitForNetworkIdle();
+      await options.puppetInstance.page.waitForNetworkIdle();
 
-      await puppetInstance.page.select(
+      await options.puppetInstance.page.select(
         'select[id="route__endpoint"]',
         `HTTPEndpoint#${httpEndpointId}`
       );
 
-      await puppetInstance.page.click('[name="commit"]');
-      await puppetInstance.page.waitForNetworkIdle();
+      await options.puppetInstance.page.click('[name="commit"]');
+      await options.puppetInstance.page.waitForNetworkIdle();
     }
 
     // if route dosnt exist, create it
     if (!existingDomainRoute) {
-      await puppetInstance.page.goto(
-        `${puppetInstance.url}/org/${orgPublicId}/servers/${serverId}/routes/new` as string
+      await options.puppetInstance.page.goto(
+        `${options.puppetInstance.url}/org/${options.orgPublicId}/servers/${options.serverId}/routes/new` as string
       );
-      await puppetInstance.page.waitForNetworkIdle();
+      await options.puppetInstance.page.waitForNetworkIdle();
 
-      await puppetInstance.page.locator('input[id="route_name"]').fill('*');
+      await options.puppetInstance.page
+        .locator('input[id="route_name"]')
+        .fill('*');
 
       // We need to find the value of the dropdown item related to the domain. Selecting via text is not possible
-      const domainDropdownValue = await puppetInstance.page.evaluate(
+      const domainDropdownValue = await options.puppetInstance.page.evaluate(
         (domain) => {
           //@ts-expect-error  - TS doesn't know it's running in the browser context
           const select = document.querySelector('#route_domain_id');
@@ -105,31 +107,31 @@ export async function setMailServerRouteForDomain(
           }
           return null;
         },
-        domainName
+        options.domainName
       );
 
-      await puppetInstance.page.select(
+      await options.puppetInstance.page.select(
         'select[id="route_domain_id"]',
         domainDropdownValue
       );
 
-      await puppetInstance.page.select(
+      await options.puppetInstance.page.select(
         'select[id="route__endpoint"]',
         `HTTPEndpoint#${httpEndpointId}`
       );
 
-      await puppetInstance.page.click('[name="commit"]');
-      await puppetInstance.page.waitForNetworkIdle();
+      await options.puppetInstance.page.click('[name="commit"]');
+      await options.puppetInstance.page.waitForNetworkIdle();
 
       console.log('no existing route found');
     }
 
     // get forwarding address from the route
-    await puppetInstance.page.goto(
-      `${puppetInstance.url}/org/${orgPublicId}/servers/${serverId}/routes` as string
+    await options.puppetInstance.page.goto(
+      `${options.puppetInstance.url}/org/${options.orgPublicId}/servers/${options.serverId}/routes` as string
     );
-    await puppetInstance.page.waitForNetworkIdle();
-    await puppetInstance.page.waitForFunction(
+    await options.puppetInstance.page.waitForNetworkIdle();
+    await options.puppetInstance.page.waitForFunction(
       () =>
         //@ts-expect-error - TS doesn't know it's running in the browser context
         document.querySelectorAll(
@@ -137,18 +139,20 @@ export async function setMailServerRouteForDomain(
         ).length
     );
 
-    await puppetInstance.page.locator(`::-p-text(\\*\\@${domainName})`).click();
-    await puppetInstance.page.waitForNetworkIdle();
-    const forwardingAddress = await puppetInstance.page.$eval(
+    await options.puppetInstance.page
+      .locator(`::-p-text(\\*\\@${options.domainName})`)
+      .click();
+    await options.puppetInstance.page.waitForNetworkIdle();
+    const forwardingAddress = await options.puppetInstance.page.$eval(
       'input[id="route_forward_address"]',
       (address) => address.value
     );
 
     return {
       data: {
-        orgId,
-        serverId,
-        domainName,
+        orgId: options.orgId,
+        serverId: options.serverId,
+        domainName: options.domainName,
         forwardingAddress
       },
       error: null

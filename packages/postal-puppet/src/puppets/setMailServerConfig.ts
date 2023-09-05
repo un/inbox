@@ -1,16 +1,16 @@
 import type { PuppetInstance } from '../index';
 
-export async function setMailServerConfig(
-  puppetInstance: PuppetInstance,
-  orgId: number,
-  orgPublicId: string,
-  serverId: string,
-  sendLimit?: number,
-  outboundSpamThreshold?: number,
-  messageRetentionDays?: number,
-  rawMessageRetentionDays?: number,
-  rawMessageRetentionSize?: number
-): Promise<{
+export async function setMailServerConfig(options: {
+  puppetInstance: PuppetInstance;
+  orgId: number;
+  orgPublicId: string;
+  serverId: string;
+  sendLimit?: number;
+  outboundSpamThreshold?: number;
+  messageRetentionDays?: number;
+  rawMessageRetentionDays?: number;
+  rawMessageRetentionSize?: number;
+}): Promise<{
   data: {
     orgId: number;
     serverId: string;
@@ -27,54 +27,54 @@ export async function setMailServerConfig(
     newLimit: number | undefined
   ): Promise<number> {
     // await puppetInstance.page.select(selector, 'custom');
-    const inputElement = await puppetInstance.page.locator(selector);
+    const inputElement = await options.puppetInstance.page.locator(selector);
     newLimit && (await inputElement.fill(newLimit.toString()));
     //@ts-ignore
     const finalValue = +(await inputElement.map((el) => el.value).wait());
     return finalValue;
   }
   try {
-    await puppetInstance.page.goto(
-      `${puppetInstance.url}/org/${orgPublicId}/servers/${serverId}/advanced` as string
+    await options.puppetInstance.page.goto(
+      `${options.puppetInstance.url}/org/${options.orgPublicId}/servers/${options.serverId}/advanced` as string
     );
-    await puppetInstance.page.waitForNetworkIdle();
-    await puppetInstance.page.waitForSelector(
+    await options.puppetInstance.page.waitForNetworkIdle();
+    await options.puppetInstance.page.waitForSelector(
       `select[id="server_allow_sender"]`
     );
 
-    await puppetInstance.page.select(
+    await options.puppetInstance.page.select(
       'select[id="server_allow_sender"]',
       'false'
     );
 
     const sendLimitValue = await setAndGetLimits(
       'input[id="server_send_limit"]',
-      sendLimit
+      options.sendLimit
     );
     const outboundSpamThresholdValue = await setAndGetLimits(
       'input[id="server_outbound_spam_threshold"]',
-      outboundSpamThreshold
+      options.outboundSpamThreshold
     );
     const messageRetentionDaysValue = await setAndGetLimits(
       'input[id="server_message_retention_days"]',
-      messageRetentionDays
+      options.messageRetentionDays
     );
     const rawMessageRetentionDaysValue = await setAndGetLimits(
       'input[id="server_raw_message_retention_days"]',
-      rawMessageRetentionDays
+      options.rawMessageRetentionDays
     );
     const rawMessageRetentionSizeValue = await setAndGetLimits(
       'input[id="server_raw_message_retention_size"]',
-      rawMessageRetentionSize
+      options.rawMessageRetentionSize
     );
 
-    await puppetInstance.page.click('[name="commit"]');
-    await puppetInstance.page.waitForNetworkIdle();
+    await options.puppetInstance.page.click('[name="commit"]');
+    await options.puppetInstance.page.waitForNetworkIdle();
 
     return {
       data: {
-        orgId,
-        serverId,
+        orgId: options.orgId,
+        serverId: options.serverId,
         sendLimit: sendLimitValue,
         outboundSpamThreshold: outboundSpamThresholdValue,
         messageRetentionDays: messageRetentionDaysValue,

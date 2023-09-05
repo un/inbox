@@ -1,12 +1,12 @@
 import type { PuppetInstance } from '../index';
 
-export async function setMailServerRoutingHttpEndpoint(
-  puppetInstance: PuppetInstance,
-  orgId: number,
-  orgPublicId: string,
-  serverId: string,
-  mailBridgeUrl: string
-): Promise<{
+export async function setMailServerRoutingHttpEndpoint(options: {
+  puppetInstance: PuppetInstance;
+  orgId: number;
+  orgPublicId: string;
+  serverId: string;
+  mailBridgeUrl: string;
+}): Promise<{
   data: {
     orgId: number;
     serverId: string;
@@ -15,14 +15,14 @@ export async function setMailServerRoutingHttpEndpoint(
   error: Error | null;
 }> {
   try {
-    puppetInstance.page.on('dialog', async (dialog) => {
+    options.puppetInstance.page.on('dialog', async (dialog) => {
       await dialog.accept();
     });
-    await puppetInstance.page.goto(
-      `${puppetInstance.url}/org/${orgPublicId}/servers/${serverId}/http_endpoints` as string
+    await options.puppetInstance.page.goto(
+      `${options.puppetInstance.url}/org/${options.orgPublicId}/servers/${options.serverId}/http_endpoints` as string
     );
-    await puppetInstance.page.waitForNetworkIdle();
-    await puppetInstance.page.waitForFunction(
+    await options.puppetInstance.page.waitForNetworkIdle();
+    await options.puppetInstance.page.waitForFunction(
       () =>
         //@ts-expect-error - TS doesn't know it's running in the browser context
         document.querySelectorAll(
@@ -31,57 +31,57 @@ export async function setMailServerRoutingHttpEndpoint(
     );
 
     /// check and delete the existing records
-    const existingRecords = await puppetInstance.page.$$(
+    const existingRecords = await options.puppetInstance.page.$$(
       'p[class="endpointList__name"]'
     );
 
     if (existingRecords.length) {
       for (const entry of existingRecords) {
         await entry.click();
-        await puppetInstance.page
+        await options.puppetInstance.page
           .locator(`a[class="button button--danger"]`)
           .click();
-        await puppetInstance.page.waitForNetworkIdle();
+        await options.puppetInstance.page.waitForNetworkIdle();
       }
     }
     // Create new SMTP Key
-    const endpointUrl = `${mailBridgeUrl}/postal/mail/inbound/${orgId}/${serverId}`;
-    await puppetInstance.page.goto(
-      `${puppetInstance.url}/org/${orgPublicId}/servers/${serverId}/http_endpoints/new` as string
+    const endpointUrl = `${options.mailBridgeUrl}/postal/mail/inbound/${options.orgId}/${options.serverId}`;
+    await options.puppetInstance.page.goto(
+      `${options.puppetInstance.url}/org/${options.orgPublicId}/servers/${options.serverId}/http_endpoints/new` as string
     );
-    await puppetInstance.page
+    await options.puppetInstance.page
       .locator('input[id="http_endpoint_name"]')
       .fill('uninbox-mail-bridge-http');
-    await puppetInstance.page
+    await options.puppetInstance.page
       .locator('input[id="http_endpoint_url"]')
       .fill(endpointUrl);
-    await puppetInstance.page.select(
+    await options.puppetInstance.page.select(
       'select[id="http_endpoint_encoding"]',
       'BodyAsJSON'
     );
-    await puppetInstance.page.select(
+    await options.puppetInstance.page.select(
       'select[id="http_endpoint_format"]',
       'Hash'
     );
-    await puppetInstance.page.select(
+    await options.puppetInstance.page.select(
       'select[id="http_endpoint_strip_replies"]',
       'true'
     );
-    await puppetInstance.page.select(
+    await options.puppetInstance.page.select(
       'select[id="http_endpoint_include_attachments"]',
       'true'
     );
-    await puppetInstance.page
+    await options.puppetInstance.page
       .locator('input[id="http_endpoint_timeout"]')
       .fill('30');
 
-    await puppetInstance.page.click('[name="commit"]');
-    await puppetInstance.page.waitForNetworkIdle();
+    await options.puppetInstance.page.click('[name="commit"]');
+    await options.puppetInstance.page.waitForNetworkIdle();
 
     return {
       data: {
-        orgId,
-        serverId,
+        orgId: options.orgId,
+        serverId: options.serverId,
         httpEndpointUrl: endpointUrl
       },
       error: null

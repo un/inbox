@@ -1,31 +1,31 @@
 import type { PuppetInstance } from '../index';
 
-export async function createOrg(
-  puppetInstance: PuppetInstance,
-  orgId: number,
-  orgPublicId: string
-): Promise<{
+export async function createOrg(options: {
+  puppetInstance: PuppetInstance;
+  orgId: number;
+  orgPublicId: string;
+}): Promise<{
   data: { orgId: number; postalOrgId: string } | null;
   error: Error | null;
 }> {
   try {
-    await puppetInstance.page.goto(
-      `${puppetInstance.url}/organizations/new` as string
+    await options.puppetInstance.page.goto(
+      `${options.puppetInstance.url}/organizations/new` as string
     );
-    await puppetInstance.page.waitForNetworkIdle();
+    await options.puppetInstance.page.waitForNetworkIdle();
 
-    await puppetInstance.page
+    await options.puppetInstance.page
       .locator('[id="organization_name"]')
-      .fill(orgPublicId);
-    await puppetInstance.page
+      .fill(options.orgPublicId);
+    await options.puppetInstance.page
       .locator('[id="organization_permalink"]')
-      .fill(orgPublicId.toLowerCase());
-    await puppetInstance.page.click('[name="commit"]');
-    await puppetInstance.page.waitForNetworkIdle();
+      .fill(options.orgPublicId.toLowerCase());
+    await options.puppetInstance.page.click('[name="commit"]');
+    await options.puppetInstance.page.waitForNetworkIdle();
     return {
       data: {
-        orgId: orgId,
-        postalOrgId: orgPublicId
+        orgId: options.orgId,
+        postalOrgId: options.orgPublicId
       },
       error: null
     };

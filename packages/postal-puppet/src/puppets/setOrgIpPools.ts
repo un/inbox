@@ -1,23 +1,25 @@
 import type { PuppetInstance } from '../index';
 
-export async function setOrgIpPools(
-  puppetInstance: PuppetInstance,
-  orgId: number,
-  orgPublicId: string,
-  poolId: string | string[]
-): Promise<{
+export async function setOrgIpPools(options: {
+  puppetInstance: PuppetInstance;
+  orgId: number;
+  orgPublicId: string;
+  poolId: string | string[];
+}): Promise<{
   data: { orgId: number; pools: string[] } | null;
   error: Error | null;
 }> {
   try {
-    const poolIds = Array.isArray(poolId) ? poolId : [poolId];
+    const poolIds = Array.isArray(options.poolId)
+      ? options.poolId
+      : [options.poolId];
     const enabledPools = [];
-    await puppetInstance.page.goto(
-      `${puppetInstance.url}/org/${orgPublicId}/ip_pools`
+    await options.puppetInstance.page.goto(
+      `${options.puppetInstance.url}/org/${options.orgPublicId}/ip_pools`
     );
-    await puppetInstance.page.waitForNetworkIdle();
-    await puppetInstance.page.waitForSelector(`input[type='checkbox']`);
-    const poolCheckboxes = await puppetInstance.page.$$(
+    await options.puppetInstance.page.waitForNetworkIdle();
+    await options.puppetInstance.page.waitForSelector(`input[type='checkbox']`);
+    const poolCheckboxes = await options.puppetInstance.page.$$(
       `input[type='checkbox']`
     );
 
@@ -32,12 +34,12 @@ export async function setOrgIpPools(
         await checkBox.click(); // disable the checkbox
       }
     }
-    await puppetInstance.page.click('[name="commit"]');
-    await puppetInstance.page.waitForNetworkIdle();
+    await options.puppetInstance.page.click('[name="commit"]');
+    await options.puppetInstance.page.waitForNetworkIdle();
 
     return {
       data: {
-        orgId,
+        orgId: options.orgId,
         pools: enabledPools
       },
       error: null
