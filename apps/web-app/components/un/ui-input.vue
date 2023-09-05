@@ -9,7 +9,7 @@
   type Props = {
     value?: string;
     label: string;
-    placeholder: string;
+    placeholder?: string;
     icon?: string | null;
     disabled?: boolean;
     width?: InputProps['width'];
