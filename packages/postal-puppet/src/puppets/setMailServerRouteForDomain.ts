@@ -7,13 +7,10 @@ export async function setMailServerRouteForDomain(options: {
   serverId: string;
   domainName: string;
 }): Promise<{
-  data: {
-    orgId: number;
-    serverId: string;
-    domainName: string;
-    forwardingAddress: string;
-  } | null;
-  error: Error | null;
+  orgId: number;
+  serverId: string;
+  domainName: string;
+  forwardingAddress: string;
 }> {
   try {
     options.puppetInstance.page.on('dialog', async (dialog) => {
@@ -149,18 +146,12 @@ export async function setMailServerRouteForDomain(options: {
     );
 
     return {
-      data: {
-        orgId: options.orgId,
-        serverId: options.serverId,
-        domainName: options.domainName,
-        forwardingAddress
-      },
-      error: null
+      orgId: options.orgId,
+      serverId: options.serverId,
+      domainName: options.domainName,
+      forwardingAddress
     };
   } catch (error: any) {
-    return {
-      data: null,
-      error: error
-    };
+    throw new Error(error);
   }
 }

@@ -7,12 +7,9 @@ export async function setMailServerEventWebhooks(options: {
   serverId: string;
   mailBridgeUrl: string;
 }): Promise<{
-  data: {
-    orgId: number;
-    serverId: string;
-    webhookUrl: string;
-  } | null;
-  error: Error | null;
+  orgId: number;
+  serverId: string;
+  webhookUrl: string;
 }> {
   try {
     options.puppetInstance.page.on('dialog', async (dialog) => {
@@ -59,18 +56,12 @@ export async function setMailServerEventWebhooks(options: {
     await options.puppetInstance.page.waitForNetworkIdle();
 
     return {
-      data: {
-        orgId: options.orgId,
-        serverId: options.serverId,
-        webhookUrl
-      },
-      error: null
+      orgId: options.orgId,
+      serverId: options.serverId,
+      webhookUrl
     };
   } catch (error: any) {
     console.log('Postal: setMailServerWebhook Error:', error);
-    return {
-      data: null,
-      error: error
-    };
+    throw new Error(error);
   }
 }

@@ -7,8 +7,9 @@ export async function addMailServer(options: {
   serverId: string;
   defaultIpPoolId: string;
 }): Promise<{
-  data: { orgId: number; serverId: string; ipPool: string } | null;
-  error: Error | null;
+  orgId: number;
+  serverId: string;
+  ipPool: string;
 }> {
   try {
     await options.puppetInstance.page.goto(
@@ -26,18 +27,12 @@ export async function addMailServer(options: {
     await options.puppetInstance.page.waitForNetworkIdle();
 
     return {
-      data: {
-        orgId: options.orgId,
-        serverId: options.serverId,
-        ipPool: options.defaultIpPoolId
-      },
-      error: null
+      orgId: options.orgId,
+      serverId: options.serverId,
+      ipPool: options.defaultIpPoolId
     };
   } catch (error: any) {
     console.log('Postal: addMailServer Error:', error);
-    return {
-      data: null,
-      error: error
-    };
+    throw new Error(error);
   }
 }

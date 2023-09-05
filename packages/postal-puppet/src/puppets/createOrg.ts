@@ -5,8 +5,8 @@ export async function createOrg(options: {
   orgId: number;
   orgPublicId: string;
 }): Promise<{
-  data: { orgId: number; postalOrgId: string } | null;
-  error: Error | null;
+  orgId: number;
+  postalOrgId: string;
 }> {
   try {
     await options.puppetInstance.page.goto(
@@ -23,17 +23,11 @@ export async function createOrg(options: {
     await options.puppetInstance.page.click('[name="commit"]');
     await options.puppetInstance.page.waitForNetworkIdle();
     return {
-      data: {
-        orgId: options.orgId,
-        postalOrgId: options.orgPublicId
-      },
-      error: null
+      orgId: options.orgId,
+      postalOrgId: options.orgPublicId
     };
   } catch (error: any) {
     console.log('Postal: createOrg Error:', error);
-    return {
-      data: null,
-      error: error
-    };
+    throw new Error(error);
   }
 }

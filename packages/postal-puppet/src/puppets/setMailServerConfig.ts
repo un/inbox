@@ -11,16 +11,13 @@ export async function setMailServerConfig(options: {
   rawMessageRetentionDays?: number;
   rawMessageRetentionSize?: number;
 }): Promise<{
-  data: {
-    orgId: number;
-    serverId: string;
-    sendLimit: number;
-    outboundSpamThreshold: number;
-    messageRetentionDays: number;
-    rawMessageRetentionDays: number;
-    rawMessageRetentionSize: number;
-  } | null;
-  error: Error | null;
+  orgId: number;
+  serverId: string;
+  sendLimit: number;
+  outboundSpamThreshold: number;
+  messageRetentionDays: number;
+  rawMessageRetentionDays: number;
+  rawMessageRetentionSize: number;
 }> {
   async function setAndGetLimits(
     selector: string,
@@ -72,22 +69,16 @@ export async function setMailServerConfig(options: {
     await options.puppetInstance.page.waitForNetworkIdle();
 
     return {
-      data: {
-        orgId: options.orgId,
-        serverId: options.serverId,
-        sendLimit: sendLimitValue,
-        outboundSpamThreshold: outboundSpamThresholdValue,
-        messageRetentionDays: messageRetentionDaysValue,
-        rawMessageRetentionDays: rawMessageRetentionDaysValue,
-        rawMessageRetentionSize: rawMessageRetentionSizeValue
-      },
-      error: null
+      orgId: options.orgId,
+      serverId: options.serverId,
+      sendLimit: sendLimitValue,
+      outboundSpamThreshold: outboundSpamThresholdValue,
+      messageRetentionDays: messageRetentionDaysValue,
+      rawMessageRetentionDays: rawMessageRetentionDaysValue,
+      rawMessageRetentionSize: rawMessageRetentionSizeValue
     };
   } catch (error: any) {
     console.log('Postal: setMailServerConfig Error:', error);
-    return {
-      data: null,
-      error: error
-    };
+    throw new Error(error);
   }
 }

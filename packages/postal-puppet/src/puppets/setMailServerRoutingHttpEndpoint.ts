@@ -7,12 +7,9 @@ export async function setMailServerRoutingHttpEndpoint(options: {
   serverId: string;
   mailBridgeUrl: string;
 }): Promise<{
-  data: {
-    orgId: number;
-    serverId: string;
-    httpEndpointUrl: string;
-  } | null;
-  error: Error | null;
+  orgId: number;
+  serverId: string;
+  httpEndpointUrl: string;
 }> {
   try {
     options.puppetInstance.page.on('dialog', async (dialog) => {
@@ -79,18 +76,12 @@ export async function setMailServerRoutingHttpEndpoint(options: {
     await options.puppetInstance.page.waitForNetworkIdle();
 
     return {
-      data: {
-        orgId: options.orgId,
-        serverId: options.serverId,
-        httpEndpointUrl: endpointUrl
-      },
-      error: null
+      orgId: options.orgId,
+      serverId: options.serverId,
+      httpEndpointUrl: endpointUrl
     };
   } catch (error: any) {
     console.log('Postal: setMailServerRoutingHttpEndpoint Error:', error);
-    return {
-      data: null,
-      error: error
-    };
+    throw new Error(error);
   }
 }

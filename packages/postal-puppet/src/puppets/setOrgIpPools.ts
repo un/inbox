@@ -6,8 +6,8 @@ export async function setOrgIpPools(options: {
   orgPublicId: string;
   poolId: string | string[];
 }): Promise<{
-  data: { orgId: number; pools: string[] } | null;
-  error: Error | null;
+  orgId: number;
+  pools: string[];
 }> {
   try {
     const poolIds = Array.isArray(options.poolId)
@@ -38,17 +38,11 @@ export async function setOrgIpPools(options: {
     await options.puppetInstance.page.waitForNetworkIdle();
 
     return {
-      data: {
-        orgId: options.orgId,
-        pools: enabledPools
-      },
-      error: null
+      orgId: options.orgId,
+      pools: enabledPools
     };
   } catch (error: any) {
     console.log('Postal: setOrgIpPools Error:', error);
-    return {
-      data: null,
-      error: error
-    };
+    throw new Error(error);
   }
 }

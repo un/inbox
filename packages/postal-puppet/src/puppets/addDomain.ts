@@ -6,13 +6,10 @@ export async function addDomain(options: {
   orgPublicId: string;
   domainName: string;
 }): Promise<{
-  data: {
-    orgId: number;
-    domainId: string;
-    dkimKey: string;
-    dkimValue: string;
-  } | null;
-  error: Error | null;
+  orgId: number;
+  domainId: string;
+  dkimKey: string;
+  dkimValue: string;
 }> {
   try {
     await options.puppetInstance.page.goto(
@@ -42,19 +39,13 @@ export async function addDomain(options: {
       .wait();
     await options.puppetInstance.page.waitForNetworkIdle();
     return {
-      data: {
-        orgId: options.orgId,
-        domainId,
-        dkimKey,
-        dkimValue
-      },
-      error: null
+      orgId: options.orgId,
+      domainId,
+      dkimKey,
+      dkimValue
     };
   } catch (error: any) {
     console.log('Postal: addDomain Error:', error);
-    return {
-      data: null,
-      error: error
-    };
+    throw new Error(error);
   }
 }

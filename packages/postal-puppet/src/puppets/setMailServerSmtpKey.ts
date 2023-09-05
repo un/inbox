@@ -6,12 +6,9 @@ export async function setMailServerSmtpKey(options: {
   orgPublicId: string;
   serverId: string;
 }): Promise<{
-  data: {
-    orgId: number;
-    serverId: string;
-    smtpKey: string;
-  } | null;
-  error: Error | null;
+  orgId: number;
+  serverId: string;
+  smtpKey: string;
 }> {
   try {
     options.puppetInstance.page.on('dialog', async (dialog) => {
@@ -74,18 +71,12 @@ export async function setMailServerSmtpKey(options: {
     await options.puppetInstance.page.waitForNetworkIdle();
 
     return {
-      data: {
-        orgId: options.orgId,
-        serverId: options.serverId,
-        smtpKey: credentialKey
-      },
-      error: null
+      orgId: options.orgId,
+      serverId: options.serverId,
+      smtpKey: credentialKey
     };
   } catch (error: any) {
     console.log('Postal: setMailServerWebhook Error:', error);
-    return {
-      data: null,
-      error: error
-    };
+    throw new Error(error);
   }
 }

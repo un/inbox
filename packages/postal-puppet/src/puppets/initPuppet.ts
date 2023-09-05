@@ -7,8 +7,7 @@ export async function initPuppet(options: {
   postalUser: string;
   postalPass: string;
 }): Promise<{
-  puppetInstance: PuppetInstance | null;
-  error: Error | null;
+  puppetInstance: PuppetInstance;
 }> {
   try {
     const url = `https://${options.postalControlPanel}.${options.postalUrl}`;
@@ -22,14 +21,10 @@ export async function initPuppet(options: {
     await page.click('[name="commit"]');
     await page.waitForNetworkIdle();
     return {
-      puppetInstance: { browser, page, url } as PuppetInstance,
-      error: null
+      puppetInstance: { browser, page, url } as PuppetInstance
     };
   } catch (error: any) {
     console.log('Postal: initPuppet Error:', error);
-    return {
-      puppetInstance: null,
-      error
-    };
+    throw new Error(error);
   }
 }
