@@ -22,7 +22,10 @@ export default defineNuxtConfig({
     realtimeKey: process.env.WEBAPP_REALTIME_KEY || '',
     mailBridgeUrl: process.env.WEBAPP_MAILBRIDGE_URL || '',
     mailBridgeKey: process.env.WEBAPP_MAILBRIDGE_KEY || '',
+    cfImagesToken: process.env.WEBAPP_CF_IMAGES_TOKEN || '',
+    cfAccountId: process.env.WEBAPP_CF_ACCOUNT_ID || '',
     public: {
+      cfImagesAccountHash: process.env.WEBAPP_CF_IMAGES_ACCOUNT_HASH || '',
       siteUrl: process.env.WEBAPP_URL || '',
       hanko: {
         apiURL: process.env.WEBAPP_HANKO_API_URL || '',
@@ -75,7 +78,11 @@ export default defineNuxtConfig({
       sessions: {
         driver: 'redis',
         base: 'sessions',
-        url: process.env.DB_REDIS_URL
+        url: process.env.DB_REDIS_URL,
+        ttl:
+          process.env.NODE_ENV === 'development'
+            ? 60 * 60 * 12
+            : 60 * 60 * 24 * 30
       }
     },
     prerender: {
@@ -103,6 +110,9 @@ export default defineNuxtConfig({
             ? 'unsafe-none'
             : 'require-corp',
         route: '/**'
+      },
+      contentSecurityPolicy: {
+        'img-src': ["'self'", 'data:', 'imagedelivery.net']
       }
     }
   }
