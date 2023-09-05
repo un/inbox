@@ -14,19 +14,6 @@ export const mailBridgeTrpcClient = createTRPCProxyClient<TrpcMailBridgeRouter>(
           (opts.direction === 'down' && opts.result instanceof Error)
       }),
       httpBatchLink({
-        fetch: (input, options) =>
-          globalThis.$fetch
-            //@ts-ignore no idea why its causing type issues on options.method
-            .raw(input.toString(), options?.method)
-            .catch((e) => {
-              if (e && e.response) return e.response;
-
-              throw e;
-            })
-            .then((response) => ({
-              ...response,
-              json: () => Promise.resolve(response._data)
-            })),
         url: `${config.mailBridgeUrl}/trpc`,
         maxURLLength: 2083,
         headers() {
