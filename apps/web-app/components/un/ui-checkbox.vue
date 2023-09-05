@@ -20,12 +20,12 @@
 </script>
 <template>
   <div>
-    <label class="flex flex-row gap-2 items-center">
+    <label class="flex flex-row gap-4 items-start">
       <CheckboxRoot
-        v-model="checked"
+        v-model:checked="checked"
         :name="props.name"
         :aria-label="props.label"
-        class="shadow-base-7 hover:(bg-base-4 border-base-8) flex h-[25px] w-[25px] appearance-none items-center justify-center rounded bg-base-3 border-base-7 border-2">
+        class="shadow-base-7 hover:(bg-base-4 border-base-8) flex min-h-[25px] min-w-[25px] appearance-none items-center justify-center rounded bg-base-3 border-base-7 border-2">
         <CheckboxIndicator
           class="bg-base-3 h-full w-full flex items-center justify-center">
           <Icon
@@ -35,9 +35,9 @@
       </CheckboxRoot>
       <span
         v-if="label"
-        class="select-none"
-        >{{ props.label }}</span
-      >
+        class="select-none text-left">
+        {{ props.label }}
+      </span>
     </label>
   </div>
 </template>
