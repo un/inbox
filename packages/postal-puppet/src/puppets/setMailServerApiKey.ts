@@ -2,12 +2,12 @@ import type { PuppetInstance } from '../index';
 
 export async function setMailServerApiKey(
   puppetInstance: PuppetInstance,
-  orgId: string,
+  orgId: number,
   orgPublicId: string,
   serverId: string
 ): Promise<{
   data: {
-    orgId: string;
+    orgId: number;
     serverId: string;
     apiKey: string;
   } | null;

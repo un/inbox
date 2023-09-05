@@ -2,12 +2,12 @@ import type { PuppetInstance } from '../index';
 
 export async function addDomain(
   puppetInstance: PuppetInstance,
-  orgId: string,
+  orgId: number,
   orgPublicId: string,
   domainName: string
 ): Promise<{
   data: {
-    orgId: string;
+    orgId: number;
     domainId: string;
     dkimKey: string;
     dkimValue: string;

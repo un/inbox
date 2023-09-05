@@ -2,7 +2,7 @@ import type { PuppetInstance } from '../index';
 
 export async function setMailServerConfig(
   puppetInstance: PuppetInstance,
-  orgId: string,
+  orgId: number,
   orgPublicId: string,
   serverId: string,
   sendLimit?: number,
@@ -12,7 +12,7 @@ export async function setMailServerConfig(
   rawMessageRetentionSize?: number
 ): Promise<{
   data: {
-    orgId: string;
+    orgId: number;
     serverId: string;
     sendLimit: number;
     outboundSpamThreshold: number;

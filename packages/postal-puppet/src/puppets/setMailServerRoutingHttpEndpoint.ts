@@ -2,13 +2,13 @@ import type { PuppetInstance } from '../index';
 
 export async function setMailServerRoutingHttpEndpoint(
   puppetInstance: PuppetInstance,
-  orgId: string,
+  orgId: number,
   orgPublicId: string,
   serverId: string,
   mailBridgeUrl: string
 ): Promise<{
   data: {
-    orgId: string;
+    orgId: number;
     serverId: string;
     httpEndpointUrl: string;
   } | null;

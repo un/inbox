@@ -2,12 +2,12 @@ import type { PuppetInstance } from '../index';
 
 export async function addMailServer(
   puppetInstance: PuppetInstance,
-  orgId: string,
+  orgId: number,
   orgPublicId: string,
   serverId: string,
   defaultIpPoolId: string
 ): Promise<{
-  data: { orgId: string; serverId: string; ipPool: string } | null;
+  data: { orgId: number; serverId: string; ipPool: string } | null;
   error: Error | null;
 }> {
   try {

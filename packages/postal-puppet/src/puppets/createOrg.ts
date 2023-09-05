@@ -2,10 +2,10 @@ import type { PuppetInstance } from '../index';
 
 export async function createOrg(
   puppetInstance: PuppetInstance,
-  orgId: string,
+  orgId: number,
   orgPublicId: string
 ): Promise<{
-  data: { orgId: string; postalOrgId: string } | null;
+  data: { orgId: number; postalOrgId: string } | null;
   error: Error | null;
 }> {
   try {

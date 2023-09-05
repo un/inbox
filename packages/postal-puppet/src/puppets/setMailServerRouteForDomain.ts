@@ -2,13 +2,13 @@ import type { PuppetInstance } from '../index';
 
 export async function setMailServerRouteForDomain(
   puppetInstance: PuppetInstance,
-  orgId: string,
+  orgId: number,
   orgPublicId: string,
   serverId: string,
   domainName: string
 ): Promise<{
   data: {
-    orgId: string;
+    orgId: number;
     serverId: string;
     domainName: string;
     forwardingAddress: string;

@@ -2,11 +2,11 @@ import type { PuppetInstance } from '../index';
 
 export async function setOrgIpPools(
   puppetInstance: PuppetInstance,
-  orgId: string,
+  orgId: number,
   orgPublicId: string,
   poolId: string | string[]
 ): Promise<{
-  data: { orgId: string; pools: string[] } | null;
+  data: { orgId: number; pools: string[] } | null;
   error: Error | null;
 }> {
   try {
