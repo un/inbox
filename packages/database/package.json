@@ -16,7 +16,8 @@
   "dependencies": {
     "@planetscale/database": "^1.11.0",
     "drizzle-orm": "^0.28.5",
-    "mysql2": "^3.6.0"
+    "mysql2": "^3.6.0",
+    "@uninbox/utils": "workspace:*"
   },
   "devDependencies": {
     "drizzle-kit": "^0.19.13"

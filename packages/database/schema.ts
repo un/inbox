@@ -15,13 +15,14 @@ import {
   customType
 } from 'drizzle-orm/mysql-core';
 import { relations, sql } from 'drizzle-orm';
+import { nanoidLength } from '@uninbox/utils';
 
 // These custom types support incompatibilities with drizzle-orm or types that must remain in sync across db
 
 // Custom nanoId type = easy increase length later - used as "publicId: nanoId('public_id')
 const nanoId = customType<{ data: string; notNull: true }>({
   dataType() {
-    return 'varchar(16)';
+    return `varchar(${nanoidLength})`;
   }
 });
 
