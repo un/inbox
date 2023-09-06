@@ -1,11 +1,11 @@
 export * from '@trpc/server';
 import { router } from './trpc';
 import { createContext } from './createContext';
-import { postalConfigRouter } from './routers/postalConfigRouter';
+import { postalPuppetRouter } from './routers/postalPuppetRouter';
 
 export const trpcMailBridgeContext = createContext;
 export const trpcMailBridgeRouter = router({
-  postal: postalConfigRouter
+  postal: postalPuppetRouter
 });
 
 export type TrpcMailBridgeRouter = typeof trpcMailBridgeRouter;

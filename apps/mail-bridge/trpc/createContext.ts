@@ -6,11 +6,10 @@ import { db } from '@uninbox/database';
 //  * @link https://trpc.io/docs/context
 
 export const createContext = async (event: H3Event) => {
-  const config = useRuntimeConfig();
+  const config = useRuntimeConfig(event);
   const authToken = getHeader(event, 'Authorization');
   const isServiceAuthenticated = authToken === config.key;
-
-  return { auth: isServiceAuthenticated, db };
+  return { auth: isServiceAuthenticated, db, config };
 };
 
 export type CreateContext = inferAsyncReturnType<typeof createContext>;
