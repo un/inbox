@@ -5,12 +5,14 @@
     value: boolean;
     name?: string;
     label?: string;
+    helperText?: string;
   };
 
   const props = withDefaults(defineProps<Props>(), {
     value: false,
     name: '',
-    label: ''
+    label: '',
+    helperText: ''
   });
 
   const slots = useSlots();
@@ -20,14 +22,14 @@
 </script>
 <template>
   <div>
-    <label class="flex flex-row gap-4 items-start">
+    <label class="flex flex-row items-start gap-4">
       <CheckboxRoot
         v-model:checked="checked"
         :name="props.name"
         :aria-label="props.label"
-        class="shadow-base-7 hover:(bg-base-4 border-base-8) flex min-h-[25px] min-w-[25px] appearance-none items-center justify-center rounded bg-base-3 border-base-7 border-2">
+        class="min-h-[25px] min-w-[25px] flex appearance-none items-center justify-center border-2 border-base-7 rounded bg-base-3 shadow-base-7 hover:(border-base-8 bg-base-4)">
         <CheckboxIndicator
-          class="bg-base-3 h-full w-full flex items-center justify-center">
+          class="h-full w-full flex items-center justify-center bg-base-3">
           <Icon
             name="ph-check-bold"
             class="h-3.5 w-3.5 text-primary-11" />
@@ -38,6 +40,13 @@
         class="select-none text-left">
         {{ props.label }}
       </span>
+      <UnUiTooltip
+        v-if="props.helperText"
+        :text="props.helperText">
+        <Icon
+          name="ph-info"
+          class="h-6 w-6" />
+      </UnUiTooltip>
     </label>
   </div>
 </template>

@@ -12,12 +12,16 @@
   defineProps({
     text: { type: String, required: true },
     parentClass: { type: String, required: false }
+
+    //TODO: fix: tooltip trigger requires clicking twice to open
   });
 </script>
 <template>
   <TooltipProvider>
     <TooltipRoot v-model:open="toggleState">
-      <TooltipTrigger :class="parentClass">
+      <TooltipTrigger
+        :class="parentClass"
+        @click="toggleState = !toggleState">
         <slot />
       </TooltipTrigger>
       <Teleport to="body">
