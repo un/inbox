@@ -28,7 +28,17 @@ export async function verifyHankoJwt(event: H3Event) {
     });
   }
 
-  return await jwtVerify(jwt, jwks).then((r) => r.payload);
+  const jwtPayload = await jwtVerify(jwt, jwks).then((r) => r.payload);
+
+  //! Workaround for hanko cookie expiry not being set properly - see: https://github.com/teamhanko/hanko/issues/1007
+  const expiryTime = jwtPayload.exp;
+  setCookie(event, useRuntimeConfig().public.hanko.cookieName, jwt, {
+    expires: new Date(expiryTime! * 1000),
+    secure: true
+  });
+  //! End workaround
+
+  return jwtPayload;
 }
 
 const verifySessionData = async (eventSession: EventSessionObject) => {
