@@ -25,6 +25,12 @@ export default defineNuxtConfig({
     cfImagesToken: process.env.WEBAPP_CF_IMAGES_TOKEN || '',
     cfAccountId: process.env.WEBAPP_CF_ACCOUNT_ID || '',
     public: {
+      mailDomainPublic: JSON.parse(
+        process.env.MAIL_DOMAIN_PUBLIC
+      ) as MailDomainEntries[],
+      mailDomainPremium:
+        (JSON.parse(process.env.MAIL_DOMAIN_PREMIUM) as MailDomainEntries[]) ||
+        [],
       cfImagesAccountHash: process.env.WEBAPP_CF_IMAGES_ACCOUNT_HASH || '',
       siteUrl: process.env.WEBAPP_URL || '',
       hanko: {
@@ -117,3 +123,8 @@ export default defineNuxtConfig({
     }
   }
 });
+
+interface MailDomainEntries {
+  name: string;
+  postalId: string;
+}
