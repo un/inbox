@@ -1,6 +1,8 @@
 import {
-  bigint,
+  tinyint,
+  smallint,
   mediumint,
+  bigint,
   boolean,
   mysqlEnum,
   mysqlTable,
@@ -17,6 +19,8 @@ import {
 import { relations, sql } from 'drizzle-orm';
 import { nanoidLength } from '@uninbox/utils';
 
+//TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit
+
 // These custom types support incompatibilities with drizzle-orm or types that must remain in sync across db
 
 // Custom nanoId type = easy increase length later - used as "publicId: nanoId('public_id')
@@ -28,6 +32,12 @@ const nanoId = customType<{ data: string; notNull: true }>({
 
 // Foreign Key type as drizzle does not support unsigned bigint
 const foreignKey = customType<{ data: number }>({
+  dataType() {
+    return 'bigint UNSIGNED';
+  }
+});
+
+const bigintUnsigned = customType<{ data: number }>({
   dataType() {
     return 'bigint UNSIGNED';
   }
@@ -54,11 +64,16 @@ export const users = mysqlTable(
 export const usersRelations = relations(users, ({ one, many }) => ({
   authIdentities: many(userAuthIdentities),
   orgMemberships: many(orgMembers),
-  profile: many(userProfiles),
+  profiles: many(userProfiles),
   defaultProfile: one(userProfiles, {
     fields: [users.id],
     references: [userProfiles.userId]
-  })
+  }),
+  conversations: many(convoMembers),
+  postalRootMailServers: many(postalRootMailServers),
+  rootEmailIdentities: many(rootEmailIdentities),
+  userGroups: many(userGroupMembers),
+  routingRules: many(emailRoutingRulesDestinations)
 }));
 
 // Identity table (user logins)
@@ -123,7 +138,7 @@ export const userProfileRelations = relations(
       fields: [userProfiles.userId],
       references: [users.id]
     }),
-    orgs: many(userProfilesToOrgs)
+    orgs: many(orgMembers)
   })
 );
 
@@ -136,6 +151,7 @@ export const orgs = mysqlTable(
     ownerId: foreignKey('owner_id').notNull(),
     name: varchar('name', { length: 64 }).notNull(),
     avatarId: varchar('avatar_Id', { length: 64 }),
+    personalOrg: boolean('personal_org').notNull().default(false),
     createdAt: timestamp('created_at')
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull()
@@ -152,12 +168,12 @@ export const orgsRelations = relations(orgs, ({ one, many }) => ({
   members: many(orgMembers),
   domains: many(domains),
   postalServers: many(postalServers),
-  modules: many(orgModules),
-  userProfiles: many(userProfilesToOrgs),
   postalConfig: one(orgPostalConfigs, {
     fields: [orgs.id],
     references: [orgPostalConfigs.orgId]
-  })
+  }),
+  modules: many(orgModules),
+  userProfiles: many(userProfilesToOrgs)
 }));
 
 export const orgMembers = mysqlTable(
@@ -168,6 +184,7 @@ export const orgMembers = mysqlTable(
     invitedByUserId: foreignKey('invited_by_user_id'),
     status: mysqlEnum('status', ['active', 'removed']).notNull(),
     role: mysqlEnum('role', ['member', 'admin']).notNull(),
+    userProfileId: foreignKey('user_profile_id').notNull(),
     addedAt: timestamp('added_at')
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -185,6 +202,10 @@ export const orgMembersRelations = relations(orgMembers, ({ one }) => ({
   org: one(orgs, {
     fields: [orgMembers.orgId],
     references: [orgs.id]
+  }),
+  profile: one(userProfiles, {
+    fields: [orgMembers.userProfileId],
+    references: [userProfiles.id]
   })
 }));
 
@@ -222,10 +243,12 @@ export const orgInvitations = mysqlTable(
     invitedByUserId: foreignKey('invited_by_user_id').notNull(),
     role: mysqlEnum('role', ['member', 'admin']).notNull(),
     invitedUser: foreignKey('invited_user'),
-    email: varchar('email', { length: 256 }),
+    email: varchar('email', { length: 128 }),
+    inviteToken: varchar('invite_token', { length: 64 }),
     invitedAt: timestamp('invited_at')
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
+    expiresAt: timestamp('expires_at'),
     acceptedAt: timestamp('accepted_at')
   },
   (table) => ({
@@ -247,30 +270,6 @@ export const orgInvitationsRelations = relations(orgInvitations, ({ one }) => ({
     references: [users.id]
   })
 }));
-
-export const orgPostalConfigs = mysqlTable(
-  'org_postal_configs',
-  {
-    id: serial('id').primaryKey(),
-    orgId: foreignKey('org_id').notNull(),
-    host: varchar('host', { length: 32 }).notNull(),
-    ipPools: json('ip_pools').notNull().$type<string[]>(),
-    defaultIpPool: varchar('default_ip_pool', { length: 32 }).notNull()
-  },
-  (table) => ({
-    orgIdIndex: index('org_id_idx').on(table.orgId)
-  })
-);
-
-export const orgPostalConfigsRelations = relations(
-  orgPostalConfigs,
-  ({ one }) => ({
-    org: one(orgs, {
-      fields: [orgPostalConfigs.orgId],
-      references: [orgs.id]
-    })
-  })
-);
 
 // Opt-ins/modules/add-ons/boosts tables
 export const orgModules = mysqlTable(
@@ -306,6 +305,31 @@ export const orgModulesRelations = relations(orgModules, ({ one }) => ({
   })
 }));
 
+export const orgPostalConfigs = mysqlTable(
+  'org_postal_configs',
+  {
+    id: serial('id').primaryKey(),
+    orgId: foreignKey('org_id').notNull(),
+    host: varchar('host', { length: 32 }).notNull(),
+    ipPools: json('ip_pools').notNull().$type<string[]>(),
+    defaultIpPool: varchar('default_ip_pool', { length: 32 }).notNull()
+  },
+  (table) => ({
+    orgIdIndex: index('org_id_idx').on(table.orgId)
+  })
+);
+
+export const orgPostalConfigsRelations = relations(
+  orgPostalConfigs,
+  ({ one, many }) => ({
+    org: one(orgs, {
+      fields: [orgPostalConfigs.orgId],
+      references: [orgs.id]
+    }),
+    domains: many(domains)
+  })
+);
+
 // Domain table
 export const domains = mysqlTable(
   'domains',
@@ -313,19 +337,22 @@ export const domains = mysqlTable(
     id: serial('id').primaryKey(),
     publicId: nanoId('public_id').notNull(),
     orgId: foreignKey('org_id').notNull(),
+    postalHost: varchar('postal_host', { length: 32 }).notNull(),
     domain: varchar('domain', { length: 256 }).notNull(),
     postalId: varchar('postal_id', { length: 64 }),
     dkimKey: varchar('dkim_key', { length: 32 }),
     dkimValue: varchar('dkim_value', { length: 256 }),
     status: mysqlEnum('status', ['active', 'removed']).notNull(),
-    mode: mysqlEnum('status', ['native', 'forwarding']).notNull(), // native = all mail comes to UnInbox, forwarding = mail is forwarded from another mail system
+    mode: mysqlEnum('mode', ['native', 'forwarding']).notNull(), // native = all mail comes to UnInbox, forwarding = mail is forwarded from another mail system
     dnsStatus: mysqlEnum('dns_status', [
-      'pending',
-      'verified',
-      'valid',
-      'failed'
-    ]).notNull(), // verified is used when using the TXT verification method, valid is when all DNS records are validated
-    forwardingAddress: varchar('forwarding_address', { length: 64 }),
+      'valid', // All DNS records are valid
+      'failed', // one or more DNS records are invalid
+      'pending', // DNS records are being validated
+      'verified', // verification TXT record has been verified
+      'unverified' // verification TXT record has not been verified
+    ]).notNull(),
+    statusUpdateAt: timestamp('status_updated_at'),
+    lastDnsCheckAt: timestamp('last_dns_check_at'),
     createdAt: timestamp('created_at')
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull()
@@ -341,8 +368,34 @@ export const domainsRelations = relations(domains, ({ one }) => ({
   org: one(orgs, {
     fields: [domains.orgId],
     references: [orgs.id]
+  }),
+  postalConfig: one(orgPostalConfigs, {
+    fields: [domains.postalHost],
+    references: [orgPostalConfigs.id]
   })
 }));
+
+export const domainVerifications = mysqlTable(
+  'domain_verifications',
+  {
+    id: serial('id').primaryKey(),
+    domainId: foreignKey('domain_id').notNull(),
+    verificationToken: varchar('verification_token', { length: 64 }).notNull(),
+    verifiedAt: timestamp('verified_at')
+  },
+  (table) => ({
+    domainIdIndex: index('domain_id_idx').on(table.domainId)
+  })
+);
+export const domainVerificationsRelations = relations(
+  domainVerifications,
+  ({ one }) => ({
+    domain: one(domains, {
+      fields: [domainVerifications.domainId],
+      references: [domains.id]
+    })
+  })
+);
 
 // Postal server table
 export const postalServers = mysqlTable(
@@ -353,10 +406,12 @@ export const postalServers = mysqlTable(
     orgId: foreignKey('org_id').notNull(),
     type: mysqlEnum('type', ['email', 'transactional', 'marketing']).notNull(),
     sendLimit: mediumint('send_limit').notNull(),
-    apiKey: varchar('api_key', { length: 256 }).notNull(),
-    smtpKey: varchar('smtp_key', { length: 256 }).notNull()
+    apiKey: varchar('api_key', { length: 64 }).notNull(),
+    smtpKey: varchar('smtp_key', { length: 64 }).notNull(),
+    forwardingAddress: varchar('forwarding_address', { length: 128 })
   },
   (table) => ({
+    publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
     orgIdIndex: index('org_id_idx').on(table.orgId),
     postalSlug: uniqueIndex('postal_slug').on(table.orgId, table.type)
   })
@@ -365,5 +420,864 @@ export const postalServersRelations = relations(postalServers, ({ one }) => ({
   org: one(orgs, {
     fields: [postalServers.orgId],
     references: [orgs.id]
+  })
+}));
+
+// Postal personal server table
+export const postalRootMailServers = mysqlTable(
+  'postal_root_mail_servers',
+  {
+    id: serial('id').primaryKey(),
+    publicId: nanoId('public_id').notNull(),
+    userId: foreignKey('user_id').notNull(),
+    type: mysqlEnum('type', ['email', 'transactional', 'marketing']).notNull(),
+    sendLimit: mediumint('send_limit').notNull(),
+    apiKey: varchar('api_key', { length: 256 }).notNull(),
+    forwardingAddress: varchar('forwarding_address', { length: 128 })
+  },
+  (table) => ({
+    publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
+    userIdIndex: index('user_id_idx').on(table.userId),
+    postalSlug: uniqueIndex('postal_slug').on(table.userId, table.type)
+  })
+);
+export const postalRootMailServersRelations = relations(
+  postalRootMailServers,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [postalRootMailServers.userId],
+      references: [users.id]
+    })
+  })
+);
+
+// External senders and their reputations
+
+export const externalEmailIdentities = mysqlTable(
+  'external_email_identities',
+  {
+    id: serial('id').primaryKey(),
+    publicId: nanoId('public_id').notNull(),
+    rootDomain: varchar('root_domain', { length: 128 }).notNull(),
+    username: varchar('username', { length: 128 }).notNull(),
+    avatarId: varchar('avatar_id', { length: 64 }),
+    signature: text('signature'),
+    createdAt: timestamp('created_at')
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull()
+  },
+  (table) => ({
+    publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
+    rootDomainIndex: index('root_domain_idx').on(table.rootDomain),
+    emailIndex: uniqueIndex('email_idx').on(table.rootDomain, table.username)
+  })
+);
+
+export const externalEmailIdentitiesRelations = relations(
+  externalEmailIdentities,
+  ({ one, many }) => ({
+    emailIdentitiesReputations: one(externalEmailIdentitiesReputations, {
+      fields: [externalEmailIdentities.id],
+      references: [externalEmailIdentitiesReputations.identityId]
+    }),
+    screenerStatuses: many(externalEmailIdentitiesScreenerStatus)
+  })
+);
+
+export const externalEmailIdentitiesReputations = mysqlTable(
+  'external_email_identities_reputations',
+  {
+    id: serial('id').primaryKey(),
+    identityId: foreignKey('identity_id').notNull(),
+    spam: tinyint('spam').notNull(),
+    cold: tinyint('cold').notNull(),
+    lastUpdated: timestamp('last_updated')
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull()
+  },
+  (table) => ({
+    identityIdIndex: index('identity_id_idx').on(table.identityId)
+  })
+);
+
+export const externalEmailIdentitiesReputationsRelations = relations(
+  externalEmailIdentitiesReputations,
+  ({ one }) => ({
+    identity: one(externalEmailIdentities, {
+      fields: [externalEmailIdentitiesReputations.identityId],
+      references: [externalEmailIdentities.id]
+    })
+  })
+);
+
+export const externalEmailIdentitiesScreenerStatus = mysqlTable(
+  'external_email_identities_screener_status',
+  {
+    id: serial('id').primaryKey(),
+    publicId: nanoId('public_id').notNull(),
+    orgId: foreignKey('org_id').notNull(),
+    externalIdentityId: foreignKey('external_identity_id').notNull(),
+    rootEmailIdentityId: foreignKey('root_email_identity_id'),
+    emailIdentityId: foreignKey('email_identity_id'),
+    status: mysqlEnum('status', ['pending', 'approve', 'reject', 'delete'])
+      .notNull()
+      .default('pending'),
+    level: mysqlEnum('level', ['emailIdentity', 'user', 'org'])
+      .notNull()
+      .default('emailIdentity'),
+    setByUserId: foreignKey('set_by_user_id').notNull(),
+    lastUpdated: timestamp('last_updated')
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull()
+  },
+  (table) => ({
+    externalIdentityIdIndex: index('externalIdentity_id_idx').on(
+      table.externalIdentityId
+    ),
+    orgIdIndex: index('org_id_idx').on(table.orgId),
+    rootEmailIdentityIdIndex: index('root_email_identity_id_idx').on(
+      table.rootEmailIdentityId
+    ),
+    emailIdentityIdIndex: index('email_identity_id_idx').on(
+      table.emailIdentityId
+    )
+  })
+);
+
+export const externalEmailIdentitiesScreenerStatusRelations = relations(
+  externalEmailIdentitiesScreenerStatus,
+  ({ one }) => ({
+    org: one(orgs, {
+      fields: [externalEmailIdentitiesScreenerStatus.orgId],
+      references: [orgs.id]
+    }),
+    externalIdentity: one(externalEmailIdentities, {
+      fields: [externalEmailIdentitiesScreenerStatus.externalIdentityId],
+      references: [externalEmailIdentities.id]
+    }),
+    rootEmailIdentity: one(rootEmailIdentities, {
+      fields: [externalEmailIdentitiesScreenerStatus.rootEmailIdentityId],
+      references: [rootEmailIdentities.id]
+    }),
+    emailIdentity: one(emailIdentities, {
+      fields: [externalEmailIdentitiesScreenerStatus.emailIdentityId],
+      references: [emailIdentities.id]
+    }),
+    setByUser: one(users, {
+      fields: [externalEmailIdentitiesScreenerStatus.setByUserId],
+      references: [users.id]
+    })
+  })
+);
+
+//* Send As External Email Identities
+
+export const sendAsExternalEmailIdentities = mysqlTable(
+  'send_as_external_email_identities',
+  {
+    id: serial('id').primaryKey(),
+    publicId: nanoId('public_id').notNull(),
+    orgId: foreignKey('org_id').notNull(),
+    verified: boolean('verified').notNull().default(false),
+    username: varchar('username', { length: 32 }).notNull(),
+    domain: varchar('domain', { length: 128 }).notNull(),
+    sendName: varchar('send_name', { length: 128 }),
+    addedBy: foreignKey('added_by').notNull(),
+    createdAt: timestamp('created_at')
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull()
+  },
+  (table) => ({
+    publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
+    orgIdIndex: index('org_id_idx').on(table.orgId)
+  })
+);
+export const sendAsExternalEmailIdentitiesRelations = relations(
+  sendAsExternalEmailIdentities,
+  ({ one }) => ({
+    org: one(orgs, {
+      fields: [sendAsExternalEmailIdentities.orgId],
+      references: [orgs.id]
+    }),
+    verification: one(sendAsExternalEmailIdentitiesVerification, {
+      fields: [sendAsExternalEmailIdentities.id],
+      references: [sendAsExternalEmailIdentitiesVerification.identityId]
+    }),
+    credentials: one(sendAsExternalEmailIdentitiesSmtpCredentials, {
+      fields: [sendAsExternalEmailIdentities.id],
+      references: [sendAsExternalEmailIdentitiesSmtpCredentials.identityId]
+    })
+  })
+);
+
+export const sendAsExternalEmailIdentitiesVerification = mysqlTable(
+  'send_as_external_email_identities_verification',
+  {
+    id: serial('id').primaryKey(),
+    identityId: foreignKey('identity_id').notNull(),
+    verificationToken: varchar('verification_token', { length: 64 }).notNull(),
+    verifiedAt: timestamp('verified_at')
+  },
+  (table) => ({
+    identityIdIndex: index('identity_id_idx').on(table.identityId)
+  })
+);
+export const sendAsExternalEmailIdentitiesVerificationRelations = relations(
+  sendAsExternalEmailIdentitiesVerification,
+  ({ one }) => ({
+    identity: one(sendAsExternalEmailIdentities, {
+      fields: [sendAsExternalEmailIdentitiesVerification.identityId],
+      references: [sendAsExternalEmailIdentities.id]
+    })
+  })
+);
+
+export const sendAsExternalEmailIdentitiesSmtpCredentials = mysqlTable(
+  'send_as_external_email_identities_smtp_credentials',
+  {
+    id: serial('id').primaryKey(),
+    identityId: foreignKey('identity_id').notNull(),
+    username: varchar('username', { length: 128 }).notNull(),
+    password: varchar('password', { length: 128 }).notNull(),
+    host: varchar('hostname', { length: 128 }).notNull(),
+    port: smallint('port').notNull(),
+    authMethod: mysqlEnum('auth_method', ['plain', 'login', 'cram_md5']),
+    encryption: mysqlEnum('encryption', ['ssl', 'tls', 'starttls', 'none']),
+    addedBy: foreignKey('added_by').notNull(),
+    createdAt: timestamp('created_at')
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull()
+  },
+  (table) => ({
+    identityIdIndex: index('identity_id_idx').on(table.identityId)
+  })
+);
+export const sendAsExternalEmailIdentitiesSmtpCredentialsRelations = relations(
+  sendAsExternalEmailIdentitiesSmtpCredentials,
+  ({ many }) => ({
+    identities: many(sendAsExternalEmailIdentities)
+  })
+);
+
+export const sendAsExternalEmailIdentitiesAuthorizedUsers = mysqlTable(
+  'send_as_external_email_identities_authorized_users',
+  {
+    id: serial('id').primaryKey(),
+    identityId: foreignKey('identity_id').notNull(),
+    userId: foreignKey('user_id'),
+    userGroupId: foreignKey('user_group_id'),
+    addedBy: foreignKey('added_by').notNull(),
+    createdAt: timestamp('created_at')
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull()
+  },
+  (table) => ({
+    //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit : userId//userGroupId
+    identityIdIndex: index('identity_id_idx').on(table.identityId),
+    userIdIndex: index('user_id_idx').on(table.userId),
+    userGroupIdIndex: index('user_group_id_idx').on(table.userGroupId)
+  })
+);
+export const sendAsExternalEmailIdentitiesAuthorizedUsersRelations = relations(
+  sendAsExternalEmailIdentitiesAuthorizedUsers,
+  ({ one }) => ({
+    identity: one(sendAsExternalEmailIdentities, {
+      fields: [sendAsExternalEmailIdentitiesAuthorizedUsers.identityId],
+      references: [sendAsExternalEmailIdentities.id]
+    }),
+    user: one(users, {
+      fields: [sendAsExternalEmailIdentitiesAuthorizedUsers.userId],
+      references: [users.id]
+    }),
+    userGroup: one(userGroups, {
+      fields: [sendAsExternalEmailIdentitiesAuthorizedUsers.userGroupId],
+      references: [userGroups.id]
+    })
+  })
+);
+
+export const rootEmailIdentities = mysqlTable(
+  'root_email_identities',
+  {
+    id: serial('id').primaryKey(),
+    publicId: nanoId('public_id').notNull(),
+    userId: foreignKey('user_id').notNull(),
+    username: varchar('username', { length: 32 }).notNull(),
+    domain: varchar('domain', { length: 128 }).notNull(),
+    sendName: varchar('send_name', { length: 128 }),
+    createdAt: timestamp('created_at')
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull()
+  },
+  (table) => ({
+    publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
+    userIdIndex: index('user_id_idx').on(table.userId)
+  })
+);
+export const rootEmailIdentitiesRelations = relations(
+  rootEmailIdentities,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [rootEmailIdentities.userId],
+      references: [users.id]
+    })
+  })
+);
+
+export const emailIdentities = mysqlTable(
+  'email_identities',
+  {
+    id: serial('id').primaryKey(),
+    publicId: nanoId('public_id').notNull(),
+    orgId: foreignKey('org_id').notNull(),
+    username: varchar('username', { length: 32 }).notNull(),
+    domainId: foreignKey('domain_id').notNull(),
+    routingRuleId: foreignKey('routing_rule_id').notNull(),
+    sendName: varchar('send_name', { length: 128 }),
+    isCatchAll: boolean('is_catch_all').notNull().default(false),
+    createdAt: timestamp('created_at')
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull()
+  },
+  (table) => ({
+    publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
+    domainIdIndex: index('domain_id_idx').on(table.domainId),
+    orgIdIndex: index('org_id_idx').on(table.orgId)
+  })
+);
+
+export const emailIdentitiesRelations = relations(
+  emailIdentities,
+  ({ one, many }) => ({
+    org: one(orgs, {
+      fields: [emailIdentities.orgId],
+      references: [orgs.id]
+    }),
+    domain: one(domains, {
+      fields: [emailIdentities.domainId],
+      references: [domains.id]
+    }),
+    authorizedUsers: many(emailIdentitiesAuthorizedUsers),
+    routingRules: one(emailRoutingRules, {
+      fields: [emailIdentities.routingRuleId],
+      references: [emailRoutingRules.id]
+    })
+  })
+);
+
+export const emailIdentitiesAuthorizedUsers = mysqlTable(
+  'email_identities_authorized_users',
+  {
+    id: serial('id').primaryKey(),
+    identityId: foreignKey('identity_id').notNull(),
+    userId: foreignKey('user_id'),
+    userGroupId: foreignKey('user_group_id'),
+    addedBy: foreignKey('added_by').notNull(),
+    createdAt: timestamp('created_at')
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull()
+  },
+  (table) => ({
+    //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit : userId//userGroupId
+    identityIdIndex: index('identity_id_idx').on(table.identityId)
+  })
+);
+
+export const emailIdentitiesAuthorizedUsersRelations = relations(
+  emailIdentitiesAuthorizedUsers,
+  ({ one }) => ({
+    identity: one(emailIdentities, {
+      fields: [emailIdentitiesAuthorizedUsers.identityId],
+      references: [emailIdentities.id]
+    }),
+    user: one(users, {
+      fields: [emailIdentitiesAuthorizedUsers.userId],
+      references: [users.id]
+    }),
+    userGroup: one(userGroups, {
+      fields: [emailIdentitiesAuthorizedUsers.userGroupId],
+      references: [userGroups.id]
+    })
+  })
+);
+
+export const userGroups = mysqlTable(
+  'user_groups',
+  {
+    id: serial('id').primaryKey(),
+    publicId: nanoId('public_id').notNull(),
+    orgId: foreignKey('org_id').notNull(),
+    name: varchar('name', { length: 128 }).notNull(),
+    description: text('description'),
+    createdAt: timestamp('created_at')
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull()
+  },
+  (table) => ({
+    publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
+    orgIdIndex: index('org_id_idx').on(table.orgId)
+  })
+);
+
+export const userGroupsRelations = relations(userGroups, ({ one, many }) => ({
+  org: one(orgs, {
+    fields: [userGroups.orgId],
+    references: [orgs.id]
+  }),
+  members: many(userGroupMembers),
+  routingRules: many(emailRoutingRulesDestinations)
+}));
+
+export const userGroupMembers = mysqlTable(
+  'user_group_members',
+  {
+    id: serial('id').primaryKey(),
+    groupId: foreignKey('group_id').notNull(),
+    userId: foreignKey('user_id').notNull(),
+    userProfileId: foreignKey('user_profile_id'),
+    addedBy: foreignKey('added_by').notNull(),
+    role: mysqlEnum('role', ['member', 'admin']).notNull(),
+    notifications: mysqlEnum('notifications', ['active', 'muted', 'off']),
+    createdAt: timestamp('created_at')
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull()
+  },
+  (table) => ({
+    groupIdIndex: index('group_id_idx').on(table.groupId),
+    userIdIndex: index('user_id_idx').on(table.userId)
+  })
+);
+export const userGroupMembersRelations = relations(
+  userGroupMembers,
+  ({ one, many }) => ({
+    group: one(userGroups, {
+      fields: [userGroupMembers.groupId],
+      references: [userGroups.id]
+    }),
+    user: one(users, {
+      fields: [userGroupMembers.userId],
+      references: [users.id]
+    }),
+    userProfile: one(userProfiles, {
+      fields: [userGroupMembers.userProfileId],
+      references: [userProfiles.id]
+    })
+  })
+);
+
+export const emailRoutingRules = mysqlTable(
+  'email_routing_rules',
+  {
+    id: serial('id').primaryKey(),
+    publicId: nanoId('public_id').notNull(),
+    orgId: foreignKey('org_id').notNull(),
+    name: varchar('name', { length: 128 }).notNull(),
+    description: text('description'),
+    createdAt: timestamp('created_at')
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull()
+  },
+  (table) => ({
+    orgIdIndex: index('org_id_idx').on(table.orgId),
+    publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId)
+  })
+);
+
+export const emailRoutingRulesRelations = relations(
+  emailRoutingRules,
+  ({ one, many }) => ({
+    org: one(orgs, {
+      fields: [emailRoutingRules.orgId],
+      references: [orgs.id]
+    }),
+    mailIdentities: many(emailIdentities),
+    destination: many(emailRoutingRulesDestinations)
+  })
+);
+
+export const emailRoutingRulesDestinations = mysqlTable(
+  'email_routing_rules_destinations',
+  {
+    id: serial('id').primaryKey(),
+    ruleId: foreignKey('rule_id').notNull(),
+    groupId: foreignKey('group_id'),
+    userId: foreignKey('user_id'),
+    createdAt: timestamp('created_at')
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull()
+  },
+  (table) => ({
+    //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit : userId//userGroupId
+  })
+);
+export const emailRoutingRulesDestinationsRelations = relations(
+  emailRoutingRulesDestinations,
+  ({ one }) => ({
+    rule: one(emailRoutingRules, {
+      fields: [emailRoutingRulesDestinations.ruleId],
+      references: [emailRoutingRules.id]
+    }),
+    group: one(userGroups, {
+      fields: [emailRoutingRulesDestinations.groupId],
+      references: [userGroups.id]
+    }),
+    user: one(users, {
+      fields: [emailRoutingRulesDestinations.userId],
+      references: [users.id]
+    })
+  })
+);
+
+//conversation tables
+export const convos = mysqlTable(
+  'convos',
+  {
+    id: serial('id').primaryKey(),
+    orgId: foreignKey('org_id').notNull(),
+    publicId: nanoId('public_id').notNull(),
+    lastUpdatedAt: timestamp('last_updated_at'),
+    screenerStatus: mysqlEnum('screener_status', [
+      'pending',
+      'approved',
+      'rejected',
+      'deleted'
+    ])
+      .notNull()
+      .default('approved'),
+    createdAt: timestamp('created_at')
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull()
+  },
+  (table) => ({
+    orgIdIndex: index('org_id_idx').on(table.orgId),
+    publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId)
+  })
+);
+export const convosRelations = relations(convos, ({ one, many }) => ({
+  org: one(orgs, {
+    fields: [convos.orgId],
+    references: [orgs.id]
+  }),
+  members: many(convoMembers),
+  attachments: many(convoAttachments),
+  messages: many(convoMessages),
+  notes: many(convoNotes),
+  drafts: many(convoDrafts),
+  subjects: many(convoSubjects)
+}));
+
+export const convoSubjects = mysqlTable(
+  'convo_subjects',
+  {
+    id: serial('id').primaryKey(),
+    conversationId: foreignKey('conversation_id').notNull(),
+    subject: varchar('subject', { length: 256 }).notNull(),
+    createdAt: timestamp('created_at')
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull()
+  },
+  (table) => ({
+    conversationIdIndex: index('conversation_id_idx').on(table.conversationId)
+  })
+);
+export const convoSubjectsRelations = relations(convoSubjects, ({ one }) => ({
+  conversation: one(convos, {
+    fields: [convoSubjects.conversationId],
+    references: [convos.id]
+  })
+}));
+
+export const convoMembers = mysqlTable(
+  'convo_members',
+  {
+    id: serial('id').primaryKey(),
+    userId: foreignKey('user_id'),
+    userProfileId: foreignKey('user_profile_id'),
+    userGroupId: foreignKey('user_group_id'),
+    externalEmailIdentityId: foreignKey('external_email_identities_id'),
+    conversationId: foreignKey('conversation_id').notNull(),
+    role: mysqlEnum('role', ['assigned', 'contributor', 'watcher', 'guest'])
+      .notNull()
+      .default('contributor'),
+    notifications: mysqlEnum('notifications', ['active', 'muted', 'off'])
+      .notNull()
+      .default('active'),
+    active: boolean('active').notNull().default(true),
+    createdAt: timestamp('created_at')
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull()
+  },
+  (table) => ({
+    //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit : userId//userGroupId
+    userIdIndex: index('user_id_idx').on(table.userId),
+    conversationIdIndex: index('conversation_id_idx').on(table.conversationId)
+  })
+);
+export const convoMembersRelations = relations(convoMembers, ({ one }) => ({
+  user: one(users, {
+    fields: [convoMembers.userId],
+    references: [users.id]
+  }),
+  userProfile: one(userProfiles, {
+    fields: [convoMembers.userProfileId],
+    references: [userProfiles.id]
+  }),
+  userGroup: one(userGroups, {
+    fields: [convoMembers.userGroupId],
+    references: [userGroups.id]
+  }),
+  externalEmailIdentity: one(externalEmailIdentities, {
+    fields: [convoMembers.externalEmailIdentityId],
+    references: [externalEmailIdentities.id]
+  }),
+  conversation: one(convos, {
+    fields: [convoMembers.conversationId],
+    references: [convos.id]
+  })
+}));
+
+export const convoAttachments = mysqlTable(
+  'convo_attachments',
+  {
+    id: serial('id').primaryKey(),
+    publicId: nanoId('public_id').notNull(),
+    conversationId: foreignKey('conversation_id').notNull(),
+    convoMessageId: foreignKey('convo_message_id'),
+    convoNoteId: foreignKey('convo_note_id'),
+    convoDraftId: foreignKey('convo_draft_id'),
+    fileName: varchar('fileName', { length: 256 }).notNull(),
+    type: varchar('type', { length: 256 }).notNull(),
+    storageId: varchar('storageId', { length: 256 }).notNull(),
+    convoMemberId: foreignKey('convo_members').notNull(),
+    createdAt: timestamp('created_at')
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull()
+  },
+  (table) => ({
+    conversationIdIndex: index('conversation_id_idx').on(table.conversationId),
+    publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId)
+  })
+);
+export const convoAttachmentsRelations = relations(
+  convoAttachments,
+  ({ one }) => ({
+    conversation: one(convos, {
+      fields: [convoAttachments.conversationId],
+      references: [convos.id]
+    }),
+    convoMessage: one(convoMessages, {
+      fields: [convoAttachments.convoMessageId],
+      references: [convoMessages.id]
+    }),
+    uploader: one(convoMembers, {
+      fields: [convoAttachments.convoMemberId],
+      references: [convoMembers.id]
+    }),
+    convoNote: one(convoNotes, {
+      fields: [convoAttachments.convoNoteId],
+      references: [convoNotes.id]
+    }),
+    convoDraft: one(convoDrafts, {
+      fields: [convoAttachments.convoDraftId],
+      references: [convoDrafts.id]
+    })
+  })
+);
+
+export const convoMessages = mysqlTable(
+  'convo_messages',
+  {
+    id: serial('id').primaryKey(),
+    publicId: nanoId('public_id').notNull(),
+    conversationId: foreignKey('conversation_id').notNull(),
+    subjectId: foreignKey('subject_id'),
+    replyToId: foreignKey('reply_to_id'),
+    author: foreignKey('convo_members').notNull(),
+    body: text('body'),
+    postalMessageId: varchar('postal_message_id', { length: 256 }),
+    postalId: bigintUnsigned('postal_id'),
+    createdAt: timestamp('created_at')
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull()
+  },
+  (table) => ({
+    conversationIdIndex: index('conversation_id_idx').on(table.conversationId),
+    publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId)
+  })
+);
+export const convoMessagesRelations = relations(
+  convoMessages,
+  ({ one, many }) => ({
+    conversation: one(convos, {
+      fields: [convoMessages.conversationId],
+      references: [convos.id]
+    }),
+    subject: one(convoSubjects, {
+      fields: [convoMessages.subjectId],
+      references: [convoSubjects.id]
+    }),
+    author: one(convoMembers, {
+      fields: [convoMessages.author],
+      references: [convoMembers.id]
+    }),
+    attachments: many(convoAttachments),
+    replies: many(convoMessageReplies, {
+      relationName: 'replies'
+    }),
+    replyTo: one(convoMessageReplies, {
+      fields: [convoMessages.replyToId],
+      references: [convoMessageReplies.convoMessageSourceId],
+      relationName: 'inReplyTo'
+    }),
+    draftReplies: many(convoMessageReplies, { relationName: 'draftReplies' })
+  })
+);
+
+export const convoMessageReplies = mysqlTable(
+  'convo_message_replies',
+  {
+    id: serial('id').primaryKey(),
+    convoMessageSourceId: foreignKey('convo_message_source_id').notNull(),
+    convoMessageReplyId: foreignKey('convo_message_reply_id'),
+    convoDraftId: foreignKey('convo_draft_id'),
+    createdAt: timestamp('created_at')
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull()
+  },
+  (table) => ({
+    //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit : convoMessageReplyId//convoDraftId
+    //TODO: Add indexes
+  })
+);
+
+export const convoMessageRepliesRelations = relations(
+  convoMessageReplies,
+  ({ one }) => ({
+    convoMessageSource: one(convoMessages, {
+      fields: [convoMessageReplies.convoMessageSourceId],
+      references: [convoMessages.id],
+      relationName: 'inReplyTo'
+    }),
+    convoMessageReply: one(convoMessages, {
+      fields: [convoMessageReplies.convoMessageReplyId],
+      references: [convoMessages.id],
+      relationName: 'replies'
+    }),
+    convoDraft: one(convoDrafts, {
+      fields: [convoMessageReplies.convoMessageReplyId],
+      references: [convoDrafts.id],
+      relationName: 'draftReplies'
+    })
+  })
+);
+
+export const convoNotes = mysqlTable(
+  'convo_notes',
+  {
+    id: serial('id').primaryKey(),
+    publicId: nanoId('public_id').notNull(),
+    conversationId: foreignKey('conversation_id').notNull(),
+    replyToId: foreignKey('reply_to_id'),
+    author: foreignKey('convo_members').notNull(),
+    visibility: mysqlEnum('visibility', ['self', 'convo', 'org', 'public'])
+      .notNull()
+      .default('convo'),
+    body: text('body'),
+    createdAt: timestamp('created_at')
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull()
+  },
+  (table) => ({
+    conversationIdIndex: index('conversation_id_idx').on(table.conversationId),
+    publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId)
+  })
+);
+export const convoNotesRelations = relations(convoNotes, ({ one, many }) => ({
+  conversation: one(convos, {
+    fields: [convoNotes.conversationId],
+    references: [convos.id]
+  }),
+  author: one(convoMembers, {
+    fields: [convoNotes.author],
+    references: [convoMembers.id]
+  }),
+  attachments: many(convoAttachments),
+  replies: many(convoNoteReplies, {
+    relationName: 'replies'
+  }),
+  replyTo: one(convoNoteReplies, {
+    fields: [convoNotes.replyToId],
+    references: [convoNoteReplies.convoNoteSourceId],
+    relationName: 'inReplyTo'
+  })
+}));
+
+export const convoNoteReplies = mysqlTable(
+  'convo_Note_replies',
+  {
+    id: serial('id').primaryKey(),
+    convoNoteSourceId: foreignKey('convo_Note_source_id').notNull(),
+    convoNoteReplyId: foreignKey('convo_Note_reply_id'),
+    createdAt: timestamp('created_at')
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull()
+  },
+  (table) => ({
+    //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit : convoNoteReplyId//convoDraftId
+    //TODO: Add indexes
+  })
+);
+
+export const convoNoteRepliesRelations = relations(
+  convoNoteReplies,
+  ({ one }) => ({
+    convoNoteSource: one(convoNotes, {
+      fields: [convoNoteReplies.convoNoteSourceId],
+      references: [convoNotes.id],
+      relationName: 'inReplyTo'
+    }),
+    convoNoteReply: one(convoNotes, {
+      fields: [convoNoteReplies.convoNoteReplyId],
+      references: [convoNotes.id],
+      relationName: 'replies'
+    })
+  })
+);
+
+export const convoDrafts = mysqlTable(
+  'convo_drafts',
+  {
+    id: serial('id').primaryKey(),
+    publicId: nanoId('public_id').notNull(),
+    conversationId: foreignKey('conversation_id').notNull(),
+    replyToId: foreignKey('reply_to_id'),
+    author: foreignKey('author').notNull(),
+    visibility: mysqlEnum('visibility', ['self', 'convo', 'org', 'public'])
+      .notNull()
+      .default('self'),
+    body: text('body'),
+
+    createdAt: timestamp('created_at')
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull()
+  },
+  (table) => ({
+    conversationIdIndex: index('conversation_id_idx').on(table.conversationId),
+    publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId)
+  })
+);
+export const convoDraftsRelations = relations(convoDrafts, ({ one, many }) => ({
+  conversation: one(convos, {
+    fields: [convoDrafts.conversationId],
+    references: [convos.id]
+  }),
+  author: one(convoMembers, {
+    fields: [convoDrafts.author],
+    references: [convoMembers.id]
+  }),
+  attachments: many(convoAttachments),
+  replyTo: one(convoMessages, {
+    fields: [convoDrafts.replyToId],
+    references: [convoMessages.id]
   })
 }));
