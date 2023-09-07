@@ -8,7 +8,7 @@ export const registrationRouter = router({
   checkUsernameAvailability: publicProcedure
     .input(
       z.object({
-        username: z.string().min(3).max(20)
+        username: z.string().min(5).max(32)
       })
     )
     .query(async ({ ctx, input }) => {

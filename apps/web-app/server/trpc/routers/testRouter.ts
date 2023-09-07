@@ -4,6 +4,7 @@ import { router, publicProcedure } from '../trpc';
 import { eq } from '@uninbox/database/orm';
 import { users } from '@uninbox/database/schema';
 import { nanoid } from '@uninbox/utils';
+import { mailBridgeTrpcClient } from '~/server/utils/mailBridgeTrpc';
 
 export const testRouter = router({
   runTest: publicProcedure
@@ -13,15 +14,10 @@ export const testRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      const result = await ctx.db.query.users.findFirst({
-        where: eq(users.id, 1)
+      const testResult = await mailBridgeTrpcClient.postal.createOrg.query({
+        username: 'demo'
       });
 
-      const insert = await ctx.db.insert(users).values({
-        username: input.username,
-        publicId: nanoid()
-      });
-
-      return { input: input.username, result: result, insert };
+      return { testResult };
     })
 });

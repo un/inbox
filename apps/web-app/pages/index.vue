@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  definePageMeta({ auth: false });
+  definePageMeta({ skipAuth: true });
 
   const turnstileToken = ref();
   const errorMessage = ref('');
@@ -19,10 +19,6 @@
     localStorage.setItem('immediatePasskeyPrompt', newValue);
   });
   let timeoutId: NodeJS.Timeout | null = null;
-
-  function resetTurnstileToken() {
-    turnstileToken.value?.reset();
-  }
 
   async function doLogin() {
     if (!turnstileToken.value) {
@@ -61,9 +57,10 @@
 </script>
 
 <template>
-  <div class="flex flex-col w-screen h-screen items-center justify-center p-4">
+  <div
+    class="flex flex-col w-screen h-screen items-center justify-between p-4 pb-14">
     <div
-      class="flex flex-col max-w-72 md:max-w-80 items-center justify-center gap-4">
+      class="flex flex-col max-w-72 md:max-w-xl items-center justify-center gap-8 w-full grow pb-4">
       <h1 class="font-display text-2xl text-center mb-4">
         Login to your <br /><span class="text-5xl">UnInbox</span>
       </h1>
@@ -94,7 +91,7 @@
       <ClientOnly>
         <NuxtTurnstile
           v-model="turnstileToken"
-          class="fixed bottom-5" />
+          class="fixed bottom-5 scale-50 mb-[-30px] hover:(scale-100 mb-0)" />
       </ClientOnly>
     </div>
     <UnUiDialog

@@ -1,7 +1,8 @@
 <script setup lang="ts">
+  import { stringify } from 'superjson';
   import { z } from 'zod';
   const { $trpc, $i18n } = useNuxtApp();
-  definePageMeta({ auth: false });
+  definePageMeta({ skipAuth: true });
 
   const turnstileToken = ref();
   const buttonLoading = ref(false);
@@ -10,23 +11,50 @@
     turnstileToken.value?.reset();
   }
   //Form Fields
-  const usernameValid = ref<boolean | null>(null);
+  const usernameValid = ref<boolean | 'remote' | null>(null);
   const usernameValue = ref('');
+  const usernameValidationMessage = ref('');
 
   const formValid = computed(() => {
     return usernameValid.value === true;
   });
 
-  watchDebounced(usernameValue, async () => {}, {
-    debounce: 250,
-    maxWait: 5000
-  });
+  //functions
+  async function goToNextStep() {
+    useCookie('un-join-username', { maxAge: 3600 }).value = usernameValue.value;
+    navigateTo('/join/passkey');
+  }
+
+  watchDebounced(
+    usernameValue,
+    async () => {
+      if (usernameValid.value === 'remote') {
+        const { available, error } =
+          await $trpc.signup.checkUsernameAvailability.query({
+            turnstileToken: turnstileToken.value,
+            username: usernameValue.value
+          });
+        //resetTurnstileToken();
+        console.log(available, error);
+        if (!available) {
+          usernameValid.value = false;
+          usernameValidationMessage.value = error || 'something went wrong';
+        }
+        available && (usernameValid.value = true);
+      }
+    },
+    {
+      debounce: 500,
+      maxWait: 5000
+    }
+  );
 </script>
 
 <template>
-  <div class="flex flex-col w-screen h-screen items-center justify-center p-4">
+  <div
+    class="flex flex-col w-screen h-screen items-center justify-between p-4 pb-14">
     <div
-      class="flex flex-col max-w-72 md:max-w-xl items-center justify-center gap-8 w-full">
+      class="flex flex-col max-w-72 md:max-w-xl items-center justify-center gap-8 w-full grow pb-4">
       <h1 class="font-display text-2xl text-center mb-4">
         Let's make your <br /><span class="text-5xl">UnInbox</span>
       </h1>
@@ -40,17 +68,23 @@
         <UnUiTooltip
           text="Secure your account"
           parentClass="w-full">
-          <div class="h-2 bg-primary-6 w-full rounded" />
+          <div
+            class="h-2 bg-primary-6 w-full rounded"
+            @click="navigateTo('/join/passkey')" />
         </UnUiTooltip>
         <UnUiTooltip
           text="Create your profile"
           parentClass="w-full">
-          <div class="h-2 bg-primary-6 w-full rounded" />
+          <div
+            class="h-2 bg-primary-6 w-full rounded"
+            @click="navigateTo('/join/profile')" />
         </UnUiTooltip>
         <UnUiTooltip
           text="Set up your organization"
           parentClass="w-full">
-          <div class="h-2 bg-primary-6 w-full rounded" />
+          <div
+            class="h-2 bg-primary-6 w-full rounded"
+            @click="navigateTo('/join/org')" />
         </UnUiTooltip>
       </div>
       <div class="flex flex-col gap-2">
@@ -64,6 +98,7 @@
       <UnUiInput
         v-model:value="usernameValue"
         v-model:valid="usernameValid"
+        v-model:validationMessage="usernameValidationMessage"
         width="full"
         icon="ph:at"
         label="Username"
@@ -89,11 +124,13 @@
           :loading="buttonLoading"
           :disabled="!formValid"
           width="full"
-          @click="console.log('button clicked')" />
+          @click="goToNextStep()" />
       </div>
-      <NuxtTurnstile
-        v-model="turnstileToken"
-        class="fixed bottom-5" />
+      <ClientOnly>
+        <NuxtTurnstile
+          v-model="turnstileToken"
+          class="fixed bottom-5 scale-50 mb-[-30px] hover:(scale-100 mb-0)" />
+      </ClientOnly>
     </div>
   </div>
 </template>
