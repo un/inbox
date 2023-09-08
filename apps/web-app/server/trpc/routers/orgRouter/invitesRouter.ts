@@ -1,221 +1,193 @@
 import { z } from 'zod';
-import { parse, stringify } from 'superjson';
-import { router, protectedProcedure } from '../../trpc';
-import type { DBType } from '@uninbox/database';
-import { eq } from '@uninbox/database/orm';
+import { router, protectedProcedure, limitedProcedure } from '../../trpc';
+import { and, eq } from '@uninbox/database/orm';
 import {
-  users,
-  userProfiles,
-  orgs,
+  orgInvitations,
   orgMembers,
-  postalServers
+  orgs,
+  userProfiles,
+  userProfilesToOrgs
 } from '@uninbox/database/schema';
-import { nanoid } from '@uninbox/utils';
+import { nanoId, nanoIdLength, nanoIdToken } from '@uninbox/utils';
 
 export const invitesRouter = router({
   createNewInvite: protectedProcedure
     .input(
       z.object({
-        orgName: z.string().min(3).max(32)
+        orgPublicId: z.string().min(3).max(nanoIdLength),
+        role: z.enum(['admin', 'member']),
+        inviteeEmail: z.string().email()
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const db = ctx.db;
+      const { db, user } = ctx;
+      const { inviteeEmail, orgPublicId, role } = input;
+      const newPublicId = nanoId();
+      const userId = user.userId || 0;
 
-      const newPublicId = nanoid();
-
-      //! create org in the db
-
-      //! create user membership to org (set as admin)
-
-      //! create the org in postal
-
-      //! save postal details in db
-      const insertUserProfileResponse = await db.insert(userProfiles).values({
-        //@ts-ignore TS dosnt know that userId must exist on protected procedures
-        userId: ctx.user.userId,
-        publicId: newPublicId
-        // avatarId: input.imageId,
-        // firstName: input.fName,
-        // lastName: input.lName
+      // TODO: make this part of the insert query as subquery
+      const sq = db
+        .select({ id: orgs.id })
+        .from(orgs)
+        .where(eq(orgs.publicId, input.orgPublicId))
+        .as('sq');
+      await db.insert(orgInvitations).values({
+        orgId: +sq.id,
+        invitedByUserId: userId,
+        publicId: newPublicId,
+        role: role,
+        email: inviteeEmail,
+        inviteToken: nanoIdToken(),
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 Days from now
       });
 
-      if (!insertUserProfileResponse.insertId) {
-        console.log(insertUserProfileResponse);
-        return {
-          success: false,
-          orgId: null,
-          orgName: null,
-          error:
-            'Something went wrong, please retry. Contact our team if it persists'
-        };
-      }
       return {
         success: true,
-        orgId: newPublicId,
-        orgName: input.orgName,
+        orgId: orgPublicId,
+        inviteId: newPublicId,
         error: null
       };
     }),
   viewInvites: protectedProcedure
     .input(
       z.object({
-        orgName: z.string().min(3).max(32)
+        orgPublicId: z.string().min(3).max(nanoIdLength)
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const db = ctx.db;
+      const sq = db
+        .select({ id: orgs.id })
+        .from(orgs)
+        .where(eq(orgs.publicId, input.orgPublicId))
+        .as('sq');
+
+      // add invited by user but return publicId and org profile
+      const orgInvitesResponse = await db
+        .select({
+          publicId: orgInvitations.publicId,
+          email: orgInvitations.email,
+          role: orgInvitations.role,
+          acceptedAt: orgInvitations.acceptedAt,
+          expiresAt: orgInvitations.expiresAt
+          // invitedByUserId: orgInvitations.invitedByUserId
+        })
+        .from(orgInvitations)
+        .where(eq(orgInvitations.orgId, +sq.id));
+
+      return {
+        success: true,
+        inviteData: orgInvitesResponse
+      };
+    }),
+
+  validateInvite: limitedProcedure
+    .input(
+      z.object({
+        inviteToken: z.string().min(3).max(32)
       })
     )
     .mutation(async ({ ctx, input }) => {
       const db = ctx.db;
 
-      const newPublicId = nanoid();
+      const queryInvitesResponse = await db
+        .select({ id: orgInvitations.id })
+        .from(orgInvitations)
+        .where(eq(orgInvitations.inviteToken, input.inviteToken));
 
-      //! create org in the db
-
-      //! create user membership to org (set as admin)
-
-      //! create the org in postal
-
-      //! save postal details in db
-      const insertUserProfileResponse = await db.insert(userProfiles).values({
-        //@ts-ignore TS dosnt know that userId must exist on protected procedures
-        userId: ctx.user.userId,
-        publicId: newPublicId
-        // avatarId: input.imageId,
-        // firstName: input.fName,
-        // lastName: input.lName
-      });
-
-      if (!insertUserProfileResponse.insertId) {
-        console.log(insertUserProfileResponse);
+      if (queryInvitesResponse.length === 0) {
         return {
-          success: false,
-          orgId: null,
-          orgName: null,
-          error:
-            'Something went wrong, please retry. Contact our team if it persists'
+          valid: false
         };
       }
+
       return {
-        success: true,
-        orgId: newPublicId,
-        orgName: input.orgName,
-        error: null
+        valid: true
       };
     }),
   redeemInvite: protectedProcedure
     .input(
       z.object({
-        orgName: z.string().min(3).max(32)
+        inviteToken: z.string().min(3).max(32),
+        profilePublicId: z.string().min(3).max(nanoIdLength).optional()
       })
     )
     .mutation(async ({ ctx, input }) => {
       const db = ctx.db;
+      const newPublicId = nanoId();
+      const userId = ctx.user.userId || 0;
 
-      const newPublicId = nanoid();
+      const queryInvitesResponse = await db
+        .select({
+          id: orgInvitations.id,
+          orgId: orgInvitations.orgId,
+          role: orgInvitations.role,
+          invitedByUserId: orgInvitations.invitedByUserId
+        })
+        .from(orgInvitations)
+        .where(eq(orgInvitations.inviteToken, input.inviteToken));
 
-      //! create org in the db
-
-      //! create user membership to org (set as admin)
-
-      //! create the org in postal
-
-      //! save postal details in db
-      const insertUserProfileResponse = await db.insert(userProfiles).values({
-        //@ts-ignore TS dosnt know that userId must exist on protected procedures
-        userId: ctx.user.userId,
-        publicId: newPublicId
-        // avatarId: input.imageId,
-        // firstName: input.fName,
-        // lastName: input.lName
-      });
-
-      if (!insertUserProfileResponse.insertId) {
-        console.log(insertUserProfileResponse);
+      if (queryInvitesResponse.length === 0) {
         return {
           success: false,
-          orgId: null,
-          orgName: null,
-          error:
-            'Something went wrong, please retry. Contact our team if it persists'
+          error: 'Invalid invite token'
         };
       }
+
+      const userProfileResponse = input.profilePublicId
+        ? await db
+            .select({ id: userProfiles.id })
+            .from(userProfiles)
+            .where(eq(userProfiles.publicId, input.profilePublicId))
+        : await db
+            .select({ id: userProfiles.id })
+            .from(userProfiles)
+            .where(
+              and(
+                eq(userProfiles.userId, userId),
+                eq(userProfiles.defaultProfile, true)
+              )
+            );
+
+      await db.update(orgInvitations).set({
+        acceptedAt: new Date(),
+        invitedUser: userId
+      });
+
+      await db.insert(orgMembers).values({
+        userId: userId,
+        orgId: +queryInvitesResponse[0].orgId,
+        invitedByUserId: +queryInvitesResponse[0].invitedByUserId,
+        status: 'active',
+        role: queryInvitesResponse[0].role,
+        userProfileId: userProfileResponse[0].id
+      });
+
+      await db.insert(userProfilesToOrgs).values({
+        userProfileId: userProfileResponse[0].id,
+        orgId: +queryInvitesResponse[0].orgId
+      });
+
       return {
         success: true,
-        orgId: newPublicId,
-        orgName: input.orgName,
         error: null
       };
     }),
   deleteInvite: protectedProcedure
     .input(
       z.object({
-        orgName: z.string().min(3).max(32)
+        invitePublicId: z.string().min(3).max(nanoIdLength)
       })
     )
     .mutation(async ({ ctx, input }) => {
       const db = ctx.db;
 
-      const newPublicId = nanoid();
+      await db
+        .delete(orgInvitations)
+        .where(eq(orgInvitations.publicId, input.invitePublicId));
 
-      //! create org in the db
-
-      //! create user membership to org (set as admin)
-
-      //! create the org in postal
-
-      //! save postal details in db
-      const insertUserProfileResponse = await db.insert(userProfiles).values({
-        //@ts-ignore TS dosnt know that userId must exist on protected procedures
-        userId: ctx.user.userId,
-        publicId: newPublicId
-        // avatarId: input.imageId,
-        // firstName: input.fName,
-        // lastName: input.lName
-      });
-
-      if (!insertUserProfileResponse.insertId) {
-        console.log(insertUserProfileResponse);
-        return {
-          success: false,
-          orgId: null,
-          orgName: null,
-          error:
-            'Something went wrong, please retry. Contact our team if it persists'
-        };
-      }
       return {
-        success: true,
-        orgId: newPublicId,
-        orgName: input.orgName,
-        error: null
+        success: true
       };
     })
 });
-
-// Types
-interface ImageUploadObjectResponse {
-  result: {
-    id: string;
-    metadata: {
-      key: string;
-    };
-    uploaded: string;
-    requireSignedURLs: boolean;
-    variants: string[];
-    draft: boolean;
-  };
-  success: boolean;
-  errors: string[];
-  messages: string[];
-}
-
-interface UploadSignedURLResponse {
-  result: Result;
-  success: boolean;
-  errors: string[];
-  messages: string[];
-}
-
-interface Result {
-  id: string;
-  uploadURL: string;
-}
