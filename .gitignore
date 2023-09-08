@@ -26,6 +26,7 @@ yarn-error.log*
 *.log*
 test.*.ts
 test*.ts
+test*
 
 # local env files
 .env
