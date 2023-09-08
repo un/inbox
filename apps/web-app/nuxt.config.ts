@@ -20,10 +20,23 @@ export default defineNuxtConfig({
     sessionSecret: process.env.WEBAPP_SESSION_SECRET || '',
     realtimeUrl: process.env.WEBAPP_REALTIME_URL || '',
     realtimeKey: process.env.WEBAPP_REALTIME_KEY || '',
+    realtime: {
+      url: process.env.WEBAPP_REALTIME_URL || '',
+      key: process.env.WEBAPP_REALTIME_KEY || ''
+    },
     mailBridgeUrl: process.env.WEBAPP_MAILBRIDGE_URL || '',
     mailBridgeKey: process.env.WEBAPP_MAILBRIDGE_KEY || '',
+    mailBridge: {
+      url: process.env.WEBAPP_MAILBRIDGE_URL || '',
+      key: process.env.WEBAPP_MAILBRIDGE_KEY || ''
+    },
     cfImagesToken: process.env.WEBAPP_CF_IMAGES_TOKEN || '',
     cfAccountId: process.env.WEBAPP_CF_ACCOUNT_ID || '',
+    cf: {
+      accountId: process.env.WEBAPP_CF_ACCOUNT_ID || '',
+      zoneId: process.env.WEBAPP_CF_ZONE_ID || '',
+      token: process.env.WEBAPP_CF_TOKEN || ''
+    },
     public: {
       cfImagesAccountHash: process.env.WEBAPP_CF_IMAGES_ACCOUNT_HASH || '',
       siteUrl: process.env.WEBAPP_URL || '',

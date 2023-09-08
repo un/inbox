@@ -37,7 +37,7 @@ export default defineNuxtPrepareHandler(async () => {
   };
 });
 
-interface MailDomainEntries {
+export interface MailDomainEntries {
   name: string;
   postalId: string;
 }
