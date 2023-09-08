@@ -7,8 +7,10 @@ interface MailDomainEntries {
 
 export default defineNitroConfig({
   // Nitro options
+  // TODO: create runtimeconfig group keys to clean up this file
   runtimeConfig: {
     url: process.env.MAILBRIDGE_URL,
+    key: process.env.MAILBRIDGE_KEY,
     postalUrl: process.env.MAILBRIDGE_POSTAL_URL,
     postalControlPanel: process.env.MAILBRIDGE_POSTAL_CONTROL_PANEL,
     postalUser: process.env.MAILBRIDGE_POSTAL_USER,
@@ -24,6 +26,12 @@ export default defineNitroConfig({
       [],
     postalWebhookUrl:
       process.env.MAILBRIDGE_POSTAL_WEBHOOK_URL || process.env.MAILBRIDGE_URL,
-    key: process.env.MAILBRIDGE_KEY
+    defaultLimits: {
+      sendLimit: 15,
+      messageRetentionDays: 14,
+      outboundSpamThreshold: 5,
+      rawMessageRetentionDays: 7,
+      rawMessageRetentionSize: 512
+    }
   }
 });
