@@ -1,8 +1,6 @@
 {
   "version": "0.2",
-  "ignorePaths": [
-    "package.json"
-  ],
+  "ignorePaths": ["package.json"],
   "dictionaryDefinitions": [],
   "dictionaries": [],
   "words": [
@@ -24,10 +22,11 @@
     "unocss",
     "unref",
     "vueuse",
-    "waitlist"
+    "waitlist",
+    "convo",
+    "convos",
+    "tinyint"
   ],
-  "ignoreWords": [
-    "ABCDEFGHJKMNPQRSTVWXYZ"
-  ],
+  "ignoreWords": ["ABCDEFGHJKMNPQRSTVWXYZ"],
   "import": []
 }
