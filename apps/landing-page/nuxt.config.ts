@@ -1,13 +1,16 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   //! FIXME: remove after update of nuxt-content to above 2.7.2
-  alias: {
-    'micromark/lib/preprocess.js': 'micromark',
-    'micromark/lib/postprocess.js': 'micromark'
-  },
+  // alias: {
+  //   'micromark/lib/preprocess.js': 'micromark',
+  //   'micromark/lib/postprocess.js': 'micromark'
+  // },
 
   devtools: { enabled: true },
-  modules: ['@nuxt/content', '@nuxtjs/color-mode'],
+  modules: [
+    // '@nuxt/content',
+    '@nuxtjs/color-mode'
+  ],
   // Styling
   css: ['@/assets/css/main.css'],
   app: {
