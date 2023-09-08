@@ -6,11 +6,13 @@ export async function setMailServerRouteForDomain(options: {
   orgPublicId: string;
   serverId: string;
   domainName: string;
+  username?: string;
 }): Promise<{
   orgId: number;
   serverId: string;
   domainName: string;
   forwardingAddress: string;
+  username: string;
 }> {
   try {
     options.puppetInstance.page.on('dialog', async (dialog) => {
@@ -84,10 +86,10 @@ export async function setMailServerRouteForDomain(options: {
         `${options.puppetInstance.url}/org/${options.orgPublicId}/servers/${options.serverId}/routes/new` as string
       );
       await options.puppetInstance.page.waitForNetworkIdle();
-
+      const username = options.username || '*';
       await options.puppetInstance.page
         .locator('input[id="route_name"]')
-        .fill('*');
+        .fill(username);
 
       // We need to find the value of the dropdown item related to the domain. Selecting via text is not possible
       const domainDropdownValue = await options.puppetInstance.page.evaluate(
@@ -149,6 +151,7 @@ export async function setMailServerRouteForDomain(options: {
       orgId: options.orgId,
       serverId: options.serverId,
       domainName: options.domainName,
+      username: options.username || '*',
       forwardingAddress
     };
   } catch (error: any) {
