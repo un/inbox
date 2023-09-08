@@ -4,7 +4,7 @@ import { router, protectedProcedure } from '../../trpc';
 import type { DBType } from '@uninbox/database';
 import { eq } from '@uninbox/database/orm';
 import { users, userProfiles } from '@uninbox/database/schema';
-import { nanoid } from '@uninbox/utils';
+import { nanoId } from '@uninbox/utils';
 
 export const profileRouter = router({
   generateAvatarUploadUrl: protectedProcedure.query(async ({ ctx, input }) => {
@@ -64,20 +64,22 @@ export const profileRouter = router({
       z.object({
         fName: z.string(),
         lName: z.string(),
-        imageId: z.string().uuid()
+        imageId: z.string().uuid(),
+        defaultProfile: z.boolean().optional().default(false)
       })
     )
     .mutation(async ({ ctx, input }) => {
       const db = ctx.db;
 
-      const newPublicId = nanoid();
+      const newPublicId = nanoId();
       const insertUserProfileResponse = await db.insert(userProfiles).values({
         //@ts-ignore TS dosnt know that userId must exist on protected procedures
         userId: ctx.user.userId,
         publicId: newPublicId,
         avatarId: input.imageId,
         firstName: input.fName,
-        lastName: input.lName
+        lastName: input.lName,
+        defaultProfile: input.defaultProfile
       });
 
       if (!insertUserProfileResponse.insertId) {
