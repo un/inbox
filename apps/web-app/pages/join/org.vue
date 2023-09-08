@@ -41,9 +41,10 @@
   async function createNewOrg() {
     newButtonLoading.value = true;
     newButtonLabel.value = 'Creating your profile';
-    const createNewOrgResponse = await $trpc.org.settings.createNewOrg.mutate({
-      orgName: orgNameValue.value
-    });
+    const createNewOrgResponse =
+      await $trpc.org.settings.createPersonalOrg.mutate({
+        orgName: orgNameValue.value
+      });
 
     if (!createNewOrgResponse.success) {
       newButtonLoading.value = false;
@@ -52,9 +53,10 @@
     }
     newButtonLoading.value = false;
     newButtonLabel.value = 'All Done!';
-    navigateTo('/setup');
+    navigateTo('/unboarding');
   }
   async function joinOrg() {
+    //FIXME: Add code for joining an org
     //   joinButtonLoading.value = true;
     //   joinButtonLabel.value = 'Creating your profile';
     //   const createProfileResponse = await $trpc.user.profile.createProfile.mutate(
