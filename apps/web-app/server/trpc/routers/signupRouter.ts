@@ -4,7 +4,7 @@ import { router, publicProcedure, limitedProcedure } from '../trpc';
 import type { DBType } from '@uninbox/database';
 import { eq } from '@uninbox/database/orm';
 import { users, userAuthIdentities } from '@uninbox/database/schema';
-import { nanoid } from '@uninbox/utils';
+import { nanoId } from '@uninbox/utils';
 import { isFakeEmail } from 'fakefilter';
 import { blockedUsernames } from '~/server/utils/signup';
 
@@ -81,7 +81,7 @@ export const signupRouter = router({
         };
       }
 
-      const newPublicId = nanoid();
+      const newPublicId = nanoId();
       const insertUserResponse = await db.insert(users).values({
         publicId: newPublicId,
         username: input.username,
@@ -120,7 +120,7 @@ export const signupRouter = router({
         .from(users)
         .where(eq(users.publicId, input.userPublicId));
 
-      const newPublicId = nanoid();
+      const newPublicId = nanoId();
       const insertUserAuthIdentity = await db
         .insert(userAuthIdentities)
         .values({

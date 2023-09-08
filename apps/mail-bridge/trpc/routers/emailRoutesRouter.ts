@@ -6,7 +6,7 @@ import {
   emailIdentitiesAuthorizedUsers,
   postalServers
 } from '@uninbox/database/schema';
-import { nanoid, nanoidLength } from '@uninbox/utils';
+import { nanoId, nanoIdLength } from '@uninbox/utils';
 import { postalPuppet } from '@uninbox/postal-puppet';
 import { eq } from '@uninbox/database/orm';
 
@@ -18,7 +18,7 @@ export const emailRoutesRouter = router({
         sendName: z.string().max(64),
         userId: z.number().min(1),
         orgId: z.number().min(1),
-        serverPublicId: z.string().min(1).max(nanoidLength),
+        serverPublicId: z.string().min(1).max(nanoIdLength),
         rootDomainName: z.string().min(1).max(255)
       })
     )
@@ -54,7 +54,7 @@ export const emailRoutesRouter = router({
 
       await postalPuppet.closePuppet(puppetInstance);
 
-      const newroutingRulePublicId = nanoid();
+      const newroutingRulePublicId = nanoId();
       const routingRuleInsertResponse = await db
         .insert(emailRoutingRules)
         .values({
@@ -64,7 +64,7 @@ export const emailRoutesRouter = router({
           description: 'This route helps deliver your @uninbox emails to you'
         });
 
-      const newEmailIdentityPublicId = nanoid();
+      const newEmailIdentityPublicId = nanoId();
       const insertEmailIdentityResponse = await db
         .insert(emailIdentities)
         .values({

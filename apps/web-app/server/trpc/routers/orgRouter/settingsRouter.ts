@@ -8,7 +8,7 @@ import {
   userProfiles,
   users
 } from '@uninbox/database/schema';
-import { nanoid } from '@uninbox/utils';
+import { nanoId } from '@uninbox/utils';
 import { mailBridgeTrpcClient } from '~/server/utils/mailBridgeTrpc';
 
 export const settingsRouter = router({
@@ -21,7 +21,7 @@ export const settingsRouter = router({
     .mutation(async ({ ctx, input }) => {
       const queryUserId = ctx.user.userId || 0;
       const db = ctx.db;
-      const newPublicId = nanoid();
+      const newPublicId = nanoId();
 
       const insertOrgResponse = await db.insert(orgs).values({
         ownerId: queryUserId,
@@ -87,7 +87,7 @@ export const settingsRouter = router({
         .select({ id: users.id, username: users.username })
         .from(users)
         .where(eq(users.id, queryUserId));
-      const newPublicId = nanoid();
+      const newPublicId = nanoId();
 
       const insertOrgResponse = await db.insert(orgs).values({
         ownerId: queryUserId,

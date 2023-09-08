@@ -3,7 +3,7 @@ import { parse, stringify } from 'superjson';
 import { router, protectedProcedure } from '../trpc';
 import { eq } from '@uninbox/database/orm';
 import { postalServers, orgPostalConfigs } from '@uninbox/database/schema';
-import { nanoid, nanoidLength } from '@uninbox/utils';
+import { nanoId, nanoIdLength } from '@uninbox/utils';
 import { postalPuppet } from '@uninbox/postal-puppet';
 
 export const orgRouter = router({
@@ -96,7 +96,7 @@ export const orgRouter = router({
     .input(
       z.object({
         orgId: z.number().min(1),
-        orgPublicId: z.string().min(3).max(nanoidLength),
+        orgPublicId: z.string().min(3).max(nanoIdLength),
         personalOrg: z.boolean().optional()
       })
     )
@@ -128,7 +128,7 @@ export const orgRouter = router({
         poolId: config.postalDefaultIpPool
       });
 
-      const newServerPublicId = nanoid();
+      const newServerPublicId = nanoId();
 
       await postalPuppet.addMailServer({
         puppetInstance: puppetInstance,
