@@ -69,9 +69,11 @@ export const usersRelations = relations(users, ({ one, many }) => ({
     fields: [users.id],
     references: [userProfiles.userId]
   }),
+  personalOrg: one(orgs, {
+    fields: [users.id],
+    references: [orgs.ownerId]
+  }),
   conversations: many(convoMembers),
-  postalRootMailServers: many(postalRootMailServers),
-  rootEmailIdentities: many(rootEmailIdentities),
   userGroups: many(userGroupMembers),
   routingRules: many(emailRoutingRulesDestinations)
 }));
@@ -408,13 +410,16 @@ export const postalServers = mysqlTable(
     id: serial('id').primaryKey(),
     publicId: nanoId('public_id').notNull(),
     orgId: foreignKey('org_id').notNull(),
+    rootMailServer: boolean('root_mail_server').notNull().default(false),
     type: mysqlEnum('type', ['email', 'transactional', 'marketing']).notNull(),
     sendLimit: mediumint('send_limit').notNull(),
     apiKey: varchar('api_key', { length: 64 }).notNull(),
-    smtpKey: varchar('smtp_key', { length: 64 }).notNull(),
+    smtpKey: varchar('smtp_key', { length: 64 }),
     forwardingAddress: varchar('forwarding_address', { length: 128 })
   },
   (table) => ({
+    //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit: when rootMailServer is true, type must be email
+    //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit: when rootMailServer is false, smtpKey must not be null
     publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
     orgIdIndex: index('org_id_idx').on(table.orgId),
     postalSlug: uniqueIndex('postal_slug').on(table.orgId, table.type)
@@ -428,32 +433,37 @@ export const postalServersRelations = relations(postalServers, ({ one }) => ({
 }));
 
 // Postal personal server table
-export const postalRootMailServers = mysqlTable(
-  'postal_root_mail_servers',
-  {
-    id: serial('id').primaryKey(),
-    publicId: nanoId('public_id').notNull(),
-    userId: foreignKey('user_id').notNull(),
-    type: mysqlEnum('type', ['email', 'transactional', 'marketing']).notNull(),
-    sendLimit: mediumint('send_limit').notNull(),
-    apiKey: varchar('api_key', { length: 256 }).notNull(),
-    forwardingAddress: varchar('forwarding_address', { length: 128 })
-  },
-  (table) => ({
-    publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
-    userIdIndex: uniqueIndex('user_id_idx').on(table.userId),
-    postalSlug: uniqueIndex('postal_slug').on(table.userId, table.type)
-  })
-);
-export const postalRootMailServersRelations = relations(
-  postalRootMailServers,
-  ({ one }) => ({
-    user: one(users, {
-      fields: [postalRootMailServers.userId],
-      references: [users.id]
-    })
-  })
-);
+// export const postalRootMailServers = mysqlTable(
+//   'postal_root_mail_servers',
+//   {
+//     id: serial('id').primaryKey(),
+//     publicId: nanoId('public_id').notNull(),
+//     orgId: foreignKey('org_id').notNull(),
+//     userId: foreignKey('user_id').notNull(),
+//     type: mysqlEnum('type', ['email']).notNull(),
+//     sendLimit: mediumint('send_limit').notNull(),
+//     apiKey: varchar('api_key', { length: 256 }).notNull(),
+//     forwardingAddress: varchar('forwarding_address', { length: 128 })
+//   },
+//   (table) => ({
+//     publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
+//     userIdIndex: uniqueIndex('user_id_idx').on(table.userId),
+//     postalSlug: uniqueIndex('postal_slug').on(table.userId, table.type)
+//   })
+// );
+// export const postalRootMailServersRelations = relations(
+//   postalRootMailServers,
+//   ({ one }) => ({
+//     user: one(users, {
+//       fields: [postalRootMailServers.userId],
+//       references: [users.id]
+//     }),
+//     org: one(orgs, {
+//       fields: [postalRootMailServers.orgId],
+//       references: [orgs.id]
+//     })
+//   })
+// );
 
 // External senders and their reputations
 
@@ -566,10 +576,6 @@ export const externalEmailIdentitiesScreenerStatusRelations = relations(
     externalIdentity: one(externalEmailIdentities, {
       fields: [externalEmailIdentitiesScreenerStatus.externalIdentityId],
       references: [externalEmailIdentities.id]
-    }),
-    rootEmailIdentity: one(rootEmailIdentities, {
-      fields: [externalEmailIdentitiesScreenerStatus.rootEmailIdentityId],
-      references: [rootEmailIdentities.id]
     }),
     emailIdentity: one(emailIdentities, {
       fields: [externalEmailIdentitiesScreenerStatus.emailIdentityId],
@@ -711,34 +717,36 @@ export const sendAsExternalEmailIdentitiesAuthorizedUsersRelations = relations(
   })
 );
 
-export const rootEmailIdentities = mysqlTable(
-  'root_email_identities',
-  {
-    id: serial('id').primaryKey(),
-    publicId: nanoId('public_id').notNull(),
-    userId: foreignKey('user_id').notNull(),
-    username: varchar('username', { length: 32 }).notNull(),
-    domain: varchar('domain', { length: 128 }).notNull(),
-    sendName: varchar('send_name', { length: 128 }),
-    createdAt: timestamp('created_at')
-      .default(sql`CURRENT_TIMESTAMP`)
-      .notNull()
-  },
-  (table) => ({
-    publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
-    userIdIndex: index('user_id_idx').on(table.userId),
-    emailIndex: uniqueIndex('email_idx').on(table.username, table.domain)
-  })
-);
-export const rootEmailIdentitiesRelations = relations(
-  rootEmailIdentities,
-  ({ one }) => ({
-    user: one(users, {
-      fields: [rootEmailIdentities.userId],
-      references: [users.id]
-    })
-  })
-);
+// export const rootEmailIdentities = mysqlTable(
+//   'root_email_identities',
+//   {
+//     id: serial('id').primaryKey(),
+//     publicId: nanoId('public_id').notNull(),
+//     userId: foreignKey('user_id').notNull(),
+//     username: varchar('username', { length: 32 }).notNull(),
+//     domain: varchar('domain', { length: 128 }).notNull(),
+//     sendName: varchar('send_name', { length: 128 }),
+//     createdAt: timestamp('created_at')
+//       .default(sql`CURRENT_TIMESTAMP`)
+//       .notNull()
+//   },
+//   (table) => ({
+//     publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
+//     userIdIndex: index('user_id_idx').on(table.userId),
+//     emailIndex: uniqueIndex('email_idx').on(table.username, table.domain)
+//   })
+// );
+// export const rootEmailIdentitiesRelations = relations(
+//   rootEmailIdentities,
+//   ({ one }) => ({
+//     user: one(users, {
+//       fields: [rootEmailIdentities.userId],
+//       references: [users.id]
+//     })
+//   })
+// );
+
+//* Email Identities
 
 export const emailIdentities = mysqlTable(
   'email_identities',
@@ -747,7 +755,8 @@ export const emailIdentities = mysqlTable(
     publicId: nanoId('public_id').notNull(),
     orgId: foreignKey('org_id').notNull(),
     username: varchar('username', { length: 32 }).notNull(),
-    domainId: foreignKey('domain_id').notNull(),
+    domainName: varchar('domain_name', { length: 128 }).notNull(),
+    domainId: foreignKey('domain_id'),
     routingRuleId: foreignKey('routing_rule_id').notNull(),
     sendName: varchar('send_name', { length: 128 }),
     isCatchAll: boolean('is_catch_all').notNull().default(false),
@@ -756,10 +765,12 @@ export const emailIdentities = mysqlTable(
       .notNull()
   },
   (table) => ({
+    //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit : !domainId && !catchAll - cant be catchall on root domains
     publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
     domainIdIndex: index('domain_id_idx').on(table.domainId),
+    domainNameIndex: index('domain_id_idx').on(table.domainName),
     orgIdIndex: index('org_id_idx').on(table.orgId),
-    emailIndex: uniqueIndex('email_idx').on(table.username, table.domainId)
+    emailIndex: uniqueIndex('email_idx').on(table.username, table.domainName)
   })
 );
 
