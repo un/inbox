@@ -1,23 +1,67 @@
 export default defineNuxtConfig({
-  // extends: ['../../layers/landing'],
-  extends: ['nuxt-umami'],
+  // extends: ['../../nuxt-layers/landing-page'],
+
   modules: [
     '@nuxt/devtools',
-    '@nuxthq/ui',
+    '@unocss/nuxt',
+    'nuxt-icon',
+    '@nuxtjs/color-mode',
     '@vueuse/nuxt',
     'nuxt-security',
-    // 'nuxt-hanko',
-    'nuxt-og-image',
-    ['@pinia/nuxt', { autoImports: ['defineStore', 'acceptHMRUpdate'] }]
+    'nuxt-prepare',
+    '@nuxtjs/turnstile',
+    '@pinia/nuxt',
+    '@pinia-plugin-persistedstate/nuxt'
   ],
 
   runtimeConfig: {
     // paths: [...pagePaths],
-    databaseUrl: process.env.NUXT_DATABASE_URL || '',
-    emailApiUrl: process.env.NUXT_EMAIL_API_URL || '',
-    emailApiKey: process.env.NUXT_EMAIL_API_KEY || '',
+    recoverySecret: process.env.WEBAPP_RECOVERY_SECRET || '',
+    sessionSecret: process.env.WEBAPP_SESSION_SECRET || '',
+    realtimeUrl: process.env.WEBAPP_REALTIME_URL || '',
+    realtimeKey: process.env.WEBAPP_REALTIME_KEY || '',
+    realtime: {
+      url: process.env.WEBAPP_REALTIME_URL || '',
+      key: process.env.WEBAPP_REALTIME_KEY || ''
+    },
+    mailBridgeUrl: process.env.WEBAPP_MAILBRIDGE_URL || '',
+    mailBridgeKey: process.env.WEBAPP_MAILBRIDGE_KEY || '',
+    mailBridge: {
+      url: process.env.WEBAPP_MAILBRIDGE_URL || '',
+      key: process.env.WEBAPP_MAILBRIDGE_KEY || ''
+    },
+    cfImagesToken: process.env.WEBAPP_CF_IMAGES_TOKEN || '',
+    cfAccountId: process.env.WEBAPP_CF_ACCOUNT_ID || '',
+    cf: {
+      accountId: process.env.WEBAPP_CF_ACCOUNT_ID || '',
+      zoneId: process.env.WEBAPP_CF_ZONE_ID || '',
+      token: process.env.WEBAPP_CF_TOKEN || ''
+    },
     public: {
-      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'https://uninbox.com'
+      cfImagesAccountHash: process.env.WEBAPP_CF_IMAGES_ACCOUNT_HASH || '',
+      siteUrl: process.env.WEBAPP_URL || '',
+      hanko: {
+        apiURL: process.env.WEBAPP_HANKO_API_URL || '',
+        cookieName: process.env.WEBAPP_HANKO_COOKIE_NAME || 'hanko'
+      }
+    },
+    turnstile: {
+      secretKey: process.env.WEBAPP_TURNSTILE_SECRET_KEY || ''
+    },
+    auth: {
+      // The session cookie name
+      name: 'un-session',
+      password: process.env.WEBAPP_SESSION_SECRET || '',
+      maxAge:
+        process.env.NODE_ENV === 'development'
+          ? 60 * 60 * 12
+          : 60 * 60 * 24 * 30,
+
+      cookie: {
+        sameSite: 'lax',
+        //@ts-ignore
+        domain: process.env.PRIMARY_DOMAIN
+      }
     }
   },
 
@@ -26,20 +70,8 @@ export default defineNuxtConfig({
   app: {
     pageTransition: { name: 'page', mode: 'out-in', duration: 300 }
   },
-  ui: {
-    icons: 'mdi'
-  },
-  ogImage: {
-    host: 'https://uninbox.com',
-    fonts: [
-      'Inter:400',
-      {
-        name: 'CalSans',
-        weight: 800,
-        // path must point to a public font file
-        path: '/fonts/CalSans-SemiBold.ttf'
-      }
-    ]
+  colorMode: {
+    classSuffix: ''
   },
 
   // Nitro/Build Configs
@@ -55,6 +87,17 @@ export default defineNuxtConfig({
     dirs: ['stores']
   },
   nitro: {
+    storage: {
+      sessions: {
+        driver: 'redis',
+        base: 'sessions',
+        url: process.env.DB_REDIS_URL,
+        ttl:
+          process.env.NODE_ENV === 'development'
+            ? 60 * 60 * 12
+            : 60 * 60 * 24 * 30
+      }
+    },
     prerender: {
       crawlLinks: true // recommended
     }
@@ -63,20 +106,15 @@ export default defineNuxtConfig({
    * * Module Configurations
    */
 
-  //* Hanko
-  // hanko: {
-  //   redirects: {
-  //     login: '/login',
-  //     success: '/dashboard'
-  //   }
-  // },
-
   //* Pinia
   pinia: {
-    autoImports: [['defineStore', 'definePiniaStore']]
+    autoImports: [['defineStore', 'definePiniaStore'], 'acceptHMRUpdate']
   },
 
   //* Nuxt-Security
+  turnstile: {
+    siteKey: process.env.WEBAPP_TURNSTILE_SITE_KEY || ''
+  },
   security: {
     headers: {
       crossOriginEmbedderPolicy: {
@@ -85,6 +123,9 @@ export default defineNuxtConfig({
             ? 'unsafe-none'
             : 'require-corp',
         route: '/**'
+      },
+      contentSecurityPolicy: {
+        'img-src': ["'self'", 'data:', 'imagedelivery.net']
       }
     }
   }

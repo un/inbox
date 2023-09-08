@@ -1,216 +1,128 @@
 <script setup lang="ts">
-  import { z } from 'zod';
-  import { useMouse, useWindowSize } from '@vueuse/core';
+  definePageMeta({ skipAuth: true });
 
-  definePageMeta({
-    layout: false
+  const turnstileToken = ref();
+  const errorMessage = ref('');
+  const passkeyLocation = ref('');
+  const immediatePasskeyPrompt = ref(false);
+  const passkeyLocationDialogOpen = ref(false);
+
+  if (process.client) {
+    passkeyLocation.value = localStorage.getItem('passkeyLocation') || '';
+    immediatePasskeyPrompt.value = JSON.parse(
+      localStorage.getItem('immediatePasskeyPrompt') || 'false'
+    );
+  }
+
+  watch(immediatePasskeyPrompt, async () => {
+    const newValue = JSON.stringify(immediatePasskeyPrompt.value);
+    localStorage.setItem('immediatePasskeyPrompt', newValue);
   });
+  let timeoutId: NodeJS.Timeout | null = null;
 
-  useSeoMeta({
-    title: 'UnInbox',
-    description: 'Open Source Email + Chat communication platform'
-  });
-  defineOgImageStatic({
-    component: 'LandingOG',
-    description: 'Open Source Email + Chat communication platform',
-    sub: 'hey.com & front.com alternative',
-    cta: 'Join the waitlist'
-  });
-
-  // Glow effect from https://learnvue.co
-  const { x, y } = useMouse();
-  const { width, height } = useWindowSize();
-  const dx = computed(() => Math.abs(x.value - width.value / 2));
-  const dy = computed(() => Math.abs(y.value - height.value / 2));
-  const distance = computed(() =>
-    Math.sqrt(dx.value * dx.value + dy.value * dy.value)
-  );
-  const size = computed(() => Math.max(400 - distance.value / 2, 150));
-  const opacity = computed(() => Math.min(Math.max(size.value / 300, 0.7), 1));
-  const logo = ref<HTMLElement>();
-  const logoGradient = computed(() => {
-    const rect = logo.value?.getBoundingClientRect();
-    const xPos = x.value - (rect?.left ?? 0);
-    const yPos = y.value - (rect?.top ?? 0);
-    return `radial-gradient(circle at ${xPos}px ${yPos}px, black 30%, transparent 100%)`;
-  });
-
-  const email = ref('');
-  const showConfirmation = ref(false);
-  const invalidEmail = ref(false);
-  const submitError = ref(false);
-  const loading = ref(false);
-
-  const toast = useToast();
-
-  defineShortcuts({
-    enter: {
-      usingInput: 'emailInput',
-      handler: () => {
-        registerWaitlist();
-      }
-    }
-  });
-
-  async function registerWaitlist() {
-    umTrackEvent('Signup');
-    loading.value = true;
-    const parsedEmail = z.string().email().safeParse(email.value);
-    if (!parsedEmail.success) {
-      loading.value = false;
-      invalidEmail.value = true;
+  async function doLogin() {
+    if (!turnstileToken.value) {
+      errorMessage.value =
+        'Human verification failed!<br/>Try refreshing the page or contact our amazing support team';
       return;
     }
-    invalidEmail.value = false;
-    const res = await $fetch('/api/waitlist', {
-      method: 'POST',
-      body: JSON.stringify({ email: email.value }),
-      headers: {
-        'Content-Type': 'application/json'
+    if (!immediatePasskeyPrompt.value) {
+      passkeyLocationDialogOpen.value = true;
+      if (timeoutId !== null) {
+        clearTimeout(timeoutId);
       }
-    });
-    if (res.error) {
-      console.error(res.error);
-      toast.add({
-        title: 'Something went wrong 🐛',
-        description: 'Please email us help@uninbox.com or reach out above',
-        color: 'red',
-        timeout: 90000
-      });
-      loading.value = false;
-      submitError.value = true;
-      showConfirmation.value = true;
+
+      timeoutId = setTimeout(() => {
+        promptForPasskey();
+      }, 7000);
+      return;
     }
-    if (res.success) {
-      toast.add({
-        title: "You're on the waitlist! 🎉",
-        description:
-          'Please check your email for confirmation, it should already be there 👀',
-        color: 'green',
-        timeout: 60000
-      });
-      showConfirmation.value = true;
-      loading.value = false;
+
+    immediatePasskeyPrompt.value && promptForPasskey();
+  }
+
+  async function promptForPasskey() {
+    if (timeoutId !== null) {
+      clearTimeout(timeoutId);
+      timeoutId = null;
     }
+    const webauthnResult = await useHanko()?.webauthn.login();
+    if (!webauthnResult) {
+      errorMessage.value =
+        'Human verification failed!<br/>Try refreshing the page or contact our amazing support team';
+      return;
+    }
+    webauthnResult && console.log(webauthnResult);
   }
 </script>
 
 <template>
   <div
-    class="w-screen h-screen bg-gradient-to-b from-black/5 to-sky-500/30 from-80% flex flex-col items-center justify-center relative overflow-hidden">
+    class="flex flex-col w-screen h-screen items-center justify-between p-4 pb-14">
     <div
-      class="absolute bg-sky-500/30 rounded-full -translate-x-1/2 -translate-y-1/2 pointer-events-none blur-3xl hidden md:visible"
-      :style="{
-        opacity,
-        left: `${x}px`,
-        top: `${y}px`,
-        width: `${size}px`,
-        height: `${size}px`
-      }" />
-    <div
-      class="h-screen w-full flex flex-col items-center justify-center gap-8 z-10 overflow-auto p-5">
-      <h1 class="font-display text-6xl md:text-9xl glow mt-24">UnInbox</h1>
-      <div class="flex flex-col gap-2 items-center">
-        <h2 class="text-lg text-center">
-          Open Source <b>Email</b> + <b>Chat</b> communication platform
-        </h2>
-        <h3 class="text italic">hey.com & front.com alternative</h3>
-      </div>
-      <div
-        class="flex flex-col md:flex-row gap-4 transition-all duration-600 cursor-none"
-        :disabled="showConfirmation">
-        <UInput
-          v-model="email"
-          icon="i-mdi-email-outline"
-          type="email"
-          :required="true"
-          placeholder="hello@email.com"
-          :disabled="showConfirmation"
-          name="emailInput" />
-        <UButton
-          :disabled="showConfirmation"
-          :loading="loading"
-          loading-icon="i-mdi-refresh"
-          @click="registerWaitlist()">
-          Join Waitlist
-        </UButton>
+      class="flex flex-col max-w-72 md:max-w-xl items-center justify-center gap-8 w-full grow pb-4">
+      <h1 class="font-display text-2xl text-center mb-4">
+        Login to your <br /><span class="text-5xl">UnInbox</span>
+      </h1>
+
+      <UnUiButton
+        label="Login with my passkey"
+        icon="ph-key-duotone"
+        width="full"
+        @click="doLogin()" />
+      <UnUiButton
+        label="Not a member yet? Join instead"
+        variant="outline"
+        width="full"
+        size="sm"
+        @click="navigateTo('/join')" />
+      <NuxtLink
+        to="/login/findmypasskey"
+        class="text-sm text-center hover:(underline text-primary-11)">
+        I lost my passkey
+      </NuxtLink>
+      <div class="h-0 max-h-0 max-w-full">
+        <p
+          v-show="errorMessage"
+          class="px-4 py-2 bg-red-9 text-primary-12 rounded text-center"
+          v-html="errorMessage"></p>
       </div>
 
-      <UBadge
-        v-if="invalidEmail"
-        color="red"
-        variant="solid">
-        Invalid email address
-      </UBadge>
-      <UBadge
-        v-if="submitError"
-        color="red"
-        variant="solid">
-        Something went wrong, please contact us
-      </UBadge>
-      <div
-        class="flex flex-col gap-4 items-center border-t-2 border-gray-400 pt-6 transition-all duration-1000"
-        :class="!showConfirmation ? 'opacity-0 hidden' : 'opacity-100 visible'">
-        <p
-          v-if="!submitError"
-          class="font-display text-2xl">
-          Nice email!
-        </p>
-        <p v-if="!submitError">
-          We've sent you a confirmation. In the mean time, heres how you can
-          follow the progress.
-        </p>
-        <div class="flex gap-4 flex-col md:flex-row max-w-max">
-          <div
-            class="border-2 p-8 rounded-md border-gray-600 flex flex-col items-center gap-4 bg-blue-500/10 hover:border-gray-400 transition-colors cursor-pointer"
-            @click="
-              navigateTo('https://twitter.com/UnInbox', { external: true })
-            ">
-            <UIcon
-              name="i-mdi-twitter
-"
-              class="text-4xl" />
-            <p>Follow on Twitter</p>
-          </div>
-          <div
-            class="border-2 p-8 rounded-md border-gray-600 flex flex-col items-center gap-4 bg-blue-500/10 hover:border-gray-400 transition-colors cursor-pointer"
-            @click="
-              navigateTo('https://discord.gg/QMV9p9sgza', { external: true })
-            ">
-            <UIcon
-              name="i-mdi-discord
-"
-              class="text-4xl" />Join on Discord
-          </div>
-          <div
-            class="border-2 p-8 rounded-md border-gray-600 flex flex-col items-center gap-4 bg-blue-500/10 hover:border-gray-400 transition-colors cursor-pointer"
-            @click="
-              navigateTo('https://github.com/uninbox/UnInbox', {
-                external: true
-              })
-            ">
-            <UIcon
-              name="i-mdi-github
-"
-              class="text-4xl" />Star on GitHub
-          </div>
-          <div
-            class="border-2 p-8 rounded-md border-gray-600 flex flex-col items-center gap-4 bg-blue-500/10 hover:border-gray-400 transition-colors cursor-pointer"
-            @click="navigateTo('https://cal.com/mc/un', { external: true })">
-            <p class="font-display text-3xl">Cal</p>
-            Call on Cal.com
-          </div>
-        </div>
-        <UBadge
-          color="blue"
-          variant="solid"
-          size="lg"
-          class="cursor-pointer"
-          @click="navigateTo('/oss-friends', { external: true })">
-          Check out our Open Source Friends. Life is better with friends, but
-          even better open source!
-        </UBadge>
-      </div>
+      <ClientOnly>
+        <NuxtTurnstile
+          v-model="turnstileToken"
+          class="fixed bottom-5 scale-50 mb-[-30px] hover:(scale-100 mb-0)" />
+      </ClientOnly>
     </div>
+    <UnUiDialog
+      v-model:isOpen="passkeyLocationDialogOpen"
+      :hasCloseButton="true"
+      title="Where's my passkey?">
+      <p v-if="passkeyLocation">
+        Tip: You last saved a passkey in this browser called
+        <span class="font-bold text-primary-11">{{ passkeyLocation }}</span>
+      </p>
+      <p v-if="!passkeyLocation">
+        It looks like you haven't used a passkey in this browser yet.<br />
+        Try using your phone to scan a QR code or check your password
+        manager.<br />
+      </p>
+      <div class="flex flex-col md:flex-row gap-4">
+        <UnUiButton
+          label="Help me find my passkey"
+          variant="outline"
+          width="full"
+          size="sm"
+          @click="navigateTo('/login/findmypasskey')" />
+        <UnUiButton
+          label="I'm ready now"
+          width="full"
+          size="sm"
+          @click="promptForPasskey()" />
+      </div>
+      <UnUiCheckbox
+        v-model:value="immediatePasskeyPrompt"
+        label="Skip this prompt in the future" />
+    </UnUiDialog>
   </div>
 </template>

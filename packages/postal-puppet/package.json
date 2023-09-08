@@ -1,0 +1,69 @@
+{
+  "name": "@uninbox/postal-puppet",
+  "type": "module",
+  "version": "0.0.1",
+  "packageManager": "pnpm@8.6.12",
+  "description": "",
+  "author": "McPizza0",
+  "license": "MIT",
+  "keywords": [],
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "*": [
+        "./dist/*",
+        "./dist/index.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "unbuild",
+    "dev": "unbuild --stub",
+    "lint": "eslint .",
+    "prepublishOnly": "nr build",
+    "release": "bumpp && npm publish",
+    "start": "esno src/index.ts",
+    "test": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "^0.41.0",
+    "@antfu/ni": "^0.21.8",
+    "@antfu/utils": "^0.7.6",
+    "@types/node": "^20.5.9",
+    "bumpp": "^9.2.0",
+    "eslint": "^8.48.0",
+    "esno": "^0.17.0",
+    "lint-staged": "^14.0.1",
+    "pnpm": "^8.7.4",
+    "rimraf": "^5.0.1",
+    "simple-git-hooks": "^2.9.0",
+    "tsx": "^3.12.8",
+    "typescript": "^5.2.2",
+    "unbuild": "^2.0.0",
+    "vite": "^4.4.9",
+    "vitest": "^0.34.3"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "pnpm lint-staged"
+  },
+  "lint-staged": {
+    "*": "eslint --fix"
+  },
+  "dependencies": {
+    "puppeteer": "^21.1.1"
+  }
+}

@@ -22,6 +22,9 @@
     "db:push": {
       "cache": false
     },
+    "db:drop": {
+      "cache": false
+    },
     "db:studio": {
       "cache": false
     },
@@ -29,10 +32,7 @@
       "outputs": []
     },
     "dev": {
-      "dependsOn": [
-        "dock",
-        "^db:generate"
-      ],
+      "dependsOn": [],
       "cache": false
     },
     "cloud": {
