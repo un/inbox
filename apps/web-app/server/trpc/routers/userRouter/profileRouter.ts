@@ -12,6 +12,8 @@ export const profileRouter = router({
 
     const formData = new FormData();
     formData.append('metadata', `{"userId":"${ctx.user.userId}"}`);
+
+    //@ts-ignore - stack depth issue
     const uploadSignedURL: UploadSignedURLResponse = await $fetch(
       `https://api.cloudflare.com/client/v4/accounts/${config.cfAccountId}/images/v2/direct_upload`,
       {
