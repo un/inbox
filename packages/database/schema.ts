@@ -253,7 +253,11 @@ export const orgInvitations = mysqlTable(
   },
   (table) => ({
     publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
-    orgIdIndex: index('org_id_idx').on(table.orgId)
+    orgIdIndex: index('org_id_idx').on(table.orgId),
+    orgEmailUniqueIndex: uniqueIndex('org_email_unique_idx').on(
+      table.orgId,
+      table.email
+    )
   })
 );
 export const orgInvitationsRelations = relations(orgInvitations, ({ one }) => ({
@@ -384,7 +388,7 @@ export const domainVerifications = mysqlTable(
     verifiedAt: timestamp('verified_at')
   },
   (table) => ({
-    domainIdIndex: index('domain_id_idx').on(table.domainId)
+    domainIdIndex: uniqueIndex('domain_id_idx').on(table.domainId)
   })
 );
 export const domainVerificationsRelations = relations(
@@ -437,7 +441,7 @@ export const postalRootMailServers = mysqlTable(
   },
   (table) => ({
     publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
-    userIdIndex: index('user_id_idx').on(table.userId),
+    userIdIndex: uniqueIndex('user_id_idx').on(table.userId),
     postalSlug: uniqueIndex('postal_slug').on(table.userId, table.type)
   })
 );
@@ -496,7 +500,7 @@ export const externalEmailIdentitiesReputations = mysqlTable(
       .notNull()
   },
   (table) => ({
-    identityIdIndex: index('identity_id_idx').on(table.identityId)
+    identityIdIndex: uniqueIndex('identity_id_idx').on(table.identityId)
   })
 );
 
@@ -540,6 +544,14 @@ export const externalEmailIdentitiesScreenerStatus = mysqlTable(
     ),
     emailIdentityIdIndex: index('email_identity_id_idx').on(
       table.emailIdentityId
+    ),
+    externalToInternalIndex: uniqueIndex('external_to_internal_idx').on(
+      table.externalIdentityId,
+      table.emailIdentityId
+    ),
+    externalToRootIndex: uniqueIndex('external_to_root_idx').on(
+      table.externalIdentityId,
+      table.rootEmailIdentityId
     )
   })
 );
@@ -583,13 +595,15 @@ export const sendAsExternalEmailIdentities = mysqlTable(
     domain: varchar('domain', { length: 128 }).notNull(),
     sendName: varchar('send_name', { length: 128 }),
     addedBy: foreignKey('added_by').notNull(),
+    smtpCredentialsId: foreignKey('smtp_credentials_id').notNull(),
     createdAt: timestamp('created_at')
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull()
   },
   (table) => ({
     publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
-    orgIdIndex: index('org_id_idx').on(table.orgId)
+    orgIdIndex: index('org_id_idx').on(table.orgId),
+    emailIndex: uniqueIndex('email_idx').on(table.username, table.domain)
   })
 );
 export const sendAsExternalEmailIdentitiesRelations = relations(
@@ -604,8 +618,8 @@ export const sendAsExternalEmailIdentitiesRelations = relations(
       references: [sendAsExternalEmailIdentitiesVerification.identityId]
     }),
     credentials: one(sendAsExternalEmailIdentitiesSmtpCredentials, {
-      fields: [sendAsExternalEmailIdentities.id],
-      references: [sendAsExternalEmailIdentitiesSmtpCredentials.identityId]
+      fields: [sendAsExternalEmailIdentities.smtpCredentialsId],
+      references: [sendAsExternalEmailIdentitiesSmtpCredentials.id]
     })
   })
 );
@@ -619,7 +633,7 @@ export const sendAsExternalEmailIdentitiesVerification = mysqlTable(
     verifiedAt: timestamp('verified_at')
   },
   (table) => ({
-    identityIdIndex: index('identity_id_idx').on(table.identityId)
+    identityIdIndex: uniqueIndex('identity_id_idx').on(table.identityId)
   })
 );
 export const sendAsExternalEmailIdentitiesVerificationRelations = relations(
@@ -636,7 +650,6 @@ export const sendAsExternalEmailIdentitiesSmtpCredentials = mysqlTable(
   'send_as_external_email_identities_smtp_credentials',
   {
     id: serial('id').primaryKey(),
-    identityId: foreignKey('identity_id').notNull(),
     username: varchar('username', { length: 128 }).notNull(),
     password: varchar('password', { length: 128 }).notNull(),
     host: varchar('hostname', { length: 128 }).notNull(),
@@ -648,9 +661,7 @@ export const sendAsExternalEmailIdentitiesSmtpCredentials = mysqlTable(
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull()
   },
-  (table) => ({
-    identityIdIndex: index('identity_id_idx').on(table.identityId)
-  })
+  (table) => ({})
 );
 export const sendAsExternalEmailIdentitiesSmtpCredentialsRelations = relations(
   sendAsExternalEmailIdentitiesSmtpCredentials,
@@ -675,7 +686,11 @@ export const sendAsExternalEmailIdentitiesAuthorizedUsers = mysqlTable(
     //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit : userId//userGroupId
     identityIdIndex: index('identity_id_idx').on(table.identityId),
     userIdIndex: index('user_id_idx').on(table.userId),
-    userGroupIdIndex: index('user_group_id_idx').on(table.userGroupId)
+    userGroupIdIndex: index('user_group_id_idx').on(table.userGroupId),
+    userToIdentityIndex: uniqueIndex('user_to_identity_idx').on(
+      table.identityId,
+      table.userId
+    )
   })
 );
 export const sendAsExternalEmailIdentitiesAuthorizedUsersRelations = relations(
@@ -711,7 +726,8 @@ export const rootEmailIdentities = mysqlTable(
   },
   (table) => ({
     publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
-    userIdIndex: index('user_id_idx').on(table.userId)
+    userIdIndex: index('user_id_idx').on(table.userId),
+    emailIndex: uniqueIndex('email_idx').on(table.username, table.domain)
   })
 );
 export const rootEmailIdentitiesRelations = relations(
@@ -742,7 +758,8 @@ export const emailIdentities = mysqlTable(
   (table) => ({
     publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
     domainIdIndex: index('domain_id_idx').on(table.domainId),
-    orgIdIndex: index('org_id_idx').on(table.orgId)
+    orgIdIndex: index('org_id_idx').on(table.orgId),
+    emailIndex: uniqueIndex('email_idx').on(table.username, table.domainId)
   })
 );
 
@@ -779,7 +796,15 @@ export const emailIdentitiesAuthorizedUsers = mysqlTable(
   },
   (table) => ({
     //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit : userId//userGroupId
-    identityIdIndex: index('identity_id_idx').on(table.identityId)
+    identityIdIndex: index('identity_id_idx').on(table.identityId),
+    userToIdentityIndex: uniqueIndex('user_to_identity_idx').on(
+      table.identityId,
+      table.userId
+    ),
+    userGroupToIdentityIndex: uniqueIndex('user_group_to_identity_idx').on(
+      table.identityId,
+      table.userGroupId
+    )
   })
 );
 
@@ -844,7 +869,11 @@ export const userGroupMembers = mysqlTable(
   },
   (table) => ({
     groupIdIndex: index('group_id_idx').on(table.groupId),
-    userIdIndex: index('user_id_idx').on(table.userId)
+    userIdIndex: index('user_id_idx').on(table.userId),
+    userToGroupIndex: uniqueIndex('user_to_group_idx').on(
+      table.groupId,
+      table.userId
+    )
   })
 );
 export const userGroupMembersRelations = relations(
@@ -1010,7 +1039,14 @@ export const convoMembers = mysqlTable(
   (table) => ({
     //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit : userId//userGroupId
     userIdIndex: index('user_id_idx').on(table.userId),
-    conversationIdIndex: index('conversation_id_idx').on(table.conversationId)
+    conversationIdIndex: index('conversation_id_idx').on(table.conversationId),
+    userToConversationIndex: uniqueIndex('user_to_conversation_idx').on(
+      table.conversationId,
+      table.userId
+    ),
+    userGroupToConversationIndex: uniqueIndex(
+      'user_group_to_conversation_idx'
+    ).on(table.conversationId, table.userGroupId)
   })
 );
 export const convoMembersRelations = relations(convoMembers, ({ one }) => ({
