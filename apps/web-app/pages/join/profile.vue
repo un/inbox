@@ -68,7 +68,8 @@
       {
         fName: fNameValue.value,
         lName: lNameValue.value,
-        imageId: imageId.value || ''
+        imageId: imageId.value || '',
+        defaultProfile: true
       }
     );
 
