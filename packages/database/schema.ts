@@ -17,7 +17,7 @@ import {
   customType
 } from 'drizzle-orm/mysql-core';
 import { relations, sql } from 'drizzle-orm';
-import { nanoidLength } from '@uninbox/utils';
+import { nanoIdLength } from '@uninbox/utils';
 
 //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit
 
@@ -26,7 +26,7 @@ import { nanoidLength } from '@uninbox/utils';
 // Custom nanoId type = easy increase length later - used as "publicId: nanoId('public_id')
 const nanoId = customType<{ data: string; notNull: true }>({
   dataType() {
-    return `varchar(${nanoidLength})`;
+    return `varchar(${nanoIdLength})`;
   }
 });
 
@@ -124,6 +124,7 @@ export const userProfiles = mysqlTable(
     title: varchar('title', { length: 64 }),
     blurb: text('blurb'),
     avatarId: varchar('avatar_id', { length: 64 }),
+    defaultProfile: boolean('default_profile').notNull().default(false),
     createdAt: timestamp('created_at')
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull()
