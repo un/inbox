@@ -11,11 +11,33 @@ export default defineNuxtPrepareHandler(async () => {
     return response.json();
   });
 
+  // set the primary mail domains
+
+  const mailDomainPublicEnv = process.env.MAIL_DOMAIN_PUBLIC;
+  const mailDomainPremiumEnv = process.env.MAIL_DOMAIN_PREMIUM;
+  if (!mailDomainPublicEnv || !mailDomainPremiumEnv) {
+    throw new Error(
+      'MAIL_DOMAIN_PUBLIC or MAIL_DOMAIN_PREMIUM is not set, you must add the domains to your ENV variables'
+    );
+  }
+
   return {
     // Overwrite the runtime config variable `foo`
     runtimeConfig: {
       hankoJwks: hankoJwksResponse,
-      public: {}
+      public: {
+        mailDomainPublic: JSON.parse(
+          mailDomainPublicEnv
+        ) as MailDomainEntries[],
+        mailDomainPremium: JSON.parse(
+          mailDomainPremiumEnv
+        ) as MailDomainEntries[]
+      }
     }
   };
 });
+
+interface MailDomainEntries {
+  name: string;
+  postalId: string;
+}
