@@ -6,6 +6,8 @@
   const newButtonLabel = ref('Make my organization');
   const joinButtonLoading = ref(false);
   const joinButtonLabel = ref('Join my team');
+  const skipButtonLoading = ref(false);
+  const skipButtonLabel = ref('I dont need an organization');
   const pageError = ref(false);
   const orgPath = ref<'join' | 'new' | null>();
 
@@ -40,40 +42,37 @@
   //functions
   async function createNewOrg() {
     newButtonLoading.value = true;
-    newButtonLabel.value = 'Creating your profile';
-    const createNewOrgResponse =
-      await $trpc.org.settings.createPersonalOrg.mutate({
-        orgName: orgNameValue.value
-      });
 
+    newButtonLabel.value = 'Creating your organization';
+    const createNewOrgResponse = await $trpc.org.settings.createNewOrg.mutate({
+      orgName: orgNameValue.value
+    });
     if (!createNewOrgResponse.success) {
       newButtonLoading.value = false;
       pageError.value = true;
       newButtonLabel.value = 'Something went wrong!';
     }
+
+    newButtonLabel.value = 'Creating a @uninbox email';
+
     newButtonLoading.value = false;
     newButtonLabel.value = 'All Done!';
     navigateTo('/unboarding');
   }
   async function joinOrg() {
-    //FIXME: Add code for joining an org
-    //   joinButtonLoading.value = true;
-    //   joinButtonLabel.value = 'Creating your profile';
-    //   const createProfileResponse = await $trpc.user.profile.createProfile.mutate(
-    //     {
-    //       fName: fNameValue.value,
-    //       lName: lNameValue.value,
-    //       imageId: imageId.value || ''
-    //     }
-    //   );
-    //   if (!createProfileResponse.success && createProfileResponse.error) {
-    //     joinButtonLoading.value = false;
-    //     pageError.value = true;
-    //     joinButtonLabel.value = 'Something went wrong!';
-    //   }
-    //   joinButtonLoading.value = false;
-    //   joinButtonLabel.value = 'All Done!';
-    //   navigateTo('/join/org');
+    joinButtonLoading.value = true;
+    joinButtonLabel.value = 'Creating your profile';
+    const joinOrgResponse = await $trpc.org.invites.redeemInvite.mutate({
+      inviteToken: inviteCodeValue.value
+    });
+    if (!joinOrgResponse.success && joinOrgResponse.error) {
+      joinButtonLoading.value = false;
+      pageError.value = true;
+      joinButtonLabel.value = 'Something went wrong!';
+    }
+    joinButtonLoading.value = false;
+    joinButtonLabel.value = 'All Done!';
+    navigateTo('/unboarding');
   }
 </script>
 
@@ -195,6 +194,13 @@
           width="full"
           @click="joinOrg()" />
       </div>
+      <UnUiButton
+        :label="skipButtonLabel"
+        icon="ph-skip-forward"
+        :loading="skipButtonLoading"
+        width="full"
+        variant="outline"
+        @click="navigateTo('/unboarding')" />
       <p
         v-if="pageError"
         class="w-full rounded bg-red-9 p-4 text-center">

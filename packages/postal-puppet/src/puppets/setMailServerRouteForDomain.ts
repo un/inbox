@@ -128,11 +128,9 @@ export async function setMailServerRouteForDomain(options: {
       `${options.puppetInstance.url}/org/${options.orgPublicId}/servers/${options.serverId}/routes` as string
     );
     await options.puppetInstance.page.waitForNetworkIdle();
-    console.log('getting forwarding address');
 
     const escapedUsername = username === '*' ? '\\*' : username;
     const routeEmail = escapedUsername + '\\@' + options.domainName;
-    console.log({ routeEmail }, encodeURIComponent(routeEmail));
     await options.puppetInstance.page
       .locator(`::-p-text(${routeEmail})`)
       .click();

@@ -58,11 +58,7 @@ export const settingsRouter = router({
     }),
 
   createPersonalOrg: protectedProcedure
-    .input(
-      z.object({
-        orgName: z.string().min(3).max(32)
-      })
-    )
+    .input(z.object({}))
     .mutation(async ({ ctx, input }) => {
       const queryUserId = ctx.user.userId || 0;
       const db = ctx.db;
@@ -122,19 +118,21 @@ export const settingsRouter = router({
         });
 
       // creates the new root email address
-      mailBridgeTrpcClient.postal.emailRoutes.createRootEmailAddress.mutate({
-        orgId: +newOrgId,
-        rootDomainName: primaryRootDomain,
-        sendName: `${userProfile[0].fname} ${userProfile[0].lname}`,
-        serverPublicId: (await insertMailBridgeOrgResponse).serverPublicId,
-        userId: queryUserId,
-        username: userObject[0].username
-      });
+      await mailBridgeTrpcClient.postal.emailRoutes.createRootEmailAddress.mutate(
+        {
+          orgId: +newOrgId,
+          rootDomainName: primaryRootDomain,
+          sendName: `${userProfile[0].fname} ${userProfile[0].lname}`,
+          serverPublicId: (await insertMailBridgeOrgResponse).serverPublicId,
+          userId: +queryUserId,
+          username: userObject[0].username.toLocaleLowerCase()
+        }
+      );
 
       return {
         success: true,
+        email: `${userObject[0].username}@${primaryRootDomain}`,
         orgId: newPublicId,
-        orgName: input.orgName,
         error: null
       };
     })

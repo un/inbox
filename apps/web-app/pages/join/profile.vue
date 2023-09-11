@@ -3,12 +3,22 @@
   import { useFileDialog } from '@vueuse/core';
   const { $trpc, $i18n } = useNuxtApp();
   definePageMeta({ auth: true });
-  const buttonLoading = ref(false);
   const uploadLoading = ref(false);
+  const buttonLoading = ref(false);
   const buttonLabel = ref('Create my profile');
+  const buttonSkipLoading = ref(false);
+  const buttonSkipLabel = ref('Skip');
   const pageError = ref(false);
   const imageUrl = ref<string | null>();
   const imageId = ref<string | null>();
+
+  const username = ref('');
+  if (process.client) {
+    const usernameCookie = useCookie('un-join-username').value;
+    !usernameCookie
+      ? navigateTo('/join')
+      : (username.value = usernameCookie || '');
+  }
 
   const {
     files: selectedFiles,
@@ -81,6 +91,30 @@
 
     buttonLoading.value = false;
     buttonLabel.value = 'All Done!';
+
+    navigateTo('/join/org');
+  }
+  async function createBlankProfile() {
+    buttonSkipLoading.value = true;
+    buttonSkipLabel.value = 'Skipping your profile';
+
+    const createProfileResponse = await $trpc.user.profile.createProfile.mutate(
+      {
+        fName: username.value,
+        lName: '@ UnInbox',
+        imageId: imageId.value || '',
+        defaultProfile: true
+      }
+    );
+
+    if (!createProfileResponse.success && createProfileResponse.error) {
+      buttonSkipLoading.value = false;
+      pageError.value = true;
+      buttonSkipLabel.value = 'Something went wrong!';
+    }
+
+    buttonSkipLoading.value = false;
+    buttonSkipLabel.value = 'All Done!';
 
     navigateTo('/join/org');
   }
@@ -179,11 +213,12 @@
       </div>
       <div class="mt-3 w-full flex lt-md:flex-col-reverse md:flex-row gap-4">
         <UnUiButton
-          label="skip"
+          :label="buttonSkipLabel"
           icon="ph-skip-forward"
           variant="outline"
           width="full"
-          @click="navigateTo('join/org')" />
+          :loading="buttonSkipLoading"
+          @click="createBlankProfile()" />
         <UnUiButton
           :label="buttonLabel"
           icon="ph-user"

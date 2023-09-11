@@ -115,18 +115,20 @@ export const orgRouter = router({
         postalPass: config.postalPass
       });
 
-      await postalPuppet.createOrg({
-        puppetInstance: puppetInstance,
-        orgId: orgId,
-        orgPublicId: postalOrgId
-      });
+      if (!personalOrg) {
+        await postalPuppet.createOrg({
+          puppetInstance: puppetInstance,
+          orgId: orgId,
+          orgPublicId: postalOrgId
+        });
 
-      await postalPuppet.setOrgIpPools({
-        puppetInstance,
-        orgId,
-        orgPublicId,
-        poolId: config.postalDefaultIpPool
-      });
+        await postalPuppet.setOrgIpPools({
+          puppetInstance,
+          orgId,
+          orgPublicId,
+          poolId: config.postalDefaultIpPool
+        });
+      }
 
       const newServerPublicId = nanoId();
 
@@ -167,7 +169,7 @@ export const orgRouter = router({
       });
 
       const setMailServerSmtpKeyResult = personalOrg
-        ? null
+        ? { smtpKey: '' }
         : await postalPuppet.setMailServerSmtpKey({
             puppetInstance: puppetInstance,
             orgId: orgId,
