@@ -18,7 +18,7 @@ export async function setMailServerRouteForDomain(options: {
     options.puppetInstance.page.on('dialog', async (dialog) => {
       await dialog.accept();
     });
-
+    const username = options.username || '*';
     // get ID of http endpoint matching name 'uninbox-mail-bridge-http'
     await options.puppetInstance.page.goto(
       `${options.puppetInstance.url}/org/${options.orgPublicId}/servers/${options.serverId}/http_endpoints` as string
@@ -63,7 +63,7 @@ export async function setMailServerRouteForDomain(options: {
     );
 
     const existingDomainRoute = await options.puppetInstance.page.$(
-      `::-p-text(\\*\\@${options.domainName})`
+      `::-p-text(${username}\\@${options.domainName})`
     );
 
     // if route exists, edit it and set the endpoint to the correct one
@@ -86,7 +86,7 @@ export async function setMailServerRouteForDomain(options: {
         `${options.puppetInstance.url}/org/${options.orgPublicId}/servers/${options.serverId}/routes/new` as string
       );
       await options.puppetInstance.page.waitForNetworkIdle();
-      const username = options.username || '*';
+
       await options.puppetInstance.page
         .locator('input[id="route_name"]')
         .fill(username);
@@ -121,8 +121,6 @@ export async function setMailServerRouteForDomain(options: {
 
       await options.puppetInstance.page.click('[name="commit"]');
       await options.puppetInstance.page.waitForNetworkIdle();
-
-      console.log('no existing route found');
     }
 
     // get forwarding address from the route
@@ -130,22 +128,20 @@ export async function setMailServerRouteForDomain(options: {
       `${options.puppetInstance.url}/org/${options.orgPublicId}/servers/${options.serverId}/routes` as string
     );
     await options.puppetInstance.page.waitForNetworkIdle();
-    await options.puppetInstance.page.waitForFunction(
-      () =>
-        //@ts-expect-error - TS doesn't know it's running in the browser context
-        document.querySelectorAll(
-          'ul[class="routeList u-margin"], div[class="noData noData--clean"]'
-        ).length
-    );
+    console.log('getting forwarding address');
 
+    const escapedUsername = username === '*' ? '\\*' : username;
+    const routeEmail = escapedUsername + '\\@' + options.domainName;
+    console.log({ routeEmail }, encodeURIComponent(routeEmail));
     await options.puppetInstance.page
-      .locator(`::-p-text(\\*\\@${options.domainName})`)
+      .locator(`::-p-text(${routeEmail})`)
       .click();
     await options.puppetInstance.page.waitForNetworkIdle();
     const forwardingAddress = await options.puppetInstance.page.$eval(
       'input[id="route_forward_address"]',
       (address) => address.value
     );
+    console.log({ forwardingAddress });
 
     return {
       orgId: options.orgId,
