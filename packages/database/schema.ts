@@ -337,6 +337,87 @@ export const orgPostalConfigsRelations = relations(
   })
 );
 
+// User groups
+export const userGroups = mysqlTable(
+  'user_groups',
+  {
+    id: serial('id').primaryKey(),
+    publicId: nanoId('public_id').notNull(),
+    orgId: foreignKey('org_id').notNull(),
+    name: varchar('name', { length: 128 }).notNull(),
+    avatarId: varchar('avatar_id', { length: 64 }),
+    color: mysqlEnum('color', [
+      'red',
+      'pink',
+      'purple',
+      'blue',
+      'green',
+      'orange',
+      'yellow'
+    ]),
+    description: text('description'),
+    createdAt: timestamp('created_at')
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull()
+  },
+  (table) => ({
+    publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
+    orgIdIndex: index('org_id_idx').on(table.orgId)
+  })
+);
+
+export const userGroupsRelations = relations(userGroups, ({ one, many }) => ({
+  org: one(orgs, {
+    fields: [userGroups.orgId],
+    references: [orgs.id]
+  }),
+  members: many(userGroupMembers),
+  routingRules: many(emailRoutingRulesDestinations)
+}));
+
+export const userGroupMembers = mysqlTable(
+  'user_group_members',
+  {
+    id: serial('id').primaryKey(),
+    groupId: foreignKey('group_id').notNull(),
+    userId: foreignKey('user_id').notNull(),
+    userProfileId: foreignKey('user_profile_id'),
+    addedBy: foreignKey('added_by').notNull(),
+    role: mysqlEnum('role', ['member', 'admin']).notNull().default('member'),
+    notifications: mysqlEnum('notifications', ['active', 'muted', 'off'])
+      .notNull()
+      .default('active'),
+    createdAt: timestamp('created_at')
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull()
+  },
+  (table) => ({
+    groupIdIndex: index('group_id_idx').on(table.groupId),
+    userIdIndex: index('user_id_idx').on(table.userId),
+    userToGroupIndex: uniqueIndex('user_to_group_idx').on(
+      table.groupId,
+      table.userId
+    )
+  })
+);
+export const userGroupMembersRelations = relations(
+  userGroupMembers,
+  ({ one, many }) => ({
+    group: one(userGroups, {
+      fields: [userGroupMembers.groupId],
+      references: [userGroups.id]
+    }),
+    user: one(users, {
+      fields: [userGroupMembers.userId],
+      references: [users.id]
+    }),
+    userProfile: one(userProfiles, {
+      fields: [userGroupMembers.userProfileId],
+      references: [userProfiles.id]
+    })
+  })
+);
+
 // Domain table
 export const domains = mysqlTable(
   'domains',
@@ -433,49 +514,16 @@ export const postalServersRelations = relations(postalServers, ({ one }) => ({
   })
 }));
 
-// Postal personal server table
-// export const postalRootMailServers = mysqlTable(
-//   'postal_root_mail_servers',
-//   {
-//     id: serial('id').primaryKey(),
-//     publicId: nanoId('public_id').notNull(),
-//     orgId: foreignKey('org_id').notNull(),
-//     userId: foreignKey('user_id').notNull(),
-//     type: mysqlEnum('type', ['email']).notNull(),
-//     sendLimit: mediumint('send_limit').notNull(),
-//     apiKey: varchar('api_key', { length: 256 }).notNull(),
-//     forwardingAddress: varchar('forwarding_address', { length: 128 })
-//   },
-//   (table) => ({
-//     publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
-//     userIdIndex: uniqueIndex('user_id_idx').on(table.userId),
-//     postalSlug: uniqueIndex('postal_slug').on(table.userId, table.type)
-//   })
-// );
-// export const postalRootMailServersRelations = relations(
-//   postalRootMailServers,
-//   ({ one }) => ({
-//     user: one(users, {
-//       fields: [postalRootMailServers.userId],
-//       references: [users.id]
-//     }),
-//     org: one(orgs, {
-//       fields: [postalRootMailServers.orgId],
-//       references: [orgs.id]
-//     })
-//   })
-// );
-
 // External senders and their reputations
-
-export const externalEmailIdentities = mysqlTable(
-  'external_email_identities',
+export const foreignEmailIdentities = mysqlTable(
+  'foreign_email_identities',
   {
     id: serial('id').primaryKey(),
     publicId: nanoId('public_id').notNull(),
     rootDomain: varchar('root_domain', { length: 128 }).notNull(),
     username: varchar('username', { length: 128 }).notNull(),
     avatarId: varchar('avatar_id', { length: 64 }),
+    senderName: varchar('sender_name', { length: 128 }),
     signature: text('signature'),
     createdAt: timestamp('created_at')
       .default(sql`CURRENT_TIMESTAMP`)
@@ -488,19 +536,19 @@ export const externalEmailIdentities = mysqlTable(
   })
 );
 
-export const externalEmailIdentitiesRelations = relations(
-  externalEmailIdentities,
+export const foreignEmailIdentitiesRelations = relations(
+  foreignEmailIdentities,
   ({ one, many }) => ({
-    emailIdentitiesReputations: one(externalEmailIdentitiesReputations, {
-      fields: [externalEmailIdentities.id],
-      references: [externalEmailIdentitiesReputations.identityId]
+    emailIdentitiesReputations: one(foreignEmailIdentitiesReputations, {
+      fields: [foreignEmailIdentities.id],
+      references: [foreignEmailIdentitiesReputations.identityId]
     }),
-    screenerStatuses: many(externalEmailIdentitiesScreenerStatus)
+    screenerStatuses: many(foreignEmailIdentitiesScreenerStatus)
   })
 );
 
-export const externalEmailIdentitiesReputations = mysqlTable(
-  'external_email_identities_reputations',
+export const foreignEmailIdentitiesReputations = mysqlTable(
+  'foreign_email_identities_reputations',
   {
     id: serial('id').primaryKey(),
     identityId: foreignKey('identity_id').notNull(),
@@ -515,23 +563,23 @@ export const externalEmailIdentitiesReputations = mysqlTable(
   })
 );
 
-export const externalEmailIdentitiesReputationsRelations = relations(
-  externalEmailIdentitiesReputations,
+export const foreignEmailIdentitiesReputationsRelations = relations(
+  foreignEmailIdentitiesReputations,
   ({ one }) => ({
-    identity: one(externalEmailIdentities, {
-      fields: [externalEmailIdentitiesReputations.identityId],
-      references: [externalEmailIdentities.id]
+    identity: one(foreignEmailIdentities, {
+      fields: [foreignEmailIdentitiesReputations.identityId],
+      references: [foreignEmailIdentities.id]
     })
   })
 );
 
-export const externalEmailIdentitiesScreenerStatus = mysqlTable(
-  'external_email_identities_screener_status',
+export const foreignEmailIdentitiesScreenerStatus = mysqlTable(
+  'foreign_email_identities_screener_status',
   {
     id: serial('id').primaryKey(),
     publicId: nanoId('public_id').notNull(),
     orgId: foreignKey('org_id').notNull(),
-    externalIdentityId: foreignKey('external_identity_id').notNull(),
+    foreignIdentityId: foreignKey('foreign_identity_id').notNull(),
     rootEmailIdentityId: foreignKey('root_email_identity_id'),
     emailIdentityId: foreignKey('email_identity_id'),
     status: mysqlEnum('status', ['pending', 'approve', 'reject', 'delete'])
@@ -546,8 +594,8 @@ export const externalEmailIdentitiesScreenerStatus = mysqlTable(
       .notNull()
   },
   (table) => ({
-    externalIdentityIdIndex: index('externalIdentity_id_idx').on(
-      table.externalIdentityId
+    foreignIdentityIdIndex: index('foreignIdentity_id_idx').on(
+      table.foreignIdentityId
     ),
     orgIdIndex: index('org_id_idx').on(table.orgId),
     rootEmailIdentityIdIndex: index('root_email_identity_id_idx').on(
@@ -556,34 +604,34 @@ export const externalEmailIdentitiesScreenerStatus = mysqlTable(
     emailIdentityIdIndex: index('email_identity_id_idx').on(
       table.emailIdentityId
     ),
-    externalToInternalIndex: uniqueIndex('external_to_internal_idx').on(
-      table.externalIdentityId,
+    foreignToInternalIndex: uniqueIndex('foreign_to_internal_idx').on(
+      table.foreignIdentityId,
       table.emailIdentityId
     ),
-    externalToRootIndex: uniqueIndex('external_to_root_idx').on(
-      table.externalIdentityId,
+    foreignToRootIndex: uniqueIndex('foreign_to_root_idx').on(
+      table.foreignIdentityId,
       table.rootEmailIdentityId
     )
   })
 );
 
-export const externalEmailIdentitiesScreenerStatusRelations = relations(
-  externalEmailIdentitiesScreenerStatus,
+export const foreignEmailIdentitiesScreenerStatusRelations = relations(
+  foreignEmailIdentitiesScreenerStatus,
   ({ one }) => ({
     org: one(orgs, {
-      fields: [externalEmailIdentitiesScreenerStatus.orgId],
+      fields: [foreignEmailIdentitiesScreenerStatus.orgId],
       references: [orgs.id]
     }),
-    externalIdentity: one(externalEmailIdentities, {
-      fields: [externalEmailIdentitiesScreenerStatus.externalIdentityId],
-      references: [externalEmailIdentities.id]
+    foreignIdentity: one(foreignEmailIdentities, {
+      fields: [foreignEmailIdentitiesScreenerStatus.foreignIdentityId],
+      references: [foreignEmailIdentities.id]
     }),
     emailIdentity: one(emailIdentities, {
-      fields: [externalEmailIdentitiesScreenerStatus.emailIdentityId],
+      fields: [foreignEmailIdentitiesScreenerStatus.emailIdentityId],
       references: [emailIdentities.id]
     }),
     setByUser: one(users, {
-      fields: [externalEmailIdentitiesScreenerStatus.setByUserId],
+      fields: [foreignEmailIdentitiesScreenerStatus.setByUserId],
       references: [users.id]
     })
   })
@@ -718,36 +766,7 @@ export const sendAsExternalEmailIdentitiesAuthorizedUsersRelations = relations(
   })
 );
 
-// export const rootEmailIdentities = mysqlTable(
-//   'root_email_identities',
-//   {
-//     id: serial('id').primaryKey(),
-//     publicId: nanoId('public_id').notNull(),
-//     userId: foreignKey('user_id').notNull(),
-//     username: varchar('username', { length: 32 }).notNull(),
-//     domain: varchar('domain', { length: 128 }).notNull(),
-//     sendName: varchar('send_name', { length: 128 }),
-//     createdAt: timestamp('created_at')
-//       .default(sql`CURRENT_TIMESTAMP`)
-//       .notNull()
-//   },
-//   (table) => ({
-//     publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
-//     userIdIndex: index('user_id_idx').on(table.userId),
-//     emailIndex: uniqueIndex('email_idx').on(table.username, table.domain)
-//   })
-// );
-// export const rootEmailIdentitiesRelations = relations(
-//   rootEmailIdentities,
-//   ({ one }) => ({
-//     user: one(users, {
-//       fields: [rootEmailIdentities.userId],
-//       references: [users.id]
-//     })
-//   })
-// );
-
-//* Email Identities
+//* native Email Identities
 
 export const emailIdentities = mysqlTable(
   'email_identities',
@@ -760,6 +779,7 @@ export const emailIdentities = mysqlTable(
     domainId: foreignKey('domain_id'),
     routingRuleId: foreignKey('routing_rule_id').notNull(),
     sendName: varchar('send_name', { length: 128 }),
+    avatarId: varchar('avatar_id', { length: 64 }),
     isCatchAll: boolean('is_catch_all').notNull().default(false),
     createdAt: timestamp('created_at')
       .default(sql`CURRENT_TIMESTAMP`)
@@ -838,74 +858,6 @@ export const emailIdentitiesAuthorizedUsersRelations = relations(
   })
 );
 
-export const userGroups = mysqlTable(
-  'user_groups',
-  {
-    id: serial('id').primaryKey(),
-    publicId: nanoId('public_id').notNull(),
-    orgId: foreignKey('org_id').notNull(),
-    name: varchar('name', { length: 128 }).notNull(),
-    description: text('description'),
-    createdAt: timestamp('created_at')
-      .default(sql`CURRENT_TIMESTAMP`)
-      .notNull()
-  },
-  (table) => ({
-    publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
-    orgIdIndex: index('org_id_idx').on(table.orgId)
-  })
-);
-
-export const userGroupsRelations = relations(userGroups, ({ one, many }) => ({
-  org: one(orgs, {
-    fields: [userGroups.orgId],
-    references: [orgs.id]
-  }),
-  members: many(userGroupMembers),
-  routingRules: many(emailRoutingRulesDestinations)
-}));
-
-export const userGroupMembers = mysqlTable(
-  'user_group_members',
-  {
-    id: serial('id').primaryKey(),
-    groupId: foreignKey('group_id').notNull(),
-    userId: foreignKey('user_id').notNull(),
-    userProfileId: foreignKey('user_profile_id'),
-    addedBy: foreignKey('added_by').notNull(),
-    role: mysqlEnum('role', ['member', 'admin']).notNull(),
-    notifications: mysqlEnum('notifications', ['active', 'muted', 'off']),
-    createdAt: timestamp('created_at')
-      .default(sql`CURRENT_TIMESTAMP`)
-      .notNull()
-  },
-  (table) => ({
-    groupIdIndex: index('group_id_idx').on(table.groupId),
-    userIdIndex: index('user_id_idx').on(table.userId),
-    userToGroupIndex: uniqueIndex('user_to_group_idx').on(
-      table.groupId,
-      table.userId
-    )
-  })
-);
-export const userGroupMembersRelations = relations(
-  userGroupMembers,
-  ({ one, many }) => ({
-    group: one(userGroups, {
-      fields: [userGroupMembers.groupId],
-      references: [userGroups.id]
-    }),
-    user: one(users, {
-      fields: [userGroupMembers.userId],
-      references: [users.id]
-    }),
-    userProfile: one(userProfiles, {
-      fields: [userGroupMembers.userProfileId],
-      references: [userProfiles.id]
-    })
-  })
-);
-
 export const emailRoutingRules = mysqlTable(
   'email_routing_rules',
   {
@@ -914,6 +866,7 @@ export const emailRoutingRules = mysqlTable(
     orgId: foreignKey('org_id').notNull(),
     name: varchar('name', { length: 128 }).notNull(),
     description: text('description'),
+    createdBy: foreignKey('created_by').notNull(),
     createdAt: timestamp('created_at')
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull()
@@ -930,6 +883,10 @@ export const emailRoutingRulesRelations = relations(
     org: one(orgs, {
       fields: [emailRoutingRules.orgId],
       references: [orgs.id]
+    }),
+    createdByUser: one(users, {
+      fields: [emailRoutingRules.createdBy],
+      references: [users.id]
     }),
     mailIdentities: many(emailIdentities),
     destination: many(emailRoutingRulesDestinations)
@@ -977,6 +934,8 @@ export const convos = mysqlTable(
     orgId: foreignKey('org_id').notNull(),
     publicId: nanoId('public_id').notNull(),
     lastUpdatedAt: timestamp('last_updated_at'),
+    lastMessageId: foreignKey('last_message_id'),
+    lastNoteId: foreignKey('last_note_id'),
     screenerStatus: mysqlEnum('screener_status', [
       'pending',
       'approved',
@@ -999,6 +958,14 @@ export const convosRelations = relations(convos, ({ one, many }) => ({
     fields: [convos.orgId],
     references: [orgs.id]
   }),
+  lastMessageId: one(convoMessages, {
+    fields: [convos.lastMessageId],
+    references: [convoMessages.id]
+  }),
+  lastNoteId: one(convoNotes, {
+    fields: [convos.lastNoteId],
+    references: [convoNotes.id]
+  }),
   members: many(convoMembers),
   attachments: many(convoAttachments),
   messages: many(convoMessages),
@@ -1011,19 +978,19 @@ export const convoSubjects = mysqlTable(
   'convo_subjects',
   {
     id: serial('id').primaryKey(),
-    conversationId: foreignKey('conversation_id').notNull(),
+    convoId: foreignKey('convo_id').notNull(),
     subject: varchar('subject', { length: 256 }).notNull(),
     createdAt: timestamp('created_at')
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull()
   },
   (table) => ({
-    conversationIdIndex: index('conversation_id_idx').on(table.conversationId)
+    convoIdIndex: index('convo_id_idx').on(table.convoId)
   })
 );
 export const convoSubjectsRelations = relations(convoSubjects, ({ one }) => ({
-  conversation: one(convos, {
-    fields: [convoSubjects.conversationId],
+  convo: one(convos, {
+    fields: [convoSubjects.convoId],
     references: [convos.id]
   })
 }));
@@ -1035,8 +1002,8 @@ export const convoMembers = mysqlTable(
     userId: foreignKey('user_id'),
     userProfileId: foreignKey('user_profile_id'),
     userGroupId: foreignKey('user_group_id'),
-    externalEmailIdentityId: foreignKey('external_email_identities_id'),
-    conversationId: foreignKey('conversation_id').notNull(),
+    foreignEmailIdentityId: foreignKey('foreign_email_identities_id'),
+    convoId: foreignKey('convo_id').notNull(),
     role: mysqlEnum('role', ['assigned', 'contributor', 'watcher', 'guest'])
       .notNull()
       .default('contributor'),
@@ -1051,14 +1018,15 @@ export const convoMembers = mysqlTable(
   (table) => ({
     //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit : userId//userGroupId
     userIdIndex: index('user_id_idx').on(table.userId),
-    conversationIdIndex: index('conversation_id_idx').on(table.conversationId),
-    userToConversationIndex: uniqueIndex('user_to_conversation_idx').on(
-      table.conversationId,
+    convoIdIndex: index('convo_id_idx').on(table.convoId),
+    userToConvoIndex: uniqueIndex('user_to_convo_idx').on(
+      table.convoId,
       table.userId
     ),
-    userGroupToConversationIndex: uniqueIndex(
-      'user_group_to_conversation_idx'
-    ).on(table.conversationId, table.userGroupId)
+    userGroupToConvoIndex: uniqueIndex('user_group_to_convo_idx').on(
+      table.convoId,
+      table.userGroupId
+    )
   })
 );
 export const convoMembersRelations = relations(convoMembers, ({ one }) => ({
@@ -1074,12 +1042,12 @@ export const convoMembersRelations = relations(convoMembers, ({ one }) => ({
     fields: [convoMembers.userGroupId],
     references: [userGroups.id]
   }),
-  externalEmailIdentity: one(externalEmailIdentities, {
-    fields: [convoMembers.externalEmailIdentityId],
-    references: [externalEmailIdentities.id]
+  foreignEmailIdentity: one(foreignEmailIdentities, {
+    fields: [convoMembers.foreignEmailIdentityId],
+    references: [foreignEmailIdentities.id]
   }),
-  conversation: one(convos, {
-    fields: [convoMembers.conversationId],
+  convo: one(convos, {
+    fields: [convoMembers.convoId],
     references: [convos.id]
   })
 }));
@@ -1089,7 +1057,7 @@ export const convoAttachments = mysqlTable(
   {
     id: serial('id').primaryKey(),
     publicId: nanoId('public_id').notNull(),
-    conversationId: foreignKey('conversation_id').notNull(),
+    convoId: foreignKey('convo_id').notNull(),
     convoMessageId: foreignKey('convo_message_id'),
     convoNoteId: foreignKey('convo_note_id'),
     convoDraftId: foreignKey('convo_draft_id'),
@@ -1102,15 +1070,15 @@ export const convoAttachments = mysqlTable(
       .notNull()
   },
   (table) => ({
-    conversationIdIndex: index('conversation_id_idx').on(table.conversationId),
+    convoIdIndex: index('convo_id_idx').on(table.convoId),
     publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId)
   })
 );
 export const convoAttachmentsRelations = relations(
   convoAttachments,
   ({ one }) => ({
-    conversation: one(convos, {
-      fields: [convoAttachments.conversationId],
+    convo: one(convos, {
+      fields: [convoAttachments.convoId],
       references: [convos.id]
     }),
     convoMessage: one(convoMessages, {
@@ -1137,7 +1105,7 @@ export const convoMessages = mysqlTable(
   {
     id: serial('id').primaryKey(),
     publicId: nanoId('public_id').notNull(),
-    conversationId: foreignKey('conversation_id').notNull(),
+    convoId: foreignKey('convo_id').notNull(),
     subjectId: foreignKey('subject_id'),
     replyToId: foreignKey('reply_to_id'),
     author: foreignKey('convo_members').notNull(),
@@ -1149,15 +1117,15 @@ export const convoMessages = mysqlTable(
       .notNull()
   },
   (table) => ({
-    conversationIdIndex: index('conversation_id_idx').on(table.conversationId),
+    convoIdIndex: index('convo_id_idx').on(table.convoId),
     publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId)
   })
 );
 export const convoMessagesRelations = relations(
   convoMessages,
   ({ one, many }) => ({
-    conversation: one(convos, {
-      fields: [convoMessages.conversationId],
+    convo: one(convos, {
+      fields: [convoMessages.convoId],
       references: [convos.id]
     }),
     subject: one(convoSubjects, {
@@ -1224,7 +1192,7 @@ export const convoNotes = mysqlTable(
   {
     id: serial('id').primaryKey(),
     publicId: nanoId('public_id').notNull(),
-    conversationId: foreignKey('conversation_id').notNull(),
+    convoId: foreignKey('convo_id').notNull(),
     replyToId: foreignKey('reply_to_id'),
     author: foreignKey('convo_members').notNull(),
     visibility: mysqlEnum('visibility', ['self', 'convo', 'org', 'public'])
@@ -1236,13 +1204,13 @@ export const convoNotes = mysqlTable(
       .notNull()
   },
   (table) => ({
-    conversationIdIndex: index('conversation_id_idx').on(table.conversationId),
+    convoIdIndex: index('convo_id_idx').on(table.convoId),
     publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId)
   })
 );
 export const convoNotesRelations = relations(convoNotes, ({ one, many }) => ({
-  conversation: one(convos, {
-    fields: [convoNotes.conversationId],
+  convo: one(convos, {
+    fields: [convoNotes.convoId],
     references: [convos.id]
   }),
   author: one(convoMembers, {
@@ -1297,7 +1265,7 @@ export const convoDrafts = mysqlTable(
   {
     id: serial('id').primaryKey(),
     publicId: nanoId('public_id').notNull(),
-    conversationId: foreignKey('conversation_id').notNull(),
+    convoId: foreignKey('convo_id').notNull(),
     replyToId: foreignKey('reply_to_id'),
     author: foreignKey('author').notNull(),
     visibility: mysqlEnum('visibility', ['self', 'convo', 'org', 'public'])
@@ -1310,13 +1278,13 @@ export const convoDrafts = mysqlTable(
       .notNull()
   },
   (table) => ({
-    conversationIdIndex: index('conversation_id_idx').on(table.conversationId),
+    convoIdIndex: index('convo_id_idx').on(table.convoId),
     publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId)
   })
 );
 export const convoDraftsRelations = relations(convoDrafts, ({ one, many }) => ({
-  conversation: one(convos, {
-    fields: [convoDrafts.conversationId],
+  convo: one(convos, {
+    fields: [convoDrafts.convoId],
     references: [convos.id]
   }),
   author: one(convoMembers, {
