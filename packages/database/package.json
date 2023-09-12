@@ -11,7 +11,8 @@
     "db:drop": "drizzle-kit drop --config=drizzle.config.ts",
     "db:drop:i": "infisical run --env=local -- drizzle-kit drop --config=drizzle.config.ts",
     "db:studio": "pnpm drizzle-kit studio --port 3333  --config=drizzle.config.ts",
-    "db:studio:i": "infisical run --env=local -- drizzle-kit studio --port 3333  --config=drizzle.config.ts"
+    "db:studio:i": "infisical run --env=local -- drizzle-kit studio --port 3333  --config=drizzle.config.ts",
+    "db:seed:i": "infisical run --env=local -- esno seedDb.ts"
   },
   "dependencies": {
     "@planetscale/database": "^1.11.0",
@@ -20,6 +21,8 @@
     "mysql2": "^3.6.1"
   },
   "devDependencies": {
-    "drizzle-kit": "^0.19.13"
+    "@faker-js/faker": "^8.0.2",
+    "drizzle-kit": "^0.19.13",
+    "esno": "^0.17.0"
   }
 }
