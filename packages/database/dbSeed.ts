@@ -126,6 +126,11 @@ async function seedDb() {
 
   // Users
   const userIds = new Array(30).fill(0).map((_, i) => i + 100);
+  const allUserIds = [
+    ...userIds,
+    fixedUsers.admin.userId,
+    fixedUsers.user.userId
+  ];
 
   for (let i = 0; i < userIds.length; i++) {
     await db.insert(users).values({
@@ -1045,8 +1050,9 @@ async function seedDb() {
   const groupIds1 = [100, 101, 102];
   const groupIds2 = [103, 104, 105];
   for (let i = 0; i < 50; i++) {
-    const user1 = userIds[Math.floor(Math.random() * userIds.length)];
-    const user2 = userIds[Math.floor(Math.random() * userIds.length)];
+    //! Does not add fixed users
+    const user1 = allUserIds[Math.floor(Math.random() * allUserIds.length)];
+    const user2 = allUserIds[Math.floor(Math.random() * allUserIds.length)];
     await db.insert(convoMembers).values([
       {
         id: 100 + i,
