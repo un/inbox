@@ -19,5 +19,6 @@ export {
   not,
   and,
   or,
-  sql
+  sql,
+  InferInsertModel
 } from 'drizzle-orm';

@@ -40,7 +40,7 @@ import {
 import { db } from '.';
 
 //! IMPORTANT: This file is only for development purposes, it should not be used in production
-//! CHECK THE COMMENTS AT FOR REQUIRED FIELDS
+//! CHECK THE COMMENTS FOR REQUIRED FIELDS
 // Register in the app for each type below, obtain your userId and profileId (not PublicId)
 interface FixedSingleUserData {
   userId: number;
@@ -115,6 +115,10 @@ const orgAvatarIds = [
   'd64c5af8-91c3-4f35-9ac9-f6220130f700',
   '956a6d74-5eff-4bb2-7e6f-3f47189bf100'
 ];
+
+// TODO: Refactor all "for" loops to push to an array, and then insert the array to the database.
+// This will potentially improve performance by a lot
+// needs to infer the type of insert using drizzle's InferInsertModel for proper typing
 
 async function seedDb() {
   console.log('Seeding database...');
@@ -751,7 +755,7 @@ async function seedDb() {
         domain: faker.internet.domainName(),
         sendName: faker.person.fullName(),
         smtpCredentialsId: 100 + i,
-        addedBy: Math.floor(Math.random() * 30) + 100
+        createdBy: Math.floor(Math.random() * 30) + 100
       },
       {
         id: 100 + i + 5,
@@ -762,7 +766,7 @@ async function seedDb() {
         domain: faker.internet.domainName(),
         sendName: faker.person.fullName(),
         smtpCredentialsId: 100 + i * 5,
-        addedBy: Math.floor(Math.random() * 30) + 100
+        createdBy: Math.floor(Math.random() * 30) + 100
       }
     ]);
   }
@@ -790,7 +794,7 @@ async function seedDb() {
       port: 587,
       authMethod: 'plain',
       encryption: 'tls',
-      addedBy: 100 + i
+      createdBy: 100 + i
     });
   }
   console.log('Send as external email identities Smtp Credentials inserted');
@@ -874,7 +878,7 @@ async function seedDb() {
         domainId: 100,
         routingRuleId: 100 + i,
         sendName: faker.person.fullName(),
-        addedBy: 100
+        createdBy: 100
       },
       {
         id: 100 + i + 30,
@@ -885,7 +889,7 @@ async function seedDb() {
         domainId: 101,
         routingRuleId: 100 + i,
         sendName: faker.person.fullName(),
-        addedBy: 100
+        createdBy: 100
       },
       {
         id: 200 + i,
@@ -896,7 +900,7 @@ async function seedDb() {
         domainId: 102,
         routingRuleId: 200 + i,
         sendName: faker.person.fullName(),
-        addedBy: 101
+        createdBy: 101
       },
       {
         id: 200 + i + 30,
@@ -907,7 +911,7 @@ async function seedDb() {
         domainId: 103,
         routingRuleId: 200 + i,
         sendName: faker.person.fullName(),
-        addedBy: 102
+        createdBy: 102
       }
     ]);
   }

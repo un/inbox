@@ -61,7 +61,8 @@ export const emailRoutesRouter = router({
           publicId: newroutingRulePublicId,
           orgId: orgId,
           name: `Delivery of emails to ${userRootEmailAddress}`,
-          description: 'This route helps deliver your @uninbox emails to you'
+          description: 'This route helps deliver your @uninbox emails to you',
+          createdBy: userId
         });
 
       const newEmailIdentityPublicId = nanoId();
@@ -74,7 +75,8 @@ export const emailRoutesRouter = router({
           domainName: rootDomainName,
           routingRuleId: +routingRuleInsertResponse.insertId,
           sendName: sendName,
-          isCatchAll: false
+          isCatchAll: false,
+          createdBy: userId
         });
 
       await db.insert(emailIdentitiesAuthorizedUsers).values({

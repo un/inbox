@@ -649,7 +649,7 @@ export const sendAsExternalEmailIdentities = mysqlTable(
     username: varchar('username', { length: 32 }).notNull(),
     domain: varchar('domain', { length: 128 }).notNull(),
     sendName: varchar('send_name', { length: 128 }),
-    addedBy: foreignKey('added_by').notNull(),
+    createdBy: foreignKey('created_by').notNull(),
     smtpCredentialsId: foreignKey('smtp_credentials_id').notNull(),
     createdAt: timestamp('created_at')
       .default(sql`CURRENT_TIMESTAMP`)
@@ -711,7 +711,7 @@ export const sendAsExternalEmailIdentitiesSmtpCredentials = mysqlTable(
     port: smallint('port').notNull(),
     authMethod: mysqlEnum('auth_method', ['plain', 'login', 'cram_md5']),
     encryption: mysqlEnum('encryption', ['ssl', 'tls', 'starttls', 'none']),
-    addedBy: foreignKey('added_by').notNull(),
+    createdBy: foreignKey('created_by').notNull(),
     createdAt: timestamp('created_at')
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull()
@@ -848,7 +848,7 @@ export const emailIdentities = mysqlTable(
     routingRuleId: foreignKey('routing_rule_id').notNull(),
     sendName: varchar('send_name', { length: 128 }),
     avatarId: varchar('avatar_id', { length: 64 }),
-    addedBy: foreignKey('added_by').notNull(),
+    createdBy: foreignKey('created_by').notNull(),
     isCatchAll: boolean('is_catch_all').notNull().default(false),
     createdAt: timestamp('created_at')
       .default(sql`CURRENT_TIMESTAMP`)
@@ -867,8 +867,8 @@ export const emailIdentities = mysqlTable(
 export const emailIdentitiesRelations = relations(
   emailIdentities,
   ({ one, many }) => ({
-    addedBy: one(users, {
-      fields: [emailIdentities.addedBy],
+    createdBy: one(users, {
+      fields: [emailIdentities.createdBy],
       references: [users.id]
     }),
     org: one(orgs, {

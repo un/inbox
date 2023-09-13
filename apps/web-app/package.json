@@ -5,8 +5,7 @@
     "build": "nuxt build",
     "dev": "PORT=3000 nuxt dev --host",
     "generate": "nuxt generate",
-    "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "preview": "nuxt preview"
   },
   "devDependencies": {
     "@iconify-json/mdi": "^1.1.54",
@@ -43,6 +42,7 @@
     "fakefilter": "^0.1.597",
     "jose": "^4.14.6",
     "pinia": "^2.1.6",
+    "pinia-shared-state": "^0.4.5",
     "radix-vue": "^0.1.32",
     "superjson": "^1.13.1",
     "trpc-nuxt": "^0.10.12",
