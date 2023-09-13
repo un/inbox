@@ -1,48 +1,153 @@
-import { nanoId, nanoIdToken } from '@uninbox/utils';
 import { faker } from '@faker-js/faker';
+import { nanoId, nanoIdLength, nanoIdToken } from '@uninbox/utils';
+import { and, eq, or } from './orm';
+import {
+  convos,
+  convoAttachments,
+  convoDrafts,
+  convoMembers,
+  convoMessages,
+  convoMessageReplies,
+  convoNotes,
+  convoNoteReplies,
+  convoSubjects,
+  domains,
+  domainVerifications,
+  emailIdentities,
+  emailIdentitiesAuthorizedUsers,
+  emailRoutingRules,
+  emailRoutingRulesDestinations,
+  foreignEmailIdentities,
+  foreignEmailIdentitiesReputations,
+  foreignEmailIdentitiesScreenerStatus,
+  orgInvitations,
+  orgMembers,
+  orgModules,
+  orgPostalConfigs,
+  orgs,
+  postalServers,
+  sendAsExternalEmailIdentities,
+  sendAsExternalEmailIdentitiesAuthorizedUsers,
+  sendAsExternalEmailIdentitiesSmtpCredentials,
+  sendAsExternalEmailIdentitiesVerification,
+  users,
+  userAuthIdentities,
+  userGroups,
+  userGroupMembers,
+  userProfiles,
+  userProfilesToOrgs
+} from './schema';
+import { db } from '.';
 
+//! IMPORTANT: This file is only for development purposes, it should not be used in production
+//! CHECK THE COMMENTS AT FOR REQUIRED FIELDS
+// Register in the app for each type below, obtain your userId and profileId (not PublicId)
 interface FixedSingleUserData {
   userId: number;
   profileId: number;
 }
-export interface FixedUsersData {
+interface FixedUsersData {
   admin: FixedSingleUserData;
   user: FixedSingleUserData;
 }
-export const userIds = new Array(30).fill(0).map((_, i) => i + 100);
-const randomDate = faker.date.past().toDateString();
+const fixedUsers: FixedUsersData = {
+  admin: {
+    userId: 1,
+    profileId: 1
+  },
+  user: {
+    userId: 2,
+    profileId: 2
+  }
+};
 
-export const usersData = (userIds: number[]) => {
-  const users: object[] = [];
+// Replace the Avatar IDs with avatars you have already uploaded to the avatar storage
+const userAvatarIds = [
+  'cae90070-fe78-4284-0bf0-cb0b4371a300',
+  '218965ee-dc60-4370-aa5d-83cd9af33500',
+  'ca4ec7ee-c6df-4bec-c173-d69d65249000',
+  'a8ac01a0-a6ff-4afa-1244-401a39b1cc00',
+  'f29063db-55a8-4364-65ff-74c2ea76c700',
+  '82521f66-f391-459a-302c-f2ec1e6c7e00',
+  '9b843741-b777-4b75-828e-e2a4e5bbc200',
+  'd6b60a4a-b83d-46fe-7eab-eea8f02aee00',
+  'e8124686-0245-49df-7588-74c9ea67bc00',
+  '12f46e42-591b-4c73-d9aa-5c060a457200',
+  'b359486d-d293-46a4-2263-bc604554d500',
+  '54fed323-ce31-436c-38eb-2dc984961c00',
+  '37149c53-de34-4ed4-3d8d-b9c2df009000',
+  'd34def99-7abc-45a0-ff9f-0fb9e3fc7f00',
+  '0e02cef5-c56e-47f2-88d0-208048600300',
+  'baddc6dd-f7c9-4317-e634-82bda2225d00',
+  '3d3c6bcd-1301-40c7-8e9f-c727bdbf4300',
+  'd97b6649-cc30-41d7-bf6c-2eecd9b18300',
+  '3a090efb-9c3d-43b8-8b8c-e51144fb5e00',
+  'b5dcdddf-11a2-4b70-326d-b41a1a7f1300',
+  '16f2e402-3cdc-40a2-3698-cb5ad596ef00',
+  '882b9683-de4c-4add-62f2-2b9295a49800',
+  'c4ce3c98-86fd-4234-a37a-55d13b44fc00',
+  '2813fb17-fe72-4ada-ecf4-2ab737134800',
+  'd9d3b67c-70da-4116-7cf5-e04910120200',
+  '47f08cf5-1be0-442c-39d0-564ff5c47000',
+  'e6ddfb34-f1e7-4c7a-4bc8-6fb4baf0eb00',
+  '1723f2a2-57f3-4b8d-02ab-e9bac4d39300',
+  '39e0ccb5-7ba0-4ec1-38bd-ea97516cd800',
+  'cbcb19ad-8da0-493e-0334-45f6d9981900'
+];
+
+const foreignIdentityAvatarIds = [
+  '93fe8159-73d2-49f9-1aa9-f5d50ca56900',
+  '72ef0be6-ffe4-44ce-3399-82b6c3da8c00',
+  '4de219e1-99e5-4418-9ae2-85abf141f700',
+  '4106fc1e-502d-4914-0300-be2188253400',
+  '2701d6fc-04d9-4cc3-e592-7c4da1523b00',
+  '6d3f3608-7c7c-427c-bc8c-b698c57b7f00',
+  '558539e4-b01a-4b8c-aa84-d6a59345bf00',
+  '3c08df38-69f9-42d4-a1d6-9304954b6800',
+  '2c3e9e20-d0d9-4fe8-d0ce-58554a9b6c00',
+  '38093327-6063-43a6-3c3a-fe4c4c97f400'
+];
+
+const orgAvatarIds = [
+  'ba6be7f3-89b4-49b3-cae6-4b0511f93900',
+  '72e167c4-9c4d-4030-4468-94efc3cdb900',
+  '108e799a-0819-4a46-5451-259c41b3e700',
+  'd64c5af8-91c3-4f35-9ac9-f6220130f700',
+  '956a6d74-5eff-4bb2-7e6f-3f47189bf100'
+];
+
+async function seedDb() {
+  console.log('Seeding database...');
+  console.time('⏱️ time');
+
+  // Users
+  const userIds = new Array(30).fill(0).map((_, i) => i + 100);
+
   for (let i = 0; i < userIds.length; i++) {
-    users.push({
+    await db.insert(users).values({
       id: userIds[i],
       publicId: nanoId(),
       username: faker.internet.userName(),
       recoveryEmail: faker.internet.email()
     });
   }
-  return users;
-};
-export const userAuthIdentitiesData = (userIds: number[]) => {
-  const userAuthIdentities: object[] = [];
+  console.log('Users inserted');
+  console.timeLog('⏱️ time');
+
+  // Auth Identities
   for (let i = 0; i < userIds.length; i++) {
-    userAuthIdentities.push({
+    await db.insert(userAuthIdentities).values({
       userId: userIds[i],
       providerId: nanoId(),
       provider: 'hanko'
     });
   }
-  return userAuthIdentities;
-};
+  console.log('Auth Identities inserted');
+  console.timeLog('⏱️ time');
 
-export const userProfilesData = (
-  userIds: number[],
-  userAvatarIds: string[]
-) => {
-  const userProfiles: object[] = [];
+  // User Profiles
   for (let i = 0; i < userIds.length; i++) {
-    userProfiles.push({
+    await db.insert(userProfiles).values({
       id: userIds[i],
       publicId: nanoId(),
       userId: userIds[i],
@@ -55,43 +160,34 @@ export const userProfilesData = (
       defaultProfile: true
     });
   }
+  console.log('User Profiles inserted');
+  console.timeLog('⏱️ time');
 
-  return userProfiles;
-};
+  // Orgs
+  await db.insert(orgs).values([
+    {
+      id: 100,
+      publicId: nanoId(),
+      ownerId: fixedUsers.admin.userId,
+      name: faker.company.name(),
+      avatarId: orgAvatarIds[Math.floor(Math.random() * orgAvatarIds.length)],
+      personalOrg: false
+    },
+    {
+      id: 101,
+      publicId: nanoId(),
+      ownerId: userIds[0],
+      name: faker.company.name(),
+      avatarId: orgAvatarIds[Math.floor(Math.random() * orgAvatarIds.length)],
+      personalOrg: false
+    }
+  ]);
+  console.log('Orgs inserted');
+  console.timeLog('⏱️ time');
 
-export const orgsData = (
-  userIds: number[],
-  fixedUsers: FixedUsersData,
-  orgAvatarIds: string[]
-) => {
-  const orgs: object[] = [];
-  orgs.push({
-    id: 100,
-    publicId: nanoId(),
-    ownerId: fixedUsers.admin.userId,
-    name: faker.company.name(),
-    avatarId: orgAvatarIds[Math.floor(Math.random() * orgAvatarIds.length)],
-    personalOrg: false
-  });
-  orgs.push({
-    id: 101,
-    publicId: nanoId(),
-    ownerId: userIds[0],
-    name: faker.company.name(),
-    avatarId: orgAvatarIds[Math.floor(Math.random() * orgAvatarIds.length)],
-    personalOrg: false
-  });
-  return orgs;
-};
-
-export const orgMembersData = (
-  userIds: number[],
-  fixedUsers: FixedUsersData
-) => {
-  const orgMembers: object[] = [];
-
+  //Org Members
   for (let i = 0; i < userIds.length; i++) {
-    orgMembers.push({
+    await db.insert(orgMembers).values({
       userId: userIds[i],
       orgId: 100,
       invitedByUserId: fixedUsers.admin.userId,
@@ -101,7 +197,7 @@ export const orgMembersData = (
     });
 
     if (i !== 0) {
-      orgMembers.push({
+      await db.insert(orgMembers).values({
         userId: userIds[i],
         orgId: 101,
         invitedByUserId: userIds[0],
@@ -111,13 +207,13 @@ export const orgMembersData = (
       });
     }
   }
-  orgMembers.push(
+  await db.insert(orgMembers).values([
     {
       userId: fixedUsers.admin.userId,
       orgId: 100,
       invitedByUserId: fixedUsers.admin.userId,
       status: 'active',
-      role: 'owner',
+      role: 'admin',
       userProfileId: fixedUsers.admin.profileId
     },
     {
@@ -149,21 +245,16 @@ export const orgMembersData = (
       orgId: 101,
       invitedByUserId: userIds[0],
       status: 'active',
-      role: 'owner',
+      role: 'admin',
       userProfileId: userIds[0]
     }
-  );
+  ]);
+  console.log('Org Members inserted');
+  console.timeLog('⏱️ time');
 
-  return orgMembers;
-};
-
-export const userProfilesToOrgsData = (
-  userIds: number[],
-  fixedUsers: FixedUsersData
-) => {
-  const userProfilesToOrgs: object[] = [];
+  // User profiles to orgs
   for (let i = 0; i < userIds.length; i++) {
-    userProfilesToOrgs.push(
+    await db.insert(userProfilesToOrgs).values([
       {
         userProfileId: userIds[i],
         orgId: 100
@@ -172,9 +263,9 @@ export const userProfilesToOrgsData = (
         userProfileId: userIds[i],
         orgId: 101
       }
-    );
+    ]);
   }
-  userProfilesToOrgs.push(
+  await db.insert(userProfilesToOrgs).values([
     {
       userProfileId: fixedUsers.admin.profileId,
       orgId: 100
@@ -191,29 +282,22 @@ export const userProfilesToOrgsData = (
       userProfileId: fixedUsers.user.profileId,
       orgId: 101
     }
-  );
-  return userProfilesToOrgs;
-};
+  ]);
+  console.log('User Profiles to Orgs inserted');
+  console.timeLog('⏱️ time');
 
-export const orgInvitationsData = (
-  userIds: number[],
-  fixedUsers: FixedUsersData
-) => {
-  const orgInvitations: object[] = [];
-
+  // Org Invitations
   for (let i = 0; i < 2; i++) {
-    orgInvitations.push(
+    await db.insert(orgInvitations).values([
       {
         publicId: nanoId(),
         orgId: 100,
         invitedByUserId: fixedUsers.admin.userId,
         role: 'member',
-        //invitedUser: '',
         email: faker.internet.email(),
-        inviteToken: nanoIdToken()
-        // invitedAt: faker.date.past(),
-        // expiresAt: faker.date.future(),
-        // acceptedAt: ''
+        inviteToken: nanoIdToken(),
+        invitedAt: faker.date.past(),
+        expiresAt: faker.date.future()
       },
       {
         publicId: nanoId(),
@@ -222,22 +306,20 @@ export const orgInvitationsData = (
         role: 'member',
         invitedUser: userIds[Math.floor(Math.random() * userIds.length)],
         email: faker.internet.email(),
-        inviteToken: nanoIdToken()
-        // invitedAt: faker.date.past(),
-        // expiresAt: faker.date.future(),
-        // acceptedAt: faker.date.future()
+        inviteToken: nanoIdToken(),
+        invitedAt: faker.date.past(),
+        expiresAt: faker.date.future(),
+        acceptedAt: faker.date.future()
       },
       {
         publicId: nanoId(),
         orgId: 101,
         invitedByUserId: fixedUsers.admin.userId,
         role: 'member',
-        //invitedUser: '',
         email: faker.internet.email(),
-        inviteToken: nanoIdToken()
-        // invitedAt: faker.date.past(),
-        // expiresAt: faker.date.future(),
-        // acceptedAt: ''
+        inviteToken: nanoIdToken(),
+        invitedAt: faker.date.past(),
+        expiresAt: faker.date.future()
       },
       {
         publicId: nanoId(),
@@ -246,20 +328,18 @@ export const orgInvitationsData = (
         role: 'member',
         invitedUser: userIds[Math.floor(Math.random() * userIds.length)],
         email: faker.internet.email(),
-        inviteToken: nanoIdToken()
-        // invitedAt: faker.date.past(),
-        // expiresAt: faker.date.future(),
-        // acceptedAt: faker.date.future()
+        inviteToken: nanoIdToken(),
+        invitedAt: faker.date.past(),
+        expiresAt: faker.date.future(),
+        acceptedAt: faker.date.future()
       }
-    );
+    ]);
   }
-  return orgInvitations;
-};
+  console.log('Org Invitations inserted');
+  console.timeLog('⏱️ time');
 
-export const orgModulesData = () => {
-  const orgModules: object[] = [];
-
-  orgModules.push(
+  // Org Modules
+  await db.insert(orgModules).values([
     {
       orgId: 100,
       module: 'strip signatures',
@@ -288,33 +368,30 @@ export const orgModulesData = () => {
       lastModifiedByUser: 103,
       lastModifiedAt: faker.date.past()
     }
-  );
-  return orgModules;
-};
+  ]);
+  console.log('Org Modules inserted');
+  console.timeLog('⏱️ time');
 
-export const orgPostalConfigsData = () => {
-  const orgPostalConfigs: object[] = [];
-  orgPostalConfigs.push(
+  // Org Postal Configs
+  await db.insert(orgPostalConfigs).values([
     {
       orgId: 100,
-      host: '',
-      ipPools: '',
-      defaultIpPool: ''
+      host: 'server.uninbox.com',
+      ipPools: ['pool1'],
+      defaultIpPool: 'pool1'
     },
     {
       orgId: 101,
-      host: '',
-      ipPools: '',
-      defaultIpPool: ''
+      host: 'server.uninbox.com',
+      ipPools: ['pool1'],
+      defaultIpPool: 'pool1'
     }
-  );
+  ]);
+  console.log('Org Postal Configs inserted');
+  console.timeLog('⏱️ time');
 
-  return orgPostalConfigs;
-};
-
-export const userGroupsData = () => {
-  const userGroups: object[] = [];
-  userGroups.push(
+  // User Group Data
+  await db.insert(userGroups).values([
     {
       id: 100,
       publicId: nanoId(),
@@ -369,22 +446,16 @@ export const userGroupsData = () => {
       description: faker.commerce.productDescription(),
       color: 'blue'
     }
-  );
+  ]);
+  console.log('User Groups inserted');
+  console.timeLog('⏱️ time');
 
-  return userGroups;
-};
-
-export const userGroupMembersData = (
-  userIds: number[],
-  fixedUsers: FixedUsersData
-) => {
-  const userGroupMembers: object[] = [];
-
+  // User Group Members
   for (let i = 0; i < userIds.length; i++) {
-    userGroupMembers.push(
+    await db.insert(userGroupMembers).values([
       {
-        id: userIds[i] + 1001,
-        groupId: Math.floor(Math.random() * 6) + 100,
+        id: 1100 + i,
+        groupId: 100,
         userId: userIds[i],
         userProfileId: userIds[i],
         addedBy: fixedUsers.admin.userId,
@@ -392,8 +463,8 @@ export const userGroupMembersData = (
         notifications: 'active'
       },
       {
-        id: userIds[i] + 1002,
-        groupId: Math.floor(Math.random() * 6) + 100,
+        id: 1200 + i,
+        groupId: 101,
         userId: userIds[i],
         userProfileId: userIds[i],
         addedBy: fixedUsers.admin.userId,
@@ -401,19 +472,47 @@ export const userGroupMembersData = (
         notifications: 'active'
       },
       {
-        id: userIds[i] + 1003,
-        groupId: Math.floor(Math.random() * 6) + 100,
+        id: 1300 + i,
+        groupId: 102,
+        userId: userIds[i],
+        userProfileId: userIds[i],
+        addedBy: fixedUsers.admin.userId,
+        role: 'member',
+        notifications: 'active'
+      },
+      {
+        id: 1100 + i + userIds.length,
+        groupId: 103,
+        userId: userIds[i],
+        userProfileId: userIds[i],
+        addedBy: fixedUsers.admin.userId,
+        role: 'member',
+        notifications: 'active'
+      },
+      {
+        id: 1200 + i + userIds.length,
+        groupId: 104,
+        userId: userIds[i],
+        userProfileId: userIds[i],
+        addedBy: fixedUsers.admin.userId,
+        role: 'member',
+        notifications: 'active'
+      },
+      {
+        id: 1300 + i + userIds.length,
+        groupId: 105,
         userId: userIds[i],
         userProfileId: userIds[i],
         addedBy: fixedUsers.admin.userId,
         role: 'member',
         notifications: 'active'
       }
-    );
+    ]);
   }
-  userGroupMembers.push(
+  await db.insert(userGroupMembers).values([
     {
-      groupId: Math.floor(Math.random() * 6) + 100,
+      id: 1501,
+      groupId: 100,
       userId: fixedUsers.admin.userId,
       userProfileId: fixedUsers.admin.profileId,
       addedBy: fixedUsers.admin.userId,
@@ -421,7 +520,17 @@ export const userGroupMembersData = (
       notifications: 'active'
     },
     {
-      groupId: Math.floor(Math.random() * 6) + 100,
+      id: 1502,
+      userId: fixedUsers.admin.userId,
+      groupId: 101,
+      userProfileId: fixedUsers.admin.profileId,
+      addedBy: fixedUsers.admin.userId,
+      role: 'member',
+      notifications: 'active'
+    },
+    {
+      id: 1503,
+      groupId: 102,
       userId: fixedUsers.admin.userId,
       userProfileId: fixedUsers.admin.profileId,
       addedBy: fixedUsers.admin.userId,
@@ -429,15 +538,8 @@ export const userGroupMembersData = (
       notifications: 'active'
     },
     {
-      groupId: Math.floor(Math.random() * 6) + 100,
-      userId: fixedUsers.admin.userId,
-      userProfileId: fixedUsers.admin.profileId,
-      addedBy: fixedUsers.admin.userId,
-      role: 'member',
-      notifications: 'active'
-    },
-    {
-      groupId: Math.floor(Math.random() * 6) + 100,
+      id: 1504,
+      groupId: 103,
       userId: fixedUsers.user.userId,
       userProfileId: fixedUsers.user.profileId,
       addedBy: fixedUsers.admin.userId,
@@ -445,7 +547,8 @@ export const userGroupMembersData = (
       notifications: 'active'
     },
     {
-      groupId: Math.floor(Math.random() * 6) + 100,
+      id: 1505,
+      groupId: 104,
       userId: fixedUsers.user.userId,
       userProfileId: fixedUsers.user.profileId,
       addedBy: fixedUsers.admin.userId,
@@ -453,22 +556,20 @@ export const userGroupMembersData = (
       notifications: 'active'
     },
     {
-      groupId: Math.floor(Math.random() * 6) + 100,
+      id: 1506,
+      groupId: 105,
       userId: fixedUsers.user.userId,
       userProfileId: fixedUsers.user.profileId,
       addedBy: fixedUsers.admin.userId,
       role: 'member',
       notifications: 'active'
     }
-  );
+  ]);
+  console.log('User Group Members inserted');
+  console.timeLog('⏱️ time');
 
-  return userGroupMembers;
-};
-
-export const domainsData = () => {
-  const domains: object[] = [];
-
-  domains.push(
+  // Domains
+  await db.insert(domains).values([
     {
       id: 100,
       publicId: nanoId(),
@@ -476,7 +577,7 @@ export const domainsData = () => {
       postalHost: faker.internet.domainName(),
       domain: faker.internet.domainName(),
       postalId: faker.string.uuid(),
-      dkimKey: faker.string.uuid(),
+      dkimKey: 'postal-AaAaAa._domainkey',
       dkimValue: faker.string.uuid(),
       status: 'active',
       mode: 'native',
@@ -491,7 +592,7 @@ export const domainsData = () => {
       postalHost: faker.internet.domainName(),
       domain: faker.internet.domainName(),
       postalId: faker.string.uuid(),
-      dkimKey: faker.string.uuid(),
+      dkimKey: 'postal-AaAaAa._domainkey',
       dkimValue: faker.string.uuid(),
       status: 'active',
       mode: 'native',
@@ -506,7 +607,7 @@ export const domainsData = () => {
       postalHost: faker.internet.domainName(),
       domain: faker.internet.domainName(),
       postalId: faker.string.uuid(),
-      dkimKey: faker.string.uuid(),
+      dkimKey: 'postal-AaAaAa._domainkey',
       dkimValue: faker.string.uuid(),
       status: 'active',
       mode: 'native',
@@ -521,7 +622,7 @@ export const domainsData = () => {
       postalHost: faker.internet.domainName(),
       domain: faker.internet.domainName(),
       postalId: faker.string.uuid(),
-      dkimKey: faker.string.uuid(),
+      dkimKey: 'postal-AaAaAa._domainkey',
       dkimValue: faker.string.uuid(),
       status: 'active',
       mode: 'native',
@@ -529,14 +630,12 @@ export const domainsData = () => {
       statusUpdateAt: faker.date.past(),
       lastDnsCheckAt: faker.date.past()
     }
-  );
+  ]);
+  console.log('Domains inserted');
+  console.timeLog('⏱️ time');
 
-  return domains;
-};
-
-export const domainVerificationsData = () => {
-  const domainVerifications: object[] = [];
-  domainVerifications.push(
+  // Domain Verifications
+  await db.insert(domainVerifications).values([
     {
       domainId: 100,
       verificationToken: nanoIdToken(),
@@ -557,14 +656,12 @@ export const domainVerificationsData = () => {
       verificationToken: nanoIdToken(),
       verifiedAt: faker.date.past()
     }
-  );
+  ]);
+  console.log('Domain Verifications inserted');
+  console.timeLog('⏱️ time');
 
-  return domainVerifications;
-};
-
-export const postalServersData = () => {
-  const postalServers: object[] = [];
-  postalServers.push(
+  // Postal Servers
+  await db.insert(postalServers).values([
     {
       id: 100,
       publicId: nanoId(),
@@ -587,17 +684,13 @@ export const postalServersData = () => {
       smtpKey: faker.string.uuid(),
       forwardingAddress: faker.internet.email()
     }
-  );
-  return postalServers;
-};
+  ]);
+  console.log('Postal Servers inserted');
+  console.timeLog('⏱️ time');
 
-export const foreignEmailIdentitiesData = (
-  foreignIdentityAvatarIds: string[]
-) => {
-  const foreignEmailIdentities: object[] = [];
-
+  // Foreign Email Identities
   for (let i = 0; i < 30; i++) {
-    foreignEmailIdentities.push({
+    await db.insert(foreignEmailIdentities).values({
       id: 100 + i,
       publicId: nanoId(),
       rootDomain: faker.internet.domainName(),
@@ -610,43 +703,45 @@ export const foreignEmailIdentitiesData = (
       signature: faker.lorem.sentences()
     });
   }
-  return foreignEmailIdentities;
-};
+  console.log('Foreign Email Identities inserted');
+  console.timeLog('⏱️ time');
 
-export const foreignEmailIdentitiesReputationsData = () => {
-  const foreignEmailIdentitiesReputations: object[] = [];
+  // Foreign Email Identities Reputations
   for (let i = 0; i < 30; i++) {
-    foreignEmailIdentitiesReputations.push({
+    await db.insert(foreignEmailIdentitiesReputations).values({
       identityId: 100 + i,
       spam: Math.floor(Math.random() * 10),
       cold: Math.floor(Math.random() * 10)
     });
   }
-  return foreignEmailIdentitiesReputations;
-};
+  console.log('Foreign Email Identities Reputations inserted');
+  console.timeLog('⏱️ time');
 
-export const foreignEmailIdentitiesScreenerStatusData = () => {
-  const foreignEmailIdentitiesScreenerStatus: object[] = [];
-  const screenerStatus = ['pending', 'approve', 'reject', 'delete'];
+  // Foreign Email Identities Screener Status
+  const foreignEmailScreenerStatus: ['pending', 'approve', 'reject', 'delete'] =
+    ['pending', 'approve', 'reject', 'delete'];
   for (let i = 0; i < 30; i++) {
-    foreignEmailIdentitiesScreenerStatus.push({
+    const randomStatus =
+      foreignEmailScreenerStatus[
+        Math.floor(Math.random() * foreignEmailScreenerStatus.length)
+      ];
+    await db.insert(foreignEmailIdentitiesScreenerStatus).values({
       id: 100 + i,
       publicId: nanoId(),
       orgId: 100,
       foreignIdentityId: 100 + i,
       emailIdentityId: 100 + i,
-      status: screenerStatus[Math.floor(Math.random() * screenerStatus.length)],
+      status: randomStatus,
       level: 'emailIdentity',
       setByUserId: Math.floor(Math.random() * 30) + 100
     });
   }
-  return foreignEmailIdentitiesScreenerStatus;
-};
+  console.log('Foreign Email Identities Screener Status inserted');
+  console.timeLog('⏱️ time');
 
-export const sendAsExternalEmailIdentitiesData = () => {
-  const sendAsExternalEmailIdentities: object[] = [];
+  // Send as external email identities
   for (let i = 0; i < 5; i++) {
-    sendAsExternalEmailIdentities.push(
+    await db.insert(sendAsExternalEmailIdentities).values([
       {
         id: 100 + i,
         publicId: nanoId(),
@@ -669,27 +764,25 @@ export const sendAsExternalEmailIdentitiesData = () => {
         smtpCredentialsId: 100 + i * 5,
         addedBy: Math.floor(Math.random() * 30) + 100
       }
-    );
+    ]);
   }
-  return sendAsExternalEmailIdentities;
-};
+  console.log('Send as external email identities inserted');
+  console.timeLog('⏱️ time');
 
-export const sendAsExternalEmailIdentitiesVerificationData = () => {
-  const sendAsExternalEmailIdentitiesVerification: object[] = [];
+  // Send as external email identities verification Data
   for (let i = 0; i < 10; i++) {
-    sendAsExternalEmailIdentitiesVerification.push({
+    await db.insert(sendAsExternalEmailIdentitiesVerification).values({
       identityId: 100 + i,
       verificationToken: nanoIdToken(),
       verifiedAt: faker.date.past()
     });
   }
-  return sendAsExternalEmailIdentitiesVerification;
-};
+  console.log('Send as external email identities verification inserted');
+  console.timeLog('⏱️ time');
 
-export const sendAsExternalEmailIdentitiesSmtpCredentialsData = () => {
-  const sendAsExternalEmailIdentitiesSmtpCredentials: object[] = [];
+  // Send as external email identities Smtp Credentials Data
   for (let i = 0; i < 10; i++) {
-    sendAsExternalEmailIdentitiesSmtpCredentials.push({
+    await db.insert(sendAsExternalEmailIdentitiesSmtpCredentials).values({
       id: 100 + i,
       username: faker.internet.userName(),
       password: faker.internet.password(),
@@ -697,16 +790,15 @@ export const sendAsExternalEmailIdentitiesSmtpCredentialsData = () => {
       port: 587,
       authMethod: 'plain',
       encryption: 'tls',
-      addedBt: 100 + i
+      addedBy: 100 + i
     });
   }
-  return sendAsExternalEmailIdentitiesSmtpCredentials;
-};
+  console.log('Send as external email identities Smtp Credentials inserted');
+  console.timeLog('⏱️ time');
 
-export const sendAsExternalEmailIdentitiesAuthorizedUsersData = () => {
-  const sendAsExternalEmailIdentitiesAuthorizedUsers: object[] = [];
+  // Send as external email identities authorized users Data
   for (let i = 0; i < 10; i++) {
-    sendAsExternalEmailIdentitiesAuthorizedUsers.push(
+    await db.insert(sendAsExternalEmailIdentitiesAuthorizedUsers).values([
       {
         identityId: 100 + i,
         userGroupId: 100 + i,
@@ -717,117 +809,14 @@ export const sendAsExternalEmailIdentitiesAuthorizedUsersData = () => {
         userId: 100 + i,
         addedBy: 100
       }
-    );
+    ]);
   }
-  return sendAsExternalEmailIdentitiesAuthorizedUsers;
-};
+  console.log('Send as external email identities authorized users inserted');
+  console.timeLog('⏱️ time');
 
-export const emailIdentitiesData = () => {
-  const emailIdentities: object[] = [];
+  // Email Routing Rules
   for (let i = 0; i < 30; i++) {
-    emailIdentities.push(
-      {
-        id: 100 + i,
-        publicId: nanoId(),
-        orgId: 100,
-        username: faker.internet.userName(),
-        domainName: faker.internet.domainName(),
-        domainId: 100,
-        sendName: faker.person.fullName(),
-        addedBy: 100
-      },
-      {
-        id: 100 + i + 30,
-        publicId: nanoId(),
-        orgId: 100,
-        username: faker.internet.userName(),
-        domainName: faker.internet.domainName(),
-        domainId: 101,
-        sendName: faker.person.fullName(),
-        addedBy: 100
-      },
-      {
-        id: 200 + i,
-        publicId: nanoId(),
-        orgId: 101,
-        username: faker.internet.userName(),
-        domainName: faker.internet.domainName(),
-        domainId: 102,
-        sendName: faker.person.fullName(),
-        addedBy: 101
-      },
-      {
-        id: 200 + i + 30,
-        publicId: nanoId(),
-        orgId: 101,
-        username: faker.internet.userName(),
-        domainName: faker.internet.domainName(),
-        domainId: 103,
-        sendName: faker.person.fullName(),
-        addedBy: 102
-      }
-    );
-  }
-  return emailIdentities;
-};
-
-export const emailIdentitiesAuthorizedUsersData = () => {
-  const emailIdentitiesAuthorizedUsers: object[] = [];
-  for (let i = 0; i < 30; i++) {
-    emailIdentitiesAuthorizedUsers.push(
-      {
-        identityId: 100 + i,
-        userId: 100 + i,
-        addedBy: 100
-      },
-      {
-        identityId: 100 + i + 30,
-        userId: 100 + i,
-        addedBy: 100
-      },
-      {
-        identityId: 200 + i,
-        userId: 100 + i,
-        addedBy: 100
-      },
-      {
-        identityId: 200 + i + 30,
-        userId: 100 + i,
-        addedBy: 100
-      }
-    );
-  }
-  for (let i = 0; i < 6; i++) {
-    emailIdentitiesAuthorizedUsers.push(
-      {
-        identityId: 100 + i,
-        userGroupId: 100 + i,
-        addedBy: 100
-      },
-      {
-        identityId: 100 + i + 30,
-        userGroupId: 100 + i,
-        addedBy: 100
-      },
-      {
-        identityId: 200 + i,
-        userGroupId: 100 + i,
-        addedBy: 100
-      },
-      {
-        identityId: 200 + i + 30,
-        userGroupId: 100 + i,
-        addedBy: 100
-      }
-    );
-  }
-  return emailIdentitiesAuthorizedUsers;
-};
-
-export const emailRoutingRulesData = () => {
-  const emailRoutingRules: object[] = [];
-  for (let i = 0; i < 30; i++) {
-    emailRoutingRules.push(
+    await db.insert(emailRoutingRules).values([
       {
         id: 100 + i,
         publicId: nanoId(),
@@ -842,17 +831,16 @@ export const emailRoutingRulesData = () => {
         orgId: 101,
         name: faker.commerce.department(),
         description: faker.commerce.productDescription(),
-        addedBy: 101
+        createdBy: 101
       }
-    );
+    ]);
   }
-  return emailRoutingRules;
-};
+  console.log('Email Routing Rules inserted');
+  console.timeLog('⏱️ time');
 
-export const emailRoutingRulesDestinationsData = () => {
-  const emailRoutingRulesDestinations: object[] = [];
+  // Email Routing Rules Destinations
   for (let i = 0; i < 30; i++) {
-    emailRoutingRulesDestinations.push(
+    await db.insert(emailRoutingRulesDestinations).values([
       {
         ruleId: 100 + i,
         groupId: 100 + i
@@ -869,41 +857,146 @@ export const emailRoutingRulesDestinationsData = () => {
         ruleId: 200 + i,
         userId: 100 + i
       }
-    );
+    ]);
   }
-  return emailRoutingRulesDestinations;
-};
+  console.log('Email Routing Rules Destinations inserted');
+  console.timeLog('⏱️ time');
 
-export const convosData = () => {
-  const convos: object[] = [];
-  const screenerStatuses = ['pending', 'approved', 'rejected', 'deleted'];
+  // Email Identities
+  for (let i = 0; i < 30; i++) {
+    await db.insert(emailIdentities).values([
+      {
+        id: 100 + i,
+        publicId: nanoId(),
+        orgId: 100,
+        username: faker.internet.userName(),
+        domainName: faker.internet.domainName(),
+        domainId: 100,
+        routingRuleId: 100 + i,
+        sendName: faker.person.fullName(),
+        addedBy: 100
+      },
+      {
+        id: 100 + i + 30,
+        publicId: nanoId(),
+        orgId: 100,
+        username: faker.internet.userName(),
+        domainName: faker.internet.domainName(),
+        domainId: 101,
+        routingRuleId: 100 + i,
+        sendName: faker.person.fullName(),
+        addedBy: 100
+      },
+      {
+        id: 200 + i,
+        publicId: nanoId(),
+        orgId: 101,
+        username: faker.internet.userName(),
+        domainName: faker.internet.domainName(),
+        domainId: 102,
+        routingRuleId: 200 + i,
+        sendName: faker.person.fullName(),
+        addedBy: 101
+      },
+      {
+        id: 200 + i + 30,
+        publicId: nanoId(),
+        orgId: 101,
+        username: faker.internet.userName(),
+        domainName: faker.internet.domainName(),
+        domainId: 103,
+        routingRuleId: 200 + i,
+        sendName: faker.person.fullName(),
+        addedBy: 102
+      }
+    ]);
+  }
+  console.log('Email Identities inserted');
+  console.timeLog('⏱️ time');
+
+  // Email Identities Authorized Users
+  for (let i = 0; i < 30; i++) {
+    await db.insert(emailIdentitiesAuthorizedUsers).values([
+      {
+        identityId: 100 + i,
+        userId: 100 + i,
+        addedBy: 100
+      },
+      {
+        identityId: 100 + i + 30,
+        userId: 100 + i,
+        addedBy: 100
+      },
+      {
+        identityId: 200 + i,
+        userId: 100 + i,
+        addedBy: 100
+      },
+      {
+        identityId: 200 + i + 30,
+        userId: 100 + i,
+        addedBy: 100
+      }
+    ]);
+  }
+  for (let i = 0; i < 6; i++) {
+    await db.insert(emailIdentitiesAuthorizedUsers).values([
+      {
+        identityId: 100 + i,
+        userGroupId: 100 + i,
+        addedBy: 100
+      },
+      {
+        identityId: 100 + i + 30,
+        userGroupId: 100 + i,
+        addedBy: 100
+      },
+      {
+        identityId: 200 + i,
+        userGroupId: 100 + i,
+        addedBy: 100
+      },
+      {
+        identityId: 200 + i + 30,
+        userGroupId: 100 + i,
+        addedBy: 100
+      }
+    ]);
+  }
+  console.log('Email Identities Authorized Users inserted');
+  console.timeLog('⏱️ time');
+
+  // Convos
+  const convoScreenerStatuses: ['pending', 'approved', 'rejected', 'deleted'] =
+    ['pending', 'approved', 'rejected', 'deleted'];
   for (let i = 0; i < 50; i++) {
-    convos.push(
+    const randomStatus =
+      convoScreenerStatuses[
+        Math.floor(Math.random() * convoScreenerStatuses.length)
+      ];
+    await db.insert(convos).values([
       {
         id: 100 + i,
         publicId: nanoId(),
         orgId: 100,
         lastUpdatedAt: faker.date.past(),
-        screenerStatus:
-          screenerStatuses[Math.floor(Math.random() * screenerStatuses.length)]
+        screenerStatus: randomStatus
       },
       {
         id: 200 + i,
         publicId: nanoId(),
         orgId: 101,
         lastUpdatedAt: faker.date.past(),
-        screenerStatus:
-          screenerStatuses[Math.floor(Math.random() * screenerStatuses.length)]
+        screenerStatus: randomStatus
       }
-    );
+    ]);
   }
-  return convos;
-};
+  console.log('Convos inserted');
+  console.timeLog('⏱️ time');
 
-export const convoSubjectsData = () => {
-  const convoSubjects: object[] = [];
+  // convo subjects
   for (let i = 0; i < 50; i++) {
-    convoSubjects.push(
+    await db.insert(convoSubjects).values([
       {
         id: 100 + i,
         convoId: 100 + i,
@@ -914,10 +1007,10 @@ export const convoSubjectsData = () => {
         convoId: 200 + i,
         subject: faker.lorem.sentence()
       }
-    );
+    ]);
   }
   for (let i = 0; i < 20; i++) {
-    convoSubjects.push(
+    await db.insert(convoSubjects).values([
       {
         id: 300 + i,
         convoId: 100 + i * 2,
@@ -928,24 +1021,29 @@ export const convoSubjectsData = () => {
         convoId: 200 + i * 2,
         subject: faker.lorem.sentence()
       }
-    );
+    ]);
   }
-  return convoSubjects;
-};
+  console.log('Convo Subjects inserted');
+  console.timeLog('⏱️ time');
 
-export const convoMembersData = () => {
-  const convoMembers: object[] = [];
-  const convoRoles = ['assigned', 'contributor', 'watcher', 'guest'];
-  const convoNotifications = ['active', 'muted', 'off'];
-  const userIds = Array(30)
-    .fill(0)
-    .map((_, i) => i + 100);
+  // convo members
+  const convoRoles: ['assigned', 'contributor', 'watcher', 'guest'] = [
+    'assigned',
+    'contributor',
+    'watcher',
+    'guest'
+  ];
+  const convoNotifications: ['active', 'muted', 'off'] = [
+    'active',
+    'muted',
+    'off'
+  ];
   const groupIds1 = [100, 101, 102];
   const groupIds2 = [103, 104, 105];
   for (let i = 0; i < 50; i++) {
     const user1 = userIds[Math.floor(Math.random() * userIds.length)];
     const user2 = userIds[Math.floor(Math.random() * userIds.length)];
-    convoMembers.push(
+    await db.insert(convoMembers).values([
       {
         id: 100 + i,
         convoId: 100 + i,
@@ -958,7 +1056,7 @@ export const convoMembersData = () => {
           ]
       },
       {
-        id: 100 + i * 2,
+        id: 200 + i,
         convoId: 100 + i,
         userGroupId: groupIds1[Math.floor(Math.random() * groupIds1.length)],
         role: convoRoles[Math.floor(Math.random() * convoRoles.length)],
@@ -968,14 +1066,14 @@ export const convoMembersData = () => {
           ]
       },
       {
-        id: 1000 + i,
+        id: 300 + i,
         convoId: 100 + i,
         foreignEmailIdentityId: 100 + i,
         role: 'contributor',
         notifications: 'active'
       },
       {
-        id: 200 + i,
+        id: 400 + i,
         convoId: 200 + i,
         userId: user2,
         userProfileId: user2,
@@ -986,7 +1084,7 @@ export const convoMembersData = () => {
           ]
       },
       {
-        id: 200 + i * 2,
+        id: 500 + i,
         convoId: 200 + i,
         userGroupId: groupIds2[Math.floor(Math.random() * groupIds2.length)],
         role: convoRoles[Math.floor(Math.random() * convoRoles.length)],
@@ -996,127 +1094,101 @@ export const convoMembersData = () => {
           ]
       },
       {
-        id: 2000 + i,
+        id: 600 + i,
         convoId: 200 + i,
         foreignEmailIdentityId: 100 + i,
         role: 'contributor',
         notifications: 'active'
       }
-    );
+    ]);
   }
+  console.log('Convo Members inserted');
+  console.timeLog('⏱️ time');
 
-  return convoMembers;
-};
-
-export const convoMessagesData = () => {
-  const convoMessages: object[] = [];
+  // convo messages
   const convoIds = Array.from({ length: 50 }, (_, i) => i + 100);
   const convoIds2 = Array.from({ length: 50 }, (_, i) => i + 200);
-  const convoSubjects = [
+  const convoRefMessageSubjects = [
     ...Array.from({ length: 50 }, (_, i) => i + 100),
     ...Array.from({ length: 50 }, (_, i) => i + 200),
     ...Array.from({ length: 20 }, (_, i) => i + 300),
     ...Array.from({ length: 20 }, (_, i) => i + 400)
   ];
-  const convoMembers = [
-    ...Array.from({ length: 100 }, (_, i) => i + 100),
-    ...Array.from({ length: 100 }, (_, i) => i + 200),
-    ...Array.from({ length: 50 }, (_, i) => i + 1000),
-    ...Array.from({ length: 50 }, (_, i) => i + 2000)
+  const convoRefMessageMembers = [
+    ...Array.from({ length: 50 }, (_, i) => i + 100),
+    ...Array.from({ length: 50 }, (_, i) => i + 200),
+    ...Array.from({ length: 50 }, (_, i) => i + 300),
+    ...Array.from({ length: 50 }, (_, i) => i + 400),
+    ...Array.from({ length: 50 }, (_, i) => i + 500),
+    ...Array.from({ length: 50 }, (_, i) => i + 600)
   ];
   for (let i = 0; i < 1000; i++) {
-    convoMessages.push(
+    await db.insert(convoMessages).values([
       {
         id: 1000 + i,
         publicId: nanoId(),
         convoId: convoIds[Math.floor(Math.random() * 50)],
-        subjectId: convoSubjects[Math.floor(Math.random() * 140)],
-        replyToId: '',
-        author: convoMembers[Math.floor(Math.random() * 300)],
+        subjectId: convoRefMessageSubjects[Math.floor(Math.random() * 140)],
+        author: convoRefMessageMembers[Math.floor(Math.random() * 300)],
         body: faker.lorem.sentences(),
         postalMessageId: faker.string.uuid(),
-        postalId: faker.string.numeric()
+        postalId: Math.floor(Math.random() * 300)
       },
       {
         id: 3000 + i,
         publicId: nanoId(),
         convoId: convoIds2[Math.floor(Math.random() * 50)],
-        subjectId: convoSubjects[Math.floor(Math.random() * 140)],
-        replyToId: '',
-        author: convoMembers[Math.floor(Math.random() * 300)],
+        subjectId: convoRefMessageSubjects[Math.floor(Math.random() * 140)],
+        author: convoRefMessageMembers[Math.floor(Math.random() * 300)],
         body: faker.lorem.sentences(),
         postalMessageId: faker.string.uuid(),
-        postalId: faker.string.numeric()
+        postalId: Math.floor(Math.random() * 300)
       }
-    );
+    ]);
   }
   for (let i = 0; i < 300; i++) {
-    convoMessages.push(
+    await db.insert(convoMessages).values([
       {
         id: 5000 + i,
         publicId: nanoId(),
         convoId: convoIds[Math.floor(Math.random() * 50)],
-        subjectId: convoSubjects[Math.floor(Math.random() * 140)],
+        subjectId: convoRefMessageSubjects[Math.floor(Math.random() * 140)],
         replyToId: 1000 + i * 2,
-        author: convoMembers[Math.floor(Math.random() * 300)],
+        author: convoRefMessageMembers[Math.floor(Math.random() * 300)],
         body: faker.lorem.sentences(),
         postalMessageId: faker.string.uuid(),
-        postalId: faker.string.numeric()
+        postalId: Math.floor(Math.random() * 300)
       },
       {
         id: 6000 + i,
         publicId: nanoId(),
         convoId: convoIds2[Math.floor(Math.random() * 50)],
-        subjectId: convoSubjects[Math.floor(Math.random() * 140)],
+        subjectId: convoRefMessageSubjects[Math.floor(Math.random() * 140)],
         replyToId: 3000 + i * 2,
-        author: convoMembers[Math.floor(Math.random() * 300)],
+        author: convoRefMessageMembers[Math.floor(Math.random() * 300)],
         body: faker.lorem.sentences(),
         postalMessageId: faker.string.uuid(),
-        postalId: faker.string.numeric()
+        postalId: Math.floor(Math.random() * 300)
       }
-    );
+    ]);
   }
+  console.log('Convo Messages inserted');
+  console.timeLog('⏱️ time');
 
-  return convoMessages;
-};
-
-export const convoAttachmentsData = () => {
-  const convoAttachments: object[] = [];
-  const convoMessageIds = Array.from({ length: 1001 }, (_, i) => i);
-  const convoMembers = [
-    ...Array.from({ length: 100 }, (_, i) => i + 100),
-    ...Array.from({ length: 100 }, (_, i) => i + 200),
-    ...Array.from({ length: 50 }, (_, i) => i + 1000),
-    ...Array.from({ length: 50 }, (_, i) => i + 2000)
+  // convo attachments
+  const convoRefMessageIds = [
+    ...Array.from({ length: 1000 }, (_, i) => i + 1000),
+    ...Array.from({ length: 1000 }, (_, i) => i + 3000),
+    ...Array.from({ length: 300 }, (_, i) => i + 5000),
+    ...Array.from({ length: 300 }, (_, i) => i + 6000)
   ];
-
   for (let i = 0; i < 25; i++) {
-    convoAttachments.push(
+    await db.insert(convoAttachments).values([
       {
         id: 100 + i,
         publicId: nanoId(),
         convoId: 100 + i * 2,
-        convoMessageId: convoMessageIds[Math.floor(Math.random() * 1000)],
-        fileName: faker.system.fileName(),
-        type: faker.system.fileType(),
-        storageId: faker.string.uuid(),
-        convoMemberId: 100 + i * 3
-      },
-      {
-        id: 100 + i * 2,
-        publicId: nanoId(),
-        convoId: 100 + i * 2,
-        convoNoteId: convoMessageIds[Math.floor(Math.random() * 1000)],
-        fileName: faker.system.fileName(),
-        type: faker.system.fileType(),
-        storageId: faker.string.uuid(),
-        convoMemberId: 100 + i * 3
-      },
-      {
-        id: 100 + i * 3,
-        publicId: nanoId(),
-        convoId: 100 + i * 2,
-        convoDraftId: convoMessageIds[Math.floor(Math.random() * 1000)],
+        convoMessageId: convoRefMessageIds[Math.floor(Math.random() * 2600)],
         fileName: faker.system.fileName(),
         type: faker.system.fileType(),
         storageId: faker.string.uuid(),
@@ -1125,42 +1197,61 @@ export const convoAttachmentsData = () => {
       {
         id: 200 + i,
         publicId: nanoId(),
+        convoId: 100 + i * 2,
+        convoNoteId: convoRefMessageIds[Math.floor(Math.random() * 2600)],
+        fileName: faker.system.fileName(),
+        type: faker.system.fileType(),
+        storageId: faker.string.uuid(),
+        convoMemberId: 100 + i * 3
+      },
+      {
+        id: 300 + i,
+        publicId: nanoId(),
+        convoId: 100 + i * 2,
+        convoDraftId: convoRefMessageIds[Math.floor(Math.random() * 2600)],
+        fileName: faker.system.fileName(),
+        type: faker.system.fileType(),
+        storageId: faker.string.uuid(),
+        convoMemberId: 100 + i * 3
+      },
+      {
+        id: 400 + i,
+        publicId: nanoId(),
         convoId: 200 + i * 2,
-        convoMessageId: convoMessageIds[Math.floor(Math.random() * 1000)],
+        convoMessageId: convoRefMessageIds[Math.floor(Math.random() * 2600)],
         fileName: faker.system.fileName(),
         type: faker.system.fileType(),
         storageId: faker.string.uuid(),
         convoMemberId: 200 + i * 3
       },
       {
-        id: 200 + i * 2,
+        id: 500 + i,
         publicId: nanoId(),
         convoId: 200 + i * 2,
-        convoNoteId: convoMessageIds[Math.floor(Math.random() * 1000)],
+        convoNoteId: convoRefMessageIds[Math.floor(Math.random() * 2600)],
         fileName: faker.system.fileName(),
         type: faker.system.fileType(),
         storageId: faker.string.uuid(),
         convoMemberId: 200 + i * 3
       },
       {
-        id: 200 + i * 3,
+        id: 600 + i,
         publicId: nanoId(),
         convoId: 200 + i * 2,
-        convoDraftId: convoMessageIds[Math.floor(Math.random() * 1000)],
+        convoDraftId: convoRefMessageIds[Math.floor(Math.random() * 2600)],
         fileName: faker.system.fileName(),
         type: faker.system.fileType(),
         storageId: faker.string.uuid(),
         convoMemberId: 200 + i * 3
       }
-    );
+    ]);
   }
-  return convoAttachments;
-};
+  console.log('Convo Attachments inserted');
+  console.timeLog('⏱️ time');
 
-export const convoMessageRepliesData = () => {
-  const convoMessageReplies: object[] = [];
+  // convo message replies
   for (let i = 0; i < 300; i++) {
-    convoMessageReplies.push(
+    await db.insert(convoMessageReplies).values([
       {
         convoMessageSourceId: 1000 + i * 2,
         convoMessageReplyId: 5000 + i
@@ -1169,73 +1260,75 @@ export const convoMessageRepliesData = () => {
         convoMessageSourceId: 3000 + i * 2,
         convoMessageReplyId: 6000 + i
       }
-    );
+    ]);
   }
-  return convoMessageReplies;
-};
+  console.log('Convo Message Replies inserted');
+  console.timeLog('⏱️ time');
 
-export const convoNotesData = () => {
-  const convoNotes: object[] = [];
-  const convoIds = Array.from({ length: 50 }, (_, i) => i + 100);
-  const convoIds2 = Array.from({ length: 50 }, (_, i) => i + 200);
-  const convoMembers = [
+  // Convo notes
+  const convoRefNotesIds = Array.from({ length: 50 }, (_, i) => i + 100);
+  const convoRefNotesIds2 = Array.from({ length: 50 }, (_, i) => i + 200);
+  const convoRefNotesMembers = [
     ...Array.from({ length: 100 }, (_, i) => i + 100),
     ...Array.from({ length: 100 }, (_, i) => i + 200),
     ...Array.from({ length: 50 }, (_, i) => i + 1000),
     ...Array.from({ length: 50 }, (_, i) => i + 2000)
   ];
-  const noteVisibility = ['self', 'convo', 'org', 'public'];
+  const noteVisibility: ['self', 'convo', 'org', 'public'] = [
+    'self',
+    'convo',
+    'org',
+    'public'
+  ];
 
   for (let i = 0; i < 1000; i++) {
-    convoNotes.push(
+    await db.insert(convoNotes).values([
       {
         id: 1000 + i,
         publicId: nanoId(),
-        convoId: convoIds[Math.floor(Math.random() * 50)],
-        replyToId: '',
-        author: convoMembers[Math.floor(Math.random() * 300)],
+        convoId: convoRefNotesIds[Math.floor(Math.random() * 50)],
+        author: convoRefNotesMembers[Math.floor(Math.random() * 300)],
         body: faker.lorem.sentences(),
         visibility: noteVisibility[Math.floor(Math.random() * 4)]
       },
       {
         id: 3000 + i,
         publicId: nanoId(),
-        convoId: convoIds2[Math.floor(Math.random() * 50)],
-        author: convoMembers[Math.floor(Math.random() * 300)],
+        convoId: convoRefNotesIds2[Math.floor(Math.random() * 50)],
+        author: convoRefNotesMembers[Math.floor(Math.random() * 300)],
         body: faker.lorem.sentences(),
         visibility: noteVisibility[Math.floor(Math.random() * 4)]
       }
-    );
+    ]);
   }
   for (let i = 0; i < 300; i++) {
-    convoNotes.push(
+    await db.insert(convoNotes).values([
       {
         id: 5000 + i,
         publicId: nanoId(),
-        convoId: convoIds[Math.floor(Math.random() * 50)],
+        convoId: convoRefNotesIds[Math.floor(Math.random() * 50)],
         replyToId: 1000 + i * 2,
-        author: convoMembers[Math.floor(Math.random() * 300)],
+        author: convoRefNotesMembers[Math.floor(Math.random() * 300)],
         body: faker.lorem.sentences(),
         visibility: noteVisibility[Math.floor(Math.random() * 4)]
       },
       {
         id: 6000 + i,
         publicId: nanoId(),
-        convoId: convoIds2[Math.floor(Math.random() * 50)],
+        convoId: convoRefNotesIds2[Math.floor(Math.random() * 50)],
         replyToId: 3000 + i * 2,
-        author: convoMembers[Math.floor(Math.random() * 300)],
+        author: convoRefNotesMembers[Math.floor(Math.random() * 300)],
         body: faker.lorem.sentences(),
         visibility: noteVisibility[Math.floor(Math.random() * 4)]
       }
-    );
+    ]);
   }
-  return convoNotes;
-};
+  console.log('Convo Notes inserted');
+  console.timeLog('⏱️ time');
 
-export const convoNoteRepliesData = () => {
-  const convoNoteReplies: object[] = [];
+  // Convo note replies
   for (let i = 0; i < 300; i++) {
-    convoNoteReplies.push(
+    await db.insert(convoNoteReplies).values([
       {
         convoNoteSourceId: 1000 + i * 2,
         convoNoteReplyId: 5000 + i
@@ -1244,42 +1337,54 @@ export const convoNoteRepliesData = () => {
         convoNoteSourceId: 3000 + i * 2,
         convoNoteReplyId: 6000 + i
       }
-    );
+    ]);
   }
-  return convoNoteReplies;
-};
+  console.log('Convo Note Replies inserted');
+  console.timeLog('⏱️ time');
 
-export const convoDraftsData = () => {
-  const convoDrafts: object[] = [];
-  const convoIds = Array.from({ length: 50 }, (_, i) => i + 100);
-  const convoIds2 = Array.from({ length: 50 }, (_, i) => i + 200);
-  const convoMembers = [
+  // convo drafts
+  const convoRefDraftIds = Array.from({ length: 50 }, (_, i) => i + 100);
+  const convoRefDraftIds2 = Array.from({ length: 50 }, (_, i) => i + 200);
+  const convoRefDraftMembers = [
     ...Array.from({ length: 100 }, (_, i) => i + 100),
     ...Array.from({ length: 100 }, (_, i) => i + 200),
     ...Array.from({ length: 50 }, (_, i) => i + 1000),
     ...Array.from({ length: 50 }, (_, i) => i + 2000)
   ];
-  const draftVisibility = ['self', 'convo', 'org', 'public'];
+  const draftVisibility: ['self', 'convo', 'org', 'public'] = [
+    'self',
+    'convo',
+    'org',
+    'public'
+  ];
 
   for (let i = 0; i < 200; i++) {
-    convoDrafts.push(
+    await db.insert(convoDrafts).values([
       {
         id: 1000 + i,
         publicId: nanoId(),
-        convoId: convoIds[Math.floor(Math.random() * 50)],
-        author: convoMembers[Math.floor(Math.random() * 300)],
+        convoId: convoRefDraftIds[Math.floor(Math.random() * 50)],
+        author: convoRefDraftMembers[Math.floor(Math.random() * 300)],
         visibility: draftVisibility[Math.floor(Math.random() * 4)],
         body: faker.lorem.sentences()
       },
       {
         id: 2000 + i,
         publicId: nanoId(),
-        convoId: convoIds2[Math.floor(Math.random() * 50)],
-        author: convoMembers[Math.floor(Math.random() * 300)],
+        convoId: convoRefDraftIds2[Math.floor(Math.random() * 50)],
+        author: convoRefDraftMembers[Math.floor(Math.random() * 300)],
         visibility: draftVisibility[Math.floor(Math.random() * 4)],
         body: faker.lorem.sentences()
       }
-    );
+    ]);
   }
-  return convoDrafts;
-};
+  console.log('Convo Drafts inserted');
+  console.timeLog('⏱️ time');
+
+  console.log('');
+  console.log('');
+  console.log('👏 All Done');
+
+  console.timeEnd('⏱️ time');
+}
+seedDb();

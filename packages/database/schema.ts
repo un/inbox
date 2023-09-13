@@ -768,96 +768,6 @@ export const sendAsExternalEmailIdentitiesAuthorizedUsersRelations = relations(
 
 //* native Email Identities
 
-export const emailIdentities = mysqlTable(
-  'email_identities',
-  {
-    id: serial('id').primaryKey(),
-    publicId: nanoId('public_id').notNull(),
-    orgId: foreignKey('org_id').notNull(),
-    username: varchar('username', { length: 32 }).notNull(),
-    domainName: varchar('domain_name', { length: 128 }).notNull(),
-    domainId: foreignKey('domain_id'),
-    routingRuleId: foreignKey('routing_rule_id').notNull(),
-    sendName: varchar('send_name', { length: 128 }),
-    avatarId: varchar('avatar_id', { length: 64 }),
-    isCatchAll: boolean('is_catch_all').notNull().default(false),
-    createdAt: timestamp('created_at')
-      .default(sql`CURRENT_TIMESTAMP`)
-      .notNull()
-  },
-  (table) => ({
-    //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit : !domainId && !catchAll - cant be catchall on root domains
-    publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
-    domainIdIndex: index('domain_id_idx').on(table.domainId),
-    domainNameIndex: index('domain_id_idx').on(table.domainName),
-    orgIdIndex: index('org_id_idx').on(table.orgId),
-    emailIndex: uniqueIndex('email_idx').on(table.username, table.domainName)
-  })
-);
-
-export const emailIdentitiesRelations = relations(
-  emailIdentities,
-  ({ one, many }) => ({
-    org: one(orgs, {
-      fields: [emailIdentities.orgId],
-      references: [orgs.id]
-    }),
-    domain: one(domains, {
-      fields: [emailIdentities.domainId],
-      references: [domains.id]
-    }),
-    authorizedUsers: many(emailIdentitiesAuthorizedUsers),
-    routingRules: one(emailRoutingRules, {
-      fields: [emailIdentities.routingRuleId],
-      references: [emailRoutingRules.id]
-    })
-  })
-);
-
-export const emailIdentitiesAuthorizedUsers = mysqlTable(
-  'email_identities_authorized_users',
-  {
-    id: serial('id').primaryKey(),
-    identityId: foreignKey('identity_id').notNull(),
-    userId: foreignKey('user_id'),
-    userGroupId: foreignKey('user_group_id'),
-    addedBy: foreignKey('added_by').notNull(),
-    createdAt: timestamp('created_at')
-      .default(sql`CURRENT_TIMESTAMP`)
-      .notNull()
-  },
-  (table) => ({
-    //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit : userId//userGroupId
-    identityIdIndex: index('identity_id_idx').on(table.identityId),
-    userToIdentityIndex: uniqueIndex('user_to_identity_idx').on(
-      table.identityId,
-      table.userId
-    ),
-    userGroupToIdentityIndex: uniqueIndex('user_group_to_identity_idx').on(
-      table.identityId,
-      table.userGroupId
-    )
-  })
-);
-
-export const emailIdentitiesAuthorizedUsersRelations = relations(
-  emailIdentitiesAuthorizedUsers,
-  ({ one }) => ({
-    identity: one(emailIdentities, {
-      fields: [emailIdentitiesAuthorizedUsers.identityId],
-      references: [emailIdentities.id]
-    }),
-    user: one(users, {
-      fields: [emailIdentitiesAuthorizedUsers.userId],
-      references: [users.id]
-    }),
-    userGroup: one(userGroups, {
-      fields: [emailIdentitiesAuthorizedUsers.userGroupId],
-      references: [userGroups.id]
-    })
-  })
-);
-
 export const emailRoutingRules = mysqlTable(
   'email_routing_rules',
   {
@@ -922,6 +832,101 @@ export const emailRoutingRulesDestinationsRelations = relations(
     user: one(users, {
       fields: [emailRoutingRulesDestinations.userId],
       references: [users.id]
+    })
+  })
+);
+
+export const emailIdentities = mysqlTable(
+  'email_identities',
+  {
+    id: serial('id').primaryKey(),
+    publicId: nanoId('public_id').notNull(),
+    orgId: foreignKey('org_id').notNull(),
+    username: varchar('username', { length: 32 }).notNull(),
+    domainName: varchar('domain_name', { length: 128 }).notNull(),
+    domainId: foreignKey('domain_id'),
+    routingRuleId: foreignKey('routing_rule_id').notNull(),
+    sendName: varchar('send_name', { length: 128 }),
+    avatarId: varchar('avatar_id', { length: 64 }),
+    addedBy: foreignKey('added_by').notNull(),
+    isCatchAll: boolean('is_catch_all').notNull().default(false),
+    createdAt: timestamp('created_at')
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull()
+  },
+  (table) => ({
+    //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit : !domainId && !catchAll - cant be catchall on root domains
+    publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
+    domainIdIndex: index('domain_id_idx').on(table.domainId),
+    domainNameIndex: index('domain_id_idx').on(table.domainName),
+    orgIdIndex: index('org_id_idx').on(table.orgId),
+    emailIndex: uniqueIndex('email_idx').on(table.username, table.domainName)
+  })
+);
+
+export const emailIdentitiesRelations = relations(
+  emailIdentities,
+  ({ one, many }) => ({
+    addedBy: one(users, {
+      fields: [emailIdentities.addedBy],
+      references: [users.id]
+    }),
+    org: one(orgs, {
+      fields: [emailIdentities.orgId],
+      references: [orgs.id]
+    }),
+    domain: one(domains, {
+      fields: [emailIdentities.domainId],
+      references: [domains.id]
+    }),
+    authorizedUsers: many(emailIdentitiesAuthorizedUsers),
+    routingRules: one(emailRoutingRules, {
+      fields: [emailIdentities.routingRuleId],
+      references: [emailRoutingRules.id]
+    })
+  })
+);
+
+export const emailIdentitiesAuthorizedUsers = mysqlTable(
+  'email_identities_authorized_users',
+  {
+    id: serial('id').primaryKey(),
+    identityId: foreignKey('identity_id').notNull(),
+    userId: foreignKey('user_id'),
+    userGroupId: foreignKey('user_group_id'),
+    addedBy: foreignKey('added_by').notNull(),
+    createdAt: timestamp('created_at')
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull()
+  },
+  (table) => ({
+    //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit : userId//userGroupId
+    identityIdIndex: index('identity_id_idx').on(table.identityId),
+    userToIdentityIndex: uniqueIndex('user_to_identity_idx').on(
+      table.identityId,
+      table.userId
+    ),
+    userGroupToIdentityIndex: uniqueIndex('user_group_to_identity_idx').on(
+      table.identityId,
+      table.userGroupId
+    )
+  })
+);
+
+export const emailIdentitiesAuthorizedUsersRelations = relations(
+  emailIdentitiesAuthorizedUsers,
+  ({ one }) => ({
+    identity: one(emailIdentities, {
+      fields: [emailIdentitiesAuthorizedUsers.identityId],
+      references: [emailIdentities.id]
+    }),
+    user: one(users, {
+      fields: [emailIdentitiesAuthorizedUsers.userId],
+      references: [users.id]
+    }),
+    userGroup: one(userGroups, {
+      fields: [emailIdentitiesAuthorizedUsers.userGroupId],
+      references: [userGroups.id]
     })
   })
 );

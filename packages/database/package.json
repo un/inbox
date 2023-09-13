@@ -12,7 +12,8 @@
     "db:drop:i": "infisical run --env=local -- drizzle-kit drop --config=drizzle.config.ts",
     "db:studio": "pnpm drizzle-kit studio --port 3333  --config=drizzle.config.ts",
     "db:studio:i": "infisical run --env=local -- drizzle-kit studio --port 3333  --config=drizzle.config.ts",
-    "db:seed:i": "infisical run --env=local -- esno seedDb.ts"
+    "db:seed:i": "infisical run --env=local -- esno dbSeed.ts",
+    "db:clean:i": "infisical run --env=local -- esno dbClean.ts"
   },
   "dependencies": {
     "@planetscale/database": "^1.11.0",
