@@ -52,7 +52,8 @@
         'Human verification failed!<br/>Try refreshing the page or contact our amazing support team';
       return;
     }
-    webauthnResult && console.log(webauthnResult);
+    console.log(webauthnResult);
+    webauthnResult && navigateTo('/h');
   }
 </script>
 
