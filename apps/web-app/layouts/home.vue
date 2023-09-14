@@ -3,9 +3,9 @@
 </script>
 <template>
   <div
-    class="flex flex-row w-full h-full p-4 items-center bg-base-2 overflow-none gap-4">
+    class="flex flex-row w-full h-full max-h-full p-4 items-center bg-base-2 overflow-none gap-4">
     <div
-      class="flex flex-col h-full justify-between transition-all duration-300"
+      class="flex flex-col h-full max-h-full justify-between transition-all duration-300"
       :class="localPrefs.sidebarCollapsed ? 'w-[50px]' : 'w-64'">
       <div class="flex flex-col gap-2">
         <button
@@ -76,7 +76,7 @@
       </div>
     </div>
     <div
-      class="border-1 rounded-3xl w-full h-full border-base-6 bg-base-1 overflow-auto max-h-full">
+      class="border-1 rounded-3xl w-full h-full border-base-6 bg-base-1 overflow-hidden max-h-full">
       <slot />
     </div>
   </div>

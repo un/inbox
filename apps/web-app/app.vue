@@ -1,16 +1,15 @@
 <script setup lang="ts">
   const route = useRoute().path;
-
-  const layout = route.startsWith('/h') ? 'home' : 'default';
+  const computedLayout = computed(() =>
+    route.startsWith('/h') ? 'home' : 'default'
+  );
 </script>
 
 <template>
   <NuxtLayout
-    class="h-screen overflow-auto"
-    :name="layout">
-    <!-- <TopNav /> -->
+    class="h-screen overflow-hidden max-h-screen"
+    :name="computedLayout">
     <NuxtPage />
-    <!-- <UNotifications /> -->
   </NuxtLayout>
 </template>
 <style></style>
