@@ -976,6 +976,8 @@ async function seedDb() {
   console.timeLog('⏱️ time');
 
   // Convos
+  // TODO: Need to add in the lastMessageId and lastNoteId.
+  // TODO: this should be an actual id of message/note thats inserted later on in the seed, one that is attached to this convo
   const convoScreenerStatuses: ['pending', 'approved', 'rejected', 'deleted'] =
     ['pending', 'approved', 'rejected', 'deleted'];
   for (let i = 0; i < 50; i++) {
@@ -989,14 +991,18 @@ async function seedDb() {
         publicId: nanoId(),
         orgId: 100,
         lastUpdatedAt: faker.date.past(),
-        screenerStatus: randomStatus
+        screenerStatus: randomStatus,
+        lastMessageId: 100 + i,
+        lastNoteId: 100 + i
       },
       {
         id: 200 + i,
         publicId: nanoId(),
         orgId: 101,
         lastUpdatedAt: faker.date.past(),
-        screenerStatus: randomStatus
+        screenerStatus: randomStatus,
+        lastMessageId: 200 + i,
+        lastNoteId: 200 + i
       }
     ]);
   }

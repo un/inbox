@@ -939,8 +939,6 @@ export const convos = mysqlTable(
     orgId: foreignKey('org_id').notNull(),
     publicId: nanoId('public_id').notNull(),
     lastUpdatedAt: timestamp('last_updated_at'),
-    lastMessageId: foreignKey('last_message_id'),
-    lastNoteId: foreignKey('last_note_id'),
     screenerStatus: mysqlEnum('screener_status', [
       'pending',
       'approved',
@@ -962,14 +960,6 @@ export const convosRelations = relations(convos, ({ one, many }) => ({
   org: one(orgs, {
     fields: [convos.orgId],
     references: [orgs.id]
-  }),
-  lastMessageId: one(convoMessages, {
-    fields: [convos.lastMessageId],
-    references: [convoMessages.id]
-  }),
-  lastNoteId: one(convoNotes, {
-    fields: [convos.lastNoteId],
-    references: [convoNotes.id]
   }),
   members: many(convoMembers),
   attachments: many(convoAttachments),

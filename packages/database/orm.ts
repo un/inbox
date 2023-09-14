@@ -19,7 +19,9 @@ export {
   not,
   and,
   or,
-  sql
+  sql,
+  asc,
+  desc
 } from 'drizzle-orm';
 
 export type { InferInsertModel, InferSelectModel } from 'drizzle-orm';
