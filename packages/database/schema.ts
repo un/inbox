@@ -1015,6 +1015,7 @@ export const convoMembers = mysqlTable(
     notifications: mysqlEnum('notifications', ['active', 'muted', 'off'])
       .notNull()
       .default('active'),
+    lastReadAt: timestamp('last_read_at'),
     active: boolean('active').notNull().default(true),
     createdAt: timestamp('created_at')
       .default(sql`CURRENT_TIMESTAMP`)
@@ -1302,3 +1303,5 @@ export const convoDraftsRelations = relations(convoDrafts, ({ one, many }) => ({
     references: [convoMessages.id]
   })
 }));
+
+// TODO: add in tables for convomessages and convonotes read status. This will be a one to one table with convo_members and the messages. This will enable read/seen tracking for each message and note.
