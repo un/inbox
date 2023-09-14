@@ -152,6 +152,9 @@ export const validateAuthSession = async (event: H3Event) => {
   }
 
   if (eventSession.data.hankoUserId !== eventHanko?.sub) {
+    console.log(
+      '🚨 session mismatch, try clearing cookies and logging back in'
+    );
     return { session: eventSession, valid: false, userId: null, reauth: false };
   }
   return {

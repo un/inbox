@@ -1,11 +1,19 @@
 export default defineNuxtRouteMiddleware(async (to) => {
-  if (process.server && !to.meta.skipAuth) {
+  if (process.server) {
     const event = useRequestEvent();
-    if (!event.context.user.valid) {
-      //TODO: Add "redirectTo" for users when they've logged in
-      return navigateTo('/');
+    if (!to.meta.skipAuth) {
+      if (!event.context.user.valid) {
+        //TODO: Add "redirectTo" for users when they've logged in
+        return navigateTo('/');
+      }
+      return;
     }
-    return;
+    if (to.meta.skipAuth) {
+      if (event.context.user.valid) {
+        if (to.path !== '/h') return navigateTo('/h');
+      }
+      return;
+    }
   }
 
   if (process.client) {
