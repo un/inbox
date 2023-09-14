@@ -1,10 +1,15 @@
 {
   "version": "0.2",
-  "ignorePaths": ["package.json"],
+  "ignorePaths": [
+    "package.json"
+  ],
   "dictionaryDefinitions": [],
   "dictionaries": [],
   "words": [
     "Authed",
+    "convo",
+    "convos",
+    "domainkey",
     "hanko",
     "Hanko",
     "mediumint",
@@ -16,17 +21,17 @@
     "Pinia",
     "planetscale",
     "superjson",
+    "tinyint",
     "trpc",
     "Typesafe",
     "uninbox",
     "unocss",
     "unref",
     "vueuse",
-    "waitlist",
-    "convo",
-    "convos",
-    "tinyint"
+    "waitlist"
   ],
-  "ignoreWords": ["ABCDEFGHJKMNPQRSTVWXYZ"],
+  "ignoreWords": [
+    "ABCDEFGHJKMNPQRSTVWXYZ"
+  ],
   "import": []
 }

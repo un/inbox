@@ -24,9 +24,8 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 *.log*
-test.*.ts
-test*.ts
-test*
+test.get.ts
+test.post.ts
 
 # local env files
 .env
@@ -37,3 +36,4 @@ test*
 
 # turbo
 .turbo
+
