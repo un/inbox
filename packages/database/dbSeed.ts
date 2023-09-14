@@ -991,18 +991,14 @@ async function seedDb() {
         publicId: nanoId(),
         orgId: 100,
         lastUpdatedAt: faker.date.past(),
-        screenerStatus: randomStatus,
-        lastMessageId: 100 + i,
-        lastNoteId: 100 + i
+        screenerStatus: randomStatus
       },
       {
         id: 200 + i,
         publicId: nanoId(),
         orgId: 101,
         lastUpdatedAt: faker.date.past(),
-        screenerStatus: randomStatus,
-        lastMessageId: 200 + i,
-        lastNoteId: 200 + i
+        screenerStatus: randomStatus
       }
     ]);
   }
