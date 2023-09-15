@@ -78,8 +78,8 @@ export default defineConfig({
         // @ts-ignore
         const bg = theme.colors?.sand?.[1] ?? '#333';
         // @ts-ignore
-        const text = theme.colors?.sand?.[12] ?? '#fff';
-        return `body{ background-color: ${bg}; color: ${text}; }`;
+        const text = theme.colors?.black?.[12];
+        return `body{ background-color: ${bg}; color: ${text}; };`;
       }
     }
   ],

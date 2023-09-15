@@ -1,11 +1,20 @@
 <script setup lang="ts">
   import type { VariantProps } from 'class-variance-authority';
   type Props = {
-    name: string;
-    avatarId?: string | null;
+    name?: string;
+    count?: number;
+    avatarId?: string;
     tooltipPreText?: string;
     size?: 'tiny' | 'xs' | 'sm' | 'md' | 'lg' | 'xl';
-    color?: 'base' | 'red' | 'purple' | 'green' | 'yellow' | 'pink' | 'blue';
+    color?:
+      | 'base'
+      | 'red'
+      | 'purple'
+      | 'green'
+      | 'yellow'
+      | 'pink'
+      | 'blue'
+      | string;
   };
 
   const props = withDefaults(defineProps<Props>(), {
@@ -27,22 +36,22 @@
         '2xl': '128x128'
       },
       container: {
-        tiny: 'w-[16px] h-[16px] text-xs',
-        xs: 'w-[32px] h-[32px] text-sm',
-        sm: 'w-[48px] h-[48px] text-base',
-        md: 'w-[56px] h-[56px] text-lg',
-        lg: 'w-[64px] h-[64px] text-xl',
-        xl: 'w-[80px] h-[80px] text-2xl',
-        '2xl': 'w-[128px] h-[128px] text-3xl'
+        tiny: 'w-[16px] h-[16px] text-xs rounded-md',
+        xs: 'w-[32px] h-[32px] text-sm rounded-md',
+        sm: 'w-[48px] h-[48px] text-base rounded-md',
+        md: 'w-[56px] h-[56px] text-lg rounded-lg',
+        lg: 'w-[64px] h-[64px] text-xl rounded-lg',
+        xl: 'w-[80px] h-[80px] text-2xl rounded-lg',
+        '2xl': 'w-[128px] h-[128px] text-3xl rounded-xl'
       },
       color: {
         base: 'bg-base-3',
-        red: 'bg-red-9',
-        purple: 'bg-purple-9',
-        green: 'bg-green-9',
-        yellow: 'bg-yellow-9',
-        pink: 'bg-pink-9',
-        blue: 'bg-blue-9'
+        red: 'bg-red-8',
+        purple: 'bg-purple-8',
+        green: 'bg-green-8',
+        yellow: 'bg-yellow-8',
+        pink: 'bg-pink-8',
+        blue: 'bg-blue-8'
       }
     }
   });
@@ -52,9 +61,9 @@
     : props.name;
 </script>
 <template>
-  <UnUiTooltip :text="tooltipText">
+  <UnUiTooltip :text="tooltipText || ''">
     <div
-      class="rounded-2 bg-cover bg-center font-display text-base-12 flex justify-center items-center"
+      class="bg-cover bg-center font-display flex justify-center items-center"
       :class="avatarClasses({ container: props.size, color: props.color })"
       :style="
         props.avatarId
@@ -63,7 +72,15 @@
             }/${avatarClasses({ image: props.size })})`
           : ''
       ">
-      {{ props.avatarId ? '' : props.name.charAt(0) }}
+      {{
+        props.avatarId
+          ? ''
+          : props.name
+          ? props.name?.charAt(0)
+          : props.count
+          ? `+ ${props.count}`
+          : ''
+      }}
     </div>
   </UnUiTooltip>
 </template>

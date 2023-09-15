@@ -2,8 +2,7 @@
 <template>
   <div
     class="border-r-1 border-base-6 pr-4 flex flex-col gap-2 h-full max-h-full overflow-y-scroll">
-    <div>one</div>
-    <div class="flex flex-col gap-0 grow overflow-scroll">
+    <div class="flex flex-col gap-0 grow overflow-hidden">
       <convos-convo-list />
 
       <div class="h-[48px] mt-[-48px] bg-gradient-to-t from-base-1" />
