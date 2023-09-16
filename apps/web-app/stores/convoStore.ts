@@ -43,7 +43,8 @@ export const useConvoStore = definePiniaStore(
     };
   },
   {
-    share: { enable: true }
+    share: { enable: true },
+    persist: false
   }
 );
 

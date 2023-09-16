@@ -71,7 +71,10 @@ export default defineNuxtConfig({
     pageTransition: { name: 'page', mode: 'out-in', duration: 300 }
   },
   colorMode: {
-    classSuffix: ''
+    classSuffix: '',
+    preference: 'light', // default value of $colorMode.preference
+    fallback: 'light', // fallback value if not system preference found
+    storageKey: 'un-color-mode'
   },
 
   // Nitro/Build Configs

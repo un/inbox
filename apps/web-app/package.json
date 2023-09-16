@@ -29,6 +29,9 @@
   "dependencies": {
     "@pinia/nuxt": "^0.4.11",
     "@teamhanko/hanko-frontend-sdk": "^0.8.3",
+    "@tiptap/pm": "^2.1.10",
+    "@tiptap/starter-kit": "^2.1.10",
+    "@tiptap/vue-3": "^2.1.10",
     "@trpc/client": "^10.38.1",
     "@trpc/server": "^10.38.1",
     "@uninbox/database": "workspace:*",

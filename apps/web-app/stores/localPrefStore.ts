@@ -1,7 +1,6 @@
 export const useLocalPrefStore = definePiniaStore(
   'localPref',
   () => {
-    const colorMode = ref<'light' | 'dark'>('light');
     const sidebarCollapsed = ref<boolean>(false);
 
     const toggleSidebar = async () => {
@@ -9,19 +8,28 @@ export const useLocalPrefStore = definePiniaStore(
       sidebarCollapsed.value = !sidebarCollapsed.value;
     };
 
+    const colorMode = useColorMode();
+    if (colorMode.preference === 'system') {
+      colorMode.value = 'light';
+      colorMode.preference = 'light';
+    }
     const toggleColorMode = async () => {
-      colorMode.value = colorMode.value === 'light' ? 'dark' : 'light';
-      useColorMode().value = colorMode.value;
+      const currentColorMode = colorMode.value;
+      const newColorMode = currentColorMode === 'light' ? 'dark' : 'light';
+      colorMode.value = newColorMode;
+      colorMode.preference = newColorMode;
     };
     return {
-      colorMode,
       toggleColorMode,
       sidebarCollapsed,
       toggleSidebar
     };
   },
   {
-    share: { enable: true }
+    share: { enable: true },
+    persist: {
+      storage: persistedState.localStorage
+    }
   }
 );
 

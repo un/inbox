@@ -1,14 +1,9 @@
 <script setup lang="ts">
-  const route = useRoute().path;
-  const computedLayout = computed(() =>
-    route.startsWith('/h') ? 'home' : 'default'
-  );
+  const route = useRoute();
 </script>
 
 <template>
-  <NuxtLayout
-    class="h-screen overflow-hidden max-h-screen"
-    :name="computedLayout">
+  <NuxtLayout class="h-screen overflow-hidden max-h-screen">
     <NuxtPage />
   </NuxtLayout>
 </template>

@@ -11,7 +11,7 @@
   const { list, containerProps, wrapperProps } = useVirtualList(
     convoStore.convos,
     {
-      itemHeight: 152,
+      itemHeight: 127 + 16,
       overscan: 3
     }
   );
@@ -19,7 +19,7 @@
     containerProps.ref,
     () => {
       // load more
-      convoStore.getNextConvos();
+      // convoStore.getNextConvos();
     },
     { distance: 300 }
   );

@@ -1,4 +1,8 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+  definePageMeta({
+    layout: 'convos'
+  });
+</script>
 <template>
   <div class="w-full h-full grid grid-cols-3 justify-between p-4">
     <div class="border-r-1 border-base-6 pr-4 flex flex-col justify-between">

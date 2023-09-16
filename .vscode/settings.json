@@ -74,5 +74,14 @@
       "bold": false,
       "italic": false
     }
+  ],
+  "i18n-ally.extract.ignored": [
+    "w-[16px] h-[16px] text-xs",
+    "w-[32px] h-[32px] text-sm",
+    "w-[48px] h-[48px] text-base",
+    "w-[56px] h-[56px] text-lg",
+    "w-[64px] h-[64px] text-xl",
+    "w-[80px] h-[80px] text-2xl",
+    "w-[128px] h-[128px] text-3xl"
   ]
 }
