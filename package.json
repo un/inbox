@@ -24,7 +24,7 @@
   "license": "AGPLv3",
   "devDependencies": {
     "@nuxt/eslint-config": "^0.2.0",
-    "@types/node": "^20.6.0",
+    "@types/node": "^20.6.2",
     "@unocss/eslint-config": "^0.55.7",
     "dotenv-cli": "^7.3.0",
     "eslint": "^8.49.0",

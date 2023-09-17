@@ -8,8 +8,8 @@
     "preview": "node .output/server/index.mjs"
   },
   "dependencies": {
-    "@trpc/client": "^10.38.1",
-    "@trpc/server": "^10.38.1",
+    "@trpc/client": "^10.38.3",
+    "@trpc/server": "^10.38.3",
     "@uninbox/database": "workspace:*",
     "@uninbox/postal-puppet": "workspace:*",
     "@uninbox/types": "workspace:*",
