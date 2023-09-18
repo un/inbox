@@ -8,7 +8,7 @@ import {
   userProfiles,
   users
 } from '@uninbox/database/schema';
-import { nanoId } from '@uninbox/utils';
+import { nanoId, nanoIdLength } from '@uninbox/utils';
 import { mailBridgeTrpcClient } from '~/server/utils/mailBridgeTrpc';
 
 export const settingsRouter = router({
@@ -134,6 +134,42 @@ export const settingsRouter = router({
         email: `${userObject[0].username}@${primaryRootDomain}`,
         orgId: newPublicId,
         error: null
+      };
+    }),
+
+  getUserOrgs: protectedProcedure
+    .input(
+      z.object({
+        onlyAdmin: z.boolean().optional()
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const queryUserId = ctx.user.userId || 0;
+      const db = ctx.db;
+      const userIsAdmin = input.onlyAdmin || false;
+
+      const orgMembersQuery = await db.query.orgMembers.findMany({
+        columns: {},
+        where: userIsAdmin
+          ? and(
+              eq(orgMembers.userId, queryUserId),
+              eq(orgMembers.role, 'admin')
+            )
+          : eq(orgMembers.userId, queryUserId),
+        with: {
+          org: {
+            columns: {
+              publicId: true,
+              name: true,
+              avatarId: true,
+              personalOrg: true
+            }
+          }
+        }
+      });
+
+      return {
+        userOrgs: orgMembersQuery
       };
     })
 });
