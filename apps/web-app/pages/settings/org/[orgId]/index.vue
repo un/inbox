@@ -100,6 +100,13 @@
 
 <template>
   <div class="flex flex-col w-full h-full items-start justify-between p-4">
+    <div class="flex flex-row w-full justify-between items-center">
+      <div class="flex flex-row gap-4 items-center">
+        <div class="flex flex-col gap-1">
+          <span class="font-display text-2xl">Organization Profile</span>
+        </div>
+      </div>
+    </div>
     <div
       class="flex flex-col items-start justify-center gap-8 w-full grow pb-14">
       <div class="flex flex-col gap-2">
