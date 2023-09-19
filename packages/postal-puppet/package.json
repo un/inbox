@@ -40,7 +40,7 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^0.42.0",
+    "@antfu/eslint-config": "0.43.0-beta.2",
     "@antfu/ni": "^0.21.8",
     "@antfu/utils": "^0.7.6",
     "@types/node": "^20.6.2",
@@ -48,7 +48,7 @@
     "eslint": "^8.49.0",
     "esno": "^0.17.0",
     "lint-staged": "^14.0.1",
-    "pnpm": "^8.7.5",
+    "pnpm": "^8.7.6",
     "rimraf": "^5.0.1",
     "simple-git-hooks": "^2.9.0",
     "tsx": "^3.12.10",
