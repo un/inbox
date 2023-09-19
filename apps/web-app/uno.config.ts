@@ -18,7 +18,7 @@ const radixColors = [
   // 'teal',
   // 'mint',
   'green',
-  // 'grass',
+  'grass',
   'lime',
   // 'yellow'
   // 'amber',

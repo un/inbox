@@ -5,7 +5,7 @@
   import { z } from 'zod';
   import { useClipboard } from '@vueuse/core';
 
-  const { copy, copied } = useClipboard();
+  const { copy, copied, text } = useClipboard();
   const { $trpc, $i18n } = useNuxtApp();
 
   const showInviteModal = ref(false);
@@ -26,16 +26,99 @@
     orgPublicId: orgPublicId
   });
 
-  // remove invites that have a acceptedAt date
-  const activeInvites = orgInviteQuery.invites.filter((invite) => {
-    return invite.acceptedAt === null;
-  });
+  const tableColumns = [
+    {
+      key: 'status',
+      label: 'Status',
+      sortable: true
+    },
+    {
+      key: 'code',
+      label: 'Invite Code',
+      sortable: true
+    },
+    {
+      key: 'email',
+      label: 'Email',
+      sortable: true
+    },
+    {
+      key: 'role',
+      label: 'Role',
+      sortable: true
+    },
 
-  const expiredInvites = orgInviteQuery.invites.filter((invite) => {
-    return invite.expiresAt
-      ? invite.acceptedAt !== null || invite.expiresAt < new Date()
-      : invite.acceptedAt !== null;
-  });
+    {
+      key: 'usedBy',
+      label: 'Used By',
+      sortable: true
+    },
+    {
+      key: 'createdBy',
+      label: 'Admin',
+      sortable: true
+    },
+    {
+      key: 'created',
+      label: 'Created On',
+      sortable: true
+    },
+    {
+      key: 'expiry',
+      label: 'Expiry',
+      sortable: true
+    }
+  ];
+
+  const tableRows = ref<{}[]>([]);
+
+  if (orgInviteQuery.invites) {
+    for (const invite of orgInviteQuery.invites) {
+      const dateNow = new Date();
+      const truncateEmail = (email: string) => {
+        const [localPart, domain] = email.split('@');
+        const truncatedLocalPart =
+          localPart.length > 4 ? `${localPart.substring(0, 4)}...` : localPart;
+        const [domainName, tld] = domain.split('.');
+        const truncatedDomainName =
+          domainName.length > 6
+            ? `${domainName.substring(0, 4)}..`
+            : domainName;
+        return `${truncatedLocalPart}@${truncatedDomainName}.${tld}`;
+      };
+      tableRows.value.push({
+        code: invite.inviteToken,
+        truncatedCode: invite.inviteToken
+          ? invite.inviteToken.substring(0, 8) + '...'
+          : '',
+        email: invite.email,
+        truncatedEmail: truncateEmail(invite.email ? invite.email : ''),
+        role: invite.role,
+        status: invite.expiresAt
+          ? invite.acceptedAt
+            ? 'used'
+            : invite.expiresAt < dateNow
+            ? 'expired'
+            : 'active'
+          : 'active',
+        creatorAvatar: invite.invitedByUser.orgMemberships[0].profile.avatarId,
+        createdBy:
+          invite.invitedByUser.orgMemberships[0].profile.firstName +
+          ' ' +
+          invite.invitedByUser.orgMemberships[0].profile.lastName,
+        created: invite.invitedAt,
+        userAvatar: invite.invitedUser?.orgMemberships[0].profile
+          ? invite.invitedUser?.orgMemberships[0].profile.avatarId
+          : null,
+        usedBy: invite.invitedUser?.orgMemberships[0].profile
+          ? invite.invitedUser?.orgMemberships[0].profile.firstName +
+            ' ' +
+            invite.invitedUser?.orgMemberships[0].profile.lastName
+          : null,
+        expiry: invite.expiresAt
+      });
+    }
+  }
 
   async function createInvite() {
     if (inviteEmailValid.value === false) return;
@@ -80,7 +163,7 @@
       </div>
     </div>
     <div
-      v-if="!showInviteModal"
+      v-if="showInviteModal"
       class="flex flex-col w-full gap-4 justify-start">
       <span class="text-md font-semibold">Create a new invite</span>
       <div class="flex flex-row gap-8">
@@ -125,28 +208,75 @@
     </div>
     <div class="flex flex-col gap-8 w-full overflow-y-scroll">
       <div class="flex flex-col gap-8 w-full">
-        <span class="text-md font-semibold">Active Invites</span>
-        <div
-          v-if="activeInvites.length === 0"
-          class="uppercase text-sm">
-          No Active Invites
-        </div>
-        <SettingsInvitesItem
-          v-for="invite of activeInvites"
-          :inviteData="invite"
-          :isExpired="false" />
-      </div>
-      <div class="flex flex-col gap-2 w-full">
-        <span class="text-md font-semibold">Expired/used Invites</span>
-        <div
-          v-if="expiredInvites.length === 0"
-          class="uppercase text-sm">
-          No Expired/Used Invites
-        </div>
-        <SettingsInvitesItem
-          v-for="invite of expiredInvites"
-          :inviteData="invite"
-          :isExpired="false" />
+        <UnUiTable
+          :columns="tableColumns"
+          :rows="tableRows"
+          class="">
+          <template #status-data="{ row }">
+            <div
+              class="py-1 px-4 rounded-full w-fit"
+              :class="row.status === 'active' ? 'bg-grass-5' : 'bg-red-5'">
+              <span class="uppercase text-xs">{{ row.status }}</span>
+            </div>
+          </template>
+          <template #code-data="{ row }">
+            <div
+              class="flex flex-row gap-2 justify-between items-center w-full">
+              <UnUiTooltip :text="row.code">
+                <span class="">{{ row.truncatedCode }}</span>
+              </UnUiTooltip>
+              <button
+                v-if="row.code"
+                class="flex flex-row gap-1 p-1 rounded items-center justify-center bg-base-3 hover:bg-base-4 text-xs"
+                @click="copy(row.code)">
+                <!-- by default, `copied` will be reset in 1.5s -->
+                <Icon
+                  name="ph-clipboard"
+                  size="16"
+                  :class="copied ? 'text-green-500' : 'text-base-11'" />
+                <span v-if="text !== row.code">Copy</span>
+                <span v-else>Copied!</span>
+              </button>
+            </div>
+          </template>
+          <template #email-data="{ row }">
+            <UnUiTooltip :text="row.email">
+              <span class="">{{ row.truncatedEmail }}</span>
+            </UnUiTooltip>
+          </template>
+          <template #role-data="{ row }">
+            <div
+              class="py-1 px-4 rounded-full w-fit"
+              :class="row.role === 'admin' ? 'bg-primary-9' : 'bg-base-5'">
+              <span class="uppercase text-xs">{{ row.role }}</span>
+            </div>
+          </template>
+          <template #usedBy-data="{ row }">
+            <div class="flex flex-row gap-2 items-center">
+              <UnUiAvatar
+                :avatarId="row.userAvatar ? row.userAvatar : ''"
+                :name="row.usedBy ? row.usedBy : ''"
+                v-if="row.userAvatar || row.usedBy"
+                size="xs" />
+              <span class="">{{ row.usedBy }}</span>
+            </div>
+          </template>
+          <template #createdBy-data="{ row }">
+            <div class="flex flex-row gap-2 items-center">
+              <UnUiAvatar
+                :avatarId="row.creatorAvatar ? row.creatorAvatar : ''"
+                :name="row.createdBy ? row.createdBy : ''"
+                size="xs" />
+              <span class="">{{ row.createdBy }}</span>
+            </div>
+          </template>
+          <template #created-data="{ row }">
+            <span class="text-xs">{{ row.created.toDateString() }}</span>
+          </template>
+          <template #expiry-data="{ row }">
+            <span class="text-xs">{{ row.expiry.toDateString() }}</span>
+          </template>
+        </UnUiTable>
       </div>
     </div>
   </div>

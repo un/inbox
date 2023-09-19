@@ -17,6 +17,54 @@
   const orgMembersQuery = await $trpc.org.members.getOrgMembers.query({
     orgPublicId: orgPublicId
   });
+
+  const tableColumns = [
+    {
+      key: 'name',
+      label: 'Name',
+      sortable: true
+    },
+    {
+      key: 'nickname',
+      label: 'Nickname',
+      sortable: true
+    },
+    {
+      key: 'title',
+      label: 'Title'
+    },
+    {
+      key: 'role',
+      label: 'Role',
+      sortable: true
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      sortable: true
+    },
+    {
+      key: 'joined',
+      label: 'Joined',
+      sortable: true
+    }
+  ];
+
+  const tableRows = ref<{}[]>([]);
+  if (orgMembersQuery.members) {
+    for (const member of orgMembersQuery.members) {
+      tableRows.value.push({
+        avatar: member.profile.avatarId,
+        name: member.profile.firstName + ' ' + member.profile.lastName,
+        nickname: member.profile.nickname,
+        title: member.profile.title,
+        role: member.role,
+        status: member.status,
+        joined: member.addedAt.toDateString(),
+        removed: member.removedAt?.toDateString()
+      });
+    }
+  }
 </script>
 
 <template>
@@ -39,54 +87,35 @@
         </button>
       </div>
     </div>
-    <div class="grid grid-cols-3 gap-4 w-full overflow-y-scroll">
-      <div
-        v-for="member of orgMembersQuery.members"
-        class="w-full bg-base-2 p-4 rounded">
-        <div class="flex flex-col gap-2">
-          <div class="flex flex-row justify-between gap-2">
-            <div class="flex flex-row gap-2">
-              <UnUiAvatar
-                :avatarId="
-                  member.profile.avatarId ? member.profile.avatarId : ''
-                "
-                :name="
-                  member.profile.firstName ? member.profile.firstName : ''
-                " />
-              <div class="flex flex-col justify-center gap-0">
-                <span class="font-medium text-lg">
-                  {{ member.profile.firstName + ' ' + member.profile.lastName }}
-                  <span
-                    class="font-italic"
-                    v-if="member.profile.nickname">
-                    ({{ member.profile.nickname }})</span
-                  >
-                </span>
-                <span class="text-sm">{{ member.profile.title }}</span>
-              </div>
-            </div>
+    <div class="flex flex-col gap-4 w-full overflow-y-scroll">
+      <UnUiTable
+        :columns="tableColumns"
+        :rows="tableRows"
+        class="">
+        <template #name-data="{ row }">
+          <div class="flex flex-row gap-2 items-center">
+            <UnUiAvatar
+              :avatarId="row.avatar ? row.avatar : ''"
+              :name="row.name ? row.name : ''"
+              size="xs" />
+            <span class="">{{ row.name }}</span>
           </div>
+        </template>
+        <template #role-data="{ row }">
           <div
-            class="flex flex-row gap-2 text-xs text-base-11 justify-between items-center">
-            <span>Joined: {{ member.addedAt.toDateString() }}</span>
-            <span v-if="member.removedAt"
-              >Removed: {{ member.removedAt.toDateString() }}</span
-            >
-            <div class="flex flex-row gap-2 justify-center">
-              <div
-                class="py-1 px-4 rounded-full bg-orange-5"
-                v-if="member.role === 'admin'">
-                <span class="uppercase text-xs">{{ member.role }}</span>
-              </div>
-              <div class="py-1 px-4 rounded-full bg-green-5">
-                <span class="uppercase text-xs text-base-12">{{
-                  member.status
-                }}</span>
-              </div>
-            </div>
+            class="py-1 px-4 rounded-full w-fit"
+            :class="row.role === 'admin' ? 'bg-primary-9' : 'bg-base-5'">
+            <span class="uppercase text-xs">{{ row.role }}</span>
           </div>
-        </div>
-      </div>
+        </template>
+        <template #status-data="{ row }">
+          <div
+            class="py-1 px-4 rounded-full w-fit"
+            :class="row.status === 'active' ? 'bg-grass-5' : 'bg-red-5'">
+            <span class="uppercase text-xs">{{ row.status }}</span>
+          </div>
+        </template>
+      </UnUiTable>
     </div>
   </div>
 </template>
