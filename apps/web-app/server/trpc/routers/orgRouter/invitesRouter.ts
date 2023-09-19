@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { router, protectedProcedure, limitedProcedure } from '../../trpc';
-import { and, eq } from '@uninbox/database/orm';
+import { and, eq, or } from '@uninbox/database/orm';
 import {
   orgInvitations,
   orgMembers,
@@ -26,13 +26,12 @@ export const invitesRouter = router({
       const userId = user.userId || 0;
 
       // TODO: make this part of the insert query as subquery
-      const sq = db
+      const orgIdResponse = await db
         .select({ id: orgs.id })
         .from(orgs)
-        .where(eq(orgs.publicId, input.orgPublicId))
-        .as('sq');
+        .where(eq(orgs.publicId, input.orgPublicId));
       await db.insert(orgInvitations).values({
-        orgId: +sq.id,
+        orgId: orgIdResponse[0].id,
         invitedByUserId: userId,
         publicId: newPublicId,
         role: role,
@@ -62,22 +61,89 @@ export const invitesRouter = router({
         .where(eq(orgs.publicId, input.orgPublicId))
         .as('sq');
 
-      // add invited by user but return publicId and org profile
-      const orgInvitesResponse = await db
-        .select({
-          publicId: orgInvitations.publicId,
-          email: orgInvitations.email,
-          role: orgInvitations.role,
-          acceptedAt: orgInvitations.acceptedAt,
-          expiresAt: orgInvitations.expiresAt
-          // invitedByUserId: orgInvitations.invitedByUserId
-        })
-        .from(orgInvitations)
-        .where(eq(orgInvitations.orgId, +sq.id));
+      // // add invited by user but return publicId and org profile
+      // const orgInvitesResponse = await db
+      //   .select({
+      //     publicId: orgInvitations.publicId,
+      //     email: orgInvitations.email,
+      //     role: orgInvitations.role,
+      //     acceptedAt: orgInvitations.acceptedAt,
+      //     expiresAt: orgInvitations.expiresAt
+      //     // invitedByUserId: orgInvitations.invitedByUserId
+      //   })
+      //   .from(orgInvitations)
+      //   .where(eq(orgInvitations.orgId, +sq.id));
 
+      const orgInvitesResponse = await db.query.orgInvitations.findMany({
+        where: eq(
+          orgInvitations.orgId,
+          db
+            .select({ id: orgs.id })
+            .from(orgs)
+            .where(eq(orgs.publicId, input.orgPublicId))
+        ),
+        columns: {
+          publicId: true,
+          role: true,
+          inviteToken: true,
+          invitedAt: true,
+          expiresAt: true,
+          acceptedAt: true,
+          email: true
+        },
+        with: {
+          invitedByUser: {
+            columns: {},
+            with: {
+              orgMemberships: {
+                columns: {},
+                where: eq(
+                  orgMembers.orgId,
+                  db
+                    .select({ id: orgs.id })
+                    .from(orgs)
+                    .where(eq(orgs.publicId, input.orgPublicId))
+                ),
+                with: {
+                  profile: {
+                    columns: {
+                      firstName: true,
+                      lastName: true,
+                      avatarId: true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          invitedUser: {
+            columns: {},
+            with: {
+              orgMemberships: {
+                columns: {},
+                where: eq(
+                  orgMembers.orgId,
+                  db
+                    .select({ id: orgs.id })
+                    .from(orgs)
+                    .where(eq(orgs.publicId, input.orgPublicId))
+                ),
+                with: {
+                  profile: {
+                    columns: {
+                      firstName: true,
+                      lastName: true,
+                      avatarId: true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      });
       return {
-        success: true,
-        inviteData: orgInvitesResponse
+        invites: orgInvitesResponse
       };
     }),
 
