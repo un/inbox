@@ -3,7 +3,7 @@ import { parse, stringify } from 'superjson';
 import { router, publicProcedure } from '../trpc';
 import { eq } from '@uninbox/database/orm';
 import { users } from '@uninbox/database/schema';
-import { nanoid } from '@uninbox/utils';
+import { nanoId } from '@uninbox/utils';
 import { mailBridgeTrpcClient } from '~/server/utils/mailBridgeTrpc';
 
 export const testRouter = router({
@@ -14,9 +14,12 @@ export const testRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      const testResult = await mailBridgeTrpcClient.postal.createOrg.query({
-        username: 'demo'
-      });
+      const testResult = await mailBridgeTrpcClient.postal.org.createOrg.mutate(
+        {
+          orgPublicId: 'demo',
+          orgId: 0
+        }
+      );
 
       return { testResult };
     })

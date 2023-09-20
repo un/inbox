@@ -62,7 +62,7 @@ const verifySessionData = async (eventSession: EventSessionObject) => {
 };
 
 export const userLookupByHankoId = async (hankoId: string) => {
-  const authIdentityLookup = await db
+  const authIdentityLookup = await db.read
     .select({ userId: userAuthIdentities.userId })
     .from(userAuthIdentities)
     .where(

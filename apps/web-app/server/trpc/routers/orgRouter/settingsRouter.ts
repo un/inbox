@@ -23,7 +23,7 @@ export const settingsRouter = router({
       const db = ctx.db;
       const newPublicId = nanoId();
 
-      const insertOrgResponse = await db.insert(orgs).values({
+      const insertOrgResponse = await db.write.insert(orgs).values({
         ownerId: queryUserId,
         name: input.orgName,
         publicId: newPublicId
@@ -31,12 +31,12 @@ export const settingsRouter = router({
       const orgId = +insertOrgResponse.insertId;
 
       //TODO: fix to where the userProfile ID is looked up on DB via SQL insert
-      const userProfile = await db
+      const userProfile = await db.read
         .select({ id: userProfiles.id })
         .from(userProfiles)
         .where(eq(userProfiles.userId, queryUserId));
 
-      await db.insert(orgMembers).values({
+      await db.write.insert(orgMembers).values({
         orgId: orgId,
         role: 'admin',
         userId: queryUserId,
@@ -66,7 +66,7 @@ export const settingsRouter = router({
         //@ts-expect-error cant correctly infer the type of useRuntimeConfig mail
         useRuntimeConfig().public.mailDomainPublic[0].name as string;
 
-      const existingPersonalOrg = await db
+      const existingPersonalOrg = await db.read
         .select({ id: orgs.id })
         .from(orgs)
         .where(and(eq(orgs.ownerId, queryUserId), eq(orgs.personalOrg, true)));
@@ -79,13 +79,13 @@ export const settingsRouter = router({
         };
       }
 
-      const userObject = await db
+      const userObject = await db.read
         .select({ id: users.id, username: users.username })
         .from(users)
         .where(eq(users.id, queryUserId));
       const newPublicId = nanoId();
 
-      const insertOrgResponse = await db.insert(orgs).values({
+      const insertOrgResponse = await db.write.insert(orgs).values({
         ownerId: queryUserId,
         name: `${userObject[0].username}'s Personal Org`,
         publicId: newPublicId,
@@ -93,7 +93,7 @@ export const settingsRouter = router({
       });
       const newOrgId = +insertOrgResponse.insertId;
 
-      const userProfile = await db
+      const userProfile = await db.read
         .select({
           id: userProfiles.id,
           fname: userProfiles.firstName,
@@ -102,7 +102,7 @@ export const settingsRouter = router({
         .from(userProfiles)
         .where(eq(userProfiles.userId, queryUserId));
 
-      await db.insert(orgMembers).values({
+      await db.write.insert(orgMembers).values({
         orgId: newOrgId,
         role: 'admin',
         userId: queryUserId,
@@ -148,7 +148,7 @@ export const settingsRouter = router({
       const db = ctx.db;
       const userIsAdmin = input.onlyAdmin || false;
 
-      const orgMembersQuery = await db.query.orgMembers.findMany({
+      const orgMembersQuery = await db.read.query.orgMembers.findMany({
         columns: {},
         where: userIsAdmin
           ? and(

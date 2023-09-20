@@ -34,7 +34,7 @@ export const convoRouter = router({
       const inputLastPublicId = cursorLastPublicId || '';
 
       // TODO: Add filtering for org based on input.filterOrgPublicId
-      const builder = await db.query.convos.findMany({
+      const builder = await db.read.query.convos.findMany({
         orderBy: [desc(convos.lastUpdatedAt), desc(convos.publicId)],
         limit: 15,
         columns: {
@@ -51,7 +51,7 @@ export const convoRouter = router({
           ),
           inArray(
             convos.id,
-            db
+            db.read
               .select({ id: convoMembers.convoId })
               .from(convoMembers)
               .where(
@@ -59,7 +59,7 @@ export const convoRouter = router({
                   eq(convoMembers.userId, userId),
                   inArray(
                     convoMembers.userGroupId,
-                    db
+                    db.read
                       .select({ id: userGroupMembers.groupId })
                       .from(userGroupMembers)
                       .where(eq(userGroupMembers.userId, userId))
@@ -173,7 +173,7 @@ export const convoRouter = router({
       const userId = user.userId || 0;
 
       // TODO: Add filtering for org based on input.filterOrgPublicId
-      const convoDetails = await db.query.convos.findFirst({
+      const convoDetails = await db.read.query.convos.findFirst({
         columns: {
           publicId: true,
           lastUpdatedAt: true,
@@ -306,7 +306,7 @@ export const convoRouter = router({
 
       // TODO: Find a better way to do this
       // Verify the user is in the convo
-      const convoDetails = await db.query.convos.findFirst({
+      const convoDetails = await db.read.query.convos.findFirst({
         where: eq(convos.publicId, convoPublicId),
         columns: {
           id: true
@@ -383,7 +383,7 @@ export const convoRouter = router({
         };
       }
 
-      const convoMessagesReturn = await db.query.convoMessages.findMany({
+      const convoMessagesReturn = await db.read.query.convoMessages.findMany({
         orderBy: [desc(convoMessages.createdAt), desc(convoMessages.publicId)],
         limit: 15,
         columns: {

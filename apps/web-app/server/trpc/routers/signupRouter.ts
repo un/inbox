@@ -15,7 +15,7 @@ async function validateUsername(
   available: boolean;
   error: string | null;
 }> {
-  const userId = await db
+  const userId = await db.read
     .select({ id: users.id })
     .from(users)
     .where(eq(users.username, username));
@@ -82,7 +82,7 @@ export const signupRouter = router({
       }
 
       const newPublicId = nanoId();
-      const insertUserResponse = await db.insert(users).values({
+      const insertUserResponse = await db.write.insert(users).values({
         publicId: newPublicId,
         username: input.username,
         recoveryEmail: input.email
@@ -115,13 +115,13 @@ export const signupRouter = router({
     .mutation(async ({ ctx, input }) => {
       const db = ctx.db;
 
-      const userLookup = await db
+      const userLookup = await db.read
         .select({ id: users.id })
         .from(users)
         .where(eq(users.publicId, input.userPublicId));
 
       const newPublicId = nanoId();
-      const insertUserAuthIdentity = await db
+      const insertUserAuthIdentity = await db.write
         .insert(userAuthIdentities)
         .values({
           provider: 'hanko',

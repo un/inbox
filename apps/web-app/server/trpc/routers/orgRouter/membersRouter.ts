@@ -24,7 +24,7 @@ export const orgMembersRouter = router({
 
       const { orgPublicId } = input;
 
-      const orgQuery = await db.query.orgs.findFirst({
+      const orgQuery = await db.read.query.orgs.findFirst({
         columns: {
           publicId: true
         },

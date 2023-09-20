@@ -17,7 +17,7 @@ export const orgProfileRouter = router({
       const db = ctx.db;
       const { orgPublicId } = input;
 
-      const orgProfileQuery = await db.query.orgs.findFirst({
+      const orgProfileQuery = await db.read.query.orgs.findFirst({
         columns: {
           publicId: true,
           name: true,
@@ -44,7 +44,7 @@ export const orgProfileRouter = router({
       const db = ctx.db;
       const { orgPublicId, orgName, orgAvatarId } = input;
 
-      await db
+      await db.write
         .update(orgs)
         .set({
           name: orgName,

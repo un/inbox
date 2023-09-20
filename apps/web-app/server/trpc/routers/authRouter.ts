@@ -13,9 +13,9 @@ export const registrationRouter = router({
     )
     .query(async ({ ctx, input }) => {
       const db = ctx.db;
-      const userLoggedIn = ctx.session.isUserLoggedIn;
+      const userLoggedIn = ctx.user.valid;
       const username = input.username;
-      ctx.db.query.users.findFirst({ where: eq(users.id, 1) });
+      ctx.db.read.query.users.findFirst({ where: eq(users.id, 1) });
       return { loggedIn: userLoggedIn, name: username };
     })
 });

@@ -17,5 +17,8 @@ const connectionOptions = {
   schema
 };
 
-export const db = drizzle(connection, connectionOptions);
+export const db = {
+  read: drizzle(connection, connectionOptions),
+  write: drizzle(connection, connectionOptions)
+};
 export type DBType = typeof db;

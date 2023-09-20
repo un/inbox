@@ -28,11 +28,11 @@ export const invitesRouter = router({
       const newInviteToken = nanoIdToken();
 
       // TODO: make this part of the insert query as subquery
-      const orgIdResponse = await db
+      const orgIdResponse = await db.read
         .select({ id: orgs.id })
         .from(orgs)
         .where(eq(orgs.publicId, input.orgPublicId));
-      await db.insert(orgInvitations).values({
+      await db.write.insert(orgInvitations).values({
         orgId: orgIdResponse[0].id,
         invitedByUserId: userId,
         publicId: newPublicId,
@@ -59,10 +59,10 @@ export const invitesRouter = router({
     .query(async ({ ctx, input }) => {
       const db = ctx.db;
 
-      const orgInvitesResponse = await db.query.orgInvitations.findMany({
+      const orgInvitesResponse = await db.read.query.orgInvitations.findMany({
         where: eq(
           orgInvitations.orgId,
-          db
+          db.read
             .select({ id: orgs.id })
             .from(orgs)
             .where(eq(orgs.publicId, input.orgPublicId))
@@ -84,7 +84,7 @@ export const invitesRouter = router({
                 columns: {},
                 where: eq(
                   orgMembers.orgId,
-                  db
+                  db.read
                     .select({ id: orgs.id })
                     .from(orgs)
                     .where(eq(orgs.publicId, input.orgPublicId))
@@ -108,7 +108,7 @@ export const invitesRouter = router({
                 columns: {},
                 where: eq(
                   orgMembers.orgId,
-                  db
+                  db.read
                     .select({ id: orgs.id })
                     .from(orgs)
                     .where(eq(orgs.publicId, input.orgPublicId))
@@ -142,7 +142,7 @@ export const invitesRouter = router({
     .mutation(async ({ ctx, input }) => {
       const db = ctx.db;
 
-      const queryInvitesResponse = await db
+      const queryInvitesResponse = await db.read
         .select({ id: orgInvitations.id })
         .from(orgInvitations)
         .where(eq(orgInvitations.inviteToken, input.inviteToken));
@@ -169,7 +169,7 @@ export const invitesRouter = router({
       const newPublicId = nanoId();
       const userId = ctx.user.userId || 0;
 
-      const queryInvitesResponse = await db
+      const queryInvitesResponse = await db.read
         .select({
           id: orgInvitations.id,
           orgId: orgInvitations.orgId,
@@ -187,11 +187,11 @@ export const invitesRouter = router({
       }
 
       const userProfileResponse = input.profilePublicId
-        ? await db
+        ? await db.read
             .select({ id: userProfiles.id })
             .from(userProfiles)
             .where(eq(userProfiles.publicId, input.profilePublicId))
-        : await db
+        : await db.read
             .select({ id: userProfiles.id })
             .from(userProfiles)
             .where(
@@ -201,12 +201,12 @@ export const invitesRouter = router({
               )
             );
 
-      await db.update(orgInvitations).set({
+      await db.write.update(orgInvitations).set({
         acceptedAt: new Date(),
         invitedUser: userId
       });
 
-      await db.insert(orgMembers).values({
+      await db.write.insert(orgMembers).values({
         userId: userId,
         orgId: +queryInvitesResponse[0].orgId,
         invitedByUserId: +queryInvitesResponse[0].invitedByUserId,
@@ -215,7 +215,7 @@ export const invitesRouter = router({
         userProfileId: userProfileResponse[0].id
       });
 
-      await db.insert(userProfilesToOrgs).values({
+      await db.write.insert(userProfilesToOrgs).values({
         userProfileId: userProfileResponse[0].id,
         orgId: +queryInvitesResponse[0].orgId
       });
@@ -234,7 +234,7 @@ export const invitesRouter = router({
     .mutation(async ({ ctx, input }) => {
       const db = ctx.db;
 
-      await db
+      await db.write
         .delete(orgInvitations)
         .where(eq(orgInvitations.publicId, input.invitePublicId));
 

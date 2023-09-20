@@ -72,15 +72,17 @@ export const profileRouter = router({
       const db = ctx.db;
 
       const newPublicId = nanoId();
-      const insertUserProfileResponse = await db.insert(userProfiles).values({
-        //@ts-ignore TS dosnt know that userId must exist on protected procedures
-        userId: ctx.user.userId,
-        publicId: newPublicId,
-        avatarId: input.imageId,
-        firstName: input.fName,
-        lastName: input.lName,
-        defaultProfile: input.defaultProfile
-      });
+      const insertUserProfileResponse = await db.write
+        .insert(userProfiles)
+        .values({
+          //@ts-ignore TS dosnt know that userId must exist on protected procedures
+          userId: ctx.user.userId,
+          publicId: newPublicId,
+          avatarId: input.imageId,
+          firstName: input.fName,
+          lastName: input.lName,
+          defaultProfile: input.defaultProfile
+        });
 
       if (!insertUserProfileResponse.insertId) {
         console.log(insertUserProfileResponse);

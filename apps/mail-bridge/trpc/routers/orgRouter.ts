@@ -105,7 +105,7 @@ export const orgRouter = router({
 
       await postalPuppet.closePuppet(puppetInstance);
 
-      await db.insert(postalServers).values({
+      await db.write.insert(postalServers).values({
         orgId: orgId,
         publicId: newServerPublicId,
         type: 'email',
@@ -115,7 +115,7 @@ export const orgRouter = router({
         rootMailServer: personalOrg
       });
 
-      await db.insert(orgPostalConfigs).values({
+      await db.write.insert(orgPostalConfigs).values({
         orgId: orgId,
         host: config.postalUrl,
         ipPools: config.postalDefaultIpPool,

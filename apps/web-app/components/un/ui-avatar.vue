@@ -6,15 +6,7 @@
     avatarId?: string;
     tooltipPreText?: string;
     size?: 'tiny' | 'xs' | 'sm' | 'md' | 'lg' | 'xl';
-    color?:
-      | 'base'
-      | 'red'
-      | 'purple'
-      | 'green'
-      | 'yellow'
-      | 'pink'
-      | 'blue'
-      | string;
+    color?: 'base' | 'red' | 'purple' | 'green' | 'yellow' | 'pink' | 'blue';
   };
 
   const props = withDefaults(defineProps<Props>(), {
