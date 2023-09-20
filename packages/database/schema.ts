@@ -427,6 +427,7 @@ export const domains = mysqlTable(
     orgId: foreignKey('org_id').notNull(),
     postalHost: varchar('postal_host', { length: 32 }).notNull(),
     domain: varchar('domain', { length: 256 }).notNull(),
+    forwardingAddress: varchar('forwarding_address', { length: 128 }),
     postalId: varchar('postal_id', { length: 64 }),
     dkimKey: varchar('dkim_key', { length: 32 }),
     dkimValue: varchar('dkim_value', { length: 256 }),
@@ -497,7 +498,7 @@ export const postalServers = mysqlTable(
     sendLimit: mediumint('send_limit').notNull(),
     apiKey: varchar('api_key', { length: 64 }).notNull(),
     smtpKey: varchar('smtp_key', { length: 64 }),
-    forwardingAddress: varchar('forwarding_address', { length: 128 })
+    forwardingAddress: varchar('forwarding_address', { length: 128 }) //! FIX: remove this value as its per domain route rather than per server
   },
   (table) => ({
     //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit: when rootMailServer is true, type must be email

@@ -1,14 +1,15 @@
 <script setup lang="ts">
   import { z } from 'zod';
   const { $trpc, $i18n } = useNuxtApp();
-  definePageMeta({ auth: false });
 
-  const result = await $trpc.test.runTest.query({ username: 'test' });
+  const response = await $trpc.org.mail.domains.createNewDomain.mutate({
+    orgPublicId: 'test',
+    domainName: 'uninbox.com'
+  });
 </script>
 
 <template>
   <div class="">
-    {{ $route.path }}
-    {{ result }}
+    {{ response }}
   </div>
 </template>

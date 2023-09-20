@@ -96,7 +96,9 @@
         </div>
         <div class="flex flex-col gap-2 pb-2 pl-2">
           <div>
-            <span class="text-sm">Domains</span>
+            <nuxt-link :to="`/settings/org/${activeOrg}/mail/domains`">
+              <span class="text-sm">Domains</span>
+            </nuxt-link>
           </div>
           <div>
             <span class="text-sm">Email identities</span>

@@ -336,8 +336,7 @@
             :class="[
               '',
               isSelected(row) && 'bg-gray-50 dark:bg-gray-800/50',
-              $attrs.onSelect &&
-                'hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer'
+              $attrs.onSelect && 'hover:bg-base-4  cursor-pointer'
             ]"
             @click="() => onSelect(row)">
             <td
