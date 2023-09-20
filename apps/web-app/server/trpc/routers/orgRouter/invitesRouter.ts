@@ -25,6 +25,8 @@ export const invitesRouter = router({
       const newPublicId = nanoId();
       const userId = user.userId || 0;
 
+      const newInviteToken = nanoIdToken();
+
       // TODO: make this part of the insert query as subquery
       const orgIdResponse = await db
         .select({ id: orgs.id })
@@ -36,7 +38,7 @@ export const invitesRouter = router({
         publicId: newPublicId,
         role: role,
         email: inviteeEmail,
-        inviteToken: nanoIdToken(),
+        inviteToken: newInviteToken,
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 Days from now
       });
 
@@ -44,6 +46,7 @@ export const invitesRouter = router({
         success: true,
         orgId: orgPublicId,
         inviteId: newPublicId,
+        inviteToken: newInviteToken,
         error: null
       };
     }),
@@ -55,24 +58,6 @@ export const invitesRouter = router({
     )
     .query(async ({ ctx, input }) => {
       const db = ctx.db;
-      const sq = db
-        .select({ id: orgs.id })
-        .from(orgs)
-        .where(eq(orgs.publicId, input.orgPublicId))
-        .as('sq');
-
-      // // add invited by user but return publicId and org profile
-      // const orgInvitesResponse = await db
-      //   .select({
-      //     publicId: orgInvitations.publicId,
-      //     email: orgInvitations.email,
-      //     role: orgInvitations.role,
-      //     acceptedAt: orgInvitations.acceptedAt,
-      //     expiresAt: orgInvitations.expiresAt
-      //     // invitedByUserId: orgInvitations.invitedByUserId
-      //   })
-      //   .from(orgInvitations)
-      //   .where(eq(orgInvitations.orgId, +sq.id));
 
       const orgInvitesResponse = await db.query.orgInvitations.findMany({
         where: eq(
@@ -142,6 +127,7 @@ export const invitesRouter = router({
           }
         }
       });
+
       return {
         invites: orgInvitesResponse
       };

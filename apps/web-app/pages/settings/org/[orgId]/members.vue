@@ -14,7 +14,12 @@
 
   const orgPublicId = useRoute().params.orgId as string;
 
-  const orgMembersQuery = await $trpc.org.members.getOrgMembers.query({
+  const {
+    data: orgMembersQuery,
+    pending,
+    error,
+    refresh
+  } = await $trpc.org.members.getOrgMembers.useLazyQuery({
     orgPublicId: orgPublicId
   });
 
@@ -51,20 +56,22 @@
   ];
 
   const tableRows = ref<{}[]>([]);
-  if (orgMembersQuery.members) {
-    for (const member of orgMembersQuery.members) {
-      tableRows.value.push({
-        avatar: member.profile.avatarId,
-        name: member.profile.firstName + ' ' + member.profile.lastName,
-        nickname: member.profile.nickname,
-        title: member.profile.title,
-        role: member.role,
-        status: member.status,
-        joined: member.addedAt.toDateString(),
-        removed: member.removedAt?.toDateString()
-      });
+  watch(orgMembersQuery, (newResults) => {
+    if (newResults?.members) {
+      for (const member of newResults.members) {
+        tableRows.value.push({
+          avatar: member.profile.avatarId,
+          name: member.profile.firstName + ' ' + member.profile.lastName,
+          nickname: member.profile.nickname,
+          title: member.profile.title,
+          role: member.role,
+          status: member.status,
+          joined: member.addedAt.toDateString(),
+          removed: member.removedAt?.toDateString()
+        });
+      }
     }
-  }
+  });
 </script>
 
 <template>
@@ -91,6 +98,7 @@
       <UnUiTable
         :columns="tableColumns"
         :rows="tableRows"
+        :loading="pending"
         class="">
         <template #name-data="{ row }">
           <div class="flex flex-row gap-2 items-center">

@@ -22,7 +22,12 @@
 
   const orgPublicId = useRoute().params.orgId as string;
 
-  const orgInviteQuery = await $trpc.org.invites.viewInvites.query({
+  const {
+    data: orgInviteQuery,
+    pending,
+    error,
+    refresh
+  } = await $trpc.org.invites.viewInvites.useLazyQuery({
     orgPublicId: orgPublicId
   });
 
@@ -71,54 +76,60 @@
   ];
 
   const tableRows = ref<{}[]>([]);
-
-  if (orgInviteQuery.invites) {
-    for (const invite of orgInviteQuery.invites) {
-      const dateNow = new Date();
-      const truncateEmail = (email: string) => {
-        const [localPart, domain] = email.split('@');
-        const truncatedLocalPart =
-          localPart.length > 4 ? `${localPart.substring(0, 4)}...` : localPart;
-        const [domainName, tld] = domain.split('.');
-        const truncatedDomainName =
-          domainName.length > 6
-            ? `${domainName.substring(0, 4)}..`
-            : domainName;
-        return `${truncatedLocalPart}@${truncatedDomainName}.${tld}`;
-      };
-      tableRows.value.push({
-        code: invite.inviteToken,
-        truncatedCode: invite.inviteToken
-          ? invite.inviteToken.substring(0, 8) + '...'
-          : '',
-        email: invite.email,
-        truncatedEmail: truncateEmail(invite.email ? invite.email : ''),
-        role: invite.role,
-        status: invite.expiresAt
-          ? invite.acceptedAt
-            ? 'used'
-            : invite.expiresAt < dateNow
-            ? 'expired'
-            : 'active'
-          : 'active',
-        creatorAvatar: invite.invitedByUser.orgMemberships[0].profile.avatarId,
-        createdBy:
-          invite.invitedByUser.orgMemberships[0].profile.firstName +
-          ' ' +
-          invite.invitedByUser.orgMemberships[0].profile.lastName,
-        created: invite.invitedAt,
-        userAvatar: invite.invitedUser?.orgMemberships[0].profile
-          ? invite.invitedUser?.orgMemberships[0].profile.avatarId
-          : null,
-        usedBy: invite.invitedUser?.orgMemberships[0].profile
-          ? invite.invitedUser?.orgMemberships[0].profile.firstName +
+  watch(orgInviteQuery, (newResults) => {
+    if (newResults) {
+      const newTableRows: {}[] = [];
+      for (const invite of newResults.invites) {
+        const dateNow = new Date();
+        const truncateEmail = (email: string) => {
+          const [localPart, domain] = email.split('@');
+          const truncatedLocalPart =
+            localPart.length > 4
+              ? `${localPart.substring(0, 4)}...`
+              : localPart;
+          const [domainName, tld] = domain.split('.');
+          const truncatedDomainName =
+            domainName.length > 6
+              ? `${domainName.substring(0, 4)}..`
+              : domainName;
+          return `${truncatedLocalPart}@${truncatedDomainName}.${tld}`;
+        };
+        newTableRows.push({
+          code: invite.inviteToken,
+          truncatedCode: invite.inviteToken
+            ? invite.inviteToken.substring(0, 8) + '...'
+            : '',
+          email: invite.email,
+          truncatedEmail: truncateEmail(invite.email ? invite.email : ''),
+          role: invite.role,
+          status: invite.expiresAt
+            ? invite.acceptedAt
+              ? 'used'
+              : invite.expiresAt < dateNow
+              ? 'expired'
+              : 'active'
+            : 'active',
+          creatorAvatar:
+            invite.invitedByUser.orgMemberships[0].profile.avatarId,
+          createdBy:
+            invite.invitedByUser.orgMemberships[0].profile.firstName +
             ' ' +
-            invite.invitedUser?.orgMemberships[0].profile.lastName
-          : null,
-        expiry: invite.expiresAt
-      });
+            invite.invitedByUser.orgMemberships[0].profile.lastName,
+          created: invite.invitedAt,
+          userAvatar: invite.invitedUser?.orgMemberships[0].profile
+            ? invite.invitedUser?.orgMemberships[0].profile.avatarId
+            : null,
+          usedBy: invite.invitedUser?.orgMemberships[0].profile
+            ? invite.invitedUser?.orgMemberships[0].profile.firstName +
+              ' ' +
+              invite.invitedUser?.orgMemberships[0].profile.lastName
+            : null,
+          expiry: invite.expiresAt
+        });
+      }
+      tableRows.value = newTableRows;
     }
-  }
+  });
 
   async function createInvite() {
     if (inviteEmailValid.value === false) return;
@@ -129,16 +140,11 @@
       inviteeEmail: inviteEmailValue.value,
       role: 'member'
     });
-
-    // const invite = await $trpc.org.invites.createInvite.mutation({
-    //   orgPublicId: orgPublicId,
-    //   email: inviteEmailValue
-    // });
     buttonLoading.value = false;
     buttonLabel.value = 'All done';
     inviteEmailValue.value = '';
-    newInviteCode.value = newInviteResponse.inviteId;
-    // TODO: re-fetch invites
+    newInviteCode.value = newInviteResponse.inviteToken;
+    refresh();
   }
 </script>
 
@@ -211,7 +217,8 @@
         <UnUiTable
           :columns="tableColumns"
           :rows="tableRows"
-          class="">
+          class=""
+          :loading="pending">
           <template #status-data="{ row }">
             <div
               class="py-1 px-4 rounded-full w-fit"
