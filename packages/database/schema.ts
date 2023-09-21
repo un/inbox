@@ -429,19 +429,30 @@ export const domains = mysqlTable(
     domain: varchar('domain', { length: 256 }).notNull(),
     forwardingAddress: varchar('forwarding_address', { length: 128 }),
     postalId: varchar('postal_id', { length: 64 }),
+    domainStatus: mysqlEnum('domain_status', ['pending', 'active', 'disabled'])
+      .notNull()
+      .default('pending'),
+    sendingMode: mysqlEnum('sending_mode', [
+      'native',
+      'external',
+      'disabled'
+    ]).notNull(),
+    receivingMode: mysqlEnum('receiving_mode', [
+      'native',
+      'forwarding',
+      'disabled'
+    ]).notNull(),
     dkimKey: varchar('dkim_key', { length: 32 }),
     dkimValue: varchar('dkim_value', { length: 256 }),
-    status: mysqlEnum('status', ['active', 'removed']).notNull(),
-    mode: mysqlEnum('mode', ['native', 'forwarding']).notNull(), // native = all mail comes to UnInbox, forwarding = mail is forwarded from another mail system
-    dnsStatus: mysqlEnum('dns_status', [
-      'valid', // All DNS records are valid
-      'failed', // one or more DNS records are invalid
-      'pending', // DNS records are being validated
-      'verified', // verification TXT record has been verified
-      'unverified' // verification TXT record has not been verified
-    ]).notNull(),
-    statusUpdateAt: timestamp('status_updated_at'),
+    mxDnsValid: boolean('mx_dns_valid').notNull().default(false),
+    dkimDnsValid: boolean('dkim_dns_valid').notNull().default(false),
+    spfDnsValid: boolean('spf_dns_valid').notNull().default(false),
+    returnPathDnsValid: boolean('return_path_dns_valid')
+      .notNull()
+      .default(false),
     lastDnsCheckAt: timestamp('last_dns_check_at'),
+    disabledAt: timestamp('disabled_at'),
+    verifiedAt: timestamp('verified_at'),
     createdAt: timestamp('created_at')
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull()
@@ -464,28 +475,6 @@ export const domainsRelations = relations(domains, ({ one }) => ({
   })
 }));
 
-export const domainVerifications = mysqlTable(
-  'domain_verifications',
-  {
-    id: serial('id').primaryKey(),
-    domainId: foreignKey('domain_id').notNull(),
-    verificationToken: varchar('verification_token', { length: 64 }).notNull(),
-    verifiedAt: timestamp('verified_at')
-  },
-  (table) => ({
-    domainIdIndex: uniqueIndex('domain_id_idx').on(table.domainId)
-  })
-);
-export const domainVerificationsRelations = relations(
-  domainVerifications,
-  ({ one }) => ({
-    domain: one(domains, {
-      fields: [domainVerifications.domainId],
-      references: [domains.id]
-    })
-  })
-);
-
 // Postal server table
 export const postalServers = mysqlTable(
   'postal_servers',
@@ -498,11 +487,12 @@ export const postalServers = mysqlTable(
     sendLimit: mediumint('send_limit').notNull(),
     apiKey: varchar('api_key', { length: 64 }).notNull(),
     smtpKey: varchar('smtp_key', { length: 64 }),
-    forwardingAddress: varchar('forwarding_address', { length: 128 }) //! FIX: remove this value as its per domain route rather than per server
+    rootForwardingAddress: varchar('root_forwarding_address', { length: 128 })
   },
   (table) => ({
     //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit: when rootMailServer is true, type must be email
     //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit: when rootMailServer is false, smtpKey must not be null
+    //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit: when rootMailServer is false, rootForwardingAddress must be null
     publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
     orgIdIndex: index('org_id_idx').on(table.orgId),
     postalSlug: uniqueIndex('postal_slug').on(table.orgId, table.type)
