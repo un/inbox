@@ -82,90 +82,105 @@
           </div>
         </div>
       </div>
+
       <div
         class="flex flex-col gap-8 w-full"
         v-if="!domainPending && domainQuery?.domainData">
         <div class="flex flex-col gap-4">
           <div class="w-full border-b-1 border-base-5 pb-2">
             <span class="text-xs uppercase text-base-11 font-semibold">
-              Incoming mail
+              DNS Records
             </span>
           </div>
-          <div class="grid grid-cols-2 gap-8">
-            <div class="flex flex-col">
-              <div><span class="font-semibold text-xl">Native</span></div>
-              <div>
-                <span> Your incoming mail is sent directly to UnInbox. </span>
-              </div>
-              <div class="flex flex-col gap-4 justify-center">
-                <div class="flex flex-row justify-between items-center">
-                  <span class="font-semibold text-lg">MX Records</span>
-                  <span
-                    class="text-sm text-base-11 py-1 px-4 rounded-full bg-red-9">
-                    INVALID
-                  </span>
-                </div>
-                <div>
-                  <span>
-                    You need remove any existing MX records from your domain's
-                    DNS configuration and add the following record.
-                  </span>
-                  <span> </span>
-                </div>
-                <div class="flex flex-row gap-4">
-                  <div class="flex flex-col gap-1">
-                    <span class="text-xs uppercase text-base-11"> Type </span>
-                    <span
-                      class="bg-base-3 p-4 rounded-lg text-sm font-mono uppercase w-[50px] text-center">
-                      MX
-                    </span>
-                  </div>
-                  <div class="flex flex-col gap-1">
-                    <span class="text-xs uppercase text-base-11"> Name </span>
-                    <span
-                      class="bg-base-3 p-4 rounded-lg text-sm font-mono lowercase w-[50px] text-center">
-                      @
-                    </span>
-                  </div>
-                  <div class="flex flex-col gap-1">
-                    <span class="text-xs uppercase text-base-11">
-                      Priority
-                    </span>
-                    <span
-                      class="bg-base-3 p-4 rounded-lg text-sm font-mono lowercase w-[50px] text-center">
-                      1
-                    </span>
-                  </div>
-                  <div class="flex flex-col gap-1">
-                    <span
-                      class="text-xs uppercase text-base-11 overflow-hidden">
-                      Hostname/content
-                    </span>
-                    <span
-                      class="bg-base-3 p-4 rounded-lg text-sm font-mono lowercase text-left w-fit">
-                      mx.one.e.uninbox.dev
-                    </span>
-                  </div>
-                  <UnUiTooltip text="Copy to clipboard">
-                    <icon
-                      name="ph-clipboard"
-                      size="20"
-                      @click="
-                        copy('v=spf1 a mx include:spf.one.e.uninbox.dev ~all')
-                      " />
-                  </UnUiTooltip>
-                </div>
-              </div>
-            </div>
-            <div class="flex flex-col">
-              <div><span class="font-semibold text-xl">Forwarding</span></div>
-              <div>
-                <span>
-                  Your incoming mail is sent to an external service, then
-                  forwarded into UnInbox.
-                </span>
-              </div>
-            </div>
+          <div class="grid grid-cols-2 gap-4">
+            <SettingsDomainDnsItem
+              title="MX Records"
+              :valid="domainDnsQuery?.dns?.mx.valid || false"
+              text="To receive email natively into UnInbox, add an MX record with the following values. This should be the only MX record for this domain."
+              :blocks="[
+                {
+                  title: 'Type',
+                  value: 'MX'
+                },
+                {
+                  title: 'Name',
+                  value: '@'
+                },
+                {
+                  title: 'Priority',
+                  value: '1'
+                },
+                {
+                  title: 'Hostname/content',
+                  value: domainDnsQuery?.dns?.mx.value || '',
+                  hasCopyButton: true
+                }
+              ]" />
+            <SettingsDomainDnsItem
+              title="SPF Record"
+              :valid="domainDnsQuery?.dns?.spf.valid || false"
+              :text="
+                domainDnsQuery?.dns?.spf.otherSenders &&
+                domainDnsQuery?.dns?.spf.otherSenders
+                  ? ' We have detected existing email senders for your domain, to ensure email sent via UnInbox is delivered properly, modify your TXT record to the following value. We have included existing senders to make your life easier. '
+                  : 'To ensure email sent via UnInbox is delivered properly, add a TXT record with the following value.'
+              "
+              :blocks="[
+                {
+                  title: 'Type',
+                  value: 'TXT'
+                },
+                {
+                  title: 'Name',
+                  value: '@'
+                },
+                {
+                  title: 'Value/Content',
+                  value: domainDnsQuery?.dns?.spf.value || '',
+                  hasCopyButton: true
+                }
+              ]" />
+            <SettingsDomainDnsItem
+              title="DKIM Record"
+              :valid="domainDnsQuery?.dns?.dkim.valid || false"
+              text="You need to add a TXT record with the following values."
+              :blocks="[
+                {
+                  title: 'Type',
+                  value: 'TXT'
+                },
+                {
+                  title: 'Name',
+                  value: domainDnsQuery?.dns?.dkim.key || '',
+                  hasCopyButton: true
+                },
+                {
+                  title: 'Value/Content',
+                  value: domainDnsQuery?.dns?.dkim.value || '',
+                  hasCopyButton: true
+                }
+              ]" />
+
+            <SettingsDomainDnsItem
+              title="Return Path"
+              :valid="domainDnsQuery?.dns?.returnPath.valid || false"
+              text="This is optional but we recommend adding this to improve deliverability. You should add a CNAME record at {{ domainDnsQuery?.dns?.returnPath.value }} to point to the hostname below."
+              :blocks="[
+                {
+                  title: 'Type',
+                  value: 'CNAME'
+                },
+                {
+                  title: 'Name',
+                  value: domainDnsQuery?.dns?.returnPath.value || '',
+                  hasCopyButton: true
+                },
+                {
+                  title: 'Target',
+                  value: domainDnsQuery?.dns?.returnPath.destination || '',
+                  hasCopyButton: true
+                }
+              ]" />
           </div>
         </div>
         <div class="flex flex-col gap-4 w-full max-w-full">
@@ -174,93 +189,7 @@
               Outgoing mail
             </span>
           </div>
-          <div class="grid grid-cols-2 gap-4 w-full max-w-full">
-            <div class="flex flex-col w-full max-w-full">
-              <div><span class="font-semibold text-xl">DKIM Record</span></div>
-              <div>
-                <span>
-                  You need to add a TXT record with the following values.
-                </span>
-              </div>
-              <span> Record Name: </span>
-              <div class="flex flex-row gap-2">
-                <pre class="bg-base-3 p-4 rounded-lg">
-postal-zzDoQW._domainkey</pre
-                >
-                <UnUiTooltip text="Copy to clipboard">
-                  <icon
-                    name="ph-clipboard"
-                    size="20"
-                    @click="
-                      copy('v=spf1 a mx include:spf.one.e.uninbox.dev ~all')
-                    " />
-                </UnUiTooltip>
-              </div>
-              <span> Record Value: </span>
-              <div class="flex flex-row gap-2 w-full max-w-full">
-                <span class="bg-base-3 p-4 rounded-lg break-anywhere">
-                  v=DKIM1; t=s; h=sha256;
-                  p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQChr6qa3G2cHJeLEfEFzcnSUpR8rhFIByRAeTPWCsKVDB7k2g6HPcQrFwtG/nYX3CC1iKler4YYhv3P1vBIwy4Hiu/2O8AbF9e1xYzykHjemhAF4F7/9IKX8iRu4sGKRpcPg6Xg6wBKM1JHe+uFuV0gKAsVeGSvKgjyyxNjhgcbCQIDAQAB;
-                </span>
-                <UnUiTooltip
-                  text="Copy to clipboard"
-                  class="">
-                  <icon
-                    name="ph-clipboard"
-                    size="20"
-                    @click="
-                      copy('v=spf1 a mx include:spf.one.e.uninbox.dev ~all')
-                    "
-                    class="" />
-                </UnUiTooltip>
-              </div>
-            </div>
-            <div class="flex flex-col gap-2">
-              <div><span class="font-semibold text-xl">SPF Record</span></div>
-              <div>
-                <span>
-                  You need to add a TXT record at the apex/root of your domain
-                  (@) with the following content. If you already send mail from
-                  another service, you may just need to add
-                  include:spf.one.e.uninbox.dev to your existing record.
-                </span>
-              </div>
-              <div class="flex flex-row gap-2">
-                <pre class="bg-base-3 p-4 rounded-lg">
-v=spf1 a mx include:spf.one.e.uninbox.dev ~all</pre
-                >
-                <UnUiTooltip text="Copy to clipboard">
-                  <icon
-                    name="ph-clipboard"
-                    size="20"
-                    @click="
-                      copy('v=spf1 a mx include:spf.one.e.uninbox.dev ~all')
-                    " />
-                </UnUiTooltip>
-              </div>
-            </div>
-            <div class="flex flex-col gap-2">
-              <div><span class="font-semibold text-xl">Return Path</span></div>
-              <div>
-                <span>
-                  This is optional but we recommend adding this to improve
-                  deliverability. You should add a CNAME record at
-                  psrp.dev.unin.me to point to the hostname below.
-                </span>
-              </div>
-              <div class="flex flex-row gap-2">
-                <pre class="bg-base-3 p-4 rounded-lg">rp.one.e.uninbox.dev</pre>
-                <UnUiTooltip text="Copy to clipboard">
-                  <icon
-                    name="ph-clipboard"
-                    size="20"
-                    @click="
-                      copy('v=spf1 a mx include:spf.one.e.uninbox.dev ~all')
-                    " />
-                </UnUiTooltip>
-              </div>
-            </div>
-          </div>
+          <div class="grid grid-cols-2 gap-4 w-full max-w-full">asdsadasd</div>
         </div>
         <div class="flex flex-col gap-4">
           <div class="w-full border-b-1 border-base-5 pb-2">
@@ -268,20 +197,7 @@ v=spf1 a mx include:spf.one.e.uninbox.dev ~all</pre
               Forwarding Address
             </span>
           </div>
-          <div class="grid grid-cols-2">
-            <div class="flex flex-col">
-              <div><span class="font-semibold text-xl">Native</span></div>
-              <div>
-                <span> Your email is managed natively in UnInbox. </span>
-              </div>
-            </div>
-            <div class="flex flex-col">
-              <div><span class="font-semibold text-xl">Forwarding</span></div>
-              <div>
-                <span> Your email is managed by an external service. </span>
-              </div>
-            </div>
-          </div>
+          <div class="grid grid-cols-2">sadsad</div>
         </div>
       </div>
       <div

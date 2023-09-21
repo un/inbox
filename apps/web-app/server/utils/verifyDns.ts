@@ -9,7 +9,7 @@ interface DnsRecords {
   mx: DnsRecord;
   dkim: DnsRecord & { key: string };
   spf: DnsRecord & { otherSenders: string[] };
-  returnPath: DnsRecord;
+  returnPath: DnsRecord & { destination: string };
 }
 export async function verifyDns({
   domainName,
@@ -44,6 +44,7 @@ export async function verifyDns({
     },
     returnPath: {
       value: `psrp.${domainName}`,
+      destination: `rp.${postalUrl}`,
       valid: false,
       error: null
     }
@@ -147,6 +148,7 @@ export async function verifyDns({
       return;
     })
     .catch((error) => {
+      dnsRecords.spf.value = `v=spf1 mx include:_spf.${postalRootUrl} ~all`;
       dnsRecords.spf.valid = false;
       dnsRecords.spf.error = 'Error resolving SPF record';
     });

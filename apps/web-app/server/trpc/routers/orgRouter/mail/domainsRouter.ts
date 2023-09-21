@@ -296,6 +296,7 @@ export const domainsRouter = router({
           .where(eq(domains.id, domainResponse.id));
       }
 
+      console.log({ dnsResult });
       return {
         dns: dnsResult,
         domainStatus: domainStatus,
