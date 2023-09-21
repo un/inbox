@@ -28,7 +28,8 @@ export default defineNuxtConfig({
     mailBridgeKey: process.env.WEBAPP_MAILBRIDGE_KEY || '',
     mailBridge: {
       url: process.env.WEBAPP_MAILBRIDGE_URL || '',
-      key: process.env.WEBAPP_MAILBRIDGE_KEY || ''
+      key: process.env.WEBAPP_MAILBRIDGE_KEY || '',
+      postalRootUrl: process.env.MAILBRIDGE_POSTAL_ROOT_URL || ''
     },
     cfImagesToken: process.env.WEBAPP_CF_IMAGES_TOKEN || '',
     cfAccountId: process.env.WEBAPP_CF_ACCOUNT_ID || '',

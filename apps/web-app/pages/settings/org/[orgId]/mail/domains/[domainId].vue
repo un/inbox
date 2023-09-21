@@ -7,30 +7,33 @@
 
   const { copy, copied, text } = useClipboard();
   const { $trpc, $i18n } = useNuxtApp();
-
-  const showInviteModal = ref(false);
-  const buttonLoading = ref(false);
-  const buttonLabel = ref('Create invite');
-  const pageError = ref(false);
   const inviteEmailValid = ref<boolean | 'remote' | null>(null);
-  const inviteEmailValue = ref('');
-  const inviteEmailValidationMessage = ref('');
-  const newInviteCode = ref('');
-  const formValid = computed(() => {
-    return inviteEmailValid.value === true;
-  });
 
-  const orgPublicId = useRoute().params.orgId as string;
-  const domainPublicId = useRoute().params.domainId as string;
+  const route = useRoute();
+
+  const orgPublicId = route.params.orgId as string;
+  const domainPublicId = route.params.domainId as string;
+  const isNewDomain = route.query.new === 'true';
 
   const {
     data: domainQuery,
-    pending,
-    error,
-    refresh
+    pending: domainPending,
+    error: domainError,
+    refresh: domainRefresh
   } = await $trpc.org.mail.domains.getDomain.useLazyQuery({
     orgPublicId: orgPublicId,
-    domainPublicId: domainPublicId
+    domainPublicId: domainPublicId,
+    newDomain: isNewDomain
+  });
+  const {
+    data: domainDnsQuery,
+    pending: domainDnsPending,
+    error: domainDnsError,
+    refresh: domainDnsRefresh
+  } = await $trpc.org.mail.domains.getDomainDns.useLazyQuery({
+    orgPublicId: orgPublicId,
+    domainPublicId: domainPublicId,
+    newDomain: isNewDomain
   });
 </script>
 
@@ -47,31 +50,21 @@
         <div class="flex flex-col gap-1">
           <span
             class="font-mono text-2xl"
-            v-if="!pending">
+            v-if="!domainPending">
             {{ domainQuery?.domainData?.domain }}
           </span>
           <span
             class="font-mono text-2xl"
-            v-if="pending">
+            v-if="domainPending">
             Loading...
           </span>
         </div>
-      </div>
-      <div class="flex flex-row gap-4 items-center">
-        <button
-          class="flex flex-row gap-2 p-2 border-1 rounded items-center justify-center border-base-7 bg-base-3 max-w-80"
-          @click="showInviteModal = !showInviteModal">
-          <icon
-            name="ph-plus"
-            size="20" />
-          <p class="text-sm">Add new</p>
-        </button>
       </div>
     </div>
     <div class="flex flex-col gap-8 w-full overflow-y-scroll">
       <div
         class="flex flex-col gap-8 w-full"
-        v-if="pending">
+        v-if="domainPending">
         <div class="flex flex-row gap-4 items-center">
           <div class="flex flex-col gap-1">
             <span class="font-display text-2xl">Loading...</span>
@@ -81,24 +74,96 @@
       </div>
       <div
         class="flex flex-col gap-8 w-full"
-        v-if="!pending">
+        v-if="!domainPending && !domainQuery?.domainData">
+        <div class="flex flex-row gap-4 items-center">
+          <div class="flex flex-col gap-1">
+            <span class="font-display text-2xl">Domain not found</span>
+            <span class="text-sm"></span>
+          </div>
+        </div>
+      </div>
+      <div
+        class="flex flex-col gap-8 w-full"
+        v-if="!domainPending && domainQuery?.domainData">
         <div class="flex flex-col gap-4">
           <div class="w-full border-b-1 border-base-5 pb-2">
             <span class="text-xs uppercase text-base-11 font-semibold">
-              Domain Mode
+              Incoming mail
             </span>
           </div>
-          <div class="grid grid-cols-2">
+          <div class="grid grid-cols-2 gap-8">
             <div class="flex flex-col">
               <div><span class="font-semibold text-xl">Native</span></div>
               <div>
-                <span> Your email is managed natively in UnInbox. </span>
+                <span> Your incoming mail is sent directly to UnInbox. </span>
+              </div>
+              <div class="flex flex-col gap-4 justify-center">
+                <div class="flex flex-row justify-between items-center">
+                  <span class="font-semibold text-lg">MX Records</span>
+                  <span
+                    class="text-sm text-base-11 py-1 px-4 rounded-full bg-red-9">
+                    INVALID
+                  </span>
+                </div>
+                <div>
+                  <span>
+                    You need remove any existing MX records from your domain's
+                    DNS configuration and add the following record.
+                  </span>
+                  <span> </span>
+                </div>
+                <div class="flex flex-row gap-4">
+                  <div class="flex flex-col gap-1">
+                    <span class="text-xs uppercase text-base-11"> Type </span>
+                    <span
+                      class="bg-base-3 p-4 rounded-lg text-sm font-mono uppercase w-[50px] text-center">
+                      MX
+                    </span>
+                  </div>
+                  <div class="flex flex-col gap-1">
+                    <span class="text-xs uppercase text-base-11"> Name </span>
+                    <span
+                      class="bg-base-3 p-4 rounded-lg text-sm font-mono lowercase w-[50px] text-center">
+                      @
+                    </span>
+                  </div>
+                  <div class="flex flex-col gap-1">
+                    <span class="text-xs uppercase text-base-11">
+                      Priority
+                    </span>
+                    <span
+                      class="bg-base-3 p-4 rounded-lg text-sm font-mono lowercase w-[50px] text-center">
+                      1
+                    </span>
+                  </div>
+                  <div class="flex flex-col gap-1">
+                    <span
+                      class="text-xs uppercase text-base-11 overflow-hidden">
+                      Hostname/content
+                    </span>
+                    <span
+                      class="bg-base-3 p-4 rounded-lg text-sm font-mono lowercase text-left w-fit">
+                      mx.one.e.uninbox.dev
+                    </span>
+                  </div>
+                  <UnUiTooltip text="Copy to clipboard">
+                    <icon
+                      name="ph-clipboard"
+                      size="20"
+                      @click="
+                        copy('v=spf1 a mx include:spf.one.e.uninbox.dev ~all')
+                      " />
+                  </UnUiTooltip>
+                </div>
               </div>
             </div>
             <div class="flex flex-col">
               <div><span class="font-semibold text-xl">Forwarding</span></div>
               <div>
-                <span> Your email is managed by an external service. </span>
+                <span>
+                  Your incoming mail is sent to an external service, then
+                  forwarded into UnInbox.
+                </span>
               </div>
             </div>
           </div>
@@ -106,7 +171,7 @@
         <div class="flex flex-col gap-4 w-full max-w-full">
           <div class="w-full max-w-full border-b-1 border-base-5 pb-2">
             <span class="text-xs uppercase text-base-11 font-semibold">
-              DNS Records
+              Outgoing mail
             </span>
           </div>
           <div class="grid grid-cols-2 gap-4 w-full max-w-full">
@@ -195,28 +260,6 @@ v=spf1 a mx include:spf.one.e.uninbox.dev ~all</pre
                 </UnUiTooltip>
               </div>
             </div>
-            <div class="flex flex-col gap-2">
-              <div><span class="font-semibold text-xl">MX Records</span></div>
-              <div>
-                <span>
-                  If you wish to receive incoming e-mail for this domain, you
-                  need to add the following MX records to the domain. You don't
-                  have to do this and we'll only tell you if they're set up or
-                  not. Both records should be priority 10.
-                </span>
-              </div>
-              <div class="flex flex-row gap-2">
-                <pre class="bg-base-3 p-4 rounded-lg">mx.one.e.uninbox.dev</pre>
-                <UnUiTooltip text="Copy to clipboard">
-                  <icon
-                    name="ph-clipboard"
-                    size="20"
-                    @click="
-                      copy('v=spf1 a mx include:spf.one.e.uninbox.dev ~all')
-                    " />
-                </UnUiTooltip>
-              </div>
-            </div>
           </div>
         </div>
         <div class="flex flex-col gap-4">
@@ -243,8 +286,9 @@ v=spf1 a mx include:spf.one.e.uninbox.dev ~all</pre
       </div>
       <div
         class="flex flex-col gap-8 w-full"
-        v-if="!pending">
+        v-if="!domainPending">
         {{ domainQuery?.domainData }}
+        {{ domainDnsQuery }}
       </div>
     </div>
   </div>

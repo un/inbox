@@ -168,8 +168,13 @@ export const settingsRouter = router({
         }
       });
 
+      // filter out orgs that have personalOrg = true
+      const usersOrgs = orgMembersQuery.filter(
+        (orgMember) => orgMember.org.personalOrg !== true
+      );
+
       return {
-        userOrgs: orgMembersQuery
+        userOrgs: usersOrgs
       };
     })
 });

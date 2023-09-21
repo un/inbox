@@ -88,7 +88,7 @@ export const emailRoutesRouter = router({
       await db.write
         .update(postalServers)
         .set({
-          forwardingAddress: setMailServerRouteResult.forwardingAddress
+          rootForwardingAddress: setMailServerRouteResult.forwardingAddress
         })
         .where(eq(postalServers.publicId, serverPublicId));
 

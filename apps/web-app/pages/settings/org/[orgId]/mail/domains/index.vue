@@ -8,16 +8,17 @@
   const { copy, copied, text } = useClipboard();
   const { $trpc, $i18n } = useNuxtApp();
 
-  const showInviteModal = ref(false);
+  const showNewModal = ref(false);
   const buttonLoading = ref(false);
-  const buttonLabel = ref('Create invite');
+  const buttonLabel = ref('Add Domain');
   const pageError = ref(false);
-  const inviteEmailValid = ref<boolean | 'remote' | null>(null);
-  const inviteEmailValue = ref('');
-  const inviteEmailValidationMessage = ref('');
-  const newInviteCode = ref('');
+  const newDomainNameValid = ref<boolean | 'remote' | null>(null);
+  const newDomainNameValue = ref('');
+  const newDomainNameValidationMessage = ref('');
+  const newDomainResponseError = ref('');
+  const newDomainPublicId = ref('');
   const formValid = computed(() => {
-    return inviteEmailValid.value === true;
+    return newDomainNameValid.value === true;
   });
 
   const orgPublicId = useRoute().params.orgId as string;
@@ -45,13 +46,13 @@
       sortable: true
     },
     {
-      key: 'dns',
-      label: 'DNS Status',
+      key: 'sendingMode',
+      label: 'SendingMode',
       sortable: true
     },
     {
-      key: 'mode',
-      label: 'Mail Mode',
+      key: 'receivingMode',
+      label: 'Receiving Mode',
       sortable: true
     }
   ];
@@ -59,8 +60,8 @@
   interface TableRow {
     status: string;
     domain: string;
-    dns: string;
-    mode: string;
+    sendingMode: string;
+    receivingMode: string;
     domainId: string;
   }
 
@@ -70,10 +71,10 @@
       const newTableRows: TableRow[] = [];
       for (const domain of newResults.domainData) {
         newTableRows.push({
-          status: domain.status,
+          status: domain.domainStatus,
           domain: domain.domain,
-          dns: domain.dnsStatus,
-          mode: domain.mode,
+          sendingMode: domain.sendingMode,
+          receivingMode: domain.receivingMode,
           domainId: domain.publicId
         });
       }
@@ -81,21 +82,30 @@
     }
   });
 
-  // async function createInvite() {
-  //   if (inviteEmailValid.value === false) return;
-  //   buttonLoading.value = true;
-  //   buttonLabel.value = 'Creating invite...';
-  //   const newInviteResponse = await $trpc.org.invites.createNewInvite.mutate({
-  //     orgPublicId: orgPublicId,
-  //     inviteeEmail: inviteEmailValue.value,
-  //     role: 'member'
-  //   });
-  //   buttonLoading.value = false;
-  //   buttonLabel.value = 'All done';
-  //   inviteEmailValue.value = '';
-  //   newInviteCode.value = newInviteResponse.inviteToken;
-  //   refresh();
-  // }
+  async function createNewDomain() {
+    if (newDomainNameValid.value === false) return;
+    buttonLoading.value = true;
+    buttonLabel.value = 'Creating domain...';
+    const newDomainResponse =
+      await $trpc.org.mail.domains.createNewDomain.mutate({
+        orgPublicId: orgPublicId,
+        domainName: newDomainNameValue.value
+      });
+
+    if (newDomainResponse.error) {
+      buttonLoading.value = false;
+      buttonLabel.value = 'Add Domain';
+      newDomainNameValid.value = false;
+      newDomainResponseError.value = newDomainResponse.error;
+      return;
+    }
+    buttonLoading.value = false;
+    buttonLabel.value = 'All done';
+
+    navigateTo(
+      `/settings/org/${orgPublicId}/mail/domains/${newDomainResponse.domainId}`
+    );
+  }
 
   function select(row: (typeof tableRows.value)[number]) {
     navigateTo(`/settings/org/${orgPublicId}/mail/domains/${row.domainId}`);
@@ -115,12 +125,35 @@
       <div class="flex flex-row gap-4 items-center">
         <button
           class="flex flex-row gap-2 p-2 border-1 rounded items-center justify-center border-base-7 bg-base-3 max-w-80"
-          @click="showInviteModal = !showInviteModal">
+          @click="showNewModal = !showNewModal">
           <icon
             name="ph-plus"
             size="20" />
           <p class="text-sm">Add new</p>
         </button>
+      </div>
+    </div>
+    <div
+      class="flex flex-col gap-4 w-full"
+      v-if="showNewModal">
+      <span class="text-xl font-semibold">Add a new domain</span>
+      <UnUiInput
+        v-model:value="newDomainNameValue"
+        v-model:valid="newDomainNameValid"
+        v-model:validationMessage="newDomainNameValidationMessage"
+        label="Domain name"
+        placeholder=""
+        :schema="z.string().min(4).includes('.')" />
+      <UnUiButton
+        :label="buttonLabel"
+        :loading="buttonLoading"
+        :disabled="!formValid"
+        size="sm"
+        @click="createNewDomain()" />
+      <div
+        v-if="newDomainResponseError"
+        class="bg-red-3 w-fit px-4 py-1 rounded-lg">
+        {{ newDomainResponseError }}
       </div>
     </div>
     <div class="flex flex-col gap-8 w-full overflow-y-scroll">

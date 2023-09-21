@@ -17,16 +17,17 @@
 
   const orgPublicId = useRoute().params.orgId as string;
 
-  const initialOrgProfile = await $trpc.org.profile.getOrgProfile.query({
-    orgPublicId: orgPublicId
-  });
+  const { data: initialOrgProfile, pending } =
+    await $trpc.org.profile.getOrgProfile.useLazyQuery({
+      orgPublicId: orgPublicId
+    });
 
-  if (initialOrgProfile.orgProfile) {
-    orgNameValue.value = initialOrgProfile.orgProfile?.name;
-    initialOrgProfile.orgProfile?.avatarId
+  if (initialOrgProfile.value && initialOrgProfile.value.orgProfile) {
+    orgNameValue.value = initialOrgProfile.value.orgProfile?.name;
+    initialOrgProfile.value.orgProfile?.avatarId
       ? (imageUrl.value = `https://imagedelivery.net/${
           useRuntimeConfig().public.cfImagesAccountHash
-        }/${initialOrgProfile.orgProfile?.avatarId}`)
+        }/${initialOrgProfile.value.orgProfile?.avatarId}`)
       : null;
   }
 
@@ -41,12 +42,12 @@
     reset: true
   });
 
-  const imageUploadSignedUrl =
-    await $trpc.user.profile.generateAvatarUploadUrl.query();
+  const { data: imageUploadSignedUrl, pending: imageUploadSignedUrlPending } =
+    await $trpc.user.profile.generateAvatarUploadUrl.useLazyQuery();
 
   const formValid = computed(() => {
     if (imageId.value) return true;
-    if (orgNameValue.value !== initialOrgProfile.orgProfile?.name) {
+    if (orgNameValue.value !== initialOrgProfile.value?.orgProfile?.name) {
       return orgNameValid.value === true;
     }
   });
@@ -61,14 +62,15 @@
     if (!selectedFiles) return;
     const formData = new FormData();
     formData.append('file', selectedFiles[0]);
-    await useFetch(imageUploadSignedUrl.uploadURL, {
-      method: 'post',
-      body: formData
-    });
-    imageId.value = await $trpc.user.profile.awaitAvatarUpload.query({
-      uploadId: imageUploadSignedUrl.id
-    });
-
+    if (imageUploadSignedUrl.value) {
+      await useFetch(imageUploadSignedUrl.value.uploadURL, {
+        method: 'post',
+        body: formData
+      });
+      imageId.value = await $trpc.user.profile.awaitAvatarUpload.query({
+        uploadId: imageUploadSignedUrl.value.id
+      });
+    }
     //TODO: make the image only appear once it has been loaded to avoid blank box
     imageUrl.value = `https://imagedelivery.net/${
       useRuntimeConfig().public.cfImagesAccountHash
@@ -99,16 +101,21 @@
 </script>
 
 <template>
-  <div class="flex flex-col w-full h-full items-start justify-between p-4">
+  <div class="flex flex-col w-full h-full items-start p-4 gap-8">
     <div class="flex flex-row w-full justify-between items-center">
-      <div class="flex flex-row gap-4 items-center">
-        <div class="flex flex-col gap-1">
-          <span class="font-display text-2xl">Organization Profile</span>
-        </div>
-      </div>
+      <span class="font-display text-2xl">Organization Profile</span>
     </div>
     <div
-      class="flex flex-col items-start justify-center gap-8 w-full grow pb-14">
+      v-if="pending"
+      class="flex flex-row w-full p-8 bg-base-3 rounded-xl gap-4 justify-center rounded-tl-2xl">
+      <icon
+        name="svg-spinners:3-dots-fade"
+        size="24" />
+      <span>Loading organization profile</span>
+    </div>
+    <div
+      class="flex flex-col items-start justify-center gap-8 w-full pb-14"
+      v-if="!pending">
       <div class="flex flex-col gap-2">
         <button
           type="button"

@@ -2,7 +2,11 @@ import { z } from 'zod';
 import { parse, stringify } from 'superjson';
 import { router, protectedProcedure } from '../trpc';
 import { and, eq } from '@uninbox/database/orm';
-import { postalServers, orgPostalConfigs } from '@uninbox/database/schema';
+import {
+  postalServers,
+  orgPostalConfigs,
+  domains
+} from '@uninbox/database/schema';
 import { nanoId, nanoIdLength } from '@uninbox/utils';
 import { postalPuppet } from '@uninbox/postal-puppet';
 
@@ -65,6 +69,7 @@ export const domainRouter = router({
 
       return {
         orgId: orgId,
+        postalServerUrl: config.postalUrl as string,
         postalOrgId: postalOrgId,
         domainId: puppetDomainResponse.domainId,
         dkimKey: puppetDomainResponse.dkimKey,

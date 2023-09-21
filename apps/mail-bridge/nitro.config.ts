@@ -12,6 +12,7 @@ export default defineNitroConfig({
     url: process.env.MAILBRIDGE_URL,
     key: process.env.MAILBRIDGE_KEY,
     postalUrl: process.env.MAILBRIDGE_POSTAL_URL,
+    postalRootUrl: process.env.MAILBRIDGE_POSTAL_ROOT_URL,
     postalControlPanel: process.env.MAILBRIDGE_POSTAL_CONTROL_PANEL,
     postalUser: process.env.MAILBRIDGE_POSTAL_USER,
     postalPass: process.env.MAILBRIDGE_POSTAL_PASSWORD,

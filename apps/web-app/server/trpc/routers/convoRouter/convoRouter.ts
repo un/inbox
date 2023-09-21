@@ -34,7 +34,7 @@ export const convoRouter = router({
       const inputLastPublicId = cursorLastPublicId || '';
 
       // TODO: Add filtering for org based on input.filterOrgPublicId
-      const builder = await db.read.query.convos.findMany({
+      const convoQuery = await db.read.query.convos.findMany({
         orderBy: [desc(convos.lastUpdatedAt), desc(convos.publicId)],
         limit: 15,
         columns: {
@@ -150,11 +150,12 @@ export const convoRouter = router({
         }
       });
 
-      const newCursorLastUpdatedAt = builder[builder.length - 1].lastUpdatedAt;
-      const newCursorLastPublicId = builder[builder.length - 1].publicId;
+      const newCursorLastUpdatedAt =
+        convoQuery[convoQuery.length - 1].lastUpdatedAt;
+      const newCursorLastPublicId = convoQuery[convoQuery.length - 1].publicId;
 
       return {
-        data: builder,
+        data: convoQuery,
         cursor: {
           lastUpdatedAt: newCursorLastUpdatedAt,
           lastPublicId: newCursorLastPublicId
