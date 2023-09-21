@@ -14,12 +14,17 @@
     }
   });
 
-  const userOrgs = await $trpc.org.settings.getUserOrgs.query({
+  const {
+    data: userOrgs,
+    pending,
+    error,
+    refresh
+  } = await $trpc.org.settings.getUserOrgs.useLazyQuery({
     onlyAdmin: true
   });
-  if (userOrgs.userOrgs.length > 0) {
+  if (userOrgs.value && userOrgs.value.userOrgs.length > 0) {
     userHasAdminOrgs.value = true;
-    activeOrg.value = userOrgs.userOrgs[0].org.publicId;
+    activeOrg.value = userOrgs.value.userOrgs[0].org.publicId;
   }
 
   // TODO: fix scroll bar positioning, move to right, approx 20 px (may need to move to a parent div)
@@ -48,14 +53,31 @@
           </div>
         </div>
       </div>
+      <div>
+        <span class="font-display text-lg">Org</span>
+      </div>
+      <div
+        v-if="pending"
+        class="flex flex-row w-full p-8 bg-base-3 rounded-xl gap-4 justify-center rounded-tl-2xl">
+        <icon
+          name="svg-spinners:3-dots-fade"
+          size="24" />
+        <span>Loading organizations</span>
+      </div>
+      <div
+        v-if="!userHasAdminOrgs && !pending"
+        class="flex flex-row w-full p-8 bg-base-3 rounded-xl gap-4 justify-center rounded-tl-2xl">
+        <icon
+          name="ph-identification-badge"
+          size="24" />
+        <span>You are not an admin in any organizations</span>
+      </div>
       <div
         class="flex flex-col gap-2"
-        v-if="userHasAdminOrgs">
-        <div>
-          <span class="font-display text-lg">Org</span>
-        </div>
+        v-if="userHasAdminOrgs && !pending">
         <div class="flex flex-col gap-1">
           <SettingsOrgSelector
+            v-if="userOrgs"
             v-for="org in userOrgs.userOrgs"
             :orgData="org"
             :key="org.org.publicId"
