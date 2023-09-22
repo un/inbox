@@ -24,9 +24,12 @@
     pending,
     error,
     refresh
-  } = await $trpc.org.settings.getUserOrgs.useLazyQuery({
-    onlyAdmin: true
-  });
+  } = await $trpc.org.settings.getUserOrgs.useLazyQuery(
+    {
+      onlyAdmin: true
+    },
+    { server: false }
+  );
 
   watch(
     userOrgs,

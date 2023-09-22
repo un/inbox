@@ -23,7 +23,15 @@
     avatarId: string;
     name: string;
     type: string;
-    color: string;
+    color:
+      | 'red'
+      | 'pink'
+      | 'purple'
+      | 'blue'
+      | 'green'
+      | 'orange'
+      | 'yellow'
+      | 'base';
   };
 
   const memberArray = ref<memberEntry[]>([]);

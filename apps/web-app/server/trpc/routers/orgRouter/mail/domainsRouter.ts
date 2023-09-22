@@ -260,9 +260,13 @@ export const domainsRouter = router({
           ? (domainSendingMode = 'disabled')
           : (domainSendingMode = 'native');
 
-        !validReceivingRecords
-          ? (domainReceivingMode = 'forwarding')
-          : (domainReceivingMode = 'native');
+        if (!validReceivingRecords) {
+          domainReceivingMode !== 'disabled'
+            ? (domainReceivingMode = 'forwarding')
+            : (domainReceivingMode = 'disabled');
+        } else {
+          domainReceivingMode = 'native';
+        }
 
         domainStatus === 'pending' && anyValidRecords
           ? (domainStatus = 'active')
@@ -296,7 +300,6 @@ export const domainsRouter = router({
           .where(eq(domains.id, domainResponse.id));
       }
 
-      console.log({ dnsResult });
       return {
         dns: dnsResult,
         domainStatus: domainStatus,

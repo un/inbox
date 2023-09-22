@@ -18,9 +18,12 @@
   const orgPublicId = useRoute().params.orgId as string;
 
   const { data: initialOrgProfile, pending } =
-    await $trpc.org.profile.getOrgProfile.useLazyQuery({
-      orgPublicId: orgPublicId
-    });
+    await $trpc.org.profile.getOrgProfile.useLazyQuery(
+      {
+        orgPublicId: orgPublicId
+      },
+      { server: false }
+    );
 
   watch(
     initialOrgProfile,
@@ -49,8 +52,15 @@
     reset: true
   });
 
-  const { data: imageUploadSignedUrl, pending: imageUploadSignedUrlPending } =
-    await $trpc.user.profile.generateAvatarUploadUrl.useLazyQuery();
+  const {
+    data: imageUploadSignedUrl,
+    pending: imageUploadSignedUrlPending,
+    execute: getUploadUrl,
+    refresh: getUploadUrlRefresh
+  } = await $trpc.user.profile.generateAvatarUploadUrl.useLazyQuery(void null, {
+    server: false,
+    immediate: false
+  });
 
   const formValid = computed(() => {
     if (imageId.value) return true;
@@ -60,7 +70,8 @@
   });
 
   //functions
-  function selectAvatar() {
+  async function selectAvatar() {
+    await getUploadUrl();
     resetFiles();
     openFileDialog();
   }
