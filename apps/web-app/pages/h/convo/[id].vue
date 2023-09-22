@@ -7,14 +7,9 @@
 
   const convoPublicId = useRoute().params.id as string;
   const { data: convoDetails, pending } =
-    await $trpc.convos.getConvo.useLazyQuery(
-      {
-        convoPublicId: convoPublicId
-      },
-      {
-        server: false
-      }
-    );
+    await $trpc.convos.getConvo.useLazyQuery({
+      convoPublicId: convoPublicId
+    });
 
   if (!convoDetails.value?.data) navigateTo('/h/convo/404');
   const createDate = useTimeAgo(

@@ -19,10 +19,7 @@
     convos.value = [];
     if (convos.value.length !== 0) return;
     const { data: userConvos } = await $trpc.convos.getUserConvos.useLazyQuery(
-      {},
-      {
-        server: false
-      }
+      {}
     );
     if (!userConvos.value) {
       convosPending.value = false;
@@ -40,15 +37,10 @@
       convoCursor.lastPublicId !== null
     ) {
       const { data: userConvos } =
-        await $trpc.convos.getUserConvos.useLazyQuery(
-          {
-            cursorLastUpdatedAt: convoCursor.lastUpdatedAt,
-            cursorLastPublicId: convoCursor.lastPublicId
-          },
-          {
-            server: false
-          }
-        );
+        await $trpc.convos.getUserConvos.useLazyQuery({
+          cursorLastUpdatedAt: convoCursor.lastUpdatedAt,
+          cursorLastPublicId: convoCursor.lastPublicId
+        });
       if (!userConvos.value) return;
       convos.value.push(...userConvos.value.data);
       convoCursor.lastUpdatedAt = userConvos.value.cursor.lastUpdatedAt;

@@ -6,37 +6,42 @@
   const route = useRoute();
   const router = useRouter();
 
-  watch(settingsSelectedOrg, (newVal) => {
-    const currentOrgRoute = route.params.orgId as string;
-    if (currentOrgRoute) {
-      const newPath = route.path.replace(currentOrgRoute, newVal);
-      router.push(newPath);
+  watch(
+    settingsSelectedOrg,
+    (newVal) => {
+      const currentOrgRoute = route.params.orgId as string;
+      if (currentOrgRoute) {
+        const newPath = route.path.replace(currentOrgRoute, newVal);
+        router.push(newPath);
+      }
     }
-  });
+    // ,
+    // { immediate: true }
+  );
 
   const {
     data: userOrgs,
     pending,
     error,
     refresh
-  } = await $trpc.org.settings.getUserOrgs.useLazyQuery(
-    {
-      onlyAdmin: true
-    },
-    {
-      server: false
-    }
-  );
+  } = await $trpc.org.settings.getUserOrgs.useLazyQuery({
+    onlyAdmin: true
+  });
 
-  watch(userOrgs, (newVal) => {
-    console.log('new userOrgs Val', newVal);
-    if (newVal && newVal.userOrgs.length > 0) {
-      if (!userHasAdminOrgs.value) userHasAdminOrgs.value = true;
-      if (!settingsSelectedOrg.value) {
-        settingsSelectedOrg.value = newVal.userOrgs[0].org.publicId;
+  watch(
+    userOrgs,
+    (newVal) => {
+      console.log('new userOrgs Val', newVal);
+      if (newVal && newVal.userOrgs.length > 0) {
+        if (!userHasAdminOrgs.value) userHasAdminOrgs.value = true;
+        if (!settingsSelectedOrg.value) {
+          settingsSelectedOrg.value = newVal.userOrgs[0].org.publicId;
+        }
       }
     }
-  });
+    // ,
+    // { immediate: true }
+  );
 
   // if (userOrgs.value && userOrgs.value.userOrgs.length > 0) {
   //   userHasAdminOrgs.value = true;

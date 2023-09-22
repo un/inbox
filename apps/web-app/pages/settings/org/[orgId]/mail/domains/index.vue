@@ -28,14 +28,9 @@
     pending,
     error,
     refresh
-  } = await $trpc.org.mail.domains.getOrgDomains.useLazyQuery(
-    {
-      orgPublicId: orgPublicId
-    },
-    {
-      server: false
-    }
-  );
+  } = await $trpc.org.mail.domains.getOrgDomains.useLazyQuery({
+    orgPublicId: orgPublicId
+  });
 
   console.log(orgDomainsQuery);
 
@@ -71,21 +66,26 @@
   }
 
   const tableRows = ref<TableRow[]>([]);
-  watch(orgDomainsQuery, (newResults) => {
-    if (newResults?.domainData) {
-      const newTableRows: TableRow[] = [];
-      for (const domain of newResults.domainData) {
-        newTableRows.push({
-          status: domain.domainStatus,
-          domain: domain.domain,
-          sendingMode: domain.sendingMode,
-          receivingMode: domain.receivingMode,
-          domainId: domain.publicId
-        });
+  watch(
+    orgDomainsQuery,
+    (newResults) => {
+      if (newResults?.domainData) {
+        const newTableRows: TableRow[] = [];
+        for (const domain of newResults.domainData) {
+          newTableRows.push({
+            status: domain.domainStatus,
+            domain: domain.domain,
+            sendingMode: domain.sendingMode,
+            receivingMode: domain.receivingMode,
+            domainId: domain.publicId
+          });
+        }
+        tableRows.value = newTableRows;
       }
-      tableRows.value = newTableRows;
     }
-  });
+    // ,
+    // { immediate: true }
+  );
 
   async function createNewDomain() {
     if (newDomainNameValid.value === false) return;

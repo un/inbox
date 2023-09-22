@@ -18,25 +18,25 @@
   const orgPublicId = useRoute().params.orgId as string;
 
   const { data: initialOrgProfile, pending } =
-    await $trpc.org.profile.getOrgProfile.useLazyQuery(
-      {
-        orgPublicId: orgPublicId
-      },
-      {
-        server: false
-      }
-    );
+    await $trpc.org.profile.getOrgProfile.useLazyQuery({
+      orgPublicId: orgPublicId
+    });
 
-  watch(initialOrgProfile, (newVal) => {
-    if (newVal && newVal.orgProfile) {
-      orgNameValue.value = newVal.orgProfile.name;
-      newVal.orgProfile.avatarId
-        ? (imageUrl.value = `https://imagedelivery.net/${
-            useRuntimeConfig().public.cfImagesAccountHash
-          }/${newVal.orgProfile.avatarId}`)
-        : null;
+  watch(
+    initialOrgProfile,
+    (newVal) => {
+      if (newVal && newVal.orgProfile) {
+        orgNameValue.value = newVal.orgProfile.name;
+        newVal.orgProfile.avatarId
+          ? (imageUrl.value = `https://imagedelivery.net/${
+              useRuntimeConfig().public.cfImagesAccountHash
+            }/${newVal.orgProfile.avatarId}`)
+          : null;
+      }
     }
-  });
+    // ,
+    // { immediate: true }
+  );
 
   const {
     files: selectedFiles,
@@ -50,9 +50,7 @@
   });
 
   const { data: imageUploadSignedUrl, pending: imageUploadSignedUrlPending } =
-    await $trpc.user.profile.generateAvatarUploadUrl.useLazyQuery(void null, {
-      server: false
-    });
+    await $trpc.user.profile.generateAvatarUploadUrl.useLazyQuery();
 
   const formValid = computed(() => {
     if (imageId.value) return true;
