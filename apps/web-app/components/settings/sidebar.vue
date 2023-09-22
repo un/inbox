@@ -1,6 +1,5 @@
 <script setup lang="ts">
   const { $trpc } = useNuxtApp();
-  const activeOrg = ref('');
 
   const navStore = useNavStore();
   const { settingsSelectedOrg, userHasAdminOrgs } = storeToRefs(navStore);
@@ -20,11 +19,17 @@
     pending,
     error,
     refresh
-  } = await $trpc.org.settings.getUserOrgs.useLazyQuery({
-    onlyAdmin: true
-  });
+  } = await $trpc.org.settings.getUserOrgs.useLazyQuery(
+    {
+      onlyAdmin: true
+    },
+    {
+      server: false
+    }
+  );
 
   watch(userOrgs, (newVal) => {
+    console.log('new userOrgs Val', newVal);
     if (newVal && newVal.userOrgs.length > 0) {
       if (!userHasAdminOrgs.value) userHasAdminOrgs.value = true;
       if (!settingsSelectedOrg.value) {

@@ -6,12 +6,23 @@
   });
 
   const convoPublicId = useRoute().params.id as string;
-  const convoDetails = await $trpc.convos.getConvo.query({
-    convoPublicId: convoPublicId
-  });
-  if (!convoDetails.data) navigateTo('/h/convo/404');
-  const createDate = useTimeAgo(convoDetails.data?.createdAt || new Date());
-  const updateDate = useTimeAgo(convoDetails.data?.lastUpdatedAt || new Date());
+  const { data: convoDetails, pending } =
+    await $trpc.convos.getConvo.useLazyQuery(
+      {
+        convoPublicId: convoPublicId
+      },
+      {
+        server: false
+      }
+    );
+
+  if (!convoDetails.value?.data) navigateTo('/h/convo/404');
+  const createDate = useTimeAgo(
+    convoDetails.value?.data?.createdAt || new Date()
+  );
+  const updateDate = useTimeAgo(
+    convoDetails.value?.data?.lastUpdatedAt || new Date()
+  );
 
   type memberEntry = {
     avatarId: string;
@@ -21,8 +32,8 @@
   };
 
   const memberArray = ref<memberEntry[]>([]);
-  if (!convoDetails.data?.members) navigateTo('/h/convo/404');
-  const convoMembers = convoDetails.data?.members || [];
+  if (!convoDetails.value?.data?.members) navigateTo('/h/convo/404');
+  const convoMembers = convoDetails.value?.data?.members || [];
   for (const member of convoMembers) {
     memberArray.value.push({
       avatarId: member.foreignEmailIdentity?.avatarId
@@ -55,8 +66,8 @@
     url: string;
   };
   const attachments = ref<AttachmentEntry[]>([]);
-  if (convoDetails.data?.attachments) {
-    for (const attachment of convoDetails.data?.attachments) {
+  if (convoDetails.value?.data?.attachments) {
+    for (const attachment of convoDetails.value?.data?.attachments) {
       const splitFileName = attachment.fileName.split('.');
       const newFileName =
         splitFileName[0].substring(0, 10) +
@@ -81,13 +92,13 @@
       <div class="flex flex-row gap-2 overflow-hidden w-full items-center">
         <span class="text-sm">
           {{
-            convoDetails.data?.subjects.length !== 1 ? 'Subjects' : 'Subject'
+            convoDetails?.data?.subjects.length !== 1 ? 'Subjects' : 'Subject'
           }}:
         </span>
         <div class="flex flex-col gap-0 overflow-hidden w-full">
           <span
             class="truncate"
-            v-for="subject of convoDetails.data?.subjects">
+            v-for="subject of convoDetails?.data?.subjects">
             {{ subject.subject }}
           </span>
         </div>

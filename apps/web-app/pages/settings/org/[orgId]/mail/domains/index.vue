@@ -28,9 +28,14 @@
     pending,
     error,
     refresh
-  } = await $trpc.org.mail.domains.getOrgDomains.useLazyQuery({
-    orgPublicId: orgPublicId
-  });
+  } = await $trpc.org.mail.domains.getOrgDomains.useLazyQuery(
+    {
+      orgPublicId: orgPublicId
+    },
+    {
+      server: false
+    }
+  );
 
   console.log(orgDomainsQuery);
 

@@ -121,7 +121,7 @@
               :valid="domainDnsQuery?.dns?.spf.valid || false"
               :text="
                 domainDnsQuery?.dns?.spf.otherSenders &&
-                domainDnsQuery?.dns?.spf.otherSenders
+                domainDnsQuery?.dns?.spf.otherSenders.length > 0
                   ? ' We have detected existing email senders for your domain, to ensure email sent via UnInbox is delivered properly, modify your TXT record to the following value. We have included existing senders to make your life easier. '
                   : 'To ensure email sent via UnInbox is delivered properly, add a TXT record with the following value.'
               "

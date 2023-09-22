@@ -27,9 +27,14 @@
     pending,
     error,
     refresh
-  } = await $trpc.org.invites.viewInvites.useLazyQuery({
-    orgPublicId: orgPublicId
-  });
+  } = await $trpc.org.invites.viewInvites.useLazyQuery(
+    {
+      orgPublicId: orgPublicId
+    },
+    {
+      server: false
+    }
+  );
 
   const tableColumns = [
     {

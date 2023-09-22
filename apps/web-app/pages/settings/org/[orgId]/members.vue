@@ -19,9 +19,14 @@
     pending,
     error,
     refresh
-  } = await $trpc.org.members.getOrgMembers.useLazyQuery({
-    orgPublicId: orgPublicId
-  });
+  } = await $trpc.org.members.getOrgMembers.useLazyQuery(
+    {
+      orgPublicId: orgPublicId
+    },
+    {
+      server: false
+    }
+  );
 
   const tableColumns = [
     {
