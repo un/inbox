@@ -1,12 +1,13 @@
 <script setup lang="ts">
   const { $trpc } = useNuxtApp();
-
-  const userHasAdminOrgs = ref(false);
   const activeOrg = ref('');
+
+  const navStore = useNavStore();
+  const { settingsSelectedOrg, userHasAdminOrgs } = storeToRefs(navStore);
   const route = useRoute();
   const router = useRouter();
 
-  watch(activeOrg, (newVal) => {
+  watch(settingsSelectedOrg, (newVal) => {
     const currentOrgRoute = route.params.orgId as string;
     if (currentOrgRoute) {
       const newPath = route.path.replace(currentOrgRoute, newVal);
@@ -22,10 +23,20 @@
   } = await $trpc.org.settings.getUserOrgs.useLazyQuery({
     onlyAdmin: true
   });
-  if (userOrgs.value && userOrgs.value.userOrgs.length > 0) {
-    userHasAdminOrgs.value = true;
-    activeOrg.value = userOrgs.value.userOrgs[0].org.publicId;
-  }
+
+  watch(userOrgs, (newVal) => {
+    if (newVal && newVal.userOrgs.length > 0) {
+      if (!userHasAdminOrgs.value) userHasAdminOrgs.value = true;
+      if (!settingsSelectedOrg.value) {
+        settingsSelectedOrg.value = newVal.userOrgs[0].org.publicId;
+      }
+    }
+  });
+
+  // if (userOrgs.value && userOrgs.value.userOrgs.length > 0) {
+  //   userHasAdminOrgs.value = true;
+  //   activeOrg.value = userOrgs.value.userOrgs[0].org.publicId;
+  // }
 
   // TODO: fix scroll bar positioning, move to right, approx 20 px (may need to move to a parent div)
 </script>
@@ -81,8 +92,8 @@
             v-for="org in userOrgs.userOrgs"
             :orgData="org"
             :key="org.org.publicId"
-            @click="activeOrg = org.org.publicId"
-            :isActive="activeOrg === org.org.publicId" />
+            @click="settingsSelectedOrg = org.org.publicId"
+            :isActive="settingsSelectedOrg === org.org.publicId" />
         </div>
         <div>
           <span
@@ -91,22 +102,22 @@
           </span>
         </div>
         <div class="flex flex-col gap-2 pb-2 pl-2">
-          <nuxt-link :to="`/settings/org/${activeOrg}`">
+          <nuxt-link :to="`/settings/org/${settingsSelectedOrg}`">
             <span class="text-sm">Org Profile</span>
           </nuxt-link>
-          <nuxt-link :to="`/settings/org/${activeOrg}/members`">
+          <nuxt-link :to="`/settings/org/${settingsSelectedOrg}/members`">
             <span class="text-sm">Members</span>
           </nuxt-link>
-          <nuxt-link :to="`/settings/org/${activeOrg}/invites`">
+          <nuxt-link :to="`/settings/org/${settingsSelectedOrg}/invites`">
             <span class="text-sm">Invites</span>
           </nuxt-link>
-          <nuxt-link :to="`settings/org/${activeOrg}/groups`">
+          <nuxt-link :to="`settings/org/${settingsSelectedOrg}/groups`">
             <span class="text-sm">Groups</span>
           </nuxt-link>
-          <nuxt-link :to="`/settings/org/${activeOrg}/features`">
+          <nuxt-link :to="`/settings/org/${settingsSelectedOrg}/features`">
             <span class="text-sm">Modules/features</span>
           </nuxt-link>
-          <nuxt-link :to="`/settings/org/${activeOrg}/billing`">
+          <nuxt-link :to="`/settings/org/${settingsSelectedOrg}/billing`">
             <span class="text-sm">Billing</span>
           </nuxt-link>
         </div>
@@ -118,7 +129,8 @@
         </div>
         <div class="flex flex-col gap-2 pb-2 pl-2">
           <div>
-            <nuxt-link :to="`/settings/org/${activeOrg}/mail/domains`">
+            <nuxt-link
+              :to="`/settings/org/${settingsSelectedOrg}/mail/domains`">
               <span class="text-sm">Domains</span>
             </nuxt-link>
           </div>

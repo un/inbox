@@ -112,7 +112,11 @@ export default defineNuxtConfig({
 
   //* Pinia
   pinia: {
-    autoImports: [['defineStore', 'definePiniaStore'], 'acceptHMRUpdate']
+    autoImports: [
+      ['defineStore', 'definePiniaStore'],
+      'acceptHMRUpdate',
+      'storeToRefs'
+    ]
   },
 
   //* Nuxt-Security
