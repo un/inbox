@@ -1,6 +1,6 @@
 @import '@unocss/reset/tailwind.css';
 
-: root {
+:root {
   font-family: 'Inter var', sans-serif;
 }
 @supports (font-variation-settings: normal) {
