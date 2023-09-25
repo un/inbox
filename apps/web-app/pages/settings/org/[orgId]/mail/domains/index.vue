@@ -39,13 +39,13 @@
 
   const tableColumns = [
     {
-      key: 'status',
-      label: 'Status',
+      key: 'domain',
+      label: 'Domain',
       sortable: true
     },
     {
-      key: 'domain',
-      label: 'Domain',
+      key: 'status',
+      label: 'Status',
       sortable: true
     },
     {
@@ -184,19 +184,25 @@
               <span class="text-md font-mono">{{ row.domain }}</span>
             </div>
           </template>
-          <template #dns-data="{ row }">
+          <template #sendingMode-data="{ row }">
             <div
               class="py-1 px-4 rounded-full w-fit"
-              :class="row.dns === 'valid' ? 'bg-grass-5' : 'bg-red-5'">
-              <span class="uppercase text-xs">{{ row.dns }}</span>
+              :class="row.sendingMode === 'native' ? 'bg-grass-5' : 'bg-red-5'">
+              <span class="uppercase text-xs">{{ row.sendingMode }}</span>
             </div>
           </template>
 
-          <template #mode-data="{ row }">
+          <template #receivingMode-data="{ row }">
             <div
               class="py-1 px-4 rounded-full w-fit"
-              :class="row.mode === 'valid' ? 'bg-grass-5' : 'bg-red-5'">
-              <span class="uppercase text-xs">{{ row.mode }}</span>
+              :class="
+                row.receivingMode === 'native'
+                  ? 'bg-grass-5'
+                  : row.receivingMode === 'forwarding'
+                  ? 'bg-orange-5'
+                  : 'bg-red-5'
+              ">
+              <span class="uppercase text-xs">{{ row.receivingMode }}</span>
             </div>
           </template>
         </UnUiTable>

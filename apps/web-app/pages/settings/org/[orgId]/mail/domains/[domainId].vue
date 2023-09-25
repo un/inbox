@@ -11,6 +11,7 @@
   const dnsRecordsExpanded = ref(false);
   const mailMethodsExpanded = ref(false);
   const showDnsRefreshMessage = ref(false);
+  const dnsRefreshLoading = ref(false);
 
   const route = useRoute();
 
@@ -70,8 +71,12 @@
   );
 
   function recheckDns() {
+    dnsRefreshLoading.value = true;
     domainDnsRefresh();
-    showDnsRefreshMessage.value = true;
+    setTimeout(() => {
+      dnsRefreshLoading.value = false;
+      showDnsRefreshMessage.value = true;
+    }, 2000);
   }
 
   // TODO: If Existing SPF, Add checkbox to SPF record: "Select which senders to include" + create dynamic string- suggestion by @KumoMTA
@@ -382,11 +387,27 @@
             <span class="text-md uppercase text-base-11 font-semibold">
               DNS Records
             </span>
-            <span class="text-xs uppercase text-base-11 font-semibold">
-              Last check: {{ timeSinceLastDnsCheck }}
-            </span>
           </div>
           <div class="flex flex-col gap-4">
+            <div class="flex flex-row justify-between items-center">
+              <span class="text-xs uppercase text-base-11 font-semibold">
+                Last check: {{ timeSinceLastDnsCheck }}
+              </span>
+              <UnUiButton
+                label="Recheck DNS Records"
+                size="sm"
+                icon="ph-arrow-clockwise"
+                :loading="dnsRefreshLoading"
+                variant="outline"
+                @click="recheckDns()" />
+            </div>
+            <span
+              class="text-sm text-base-11 w-full text-center"
+              v-if="showDnsRefreshMessage">
+              DNS records can take several hours to update across the internet.
+              We will keep checking regularly and let you know when everything
+              is correct.
+            </span>
             <SettingsDomainDnsItem
               title="MX Records"
               :valid="domainDnsQuery?.dns?.mx.valid || false"
@@ -485,19 +506,6 @@
               :expanded="dnsRecordsExpanded"
               @clicked="dnsRecordsExpanded = !dnsRecordsExpanded" />
           </div>
-          <UnUiButton
-            label="Recheck DNS Records"
-            size="sm"
-            variant="outline"
-            width="full"
-            @click="domainDnsRefresh()" />
-          <span
-            class="text-sm text-base-11 w-full text-center"
-            v-if="showDnsRefreshMessage">
-            DNS records can take several hours update across the internet. We
-            will keep checking regularly and let you know when everything is
-            correct.
-          </span>
         </div>
       </div>
     </div>
