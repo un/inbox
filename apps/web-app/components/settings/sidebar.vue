@@ -102,10 +102,12 @@
             <nuxt-link :to="`/settings/org/${settingsSelectedOrg}`">
               <span class="text-sm">Org Profile</span>
             </nuxt-link>
-            <nuxt-link :to="`/settings/org/${settingsSelectedOrg}/features`">
+            <nuxt-link
+              :to="`/settings/org/${settingsSelectedOrg}/setup/features`">
               <span class="text-sm">Modules/features</span>
             </nuxt-link>
-            <nuxt-link :to="`/settings/org/${settingsSelectedOrg}/billing`">
+            <nuxt-link
+              :to="`/settings/org/${settingsSelectedOrg}/setup/billing`">
               <span class="text-sm">Billing</span>
             </nuxt-link>
           </div>
@@ -115,13 +117,16 @@
               class="text-xs uppercase font-semibold text-base-11 border-b-1 border-base-3 pb-1">
               Users
             </span>
-            <nuxt-link :to="`/settings/org/${settingsSelectedOrg}/members`">
+            <nuxt-link
+              :to="`/settings/org/${settingsSelectedOrg}/users/members`">
               <span class="text-sm">Members</span>
             </nuxt-link>
-            <nuxt-link :to="`/settings/org/${settingsSelectedOrg}/invites`">
+            <nuxt-link
+              :to="`/settings/org/${settingsSelectedOrg}/users/invites`">
               <span class="text-sm">Invites</span>
             </nuxt-link>
-            <nuxt-link :to="`settings/org/${settingsSelectedOrg}/groups`">
+            <nuxt-link
+              :to="`/settings/org/${settingsSelectedOrg}/users/groups`">
               <span class="text-sm">Groups</span>
             </nuxt-link>
           </div>
