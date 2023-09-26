@@ -79,5 +79,55 @@ export const orgMembersRouter = router({
       return {
         members: orgQuery?.members
       };
+    }),
+  getOrgMembersList: protectedProcedure
+    .input(
+      z.object({
+        orgPublicId: z.string().min(3).max(nanoIdLength)
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const queryUserId = ctx.user.userId || 0;
+      const db = ctx.db;
+
+      const { orgPublicId } = input;
+
+      const userInOrg = await isUserInOrg({
+        userId: queryUserId,
+        orgPublicId
+      });
+
+      if (!userInOrg) {
+        throw new Error('User not in org');
+      }
+
+      const orgQuery = await db.read.query.orgs.findFirst({
+        columns: {
+          publicId: true
+        },
+        where: and(eq(orgs.publicId, orgPublicId)),
+        with: {
+          members: {
+            columns: {
+              role: true,
+              status: true
+            },
+            with: {
+              profile: {
+                columns: {
+                  publicId: true,
+                  avatarId: true,
+                  firstName: true,
+                  lastName: true,
+                  title: true
+                }
+              }
+            }
+          }
+        }
+      });
+      return {
+        members: orgQuery?.members
+      };
     })
 });

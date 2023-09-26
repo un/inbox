@@ -108,8 +108,6 @@ export const domainsRouter = router({
 
       const dbReplica = input.newDomain ? db.write : db.read;
 
-      console.log({ input });
-
       const userOrg = await isUserInOrg({
         userId,
         orgPublicId

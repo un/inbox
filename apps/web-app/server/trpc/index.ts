@@ -11,6 +11,7 @@ import { convoRouter } from './routers/convoRouter/convoRouter';
 import { orgProfileRouter } from './routers/orgRouter/profileRouter';
 import { orgMembersRouter } from './routers/orgRouter/membersRouter';
 import { domainsRouter } from './routers/orgRouter/mail/domainsRouter';
+import { orgUserGroupsRouter } from './routers/orgRouter/groupsRouter';
 
 export const trpcWebAppContext = createContext;
 
@@ -26,7 +27,8 @@ const trpcWebAppOrgRouter = router({
   profile: orgProfileRouter,
   invites: invitesRouter,
   members: orgMembersRouter,
-  mail: trpcWebAppOrgMailRouter
+  mail: trpcWebAppOrgMailRouter,
+  userGroups: orgUserGroupsRouter
 });
 
 const trpcWebAppConvoRouter = router({
