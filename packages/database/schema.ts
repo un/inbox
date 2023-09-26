@@ -18,6 +18,7 @@ import {
 } from 'drizzle-orm/mysql-core';
 import { relations, sql } from 'drizzle-orm';
 import { nanoIdLength } from '@uninbox/utils';
+import { uiColors } from '@uninbox/types/ui';
 
 //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit
 
@@ -346,15 +347,7 @@ export const userGroups = mysqlTable(
     orgId: foreignKey('org_id').notNull(),
     name: varchar('name', { length: 128 }).notNull(),
     avatarId: varchar('avatar_id', { length: 64 }),
-    color: mysqlEnum('color', [
-      'red',
-      'pink',
-      'purple',
-      'blue',
-      'green',
-      'orange',
-      'yellow'
-    ]),
+    color: mysqlEnum('color', [...uiColors]),
     description: text('description'),
     createdAt: timestamp('created_at')
       .default(sql`CURRENT_TIMESTAMP`)
