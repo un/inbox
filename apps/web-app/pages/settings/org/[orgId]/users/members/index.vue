@@ -56,27 +56,22 @@
   ];
 
   const tableRows = ref<{}[]>([]);
-  watch(
-    orgMembersQuery,
-    (newResults) => {
-      if (newResults?.members) {
-        for (const member of newResults.members) {
-          tableRows.value.push({
-            avatar: member.profile.avatarId,
-            name: member.profile.firstName + ' ' + member.profile.lastName,
-            nickname: member.profile.nickname,
-            title: member.profile.title,
-            role: member.role,
-            status: member.status,
-            joined: member.addedAt.toDateString(),
-            removed: member.removedAt?.toDateString()
-          });
-        }
+  watch(orgMembersQuery, (newResults) => {
+    if (newResults?.members) {
+      for (const member of newResults.members) {
+        tableRows.value.push({
+          avatar: member.profile.avatarId,
+          name: member.profile.firstName + ' ' + member.profile.lastName,
+          nickname: member.profile.nickname,
+          title: member.profile.title,
+          role: member.role,
+          status: member.status,
+          joined: member.addedAt.toDateString(),
+          removed: member.removedAt?.toDateString()
+        });
       }
     }
-    // ,
-    // { immediate: true }
-  );
+  });
 </script>
 
 <template>

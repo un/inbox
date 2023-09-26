@@ -1,4 +1,5 @@
 <script setup lang="ts">
+  import { UiColor } from '@uninbox/types/ui';
   import type { VariantProps } from 'class-variance-authority';
   type Props = {
     name?: string;
@@ -6,15 +7,7 @@
     avatarId?: string;
     tooltipPreText?: string;
     size?: 'tiny' | 'xs' | 'sm' | 'md' | 'lg' | 'xl';
-    color?:
-      | 'base'
-      | 'red'
-      | 'purple'
-      | 'green'
-      | 'yellow'
-      | 'orange'
-      | 'pink'
-      | 'blue';
+    color?: UiColor | 'base';
   };
 
   const props = withDefaults(defineProps<Props>(), {
@@ -52,7 +45,8 @@
         green: 'bg-green-8',
         yellow: 'bg-yellow-8',
         pink: 'bg-pink-8',
-        blue: 'bg-blue-8'
+        blue: 'bg-blue-8',
+        cyan: 'bg-cyan-8'
       }
     }
   });
