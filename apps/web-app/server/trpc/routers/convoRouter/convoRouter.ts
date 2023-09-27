@@ -87,7 +87,8 @@ export const convoRouter = router({
                 columns: {
                   firstName: true,
                   lastName: true,
-                  avatarId: true
+                  avatarId: true,
+                  handle: true
                 }
               },
               userGroup: {
@@ -127,7 +128,8 @@ export const convoRouter = router({
                     columns: {
                       firstName: true,
                       lastName: true,
-                      avatarId: true
+                      avatarId: true,
+                      handle: true
                     }
                   },
                   userGroup: {
@@ -202,7 +204,8 @@ export const convoRouter = router({
                   firstName: true,
                   lastName: true,
                   avatarId: true,
-                  publicId: true
+                  publicId: true,
+                  handle: true
                 }
               },
               userGroup: {
@@ -321,7 +324,8 @@ export const convoRouter = router({
                   firstName: true,
                   lastName: true,
                   avatarId: true,
-                  publicId: true
+                  publicId: true,
+                  handle: true
                 }
               },
               userGroup: {

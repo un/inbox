@@ -65,6 +65,7 @@ export const profileRouter = router({
         fName: z.string(),
         lName: z.string(),
         imageId: z.string().uuid(),
+        handle: z.string().min(2).max(20),
         defaultProfile: z.boolean().optional().default(false)
       })
     )
@@ -81,7 +82,8 @@ export const profileRouter = router({
           avatarId: input.imageId,
           firstName: input.fName,
           lastName: input.lName,
-          defaultProfile: input.defaultProfile
+          defaultProfile: input.defaultProfile,
+          handle: input.handle
         });
 
       if (!insertUserProfileResponse.insertId) {

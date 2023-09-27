@@ -79,7 +79,8 @@
         fName: fNameValue.value,
         lName: lNameValue.value,
         imageId: imageId.value || '',
-        defaultProfile: true
+        defaultProfile: true,
+        handle: username.value
       }
     );
 
@@ -103,7 +104,8 @@
         fName: username.value,
         lName: '@ UnInbox',
         imageId: imageId.value || '',
-        defaultProfile: true
+        defaultProfile: true,
+        handle: username.value
       }
     );
 

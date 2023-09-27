@@ -46,7 +46,7 @@ export const orgMembersRouter = router({
                   avatarId: true,
                   firstName: true,
                   lastName: true,
-                  nickname: true,
+                  handle: true,
                   title: true,
                   blurb: true
                 }
@@ -123,7 +123,8 @@ export const orgMembersRouter = router({
                   avatarId: true,
                   firstName: true,
                   lastName: true,
-                  title: true
+                  title: true,
+                  handle: true
                 }
               }
             }

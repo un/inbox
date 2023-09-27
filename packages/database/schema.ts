@@ -121,7 +121,7 @@ export const userProfiles = mysqlTable(
     userId: foreignKey('user_id').notNull(),
     firstName: varchar('first_name', { length: 64 }),
     lastName: varchar('last_name', { length: 64 }),
-    nickname: varchar('nickname', { length: 64 }),
+    handle: varchar('handle', { length: 64 }).notNull(),
     title: varchar('title', { length: 64 }),
     blurb: text('blurb'),
     avatarId: varchar('avatar_id', { length: 64 }),
