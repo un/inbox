@@ -34,7 +34,7 @@
       @click="$emit('clicked')">
       <span class="font-display text-lg">{{ props.title }}</span>
       <span
-        class="text-xs font-semibold text-base-1 uppercase py-1 px-4 rounded-full bg-red-9"
+        class="text-xs font-semibold text-base-1 uppercase py-1 px-4 rounded-full"
         :class="badgeColor">
         {{ props.valid ? 'Valid' : 'Invalid' }}
       </span>
