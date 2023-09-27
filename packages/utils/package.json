@@ -9,6 +9,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "nanoid": "^4.0.2"
+    "nanoid": "^5.0.1"
   }
 }

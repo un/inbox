@@ -9,11 +9,11 @@
     "postinstall": "nuxt prepare"
   },
   "devDependencies": {
-    "@nuxt/content": "^2.8.2",
-    "@nuxt/devtools": "^0.8.3",
+    "@nuxt/content": "^2.8.3",
+    "@nuxt/devtools": "^0.8.5",
     "@nuxtjs/color-mode": "^3.3.0",
-    "@types/node": "^20.6.2",
-    "nuxt": "^3.7.3",
+    "@types/node": "^20.7.0",
+    "nuxt": "^3.7.4",
     "nuxt-security": "^0.14.4"
   },
   "dependencies": {
