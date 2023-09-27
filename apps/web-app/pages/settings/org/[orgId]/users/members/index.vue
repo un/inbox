@@ -30,8 +30,8 @@
       sortable: true
     },
     {
-      key: 'nickname',
-      label: 'Nickname',
+      key: 'handle',
+      label: 'Username',
       sortable: true
     },
     {
@@ -108,6 +108,9 @@
               size="xs" />
             <span class="">{{ row.name }}</span>
           </div>
+        </template>
+        <template #handle-data="{ row }">
+          <span class="">@{{ row.handle }}</span>
         </template>
         <template #role-data="{ row }">
           <div
