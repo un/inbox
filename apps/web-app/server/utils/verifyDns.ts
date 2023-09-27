@@ -165,7 +165,7 @@ export async function verifyDns({
 
   // verify the Return-Path Record
   await dns.promises
-    .resolveCname(dnsRecords.returnPath.value)
+    .resolveCname(`psrp.${domainName}`)
     .then((returnPathDnsResponse) => {
       if (returnPathDnsResponse.length > 1) {
         dnsRecords.returnPath.valid = false;
