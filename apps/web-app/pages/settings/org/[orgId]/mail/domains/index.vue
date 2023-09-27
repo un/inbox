@@ -111,7 +111,7 @@
     buttonLabel.value = 'All done';
 
     navigateTo(
-      `/settings/org/${orgPublicId}/mail/domains/${newDomainResponse.domainId}`
+      `/settings/org/${orgPublicId}/mail/domains/${newDomainResponse.domainId}/?new=true`
     );
   }
 

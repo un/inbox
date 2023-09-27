@@ -372,6 +372,7 @@ export const userGroupMembers = mysqlTable(
   'user_group_members',
   {
     id: serial('id').primaryKey(),
+    publicId: nanoId('public_id').notNull(),
     groupId: foreignKey('group_id').notNull(),
     userId: foreignKey('user_id').notNull(),
     userProfileId: foreignKey('user_profile_id'),

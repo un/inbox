@@ -13,6 +13,10 @@
   const groupPublicId = route.params.groupId as string;
   const isNewGroup = route.query.new === 'true';
 
+  const addNewUserButtonLabel = ref('Add users to group');
+  const addNewUserButtonLoading = ref(false);
+  const showAddNewUser = ref(false);
+
   const {
     data: groupData,
     pending: groupPending,
@@ -27,6 +31,19 @@
     { server: false }
   );
 
+  const {
+    data: orgMembersData,
+    pending: orgMembersPending,
+    error: orgMembersError,
+    execute: getOrgMembersList,
+    refresh: orgMembersRefresh
+  } = await $trpc.org.members.getOrgMembersList.useLazyQuery(
+    {
+      orgPublicId: orgPublicId
+    },
+    { server: false, immediate: false }
+  );
+
   const tableColumns = [
     {
       key: 'name',
@@ -36,15 +53,10 @@
     {
       key: 'title',
       label: 'Title'
-    },
-
-    {
-      key: 'notifications',
-      label: 'Notifications',
-      sortable: true
     }
   ];
   interface TableRow {
+    publicId: string;
     avatarId: string;
     name: string;
     nickname: string;
@@ -53,11 +65,13 @@
     notifications: string;
   }
 
+  const usersInGroup = ref<string[]>([]);
   const tableRows = ref<TableRow[]>([]);
   watch(groupData, (newResults) => {
     if (newResults?.group?.members) {
       for (const member of newResults?.group?.members) {
         tableRows.value.push({
+          publicId: member.publicId,
           avatarId: member.userProfile?.avatarId || '',
           name:
             member.userProfile?.firstName + ' ' + member.userProfile?.lastName,
@@ -66,11 +80,19 @@
           role: member.role,
           notifications: member.notifications
         });
+        if (member.userProfile?.publicId) {
+          usersInGroup.value.push(member.userProfile?.publicId);
+        }
       }
     }
   });
 
   // TODO: If Existing SPF, Add checkbox to SPF record: "Select which senders to include" + create dynamic string- suggestion by @KumoMTA
+
+  function showAddUser() {
+    getOrgMembersList();
+    showAddNewUser.value = true;
+  }
 </script>
 
 <template>
@@ -133,7 +155,7 @@
       <div
         class="flex flex-col gap-8 w-full"
         v-if="!groupPending && groupData?.group">
-        <div class="flex flex-col gap-4">
+        <div class="flex flex-col gap-4 items-center">
           <div class="w-full border-b-1 border-base-5 pb-2">
             <span class="text-sm uppercase text-base-11 font-semibold">
               Members
@@ -193,6 +215,49 @@
               </div>
             </template>
           </UnUiTable>
+          <UnUiButton
+            label="Add user to group"
+            size="md"
+            @click="showAddUser()"
+            v-if="!showAddNewUser" />
+          <div
+            class="flex flex-row gap-4 w-full items-center justify-center"
+            v-if="showAddNewUser && orgMembersPending">
+            <Icon
+              name="svg-spinners:3-dots-fade"
+              size="32" />
+            <span>Loading organization members</span>
+          </div>
+          <div
+            class="grid grid-cols-2 gap-4 w-full"
+            v-if="showAddNewUser && !orgMembersPending">
+            <div
+              v-for="member of orgMembersData?.members"
+              class="flex flex-row gap-4 bg-base-2 p-8 rounded-xl items-center">
+              <UnUiAvatar
+                :avatar-id="member.profile?.avatarId || ''"
+                :name="
+                  member.profile?.firstName + ' ' + member.profile?.lastName
+                "
+                size="lg" />
+              <div class="flex flex-col gap-2">
+                <span class="text-xl font-display">
+                  {{
+                    member.profile?.firstName + ' ' + member.profile?.lastName
+                  }}
+                </span>
+                <span class="">
+                  {{ member.profile?.title }}
+                </span>
+              </div>
+              <div class="flex flex-col gap-2">
+                <span
+                  class="uppercase text-xs py-1 px-4 bg-base-6 rounded-full">
+                  {{ member.role }}
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -83,14 +83,15 @@ export const orgMembersRouter = router({
   getOrgMembersList: protectedProcedure
     .input(
       z.object({
-        orgPublicId: z.string().min(3).max(nanoIdLength)
+        orgPublicId: z.string().min(3).max(nanoIdLength),
+        includeRemoved: z.boolean().optional()
       })
     )
     .query(async ({ ctx, input }) => {
       const queryUserId = ctx.user.userId || 0;
       const db = ctx.db;
 
-      const { orgPublicId } = input;
+      const { orgPublicId, includeRemoved } = input;
 
       const userInOrg = await isUserInOrg({
         userId: queryUserId,
@@ -112,6 +113,9 @@ export const orgMembersRouter = router({
               role: true,
               status: true
             },
+            where: !includeRemoved
+              ? eq(orgMembers.status, 'active')
+              : undefined,
             with: {
               profile: {
                 columns: {
