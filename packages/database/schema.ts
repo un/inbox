@@ -183,6 +183,8 @@ export const orgsRelations = relations(orgs, ({ one, many }) => ({
 export const orgMembers = mysqlTable(
   'org_members',
   {
+    id: serial('id').primaryKey(),
+    publicId: nanoId('public_id').notNull(),
     userId: foreignKey('user_id').notNull(),
     orgId: foreignKey('org_id').notNull(),
     invitedByUserId: foreignKey('invited_by_user_id'),
@@ -195,7 +197,10 @@ export const orgMembers = mysqlTable(
     removedAt: timestamp('removed_at')
   },
   (table) => ({
-    pk: primaryKey(table.userId, table.orgId)
+    publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
+    userIdIndex: index('user_id_idx').on(table.userId),
+    orgIdIndex: index('org_id_idx').on(table.orgId),
+    orgUserIndex: uniqueIndex('org_user_idx').on(table.orgId, table.userId)
   })
 );
 export const orgMembersRelations = relations(orgMembers, ({ one }) => ({
@@ -794,7 +799,7 @@ export const emailRoutingRulesDestinations = mysqlTable(
     id: serial('id').primaryKey(),
     ruleId: foreignKey('rule_id').notNull(),
     groupId: foreignKey('group_id'),
-    userId: foreignKey('user_id'),
+    orgMemberId: foreignKey('org_member_id'),
     createdAt: timestamp('created_at')
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull()
@@ -814,8 +819,8 @@ export const emailRoutingRulesDestinationsRelations = relations(
       fields: [emailRoutingRulesDestinations.groupId],
       references: [userGroups.id]
     }),
-    user: one(users, {
-      fields: [emailRoutingRulesDestinations.userId],
+    orgMember: one(users, {
+      fields: [emailRoutingRulesDestinations.orgMemberId],
       references: [users.id]
     })
   })
