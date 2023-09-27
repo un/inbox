@@ -50,6 +50,16 @@ export async function verifyDns({
     }
   };
 
+  const domainDnsServers = await dns.promises.resolveNs(domainName);
+
+  const domainDnsServerIpAddresses = (
+    await Promise.all(
+      domainDnsServers.map((dnsServer) => dns.promises.resolve4(dnsServer))
+    )
+  ).flat();
+
+  await dns.promises.setServers(domainDnsServerIpAddresses);
+
   // verify the MX Record
   await dns.promises
     .resolveMx(domainName)
@@ -174,6 +184,8 @@ export async function verifyDns({
       dnsRecords.returnPath.valid = false;
       dnsRecords.returnPath.error = 'No Return-Path records found';
     });
+
+  await dns.promises.setServers(['1.1.1.1', '1.0.0.1']);
 
   return dnsRecords;
 }
