@@ -38,16 +38,14 @@
     description: string | null;
     avatarId: string | null;
     color: string | null;
-    members: {
-      userProfile: {
-        publicId: string;
-        firstName: string | null;
-        lastName: string | null;
-        nickname: string | null;
-        title: string | null;
-        avatarId: string | null;
-      } | null;
-    }[];
+    members: ({
+      publicId: string;
+      firstName: string | null;
+      lastName: string | null;
+      handle: string | null;
+      title: string | null;
+      avatarId: string | null;
+    } | null)[];
   }
 
   const tableRows = ref<TableRow[]>([]);
@@ -60,7 +58,7 @@
           description: group.description,
           avatarId: group.avatarId,
           color: group.color,
-          members: group.members
+          members: group.members.map((member) => member.userProfile)
         });
       }
     }
@@ -108,9 +106,16 @@
           </div>
         </template>
         <template #members-data="{ row }">
-          <UnUiAvatarList
-            :avatars="row.members"
-            :max="3"
+          <UnUiAvatar
+            v-for="member in row.members"
+            :avatar-id="member.avatarId ? member.avatarId : ''"
+            :name="
+              member.firstName && member.lastName
+                ? member.firstName + ' ' + member.lastName
+                : ''
+            "
+            :color="member.color ? member.color : ''"
+            :key="member.publicId"
             size="xs" />
         </template>
       </UnUiTable>

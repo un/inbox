@@ -10,7 +10,7 @@
   const route = useRoute();
 
   const orgPublicId = route.params.orgId as string;
-  const groupPublicId = route.params.groupId as string;
+  const emailIdentityPublicId = route.params.emailIdentityId as string;
   const isNewGroup = route.query.new === 'true';
 
   const addNewUserButtonLabel = ref('Add users to group');

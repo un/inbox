@@ -12,6 +12,7 @@ import { orgProfileRouter } from './routers/orgRouter/profileRouter';
 import { orgMembersRouter } from './routers/orgRouter/membersRouter';
 import { domainsRouter } from './routers/orgRouter/mail/domainsRouter';
 import { orgUserGroupsRouter } from './routers/orgRouter/groupsRouter';
+import { emailIdentityRouter } from './routers/orgRouter/mail/emailIdentityRouter';
 
 export const trpcWebAppContext = createContext;
 
@@ -19,7 +20,8 @@ const trpcWebAppUserRouter = router({
   profile: profileRouter
 });
 const trpcWebAppOrgMailRouter = router({
-  domains: domainsRouter
+  domains: domainsRouter,
+  emailIdentities: emailIdentityRouter
 });
 
 const trpcWebAppOrgRouter = router({

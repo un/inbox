@@ -789,7 +789,7 @@ export const emailRoutingRulesRelations = relations(
       references: [users.id]
     }),
     mailIdentities: many(emailIdentities),
-    destination: many(emailRoutingRulesDestinations)
+    destinations: many(emailRoutingRulesDestinations)
   })
 );
 
@@ -819,9 +819,9 @@ export const emailRoutingRulesDestinationsRelations = relations(
       fields: [emailRoutingRulesDestinations.groupId],
       references: [userGroups.id]
     }),
-    orgMember: one(users, {
+    orgMember: one(orgMembers, {
       fields: [emailRoutingRulesDestinations.orgMemberId],
-      references: [users.id]
+      references: [orgMembers.id]
     })
   })
 );

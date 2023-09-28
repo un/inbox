@@ -110,6 +110,7 @@ export const orgMembersRouter = router({
         with: {
           members: {
             columns: {
+              publicId: true,
               role: true,
               status: true
             },

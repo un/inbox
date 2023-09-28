@@ -25,53 +25,60 @@
 
   const tableColumns = [
     {
-      key: 'name',
-      label: 'Name',
+      key: 'email',
+      label: 'Email',
       sortable: true
     },
     {
-      key: 'nickname',
-      label: 'Nickname',
+      key: 'domain',
+      label: 'Domain',
       sortable: true
     },
     {
-      key: 'title',
-      label: 'Title'
+      key: 'sendName',
+      label: 'SendName'
     },
     {
-      key: 'role',
-      label: 'Role',
-      sortable: true
-    },
-    {
-      key: 'status',
-      label: 'Status',
-      sortable: true
-    },
-    {
-      key: 'joined',
-      label: 'Joined',
+      key: 'routing',
+      label: 'Route to',
       sortable: true
     }
   ];
 
-  const tableRows = ref<{}[]>([]);
-  watch(orgMembersQuery, (newResults) => {
-    if (newResults?.members) {
-      for (const member of newResults.members) {
-        tableRows.value.push({
-          avatar: member.profile.avatarId,
-          name: member.profile.firstName + ' ' + member.profile.lastName,
-          nickname: member.profile.nickname,
-          title: member.profile.title,
-          role: member.role,
-          status: member.status,
-          joined: member.addedAt.toDateString(),
-          removed: member.removedAt?.toDateString()
-        });
-      }
-    }
-  });
+  interface TableRow {
+    publicId: string;
+    name: string;
+    description: string | null;
+    avatarId: string | null;
+    color: string | null;
+    members: ({
+      publicId: string;
+      firstName: string | null;
+      lastName: string | null;
+      handle: string | null;
+      title: string | null;
+      avatarId: string | null;
+    } | null)[];
+  }
+
+  const tableRows = ref<TableRow[]>([]);
+  // watch(orgUserGroupsQuery, (newResults) => {
+  //   if (newResults?.groups) {
+  //     for (const group of newResults.groups) {
+  //       tableRows.value.push({
+  //         publicId: group.publicId,
+  //         name: group.name,
+  //         description: group.description,
+  //         avatarId: group.avatarId,
+  //         color: group.color,
+  //         members: group.members.map((member) => member.userProfile)
+  //       });
+  //     }
+  //   }
+  // });
+  function select(row: (typeof tableRows.value)[number]) {
+    navigateTo(`/settings/org/${orgPublicId}/mail/addresses/${row.publicId}`);
+  }
 </script>
 
 <template>
@@ -79,19 +86,21 @@
     <div class="flex flex-row w-full justify-between items-center">
       <div class="flex flex-row gap-4 items-center">
         <div class="flex flex-col gap-1">
-          <span class="font-display text-2xl">Members</span>
-          <span class="text-sm">Manage your org members</span>
+          <span class="font-display text-2xl">Addresses</span>
+          <span class="text-sm"
+            >Manage your organization's email addresses</span
+          >
         </div>
       </div>
       <div class="flex flex-row gap-4 items-center">
-        <button
+        <nuxt-link
           class="flex flex-row gap-2 p-2 border-1 rounded items-center justify-center border-base-7 bg-base-3 max-w-80"
-          @click="navigateTo('./invites')">
+          :to="`/settings/org/${orgPublicId}/mail/addresses/new`">
           <icon
             name="ph-plus"
             size="20" />
-          <p class="text-sm">Invite</p>
-        </button>
+          <p class="text-sm">Add new</p>
+        </nuxt-link>
       </div>
     </div>
     <div class="flex flex-col gap-4 w-full overflow-y-scroll">

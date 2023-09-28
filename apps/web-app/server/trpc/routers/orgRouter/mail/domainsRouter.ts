@@ -41,6 +41,7 @@ export const domainsRouter = router({
       // END TODO
 
       const domainRecords = await dns.promises.resolveAny(domainName);
+      console.log({ domainRecords });
       if (!domainRecords || domainRecords.length === 0) {
         return {
           error: 'Domain does not exist or is not registered'

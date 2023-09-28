@@ -70,9 +70,10 @@
     { server: false }
   );
 
-  function recheckDns() {
+  async function recheckDns() {
     dnsRefreshLoading.value = true;
-    domainDnsRefresh();
+    await domainDnsRefresh();
+    await domainRefresh();
     setTimeout(() => {
       dnsRefreshLoading.value = false;
       showDnsRefreshMessage.value = true;
@@ -106,24 +107,15 @@
         </div>
       </div>
       <span
-        class="font-semibold text-base-1 uppercase py-1 px-4 rounded-full bg-red-9"
-        v-if="
-          !domainPending && domainQuery?.domainData?.domainStatus === 'disabled'
-        ">
-        {{ domainQuery?.domainData?.domainStatus }}
-      </span>
-      <span
-        class="font-semibold text-base-1 uppercase py-1 px-4 rounded-full bg-orange-9"
-        v-if="
-          !domainPending && domainQuery?.domainData?.domainStatus === 'pending'
-        ">
-        {{ domainQuery?.domainData?.domainStatus }}
-      </span>
-      <span
-        class="font-semibold text-base-1 uppercase py-1 px-4 rounded-full bg-green-9"
-        v-if="
-          !domainPending && domainQuery?.domainData?.domainStatus === 'active'
-        ">
+        class="font-semibold text-base-1 uppercase py-1 px-4 rounded-full"
+        :class="
+          domainQuery?.domainData?.domainStatus === 'disabled'
+            ? 'bg-red-9'
+            : domainQuery?.domainData?.domainStatus === 'pending'
+            ? 'bg-orange-9'
+            : 'bg-green-9'
+        "
+        v-if="!domainPending">
         {{ domainQuery?.domainData?.domainStatus }}
       </span>
     </div>
@@ -404,9 +396,8 @@
             <span
               class="text-sm text-base-11 w-full text-center"
               v-if="showDnsRefreshMessage">
-              DNS records can take several hours to update across the internet.
-              We will keep checking regularly and let you know when everything
-              is correct.
+              DNS records have been rechecked. If the records are still invalid,
+              please recheck your DNS settings.
             </span>
             <SettingsDomainDnsItem
               title="MX Records"
@@ -486,7 +477,7 @@
             <SettingsDomainDnsItem
               title="Return Path"
               :valid="domainDnsQuery?.dns?.returnPath.valid || false"
-              text="To add a layer of reliability for sending emails, add a CNAME record with the following values. Adding a return path record helps stop undelivered emails from spamming external services."
+              text="To add a layer of reliability for sending emails, add a CNAME record with the following values. Adding a return path record helps stop undelivered emails from spamming external services. Make sure to disable any proxy settings."
               :blocks="[
                 {
                   title: 'Type',
