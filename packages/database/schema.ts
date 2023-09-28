@@ -424,6 +424,7 @@ export const domains = mysqlTable(
     id: serial('id').primaryKey(),
     publicId: nanoId('public_id').notNull(),
     orgId: foreignKey('org_id').notNull(),
+    catchAllAddress: foreignKey('catch_all_address'),
     postalHost: varchar('postal_host', { length: 32 }).notNull(),
     domain: varchar('domain', { length: 256 }).notNull(),
     forwardingAddress: varchar('forwarding_address', { length: 128 }),
@@ -471,6 +472,10 @@ export const domainsRelations = relations(domains, ({ one }) => ({
   postalConfig: one(orgPostalConfigs, {
     fields: [domains.postalHost],
     references: [orgPostalConfigs.id]
+  }),
+  catchAllAddress: one(emailIdentities, {
+    fields: [domains.catchAllAddress],
+    references: [emailIdentities.id]
   })
 }));
 
@@ -845,7 +850,7 @@ export const emailIdentities = mysqlTable(
       .notNull()
   },
   (table) => ({
-    //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit : !domainId && !catchAll - cant be catchall on root domains
+    //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit : !domainId && !catchAll - cant be catchall on root domains || catchAll && domainId - Single domain can only have one catch all email address
     publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
     domainIdIndex: index('domain_id_idx').on(table.domainId),
     domainNameIndex: index('domain_id_idx').on(table.domainName),
