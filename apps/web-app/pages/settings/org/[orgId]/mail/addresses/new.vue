@@ -117,65 +117,101 @@
       </div>
     </div>
 
-    <div class="flex flex-col gap-4">
-      <UnUiInput
-        label="Send Name"
-        :schema="z.string().min(2)"
-        :helper="`The name that will appear in the 'From' field of emails sent from this address`"
-        v-model:value="newIdentitySendNameValue"
-        v-model:valid="newIdentitySendNameValid" />
-      <div class="flex flex-row gap-4 items-end">
+    <div class="flex flex-col gap-8 w-full">
+      <div class="flex flex-col gap-4 w-full">
+        <div class="w-full border-b-1 border-base-6">
+          <span class="font-medium uppercase text-base-11 text-sm">
+            Email Address
+          </span>
+        </div>
         <UnUiInput
-          label="Username"
-          :schema="z.string().min(2)"
-          v-model:value="newIdentityUsernameValue"
-          v-model:valid="newIdentityUsernameValid" />
-        <span
-          v-if="newIdentityDomainName"
-          class="font-mono mb-2">
-          @{{ newIdentityDomainName }}</span
-        >
-      </div>
-      <div class="flex flex-col gap-2">
-        <span class="text-xs font-medium">Domain</span>
-        <span v-if="orgDomainsPending">
-          <icon name="svg-spinners:3-dots-fade" /> Loading Domains
-        </span>
-        <div
-          class="flex flex-row gap-8 flex-wrap"
-          v-if="!orgDomainsPending">
-          <div v-for="domain of orgDomainsData?.domainData">
-            <div
-              class="flex flex-row bg-base-2 p-2 rounded-xl items-center w-fit gap-4">
-              <span class="font-mono">
-                {{ domain.domain }}
-              </span>
-              <button
-                @click="setActiveDomain(domain.publicId)"
-                class="px-2 py-2 rounded-lg flex flex-row gap-2 items-center"
-                :class="
-                  newIdentityDomainPublicId === domain.publicId
-                    ? 'bg-primary-9'
-                    : 'bg-base-5'
-                ">
+          label="Send Name"
+          :schema="z.string().min(2).max(64)"
+          :helper="`The name that will appear in the 'From' field of emails sent from this address`"
+          v-model:value="newIdentitySendNameValue"
+          v-model:valid="newIdentitySendNameValid" />
+        <div class="flex flex-row gap-4 items-center flex-wrap">
+          <UnUiInput
+            label="Address"
+            :schema="
+              z
+                .string()
+                .min(1)
+                .max(32)
+                .regex(/^[a-zA-Z0-9]*$/, {
+                  message: 'Only letters and numbers'
+                })
+            "
+            v-model:value="newIdentityUsernameValue"
+            v-model:valid="newIdentityUsernameValid" />
+
+          <div class="flex flex-col gap-1">
+            <div class="flex flex-row gap-2 items-end">
+              <span class="text-sm font-medium text-base-12">Catch-all</span>
+              <UnUiTooltip
+                text="If an email is sent to an address that does not exist, it will be delivered here"
+                class="leading-none max-h-[16px]">
                 <icon
-                  :name="
+                  name="ph:info"
+                  size="16"
+                  class="max-h-[16px] max-w-[16px]" />
+              </UnUiTooltip>
+            </div>
+            <button
+              @click="newIdentityCatchAll = !newIdentityCatchAll"
+              class="px-2 py-2 rounded-lg flex flex-row gap-2 items-center w-fit"
+              :class="newIdentityCatchAll ? 'bg-primary-9' : 'bg-base-5'">
+              <icon
+                :name="newIdentityCatchAll ? 'ph:check-bold' : 'ph:x-bold'"
+                size="16" />
+            </button>
+          </div>
+        </div>
+        <div class="flex flex-col gap-1">
+          <span class="text-sm font-medium text-base-12">Domain</span>
+          <span v-if="orgDomainsPending">
+            <icon name="svg-spinners:3-dots-fade" /> Loading Domains
+          </span>
+          <div
+            class="flex flex-row gap-8 flex-wrap"
+            v-if="!orgDomainsPending">
+            <div v-for="domain of orgDomainsData?.domainData">
+              <div
+                class="flex flex-row bg-base-2 p-1 rounded-xl items-center w-fit gap-4">
+                <span class="font-mono">
+                  {{ domain.domain }}
+                </span>
+                <button
+                  @click="setActiveDomain(domain.publicId)"
+                  class="px-2 py-2 rounded-lg flex flex-row gap-2 items-center"
+                  :class="
                     newIdentityDomainPublicId === domain.publicId
-                      ? 'ph:check-bold'
-                      : 'ph:x-bold'
-                  "
-                  size="16" />
-              </button>
+                      ? 'bg-primary-9'
+                      : 'bg-base-5'
+                  ">
+                  <icon
+                    :name="
+                      newIdentityDomainPublicId === domain.publicId
+                        ? 'ph:check-bold'
+                        : 'ph:x-bold'
+                    "
+                    size="16" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="flex flex-col gap-2">
-        <span class="text-sm font-medium">Route messages to</span>
+      <div class="flex flex-col gap-4">
+        <div class="w-full border-b-1 border-base-6">
+          <span class="font-medium uppercase text-base-11 text-sm">
+            Deliver messages to
+          </span>
+        </div>
 
         <div class="flex flex-col gap-2">
-          <span class="text-xs">User Groups</span>
+          <span class="text-sm font-medium">Groups</span>
           <span v-if="orgUserGroupPending">
             <icon name="svg-spinners:3-dots-fade" /> Loading User Groups
           </span>
@@ -225,7 +261,7 @@
         </div>
 
         <div class="flex flex-col gap-2">
-          <span class="text-xs">Users</span>
+          <span class="text-sm font-medium">Users</span>
           <span v-if="orgMembersPending">
             <icon name="svg-spinners:3-dots-fade" /> Loading Users
           </span>
@@ -300,22 +336,6 @@
           </div>
         </div>
       </div>
-      <UnUiButton
-        icon="ph:plus"
-        :label="buttonLabel"
-        :loading="buttonLoading"
-        :disabled="!formValid"
-        variant="soft"
-        class="mt-2"
-        @click="createNewEmailIdentity()" />
-      <UnUiButton
-        icon="ph:plus"
-        :label="buttonLabel"
-        :loading="buttonLoading"
-        :disabled="!formValid"
-        variant="outline"
-        class="mt-2"
-        @click="createNewEmailIdentity()" />
       <UnUiButton
         icon="ph:plus"
         :label="buttonLabel"

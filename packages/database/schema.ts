@@ -75,8 +75,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
     references: [orgs.ownerId]
   }),
   conversations: many(convoMembers),
-  userGroups: many(userGroupMembers),
-  routingRules: many(emailRoutingRulesDestinations)
+  userGroups: many(userGroupMembers)
 }));
 
 // Identity table (user logins)
@@ -203,7 +202,7 @@ export const orgMembers = mysqlTable(
     orgUserIndex: uniqueIndex('org_user_idx').on(table.orgId, table.userId)
   })
 );
-export const orgMembersRelations = relations(orgMembers, ({ one }) => ({
+export const orgMembersRelations = relations(orgMembers, ({ one, many }) => ({
   user: one(users, {
     fields: [orgMembers.userId],
     references: [users.id]
@@ -215,7 +214,8 @@ export const orgMembersRelations = relations(orgMembers, ({ one }) => ({
   profile: one(userProfiles, {
     fields: [orgMembers.userProfileId],
     references: [userProfiles.id]
-  })
+  }),
+  routingRules: many(emailRoutingRulesDestinations)
 }));
 
 export const userProfilesToOrgs = mysqlTable(

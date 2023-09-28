@@ -9,7 +9,7 @@
         :name="props.loading ? 'svg-spinners:3-dots-fade' : props.icon"
         :size="iconClasses({ size: props.size })" />
     </div>
-    <p>{{ props.label }}</p>
+    <span v-if="props.label !== ''">{{ props.label }}</span>
   </button>
 </template>
 
@@ -43,12 +43,12 @@
   const iconClasses = useUtils().cva('', {
     variants: {
       size: {
-        sm: '1rem',
-        md: '1.5rem'
+        sm: '16px',
+        md: '20px'
       },
       container: {
-        sm: 'w-[1rem] h-[1rem]',
-        md: 'w-[1.5rem] h-[1.5rem]'
+        sm: 'w-[16px] h-[16px]',
+        md: 'w-[20px] h-[20px]'
       }
     }
   });
@@ -58,8 +58,8 @@
     {
       variants: {
         size: {
-          sm: 'py-2 px-4 text-sm font-medium leading-4 gap-3',
-          md: 'py-3 px-6 text-base font-medium leading-6 gap-4'
+          sm: 'py-2 px-4 text-sm font-medium leading-none gap-1',
+          md: 'py-2 px-4 text-base font-medium leading-none gap-2'
         },
         width: {
           full: 'w-full',

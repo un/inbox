@@ -196,7 +196,6 @@
               Members
             </span>
           </div>
-          {{ groupData }}
           <UnUiTable
             :columns="tableColumns"
             :rows="tableRows"

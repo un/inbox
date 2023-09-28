@@ -300,15 +300,12 @@
         <tr v-if="loading">
           <td :colspan="columns.length + (modelValue ? 1 : 0)">
             <slot name="loading-state">
-              <div
-                class="flex flex-col items-center justify-center flex-1 px-6 py-14 sm:px-14">
-                <p class="text-sm text-center text-gray-900 dark:text-white">
-                  <Icon
-                    name="svg-spinners:3-dots-fade"
-                    size="24" />
-                  Loading
-                </p>
-              </div>
+              <p class="text-sm text-center p-4">
+                <Icon
+                  name="svg-spinners:3-dots-fade"
+                  size="24" />
+                Loading
+              </p>
             </slot>
           </td>
         </tr>
@@ -316,15 +313,7 @@
         <tr v-if="!rows.length">
           <td :colspan="columns.length + (modelValue ? 1 : 0)">
             <slot name="empty-state">
-              <div
-                class="flex flex-col items-center justify-center flex-1 px-6 py-14 sm:px-14">
-                <p class="text-sm text-center text-gray-900 dark:text-white">
-                  <Icon
-                    name="ph-smiley-sad"
-                    size="24" />
-                  No data found
-                </p>
-              </div>
+              <p class="text-sm text-center p-4">No data</p>
             </slot>
           </td>
         </tr>

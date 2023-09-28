@@ -15,18 +15,18 @@
   const orgPublicId = useRoute().params.orgId as string;
 
   const {
-    data: orgMembersQuery,
+    data: orgEmailIdentities,
     pending,
     error,
     refresh
-  } = await $trpc.org.members.getOrgMembers.useLazyQuery({
+  } = await $trpc.org.mail.emailIdentities.getOrgEmailIdentities.useLazyQuery({
     orgPublicId: orgPublicId
   });
 
   const tableColumns = [
     {
-      key: 'email',
-      label: 'Email',
+      key: 'address',
+      label: 'Address',
       sortable: true
     },
     {
@@ -39,46 +39,46 @@
       label: 'SendName'
     },
     {
-      key: 'routing',
-      label: 'Route to',
+      key: 'destination',
+      label: 'Destination',
+      sortable: true
+    },
+    {
+      key: 'catchAll',
       sortable: true
     }
   ];
 
   interface TableRow {
     publicId: string;
-    name: string;
-    description: string | null;
-    avatarId: string | null;
-    color: string | null;
-    members: ({
-      publicId: string;
-      firstName: string | null;
-      lastName: string | null;
-      handle: string | null;
-      title: string | null;
-      avatarId: string | null;
-    } | null)[];
+    address: string;
+    domain: string;
+    sendName: string | null;
+    catchAll: boolean;
+    destination: string;
   }
 
   const tableRows = ref<TableRow[]>([]);
-  // watch(orgUserGroupsQuery, (newResults) => {
-  //   if (newResults?.groups) {
-  //     for (const group of newResults.groups) {
-  //       tableRows.value.push({
-  //         publicId: group.publicId,
-  //         name: group.name,
-  //         description: group.description,
-  //         avatarId: group.avatarId,
-  //         color: group.color,
-  //         members: group.members.map((member) => member.userProfile)
-  //       });
-  //     }
-  //   }
-  // });
+  watch(orgEmailIdentities, (newResults) => {
+    if (newResults?.emailIdentityData) {
+      for (const identity of newResults.emailIdentityData) {
+        tableRows.value.push({
+          publicId: identity.publicId,
+          address: identity.username,
+          domain: identity.domainName,
+          sendName: identity.sendName,
+          catchAll: identity.isCatchAll,
+          destination:
+            identity.routingRules.description || identity.routingRules.name
+        });
+      }
+    }
+  });
   function select(row: (typeof tableRows.value)[number]) {
     navigateTo(`/settings/org/${orgPublicId}/mail/addresses/${row.publicId}`);
   }
+
+  // TODO: set the destinations column to be an avatar list of users and groups
 </script>
 
 <template>
@@ -108,29 +108,21 @@
         :columns="tableColumns"
         :rows="tableRows"
         :loading="pending"
-        class="">
-        <template #name-data="{ row }">
-          <div class="flex flex-row gap-2 items-center">
-            <UnUiAvatar
-              :avatarId="row.avatar ? row.avatar : ''"
-              :name="row.name ? row.name : ''"
-              size="xs" />
-            <span class="">{{ row.name }}</span>
-          </div>
+        class=""
+        @select="select">
+        <template #address-data="{ row }">
+          <span class="">{{ row.address }}</span>
         </template>
-        <template #role-data="{ row }">
+        <template #catchAll-data="{ row }">
           <div
-            class="py-1 px-4 rounded-full w-fit"
-            :class="row.role === 'admin' ? 'bg-primary-9' : 'bg-base-5'">
-            <span class="uppercase text-xs">{{ row.role }}</span>
+            class="py-1 px-4 rounded-full w-fit bg-primary-9 text-black"
+            v-if="row.catchAll">
+            <span class="uppercase text-xs">catch-all</span>
           </div>
+          <span v-if="!row.catchAll"></span>
         </template>
-        <template #status-data="{ row }">
-          <div
-            class="py-1 px-4 rounded-full w-fit"
-            :class="row.status === 'active' ? 'bg-grass-5' : 'bg-red-5'">
-            <span class="uppercase text-xs">{{ row.status }}</span>
-          </div>
+        <template #domain-data="{ row }">
+          <span class="">@{{ row.domain }}</span>
         </template>
       </UnUiTable>
     </div>

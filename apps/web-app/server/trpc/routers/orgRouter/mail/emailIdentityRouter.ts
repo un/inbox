@@ -79,35 +79,45 @@ export const emailIdentityRouter = router({
         ),
         columns: {
           id: true,
-          domain: true
+          domain: true,
+          catchAllAddress: true
         }
       });
       if (!domainResponse) {
         throw new Error('Domain not found');
       }
+      if (domainResponse.catchAllAddress && catchAll) {
+        throw new Error('Domain already has catch all address');
+      }
 
       const orgMemberIds: number[] = [];
-      const orgMemberIdsResponse = routeToUsersOrgMemberPublicIds
-        ? await db.read.query.orgMembers.findMany({
-            where: inArray(orgMembers.publicId, routeToUsersOrgMemberPublicIds),
-            columns: {
-              id: true
-            }
-          })
-        : [];
+      const orgMemberIdsResponse =
+        routeToUsersOrgMemberPublicIds &&
+        routeToUsersOrgMemberPublicIds.length > 0
+          ? await db.read.query.orgMembers.findMany({
+              where: inArray(
+                orgMembers.publicId,
+                routeToUsersOrgMemberPublicIds
+              ),
+              columns: {
+                id: true
+              }
+            })
+          : [];
       orgMemberIdsResponse.forEach((orgMember) => {
         orgMemberIds.push(orgMember.id);
       });
 
       const userGroupIds: number[] = [];
-      const userGroupIdsResponse = routeToGroupsPublicIds
-        ? await db.read.query.userGroups.findMany({
-            where: inArray(userGroups.publicId, routeToGroupsPublicIds),
-            columns: {
-              id: true
-            }
-          })
-        : [];
+      const userGroupIdsResponse =
+        routeToGroupsPublicIds && routeToGroupsPublicIds.length > 0
+          ? await db.read.query.userGroups.findMany({
+              where: inArray(userGroups.publicId, routeToGroupsPublicIds),
+              columns: {
+                id: true
+              }
+            })
+          : [];
       userGroupIdsResponse.forEach((userGroup) => {
         userGroupIds.push(userGroup.id);
       });
@@ -165,6 +175,15 @@ export const emailIdentityRouter = router({
           sendName: sendName,
           isCatchAll: catchAll
         });
+
+      if (catchAll) {
+        await db.write
+          .update(domains)
+          .set({
+            catchAllAddress: +insertEmailIdentityResponse.insertId
+          })
+          .where(eq(domains.id, domainResponse.id));
+      }
 
       return {
         emailIdentity: emailIdentityPublicId

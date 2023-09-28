@@ -47,9 +47,9 @@
         <div>
           <span class="font-display text-lg">Personal</span>
         </div>
-        <div class="flex flex-col gap-2">
+        <div class="flex flex-col gap-2 pl-2">
           <div>
-            <span class="text-sm">Profiles</span>
+            <span class="text-sm">Profile</span>
           </div>
           <div>
             <span class="text-sm">Account</span>
@@ -58,11 +58,11 @@
             <span class="text-sm">Security & Passkeys</span>
           </div>
           <div>
-            <span class="text-sm">Whatelse</span>
+            <span class="text-sm">Personal Address</span>
           </div>
         </div>
       </div>
-      <div class="flex flex-col gap-4">
+      <div class="flex flex-col gap-4 mb-[48px]">
         <div>
           <span class="font-display text-lg">Org</span>
         </div>
@@ -102,10 +102,10 @@
             <nuxt-link :to="`/settings/org/${settingsSelectedOrg}`">
               <span class="text-sm">Org Profile</span>
             </nuxt-link>
-            <nuxt-link
+            <!-- <nuxt-link
               :to="`/settings/org/${settingsSelectedOrg}/setup/features`">
               <span class="text-sm">Modules/features</span>
-            </nuxt-link>
+            </nuxt-link> -->
             <nuxt-link
               :to="`/settings/org/${settingsSelectedOrg}/setup/billing`">
               <span class="text-sm">Billing</span>
@@ -148,14 +148,14 @@
               :to="`/settings/org/${settingsSelectedOrg}/mail/addresses`">
               <span class="text-sm">Routing Rules</span>
             </nuxt-link>
-            <nuxt-link
+            <!-- <nuxt-link
               :to="`/settings/org/${settingsSelectedOrg}/mail/addresses`">
               <span class="text-sm">External identities</span>
-            </nuxt-link>
-            <nuxt-link
+            </nuxt-link> -->
+            <!-- <nuxt-link
               :to="`/settings/org/${settingsSelectedOrg}/mail/addresses`">
               <span class="text-sm">Limits</span>
-            </nuxt-link>
+            </nuxt-link> -->
           </div>
         </div>
       </div>

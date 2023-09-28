@@ -106,17 +106,20 @@
           </div>
         </template>
         <template #members-data="{ row }">
-          <UnUiAvatar
-            v-for="member in row.members"
-            :avatar-id="member.avatarId ? member.avatarId : ''"
-            :name="
-              member.firstName && member.lastName
-                ? member.firstName + ' ' + member.lastName
-                : ''
-            "
-            :color="member.color ? member.color : ''"
-            :key="member.publicId"
-            size="xs" />
+          <div class="flex flex-row gap-2">
+            <UnUiAvatar
+              v-for="member in row.members"
+              :avatar-id="member.avatarId ? member.avatarId : ''"
+              :name="
+                member.firstName && member.lastName
+                  ? member.firstName + ' ' + member.lastName
+                  : ''
+              "
+              :color="member.color ? member.color : ''"
+              :key="member.publicId"
+              size="xs" />
+            <span v-if="row.members.length === 0"></span>
+          </div>
         </template>
       </UnUiTable>
     </div>
