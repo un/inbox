@@ -1,6 +1,4 @@
 export default defineNuxtConfig({
-  // extends: ['../../nuxt-layers/landing-page'],
-
   modules: [
     '@nuxt/devtools',
     '@unocss/nuxt',
@@ -18,25 +16,29 @@ export default defineNuxtConfig({
     // paths: [...pagePaths],
     recoverySecret: process.env.WEBAPP_RECOVERY_SECRET || '',
     sessionSecret: process.env.WEBAPP_SESSION_SECRET || '',
-    realtimeUrl: process.env.WEBAPP_REALTIME_URL || '',
-    realtimeKey: process.env.WEBAPP_REALTIME_KEY || '',
+    // realtimeUrl: process.env.WEBAPP_REALTIME_URL || '',
+    // realtimeKey: process.env.WEBAPP_REALTIME_KEY || '',
     realtime: {
       url: process.env.WEBAPP_REALTIME_URL || '',
       key: process.env.WEBAPP_REALTIME_KEY || ''
     },
-    mailBridgeUrl: process.env.WEBAPP_MAILBRIDGE_URL || '',
-    mailBridgeKey: process.env.WEBAPP_MAILBRIDGE_KEY || '',
+    // mailBridgeUrl: process.env.WEBAPP_MAILBRIDGE_URL || '',
+    // mailBridgeKey: process.env.WEBAPP_MAILBRIDGE_KEY || '',
     mailBridge: {
       url: process.env.WEBAPP_MAILBRIDGE_URL || '',
       key: process.env.WEBAPP_MAILBRIDGE_KEY || '',
       postalRootUrl: process.env.MAILBRIDGE_POSTAL_ROOT_URL || ''
     },
-    cfImagesToken: process.env.WEBAPP_CF_IMAGES_TOKEN || '',
-    cfAccountId: process.env.WEBAPP_CF_ACCOUNT_ID || '',
+    billing: {
+      enabled: 'false',
+      billingUrl: ''
+    },
+    // cfImagesToken: process.env.WEBAPP_CF_IMAGES_TOKEN || '',
+    // cfAccountId: process.env.WEBAPP_CF_ACCOUNT_ID || '',
     cf: {
       accountId: process.env.WEBAPP_CF_ACCOUNT_ID || '',
       zoneId: process.env.WEBAPP_CF_ZONE_ID || '',
-      token: process.env.WEBAPP_CF_TOKEN || ''
+      token: process.env.WEBAPP_CF_IMAGES_TOKEN || ''
     },
     public: {
       cfImagesAccountHash: process.env.WEBAPP_CF_IMAGES_ACCOUNT_HASH || '',

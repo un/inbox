@@ -5,6 +5,8 @@ interface MailDomainEntries {
   postalId: string;
 }
 
+// TODO: ensure limits are pulled from the billing module
+
 export default defineNitroConfig({
   // Nitro options
   // TODO: create runtimeconfig group keys to clean up this file

@@ -15,11 +15,11 @@ export const profileRouter = router({
 
     //@ts-ignore - stack depth issue
     const uploadSignedURL: UploadSignedURLResponse = await $fetch(
-      `https://api.cloudflare.com/client/v4/accounts/${config.cfAccountId}/images/v2/direct_upload`,
+      `https://api.cloudflare.com/client/v4/accounts/${config.cf.accountId}/images/v2/direct_upload`,
       {
         method: 'post',
         headers: {
-          authorization: `Bearer ${config.cfImagesToken}`
+          authorization: `Bearer ${config.cf.token}`
         },
         body: formData
       }
@@ -37,11 +37,11 @@ export const profileRouter = router({
       const config = useRuntimeConfig();
       async function fetchUntilNotDraft() {
         const imageUploadObject: ImageUploadObjectResponse = await $fetch(
-          `https://api.cloudflare.com/client/v4/accounts/${config.cfAccountId}/images/v1/${input.uploadId}`,
+          `https://api.cloudflare.com/client/v4/accounts/${config.cf.accountId}/images/v1/${input.uploadId}`,
           {
             method: 'get',
             headers: {
-              authorization: `Bearer ${config.cfImagesToken}`
+              authorization: `Bearer ${config.cf.token}`
             }
           }
         );

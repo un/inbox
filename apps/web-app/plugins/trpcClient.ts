@@ -29,11 +29,11 @@ export default defineNuxtPlugin(() => {
           (opts.direction === 'down' && opts.result instanceof Error)
       }),
       httpBatchLink({
-        url: `${config.mailBridgeUrl}/trpc`,
+        url: `${config.mailBridge.url}/trpc`,
         maxURLLength: 2083,
         headers() {
           return {
-            Authorization: config.mailBridgeKey as string
+            Authorization: config.mailBridge.key as string
           };
         }
       })

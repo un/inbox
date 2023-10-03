@@ -21,10 +21,24 @@ export default defineNuxtPrepareHandler(async () => {
     );
   }
 
+  // Check for EE license, enable billing functionality
+
+  const billingConfig = {
+    enabled: 'false',
+    billingUrl: ''
+  };
+  const eeLicenseKey = process.env.EE_LICENSE_KEY;
+  const billingUrl = process.env.BILLING_URL;
+  if (eeLicenseKey && billingUrl) {
+    billingConfig.enabled = 'true';
+    billingConfig.billingUrl = billingUrl;
+  }
+
   return {
     // Overwrite the runtime config variable `foo`
     runtimeConfig: {
       hankoJwks: hankoJwksResponse,
+      billing: billingConfig,
       public: {
         mailDomainPublic: JSON.parse(
           mailDomainPublicEnv

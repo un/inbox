@@ -36,8 +36,10 @@ export const settingsRouter = router({
         .from(userProfiles)
         .where(eq(userProfiles.userId, queryUserId));
 
+      const newPublicId2 = nanoId();
       await db.write.insert(orgMembers).values({
         orgId: orgId,
+        publicId: newPublicId2,
         role: 'admin',
         userId: queryUserId,
         status: 'active',
@@ -102,10 +104,12 @@ export const settingsRouter = router({
         .from(userProfiles)
         .where(eq(userProfiles.userId, queryUserId));
 
+      const newPublicId2 = nanoId();
       await db.write.insert(orgMembers).values({
         orgId: newOrgId,
         role: 'admin',
         userId: queryUserId,
+        publicId: newPublicId2,
         status: 'active',
         userProfileId: userProfile[0].id
       });
