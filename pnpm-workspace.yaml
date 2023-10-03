@@ -1,4 +1,7 @@
 packages:
-  - "packages/*"
-  - "apps/*"
-  - "layers/*"
+  - 'packages/*'
+  - 'apps/*'
+  - 'layers/*'
+  - 'ee/packages/*'
+  - 'ee/apps/*'
+  - 'ee/layers/*'
