@@ -3,7 +3,6 @@
    <a href="https://github.com/uninbox/UnInbox/stargazers"><img src="https://img.shields.io/github/stars/uninbox/UnInbox?logo=github&style=for-the-badge&color=yellow" alt="Github Stars"></a>
 </p>
 <p align="center">
-   <a href="https://github.com/uninbox/UnInbox/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-AGPLv3-yellow?style=for-the-badge" alt="License"></a>
    <a href="https://github.com/uninbox/UnInbox/pulse"><img src="https://img.shields.io/github/commit-activity/m/uninbox/UnInbox?style=for-the-badge&color=green" alt="Commits-per-month"></a>
 </p>
 <p align="center" style="margin-top: 12px">
@@ -12,7 +11,7 @@
   </a>
 
   <h1 align="center"><tt>UnInbox</tt></h1>
-  <h2 align="center">The Email 💌 + Communication 💬 platform that lets you have conversations, without the cons 😎</h2>
+  <h2 align="center">The Communication Infrastructure for tomorrow</h2>
 
 <p align="center">
     <a href="https://UnInbox.com"><strong>To our Website & App »</strong></a>
@@ -28,39 +27,47 @@
 
 ## :construction: Current Status
 
-`UnInbox` is currently in Alpha Release. You can access it at [https://UnInbox.com](https://UnInbox.com)
-
-Self-hosting is a WiP, currently not advised/supported, see below!
+`UnInbox` is currently in under heavy development. The initial public release is expected in October 2023
 
 ---
 
-## 🤔 Why
+## About
 
-Email is messy. You have an inbox that gets tons of random stuff dumped into. Reaching "Inbox Zero" is now as celebrated as running a marathon - thats sad.
+Your communications should feel intuitive and natural, be calm and organized - but instead its overwhelming and painful.
 
-Having a conversation over email has become impossible. It's slow, and when you go to check your messages, some random marketing email consumes your attention.
+UnInbox is built from the ground up as a communication infrastructure platform built for better communication.
 
-We're all used to chat, we like chat, its more personal - but its a far world away from email.
+Email is just a single of many possible connectors. Messages arrive and are go through a line of filtering, processing, and contexting before being delivered.
 
-We bring email up to the modern standards and expectations of communication - block out all the noise, and let you converse without the cons.
+Key communication is at the forefront of your experience, and the noise is pushed to the back of the queue.
 
-## ⚙️ Tech Stack
+---
+
+## Why
+
+The first email was sent almost 45 years ago (1979), before the invention of the mobile telephone.
+
+We've seen some advancements in email technology, but very few changes in the way we process and use them.
+
+Inboxes have become a dumping ground for anyone to steal our attention and focus.
+
+The defacto for personal conversations is now a chat app - why cant we have that same experience for email.
+
+---
+
+## Tech Stack
 
 `UnInbox` is built with the following epic technologies & tools:
 
 - [Nuxt JS (VueJS)](https://nuxt.com) FrontEnd & Backend + modules
-- [Nitro](https://nitro.unjs.io/) Public API
-- [TailwindCSS](https://tailwindcss.com/) CSS Engine (tailwind compatible)
+- [Nitro](https://nitro.unjs.io/) Public API + Misc tooling
+- [UnoCSS](https://unocss.dev/) CSS Engine (fully tailwind compatible)
 - [tRPC](https://trpc.io/) Typesafe APIs
 - [DrizzleORM](https://orm.drizzle.team/) ORM + MySQL
 - [Hanko.io](https://hanko.io/) User Authentication (PassKeys)
 
 Things will change over time!
 
-## 💾 Self Hosting
+## Self Hosting
 
-As we are in Alpha Release, a lot of things will keep changing rapidly and possibly dramatically.
-
-We do not advise or support self hosting at the moment. But it's very high on our priority list.
-
-We hope to have a fully documented self-hosting version available later in 2023.
+Self hosting will be possible, but requires some additional manual configuration for email. Please check out Discord community for information on how to self-host UnInbox
