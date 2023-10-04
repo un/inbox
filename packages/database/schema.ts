@@ -52,6 +52,7 @@ export const users = mysqlTable(
     publicId: nanoId('public_id').notNull(),
     username: varchar('username', { length: 32 }).notNull(),
     recoveryEmail: varchar('recovery_email', { length: 255 }),
+    metadata: json('metadata').$type<Record<string, unknown>>(),
     createdAt: timestamp('created_at')
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull()
@@ -155,6 +156,7 @@ export const orgs = mysqlTable(
     name: varchar('name', { length: 64 }).notNull(),
     avatarId: varchar('avatar_Id', { length: 64 }),
     personalOrg: boolean('personal_org').notNull().default(false),
+    metadata: json('metadata').$type<Record<string, unknown>>(),
     createdAt: timestamp('created_at')
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull()
