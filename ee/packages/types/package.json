@@ -1,0 +1,11 @@
+{
+    "name": "@uninbox-ee/types",
+    "private": true,
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.ts",
+    "types": "index.ts",
+    "devDependencies": {
+        "typescript": "^5.2.2"
+    }
+}
