@@ -1,5 +1,6 @@
 import { defineNitroConfig } from 'nitropack/config';
 import fetch from 'node-fetch'; // or import axios from 'axios';
+import { StripeData } from './types';
 
 const eeLicenseKey = process.env.EE_LICENSE_KEY;
 const appUrl = process.env.WEBAPP_URL;
@@ -9,6 +10,11 @@ async function validateLicenseKey(key: string, appUrl: string) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ key, appUrl })
+  }).then((response) => {
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    return response.json();
   });
 
   if (!response.valid) {
@@ -16,6 +22,7 @@ async function validateLicenseKey(key: string, appUrl: string) {
       '🚨 You are attempting to run software that requires a paid license but have not provided a valid license key. Please check https://github.com/uninbox/uninbox/tree/main/ee for more information about the license'
     );
   }
+  return true;
 }
 
 if (eeLicenseKey && appUrl) {
@@ -31,11 +38,28 @@ if (eeLicenseKey && appUrl) {
   );
 }
 
+const stripeData: StripeData = {
+  plans: {
+    starter: {
+      monthly: process.env.BILLING_STRIPE_PLAN_STARTER_MONTHLY_ID,
+      yearly: process.env.BILLING_STRIPE_PLAN_STARTER_YEARLY_ID
+    },
+    pro: {
+      monthly: process.env.BILLING_STRIPE_PLAN_PRO_MONTHLY_ID,
+      yearly: process.env.BILLING_STRIPE_PLAN_PRO_YEARLY_ID
+    }
+  },
+  lifetime: { current: process.env.BILLING_STRIPE_LIFETIME_ID, previous: null },
+  key: process.env.BILLING_STRIPE_KEY,
+  webhookKey: process.env.BILLING_STRIPE_WEBHOOK_KEY
+};
+
 export default defineNitroConfig({
   // Nitro options
   runtimeConfig: {
     url: process.env.BILLING_URL,
     key: process.env.BILLING_KEY,
-    stripeKey: process.env.BILLING_STRIPE_KEY
+    stripe: stripeData
+    // stripeKey: process.env.BILLING_STRIPE_KEY
   }
 });

@@ -1,19 +1,27 @@
 //import { validateStripeSignature } from '../utils/validateStripeWebhook';
 
+import Stripe from 'stripe';
+import { useStripe } from '../utils/useStripe';
+
 export default defineEventHandler(async (event) => {
   if (getRequestURL(event).pathname.startsWith('/stripe')) {
-    const body = await readBody(event);
-    const signature = await getHeader(event, 'x-postal-signature');
-    //TODO: need to support multiple public keys from multiple servers, and return true if any match
-    const publicKey = useRuntimeConfig().postalWebhookPublicKey;
-    const validStripeSignature = await validateStripeWebhookSignature(
-      body,
-      signature,
-      publicKey
-    );
-    if (!validStripeSignature) {
+    const body = await readRawBody(event);
+    const signature = await getHeader(event, 'stripe-signature');
+    const webhookKey = useRuntimeConfig().stripe.webhookKey;
+
+    let stripeEvent: Stripe.Event;
+
+    try {
+      stripeEvent = await useStripe().sdk.webhooks.constructEvent(
+        body,
+        signature,
+        webhookKey
+      );
+    } catch (e) {
+      console.log(e);
       sendNoContent(event, 401);
     }
-    event.context.fromStripe = validStripeSignature;
+
+    event.context.stripeEvent = stripeEvent;
   }
 });
