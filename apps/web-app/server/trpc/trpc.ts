@@ -34,7 +34,7 @@ const turnstileTokenValidation = experimental_standaloneMiddleware<{
   if (!opts.input.turnstileToken) {
     throw new TRPCError({
       code: 'FORBIDDEN',
-      message: 'Missing Turnstile Verfication Token'
+      message: 'Missing Turnstile Verification Token'
     });
   }
 
@@ -42,7 +42,7 @@ const turnstileTokenValidation = experimental_standaloneMiddleware<{
   if (!token.success)
     throw new TRPCError({
       code: 'BAD_REQUEST',
-      message: 'Invalid Turnstile Verfication Token'
+      message: 'Invalid Turnstile Verification Token'
     });
 
   return opts.next();
