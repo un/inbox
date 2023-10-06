@@ -25,7 +25,9 @@ export default defineNuxtPrepareHandler(async () => {
 
   const eeConfig = {
     enabled: false,
-    modules: [] as string[]
+    modules: {
+      billing: false
+    }
   };
 
   const billingConfig = {
@@ -44,12 +46,11 @@ export default defineNuxtPrepareHandler(async () => {
   const billingKey = process.env.BILLING_KEY;
   if (eeLicenseKey && billingUrl && billingKey) {
     console.log('✅ EE Billing module is enabled');
-    eeConfig.modules.push('billing');
+    eeConfig.modules.billing = true;
     billingConfig.enabled = true;
     billingConfig.billingUrl = billingUrl;
     billingConfig.billingKey = billingKey;
   }
-  const eeEnabled = eeLicenseKey ? true : false;
 
   return {
     // Overwrite the runtime config variable `foo`
@@ -63,7 +64,7 @@ export default defineNuxtPrepareHandler(async () => {
         mailDomainPremium: JSON.parse(
           mailDomainPremiumEnv
         ) as MailDomainEntries[],
-        eeConfig
+        ee: eeConfig
       }
     }
   };
