@@ -4,7 +4,7 @@ import { router, publicProcedure } from '../trpc';
 import { eq } from '@uninbox/database/orm';
 import { users } from '@uninbox/database/schema';
 import { nanoId } from '@uninbox/utils';
-import { mailBridgeTrpcClient } from '~/server/utils/mailBridgeTrpc';
+import { mailBridgeTrpcClient } from '~/server/utils/tRPCServerClients';
 
 export const testRouter = router({
   runTest: publicProcedure

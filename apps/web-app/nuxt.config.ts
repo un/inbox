@@ -29,10 +29,6 @@ export default defineNuxtConfig({
       key: process.env.WEBAPP_MAILBRIDGE_KEY || '',
       postalRootUrl: process.env.MAILBRIDGE_POSTAL_ROOT_URL || ''
     },
-    billing: {
-      enabled: 'false',
-      billingUrl: ''
-    },
     // cfImagesToken: process.env.WEBAPP_CF_IMAGES_TOKEN || '',
     // cfAccountId: process.env.WEBAPP_CF_ACCOUNT_ID || '',
     cf: {

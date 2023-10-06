@@ -36,6 +36,7 @@
     "@trpc/server": "^10.38.5",
     "@uninbox/database": "workspace:*",
     "@uninbox/trpc": "workspace:*",
+    "@uninbox-ee/types": "workspace:*",
     "@uninbox/types": "workspace:*",
     "@uninbox/utils": "workspace:*",
     "@unocss/reset": "^0.56.5",

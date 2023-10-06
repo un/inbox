@@ -9,7 +9,7 @@ import {
   users
 } from '@uninbox/database/schema';
 import { nanoId, nanoIdLength } from '@uninbox/utils';
-import { mailBridgeTrpcClient } from '~/server/utils/mailBridgeTrpc';
+import { mailBridgeTrpcClient } from '~/server/utils/tRPCServerClients';
 
 export const settingsRouter = router({
   createNewOrg: protectedProcedure
