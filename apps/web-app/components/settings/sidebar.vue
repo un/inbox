@@ -19,7 +19,7 @@
     pending,
     error,
     refresh
-  } = await $trpc.org.settings.getUserOrgs.useLazyQuery(
+  } = await $trpc.org.crud.getUserOrgs.useLazyQuery(
     {
       onlyAdmin: true
     },
@@ -37,6 +37,8 @@
   });
 
   // TODO: fix scroll bar positioning, move to right, approx 20 px (may need to move to a parent div)
+
+  const eeConfig = useRuntimeConfig().public.ee;
 </script>
 <template>
   <div
@@ -49,16 +51,19 @@
         </div>
         <div class="flex flex-col gap-2 pl-2">
           <div>
-            <span class="text-sm">Profile</span>
+            <span class="text-sm">Account</span>
           </div>
           <div>
-            <span class="text-sm">Account</span>
+            <span class="text-sm">Profiles</span>
+          </div>
+          <div>
+            <span class="text-sm">Personal Addresses</span>
           </div>
           <div>
             <span class="text-sm">Security & Passkeys</span>
           </div>
           <div>
-            <span class="text-sm">Personal Address</span>
+            <span class="text-sm">Lifetime License</span>
           </div>
         </div>
       </div>
@@ -107,7 +112,8 @@
               <span class="text-sm">Modules/features</span>
             </nuxt-link> -->
             <nuxt-link
-              :to="`/settings/org/${settingsSelectedOrg}/setup/billing`">
+              :to="`/settings/org/${settingsSelectedOrg}/setup/billing`"
+              v-if="eeConfig.modules.billing">
               <span class="text-sm">Billing</span>
             </nuxt-link>
           </div>
