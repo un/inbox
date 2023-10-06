@@ -17,6 +17,7 @@
     "db:drop:i": "infisical run --env=local -- turbo run db:drop",
     "dev": "turbo run dev",
     "dev:i": "infisical run --env=local -- turbo run dev",
+    "ee:dev:i": "infisical run --env=local -- turbo run ee:dev",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

@@ -5,18 +5,16 @@
   "types": "types.ts",
   "scripts": {
     "ee:dev": "PORT=3900 npx nitropack dev",
-    "ee:dev:i": "PORT=3900 npx nitropack dev",
     "ee:build": "npx nitropack build",
-    "ee:build:i": "npx nitropack build",
     "ee:preview": "node .output/server/index.mjs"
   },
   "dependencies": {
     "@trpc/client": "^10.38.5",
     "@trpc/server": "^10.38.5",
     "nitropack": "^2.6.3",
-    "stripe": "^13.8.0",
+    "stripe": "^13.9.0",
     "superjson": "^1.13.3",
     "trpc-nuxt": "^0.10.12",
-    "zod": "^3.22.2"
+    "zod": "^3.22.4"
   }
 }

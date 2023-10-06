@@ -35,6 +35,10 @@
       "dependsOn": [],
       "cache": false
     },
+    "ee:dev": {
+      "dependsOn": [],
+      "cache": false
+    },
     "cloud": {
       "cache": false
     },
