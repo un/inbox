@@ -17,6 +17,15 @@ const isUserAuthenticated = trpcContext.middleware(({ next, ctx }) => {
   }
   return next();
 });
+const isEeEnabled = trpcContext.middleware(({ next }) => {
+  if (useRuntimeConfig().billing.enabled !== true) {
+    throw new TRPCError({
+      code: 'PRECONDITION_FAILED',
+      message: 'Enterprise Edition features are disabled on this server'
+    });
+  }
+  return next();
+});
 
 //TODO: check when standalone middleware is no longer experimental or fix inputs in standard middleware
 const turnstileTokenValidation = experimental_standaloneMiddleware<{
@@ -45,5 +54,7 @@ export const limitedProcedure = trpcContext.procedure
   .use(turnstileTokenValidation);
 export const protectedProcedure =
   trpcContext.procedure.use(isUserAuthenticated);
+export const eeProcedure = protectedProcedure.use(isEeEnabled);
+
 export const router = trpcContext.router;
 export const middleware = trpcContext.middleware;
