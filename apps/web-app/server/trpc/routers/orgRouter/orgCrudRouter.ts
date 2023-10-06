@@ -11,7 +11,7 @@ import {
 import { nanoId, nanoIdLength } from '@uninbox/utils';
 import { mailBridgeTrpcClient } from '~/server/utils/tRPCServerClients';
 
-export const settingsRouter = router({
+export const crudRouter = router({
   createNewOrg: protectedProcedure
     .input(
       z.object({

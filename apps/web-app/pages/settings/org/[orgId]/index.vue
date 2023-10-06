@@ -18,7 +18,7 @@
   const orgPublicId = useRoute().params.orgId as string;
 
   const { data: initialOrgProfile, pending } =
-    await $trpc.org.profile.getOrgProfile.useLazyQuery(
+    await $trpc.org.setup.profile.getOrgProfile.useLazyQuery(
       {
         orgPublicId: orgPublicId
       },
@@ -101,7 +101,7 @@
     buttonLabel.value = 'Saving...';
     const newOrgAvatarId = imageId.value ? imageId.value : null;
 
-    const response = await $trpc.org.profile.setOrgProfile.mutate({
+    const response = await $trpc.org.setup.profile.setOrgProfile.mutate({
       orgPublicId: orgPublicId,
       orgName: orgNameValue.value,
       ...(imageId.value && { orgAvatarId: imageId.value })

@@ -27,7 +27,7 @@
     pending,
     error,
     refresh
-  } = await $trpc.org.invites.viewInvites.useLazyQuery({
+  } = await $trpc.org.users.invites.viewInvites.useLazyQuery({
     orgPublicId: orgPublicId
   });
 
@@ -140,11 +140,12 @@
     if (inviteEmailValid.value === false) return;
     buttonLoading.value = true;
     buttonLabel.value = 'Creating invite...';
-    const newInviteResponse = await $trpc.org.invites.createNewInvite.mutate({
-      orgPublicId: orgPublicId,
-      inviteeEmail: inviteEmailValue.value,
-      role: 'member'
-    });
+    const newInviteResponse =
+      await $trpc.org.users.invites.createNewInvite.mutate({
+        orgPublicId: orgPublicId,
+        inviteeEmail: inviteEmailValue.value,
+        role: 'member'
+      });
     buttonLoading.value = false;
     buttonLabel.value = 'All done';
     inviteEmailValue.value = '';

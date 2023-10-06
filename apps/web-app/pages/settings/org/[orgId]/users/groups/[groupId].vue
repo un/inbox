@@ -24,7 +24,7 @@
     pending: groupPending,
     error,
     refresh
-  } = await $trpc.org.userGroups.getUserGroup.useLazyQuery(
+  } = await $trpc.org.users.userGroups.getUserGroup.useLazyQuery(
     {
       orgPublicId: orgPublicId,
       userGroupPublicId: groupPublicId,
@@ -39,7 +39,7 @@
     error: orgMembersError,
     execute: getOrgMembersList,
     refresh: orgMembersRefresh
-  } = await $trpc.org.members.getOrgMembersList.useLazyQuery(
+  } = await $trpc.org.users.members.getOrgMembersList.useLazyQuery(
     {
       orgPublicId: orgPublicId
     },
@@ -103,7 +103,7 @@
 
   async function addNewUserToGroup(userProfilePublicId: string) {
     addingUserId.value = userProfilePublicId;
-    const result = await $trpc.org.userGroups.addUserToGroup.mutate({
+    const result = await $trpc.org.users.userGroups.addUserToGroup.mutate({
       orgPublicId: orgPublicId,
       groupPublicId: groupPublicId,
       userProfilePublicId: userProfilePublicId

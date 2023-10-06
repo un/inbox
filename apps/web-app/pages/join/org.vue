@@ -44,7 +44,7 @@
     newButtonLoading.value = true;
 
     newButtonLabel.value = 'Creating your organization';
-    const createNewOrgResponse = await $trpc.org.settings.createNewOrg.mutate({
+    const createNewOrgResponse = await $trpc.org.crud.createNewOrg.mutate({
       orgName: orgNameValue.value
     });
     if (!createNewOrgResponse.success) {
@@ -62,7 +62,7 @@
   async function joinOrg() {
     joinButtonLoading.value = true;
     joinButtonLabel.value = 'Creating your profile';
-    const joinOrgResponse = await $trpc.org.invites.redeemInvite.mutate({
+    const joinOrgResponse = await $trpc.org.users.invites.redeemInvite.mutate({
       inviteToken: inviteCodeValue.value
     });
     if (!joinOrgResponse.success && joinOrgResponse.error) {

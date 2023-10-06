@@ -13,7 +13,7 @@
   async function createNewPersonalOrg() {
     buttonLoading.value = true;
     const createNewPersonalOrgResponse =
-      await $trpc.org.settings.createPersonalOrg.mutate({});
+      await $trpc.org.crud.createPersonalOrg.mutate({});
     if (!createNewPersonalOrgResponse.success) {
       pageError.value = true;
       buttonLabel.value = 'Take me to my account anyway!';

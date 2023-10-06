@@ -19,7 +19,7 @@
     pending,
     error,
     refresh
-  } = await $trpc.org.members.getOrgMembers.useLazyQuery({
+  } = await $trpc.org.users.members.getOrgMembers.useLazyQuery({
     orgPublicId: orgPublicId
   });
 

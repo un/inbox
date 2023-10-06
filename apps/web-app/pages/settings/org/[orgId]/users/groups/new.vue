@@ -26,7 +26,7 @@
     buttonLoading.value = true;
     buttonLabel.value = 'Creating...';
     const { newGroupPublicId } =
-      await $trpc.org.userGroups.createOrgUserGroups.mutate({
+      await $trpc.org.users.userGroups.createOrgUserGroups.mutate({
         orgPublicId,
         groupName: newGroupNameValue.value,
         groupDescription: newGroupDescriptionValue.value,

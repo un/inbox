@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { parse, stringify } from 'superjson';
-import { router, protectedProcedure } from '../../trpc';
+import { router, protectedProcedure } from '../../../trpc';
 import { eq, and } from '@uninbox/database/orm';
 import { orgs } from '@uninbox/database/schema';
 import { nanoId, nanoIdLength } from '@uninbox/utils';

@@ -11,7 +11,7 @@
     pending,
     error,
     refresh
-  } = await $trpc.org.userGroups.getOrgUserGroups.useLazyQuery({
+  } = await $trpc.org.users.userGroups.getOrgUserGroups.useLazyQuery({
     orgPublicId: orgPublicId
   });
 

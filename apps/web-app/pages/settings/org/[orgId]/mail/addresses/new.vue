@@ -40,13 +40,13 @@
     });
   // get list of groups
   const { data: orgUserGroupsData, pending: orgUserGroupPending } =
-    await $trpc.org.userGroups.getOrgUserGroups.useLazyQuery({
+    await $trpc.org.users.userGroups.getOrgUserGroups.useLazyQuery({
       orgPublicId: orgPublicId
     });
 
   // get list of users
   const { data: orgMembersData, pending: orgMembersPending } =
-    await $trpc.org.members.getOrgMembersList.useLazyQuery({
+    await $trpc.org.users.members.getOrgMembersList.useLazyQuery({
       orgPublicId: orgPublicId
     });
 

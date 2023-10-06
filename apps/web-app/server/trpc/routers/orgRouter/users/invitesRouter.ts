@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { router, protectedProcedure, limitedProcedure } from '../../trpc';
+import { router, protectedProcedure, limitedProcedure } from '../../../trpc';
 import { and, eq, or } from '@uninbox/database/orm';
 import {
   orgInvitations,
@@ -206,7 +206,9 @@ export const invitesRouter = router({
         invitedUser: userId
       });
 
+      const newPublicIdOrgMembers = nanoId();
       await db.write.insert(orgMembers).values({
+        publicId: newPublicIdOrgMembers,
         userId: userId,
         orgId: +queryInvitesResponse[0].orgId,
         invitedByUserId: +queryInvitesResponse[0].invitedByUserId,
