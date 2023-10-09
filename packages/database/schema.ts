@@ -19,6 +19,12 @@ import {
 import { relations, sql } from 'drizzle-orm';
 import { nanoIdLength } from '@uninbox/utils';
 import { uiColors } from '@uninbox/types/ui';
+import {
+  stripeBillingPeriods,
+  stripePlanNames,
+  StripeBillingPeriod,
+  StripePlanName
+} from '../../ee/apps/billing/types';
 
 //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit
 
@@ -1292,3 +1298,68 @@ export const convoDraftsRelations = relations(convoDrafts, ({ one, many }) => ({
 }));
 
 // TODO: add in tables for convomessages and convonotes read status. This will be a one to one table with convo_members and the messages. This will enable read/seen tracking for each message and note.
+
+// Billing Tables - only used in EE packages
+
+export const orgBilling = mysqlTable(
+  'org_billing',
+  {
+    id: serial('id').primaryKey(),
+    orgId: foreignKey('org_id').notNull(),
+    stripeCustomerId: varchar('stripe_customer_id', { length: 128 }).notNull(),
+    stripeSubscriptionId: varchar('stripe_subscription_id', { length: 128 }),
+    plan: mysqlEnum('plan', [...stripePlanNames])
+      .notNull()
+      .default('free'),
+    period: mysqlEnum('period', [...stripeBillingPeriods])
+      .notNull()
+      .default('monthly')
+  },
+  (table) => ({
+    orgIdIndex: index('org_id_idx').on(table.orgId),
+    stripeCustomerIdIndex: uniqueIndex('stripe_customer_id_idx').on(
+      table.stripeCustomerId
+    ),
+    stripeSubscriptionIdIndex: uniqueIndex('stripe_subscription_id_idx').on(
+      table.stripeSubscriptionId
+    )
+  })
+);
+
+export const orgBillingRelations = relations(orgBilling, ({ one, many }) => ({
+  org: one(orgs, {
+    fields: [orgBilling.orgId],
+    references: [orgs.id]
+  }),
+  lifetimeLicenses: many(lifetimeLicenses)
+}));
+
+export const lifetimeLicenses = mysqlTable(
+  'lifetime_licenses',
+  {
+    id: serial('id').primaryKey(),
+    publicId: nanoId('public_id').notNull(),
+    userId: foreignKey('user_id').notNull(),
+    orgId: foreignKey('org_id'),
+    stripePaymentId: varchar('stripe_payment_id', { length: 128 }).notNull()
+  },
+  (table) => ({
+    orgIdIndex: index('org_id_idx').on(table.orgId),
+    userIdIndex: index('user_id_idx').on(table.userId),
+    userToOrgIndex: uniqueIndex('user_to_org_idx').on(table.orgId, table.userId)
+  })
+);
+
+export const lifetimeLicensesRelations = relations(
+  lifetimeLicenses,
+  ({ one }) => ({
+    owner: one(users, {
+      fields: [lifetimeLicenses.userId],
+      references: [users.id]
+    }),
+    org: one(orgs, {
+      fields: [lifetimeLicenses.orgId],
+      references: [orgs.id]
+    })
+  })
+);
