@@ -13,6 +13,7 @@ export const profileRouter = router({
     const formData = new FormData();
     formData.append('metadata', `{"userId":"${ctx.user.userId}"}`);
 
+    // https://api.cloudflare.com/client/v4/accounts/0821901a4d9392ed1dfc645608f19474/images/v2/direct_upload
     //@ts-ignore - stack depth issue
     const uploadSignedURL: UploadSignedURLResponse = await $fetch(
       `https://api.cloudflare.com/client/v4/accounts/${config.cf.accountId}/images/v2/direct_upload`,
@@ -64,7 +65,7 @@ export const profileRouter = router({
       z.object({
         fName: z.string(),
         lName: z.string(),
-        imageId: z.string().uuid(),
+        imageId: z.string().uuid().optional().nullable(),
         handle: z.string().min(2).max(20),
         defaultProfile: z.boolean().optional().default(false)
       })

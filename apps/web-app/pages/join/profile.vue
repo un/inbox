@@ -31,8 +31,13 @@
     reset: true
   });
 
-  const imageUploadSignedUrl =
-    await $trpc.user.profile.generateAvatarUploadUrl.query();
+  const {
+    data: imageUploadSignedUrl,
+    pending,
+    error
+  } = await $trpc.user.profile.generateAvatarUploadUrl.useLazyQuery(void 0, {
+    server: false
+  });
 
   //Form Fields
   const fNameValid = ref<boolean | 'remote' | null>(null);
@@ -48,20 +53,26 @@
 
   //functions
   function selectAvatar() {
+    if (pending || error) {
+      console.log({ pending, error });
+      return;
+    }
     resetFiles();
     openFileDialog();
   }
   selectedFilesOnChange(async (selectedFiles) => {
+    if (pending || error || !imageUploadSignedUrl.value) return;
+
     uploadLoading.value = true;
     if (!selectedFiles) return;
     const formData = new FormData();
     formData.append('file', selectedFiles[0]);
-    await useFetch(imageUploadSignedUrl.uploadURL, {
+    await useFetch(imageUploadSignedUrl.value?.uploadURL, {
       method: 'post',
       body: formData
     });
     imageId.value = await $trpc.user.profile.awaitAvatarUpload.query({
-      uploadId: imageUploadSignedUrl.id
+      uploadId: imageUploadSignedUrl.value?.id
     });
 
     //TODO: make the image only appear once it has been loaded to avoid blank box
@@ -78,7 +89,7 @@
       {
         fName: fNameValue.value,
         lName: lNameValue.value,
-        imageId: imageId.value || '',
+        imageId: imageId.value ? imageId.value : null,
         defaultProfile: true,
         handle: username.value
       }
