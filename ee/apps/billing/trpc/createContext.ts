@@ -1,7 +1,7 @@
 import { inferAsyncReturnType } from '@trpc/server';
 import type { H3Event } from 'h3';
 import { StripeData } from '../types';
-// import { db } from '@uninbox/database';
+import { db } from '@uninbox/database';
 
 //  * Creates context for an incoming request
 //  * @link https://trpc.io/docs/context
@@ -11,7 +11,7 @@ export const createContext = async (event: H3Event) => {
   const authToken = getHeader(event, 'Authorization');
   const isServiceAuthenticated = authToken === config.key;
   const stripeData: StripeData = config.stripe;
-  return { auth: isServiceAuthenticated, stripe: stripeData };
+  return { auth: isServiceAuthenticated, stripe: stripeData, db };
 };
 
 export type CreateContext = inferAsyncReturnType<typeof createContext>;

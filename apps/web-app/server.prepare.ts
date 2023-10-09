@@ -32,8 +32,8 @@ export default defineNuxtPrepareHandler(async () => {
 
   const billingConfig = {
     enabled: false,
-    billingUrl: '',
-    billingKey: ''
+    url: '',
+    key: ''
   };
 
   const eeLicenseKey = process.env.EE_LICENSE_KEY;
@@ -48,8 +48,8 @@ export default defineNuxtPrepareHandler(async () => {
     console.log('✅ EE Billing module is enabled');
     eeConfig.modules.billing = true;
     billingConfig.enabled = true;
-    billingConfig.billingUrl = billingUrl;
-    billingConfig.billingKey = billingKey;
+    billingConfig.url = billingUrl;
+    billingConfig.key = billingKey;
   }
 
   return {

@@ -9,6 +9,7 @@
     "ee:preview": "node .output/server/index.mjs"
   },
   "dependencies": {
+    "@uninbox/database": "workspace:*",
     "@trpc/client": "^10.38.5",
     "@trpc/server": "^10.38.5",
     "nitropack": "^2.6.3",

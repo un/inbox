@@ -228,6 +228,9 @@ importers:
       '@trpc/server':
         specifier: ^10.38.5
         version: 10.38.5
+      '@uninbox/database':
+        specifier: workspace:*
+        version: link:../../../packages/database
       nitropack:
         specifier: ^2.6.3
         version: 2.6.3
