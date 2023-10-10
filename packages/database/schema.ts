@@ -1340,13 +1340,13 @@ export const lifetimeLicenses = mysqlTable(
     id: serial('id').primaryKey(),
     publicId: nanoId('public_id').notNull(),
     userId: foreignKey('user_id').notNull(),
-    orgId: foreignKey('org_id'),
+    orgBillingId: foreignKey('org_billing_id'),
     stripePaymentId: varchar('stripe_payment_id', { length: 128 }).notNull()
   },
   (table) => ({
-    orgIdIndex: index('org_id_idx').on(table.orgId),
+    publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
     userIdIndex: index('user_id_idx').on(table.userId),
-    userToOrgIndex: uniqueIndex('user_to_org_idx').on(table.orgId, table.userId)
+    orgIdIndex: index('org_id_idx').on(table.orgBillingId)
   })
 );
 
@@ -1357,9 +1357,9 @@ export const lifetimeLicensesRelations = relations(
       fields: [lifetimeLicenses.userId],
       references: [users.id]
     }),
-    org: one(orgs, {
-      fields: [lifetimeLicenses.orgId],
-      references: [orgs.id]
+    org: one(orgBilling, {
+      fields: [lifetimeLicenses.orgBillingId],
+      references: [orgBilling.id]
     })
   })
 );

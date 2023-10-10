@@ -88,5 +88,53 @@ export const billingRouter = router({
       return {
         portalLink: orgPortalLink.link
       };
+    }),
+  getOrgSubscriptionPaymentLink: eeProcedure
+    .input(
+      z.object({
+        orgPublicId: z.string().min(3).max(nanoIdLength),
+        plan: z.enum(['starter', 'pro']),
+        period: z.enum(['monthly', 'yearly'])
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const queryUserId = ctx.user.userId || 0;
+      const db = ctx.db;
+      const { orgPublicId, plan, period } = input;
+
+      const userOrg = await isUserInOrg({ userId: queryUserId, orgPublicId });
+      if (!userOrg || userOrg.role !== 'admin') {
+        throw new Error('User not in org');
+      }
+      if (userOrg.role !== 'admin') {
+        throw new Error('User not the admin');
+      }
+
+      const activeOrgMembersCount = await db.read
+        .select({ count: sql<number>`count(*)` })
+        .from(orgMembers)
+        .where(
+          and(
+            eq(orgMembers.orgId, userOrg.orgId),
+            eq(orgMembers.status, 'active')
+          )
+        );
+      const orgSubLink =
+        await billingTrpcClient.stripe.links.createSubscriptionPaymentLink.mutate(
+          {
+            orgId: +userOrg.orgId,
+            plan: plan,
+            period: period,
+            totalOrgUsers: +activeOrgMembersCount[0].count,
+            lifetimeUsers: 0
+          }
+        );
+
+      if (!orgSubLink.link) {
+        throw new Error('Org not subscribed to a plan');
+      }
+      return {
+        subLink: orgSubLink.link
+      };
     })
 });

@@ -35,7 +35,7 @@ export const stripeLinksRouter = router({
           ? `Total users: ${totalOrgUsers} (${chargeableUsers} paid + ${lifetimeUsers} lifetime)`
           : `Total users: ${totalOrgUsers}`;
 
-      const paymentLink = await useStripe().sdk.paymentLinks.create({
+      const subscribeToPlan = await useStripe().sdk.paymentLinks.create({
         metadata: {
           orgId
         },
@@ -53,13 +53,13 @@ export const stripeLinksRouter = router({
             plan: input.plan,
             period: input.period,
             totalUsers: input.totalOrgUsers,
-            chargeableUsers: input.lifetimeUsers
+            chargeableUsers: chargeableUsers
           }
         }
       });
 
       return {
-        link: paymentLink.url
+        link: subscribeToPlan.url
       };
     }),
   createLifetimePaymentLink: protectedProcedure
