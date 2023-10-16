@@ -42,12 +42,12 @@
 </script>
 <template>
   <div
-    class="border-r-1 border-base-6 pr-4 flex flex-col gap-2 h-full max-h-full overflow-y-scroll">
+    class="h-full max-h-full flex flex-col gap-2 overflow-y-scroll border-r-1 border-base-6 pr-4">
     <div
-      class="flex flex-col gap-4 grow overflow-hidden h-full max-h-full overflow-y-scroll">
-      <div class="flex flex-col gap-2 w-full border-b-1 border-base-6 pb-4">
+      class="h-full max-h-full flex grow flex-col gap-4 overflow-hidden overflow-y-scroll">
+      <div class="w-full flex flex-col gap-2 border-b-1 border-base-6 pb-4">
         <div>
-          <span class="font-display text-lg">Personal</span>
+          <span class="text-lg font-display">Personal</span>
         </div>
         <div class="flex flex-col gap-2 pl-2">
           <div>
@@ -62,18 +62,18 @@
           <div>
             <span class="text-sm">Security & Passkeys</span>
           </div>
-          <div>
+          <nuxt-link :to="`/settings/user/lifetime`">
             <span class="text-sm">Lifetime License</span>
-          </div>
+          </nuxt-link>
         </div>
       </div>
-      <div class="flex flex-col gap-4 mb-[48px]">
+      <div class="mb-[48px] flex flex-col gap-4">
         <div>
-          <span class="font-display text-lg">Org</span>
+          <span class="text-lg font-display">Org</span>
         </div>
         <div
           v-if="pending"
-          class="flex flex-row w-full p-8 bg-base-3 rounded-xl gap-4 justify-center rounded-tl-2xl">
+          class="w-full flex flex-row justify-center gap-4 rounded-xl rounded-tl-2xl bg-base-3 p-8">
           <icon
             name="svg-spinners:3-dots-fade"
             size="24" />
@@ -81,27 +81,28 @@
         </div>
         <div
           v-if="!userHasAdminOrgs && !pending"
-          class="flex flex-row w-full p-8 bg-base-3 rounded-xl gap-4 justify-center rounded-tl-2xl">
+          class="w-full flex flex-row justify-center gap-4 rounded-xl rounded-tl-2xl bg-base-3 p-8">
           <icon
             name="ph-identification-badge"
             size="24" />
           <span>You are not an admin in any organizations</span>
         </div>
         <div
-          class="flex flex-col gap-8"
-          v-if="userHasAdminOrgs && !pending">
-          <div class="flex flex-col gap-1">
+          v-if="userHasAdminOrgs && !pending"
+          class="flex flex-col gap-8">
+          <div
+            v-if="userOrgs"
+            class="flex flex-col gap-1">
             <SettingsOrgSelector
-              v-if="userOrgs"
               v-for="org in userOrgs.userOrgs"
-              :orgData="org"
               :key="org.org.publicId"
-              @click="settingsSelectedOrg = org.org.publicId"
-              :isActive="settingsSelectedOrg === org.org.publicId" />
+              :org-data="org"
+              :is-active="settingsSelectedOrg === org.org.publicId"
+              @click="settingsSelectedOrg = org.org.publicId" />
           </div>
           <div class="flex flex-col gap-2 pb-2 pl-2">
             <span
-              class="text-xs uppercase font-semibold text-base-11 border-b-1 border-base-3 pb-1">
+              class="border-b-1 border-base-3 pb-1 text-xs font-semibold uppercase text-base-11">
               Setup
             </span>
             <nuxt-link :to="`/settings/org/${settingsSelectedOrg}`">
@@ -112,15 +113,15 @@
               <span class="text-sm">Modules/features</span>
             </nuxt-link> -->
             <nuxt-link
-              :to="`/settings/org/${settingsSelectedOrg}/setup/billing`"
-              v-if="eeConfig.modules.billing">
+              v-if="eeConfig.modules.billing"
+              :to="`/settings/org/${settingsSelectedOrg}/setup/billing`">
               <span class="text-sm">Billing</span>
             </nuxt-link>
           </div>
 
           <div class="flex flex-col gap-2 pb-2 pl-2">
             <span
-              class="text-xs uppercase font-semibold text-base-11 border-b-1 border-base-3 pb-1">
+              class="border-b-1 border-base-3 pb-1 text-xs font-semibold uppercase text-base-11">
               Users
             </span>
             <nuxt-link
@@ -139,7 +140,7 @@
 
           <div class="flex flex-col gap-2 pb-2 pl-2">
             <span
-              class="text-xs uppercase font-semibold text-base-11 border-b-1 border-base-3 pb-1">
+              class="border-b-1 border-base-3 pb-1 text-xs font-semibold uppercase text-base-11">
               Mail
             </span>
             <nuxt-link
@@ -166,7 +167,7 @@
         </div>
       </div>
 
-      <div class="h-[48px] mt-[-48px] bg-gradient-to-t from-base-1" />
+      <div class="mt-[-48px] h-[48px] from-base-1 bg-gradient-to-t" />
     </div>
   </div>
 </template>
