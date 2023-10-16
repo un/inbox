@@ -39,6 +39,7 @@ if (eeLicenseKey && appUrl) {
 }
 
 const stripeData: StripeData = {
+  //@ts-expect-error - free plan does not have any ids
   plans: {
     starter: {
       monthly: process.env.BILLING_STRIPE_PLAN_STARTER_MONTHLY_ID,

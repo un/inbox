@@ -3,6 +3,12 @@
 import Stripe from 'stripe';
 import { useStripe } from '../utils/useStripe';
 
+declare module 'h3' {
+  interface H3EventContext {
+    stripeEvent: Stripe.Event;
+  }
+}
+
 export default defineEventHandler(async (event) => {
   if (getRequestURL(event).pathname.startsWith('/stripe')) {
     const body = await readRawBody(event);
