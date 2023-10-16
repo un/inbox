@@ -37,8 +37,6 @@
   });
 
   // TODO: fix scroll bar positioning, move to right, approx 20 px (may need to move to a parent div)
-
-  const eeConfig = useRuntimeConfig().public.ee;
 </script>
 <template>
   <div
@@ -62,7 +60,9 @@
           <div>
             <span class="text-sm">Security & Passkeys</span>
           </div>
-          <nuxt-link :to="`/settings/user/lifetime`">
+          <nuxt-link
+            v-if="useEE().config.modules.billing"
+            :to="`/settings/user/lifetime`">
             <span class="text-sm">Lifetime License</span>
           </nuxt-link>
         </div>
@@ -113,7 +113,7 @@
               <span class="text-sm">Modules/features</span>
             </nuxt-link> -->
             <nuxt-link
-              v-if="eeConfig.modules.billing"
+              v-if="useEE().config.modules.billing"
               :to="`/settings/org/${settingsSelectedOrg}/setup/billing`">
               <span class="text-sm">Billing</span>
             </nuxt-link>

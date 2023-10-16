@@ -4,7 +4,7 @@ import { router, protectedProcedure } from '../trpc';
 import { useStripe } from '../../utils/useStripe';
 import { stripeBillingPeriods, stripePlanNames } from '../../types';
 import { and, eq } from '@uninbox/database/orm';
-import { orgBilling } from '@uninbox/database/schema';
+import { orgBilling, users } from '@uninbox/database/schema';
 // import {
 //   postalServers,
 //   orgPostalConfigs,
@@ -50,6 +50,7 @@ export const stripeLinksRouter = router({
           //@ts-ignore metadata not typed correctly
           metadata: {
             orgId,
+            product: 'subscription',
             plan: input.plan,
             period: input.period,
             totalUsers: input.totalOrgUsers,
@@ -69,14 +70,47 @@ export const stripeLinksRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      //const { config, db } = ctx;
-      const { stripe } = ctx;
+      const { stripe, db } = ctx;
       const { userId } = input;
 
+      const userObject = await db.read.query.users.findFirst({
+        where: eq(users.id, userId),
+        columns: {
+          metadata: true
+        }
+      });
+
+      if (!userObject) throw new Error('User not found');
+
+      let userStripeId = userObject.metadata?.stripeId as string;
+
+      if (!userStripeId) {
+        const newCustomer = await useStripe().sdk.customers.create({
+          metadata: {
+            userId
+          }
+        });
+        await db.write
+          .update(users)
+          .set({
+            metadata: {
+              stripeId: newCustomer.id
+            }
+          })
+          .where(eq(users.id, userId));
+        userStripeId = newCustomer.id;
+      }
+
+      const redirectUrl = useRuntimeConfig().appUrl;
+
       const currentLifetimeProductId = stripe.lifetime.current;
-      const paymentLink = await useStripe().sdk.paymentLinks.create({
+      const paymentLink = await useStripe().sdk.checkout.sessions.create({
+        success_url: `${redirectUrl}/settings/user/lifetime`,
+        mode: 'payment',
+        customer: userStripeId,
         metadata: {
-          userId
+          userId,
+          product: 'lifetime'
         },
         line_items: [
           {

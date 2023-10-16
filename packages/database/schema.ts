@@ -1357,7 +1357,7 @@ export const lifetimeLicensesRelations = relations(
       fields: [lifetimeLicenses.userId],
       references: [users.id]
     }),
-    org: one(orgBilling, {
+    orgBillingProfile: one(orgBilling, {
       fields: [lifetimeLicenses.orgBillingId],
       references: [orgBilling.id]
     })

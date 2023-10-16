@@ -1,5 +1,7 @@
+import { StripeBillingPeriod, StripePlanName } from './../../types';
 import { db } from '@uninbox/database';
-import { lifetimeLicenses } from '@uninbox/database/schema';
+import { eq } from '@uninbox/database/orm';
+import { lifetimeLicenses, orgBilling } from '@uninbox/database/schema';
 import { nanoId } from '@uninbox/utils';
 import Stripe from 'stripe';
 
@@ -36,13 +38,61 @@ const handleCheckoutSessionCompleted = async (stripeEvent: Stripe.Event) => {
   await db.write.insert(lifetimeLicenses).values(lifeTimeLicenceArray);
 };
 
-const handleCustomerSubscriptionUpdated = (stripeEvent: Stripe.Event) => {
+const handleCustomerSubscriptionUpdated = async (stripeEvent: Stripe.Event) => {
   const data = stripeEvent.data.object as Stripe.Subscription;
-  const metadata = data.metadata;
+  const orgsId = Number(data.metadata.orgId);
+  const subId = data.id as string;
+  const customerId = data.customer as string;
   const status = data.status;
-  const plan = data.items.data[0].plan.id;
-  const quantity = data.items.data[0].quantity;
-  console.log({ metadata, status, plan, quantity });
+  const plan = data.metadata.plan as StripePlanName;
+  const period = data.metadata.period as StripeBillingPeriod;
+  console.log({ status, plan });
+  if (status !== 'active') {
+    console.log('❌', 'Subscription not active - manual check', {
+      status,
+      subId
+    });
+    return;
+  }
+
+  if (!orgsId || !subId || !customerId || !plan || !period) {
+    console.log('❌', 'Missing data', {
+      orgsId,
+      subId,
+      customerId,
+      plan,
+      period
+    });
+    return;
+  }
+
+  const existingOrgBilling = await db.read.query.orgBilling.findFirst({
+    where: eq(orgBilling.orgId, orgsId),
+    columns: {
+      id: true
+    }
+  });
+
+  if (existingOrgBilling) {
+    await db.write
+      .update(orgBilling)
+      .set({
+        orgId: orgsId,
+        stripeCustomerId: customerId,
+        stripeSubscriptionId: subId,
+        plan: plan,
+        period: period
+      })
+      .where(eq(orgBilling.id, existingOrgBilling.id));
+  } else {
+    await db.write.insert(orgBilling).values({
+      orgId: orgsId,
+      stripeCustomerId: customerId,
+      stripeSubscriptionId: subId,
+      plan: plan,
+      period: period
+    });
+  }
 };
 
 export default eventHandler(async (event) => {

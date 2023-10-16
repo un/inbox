@@ -231,6 +231,9 @@ importers:
       '@uninbox/database':
         specifier: workspace:*
         version: link:../../../packages/database
+      '@uninbox/utils':
+        specifier: workspace:*
+        version: link:../../../packages/utils
       nitropack:
         specifier: ^2.6.3
         version: 2.6.3

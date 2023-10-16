@@ -36,7 +36,6 @@
         plan: plan,
         period: billingPeriod
       });
-    console.log({ linkData });
 
     navigateTo(linkData?.value?.subLink, {
       external: true,
@@ -44,34 +43,48 @@
     });
     loadingButton.value = '';
   }
+  const goToPortalButtonLoading = ref(false);
+  async function goToBillingPortal() {
+    goToPortalButtonLoading.value = true;
+    const { data: linkData, pending: linkPending } =
+      await $trpc.org.setup.billing.getOrgStripePortalLink.useLazyQuery({
+        orgPublicId: orgPublicId
+      });
+
+    navigateTo(linkData?.value?.portalLink, {
+      external: true,
+      open: { target: '_blank' }
+    });
+    goToPortalButtonLoading.value = false;
+  }
 </script>
 
 <template>
-  <div class="flex flex-col w-full h-full items-start p-4 gap-8">
-    <div class="flex flex-row w-full justify-between items-center">
-      <div class="flex flex-row gap-4 items-center">
+  <div class="h-full w-full flex flex-col items-start gap-8 p-4">
+    <div class="w-full flex flex-row items-center justify-between">
+      <div class="flex flex-row items-center gap-4">
         <div class="flex flex-col gap-1">
-          <span class="font-display text-2xl">Billing</span>
+          <span class="text-2xl font-display">Billing</span>
           <span class="text-sm"> Manage your organization's subscription </span>
         </div>
       </div>
     </div>
 
-    <div class="flex flex-col gap-8 w-full overflow-y-scroll">
+    <div class="w-full flex flex-col gap-8 overflow-y-scroll">
       <div
-        class="flex flex-col gap-8 w-full"
-        v-if="pending">
+        v-if="pending"
+        class="w-full flex flex-col gap-8">
         Loading
       </div>
       <div
-        class="flex flex-col gap-8 w-full"
-        v-if="error">
+        v-if="error"
+        class="w-full flex flex-col gap-8">
         {{ error }}
       </div>
-      <div class="flex flex-col gap-8 w-full">
+      <div class="w-full flex flex-col gap-8">
         <div
-          class="flex flex-row gap-8 w-full"
-          v-if="!pending">
+          v-if="!pending"
+          class="w-full flex flex-row gap-8">
           <div class="flex flex-col">
             <span class="text-sm font-medium text-base-11">Current Plan</span>
             <span class="text-2xl font-display capitalize">{{
@@ -85,16 +98,16 @@
             }}</span>
           </div>
           <div
-            class="flex flex-col"
-            v-if="orgBillingOverview?.lifetimeUsers">
+            v-if="orgBillingOverview?.lifetimeUsers"
+            class="flex flex-col">
             <span class="text-sm font-medium text-base-11">Lifetime Users</span>
             <span class="text-2xl font-display">
               {{ orgBillingOverview?.lifetimeUsers }}
             </span>
           </div>
           <div
-            class="flex flex-col"
-            v-if="orgBillingOverview?.lifetimeUsers">
+            v-if="orgBillingOverview?.lifetimeUsers"
+            class="flex flex-col">
             <span class="text-sm font-medium text-base-11">Paid Users</span>
             <span class="text-2xl font-display">
               {{
@@ -106,75 +119,75 @@
         </div>
         <div v-if="orgBillingOverview?.currentPlan === 'free'">
           <UnUiButton
+            v-if="!showPricingTable"
             label="Upgrade"
             variant="solid"
-            @click="showPricingTable = true"
-            v-if="!showPricingTable" />
+            @click="showPricingTable = true" />
           <div
             v-if="showPricingTable"
-            class="flex flex-col gap-8 items-center">
+            class="flex flex-col items-center gap-8">
             <div
-              class="flex flex-row gap-0 items-center justify-center w-fit bg-base-3 border-1 border-base-7 p-1 rounded-lg">
+              class="w-fit flex flex-row items-center justify-center gap-0 border-1 border-base-7 rounded-lg bg-base-3 p-1">
               <button
-                class="py-1 px-6 rounded-md"
+                class="rounded-md px-6 py-1"
                 :class="
                   pricingTableBillingPeriod === 'monthly'
                     ? 'bg-primary-9 border-1 border-primary-7'
                     : ''
                 "
                 @click="pricingTableBillingPeriod = 'monthly'">
-                <span class="text-xs uppercase font-semibold"> Monthly </span>
+                <span class="text-xs font-semibold uppercase"> Monthly </span>
               </button>
               <button
-                class="py-1 px-6 rounded-md"
+                class="rounded-md px-6 py-1"
                 :class="
                   pricingTableBillingPeriod === 'yearly'
                     ? 'bg-primary-9 border-1 border-primary-7'
                     : ''
                 "
                 @click="pricingTableBillingPeriod = 'yearly'">
-                <span class="text-xs uppercase font-semibold"> yearly </span>
+                <span class="text-xs font-semibold uppercase"> yearly </span>
               </button>
             </div>
-            <div class="flex flex-row flex-wrap w-full gap-8 justify-center">
+            <div class="w-full flex flex-row flex-wrap justify-center gap-8">
               <div
-                class="flex flex-col gap-8 bg-base-2 border-base-7 border-1 rounded-xl p-8 min-w-xs">
-                <span class="font-display text-xl leading-none">
+                class="min-w-xs flex flex-col gap-8 border-1 border-base-7 rounded-xl bg-base-2 p-8">
+                <span class="text-xl leading-none font-display">
                   Free Plan
                 </span>
-                <div class="flex flex-col gap-4 justify-start">
-                  <div class="flex flex-row gap-2 items-center">
+                <div class="flex flex-col justify-start gap-4">
+                  <div class="flex flex-row items-center gap-2">
                     <Icon name="ph:check-circle-fill" />
-                    <span class="text-base-12 text-sm leading-none">
+                    <span class="text-sm leading-none text-base-12">
                       Multiple users
                     </span>
                   </div>
-                  <div class="flex flex-row gap-2 items-center">
+                  <div class="flex flex-row items-center gap-2">
                     <Icon name="ph:check-circle-fill" />
-                    <span class="text-base-12 text-sm leading-none">
+                    <span class="text-sm leading-none text-base-12">
                       @uninbox.me email addresses
                     </span>
                   </div>
-                  <div class="flex flex-row gap-2 items-center">
+                  <div class="flex flex-row items-center gap-2">
                     <Icon name="ph:check-circle-fill" />
-                    <span class="text-base-12 text-sm leading-none">
+                    <span class="text-sm leading-none text-base-12">
                       Forwarding Address
                     </span>
                   </div>
-                  <div class="flex flex-row gap-2 items-center">
+                  <div class="flex flex-row items-center gap-2">
                     <Icon name="ph:check-circle-fill" />
-                    <span class="text-base-12 text-sm leading-none">
+                    <span class="text-sm leading-none text-base-12">
                       Unlimited Projects
                     </span>
                   </div>
                 </div>
-                <div class="flex flex-row gap-2 items-center">
-                  <span class="font-display text-4xl leading-none">$0</span>
+                <div class="flex flex-row items-center gap-2">
+                  <span class="text-4xl leading-none font-display">$0</span>
                   <div class="flex flex-col gap-0">
-                    <span class="leading-none text-sm font-medium text-base-11"
+                    <span class="text-sm font-medium leading-none text-base-11"
                       >per user</span
                     >
-                    <span class="leading-none text-sm font-medium text-base-11"
+                    <span class="text-sm font-medium leading-none text-base-11"
                       >per
                       {{
                         pricingTableBillingPeriod === 'yearly'
@@ -192,47 +205,47 @@
                   :disabled="true" />
               </div>
               <div
-                class="flex flex-col gap-8 bg-base-2 border-base-7 border-1 rounded-xl p-8 min-w-xs">
-                <span class="font-display text-xl leading-none">
+                class="min-w-xs flex flex-col gap-8 border-1 border-base-7 rounded-xl bg-base-2 p-8">
+                <span class="text-xl leading-none font-display">
                   Starter Plan
                 </span>
-                <div class="flex flex-col gap-4 justify-start">
-                  <div class="flex flex-row gap-2 items-center">
+                <div class="flex flex-col justify-start gap-4">
+                  <div class="flex flex-row items-center gap-2">
                     <Icon name="ph:check-circle-fill" />
-                    <span class="text-base-12 text-sm leading-none">
+                    <span class="text-sm leading-none text-base-12">
                       Everything in "Free Plan"
                     </span>
                   </div>
-                  <div class="flex flex-row gap-2 items-center">
+                  <div class="flex flex-row items-center gap-2">
                     <Icon name="ph:check-circle-fill" />
-                    <span class="text-base-12 text-sm leading-none">
+                    <span class="text-sm leading-none text-base-12">
                       User Groups
                     </span>
                   </div>
-                  <div class="flex flex-row gap-2 items-center">
+                  <div class="flex flex-row items-center gap-2">
                     <Icon name="ph:check-circle-fill" />
-                    <span class="text-base-12 text-sm leading-none">
+                    <span class="text-sm leading-none text-base-12">
                       Multiple email destinations
                     </span>
                   </div>
-                  <div class="flex flex-row gap-2 items-center">
+                  <div class="flex flex-row items-center gap-2">
                     <Icon name="ph:check-circle-fill" />
-                    <span class="text-base-12 text-sm leading-none">
+                    <span class="text-sm leading-none text-base-12">
                       1 Custom Domain
                     </span>
                   </div>
                 </div>
-                <div class="flex flex-row gap-2 items-center">
-                  <span class="font-display text-4xl leading-none"
+                <div class="flex flex-row items-center gap-2">
+                  <span class="text-4xl leading-none font-display"
                     >${{
                       pricingTableBillingPeriod === 'yearly' ? '90' : '9'
                     }}</span
                   >
                   <div class="flex flex-col gap-0">
-                    <span class="leading-none text-sm font-medium text-base-11"
+                    <span class="text-sm font-medium leading-none text-base-11"
                       >per user</span
                     >
-                    <span class="leading-none text-sm font-medium text-base-11"
+                    <span class="text-sm font-medium leading-none text-base-11"
                       >per
                       {{
                         pricingTableBillingPeriod === 'yearly'
@@ -250,47 +263,47 @@
                   @click="subscribeToPlan('starter')" />
               </div>
               <div
-                class="flex flex-col gap-8 bg-base-2 border-base-7 border-1 rounded-xl p-8 min-w-xs">
-                <span class="font-display text-xl leading-none">
+                class="min-w-xs flex flex-col gap-8 border-1 border-base-7 rounded-xl bg-base-2 p-8">
+                <span class="text-xl leading-none font-display">
                   Pro Plan
                 </span>
-                <div class="flex flex-col gap-4 justify-start">
-                  <div class="flex flex-row gap-2 items-center">
+                <div class="flex flex-col justify-start gap-4">
+                  <div class="flex flex-row items-center gap-2">
                     <Icon name="ph:check-circle-fill" />
-                    <span class="text-base-12 text-sm leading-none">
+                    <span class="text-sm leading-none text-base-12">
                       Everything in "Starter Plan"
                     </span>
                   </div>
-                  <div class="flex flex-row gap-2 items-center">
+                  <div class="flex flex-row items-center gap-2">
                     <Icon name="ph:check-circle-fill" />
-                    <span class="text-base-12 text-sm leading-none">
+                    <span class="text-sm leading-none text-base-12">
                       Catch-all Address
                     </span>
                   </div>
-                  <div class="flex flex-row gap-2 items-center">
+                  <div class="flex flex-row items-center gap-2">
                     <Icon name="ph:check-circle-fill" />
-                    <span class="text-base-12 text-sm leading-none">
+                    <span class="text-sm leading-none text-base-12">
                       Unlimited Projects
                     </span>
                   </div>
-                  <div class="flex flex-row gap-2 items-center">
+                  <div class="flex flex-row items-center gap-2">
                     <Icon name="ph:check-circle-fill" />
-                    <span class="text-base-12 text-sm leading-none">
+                    <span class="text-sm leading-none text-base-12">
                       Unlimited Custom Domains
                     </span>
                   </div>
                 </div>
-                <div class="flex flex-row gap-2 items-center">
-                  <span class="font-display text-4xl leading-none"
+                <div class="flex flex-row items-center gap-2">
+                  <span class="text-4xl leading-none font-display"
                     >${{
                       pricingTableBillingPeriod === 'yearly' ? '120' : '12'
                     }}</span
                   >
                   <div class="flex flex-col gap-0">
-                    <span class="leading-none text-sm font-medium text-base-11"
+                    <span class="text-sm font-medium leading-none text-base-11"
                       >per user</span
                     >
-                    <span class="leading-none text-sm font-medium text-base-11"
+                    <span class="text-sm font-medium leading-none text-base-11"
                       >per
                       {{
                         pricingTableBillingPeriod === 'yearly'
@@ -321,7 +334,9 @@
         <div v-if="orgBillingOverview?.currentPlan !== 'free'">
           <UnUiButton
             label="Manage Billing"
-            variant="solid" />
+            variant="solid"
+            :loading="goToPortalButtonLoading"
+            @click="goToBillingPortal()" />
         </div>
       </div>
     </div>

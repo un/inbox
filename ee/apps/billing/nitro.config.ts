@@ -60,6 +60,7 @@ export default defineNitroConfig({
   runtimeConfig: {
     url: process.env.BILLING_URL,
     key: process.env.BILLING_KEY,
+    appUrl: process.env.WEBAPP_URL,
     stripe: stripeData
     // stripeKey: process.env.BILLING_STRIPE_KEY
   }
