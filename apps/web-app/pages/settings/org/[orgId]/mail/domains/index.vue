@@ -119,20 +119,38 @@
     navigateTo(`/settings/org/${orgPublicId}/mail/domains/${row.domainId}`);
   }
   const selected = ref<typeof tableRows.value>([]);
+
+  const canAddDomain = ref<boolean | null | undefined>(null);
+  const canAddDomainAllowedPlans = ref<string[]>();
+
+  if (useEE().config.modules.billing) {
+    console.log('checking if can use feature');
+    const { data: canUseFeature } =
+      await $trpc.org.setup.billing.canUseFeature.useLazyQuery(
+        {
+          orgPublicId: orgPublicId,
+          feature: 'customDomains'
+        },
+        { server: false }
+      );
+
+    canAddDomain.value = canUseFeature.value?.canUse;
+    canAddDomainAllowedPlans.value = canUseFeature.value?.allowedPlans;
+  }
 </script>
 
 <template>
-  <div class="flex flex-col w-full h-full items-start p-4 gap-8">
-    <div class="flex flex-row w-full justify-between items-center">
-      <div class="flex flex-row gap-4 items-center">
+  <div class="h-full w-full flex flex-col items-start gap-8 p-4">
+    <div class="w-full flex flex-row items-center justify-between">
+      <div class="flex flex-row items-center gap-4">
         <div class="flex flex-col gap-1">
-          <span class="font-display text-2xl">Domains</span>
+          <span class="text-2xl font-display">Domains</span>
           <span class="text-sm">Manage your organizations domains</span>
         </div>
       </div>
-      <div class="flex flex-row gap-4 items-center">
+      <div class="flex flex-row items-center gap-4">
         <button
-          class="flex flex-row gap-2 p-2 border-1 rounded items-center justify-center border-base-7 bg-base-3 max-w-80"
+          class="max-w-80 flex flex-row items-center justify-center gap-2 border-1 border-base-7 rounded bg-base-3 p-2"
           @click="showNewModal = !showNewModal">
           <icon
             name="ph-plus"
@@ -142,8 +160,8 @@
       </div>
     </div>
     <div
-      class="flex flex-col gap-4 w-full"
-      v-if="showNewModal">
+      v-if="showNewModal && canAddDomain"
+      class="w-full flex flex-col gap-4">
       <span class="text-xl font-semibold">Add a new domain</span>
       <UnUiInput
         v-model:value="newDomainNameValue"
@@ -160,12 +178,22 @@
         @click="createNewDomain()" />
       <div
         v-if="newDomainResponseError"
-        class="bg-red-3 w-fit px-4 py-1 rounded-lg">
+        class="w-fit rounded-lg bg-red-3 px-4 py-1">
         {{ newDomainResponseError }}
       </div>
     </div>
-    <div class="flex flex-col gap-8 w-full overflow-y-scroll">
-      <div class="flex flex-col gap-8 w-full">
+    <div
+      v-if="showNewModal && !canAddDomain"
+      class="w-full flex flex-col gap-4">
+      <span class="text-xl font-semibold">Add a new domain</span>
+      <span
+        >Sorry, your current billing plan does not support adding custom
+        domains.</span
+      >
+      <span>Supported plans are: {{ canAddDomainAllowedPlans }}</span>
+    </div>
+    <div class="w-full flex flex-col gap-8 overflow-y-scroll">
+      <div class="w-full flex flex-col gap-8">
         <UnUiTable
           :columns="tableColumns"
           :rows="tableRows"
@@ -174,9 +202,9 @@
           @select="select">
           <template #status-data="{ row }">
             <div
-              class="py-1 px-4 rounded-full w-fit"
+              class="w-fit rounded-full px-4 py-1"
               :class="row.status === 'active' ? 'bg-grass-5' : 'bg-red-5'">
-              <span class="uppercase text-xs">{{ row.status }}</span>
+              <span class="text-xs uppercase">{{ row.status }}</span>
             </div>
           </template>
           <template #domain-data="{ row }">
@@ -186,15 +214,15 @@
           </template>
           <template #sendingMode-data="{ row }">
             <div
-              class="py-1 px-4 rounded-full w-fit"
+              class="w-fit rounded-full px-4 py-1"
               :class="row.sendingMode === 'native' ? 'bg-grass-5' : 'bg-red-5'">
-              <span class="uppercase text-xs">{{ row.sendingMode }}</span>
+              <span class="text-xs uppercase">{{ row.sendingMode }}</span>
             </div>
           </template>
 
           <template #receivingMode-data="{ row }">
             <div
-              class="py-1 px-4 rounded-full w-fit"
+              class="w-fit rounded-full px-4 py-1"
               :class="
                 row.receivingMode === 'native'
                   ? 'bg-grass-5'
@@ -202,7 +230,7 @@
                   ? 'bg-orange-5'
                   : 'bg-red-5'
               ">
-              <span class="uppercase text-xs">{{ row.receivingMode }}</span>
+              <span class="text-xs uppercase">{{ row.receivingMode }}</span>
             </div>
           </template>
         </UnUiTable>

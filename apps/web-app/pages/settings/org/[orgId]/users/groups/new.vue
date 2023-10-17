@@ -40,12 +40,30 @@
       );
     }, 1500);
   }
+
+  const canAddUserGroup = ref<boolean | null | undefined>(null);
+  const canAddUserGroupAllowedPlans = ref<string[]>();
+
+  if (useEE().config.modules.billing) {
+    console.log('checking if can use feature');
+    const { data: canUseFeature } =
+      await $trpc.org.setup.billing.canUseFeature.useLazyQuery(
+        {
+          orgPublicId: orgPublicId,
+          feature: 'userGroups'
+        },
+        { server: false }
+      );
+
+    canAddUserGroup.value = canUseFeature.value?.canUse;
+    canAddUserGroupAllowedPlans.value = canUseFeature.value?.allowedPlans;
+  }
 </script>
 
 <template>
-  <div class="flex flex-col w-full h-full items-start p-4 gap-8">
-    <div class="flex flex-row w-full justify-between items-center">
-      <div class="flex flex-row gap-4 items-center">
+  <div class="h-full w-full flex flex-col items-start gap-8 p-4">
+    <div class="w-full flex flex-row items-center justify-between">
+      <div class="flex flex-row items-center gap-4">
         <UnUiTooltip text="Back to domains">
           <icon
             name="ph-arrow-left"
@@ -53,86 +71,96 @@
             @click="navigateTo('./')" />
         </UnUiTooltip>
         <div class="flex flex-col gap-1">
-          <span class="font-display text-2xl">Add a new Group</span>
+          <span class="text-2xl font-display">Add a new Group</span>
         </div>
       </div>
     </div>
-    <div class="flex flex-col gap-4">
+    <div
+      v-if="!canAddUserGroup"
+      class="w-full flex flex-col gap-4">
+      <span>
+        Sorry, your current billing plan does not support adding user groups.
+      </span>
+      <span>Supported plans are: {{ canAddUserGroupAllowedPlans }}</span>
+    </div>
+    <div
+      v-if="canAddUserGroup"
+      class="flex flex-col gap-4">
       <UnUiInput
-        label="Group Name"
-        :schema="z.string().min(2)"
         v-model:value="newGroupNameValue"
-        v-model:valid="newGroupNameValid" />
+        v-model:valid="newGroupNameValid"
+        label="Group Name"
+        :schema="z.string().min(2)" />
       <UnUiInput
+        v-model:value="newGroupDescriptionValue"
         label="Description"
-        :schema="z.string().optional()"
-        v-model:value="newGroupDescriptionValue" />
+        :schema="z.string().optional()" />
       <div class="flex flex-col gap-1">
         <span class="text-sm">Group Color</span>
         <div class="flex flex-row gap-2">
           <div
-            class="w-8 h-8 bg-red-9 cursor-pointer rounded text-white p-1"
+            class="h-8 w-8 cursor-pointer rounded bg-red-9 p-1 text-white"
             @click="newGroupColorValue = 'red'">
             <icon
+              v-if="newGroupColorValue === 'red'"
               name="ph:check-bold"
-              size="24"
-              v-if="newGroupColorValue === 'red'" />
+              size="24" />
           </div>
           <div
-            class="w-8 h-8 bg-pink-9 cursor-pointer rounded text-white p-1"
+            class="h-8 w-8 cursor-pointer rounded bg-pink-9 p-1 text-white"
             @click="newGroupColorValue = 'pink'">
             <icon
+              v-if="newGroupColorValue === 'pink'"
               name="ph:check-bold"
-              size="24"
-              v-if="newGroupColorValue === 'pink'" />
+              size="24" />
           </div>
           <div
-            class="w-8 h-8 bg-purple-9 cursor-pointer rounded text-white p-1"
+            class="h-8 w-8 cursor-pointer rounded bg-purple-9 p-1 text-white"
             @click="newGroupColorValue = 'purple'">
             <icon
+              v-if="newGroupColorValue === 'purple'"
               name="ph:check-bold"
-              size="24"
-              v-if="newGroupColorValue === 'purple'" />
+              size="24" />
           </div>
           <div
-            class="w-8 h-8 bg-blue-9 cursor-pointer rounded text-white p-1"
+            class="h-8 w-8 cursor-pointer rounded bg-blue-9 p-1 text-white"
             @click="newGroupColorValue = 'blue'">
             <icon
+              v-if="newGroupColorValue === 'blue'"
               name="ph:check-bold"
-              size="24"
-              v-if="newGroupColorValue === 'blue'" />
+              size="24" />
           </div>
           <div
-            class="w-8 h-8 bg-cyan-9 cursor-pointer rounded text-white p-1"
+            class="h-8 w-8 cursor-pointer rounded bg-cyan-9 p-1 text-white"
             @click="newGroupColorValue = 'cyan'">
             <icon
+              v-if="newGroupColorValue === 'cyan'"
               name="ph:check-bold"
-              size="24"
-              v-if="newGroupColorValue === 'cyan'" />
+              size="24" />
           </div>
           <div
-            class="w-8 h-8 bg-green-9 cursor-pointer rounded text-white p-1"
+            class="h-8 w-8 cursor-pointer rounded bg-green-9 p-1 text-white"
             @click="newGroupColorValue = 'green'">
             <icon
+              v-if="newGroupColorValue === 'green'"
               name="ph:check-bold"
-              size="24"
-              v-if="newGroupColorValue === 'green'" />
+              size="24" />
           </div>
           <div
-            class="w-8 h-8 bg-orange-9 cursor-pointer rounded text-white p-1"
+            class="h-8 w-8 cursor-pointer rounded bg-orange-9 p-1 text-white"
             @click="newGroupColorValue = 'orange'">
             <icon
+              v-if="newGroupColorValue === 'orange'"
               name="ph:check-bold"
-              size="24"
-              v-if="newGroupColorValue === 'orange'" />
+              size="24" />
           </div>
           <div
-            class="w-8 h-8 bg-yellow-9 cursor-pointer rounded text-white p-1"
+            class="h-8 w-8 cursor-pointer rounded bg-yellow-9 p-1 text-white"
             @click="newGroupColorValue = 'yellow'">
             <icon
+              v-if="newGroupColorValue === 'yellow'"
               name="ph:check-bold"
-              size="24"
-              v-if="newGroupColorValue === 'yellow'" />
+              size="24" />
           </div>
         </div>
       </div>

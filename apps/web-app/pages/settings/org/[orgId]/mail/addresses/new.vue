@@ -21,9 +21,20 @@
   const buttonLoading = ref(false);
 
   const formValid = computed(() => {
+    if (canUseMultipleDesinations.value === false) {
+      return (
+        newIdentityUsernameValid.value === true &&
+        newIdentitySendNameValid.value === true &&
+        newIdentityDomainName.value.length > 0 &&
+        (newIdentityRouteToGroupsPublicIds.value.length > 0 ||
+          newIdentityRouteToUsersOrgMemberPublicIds.value.length > 0) &&
+        !multipleDestinationsSelected.value
+      );
+    }
     return (
       newIdentityUsernameValid.value === true &&
       newIdentitySendNameValid.value === true &&
+      newIdentityDomainName.value.length > 0 &&
       (newIdentityRouteToGroupsPublicIds.value.length > 0 ||
         newIdentityRouteToUsersOrgMemberPublicIds.value.length > 0)
     );
@@ -98,13 +109,51 @@
       );
     }, 1500);
   }
+
+  const canUseCatchAll = ref<boolean | null | undefined>(null);
+  const canUseCatchAllAllowedPlans = ref<string[]>();
+  const canUseMultipleDesinations = ref<boolean | null | undefined>(null);
+  const canUseMultipleDesinationsAllowedPlans = ref<string[]>();
+  const multipleDestinationsSelected = computed(() => {
+    return (
+      newIdentityRouteToGroupsPublicIds.value.length +
+        newIdentityRouteToUsersOrgMemberPublicIds.value.length >
+      1
+    );
+  });
+
+  if (useEE().config.modules.billing) {
+    console.log('checking if can use feature');
+    const { data: canUseCatch } =
+      await $trpc.org.setup.billing.canUseFeature.useLazyQuery(
+        {
+          orgPublicId: orgPublicId,
+          feature: 'userGroups'
+        },
+        { server: false }
+      );
+    const { data: canUseDestinations } =
+      await $trpc.org.setup.billing.canUseFeature.useLazyQuery(
+        {
+          orgPublicId: orgPublicId,
+          feature: 'multiDestinationEmails'
+        },
+        { server: false }
+      );
+
+    canUseCatchAll.value = canUseCatch.value?.canUse;
+    canUseCatchAllAllowedPlans.value = canUseCatch.value?.allowedPlans;
+    canUseMultipleDesinations.value = canUseDestinations.value?.canUse;
+    canUseMultipleDesinationsAllowedPlans.value =
+      canUseDestinations.value?.allowedPlans;
+  }
 </script>
 
 <template>
   <div
-    class="flex flex-col w-full h-full items-start p-4 gap-8 overflow-y-scroll">
-    <div class="flex flex-row w-full justify-between items-center">
-      <div class="flex flex-row gap-4 items-center">
+    class="h-full w-full flex flex-col items-start gap-8 overflow-y-scroll p-4">
+    <div class="w-full flex flex-row items-center justify-between">
+      <div class="flex flex-row items-center gap-4">
         <UnUiTooltip text="Back to Email Address list">
           <icon
             name="ph-arrow-left"
@@ -112,26 +161,28 @@
             @click="navigateTo('./')" />
         </UnUiTooltip>
         <div class="flex flex-col gap-1">
-          <span class="font-display text-2xl">Add a new Email Address</span>
+          <span class="text-2xl font-display">Add a new Email Address</span>
         </div>
       </div>
     </div>
 
-    <div class="flex flex-col gap-8 w-full">
-      <div class="flex flex-col gap-4 w-full">
+    <div class="w-full flex flex-col gap-8">
+      <div class="w-full flex flex-col gap-4">
         <div class="w-full border-b-1 border-base-6">
-          <span class="font-medium uppercase text-base-11 text-sm">
+          <span class="text-sm font-medium uppercase text-base-11">
             Email Address
           </span>
         </div>
         <UnUiInput
+          v-model:value="newIdentitySendNameValue"
+          v-model:valid="newIdentitySendNameValid"
           label="Send Name"
           :schema="z.string().min(2).max(64)"
-          :helper="`The name that will appear in the 'From' field of emails sent from this address`"
-          v-model:value="newIdentitySendNameValue"
-          v-model:valid="newIdentitySendNameValid" />
-        <div class="flex flex-row gap-4 items-center flex-wrap">
+          :helper="`The name that will appear in the 'From' field of emails sent from this address`" />
+        <div class="flex flex-row flex-wrap items-center gap-4">
           <UnUiInput
+            v-model:value="newIdentityUsernameValue"
+            v-model:valid="newIdentityUsernameValid"
             label="Address"
             :schema="
               z
@@ -141,16 +192,20 @@
                 .regex(/^[a-zA-Z0-9]*$/, {
                   message: 'Only letters and numbers'
                 })
-            "
-            v-model:value="newIdentityUsernameValue"
-            v-model:valid="newIdentityUsernameValid" />
+            " />
 
           <div class="flex flex-col gap-1">
-            <div class="flex flex-row gap-2 items-end">
-              <span class="text-sm font-medium text-base-12">Catch-all</span>
+            <div class="flex flex-row items-end gap-2">
+              <span class="text-sm font-medium text-base-12"
+                >Catch-all{{ canUseCatchAll ? '' : ' (Disabled)' }}</span
+              >
               <UnUiTooltip
-                text="If an email is sent to an address that does not exist, it will be delivered here"
-                class="leading-none max-h-[16px]">
+                :text="
+                  canUseCatchAll
+                    ? 'If an email is sent to an address that does not exist, it will be delivered here'
+                    : 'Catch-all is not available on your current billing plan'
+                "
+                class="max-h-[16px] leading-none">
                 <icon
                   name="ph:info"
                   size="16"
@@ -158,9 +213,19 @@
               </UnUiTooltip>
             </div>
             <button
-              @click="newIdentityCatchAll = !newIdentityCatchAll"
-              class="px-2 py-2 rounded-lg flex flex-row gap-2 items-center w-fit"
-              :class="newIdentityCatchAll ? 'bg-primary-9' : 'bg-base-5'">
+              class="w-fit flex flex-row items-center gap-2 rounded-lg px-2 py-2"
+              :class="
+                canUseCatchAll
+                  ? newIdentityCatchAll
+                    ? 'bg-primary-9'
+                    : 'bg-base-5'
+                  : 'opacity-50 cursor-not-allowed disabled'
+              "
+              @click="
+                canUseCatchAll
+                  ? (newIdentityCatchAll = !newIdentityCatchAll)
+                  : null
+              ">
               <icon
                 :name="newIdentityCatchAll ? 'ph:check-bold' : 'ph:x-bold'"
                 size="16" />
@@ -173,22 +238,27 @@
             <icon name="svg-spinners:3-dots-fade" /> Loading Domains
           </span>
           <div
-            class="flex flex-row gap-8 flex-wrap"
-            v-if="!orgDomainsPending">
-            <div v-for="domain of orgDomainsData?.domainData">
+            v-if="!orgDomainsPending"
+            class="flex flex-row flex-wrap gap-8">
+            <span v-if="orgDomainsData?.domainData?.length === 0">
+              No Domains Found
+            </span>
+            <div
+              v-for="domain of orgDomainsData?.domainData"
+              :key="domain.publicId">
               <div
-                class="flex flex-row bg-base-2 p-1 rounded-xl items-center w-fit gap-4">
+                class="w-fit flex flex-row items-center gap-4 rounded-xl bg-base-2 p-1">
                 <span class="font-mono">
                   {{ domain.domain }}
                 </span>
                 <button
-                  @click="setActiveDomain(domain.publicId)"
-                  class="px-2 py-2 rounded-lg flex flex-row gap-2 items-center"
+                  class="flex flex-row items-center gap-2 rounded-lg px-2 py-2"
                   :class="
                     newIdentityDomainPublicId === domain.publicId
                       ? 'bg-primary-9'
                       : 'bg-base-5'
-                  ">
+                  "
+                  @click="setActiveDomain(domain.publicId)">
                   <icon
                     :name="
                       newIdentityDomainPublicId === domain.publicId
@@ -205,7 +275,7 @@
 
       <div class="flex flex-col gap-4">
         <div class="w-full border-b-1 border-base-6">
-          <span class="font-medium uppercase text-base-11 text-sm">
+          <span class="text-sm font-medium uppercase text-base-11">
             Deliver messages to
           </span>
         </div>
@@ -216,12 +286,17 @@
             <icon name="svg-spinners:3-dots-fade" /> Loading User Groups
           </span>
           <div
-            class="flex flex-row gap-4 flex-wrap"
-            v-if="!orgUserGroupPending">
-            <template v-for="group of orgUserGroupsData?.groups">
+            v-if="!orgUserGroupPending"
+            class="flex flex-row flex-wrap gap-4">
+            <span v-if="orgUserGroupsData?.groups.length === 0">
+              No Groups Found
+            </span>
+            <template
+              v-for="group of orgUserGroupsData?.groups"
+              :key="group.publicId">
               <div
-                class="flex flex-row gap-8 bg-base-2 p-2 rounded-xl items-center">
-                <div class="flex flex-row gap-4 items-center">
+                class="flex flex-row items-center gap-8 rounded-xl bg-base-2 p-2">
+                <div class="flex flex-row items-center gap-4">
                   <UnUiAvatar
                     :avatar-id="group.avatarId || ''"
                     :name="group.name"
@@ -236,16 +311,16 @@
                   </div>
                 </div>
                 <button
-                  @click="
-                    newIdentityRouteToGroupsPublicIds.includes(group.publicId)
-                      ? removeUserGroupFromRoute(group.publicId)
-                      : addUserGroupToRoute(group.publicId)
-                  "
-                  class="px-2 py-2 rounded-lg flex flex-row gap-2 items-center"
+                  class="flex flex-row items-center gap-2 rounded-lg px-2 py-2"
                   :class="
                     newIdentityRouteToGroupsPublicIds.includes(group.publicId)
                       ? 'bg-primary-9'
                       : 'bg-base-5'
+                  "
+                  @click="
+                    newIdentityRouteToGroupsPublicIds.includes(group.publicId)
+                      ? removeUserGroupFromRoute(group.publicId)
+                      : addUserGroupToRoute(group.publicId)
                   ">
                   <icon
                     :name="
@@ -266,12 +341,14 @@
             <icon name="svg-spinners:3-dots-fade" /> Loading Users
           </span>
           <div
-            class="flex flex-row gap-4 flex-wrap"
-            v-if="!orgMembersPending">
-            <template v-for="member of orgMembersData?.members">
+            v-if="!orgMembersPending"
+            class="flex flex-row flex-wrap gap-4">
+            <template
+              v-for="member of orgMembersData?.members"
+              :key="member.publicId">
               <div
-                class="flex flex-row gap-8 bg-base-2 p-2 rounded-xl items-center">
-                <div class="flex flex-row gap-4 items-center">
+                class="flex flex-row items-center gap-8 rounded-xl bg-base-2 p-2">
+                <div class="flex flex-row items-center gap-4">
                   <UnUiAvatar
                     :avatar-id="member.profile?.avatarId || ''"
                     :name="
@@ -279,7 +356,7 @@
                     "
                     size="xs" />
                   <div class="flex flex-col gap-1">
-                    <div class="flex flex-row gap-1 items-center h-[16px]">
+                    <div class="h-[16px] flex flex-row items-center gap-1">
                       <span class="font-semibold leading-none">
                         {{
                           member.profile?.firstName +
@@ -288,9 +365,9 @@
                         }}
                       </span>
                       <UnUiTooltip
+                        v-if="member.role === 'admin'"
                         text="Organization Admin"
-                        class="h-[16px] w-[16px]"
-                        v-if="member.role === 'admin'">
+                        class="h-[16px] w-[16px]">
                         <icon
                           name="ph:crown"
                           class="text-yellow-8"
@@ -306,20 +383,20 @@
                   </div>
                 </div>
                 <button
-                  @click="
-                    newIdentityRouteToUsersOrgMemberPublicIds.includes(
-                      member.publicId
-                    )
-                      ? removeUserFromRoute(member.publicId)
-                      : addUserToRoute(member.publicId)
-                  "
-                  class="px-2 py-2 rounded-lg flex flex-row gap-2 items-center"
+                  class="flex flex-row items-center gap-2 rounded-lg px-2 py-2"
                   :class="
                     newIdentityRouteToUsersOrgMemberPublicIds.includes(
                       member.publicId
                     )
                       ? 'bg-primary-9'
                       : 'bg-base-5'
+                  "
+                  @click="
+                    newIdentityRouteToUsersOrgMemberPublicIds.includes(
+                      member.publicId
+                    )
+                      ? removeUserFromRoute(member.publicId)
+                      : addUserToRoute(member.publicId)
                   ">
                   <icon
                     :name="
@@ -336,6 +413,12 @@
           </div>
         </div>
       </div>
+      <span
+        v-if="!canUseMultipleDesinations && multipleDestinationsSelected"
+        class="rounded bg-red-9 p-2 text-sm font-bold text-white">
+        You can only deliver messages to one single destination on your current
+        plan
+      </span>
       <UnUiButton
         icon="ph:plus"
         :label="buttonLabel"

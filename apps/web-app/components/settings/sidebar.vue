@@ -23,7 +23,7 @@
     {
       onlyAdmin: true
     },
-    { server: false }
+    { server: false, queryKey: 'getUserOrgsSidebar' }
   );
 
   watch(userOrgs, (newVal) => {
@@ -37,6 +37,7 @@
   });
 
   // TODO: fix scroll bar positioning, move to right, approx 20 px (may need to move to a parent div)
+  const eeBilling = useEE().config.modules.billing;
 </script>
 <template>
   <div
@@ -48,20 +49,20 @@
           <span class="text-lg font-display">Personal</span>
         </div>
         <div class="flex flex-col gap-2 pl-2">
-          <div>
+          <!-- <div>
             <span class="text-sm">Account</span>
-          </div>
+          </div> -->
           <div>
-            <span class="text-sm">Profiles</span>
+            <span class="text-sm">Profile</span>
           </div>
           <div>
             <span class="text-sm">Personal Addresses</span>
           </div>
-          <div>
+          <!-- <div>
             <span class="text-sm">Security & Passkeys</span>
-          </div>
+          </div> -->
           <nuxt-link
-            v-if="useEE().config.modules.billing"
+            v-if="eeBilling"
             :to="`/settings/user/lifetime`">
             <span class="text-sm">Lifetime License</span>
           </nuxt-link>
@@ -100,6 +101,23 @@
               :is-active="settingsSelectedOrg === org.org.publicId"
               @click="settingsSelectedOrg = org.org.publicId" />
           </div>
+        </div>
+        <div
+          v-if="!pending"
+          class="flex flex-col gap-8">
+          <nuxt-link
+            class="max-w-full w-full flex flex-row items-center justify-start gap-2 overflow-hidden rounded bg-base-2 p-2 pl-4 hover:bg-base-4"
+            to="/settings/org/new">
+            <icon
+              name="ph-plus"
+              size="16" />
+
+            <span class="text-xs font-medium">Create New Org</span>
+          </nuxt-link>
+        </div>
+        <div
+          v-if="userHasAdminOrgs && !pending"
+          class="flex flex-col gap-8">
           <div class="flex flex-col gap-2 pb-2 pl-2">
             <span
               class="border-b-1 border-base-3 pb-1 text-xs font-semibold uppercase text-base-11">
@@ -113,7 +131,7 @@
               <span class="text-sm">Modules/features</span>
             </nuxt-link> -->
             <nuxt-link
-              v-if="useEE().config.modules.billing"
+              v-if="eeBilling"
               :to="`/settings/org/${settingsSelectedOrg}/setup/billing`">
               <span class="text-sm">Billing</span>
             </nuxt-link>
@@ -151,10 +169,10 @@
               :to="`/settings/org/${settingsSelectedOrg}/mail/addresses`">
               <span class="text-sm">Email Addresses</span>
             </nuxt-link>
-            <nuxt-link
+            <!-- <nuxt-link
               :to="`/settings/org/${settingsSelectedOrg}/mail/addresses`">
               <span class="text-sm">Routing Rules</span>
-            </nuxt-link>
+            </nuxt-link> -->
             <!-- <nuxt-link
               :to="`/settings/org/${settingsSelectedOrg}/mail/addresses`">
               <span class="text-sm">External identities</span>
