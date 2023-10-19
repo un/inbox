@@ -13,13 +13,6 @@
   const buttonLabel = ref('Add Domain');
   const pageError = ref(false);
   const newDomainNameValid = ref<boolean | 'remote' | null>(null);
-  const newDomainNameValue = ref('');
-  const newDomainNameValidationMessage = ref('');
-  const newDomainResponseError = ref('');
-  const newDomainPublicId = ref('');
-  const formValid = computed(() => {
-    return newDomainNameValid.value === true;
-  });
 
   const orgPublicId = useRoute().params.orgId as string;
 
@@ -90,53 +83,10 @@
     // { immediate: true }
   );
 
-  async function createNewDomain() {
-    if (newDomainNameValid.value === false) return;
-    buttonLoading.value = true;
-    buttonLabel.value = 'Creating domain...';
-    const newDomainResponse =
-      await $trpc.org.mail.domains.createNewDomain.mutate({
-        orgPublicId: orgPublicId,
-        domainName: newDomainNameValue.value
-      });
-
-    if (newDomainResponse.error) {
-      buttonLoading.value = false;
-      buttonLabel.value = 'Add Domain';
-      newDomainNameValid.value = false;
-      newDomainResponseError.value = newDomainResponse.error;
-      return;
-    }
-    buttonLoading.value = false;
-    buttonLabel.value = 'All done';
-
-    navigateTo(
-      `/settings/org/${orgPublicId}/mail/domains/${newDomainResponse.domainId}/?new=true`
-    );
-  }
-
   function select(row: (typeof tableRows.value)[number]) {
     navigateTo(`/settings/org/${orgPublicId}/mail/domains/${row.domainId}`);
   }
   const selected = ref<typeof tableRows.value>([]);
-
-  const canAddDomain = ref<boolean | null | undefined>(null);
-  const canAddDomainAllowedPlans = ref<string[]>();
-
-  if (useEE().config.modules.billing) {
-    console.log('checking if can use feature');
-    const { data: canUseFeature } =
-      await $trpc.org.setup.billing.canUseFeature.useLazyQuery(
-        {
-          orgPublicId: orgPublicId,
-          feature: 'customDomains'
-        },
-        { server: false }
-      );
-
-    canAddDomain.value = canUseFeature.value?.canUse;
-    canAddDomainAllowedPlans.value = canUseFeature.value?.allowedPlans;
-  }
 </script>
 
 <template>
@@ -151,46 +101,13 @@
       <div class="flex flex-row items-center gap-4">
         <button
           class="max-w-80 flex flex-row items-center justify-center gap-2 border-1 border-base-7 rounded bg-base-3 p-2"
-          @click="showNewModal = !showNewModal">
+          @click="navigateTo(`/settings/org/${orgPublicId}/mail/domains/new`)">
           <icon
             name="ph-plus"
             size="20" />
           <p class="text-sm">Add new</p>
         </button>
       </div>
-    </div>
-    <div
-      v-if="showNewModal && canAddDomain"
-      class="w-full flex flex-col gap-4">
-      <span class="text-xl font-semibold">Add a new domain</span>
-      <UnUiInput
-        v-model:value="newDomainNameValue"
-        v-model:valid="newDomainNameValid"
-        v-model:validationMessage="newDomainNameValidationMessage"
-        label="Domain name"
-        placeholder=""
-        :schema="z.string().min(4).includes('.')" />
-      <UnUiButton
-        :label="buttonLabel"
-        :loading="buttonLoading"
-        :disabled="!formValid"
-        size="sm"
-        @click="createNewDomain()" />
-      <div
-        v-if="newDomainResponseError"
-        class="w-fit rounded-lg bg-red-3 px-4 py-1">
-        {{ newDomainResponseError }}
-      </div>
-    </div>
-    <div
-      v-if="showNewModal && !canAddDomain"
-      class="w-full flex flex-col gap-4">
-      <span class="text-xl font-semibold">Add a new domain</span>
-      <span
-        >Sorry, your current billing plan does not support adding custom
-        domains.</span
-      >
-      <span>Supported plans are: {{ canAddDomainAllowedPlans }}</span>
     </div>
     <div class="w-full flex flex-col gap-8 overflow-y-scroll">
       <div class="w-full flex flex-col gap-8">

@@ -52,18 +52,18 @@
           <!-- <div>
             <span class="text-sm">Account</span>
           </div> -->
-          <div>
+          <NuxtLink to="/settings/user/profiles">
             <span class="text-sm">Profile</span>
-          </div>
-          <div>
+          </NuxtLink>
+          <NuxtLink to="/settings/user/addresses">
             <span class="text-sm">Personal Addresses</span>
-          </div>
+          </NuxtLink>
           <!-- <div>
             <span class="text-sm">Security & Passkeys</span>
           </div> -->
           <nuxt-link
             v-if="eeBilling"
-            :to="`/settings/user/lifetime`">
+            to="/settings/user/lifetime">
             <span class="text-sm">Lifetime License</span>
           </nuxt-link>
         </div>

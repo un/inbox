@@ -43,8 +43,10 @@
 
   const canAddUserGroup = ref<boolean | null | undefined>(null);
   const canAddUserGroupAllowedPlans = ref<string[]>();
+  const dataPending = ref(true);
 
   if (useEE().config.modules.billing) {
+    dataPending.value = true;
     console.log('checking if can use feature');
     const { data: canUseFeature } =
       await $trpc.org.setup.billing.canUseFeature.useLazyQuery(
@@ -57,6 +59,10 @@
 
     canAddUserGroup.value = canUseFeature.value?.canUse;
     canAddUserGroupAllowedPlans.value = canUseFeature.value?.allowedPlans;
+    dataPending.value = false;
+  } else {
+    dataPending.value = false;
+    canAddUserGroup.value = true;
   }
 </script>
 
@@ -76,7 +82,15 @@
       </div>
     </div>
     <div
-      v-if="!canAddUserGroup"
+      v-if="dataPending"
+      class="w-full flex flex-row justify-center gap-4 rounded-xl rounded-tl-2xl bg-base-3 p-8">
+      <icon
+        name="svg-spinners:3-dots-fade"
+        size="24" />
+      <span>Checking groups</span>
+    </div>
+    <div
+      v-if="!dataPending && !canAddUserGroup"
       class="w-full flex flex-col gap-4">
       <span>
         Sorry, your current billing plan does not support adding user groups.
@@ -84,7 +98,7 @@
       <span>Supported plans are: {{ canAddUserGroupAllowedPlans }}</span>
     </div>
     <div
-      v-if="canAddUserGroup"
+      v-if="!dataPending && canAddUserGroup"
       class="flex flex-col gap-4">
       <UnUiInput
         v-model:value="newGroupNameValue"
