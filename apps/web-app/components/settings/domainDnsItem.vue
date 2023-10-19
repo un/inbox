@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  const { copy, copied, text } = useClipboard();
+  const { copy, copied } = useClipboard();
 
   type DnsItemBlockProps = {
     title: string;
@@ -28,41 +28,43 @@
 </script>
 <template>
   <div
-    class="flex flex-col gap-4 justify-center p-8 bg-base-2 rounded-2xl w-full h-fit">
+    class="h-fit w-full flex flex-col justify-center gap-4 rounded-2xl bg-base-2 p-8">
     <div
-      class="flex flex-row justify-between items-center cursor-pointer"
+      class="flex flex-row cursor-pointer items-center justify-between"
       @click="$emit('clicked')">
-      <span class="font-display text-lg">{{ props.title }}</span>
+      <span class="text-lg font-display">{{ props.title }}</span>
       <span
-        class="text-xs font-semibold text-base-1 uppercase py-1 px-4 rounded-full"
+        class="rounded-full px-4 py-1 text-xs font-semibold uppercase text-base-1"
         :class="badgeColor">
         {{ props.valid ? 'Valid' : 'Invalid' }}
       </span>
     </div>
     <div
       v-show="props.expanded"
-      class="flex flex-col gap-4 justify-center">
+      class="flex flex-col justify-center gap-4">
       <div>
         <span class="">{{ props.text }}</span>
       </div>
-      <div class="flex flex-row gap-4 flex-wrap">
-        <div v-for="block of props.blocks">
+      <div class="flex flex-row flex-wrap gap-4">
+        <div
+          v-for="block of props.blocks"
+          :key="block.value">
           <div class="flex flex-col gap-1">
-            <span class="text-xs uppercase text-base-11 overflow-hidden">
+            <span class="overflow-hidden text-xs uppercase text-base-11">
               {{ block.title }}
             </span>
-            <div class="flex flex-row gap-2 items-center">
+            <div class="flex flex-row items-center gap-2">
               <div
-                class="flex flex-col bg-base-3 p-4 rounded-lg w-fit min-w-[50px] items-center">
+                class="min-w-[50px] w-fit flex flex-col items-center rounded-lg bg-base-3 p-4">
                 <span
-                  class="text-sm font-mono break-anywhere text-left w-fit"
+                  class="w-fit break-anywhere text-left text-sm font-mono"
                   :class="block.title === 'Type' ? 'uppercase' : 'lowercase'">
                   {{ block.value }}
                 </span>
               </div>
               <UnUiTooltip
-                text="Copy to clipboard"
-                v-if="block.hasCopyButton">
+                v-if="block.hasCopyButton"
+                text="Copy to clipboard">
                 <icon
                   name="ph-clipboard"
                   size="20"
