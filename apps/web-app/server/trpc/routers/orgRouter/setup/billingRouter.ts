@@ -171,6 +171,16 @@ export const billingRouter = router({
         throw new Error('User not the admin');
       }
 
+      const orgSubscriptionQuery = await db.read.query.orgBilling.findFirst({
+        where: eq(orgBilling.orgId, userOrg.orgId),
+        columns: {
+          id: true
+        }
+      });
+      if (orgSubscriptionQuery?.id) {
+        throw new Error('Org already subscribed to a plan');
+      }
+
       const activeOrgMembersCount = await db.read
         .select({ count: sql<number>`count(*)` })
         .from(orgMembers)
@@ -180,6 +190,8 @@ export const billingRouter = router({
             eq(orgMembers.status, 'active')
           )
         );
+
+      // note: we assume 0 lifetime users since this link is only used the first time an org subscribes
       const orgSubLink =
         await billingTrpcClient.stripe.links.createSubscriptionPaymentLink.mutate(
           {

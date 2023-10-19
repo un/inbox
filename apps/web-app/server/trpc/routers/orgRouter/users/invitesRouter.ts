@@ -222,6 +222,12 @@ export const invitesRouter = router({
         orgId: +queryInvitesResponse[0].orgId
       });
 
+      if (useRuntimeConfig().billing.enabled) {
+        billingTrpcClient.stripe.subscriptions.updateOrgUserCount.mutate({
+          orgId: +queryInvitesResponse[0].orgId
+        });
+      }
+
       return {
         success: true,
         error: null
