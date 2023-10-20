@@ -8,14 +8,14 @@
     "preview": "node .output/server/index.mjs"
   },
   "dependencies": {
-    "@trpc/client": "^10.38.5",
-    "@trpc/server": "^10.38.5",
+    "@trpc/client": "^10.41.0",
+    "@trpc/server": "^10.41.0",
     "@uninbox/database": "workspace:*",
     "@uninbox/postal-puppet": "workspace:*",
     "@uninbox/types": "workspace:*",
     "@uninbox/utils": "workspace:*",
-    "nitropack": "^2.6.3",
-    "superjson": "^1.13.3",
+    "nitropack": "^2.7.0",
+    "superjson": "^2.0.0",
     "trpc-nuxt": "^0.10.12",
     "zod": "^3.22.4"
   }

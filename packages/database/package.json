@@ -17,10 +17,10 @@
   },
   "dependencies": {
     "@planetscale/database": "^1.11.0",
-    "@uninbox/utils": "workspace:*",
     "@uninbox/types": "workspace:*",
+    "@uninbox/utils": "workspace:*",
     "drizzle-orm": "^0.28.6",
-    "mysql2": "^3.6.1"
+    "mysql2": "^3.6.2"
   },
   "devDependencies": {
     "@faker-js/faker": "^8.0.2",
