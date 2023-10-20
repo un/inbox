@@ -40,7 +40,7 @@ export const emailIdentityRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const { db, user } = ctx;
-      let {
+      const {
         orgPublicId,
         emailUsername,
         domainPublicId,
