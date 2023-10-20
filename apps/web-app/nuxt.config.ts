@@ -79,9 +79,9 @@ export default defineNuxtConfig({
     shim: false
   },
   // import the Pinia stores
-  imports: {
-    dirs: ['stores']
-  },
+  // imports: {
+  //   dirs: ['stores']
+  // },
   nitro: {
     storage: {
       sessions: {
@@ -104,11 +104,11 @@ export default defineNuxtConfig({
 
   //* Pinia
   pinia: {
-    autoImports: [
-      ['defineStore', 'definePiniaStore'],
-      'acceptHMRUpdate',
-      'storeToRefs'
-    ]
+    // autoImports: [
+    //   ['defineStore', 'definePiniaStore'],
+    //   'acceptHMRUpdate',
+    //   'storeToRefs'
+    // ]
   },
 
   //* Nuxt-Security

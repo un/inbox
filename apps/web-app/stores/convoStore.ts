@@ -1,4 +1,4 @@
-export const useConvoStore = definePiniaStore(
+export const useConvoStore = defineStore(
   'convos',
   () => {
     type PromiseType<T> = T extends Promise<infer U> ? U : never;

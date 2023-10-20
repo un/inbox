@@ -1,4 +1,4 @@
-export const useLocalPrefStore = definePiniaStore(
+export const useLocalPrefStore = defineStore(
   'localPref',
   () => {
     const sidebarCollapsed = ref<boolean>(false);

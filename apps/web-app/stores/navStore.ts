@@ -1,4 +1,4 @@
-export const useNavStore = definePiniaStore(
+export const useNavStore = defineStore(
   'navStore',
   () => {
     const settingsSelectedOrg = ref('');
