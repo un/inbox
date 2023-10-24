@@ -42,13 +42,14 @@ export const emailIdentityRouter = router({
       const { db, user } = ctx;
       const {
         orgPublicId,
-        emailUsername,
         domainPublicId,
         sendName,
         catchAll,
         routeToUsersOrgMemberPublicIds,
         routeToGroupsPublicIds
       } = input;
+
+      const emailUsername = input.emailUsername.toLowerCase();
       const newPublicId = nanoId();
       const userId = user.userId || 0;
 
