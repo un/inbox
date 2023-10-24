@@ -112,7 +112,8 @@ export const orgMembersRouter = router({
             columns: {
               publicId: true,
               role: true,
-              status: true
+              status: true,
+              userId: true
             },
             where: !includeRemoved
               ? eq(orgMembers.status, 'active')
@@ -132,8 +133,18 @@ export const orgMembersRouter = router({
           }
         }
       });
+
+      const ownMembershipId = orgQuery?.members.find(
+        (member) => member.userId === +queryUserId
+      )?.publicId;
+
+      orgQuery?.members.forEach((member) => {
+        member.userId = 0;
+      });
+
       return {
-        members: orgQuery?.members
+        members: orgQuery?.members,
+        ownMembershipId
       };
     })
 });

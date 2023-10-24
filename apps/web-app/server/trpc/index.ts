@@ -53,7 +53,7 @@ export const trpcWebAppRouter = router({
   auth: registrationRouter,
   user: trpcWebAppUserRouter,
   org: trpcWebAppOrgRouter,
-  convos: trpcWebAppConvoRouter,
+  convos: convoRouter,
   test: testRouter
 });
 

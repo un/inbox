@@ -144,7 +144,8 @@ export const crudRouter = router({
   getUserOrgs: protectedProcedure
     .input(
       z.object({
-        onlyAdmin: z.boolean().optional()
+        onlyAdmin: z.boolean().optional(),
+        includePersonal: z.boolean().optional()
       })
     )
     .query(async ({ ctx, input }) => {
@@ -177,7 +178,12 @@ export const crudRouter = router({
         (orgMember) => orgMember.org.personalOrg !== true
       );
 
+      const personalOrg = orgMembersQuery.filter(
+        (orgMember) => orgMember.org.personalOrg === true
+      );
+
       return {
+        personalOrgs: input.includePersonal ? personalOrg : null,
         userOrgs: usersOrgs
       };
     })
