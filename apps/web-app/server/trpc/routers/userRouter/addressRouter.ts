@@ -161,6 +161,7 @@ export const addressRouter = router({
         }
       );
 
+      // TODO: Check if domains are enabled/validated, if not return invalid, but display the email address in the list with a tooltip
       return {
         emailIdentities: emailIdentities
       };
