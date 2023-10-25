@@ -39,12 +39,12 @@
       showPersonalAddress.value = false;
     }
     activeOrg.value.publicId = orgPublicId;
-    console.log(activeOrg.value);
     userEmailIdentitiesExecute();
     orgUserGroupsExecute();
     orgMembersExecute();
   }
 
+  // TODO: handle if the domain is not valid/enabled. display the email address in the list but show it as disabled and show a tooltip on hover that says "this domain is not enabled for sending"
   const {
     data: userEmailIdentitiesData,
     pending: userEmailIdentitiesPending,
@@ -70,7 +70,6 @@
   function setActiveSendAs(identityId: string, name: string) {
     sendAsSummaryString.value = name;
     activeSendAs.value = identityId;
-    console.log(activeSendAs.value);
     sendAsExpanded.value = false;
   }
 
@@ -108,9 +107,6 @@
   watch(orgMembersData, () => {
     userOrgMembershipPublicId.value =
       orgMembersData.value?.ownMembershipId || '';
-    console.log('yo my id', orgMembersData.value?.ownMembershipId);
-    console.log(JSON.stringify(orgMembersData.value));
-
     newIdentityRouteToUsersOrgMemberPublicIds.value = [];
     newIdentityRouteToUsersOrgMemberPublicIds.value.push(
       userOrgMembershipPublicId.value

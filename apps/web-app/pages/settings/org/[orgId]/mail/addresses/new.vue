@@ -4,7 +4,6 @@
   });
   import { UiColor } from '@uninbox/types/ui';
   import { z } from 'zod';
-  import trpcClient from '~/plugins/trpcClient';
   const { $trpc, $i18n } = useNuxtApp();
 
   const newIdentityUsernameValue = ref('');
@@ -21,7 +20,7 @@
   const buttonLoading = ref(false);
 
   const formValid = computed(() => {
-    if (canUseMultipleDesinations.value === false) {
+    if (isPro.value === false) {
       return (
         newIdentityUsernameValid.value === true &&
         newIdentitySendNameValid.value === true &&
@@ -110,10 +109,6 @@
     }, 1500);
   }
 
-  const canUseCatchAll = ref<boolean | null | undefined>(null);
-  const canUseCatchAllAllowedPlans = ref<string[]>();
-  const canUseMultipleDesinations = ref<boolean | null | undefined>(null);
-  const canUseMultipleDesinationsAllowedPlans = ref<string[]>();
   const multipleDestinationsSelected = computed(() => {
     return (
       newIdentityRouteToGroupsPublicIds.value.length +
@@ -122,30 +117,19 @@
     );
   });
 
+  const isPro = ref<boolean | null | undefined>(null);
   if (useEE().config.modules.billing) {
-    console.log('checking if can use feature');
-    const { data: canUseCatch } =
-      await $trpc.org.setup.billing.canUseFeature.useLazyQuery(
+    const { data: isProQuery } =
+      await $trpc.org.setup.billing.isPro.useLazyQuery(
         {
-          orgPublicId: orgPublicId,
-          feature: 'userGroups'
-        },
-        { server: false }
-      );
-    const { data: canUseDestinations } =
-      await $trpc.org.setup.billing.canUseFeature.useLazyQuery(
-        {
-          orgPublicId: orgPublicId,
-          feature: 'multiDestinationEmails'
+          orgPublicId: orgPublicId
         },
         { server: false }
       );
 
-    canUseCatchAll.value = canUseCatch.value?.canUse;
-    canUseCatchAllAllowedPlans.value = canUseCatch.value?.allowedPlans;
-    canUseMultipleDesinations.value = canUseDestinations.value?.canUse;
-    canUseMultipleDesinationsAllowedPlans.value =
-      canUseDestinations.value?.allowedPlans;
+    isPro.value = isProQuery.value?.isPro;
+  } else {
+    isPro.value = true;
   }
 </script>
 
@@ -197,11 +181,11 @@
           <div class="flex flex-col gap-1">
             <div class="flex flex-row items-end gap-2">
               <span class="text-sm font-medium text-base-12"
-                >Catch-all{{ canUseCatchAll ? '' : ' (Disabled)' }}</span
+                >Catch-all{{ isPro ? '' : ' (Disabled)' }}</span
               >
               <UnUiTooltip
                 :text="
-                  canUseCatchAll
+                  isPro
                     ? 'If an email is sent to an address that does not exist, it will be delivered here'
                     : 'Catch-all is not available on your current billing plan'
                 "
@@ -215,16 +199,14 @@
             <button
               class="w-fit flex flex-row items-center gap-2 rounded-lg px-2 py-2"
               :class="
-                canUseCatchAll
+                isPro
                   ? newIdentityCatchAll
                     ? 'bg-primary-9'
                     : 'bg-base-5'
                   : 'opacity-50 cursor-not-allowed disabled'
               "
               @click="
-                canUseCatchAll
-                  ? (newIdentityCatchAll = !newIdentityCatchAll)
-                  : null
+                isPro ? (newIdentityCatchAll = !newIdentityCatchAll) : null
               ">
               <icon
                 :name="newIdentityCatchAll ? 'ph:check-bold' : 'ph:x-bold'"
@@ -414,7 +396,7 @@
         </div>
       </div>
       <span
-        v-if="!canUseMultipleDesinations && multipleDestinationsSelected"
+        v-if="!isPro && multipleDestinationsSelected"
         class="rounded bg-red-9 p-2 text-sm font-bold text-white">
         You can only deliver messages to one single destination on your current
         plan

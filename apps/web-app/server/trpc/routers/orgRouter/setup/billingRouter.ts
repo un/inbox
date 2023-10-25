@@ -13,21 +13,6 @@ import { nanoId, nanoIdLength } from '@uninbox/utils';
 const planNames = ['free', 'starter', 'pro'] as const;
 type PlanName = (typeof planNames)[number];
 
-const featureNames = [
-  'customDomains',
-  'userGroups',
-  'catchAll',
-  'multiDestinationEmails'
-] as const;
-type FeatureName = (typeof featureNames)[number];
-
-const featurePlanMap: Record<FeatureName, PlanName[]> = {
-  customDomains: ['starter', 'pro'],
-  userGroups: ['starter', 'pro'],
-  catchAll: ['pro'],
-  multiDestinationEmails: ['pro']
-};
-
 export const billingRouter = router({
   getOrgBillingOverview: eeProcedure
     .input(
@@ -231,24 +216,20 @@ export const billingRouter = router({
         lifetimeLink: lifetimePurchaseLink.link
       };
     }),
-  canUseFeature: eeProcedure
+  isPro: eeProcedure
     .input(
       z.object({
-        orgPublicId: z.string().min(3).max(nanoIdLength),
-        feature: z.enum([...featureNames])
+        orgPublicId: z.string().min(3).max(nanoIdLength)
       })
     )
     .query(async ({ ctx, input }) => {
       const queryUserId = ctx.user.userId || 0;
       const db = ctx.db;
-      const { orgPublicId, feature } = input;
+      const { orgPublicId } = input;
 
       const userOrg = await isUserInOrg({ userId: queryUserId, orgPublicId });
-      if (!userOrg || userOrg.role !== 'admin') {
+      if (!userOrg) {
         throw new Error('User not in org');
-      }
-      if (userOrg.role !== 'admin') {
-        throw new Error('User not the admin');
       }
 
       const orgBillingResponse = await db.read.query.orgBilling.findFirst({
@@ -258,10 +239,8 @@ export const billingRouter = router({
         }
       });
       const orgPlan = orgBillingResponse?.plan || 'free';
-      const allowedPlans = featurePlanMap[feature];
       return {
-        canUse: allowedPlans.includes(orgPlan),
-        allowedPlans: allowedPlans
+        isPro: orgPlan === 'pro'
       };
     })
 });

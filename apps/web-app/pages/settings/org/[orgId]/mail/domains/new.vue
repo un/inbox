@@ -48,28 +48,19 @@
     );
   }
 
-  const canAddDomain = ref<boolean | null | undefined>(null);
-  const canAddDomainAllowedPlans = ref<string[]>();
-  const dataPending = ref(true);
-
+  const isPro = ref<boolean | null | undefined>(null);
   if (useEE().config.modules.billing) {
-    dataPending.value = true;
-
-    const { data: canUseFeature, pending } =
-      await $trpc.org.setup.billing.canUseFeature.useLazyQuery(
+    const { data: isProQuery } =
+      await $trpc.org.setup.billing.isPro.useLazyQuery(
         {
-          orgPublicId: orgPublicId,
-          feature: 'customDomains'
+          orgPublicId: orgPublicId
         },
         { server: false }
       );
 
-    canAddDomain.value = canUseFeature.value?.canUse;
-    canAddDomainAllowedPlans.value = canUseFeature.value?.allowedPlans;
-    dataPending.value = false;
+    isPro.value = isProQuery.value?.isPro;
   } else {
-    dataPending.value = false;
-    canAddDomain.value = true;
+    isPro.value = true;
   }
 </script>
 
@@ -83,16 +74,16 @@
         </div>
       </div>
     </div>
-    <div
+    <!-- <div
       v-if="dataPending"
       class="w-full flex flex-row justify-center gap-4 rounded-xl rounded-tl-2xl bg-base-3 p-8">
       <icon
         name="svg-spinners:3-dots-fade"
         size="24" />
       <span>Checking Domains</span>
-    </div>
+    </div> -->
     <div
-      v-if="!dataPending && canAddDomain"
+      v-if="isPro"
       class="w-full flex flex-col gap-4">
       <span class="text-xl font-semibold">Add a new domain</span>
       <UnUiInput
@@ -115,14 +106,14 @@
       </div>
     </div>
     <div
-      v-if="!dataPending && !canAddDomain"
+      v-if="!isPro"
       class="w-full flex flex-col gap-4">
       <span class="text-xl font-semibold">Add a new domain</span>
       <span
         >Sorry, your current billing plan does not support adding custom
         domains.</span
       >
-      <span>Supported plans are: {{ canAddDomainAllowedPlans }}</span>
+      <!-- <span>Supported plans are: {{ canAddDomainAllowedPlans }}</span> -->
     </div>
   </div>
 </template>
