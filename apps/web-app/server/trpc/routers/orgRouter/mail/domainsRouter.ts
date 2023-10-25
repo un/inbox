@@ -3,7 +3,7 @@ import { router, protectedProcedure, limitedProcedure } from '../../../trpc';
 import { and, eq, or } from '@uninbox/database/orm';
 import { orgs, orgMembers, domains } from '@uninbox/database/schema';
 import { nanoId, nanoIdLength, nanoIdToken } from '@uninbox/utils';
-import dns from 'dns';
+import dns from 'node:dns';
 import { verifyDns } from '~/server/utils/verifyDns';
 import { isUserInOrg } from '~/server/utils/dbQueries';
 
@@ -17,11 +17,12 @@ export const domainsRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const { db, user } = ctx;
-      let { orgPublicId, domainName } = input;
+      const { orgPublicId } = input;
       const newPublicId = nanoId();
       const userId = user.userId || 0;
 
-      domainName = domainName.toLowerCase();
+      const domainName = input.domainName.toLowerCase();
+      console.log({ domainName });
 
       const userOrg = await isUserInOrg({
         userId,
@@ -40,13 +41,11 @@ export const domainsRouter = router({
       }
       // END TODO
 
-      const domainRecords = await dns.promises.resolveAny(domainName);
-      console.log({ domainRecords });
-      if (!domainRecords || domainRecords.length === 0) {
-        return {
-          error: 'Domain does not exist or is not registered'
-        };
-      }
+      await dns.promises.setServers(['1.1.1.1', '1.0.0.1']);
+      await dns.promises.resolveNs(domainName).catch((error) => {
+        console.log({ error }, { domainName });
+        throw new Error('Domain does not exist or is not registered');
+      });
 
       const existingDomains = await db.read.query.domains.findFirst({
         where: eq(domains.domain, domainName),

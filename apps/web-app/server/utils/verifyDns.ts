@@ -186,6 +186,10 @@ export async function verifyDns({
     });
 
   await dns.promises.setServers(['1.1.1.1', '1.0.0.1']);
+  await dns.promises.setServers(['1.1.1.1', '1.0.0.1']);
+  await dns.promises.setServers(['1.1.1.1', '1.0.0.1']);
+  await dns.promises.setServers(['1.1.1.1', '1.0.0.1']);
+  await dns.promises.setServers(['1.1.1.1', '1.0.0.1']);
 
   return dnsRecords;
 }
