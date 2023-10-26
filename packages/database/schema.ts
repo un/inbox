@@ -997,8 +997,7 @@ export const convoMembers = mysqlTable(
   'convo_members',
   {
     id: serial('id').primaryKey(),
-    userId: foreignKey('user_id'),
-    userProfileId: foreignKey('user_profile_id'),
+    orgMemberId: foreignKey('org_member_id'),
     userGroupId: foreignKey('user_group_id'),
     foreignEmailIdentityId: foreignKey('foreign_email_identities_id'),
     convoId: foreignKey('convo_id').notNull(),
@@ -1016,11 +1015,11 @@ export const convoMembers = mysqlTable(
   },
   (table) => ({
     //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit : userId//userGroupId
-    userIdIndex: index('user_id_idx').on(table.userId),
+    orgMemberIdIndex: index('user_id_idx').on(table.orgMemberId),
     convoIdIndex: index('convo_id_idx').on(table.convoId),
-    userToConvoIndex: uniqueIndex('user_to_convo_idx').on(
+    orgMemberToConvoIndex: uniqueIndex('org_member_to_convo_idx').on(
       table.convoId,
-      table.userId
+      table.orgMemberId
     ),
     userGroupToConvoIndex: uniqueIndex('user_group_to_convo_idx').on(
       table.convoId,
@@ -1029,13 +1028,9 @@ export const convoMembers = mysqlTable(
   })
 );
 export const convoMembersRelations = relations(convoMembers, ({ one }) => ({
-  user: one(users, {
-    fields: [convoMembers.userId],
-    references: [users.id]
-  }),
-  userProfile: one(userProfiles, {
-    fields: [convoMembers.userProfileId],
-    references: [userProfiles.id]
+  orgMember: one(orgMembers, {
+    fields: [convoMembers.orgMemberId],
+    references: [orgMembers.id]
   }),
   userGroup: one(userGroups, {
     fields: [convoMembers.userGroupId],
@@ -1107,7 +1102,7 @@ export const convoMessages = mysqlTable(
     convoId: foreignKey('convo_id').notNull(),
     subjectId: foreignKey('subject_id'),
     replyToId: foreignKey('reply_to_id'),
-    author: foreignKey('convo_members').notNull(),
+    author: foreignKey('author').notNull(),
     body: text('body'),
     postalMessageId: varchar('postal_message_id', { length: 256 }),
     postalId: bigintUnsigned('postal_id'),
