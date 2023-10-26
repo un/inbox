@@ -1,6 +1,14 @@
 import { z } from 'zod';
 import { router, protectedProcedure, limitedProcedure } from '../../trpc';
-import { and, desc, eq, inArray, lt, or } from '@uninbox/database/orm';
+import {
+  InferInsertModel,
+  and,
+  desc,
+  eq,
+  inArray,
+  lt,
+  or
+} from '@uninbox/database/orm';
 import {
   convos,
   convoMembers,
@@ -83,12 +91,16 @@ export const convoRouter = router({
           },
           members: {
             with: {
-              userProfile: {
-                columns: {
-                  firstName: true,
-                  lastName: true,
-                  avatarId: true,
-                  handle: true
+              orgMember: {
+                with: {
+                  profile: {
+                    columns: {
+                      firstName: true,
+                      lastName: true,
+                      avatarId: true,
+                      handle: true
+                    }
+                  }
                 }
               },
               userGroup: {
@@ -109,7 +121,7 @@ export const convoRouter = router({
             },
             columns: {
               id: true,
-              userId: true,
+              orgMemberId: true,
               userGroupId: true,
               foreignEmailIdentityId: true,
               role: true
@@ -124,12 +136,16 @@ export const convoRouter = router({
             with: {
               author: {
                 with: {
-                  userProfile: {
-                    columns: {
-                      firstName: true,
-                      lastName: true,
-                      avatarId: true,
-                      handle: true
+                  orgMember: {
+                    with: {
+                      profile: {
+                        columns: {
+                          firstName: true,
+                          lastName: true,
+                          avatarId: true,
+                          handle: true
+                        }
+                      }
                     }
                   },
                   userGroup: {
@@ -198,14 +214,18 @@ export const convoRouter = router({
           },
           members: {
             with: {
-              userProfile: {
-                columns: {
-                  userId: true,
-                  firstName: true,
-                  lastName: true,
-                  avatarId: true,
-                  publicId: true,
-                  handle: true
+              orgMember: {
+                with: {
+                  profile: {
+                    columns: {
+                      userId: true,
+                      firstName: true,
+                      lastName: true,
+                      avatarId: true,
+                      publicId: true,
+                      handle: true
+                    }
+                  }
                 }
               },
               userGroup: {
@@ -234,7 +254,7 @@ export const convoRouter = router({
               }
             },
             columns: {
-              userId: true,
+              orgMemberId: true,
               userGroupId: true,
               foreignEmailIdentityId: true,
               role: true
@@ -260,9 +280,10 @@ export const convoRouter = router({
       //Check if the user is in the conversation
       const convoMembersUserIds: number[] = [];
       convoDetails?.members.forEach((member) => {
-        member.userId && convoMembersUserIds.push(member.userId);
-        member.userProfile?.userId &&
-          convoMembersUserIds.push(member.userProfile.userId);
+        member.orgMember?.userId &&
+          convoMembersUserIds.push(member.orgMember?.userId);
+        member.orgMember?.profile?.userId &&
+          convoMembersUserIds.push(member.orgMember?.profile.userId);
         member.userGroup?.members.forEach((groupMember) => {
           groupMember.userId && convoMembersUserIds.push(groupMember.userId);
         });
@@ -278,8 +299,9 @@ export const convoRouter = router({
 
       // strip the user IDs from the response
       convoDetails.members.forEach((member) => {
-        member.userId = null;
-        if (member.userProfile?.userId) member.userProfile.userId = 0;
+        if (member.orgMember?.userId) member.orgMember.userId = 0;
+        if (member.orgMember?.profile?.userId)
+          member.orgMember.profile.userId = 0;
         member.userGroup?.members.forEach((groupMember) => {
           if (groupMember.userId) groupMember.userId = 0;
         });
@@ -289,128 +311,129 @@ export const convoRouter = router({
         data: convoDetails
       };
     }),
-
-  getConvoMessages: protectedProcedure
+  createConvo: protectedProcedure
     .input(
       z.object({
-        convoPublicId: z.string().min(3).max(nanoIdLength),
-        cursorLastCreatedAt: z.date().optional(),
-        cursorLastPublicId: z.string().min(3).max(nanoIdLength).optional()
+        orgPublicId: z.string().min(3).max(nanoIdLength),
+        sendAsPublicId: z.string().min(3).max(nanoIdLength),
+        authorPublicId: z.string().min(3).max(nanoIdLength),
+        participantsUsers: z.array(z.string().min(3).max(nanoIdLength)),
+        participantsGroups: z.array(z.string().min(3).max(nanoIdLength)),
+        participantsExternalEmails: z.array(z.string().min(1)),
+        topic: z.string().min(1),
+        message: z.string().min(1)
       })
     )
-    .query(async ({ ctx, input }) => {
+    .mutation(async ({ ctx, input }) => {
       const { db, user } = ctx;
-      const { convoPublicId, cursorLastCreatedAt, cursorLastPublicId } = input;
       const userId = user.userId || 0;
+      const { orgPublicId, participantsExternalEmails } = input;
 
-      const inputLastCreatedAt = cursorLastCreatedAt
-        ? new Date(cursorLastCreatedAt)
-        : new Date();
-      const inputLastPublicId = cursorLastPublicId || '';
-
-      // TODO: Find a better way to do this
-      // Verify the user is in the convo
-      const convoDetails = await db.read.query.convos.findFirst({
-        where: eq(convos.publicId, convoPublicId),
-        columns: {
-          id: true
-        },
-        with: {
-          members: {
-            with: {
-              userProfile: {
-                columns: {
-                  userId: true,
-                  firstName: true,
-                  lastName: true,
-                  avatarId: true,
-                  publicId: true,
-                  handle: true
-                }
-              },
-              userGroup: {
-                columns: {
-                  name: true,
-                  color: true,
-                  avatarId: true,
-                  publicId: true
-                },
-                with: {
-                  members: {
-                    columns: {
-                      userId: true
-                    }
-                  }
-                }
-              },
-              foreignEmailIdentity: {
-                columns: {
-                  senderName: true,
-                  avatarId: true,
-                  username: true,
-                  rootDomain: true,
-                  publicId: true
-                }
-              }
-            },
-            columns: {
-              userId: true,
-              userGroupId: true,
-              foreignEmailIdentityId: true,
-              role: true
-            }
-          }
-        }
+      const userOrg = await isUserInOrg({
+        userId,
+        orgPublicId
       });
 
-      if (!convoDetails) {
-        console.log('Convo not found');
-        return {
-          error: 'Convo not found'
-        };
+      if (!userOrg) {
+        throw new Error('User not in org');
       }
-      //Check if the user is in the conversation
-      const convoMembersUserIds: number[] = [];
-      convoDetails?.members.forEach((member) => {
-        member.userId && convoMembersUserIds.push(member.userId);
-        member.userProfile?.userId &&
-          convoMembersUserIds.push(member.userProfile.userId);
-        member.userGroup?.members.forEach((groupMember) => {
-          groupMember.userId && convoMembersUserIds.push(groupMember.userId);
-        });
+
+      const newPublicId = nanoId();
+
+      // create convo
+
+      const convoInsertResponse = await db.write.insert(convos).values({
+        publicId: newPublicId,
+        orgId: userOrg.orgId,
+        screenerStatus: 'approved',
+        lastUpdatedAt: new Date()
       });
 
-      if (!convoMembersUserIds.includes(+userId)) {
-        console.log('User not in convo');
-        console.log({ userId, convoMembersUserIds });
-        return {
-          error: 'User not in convo'
-        };
-      }
+      // create subject
+      await db.write.insert(convoSubjects).values({
+        convoId: +convoInsertResponse.insertId,
+        subject: input.topic
+      });
 
-      const convoMessagesReturn = await db.read.query.convoMessages.findMany({
-        orderBy: [desc(convoMessages.createdAt), desc(convoMessages.publicId)],
-        limit: 15,
-        columns: {
-          publicId: true,
-          createdAt: true,
-          author: true,
-          body: true
-        },
-        where: and(
-          or(
-            and(
-              eq(convoMessages.createdAt, inputLastCreatedAt),
-              lt(convoMessages.publicId, inputLastPublicId)
-            ),
-            lt(convoMessages.createdAt, inputLastCreatedAt)
+      // Create external people if dont exist in system
+      // Split email addresses into username and rootDomain
+      const emailParts = participantsExternalEmails.map((email) => {
+        const [username, rootDomain] = email.split('@');
+        return { username, rootDomain };
+      });
+
+      // Query the database
+      const existingForeignIdentities =
+        await db.read.query.foreignEmailIdentities.findMany({
+          where: or(
+            ...emailParts.map((part) =>
+              and(
+                eq(foreignEmailIdentities.username, part.username),
+                eq(foreignEmailIdentities.rootDomain, part.rootDomain)
+              )
+            )
           ),
-          eq(convoMessages.convoId, convoDetails.id)
+          columns: {
+            id: true,
+            username: true,
+            rootDomain: true
+          }
+        });
+      const foreignIdentitiesIds = existingForeignIdentities.map(
+        (identity) => +identity.id
+      );
+
+      // Check for non-existing emails and create new entries for non existant
+      const existingEmails = new Set(
+        existingForeignIdentities.map(
+          (identity) => `${identity.username}@${identity.rootDomain}`
         )
-      });
+      );
+      const newEmails = emailParts.filter(
+        (part) => !existingEmails.has(`${part.username}@${part.rootDomain}`)
+      );
+
+      for (const newEmail of newEmails) {
+        // Create new entry in the database
+        const newPublicId = nanoId();
+        const insertNewResponse = await db.write
+          .insert(foreignEmailIdentities)
+          .values({
+            publicId: newPublicId,
+            username: newEmail.username,
+            rootDomain: newEmail.rootDomain
+          });
+        foreignIdentitiesIds.push(+insertNewResponse.insertId);
+      }
+
+      // get userId/Profile Id from orgMemberPublicId EXCEPT FOR AUTHOR
+
+      // Get Group ID from groupPublic Id
+
+      // add convo members
+      const convoMembersInsertResponse = await db.write
+        .insert(convoMembers)
+        .values({
+          convoId: +convoInsertResponse.insertId,
+          role: 'assigned',
+          userId: 0,
+          userProfileId: 0,
+          notifications: 'active',
+          active: true,
+          userGroupId: 0,
+          foreignEmailIdentityId: 0
+        });
+
+      // Insert Author into ConvoMembers, but save ID for message author
+
+      // add external people screener status
+
+      // add message to convo
+
+      // send email to external email address
 
       return {
-        messages: convoMessagesReturn
+        data: convoDetails
       };
     })
 });
