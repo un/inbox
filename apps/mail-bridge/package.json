@@ -14,6 +14,7 @@
     "@uninbox/postal-puppet": "workspace:*",
     "@uninbox/types": "workspace:*",
     "@uninbox/utils": "workspace:*",
+    "html-to-text": "^9.0.5",
     "nitropack": "^2.7.0",
     "superjson": "^2.0.0",
     "trpc-nuxt": "^0.10.12",

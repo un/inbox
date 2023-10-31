@@ -591,7 +591,7 @@ export const foreignEmailIdentitiesScreenerStatus = mysqlTable(
     level: mysqlEnum('level', ['emailIdentity', 'user', 'org'])
       .notNull()
       .default('emailIdentity'),
-    setByUserId: foreignKey('set_by_user_id').notNull(),
+    setByOrgMemberId: foreignKey('set_by_org_member_id').notNull(),
     lastUpdated: timestamp('last_updated')
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull()
@@ -633,9 +633,9 @@ export const foreignEmailIdentitiesScreenerStatusRelations = relations(
       fields: [foreignEmailIdentitiesScreenerStatus.emailIdentityId],
       references: [emailIdentities.id]
     }),
-    setByUser: one(users, {
-      fields: [foreignEmailIdentitiesScreenerStatus.setByUserId],
-      references: [users.id]
+    setByOrgMember: one(orgMembers, {
+      fields: [foreignEmailIdentitiesScreenerStatus.setByOrgMemberId],
+      references: [orgMembers.id]
     })
   })
 );
@@ -1104,7 +1104,7 @@ export const convoMessages = mysqlTable(
     replyToId: foreignKey('reply_to_id'),
     author: foreignKey('author').notNull(),
     body: text('body'),
-    postalMessageId: varchar('postal_message_id', { length: 256 }),
+    smtpMessageId: varchar('smtp_message_id', { length: 256 }),
     postalId: bigintUnsigned('postal_id'),
     createdAt: timestamp('created_at')
       .default(sql`CURRENT_TIMESTAMP`)

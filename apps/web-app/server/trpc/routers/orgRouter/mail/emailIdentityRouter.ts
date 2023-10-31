@@ -232,6 +232,13 @@ export const emailIdentityRouter = router({
             avatarId: true
           },
           with: {
+            domain: {
+              columns: {
+                sendingMode: true,
+                receivingMode: true,
+                domainStatus: true
+              }
+            },
             routingRules: {
               columns: {
                 publicId: true,
@@ -297,8 +304,8 @@ export const emailIdentityRouter = router({
         };
       }
 
-      const emailIdentityReponse = await db.read.query.emailIdentities.findMany(
-        {
+      const emailIdentityResponse =
+        await db.read.query.emailIdentities.findMany({
           where: eq(domains.orgId, +userOrg.orgId),
           columns: {
             publicId: true,
@@ -309,6 +316,13 @@ export const emailIdentityRouter = router({
             avatarId: true
           },
           with: {
+            domain: {
+              columns: {
+                sendingMode: true,
+                receivingMode: true,
+                domainStatus: true
+              }
+            },
             routingRules: {
               columns: {
                 publicId: true,
@@ -346,11 +360,10 @@ export const emailIdentityRouter = router({
               }
             }
           }
-        }
-      );
+        });
 
       return {
-        emailIdentityData: emailIdentityReponse
+        emailIdentityData: emailIdentityResponse
       };
     })
 });

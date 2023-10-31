@@ -17,7 +17,9 @@ import {
   foreignEmailIdentities,
   userGroups,
   userGroupMembers,
-  convoMessages
+  convoMessages,
+  orgMembers,
+  foreignEmailIdentitiesScreenerStatus
 } from '@uninbox/database/schema';
 import { nanoId, nanoIdLength, nanoIdToken } from '@uninbox/utils';
 
@@ -311,6 +313,7 @@ export const convoRouter = router({
         data: convoDetails
       };
     }),
+
   createConvo: protectedProcedure
     .input(
       z.object({
@@ -327,7 +330,13 @@ export const convoRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { db, user } = ctx;
       const userId = user.userId || 0;
-      const { orgPublicId, participantsExternalEmails } = input;
+      const {
+        orgPublicId,
+        participantsExternalEmails,
+        participantsGroups,
+        participantsUsers,
+        authorPublicId
+      } = input;
 
       const userOrg = await isUserInOrg({
         userId,
@@ -338,10 +347,20 @@ export const convoRouter = router({
         throw new Error('User not in org');
       }
 
+      const authorOrgMemberResponse = await db.read.query.orgMembers.findFirst({
+        where: eq(orgMembers.publicId, authorPublicId),
+        columns: {
+          id: true
+        }
+      });
+
+      if (!authorOrgMemberResponse || !authorOrgMemberResponse.id) {
+        throw new Error('Author Id Not Found!');
+      }
+
       const newPublicId = nanoId();
 
       // create convo
-
       const convoInsertResponse = await db.write.insert(convos).values({
         publicId: newPublicId,
         orgId: userOrg.orgId,
@@ -350,87 +369,175 @@ export const convoRouter = router({
       });
 
       // create subject
-      await db.write.insert(convoSubjects).values({
-        convoId: +convoInsertResponse.insertId,
-        subject: input.topic
-      });
-
-      // Create external people if dont exist in system
-      // Split email addresses into username and rootDomain
-      const emailParts = participantsExternalEmails.map((email) => {
-        const [username, rootDomain] = email.split('@');
-        return { username, rootDomain };
-      });
-
-      // Query the database
-      const existingForeignIdentities =
-        await db.read.query.foreignEmailIdentities.findMany({
-          where: or(
-            ...emailParts.map((part) =>
-              and(
-                eq(foreignEmailIdentities.username, part.username),
-                eq(foreignEmailIdentities.rootDomain, part.rootDomain)
-              )
-            )
-          ),
-          columns: {
-            id: true,
-            username: true,
-            rootDomain: true
-          }
+      const subjectInsertResponse = await db.write
+        .insert(convoSubjects)
+        .values({
+          convoId: +convoInsertResponse.insertId,
+          subject: input.topic
         });
-      const foreignIdentitiesIds = existingForeignIdentities.map(
-        (identity) => +identity.id
-      );
 
-      // Check for non-existing emails and create new entries for non existant
-      const existingEmails = new Set(
-        existingForeignIdentities.map(
-          (identity) => `${identity.username}@${identity.rootDomain}`
-        )
-      );
-      const newEmails = emailParts.filter(
-        (part) => !existingEmails.has(`${part.username}@${part.rootDomain}`)
-      );
+      let foreignIdentitiesIds: number[] = [];
+      if (participantsExternalEmails && participantsExternalEmails.length > 0) {
+        // Create external people if dont exist in system
+        // 1. Split email addresses into username and rootDomain
+        const emailParts = participantsExternalEmails.map((email) => {
+          const [username, rootDomain] = email.split('@');
+          return { username, rootDomain };
+        });
 
-      for (const newEmail of newEmails) {
-        // Create new entry in the database
-        const newPublicId = nanoId();
-        const insertNewResponse = await db.write
-          .insert(foreignEmailIdentities)
-          .values({
-            publicId: newPublicId,
-            username: newEmail.username,
-            rootDomain: newEmail.rootDomain
+        // 2. Query the database to see if they already exist
+        const existingForeignIdentities =
+          await db.read.query.foreignEmailIdentities.findMany({
+            where: or(
+              ...emailParts.map((part) =>
+                and(
+                  eq(foreignEmailIdentities.username, part.username),
+                  eq(foreignEmailIdentities.rootDomain, part.rootDomain)
+                )
+              )
+            ),
+            columns: {
+              id: true,
+              username: true,
+              rootDomain: true
+            }
           });
-        foreignIdentitiesIds.push(+insertNewResponse.insertId);
+        foreignIdentitiesIds = existingForeignIdentities.map(
+          (identity) => +identity.id
+        );
+
+        // change existing emails formats, and create new array without them (only with missing ones)
+        const existingEmails = new Set(
+          existingForeignIdentities.map(
+            (identity) => `${identity.username}@${identity.rootDomain}`
+          )
+        );
+        const newEmails = emailParts.filter(
+          (part) => !existingEmails.has(`${part.username}@${part.rootDomain}`)
+        );
+
+        for (const newEmail of newEmails) {
+          const newPublicId = nanoId();
+          const insertNewResponse = await db.write
+            .insert(foreignEmailIdentities)
+            .values({
+              publicId: newPublicId,
+              username: newEmail.username,
+              rootDomain: newEmail.rootDomain
+            });
+          foreignIdentitiesIds.push(+insertNewResponse.insertId);
+        }
       }
-
-      // get userId/Profile Id from orgMemberPublicId EXCEPT FOR AUTHOR
-
       // Get Group ID from groupPublic Id
 
+      let groupIds: number[] = [];
+      if (participantsGroups.length > 0) {
+        const groupResponses = await db.read.query.userGroups.findMany({
+          where: inArray(userGroups.publicId, participantsGroups),
+          columns: {
+            id: true
+          }
+        });
+        groupIds = groupResponses.map((group) => group.id);
+      }
+
+      let orgMemberIds: number[] = [];
+      if (participantsUsers.length > 0) {
+        const orgMemberResponses = await db.read.query.orgMembers.findMany({
+          where: inArray(orgMembers.publicId, participantsUsers),
+          columns: {
+            id: true
+          }
+        });
+        orgMemberIds = orgMemberResponses.map((member) => member.id);
+      }
+
       // add convo members
-      const convoMembersInsertResponse = await db.write
+      type ConvoMembersDbInsertValue = InferInsertModel<typeof convoMembers>;
+      const convoMembersDbInsertValuesArray: ConvoMembersDbInsertValue[] = [];
+
+      // For each foreignIdentitiesIds && groupIds && orgMemberId
+
+      foreignIdentitiesIds.forEach((id) => {
+        convoMembersDbInsertValuesArray.push({
+          convoId: +convoInsertResponse.insertId,
+          role: 'contributor',
+          notifications: 'active',
+          active: true,
+          foreignEmailIdentityId: +id
+        });
+      });
+
+      groupIds.forEach((id) => {
+        convoMembersDbInsertValuesArray.push({
+          convoId: +convoInsertResponse.insertId,
+          role: 'contributor',
+          notifications: 'active',
+          active: true,
+          userGroupId: +id
+        });
+      });
+
+      orgMemberIds.forEach((id) => {
+        convoMembersDbInsertValuesArray.push({
+          convoId: +convoInsertResponse.insertId,
+          role: 'contributor',
+          orgMemberId: +id,
+          notifications: 'active',
+          active: true
+        });
+      });
+
+      await db.write
+        .insert(convoMembers)
+        .values(convoMembersDbInsertValuesArray);
+
+      const authorConvoMemberInsertResponse = await db.write
         .insert(convoMembers)
         .values({
           convoId: +convoInsertResponse.insertId,
           role: 'assigned',
-          userId: 0,
-          userProfileId: 0,
+          orgMemberId: +authorOrgMemberResponse?.id,
           notifications: 'active',
-          active: true,
-          userGroupId: 0,
-          foreignEmailIdentityId: 0
+          active: true
         });
-
-      // Insert Author into ConvoMembers, but save ID for message author
 
       // add external people screener status
 
-      // add message to convo
+      type ForeignEmailIdentitiesScreenerStatusInsertValue = InferInsertModel<
+        typeof foreignEmailIdentitiesScreenerStatus
+      >;
+      const foreignEmailIdentitiesScreenerStatusInsertArray: ForeignEmailIdentitiesScreenerStatusInsertValue[] =
+        [];
+      foreignIdentitiesIds.forEach((id) => {
+        const newPublicId = nanoId();
+        foreignEmailIdentitiesScreenerStatusInsertArray.push({
+          foreignIdentityId: +id,
+          orgId: +userOrg.orgId,
+          publicId: newPublicId,
+          setByOrgMemberId: +authorOrgMemberResponse.id,
+          level: 'org',
+          status: 'approve'
+        });
+      });
+
+      if (foreignEmailIdentitiesScreenerStatusInsertArray.length > 0) {
+        await db.write
+          .insert(foreignEmailIdentitiesScreenerStatus)
+          .values(foreignEmailIdentitiesScreenerStatusInsertArray);
+      }
 
       // send email to external email address
+
+      // add message to convo
+      const newConvoMessagePublicId = nanoId();
+      await db.write.insert(convoMessages).values({
+        convoId: +convoInsertResponse.insertId,
+        publicId: newConvoMessagePublicId,
+        subjectId: +subjectInsertResponse.insertId,
+        author: +authorConvoMemberInsertResponse.insertId,
+        body: input.message
+      });
 
       return {
         data: convoDetails

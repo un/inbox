@@ -137,7 +137,7 @@
     <div class="flex flex-row justify-between gap-4">
       <label
         :id="`input-label-${props.label}`"
-        class="text-sm font-medium"
+        class="min-w-fit text-sm font-medium"
         >{{ props.label }}</label
       >
       <span
