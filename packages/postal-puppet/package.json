@@ -40,18 +40,18 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "1.0.0-beta.27",
-    "@antfu/ni": "^0.21.8",
+    "@antfu/eslint-config": "1.1.1",
+    "@antfu/ni": "^0.21.9",
     "@antfu/utils": "^0.7.6",
-    "@types/node": "^20.8.7",
+    "@types/node": "^20.9.0",
     "bumpp": "^9.2.0",
-    "eslint": "^8.51.0",
-    "esno": "^0.17.0",
-    "lint-staged": "^15.0.2",
-    "pnpm": "^8.9.2",
+    "eslint": "^8.53.0",
+    "esno": "^4.0.0",
+    "lint-staged": "^15.1.0",
+    "pnpm": "^8.10.5",
     "rimraf": "^5.0.5",
     "simple-git-hooks": "^2.9.0",
-    "tsx": "^3.14.0",
+    "tsx": "^4.1.2",
     "typescript": "^5.2.2",
     "unbuild": "^2.0.0",
     "vite": "^4.5.0",
@@ -64,6 +64,6 @@
     "*": "eslint --fix"
   },
   "dependencies": {
-    "puppeteer": "^21.1.1"
+    "puppeteer": "^21.5.1"
   }
 }
