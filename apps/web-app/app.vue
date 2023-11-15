@@ -3,8 +3,9 @@
 </script>
 
 <template>
-  <NuxtLayout class="h-screen overflow-hidden max-h-screen">
+  <NuxtLayout class="h-screen max-h-screen overflow-hidden">
     <NuxtPage />
   </NuxtLayout>
+  <UNotifications />
 </template>
 <style></style>

@@ -1,15 +1,18 @@
 export default defineNuxtConfig({
   modules: [
     '@nuxt/devtools',
-    '@unocss/nuxt',
-    'nuxt-icon',
-    '@nuxtjs/color-mode',
     '@vueuse/nuxt',
     'nuxt-security',
     'nuxt-prepare',
     '@nuxtjs/turnstile',
     '@pinia/nuxt',
-    '@pinia-plugin-persistedstate/nuxt'
+    '@pinia-plugin-persistedstate/nuxt',
+    '@nuxt/ui'
+
+    // Handled by NuxtUi
+    // '@unocss/nuxt',
+    // 'nuxt-icon',
+    // '@nuxtjs/color-mode',
   ],
 
   runtimeConfig: {
@@ -63,8 +66,13 @@ export default defineNuxtConfig({
   app: {
     pageTransition: { name: 'page', mode: 'out-in', duration: 300 }
   },
+  ui: {
+    global: false,
+    icons: ['ph', 'mdi', 'svg-spinners']
+  },
+  // Handled by NuxtUi
   colorMode: {
-    classSuffix: '',
+    // classSuffix: '',
     preference: 'light', // default value of $colorMode.preference
     fallback: 'light', // fallback value if not system preference found
     storageKey: 'un-color-mode'
@@ -117,13 +125,8 @@ export default defineNuxtConfig({
   },
   security: {
     headers: {
-      crossOriginEmbedderPolicy: {
-        value:
-          process.env.NODE_ENV === 'development'
-            ? 'unsafe-none'
-            : 'require-corp',
-        route: '/**'
-      },
+      crossOriginEmbedderPolicy:
+        process.env.NODE_ENV === 'development' ? 'unsafe-none' : 'require-corp',
       contentSecurityPolicy: {
         'img-src': ["'self'", 'data:', 'imagedelivery.net']
       }
