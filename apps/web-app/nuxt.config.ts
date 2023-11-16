@@ -67,7 +67,8 @@ export default defineNuxtConfig({
     pageTransition: { name: 'page', mode: 'out-in', duration: 300 }
   },
   ui: {
-    global: false,
+    prefix: 'nuxt-ui-',
+    global: true,
     icons: ['ph', 'mdi', 'svg-spinners']
   },
   // Handled by NuxtUi

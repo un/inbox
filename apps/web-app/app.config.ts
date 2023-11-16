@@ -4,7 +4,7 @@ export default defineAppConfig({
   // }
 
   ui: {
-    primary: 'amber',
+    primary: 'slate',
     gray: 'zinc',
     safelistColors: ['orange']
   }
