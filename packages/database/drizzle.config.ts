@@ -9,6 +9,6 @@ export default {
   out: './migrations',
   driver: 'mysql2',
   dbCredentials: {
-    connectionString: process.env['DB_MYSQL_MIGRATION_URL']!
+    uri: process.env['DB_MYSQL_MIGRATION_URL']!
   }
 } satisfies Config;
