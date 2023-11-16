@@ -6,6 +6,6 @@
   <NuxtLayout class="h-screen max-h-screen overflow-hidden">
     <NuxtPage />
   </NuxtLayout>
-  <UNotifications />
+  <NuxtUiNotifications />
 </template>
 <style></style>
