@@ -4,7 +4,7 @@ import {
   experimental_standaloneMiddleware
 } from '@trpc/server';
 import superjson from 'superjson';
-import { Context } from './createContext';
+import type { Context } from './createContext';
 import * as z from 'zod';
 
 export const trpcContext = initTRPC
@@ -32,6 +32,7 @@ const turnstileTokenValidation = experimental_standaloneMiddleware<{
   input: { turnstileToken: string }; // defaults to 'unknown' if not defined
 }>().create(async (opts) => {
   if (!opts.input.turnstileToken) {
+    if (process.env.NODE_ENV === 'development') return opts.next();
     throw new TRPCError({
       code: 'FORBIDDEN',
       message: 'Missing Turnstile Verification Token'
