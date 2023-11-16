@@ -1,10 +1,10 @@
 <script setup lang="ts"></script>
 <template>
   <div
-    class="flex flex-row w-full h-full max-h-full p-4 items-center bg-base-2 overflow-none gap-4">
+    class="overflow-none bg-gray-100 dark:bg-gray-900 h-full max-h-full w-full flex flex-row items-center gap-4 p-4">
     <layout-navbar />
     <div
-      class="border-1 rounded-3xl w-full h-full border-base-6 bg-base-1 overflow-hidden max-h-full">
+      class="bg-gray-50 border-gray-200 dark:bg-gray-950 dark:border-gray-800 h-full max-h-full w-full overflow-hidden border border-1 rounded-3xl">
       <slot />
     </div>
   </div>

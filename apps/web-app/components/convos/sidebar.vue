@@ -9,7 +9,7 @@
     </div>
     <div class="flex flex-row gap-2">
       <button
-        class="w-full flex flex-row items-center justify-center gap-4 border-1 border-base-7 rounded rounded-bl-xl bg-base-3 p-2"
+        class="border-gray-200 bg-gray-100 dark:border-gray-800 dark:bg-gray-900 w-full flex flex-row items-center justify-center gap-4 border border-1 rounded rounded-bl-xl p-2"
         @click="navigateTo('/h/convo/new')">
         <icon
           name="ph-plus"

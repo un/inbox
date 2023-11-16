@@ -17,91 +17,128 @@
     if (currentPath.value.includes('/help')) return 'help';
     return '';
   });
+
+  const navLinks = [
+    {
+      label: 'Conversations',
+      to: '/h',
+      icon: 'i-ph-chat-circle'
+    },
+    {
+      label: 'Screener',
+      to: '/h/screener',
+      icon: 'i-ph-hand'
+    },
+    {
+      label: 'Feed',
+      to: '/h/feed',
+      icon: 'i-ph-newspaper'
+    },
+    {
+      label: 'Codes',
+      to: '/h/codes',
+      icon: 'i-ph-password'
+    }
+  ];
+  const footerLinks = [
+    {
+      label: 'Settings',
+      to: '/settings',
+      icon: 'i-ph-gear'
+    },
+    {
+      label: 'Help',
+      to: '/help',
+      icon: 'i-ph-question'
+    }
+  ];
 </script>
 <template>
   <div
-    class="flex flex-col h-full max-h-full justify-between transition-all duration-300"
-    :class="localPrefs.sidebarCollapsed ? 'w-[50px]' : 'w-64'">
-    <div class="flex flex-col gap-2">
+    class="h-full max-h-full flex flex-col justify-between transition-all duration-300">
+    <!-- :class="localPrefs.sidebarCollapsed ? 'w-[50px]' : 'w-64'"> -->
+    <!-- <div class="flex flex-col gap-2">
       <nuxt-link
         to="/h"
-        class="overflow-hidden w-full">
+        class="w-full overflow-hidden">
         <button
-          class="flex flex-row gap-4 py-2 px-4 rounded hover:bg-base-4 items-center overflow-hidden justify-start w-full"
+          class="w-full flex flex-row items-center justify-start gap-4 overflow-hidden rounded px-4 py-2 hover:bg-base-4"
           :class="activeNav === 'convos' ? 'bg-base-5' : ''"
           aria-label="Conversations">
-          <icon
-            name="ph-chat-circle"
+          <UnUiIcon
+            name="i-ph-chat-circle"
             size="1.25rem"
             class="min-w-[1.25rem]" />
           <p>Conversations</p>
         </button>
       </nuxt-link>
       <button
-        class="flex flex-row gap-4 py-2 px-4 rounded hover:bg-base-4 items-center overflow-hidden justify-start w-full"
+        class="w-full flex flex-row items-center justify-start gap-4 overflow-hidden rounded px-4 py-2 hover:bg-base-4"
         :class="activeNav === 'screener' ? 'bg-base-5' : ''">
-        <icon
-          name="ph-hand"
+        <UnUiIcon
+          name="i-ph-hand"
           size="1.25rem"
           class="min-w-[1.25rem]" />
         <p>Screener</p>
       </button>
       <button
-        class="flex flex-row gap-4 py-2 px-4 rounded hover:bg-base-4 items-center overflow-hidden justify-start w-full"
+        class="w-full flex flex-row items-center justify-start gap-4 overflow-hidden rounded px-4 py-2 hover:bg-base-4"
         :class="activeNav === 'feed' ? 'bg-base-5' : ''">
-        <icon
-          name="ph-newspaper"
+        <UnUiIcon
+          name="i-ph-newspaper"
           size="1.25rem"
           class="min-w-[1.25rem]" />
         <p>Feed</p>
       </button>
       <button
-        class="flex flex-row gap-4 py-2 px-4 rounded hover:bg-base-4 items-center overflow-hidden justify-start w-full"
+        class="w-full flex flex-row items-center justify-start gap-4 overflow-hidden rounded px-4 py-2 hover:bg-base-4"
         :class="activeNav === 'codes' ? 'bg-base-5' : ''">
-        <icon
-          name="ph-password"
+        <UnUiIcon
+          name="i-ph-password"
           size="1.25rem"
           class="min-w-[1.25rem]" />
         <p>Codes</p>
       </button>
-    </div>
-    <div class="flex flex-col gap-2">
+    </div> -->
+    <UnUiVerticalNavigation :links="navLinks"> </UnUiVerticalNavigation>
+    <UnUiVerticalNavigation :links="footerLinks"> </UnUiVerticalNavigation>
+    <!-- <div class="flex flex-col gap-2">
       <nuxt-link
         to="/settings"
-        class="overflow-hidden w-full">
+        class="w-full overflow-hidden">
         <button
-          class="flex flex-row gap-4 py-2 px-4 rounded hover:bg-base-4 items-center overflow-hidden justify-start w-full"
+          class="w-full flex flex-row items-center justify-start gap-4 overflow-hidden rounded px-4 py-2 hover:bg-base-4"
           :class="activeNav === 'settings' ? 'bg-base-5' : ''">
-          <icon
-            name="ph-gear"
+          <UnUiIcon
+            name="i-ph-gear"
             size="1.25rem"
             class="min-w-[1.25rem]" />
           <p>Settings</p>
         </button>
       </nuxt-link>
       <button
-        class="flex flex-row gap-4 py-2 px-4 rounded hover:bg-base-4 items-center overflow-hidden justify-start w-full"
+        class="w-full flex flex-row items-center justify-start gap-4 overflow-hidden rounded px-4 py-2 hover:bg-base-4"
         :class="activeNav === 'help' ? 'bg-base-5' : ''"
         @click="localPrefs.toggleColorMode()">
-        <icon
-          name="ph-question"
+        <UnUiIcon
+          name="i-ph-question"
           size="1.25rem"
           class="min-w-[1.25rem]" />
         <p>Help</p>
       </button>
       <button
-        class="flex flex-row gap-4 py-2 px-4 rounded hover:bg-base-4 items-center overflow-hidden justify-start w-full truncate"
+        class="w-full flex flex-row items-center justify-start gap-4 overflow-hidden truncate rounded px-4 py-2 hover:bg-base-4"
         @click="localPrefs.toggleSidebar()">
-        <icon
+        <UnUiIcon
           :name="
             localPrefs.sidebarCollapsed
-              ? 'ph-caret-double-right'
-              : 'ph-caret-double-left'
+              ? 'i-ph-caret-double-right'
+              : 'i-ph-caret-double-left'
           "
           size="1.25rem"
           class="min-w-[1.25rem]" />
         <p>Close Sidebar</p>
       </button>
-    </div>
+    </div> -->
   </div>
 </template>
