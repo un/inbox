@@ -2,7 +2,7 @@
   definePageMeta({ skipAuth: true });
 
   const turnstileToken = ref();
-  const errorMessage = ref('');
+  const errorMessage = ref(false);
   const passkeyLocation = ref('');
   const immediatePasskeyPrompt = ref(false);
   const passkeyLocationDialogOpen = ref(false);
@@ -22,8 +22,7 @@
 
   async function doLogin() {
     if (!turnstileToken.value) {
-      errorMessage.value =
-        'Human verification failed!<br/>Try refreshing the page or contact our amazing support team';
+      errorMessage.value = true;
       return;
     }
     if (!immediatePasskeyPrompt.value) {
@@ -34,7 +33,7 @@
 
       timeoutId = setTimeout(() => {
         promptForPasskey();
-      }, 7000);
+      }, 10000);
       return;
     }
 
@@ -48,8 +47,7 @@
     }
     const webauthnResult = await useHanko()?.webauthn.login();
     if (!webauthnResult) {
-      errorMessage.value =
-        'Human verification failed!<br/>Try refreshing the page or contact our amazing support team';
+      errorMessage.value = true;
       return;
     }
     console.log(webauthnResult);
@@ -59,71 +57,82 @@
 
 <template>
   <div
-    class="flex flex-col w-screen h-screen items-center justify-between p-4 pb-14">
+    class="h-screen w-screen flex flex-col items-center justify-between p-4 pb-14">
     <div
-      class="flex flex-col max-w-72 md:max-w-xl items-center justify-center gap-8 w-full grow pb-4">
-      <h1 class="font-display text-2xl text-center mb-4">
+      class="max-w-72 w-full flex grow flex-col items-center justify-center gap-8 pb-4 md:max-w-xl">
+      <h1 class="mb-4 text-center text-2xl font-display">
         Login to your <br /><span class="text-5xl">UnInbox</span>
       </h1>
-
       <UnUiButton
         label="Login with my passkey"
-        icon="ph-key-duotone"
-        width="full"
+        icon="i-ph-key-duotone"
+        block
+        color="primary"
+        size="lg"
         @click="doLogin()" />
       <UnUiButton
         label="Not a member yet? Join instead"
-        variant="outline"
-        width="full"
-        size="sm"
-        @click="navigateTo('/join')" />
+        variant="soft"
+        block
+        size="lg"
+        to="/join" />
       <NuxtLink
         to="/login/findmypasskey"
-        class="text-sm text-center hover:(underline text-primary-11)">
+        class="text-center text-sm hover:(text-primary-11 underline)">
         I lost my passkey
       </NuxtLink>
-      <div class="h-0 max-h-0 max-w-full">
-        <p
+      <div class="h-0 max-h-0 max-w-full w-full">
+        <UnUiAlert
           v-show="errorMessage"
-          class="px-4 py-2 bg-red-9 text-primary-12 rounded text-center"
-          v-html="errorMessage"></p>
+          icon="i-ph-warning-circle"
+          title="Human verification failed!"
+          description="Try refreshing the page or contact our amazing support team"
+          color="red"
+          variant="solid" />
       </div>
 
       <ClientOnly>
         <NuxtTurnstile
           v-model="turnstileToken"
-          class="fixed bottom-5 scale-50 mb-[-30px] hover:(scale-100 mb-0)" />
+          class="fixed bottom-5 mb-[-30px] scale-50 hover:(mb-0 scale-100)" />
       </ClientOnly>
     </div>
-    <UnUiDialog
-      v-model:isOpen="passkeyLocationDialogOpen"
-      :hasCloseButton="true"
-      title="Where's my passkey?">
-      <p v-if="passkeyLocation">
-        Tip: You last saved a passkey in this browser called
-        <span class="font-bold text-primary-11">{{ passkeyLocation }}</span>
-      </p>
-      <p v-if="!passkeyLocation">
-        It looks like you haven't used a passkey in this browser yet.<br />
-        Try using your phone to scan a QR code or check your password
-        manager.<br />
-      </p>
-      <div class="flex flex-col md:flex-row gap-4">
-        <UnUiButton
-          label="Help me find my passkey"
-          variant="outline"
-          width="full"
-          size="sm"
-          @click="navigateTo('/login/findmypasskey')" />
-        <UnUiButton
-          label="I'm ready now"
-          width="full"
-          size="sm"
-          @click="promptForPasskey()" />
+    <UnUiModal v-model="passkeyLocationDialogOpen">
+      <template #header>
+        <div class="flex items-center justify-end">
+          <UnUiButton
+            color="gray"
+            variant="ghost"
+            icon="i-ph-x"
+            class="-my-1"
+            @click="passkeyLocationDialogOpen = false" />
+        </div>
+      </template>
+
+      <div class="w-full flex flex-col gap-4 p-4">
+        <p v-if="passkeyLocation">
+          Tip: You last saved a passkey in this browser called
+          <span class="font-bold text-primary-11">{{ passkeyLocation }}</span>
+        </p>
+        <p v-if="!passkeyLocation">
+          It looks like you haven't used a passkey in this browser yet.<br />
+          Try using your phone to scan a QR code or check your password
+          manager.<br />
+        </p>
       </div>
-      <UnUiCheckbox
-        v-model:value="immediatePasskeyPrompt"
-        label="Skip this prompt in the future" />
-    </UnUiDialog>
+      <template #footer>
+        <div class="w-full flex flex-col gap-4 md:flex-row">
+          <UnUiButton
+            label="Help me find my passkey"
+            variant="outline"
+            size="sm"
+            @click="navigateTo('/login/findmypasskey')" />
+          <UnUiButton
+            label="I'm ready now"
+            size="sm"
+            @click="promptForPasskey()" />
+        </div>
+      </template>
+    </UnUiModal>
   </div>
 </template>

@@ -90,43 +90,39 @@
 </script>
 
 <template>
-  <div class="flex flex-col w-screen h-screen items-center justify-between p-4">
+  <div class="h-screen w-screen flex flex-col items-center justify-between p-4">
     <div
-      class="flex flex-col max-w-72 md:max-w-xl items-center justify-center gap-8 w-full grow pb-14">
-      <h1 class="font-display text-2xl text-center mb-4">
+      class="max-w-72 w-full flex grow flex-col items-center justify-center gap-8 pb-14 md:max-w-xl">
+      <h1 class="mb-4 text-center text-2xl font-display">
         Let's make your <br /><span class="text-5xl">UnInbox</span>
       </h1>
-      <h2 class="font-semibold text-xl text-center">
+      <h2 class="text-center text-xl font-semibold">
         Secure your account {{ username }}
       </h2>
-      <div class="flex flex-row gap-2 w-full justify-stretch">
+      <div class="w-full flex flex-row justify-stretch gap-2">
         <UnUiTooltip
           text="Choose your username"
-          parentClass="w-full">
+          class="w-full">
           <div
-            class="h-2 bg-primary-6 rounded w-full"
+            class="bg-primary-400 h-2 w-full rounded"
             @click="navigateTo('/join')" />
         </UnUiTooltip>
         <UnUiTooltip
           text="Secure your account"
-          parentClass="w-full">
+          class="w-full">
           <div
-            class="h-2 bg-primary-9 w-full rounded"
+            class="bg-primary-600 h-2 w-full rounded"
             @click="navigateTo('/join/passkey')" />
         </UnUiTooltip>
         <UnUiTooltip
           text="Create your profile"
-          parentClass="w-full">
-          <div
-            class="h-2 bg-primary-6 w-full rounded"
-            @click="navigateTo('/join/profile')" />
+          class="w-full">
+          <div class="bg-primary-400 h-2 w-full rounded" />
         </UnUiTooltip>
         <UnUiTooltip
           text="Set up your organization"
-          parentClass="w-full">
-          <div
-            class="h-2 bg-primary-6 w-full rounded"
-            @click="navigateTo('/join/org')" />
+          class="w-full">
+          <div class="bg-primary-400 h-2 w-full rounded" />
         </UnUiTooltip>
       </div>
       <div class="flex flex-col gap-2">
@@ -136,22 +132,22 @@
           world more secure.
         </p>
       </div>
-      <div class="grid lt-md:grid-rows-2 md:grid-cols-2 gap-2 w-full">
+      <div class="grid w-full gap-2 lt-md:grid-rows-2 md:grid-cols-2">
         <UnUiButton
           label="Tell me about passkeys"
-          icon="mdi-information-variant"
-          variant="soft"
+          icon="i-mdi-information-variant"
+          variant="outline"
           size="sm"
           color="green"
-          width="full"
+          block
           @click="howToAddPasskeyDialogOpen = true" />
         <UnUiButton
           label="How do I add a passkey?"
-          icon="mdi-help"
-          variant="soft"
+          icon="i-mdi-help"
+          variant="outline"
           size="sm"
           color="orange"
-          width="full"
+          block
           @click="howToAddPasskeyDialogOpen = true" />
       </div>
       <UnUiInput
@@ -163,21 +159,21 @@
         label="Recovery email address"
         helper="This email will only be used if you ever lose all your passkeys and need to recover your account or for important account notices."
         placeholder=""
-        :remoteValidation="true"
+        :remote-validation="true"
         :schema="z.string().email()" />
 
       <div class="mt-3 w-full">
         <UnUiButton
           :label="buttonLabel"
-          icon="ph-key"
+          icon="i-ph-key"
           :loading="buttonLoading"
           :disabled="!formValid"
-          width="full"
+          block
           @click="createAccount()" />
       </div>
       <p
         v-if="pageError"
-        class="p-4 w-full text-center rounded bg-red-9">
+        class="w-full rounded bg-red-9 p-4 text-center">
         Something went wrong, please try again or contact our support team if it
         persists
       </p>
@@ -188,14 +184,24 @@
       <ClientOnly>
         <NuxtTurnstile
           v-model="turnstileToken"
-          class="fixed bottom-5 scale-50 mb-[-30px] hover:(scale-100 mb-0)" />
+          class="fixed bottom-5 mb-[-30px] scale-50 hover:(mb-0 scale-100)" />
       </ClientOnly>
     </div>
-    <UnUiDialog
-      v-model:isOpen="howToAddPasskeyDialogOpen"
-      :hasCloseButton="true"
+    <UnUiModal
+      v-model="howToAddPasskeyDialogOpen"
       title="How to add a passkey?">
-      <div class="flex flex-col gap-4 items-center w-full">
+      <template #header>
+        <div class="flex items-center justify-between">
+          <p>How to add a passkey?</p>
+          <UnUiButton
+            color="gray"
+            variant="ghost"
+            icon="i-ph-x"
+            class="-my-1"
+            @click="howToAddPasskeyDialogOpen = false" />
+        </div>
+      </template>
+      <div class="w-full flex flex-col items-center gap-4">
         <p
           v-if="instructionSet === ''"
           class="text-center">
@@ -204,37 +210,37 @@
           Select your mobile system below to see the instructions.
         </p>
         <div
-          class="grid lt-md:grid-rows-2 md:grid-cols-2 justify-items-stretch gap-2 w-full">
+          class="grid w-full justify-items-stretch gap-2 lt-md:grid-rows-2 md:grid-cols-2">
           <button
-            class="h-24 hover:bg-primary-4 border border-primary-7 px-4 rounded text-xl grow"
+            class="h-24 grow border border-primary-7 rounded px-4 text-xl hover:bg-primary-4"
             :class="instructionSet === 'ios' ? 'bg-primary-5' : 'bg-primary-2'"
             @click="instructionSet = 'ios'">
             <Icon
               name="ph-apple-logo-fill"
-              class="mt-[-6px] mr-2" />iOS
+              class="mr-2 mt-[-6px]" />iOS
           </button>
           <button
-            class="h-24 hover:bg-primary-4 border border-primary-7 px-4 rounded text-xl"
+            class="h-24 border border-primary-7 rounded px-4 text-xl hover:bg-primary-4"
             :class="
               instructionSet === 'android' ? 'bg-primary-5' : 'bg-primary-2'
             "
             @click="instructionSet = 'android'">
             <Icon
               name="ph-android-logo-fill"
-              class="mt-[-6px] mr-2" />Android
+              class="mr-2 mt-[-6px]" />Android
           </button>
         </div>
         <ol
           v-if="instructionSet === 'ios'"
           class="">
           <li>
-            Click the <span class="font-mono text-sm">"Create my passkey"</span>
+            Click the <span class="text-sm font-mono">"Create my passkey"</span>
             button below
           </li>
           <li>The browser will ask where to save the passkey</li>
           <li>
             Select
-            <span class="font-mono text-sm">"Use a phone or tablet"</span>
+            <span class="text-sm font-mono">"Use a phone or tablet"</span>
           </li>
           <li>
             Using the built-in iOS camera app to scan the QR barcode thats
@@ -242,7 +248,7 @@
           </li>
           <li>
             Tap the small
-            <span class="font-mono text-sm">"Save a passkey"</span> message that
+            <span class="text-sm font-mono">"Save a passkey"</span> message that
             appears on screen
           </li>
         </ol>
@@ -268,13 +274,15 @@
             that appears at the bottom.
           </li>
         </ol>
+      </div>
+      <template #footer>
         <UnUiButton
           label="Ok, I'm ready"
-          icon="ph-thumbs-up"
-          variant="soft"
+          icon="i-ph-thumbs-up"
           color="green"
+          block
           @click="howToAddPasskeyDialogOpen = false" />
-      </div>
-    </UnUiDialog>
+      </template>
+    </UnUiModal>
   </div>
 </template>

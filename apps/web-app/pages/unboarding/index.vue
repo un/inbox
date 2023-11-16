@@ -38,13 +38,16 @@
 
       <div class="flex flex-col gap-2">
         <p class="text-center">
-          Here's a short video to help you get started while we set you up with
-          a free @uninbox email address.
+          We're setting you up with a free @uninbox email address.
+        </p>
+        <p class="text-center">
+          Here's a short video to help you get started while we create your
+          account.
         </p>
         <p class="text-center">
           We dont have a full <span class="line-through">on</span>unboading
-          <span class="font-bold">yet</span>,<br />so watching the video will
-          really help get started.
+          <span class="font-bold">yet</span>,<br />so the video will help you
+          get started.
         </p>
         <p class="text-center">
           Give us a shout if you run into any issues, we're here to help!
@@ -64,16 +67,17 @@
         🎉 Your new email is ready:
         <span class="font-bold">{{ userEmail }}</span>
       </p>
-      <p
+      <UnUiAlert
         v-if="pageError"
-        class="w-full rounded bg-red-9 p-4 text-center">
-        Something went wrong, please try again or contact our support team if it
-        persists
-      </p>
+        title="Uh oh!"
+        color="red"
+        icon="i-ph-warning-circle"
+        description="Something went wrong, please try again or contact our support team if it
+        persists" />
       <UnUiButton
         :label="buttonLabel"
-        icon="ph-thumbs-up"
-        width="full"
+        icon="i-ph-thumbs-up"
+        block
         :loading="buttonLoading"
         @click="navigateTo('/h')" />
     </div>

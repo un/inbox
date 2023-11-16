@@ -33,8 +33,8 @@
 
   const {
     data: imageUploadSignedUrl,
-    pending,
-    error
+    pending: imageUploadSignedUrlPending,
+    error: imageUploadSignedUrlError
   } = await $trpc.user.profile.generateAvatarUploadUrl.useLazyQuery(void 0, {
     server: false
   });
@@ -53,15 +53,26 @@
 
   //functions
   function selectAvatar() {
-    if (pending || error) {
-      console.log({ pending, error });
+    if (imageUploadSignedUrlPending.value || imageUploadSignedUrlError.value) {
+      console.log(
+        JSON.stringify({
+          imageUploadSignedUrlPending,
+          imageUploadSignedUrlError
+        })
+      );
+      console.log(imageUploadSignedUrlPending.value);
       return;
     }
     resetFiles();
     openFileDialog();
   }
   selectedFilesOnChange(async (selectedFiles) => {
-    if (pending || error || !imageUploadSignedUrl.value) return;
+    if (
+      imageUploadSignedUrlPending.value ||
+      imageUploadSignedUrlError.value ||
+      !imageUploadSignedUrl.value
+    )
+      return;
 
     uploadLoading.value = true;
     if (!selectedFiles) return;
@@ -134,41 +145,37 @@
 </script>
 
 <template>
-  <div class="flex flex-col w-screen h-screen items-center justify-between p-4">
+  <div class="h-screen w-screen flex flex-col items-center justify-between p-4">
     <div
-      class="flex flex-col max-w-72 md:max-w-xl items-center justify-center gap-8 w-full grow pb-14">
-      <h1 class="font-display text-2xl text-center mb-4">
+      class="max-w-72 w-full flex grow flex-col items-center justify-center gap-8 pb-14 md:max-w-xl">
+      <h1 class="mb-4 text-center text-2xl font-display">
         Let's make your <br /><span class="text-5xl">UnInbox</span>
       </h1>
-      <h2 class="font-semibold text-xl text-center">Got time for a profile?</h2>
-      <div class="flex flex-row gap-2 w-full justify-stretch">
+      <h2 class="text-center text-xl font-semibold">Got time for a profile?</h2>
+      <div class="w-full flex flex-row justify-stretch gap-2">
         <UnUiTooltip
           text="Choose your username"
-          parentClass="w-full">
+          class="w-full">
           <div
-            class="h-2 bg-primary-6 rounded w-full"
+            class="bg-primary-400 h-2 w-full rounded"
             @click="navigateTo('/join')" />
         </UnUiTooltip>
         <UnUiTooltip
           text="Secure your account"
-          parentClass="w-full">
+          class="w-full">
           <div
-            class="h-2 bg-primary-6 w-full rounded"
+            class="bg-primary-400 h-2 w-full rounded"
             @click="navigateTo('/join/passkey')" />
         </UnUiTooltip>
         <UnUiTooltip
           text="Create your profile"
-          parentClass="w-full">
-          <div
-            class="h-2 bg-primary-9 w-full rounded"
-            @click="navigateTo('/join/profile')" />
+          class="w-full">
+          <div class="bg-primary-600 h-2 w-full rounded" />
         </UnUiTooltip>
         <UnUiTooltip
           text="Set up your organization"
-          parentClass="w-full">
-          <div
-            class="h-2 bg-primary-6 w-full rounded"
-            @click="navigateTo('/join/org')" />
+          class="w-full">
+          <div class="bg-primary-400 h-2 w-full rounded" />
         </UnUiTooltip>
       </div>
       <p class="text-center">
@@ -177,22 +184,23 @@
         <span class="font-italic">Skip this step if you like</span>
       </p>
       <div
-        class="grid gap-4 items-center"
+        class="grid items-center gap-4"
         :class="fNameValue || lNameValue ? 'grid-cols-2' : 'grid-cols-1'">
         <button
-          type="button"
-          class="bg-base-3 border-base-7 border-1 lt-md:(h-[80px] w-[80px] rounded-4) md:(h-[128px] w-[128px] rounded-6) hover:(bg-base-4 border-base-8) cursor-pointer bg-cover bg-center"
+          class="h-[80px] w-[80px] cursor-pointer border-1 border-base-7 rounded-4 bg-base-3 bg-cover bg-center md:h-[128px] md:w-[128px] hover:border-base-8 md:rounded-6 hover:bg-base-4"
           :style="imageUrl ? `background-image: url(${imageUrl}/128x128)` : ''"
           @click="selectAvatar()">
           <div
-            class="flex flex-col gap-2 w-full h-full items-center justify-center p-4"
-            v-if="!imageUrl">
-            <div class="lt-md:(w-[24px] h-[24px]) w-[32px] h-[32px]">
-              <Icon
+            v-if="!imageUrl"
+            class="h-full w-full flex flex-col items-center justify-center gap-2 p-4">
+            <div class="h-[32px] w-[32px]">
+              <UnUiIcon
                 :name="
-                  uploadLoading ? 'svg-spinners:3-dots-fade' : 'ph-image-square'
+                  uploadLoading
+                    ? 'i-svg-spinners:3-dots-fade'
+                    : 'i-ph-image-square'
                 "
-                size="100%" />
+                class="h-[24px] w-[24px]" />
             </div>
             <p class="text-center text-sm lt-md:text-xs">Upload image</p>
           </div>
@@ -200,13 +208,13 @@
 
         <div
           v-if="fNameValue || lNameValue"
-          class="font-display lt-md:text-2xl md:text-3xl flex flex-col">
+          class="flex flex-col font-display lt-md:text-2xl md:text-3xl">
           <p>{{ fNameValue }}</p>
           <p>{{ lNameValue }}</p>
         </div>
       </div>
       <div
-        class="grid lt-md:grid-rows-2 md:grid-cols-2 gap-4 items-center w-full">
+        class="grid w-full items-center gap-4 lt-md:grid-rows-2 md:grid-cols-2">
         <UnUiInput
           v-model:value="fNameValue"
           v-model:valid="fNameValid"
@@ -224,25 +232,26 @@
           placeholder=""
           :schema="z.string()" />
       </div>
-      <div class="mt-3 w-full flex lt-md:flex-col-reverse md:flex-row gap-4">
+      <div class="grid w-full items-center gap-4 md:grid-cols-2 sm:grid-rows-2">
         <UnUiButton
           :label="buttonSkipLabel"
-          icon="ph-skip-forward"
+          icon="i-ph-skip-forward"
           variant="outline"
-          width="full"
+          block
           :loading="buttonSkipLoading"
           @click="createBlankProfile()" />
+
         <UnUiButton
           :label="buttonLabel"
-          icon="ph-user"
+          icon="i-ph-user"
           :loading="buttonLoading"
           :disabled="!formValid"
-          width="full"
+          block
           @click="createUserProfile()" />
       </div>
       <p
         v-if="pageError"
-        class="p-4 w-full text-center rounded bg-red-9">
+        class="w-full rounded bg-red-9 p-4 text-center">
         Something went wrong, please try again or contact our support team if it
         persists
       </p>

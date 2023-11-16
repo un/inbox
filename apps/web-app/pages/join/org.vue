@@ -89,31 +89,29 @@
       <div class="w-full flex flex-row justify-stretch gap-2">
         <UnUiTooltip
           text="Choose your username"
-          parent-class="w-full">
+          class="w-full">
           <div
-            class="h-2 w-full rounded bg-primary-6"
+            class="bg-primary-400 h-2 w-full rounded"
             @click="navigateTo('/join')" />
         </UnUiTooltip>
         <UnUiTooltip
           text="Secure your account"
-          parent-class="w-full">
+          class="w-full">
           <div
-            class="h-2 w-full rounded bg-primary-6"
+            class="bg-primary-400 h-2 w-full rounded"
             @click="navigateTo('/join/passkey')" />
         </UnUiTooltip>
         <UnUiTooltip
           text="Create your profile"
-          parent-class="w-full">
+          class="w-full">
           <div
-            class="h-2 w-full rounded bg-primary-6"
+            class="bg-primary-400 h-2 w-full rounded"
             @click="navigateTo('/join/profile')" />
         </UnUiTooltip>
         <UnUiTooltip
           text="Set up your organization"
-          parent-class="w-full">
-          <div
-            class="h-2 w-full rounded bg-primary-9"
-            @click="navigateTo('/join/org')" />
+          class="w-full">
+          <div class="bg-primary-600 h-2 w-full rounded" />
         </UnUiTooltip>
       </div>
 
@@ -161,10 +159,10 @@
 
         <UnUiButton
           :label="newButtonLabel"
-          icon="ph-house"
+          icon="i-ph-house"
           :loading="newButtonLoading"
           :disabled="!formValid"
-          width="full"
+          block
           @click="createNewOrg()" />
       </div>
       <div
@@ -188,25 +186,26 @@
 
         <UnUiButton
           :label="joinButtonLabel"
-          icon="ph-users-four"
+          icon="i-ph-users-four"
           :loading="joinButtonLoading"
           :disabled="!formValid"
-          width="full"
+          block
           @click="joinOrg()" />
       </div>
       <UnUiButton
         :label="skipButtonLabel"
-        icon="ph-skip-forward"
+        icon="i-ph-skip-forward"
         :loading="skipButtonLoading"
-        width="full"
+        block
         variant="outline"
         @click="navigateTo('/unboarding')" />
-      <p
+      <UnUiAlert
         v-if="pageError"
-        class="w-full rounded bg-red-9 p-4 text-center">
-        Something went wrong, please try again or contact our support team if it
-        persists
-      </p>
+        title="Uh oh!"
+        color="red"
+        icon="i-ph-warning-circle"
+        description="Something went wrong, please try again or contact our support team if it
+        persists" />
     </div>
   </div>
 </template>

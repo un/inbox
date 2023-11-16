@@ -52,39 +52,33 @@
 
 <template>
   <div
-    class="flex flex-col w-screen h-screen items-center justify-between p-4 pb-14">
+    class="h-screen w-screen flex flex-col items-center justify-between p-4 pb-14">
     <div
-      class="flex flex-col max-w-72 md:max-w-xl items-center justify-center gap-8 w-full grow pb-4">
-      <h1 class="font-display text-2xl text-center mb-4">
+      class="max-w-72 w-full flex grow flex-col items-center justify-center gap-8 pb-4 md:max-w-xl">
+      <h1 class="mb-4 text-center text-2xl font-display">
         Let's make your <br /><span class="text-5xl">UnInbox</span>
       </h1>
-      <h2 class="font-semibold text-xl text-center">Choose your username</h2>
-      <div class="flex flex-row gap-2 w-full justify-stretch">
+      <h2 class="text-center text-xl font-semibold">Choose your username</h2>
+      <div class="w-full flex flex-row justify-stretch gap-2">
         <UnUiTooltip
           text="Choose your username"
-          parentClass="w-full">
-          <div class="h-2 bg-primary-9 rounded w-full" />
+          class="w-full">
+          <div class="bg-primary-600 h-2 w-full rounded" />
         </UnUiTooltip>
         <UnUiTooltip
           text="Secure your account"
-          parentClass="w-full">
-          <div
-            class="h-2 bg-primary-6 w-full rounded"
-            @click="navigateTo('/join/passkey')" />
+          class="w-full">
+          <div class="bg-primary-400 h-2 w-full rounded" />
         </UnUiTooltip>
         <UnUiTooltip
           text="Create your profile"
-          parentClass="w-full">
-          <div
-            class="h-2 bg-primary-6 w-full rounded"
-            @click="navigateTo('/join/profile')" />
+          class="w-full">
+          <div class="bg-primary-400 h-2 w-full rounded" />
         </UnUiTooltip>
         <UnUiTooltip
           text="Set up your organization"
-          parentClass="w-full">
-          <div
-            class="h-2 bg-primary-6 w-full rounded"
-            @click="navigateTo('/join/org')" />
+          class="w-full">
+          <div class="bg-primary-400 h-2 w-full rounded" />
         </UnUiTooltip>
       </div>
       <div class="flex flex-col gap-2">
@@ -104,7 +98,7 @@
         label="Username"
         helper="Can only contain letters and numbers. Usernames less than 5 characters are available for pro users, 3 or less characters are reserved for lifetime license users"
         placeholder=""
-        :remoteValidation="true"
+        :remote-validation="true"
         :schema="
           z
             .string()
@@ -120,16 +114,16 @@
       <div class="mt-3 w-full">
         <UnUiButton
           label="I like it"
-          icon="ph-check"
+          icon="i-ph-check"
           :loading="buttonLoading"
           :disabled="!formValid"
-          width="full"
+          block
           @click="goToNextStep()" />
       </div>
       <ClientOnly>
         <NuxtTurnstile
           v-model="turnstileToken"
-          class="fixed bottom-5 scale-50 mb-[-30px] hover:(scale-100 mb-0)" />
+          class="fixed bottom-5 mb-[-30px] scale-50 hover:(mb-0 scale-100)" />
       </ClientOnly>
     </div>
   </div>
