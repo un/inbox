@@ -47,11 +47,11 @@
       label: 'Email',
       sortable: true
     },
-    {
-      key: 'role',
-      label: 'Role',
-      sortable: true
-    },
+    // {
+    //   key: 'role',
+    //   label: 'Role',
+    //   sortable: true
+    // },
 
     {
       key: 'usedBy',
@@ -63,11 +63,11 @@
       label: 'Admin',
       sortable: true
     },
-    {
-      key: 'created',
-      label: 'Created On',
-      sortable: true
-    },
+    // {
+    //   key: 'created',
+    //   label: 'Created On',
+    //   sortable: true
+    // },
     {
       key: 'expiry',
       label: 'Expiry',
@@ -108,8 +108,8 @@
               ? invite.acceptedAt
                 ? 'used'
                 : invite.expiresAt < dateNow
-                ? 'expired'
-                : 'active'
+                  ? 'expired'
+                  : 'active'
               : 'active',
             creatorAvatar:
               invite.invitedByUser.orgMemberships[0].profile.avatarId,
@@ -155,20 +155,20 @@
 </script>
 
 <template>
-  <div class="flex flex-col w-full h-full items-start p-4 gap-8">
-    <div class="flex flex-row w-full justify-between items-center">
-      <div class="flex flex-row gap-4 items-center">
+  <div class="h-full w-full flex flex-col items-start gap-8 p-4">
+    <div class="w-full flex flex-row items-center justify-between">
+      <div class="flex flex-row items-center gap-4">
         <div class="flex flex-col gap-1">
-          <span class="font-display text-2xl">Invites</span>
+          <span class="text-2xl font-display">Invites</span>
           <span class="text-sm">Manage your org invitations</span>
         </div>
       </div>
-      <div class="flex flex-row gap-4 items-center">
+      <div class="flex flex-row items-center gap-4">
         <button
-          class="flex flex-row gap-2 p-2 border-1 rounded items-center justify-center border-base-7 bg-base-3 max-w-80"
+          class="max-w-80 flex flex-row items-center justify-center gap-2 border-1 border-base-7 rounded bg-base-3 p-2"
           @click="showInviteModal = !showInviteModal">
-          <icon
-            name="ph-plus"
+          <UnUiIcon
+            name="i-ph-plus"
             size="20" />
           <p class="text-sm">Invite</p>
         </button>
@@ -176,10 +176,10 @@
     </div>
     <div
       v-if="showInviteModal"
-      class="flex flex-col w-full gap-4 justify-start">
+      class="w-full flex flex-col justify-start gap-4">
       <span class="text-md font-semibold">Create a new invite</span>
       <div class="flex flex-row gap-8">
-        <div class="flex flex-col w-full gap-4">
+        <div class="flex flex-col gap-4">
           <UnUiInput
             v-model:value="inviteEmailValue"
             v-model:valid="inviteEmailValid"
@@ -191,24 +191,23 @@
             :label="buttonLabel"
             :loading="buttonLoading"
             :disabled="!formValid"
-            size="sm"
             @click="createInvite()" />
         </div>
         <div
-          class="w-full flex flex-col gap-0"
-          v-if="newInviteCode">
-          <span class="text-sm uppercase font-semibold text-base-11"
+          v-if="newInviteCode"
+          class="w-full flex flex-col gap-0">
+          <span class="text-sm font-semibold uppercase text-base-11"
             >Invite Code</span
           >
           <div class="flex flex-row gap-4">
             <span class="font-mono">{{ newInviteCode }}</span>
             <button
               v-if="newInviteCode"
-              class="flex flex-row gap-1 p-1 rounded items-center justify-center bg-base-3 hover:bg-base-4 text-xs"
+              class="flex flex-row items-center justify-center gap-1 rounded bg-base-3 p-1 text-xs hover:bg-base-4"
               @click="copy(newInviteCode)">
               <!-- by default, `copied` will be reset in 1.5s -->
-              <Icon
-                name="ph-clipboard"
+              <UnUiIcon
+                name="i-ph-clipboard"
                 size="16"
                 :class="copied ? 'text-green-500' : 'text-base-11'" />
               <span v-if="!copied">Copy</span>
@@ -218,33 +217,31 @@
         </div>
       </div>
     </div>
-    <div class="flex flex-col gap-8 w-full overflow-y-scroll">
-      <div class="flex flex-col gap-8 w-full">
-        <UnUiTable
+    <div class="w-full flex flex-col gap-8 overflow-y-scroll">
+      <div class="w-full flex flex-col gap-8">
+        <NuxtUiTable
           :columns="tableColumns"
           :rows="tableRows"
           class=""
           :loading="pending">
           <template #status-data="{ row }">
-            <div
-              class="py-1 px-4 rounded-full w-fit"
-              :class="row.status === 'active' ? 'bg-grass-5' : 'bg-red-5'">
-              <span class="uppercase text-xs">{{ row.status }}</span>
-            </div>
+            <UnUiBadge :color="row.status === 'active' ? 'green' : 'red'">
+              <span class="uppercase">{{ row.status }}</span>
+            </UnUiBadge>
           </template>
           <template #code-data="{ row }">
             <div
-              class="flex flex-row gap-2 justify-between items-center w-full">
+              class="w-full flex flex-row items-center justify-between gap-2">
               <UnUiTooltip :text="row.code">
                 <span class="">{{ row.truncatedCode }}</span>
               </UnUiTooltip>
               <button
                 v-if="row.code"
-                class="flex flex-row gap-1 p-1 rounded items-center justify-center bg-base-3 hover:bg-base-4 text-xs"
+                class="flex flex-row items-center justify-center gap-1 rounded bg-base-3 p-1 text-xs hover:bg-base-4"
                 @click="copy(row.code)">
                 <!-- by default, `copied` will be reset in 1.5s -->
-                <Icon
-                  name="ph-clipboard"
+                <UnUiIcon
+                  name="i-ph-clipboard"
                   size="16"
                   :class="copied ? 'text-green-500' : 'text-base-11'" />
                 <span v-if="text !== row.code">Copy</span>
@@ -257,27 +254,25 @@
               <span class="">{{ row.truncatedEmail }}</span>
             </UnUiTooltip>
           </template>
-          <template #role-data="{ row }">
-            <div
-              class="py-1 px-4 rounded-full w-fit"
-              :class="row.role === 'admin' ? 'bg-primary-9' : 'bg-base-5'">
-              <span class="uppercase text-xs">{{ row.role }}</span>
-            </div>
-          </template>
+          <!-- <template #role-data="{ row }">
+            <UnUiBadge :color="row.role === 'admin' ? 'amber' : 'blue'">
+              <span class="uppercase">{{ row.role }}</span>
+            </UnUiBadge>
+          </template> -->
           <template #usedBy-data="{ row }">
-            <div class="flex flex-row gap-2 items-center">
+            <div class="flex flex-row items-center gap-2">
               <UnUiAvatar
-                :avatarId="row.userAvatar ? row.userAvatar : ''"
-                :name="row.usedBy ? row.usedBy : ''"
                 v-if="row.userAvatar || row.usedBy"
+                :avatar-id="row.userAvatar ? row.userAvatar : ''"
+                :name="row.usedBy ? row.usedBy : ''"
                 size="xs" />
               <span class="">{{ row.usedBy }}</span>
             </div>
           </template>
           <template #createdBy-data="{ row }">
-            <div class="flex flex-row gap-2 items-center">
+            <div class="flex flex-row items-center gap-2">
               <UnUiAvatar
-                :avatarId="row.creatorAvatar ? row.creatorAvatar : ''"
+                :avatar-id="row.creatorAvatar ? row.creatorAvatar : ''"
                 :name="row.createdBy ? row.createdBy : ''"
                 size="xs" />
               <span class="">{{ row.createdBy }}</span>
@@ -289,7 +284,7 @@
           <template #expiry-data="{ row }">
             <span class="text-xs">{{ row.expiry.toDateString() }}</span>
           </template>
-        </UnUiTable>
+        </NuxtUiTable>
       </div>
     </div>
   </div>

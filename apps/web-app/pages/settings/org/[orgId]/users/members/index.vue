@@ -62,10 +62,8 @@
 
   const tableRows = ref<{}[]>([]);
   watch(orgMembersQuery, (newResults) => {
-    console.log(JSON.stringify(newResults));
     if (newResults?.members) {
       for (const member of newResults.members) {
-        console.log(member.profile);
         tableRows.value.push({
           avatar: member.profile.avatarId,
           name: member.profile.firstName + ' ' + member.profile.lastName,
