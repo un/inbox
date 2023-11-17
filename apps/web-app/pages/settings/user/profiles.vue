@@ -97,7 +97,6 @@
         imageId.value,
         '128x128'
       ) as string;
-      console.log(imageUrl.value);
     }
     uploadLoading.value = false;
   });
@@ -131,6 +130,14 @@
     }
     buttonLoading.value = false;
     buttonLabel.value = 'All done!';
+    const toast = useToast();
+    toast.add({
+      id: 'profile_saved',
+      title: 'Profile Saved',
+      description: 'Profile has been updated successfully',
+      icon: 'i-ph-thumbs-up',
+      timeout: 5000
+    });
   }
 </script>
 
@@ -159,7 +166,7 @@
           <div
             v-if="!imageUrl"
             class="h-full w-full flex flex-col items-center justify-center gap-2 p-4">
-            <div class="h-[32px] w-[32px] lt-md:(h-[24px] w-[24px])">
+            <div class="h-[32px] w-[32px]">
               <UnUiIcon
                 :name="
                   uploadLoading
@@ -171,23 +178,12 @@
             <p class="text-center text-sm lt-md:text-xs">Upload image</p>
           </div>
         </button>
-        <button
+        <UnUiButton
           v-if="imageUrl"
-          class="w-full flex flex-row items-center justify-start gap-1"
-          @click="selectAvatar()">
-          <div class="h-[24px] w-[24px]">
-            <UnUiIcon
-              :name="
-                uploadLoading
-                  ? 'i-svg-spinners:3-dots-fade'
-                  : 'i-ph-image-square'
-              "
-              size="100%" />
-          </div>
-          <span class="text-center text-sm lt-md:text-xs"
-            >Upload new image</span
-          >
-        </button>
+          label="Upload new image"
+          icon="i-ph-image-square"
+          :loading="uploadLoading"
+          @click="selectAvatar()" />
       </div>
       <div class="flex flex-row flex-wrap gap-4">
         <UnUiInput

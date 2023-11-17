@@ -31,9 +31,10 @@
       if (newVal && newVal.orgProfile) {
         orgNameValue.value = newVal.orgProfile.name;
         newVal.orgProfile.avatarId
-          ? (imageUrl.value = `https://imagedelivery.net/${
-              useRuntimeConfig().public.cfImagesAccountHash
-            }/${newVal.orgProfile.avatarId}`)
+          ? ((imageUrl.value = useUtils().generateAvatarUrl(
+              newVal.orgProfile.avatarId,
+              '128x128'
+            )) as string)
           : null;
       }
     }
@@ -90,9 +91,12 @@
       });
     }
     //TODO: make the image only appear once it has been loaded to avoid blank box
-    imageUrl.value = `https://imagedelivery.net/${
-      useRuntimeConfig().public.cfImagesAccountHash
-    }/${imageId.value}`;
+    if (imageId.value) {
+      imageUrl.value = useUtils().generateAvatarUrl(
+        imageId.value,
+        '128x128'
+      ) as string;
+    }
     uploadLoading.value = false;
   });
 
@@ -115,35 +119,43 @@
     }
     buttonLoading.value = false;
     buttonLabel.value = 'All done!';
+    const toast = useToast();
+    toast.add({
+      id: 'profile_saved',
+      title: 'Profile Saved',
+      description: 'Profile has been updated successfully',
+      icon: 'i-ph-thumbs-up',
+      timeout: 5000
+    });
   }
 </script>
 
 <template>
-  <div class="flex flex-col w-full h-full items-start p-4 gap-8">
-    <div class="flex flex-row w-full justify-between items-center">
-      <span class="font-display text-2xl">Organization Profile</span>
+  <div class="h-full w-full flex flex-col items-start gap-8 p-4">
+    <div class="w-full flex flex-row items-center justify-between">
+      <span class="text-2xl font-display">Organization Profile</span>
     </div>
     <div
       v-if="pending"
-      class="flex flex-row w-full p-8 bg-base-3 rounded-xl gap-4 justify-center rounded-tl-2xl">
+      class="w-full flex flex-row justify-center gap-4 rounded-xl rounded-tl-2xl bg-base-3 p-8">
       <icon
         name="svg-spinners:3-dots-fade"
         size="24" />
       <span>Loading organization profile</span>
     </div>
     <div
-      class="flex flex-col items-start justify-center gap-8 w-full pb-14"
-      v-if="!pending">
+      v-if="!pending"
+      class="w-full flex flex-col items-start justify-center gap-8 pb-14">
       <div class="flex flex-col gap-2">
         <button
           type="button"
-          class="bg-base-3 border-base-7 border-1 lt-md:(h-[80px] w-[80px] rounded-4) md:(h-[128px] w-[128px] rounded-6) hover:(bg-base-4 border-base-8) cursor-pointer bg-cover bg-center"
-          :style="imageUrl ? `background-image: url(${imageUrl}/128x128)` : ''"
+          class="h-[80px] w-[80px] cursor-pointer border-1 border-base-7 rounded-lg bg-base-3 bg-cover bg-center md:h-[128px] md:w-[128px] hover:border-base-8 hover:bg-base-4"
+          :style="imageUrl ? `background-image: url(${imageUrl})` : ''"
           @click="selectAvatar()">
           <div
-            class="flex flex-col gap-2 w-full h-full items-center justify-center p-4"
-            v-if="!imageUrl">
-            <div class="lt-md:(w-[24px] h-[24px]) w-[32px] h-[32px]">
+            v-if="!imageUrl"
+            class="h-full w-full flex flex-col items-center justify-center gap-2 p-4">
+            <div class="h-[32px] w-[32px]">
               <Icon
                 :name="
                   uploadLoading ? 'svg-spinners:3-dots-fade' : 'ph-image-square'
@@ -153,21 +165,12 @@
             <p class="text-center text-sm lt-md:text-xs">Upload image</p>
           </div>
         </button>
-        <button
-          class="flex flex-row gap-1 w-full items-center justify-start"
+        <UnUiButton
           v-if="imageUrl"
-          @click="selectAvatar()">
-          <div class="w-[24px] h-[24px]">
-            <Icon
-              :name="
-                uploadLoading ? 'svg-spinners:3-dots-fade' : 'ph-image-square'
-              "
-              size="100%" />
-          </div>
-          <span class="text-center text-sm lt-md:text-xs"
-            >Upload new image</span
-          >
-        </button>
+          label="Upload new image"
+          icon="i-ph-image-square"
+          :loading="uploadLoading"
+          @click="selectAvatar()" />
       </div>
 
       <UnUiInput
@@ -180,13 +183,13 @@
         :schema="z.string().min(1)" />
       <UnUiButton
         :label="buttonLabel"
-        icon="ph-floppy-disk"
+        icon="i-ph-floppy-disk"
         :loading="buttonLoading"
         :disabled="!formValid"
         @click="saveProfile()" />
       <p
         v-if="pageError"
-        class="p-4 w-full text-center rounded bg-red-9">
+        class="w-full rounded bg-red-9 p-4 text-center">
         Something went wrong, please try again or contact our support team if it
         persists
       </p>
