@@ -1,81 +1,53 @@
-<script setup lang="ts">
-  import { UiColor } from '@uninbox/types/ui';
-  import type { VariantProps } from 'class-variance-authority';
-  type Props = {
-    name?: string;
-    count?: number;
-    avatarId?: string;
-    tooltipPreText?: string;
-    size?: 'tiny' | 'xs' | 'sm' | 'md' | 'lg' | 'xl';
-    color?: UiColor | 'base';
-  };
+<script lang="ts">
+  import type { DefineComponent } from 'vue';
+  import { NuxtUiAvatar } from '#components';
 
-  const props = withDefaults(defineProps<Props>(), {
-    name: '',
-    size: 'md',
-    color: 'base'
-  });
-  const imageUrlAccountHash = useRuntimeConfig().public.cfImagesAccountHash;
-
-  const avatarClasses = useUtils().cva('', {
-    variants: {
-      image: {
-        tiny: '32x32',
-        xs: '32x32',
-        sm: '48x48',
-        md: '56x56',
-        lg: '64x64',
-        xl: '80x80',
-        '2xl': '128x128'
-      },
-      container: {
-        tiny: 'w-[16px] h-[16px] text-xs rounded-md',
-        xs: 'w-[32px] h-[32px] text-sm rounded-md',
-        sm: 'w-[48px] h-[48px] text-base rounded-md',
-        md: 'w-[56px] h-[56px] text-lg rounded-lg',
-        lg: 'w-[64px] h-[64px] text-xl rounded-lg',
-        xl: 'w-[80px] h-[80px] text-2xl rounded-lg',
-        '2xl': 'w-[128px] h-[128px] text-3xl rounded-xl'
-      },
+  export default defineComponent<
+    typeof NuxtUiAvatar extends DefineComponent<infer Props, any, any>
+      ? Props & {
+          color?: string;
+          avatarId?: string;
+          avatarUrl?: string | undefined;
+        }
+      : never
+  >({
+    props: {
+      ...NuxtUiAvatar.props,
       color: {
-        base: 'bg-base-3',
-        red: 'bg-red-8',
-        orange: 'bg-orange-8',
-        purple: 'bg-purple-8',
-        green: 'bg-green-8',
-        yellow: 'bg-yellow-8',
-        pink: 'bg-pink-8',
-        blue: 'bg-blue-8',
-        cyan: 'bg-cyan-8'
+        type: String,
+        required: false,
+        default: 'red'
+      },
+      avatarId: {
+        type: String,
+        required: false,
+        default: null
       }
+    },
+    setup(props: any) {
+      const avatarUrl = computed(() => {
+        const size: string = props.size;
+        return props.src
+          ? props.src
+          : props.avatarId
+            ? useUtils().generateAvatarUrl(props.avatarId, size)
+            : null;
+      });
+
+      return { avatarUrl };
     }
   });
-
-  const tooltipText = props.tooltipPreText
-    ? props.tooltipPreText + ': ' + props.name
-    : props.name;
+  //TODO: Ensure that the color prop is a pre-defined color so tailwindcss correctly generates it for the css
 </script>
 <template>
-  <UnUiTooltip :text="tooltipText || ''">
-    <div
-      class="bg-cover bg-center font-display flex justify-center items-center"
-      :class="avatarClasses({ container: props.size, color: props.color })"
-      :style="
-        props.avatarId
-          ? `background-image: url(https://imagedelivery.net/${imageUrlAccountHash}/${
-              props.avatarId
-            }/${avatarClasses({ image: props.size })})`
-          : ''
-      ">
-      {{
-        props.avatarId
-          ? ''
-          : props.name
-          ? props.name?.charAt(0)
-          : props.count
-          ? `+ ${props.count}`
-          : ''
-      }}
-    </div>
+  <UnUiTooltip :text="$props.alt">
+    <NuxtUiAvatar
+      v-bind="$props"
+      :src="avatarUrl"
+      :ui="{
+        text: 'font-display text-gray-950',
+        placeholder: 'font-display text-gray-950'
+      }"
+      :class="`bg-${$props.color}-400`" />
   </UnUiTooltip>
 </template>
