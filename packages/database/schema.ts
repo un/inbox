@@ -81,7 +81,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
     fields: [users.id],
     references: [orgs.ownerId]
   }),
-  conversations: many(convoMembers),
+  // conversations: many(convoMembers),
   userGroups: many(userGroupMembers)
 }));
 
