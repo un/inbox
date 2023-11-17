@@ -40,9 +40,10 @@
         blurbValue.value = newVal.profile.blurb || '';
 
         newVal.profile.avatarId
-          ? (imageUrl.value = `https://imagedelivery.net/${
-              useRuntimeConfig().public.cfImagesAccountHash
-            }/${newVal.profile.avatarId}`)
+          ? ((imageUrl.value = useUtils().generateAvatarUrl(
+              newVal.profile.avatarId,
+              '128x128'
+            )) as string)
           : null;
       }
     }
@@ -90,11 +91,14 @@
       imageId.value = await $trpc.user.profile.awaitAvatarUpload.query({
         uploadId: imageUploadSignedUrl.value.id
       });
+      //TODO: make the image only appear once it has been loaded to avoid blank box
+
+      imageUrl.value = useUtils().generateAvatarUrl(
+        imageId.value,
+        '128x128'
+      ) as string;
+      console.log(imageUrl.value);
     }
-    //TODO: make the image only appear once it has been loaded to avoid blank box
-    imageUrl.value = `https://imagedelivery.net/${
-      useRuntimeConfig().public.cfImagesAccountHash
-    }/${imageId.value}`;
     uploadLoading.value = false;
   });
 
@@ -138,8 +142,8 @@
     <div
       v-if="pending"
       class="w-full flex flex-row justify-center gap-4 rounded-xl rounded-tl-2xl bg-base-3 p-8">
-      <icon
-        name="svg-spinners:3-dots-fade"
+      <UnUiIcon
+        name="i-svg-spinners:3-dots-fade"
         size="24" />
       <span>Loading your profiles</span>
     </div>
@@ -149,16 +153,18 @@
       <div class="flex flex-col gap-2">
         <button
           type="button"
-          class="cursor-pointer border-1 border-base-7 bg-base-3 bg-cover bg-center lt-md:(h-[80px] w-[80px] rounded-4) md:(h-[128px] w-[128px] rounded-6) hover:(border-base-8 bg-base-4)"
-          :style="imageUrl ? `background-image: url(${imageUrl}/128x128)` : ''"
+          class="h-[80px] w-[80px] cursor-pointer border-1 border-base-7 rounded-lg bg-base-3 bg-base-4 bg-cover bg-center md:h-[128px] md:w-[128px] hover:border-base-8"
+          :style="imageUrl ? `background-image: url(${imageUrl})` : ''"
           @click="selectAvatar()">
           <div
             v-if="!imageUrl"
             class="h-full w-full flex flex-col items-center justify-center gap-2 p-4">
             <div class="h-[32px] w-[32px] lt-md:(h-[24px] w-[24px])">
-              <Icon
+              <UnUiIcon
                 :name="
-                  uploadLoading ? 'svg-spinners:3-dots-fade' : 'ph-image-square'
+                  uploadLoading
+                    ? 'i-svg-spinners:3-dots-fade'
+                    : 'i-ph-image-square'
                 "
                 size="100%" />
             </div>
@@ -170,9 +176,11 @@
           class="w-full flex flex-row items-center justify-start gap-1"
           @click="selectAvatar()">
           <div class="h-[24px] w-[24px]">
-            <Icon
+            <UnUiIcon
               :name="
-                uploadLoading ? 'svg-spinners:3-dots-fade' : 'ph-image-square'
+                uploadLoading
+                  ? 'i-svg-spinners:3-dots-fade'
+                  : 'i-ph-image-square'
               "
               size="100%" />
           </div>
@@ -207,7 +215,7 @@
       </div>
       <UnUiButton
         :label="buttonLabel"
-        icon="ph-floppy-disk"
+        icon="i-ph-floppy-disk"
         :loading="buttonLoading"
         @click="saveProfile()" />
       <p
