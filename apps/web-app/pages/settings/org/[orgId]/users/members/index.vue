@@ -19,9 +19,14 @@
     pending,
     error,
     refresh
-  } = await $trpc.org.users.members.getOrgMembers.useLazyQuery({
-    orgPublicId: orgPublicId
-  });
+  } = await $trpc.org.users.members.getOrgMembers.useLazyQuery(
+    {
+      orgPublicId: orgPublicId
+    },
+    {
+      server: false
+    }
+  );
 
   const tableColumns = [
     {
@@ -57,8 +62,10 @@
 
   const tableRows = ref<{}[]>([]);
   watch(orgMembersQuery, (newResults) => {
+    console.log(JSON.stringify(newResults));
     if (newResults?.members) {
       for (const member of newResults.members) {
+        console.log(member.profile);
         tableRows.value.push({
           avatar: member.profile.avatarId,
           name: member.profile.firstName + ' ' + member.profile.lastName,
@@ -75,36 +82,36 @@
 </script>
 
 <template>
-  <div class="flex flex-col w-full h-full items-start p-4 gap-8">
-    <div class="flex flex-row w-full justify-between items-center">
-      <div class="flex flex-row gap-4 items-center">
+  <div class="h-full w-full flex flex-col items-start gap-8 p-4">
+    <div class="w-full flex flex-row items-center justify-between">
+      <div class="flex flex-row items-center gap-4">
         <div class="flex flex-col gap-1">
-          <span class="font-display text-2xl">Members</span>
+          <span class="text-2xl font-display">Members</span>
           <span class="text-sm">Manage your org members</span>
         </div>
       </div>
-      <div class="flex flex-row gap-4 items-center">
+      <div class="flex flex-row items-center gap-4">
         <button
-          class="flex flex-row gap-2 p-2 border-1 rounded items-center justify-center border-base-7 bg-base-3 max-w-80"
+          class="max-w-80 flex flex-row items-center justify-center gap-2 border-1 border-base-7 rounded bg-base-3 p-2"
           @click="navigateTo('./invites')">
-          <icon
-            name="ph-plus"
+          <UnUiIcon
+            name="i-ph-plus"
             size="20" />
           <p class="text-sm">Invite</p>
         </button>
       </div>
     </div>
-    <div class="flex flex-col gap-4 w-full overflow-y-scroll">
-      <UnUiTable
+    <div class="w-full flex flex-col gap-4 overflow-y-scroll">
+      <NuxtUiTable
         :columns="tableColumns"
         :rows="tableRows"
         :loading="pending"
         class="">
         <template #name-data="{ row }">
-          <div class="flex flex-row gap-2 items-center">
+          <div class="flex flex-row items-center gap-2">
             <UnUiAvatar
-              :avatarId="row.avatar ? row.avatar : ''"
-              :name="row.name ? row.name : ''"
+              :avatar-id="row.avatar ? row.avatar : ''"
+              :alt="row.name ? row.name : ''"
               size="xs" />
             <span class="">{{ row.name }}</span>
           </div>
@@ -113,20 +120,20 @@
           <span class="">@{{ row.handle }}</span>
         </template>
         <template #role-data="{ row }">
-          <div
-            class="py-1 px-4 rounded-full w-fit"
-            :class="row.role === 'admin' ? 'bg-primary-9' : 'bg-base-5'">
-            <span class="uppercase text-xs">{{ row.role }}</span>
-          </div>
+          <UnUiBadge
+            :color="row.role === 'admin' ? 'amber' : 'blue'"
+            variant="solid">
+            <span class="uppercase">{{ row.role }}</span>
+          </UnUiBadge>
         </template>
         <template #status-data="{ row }">
-          <div
-            class="py-1 px-4 rounded-full w-fit"
-            :class="row.status === 'active' ? 'bg-grass-5' : 'bg-red-5'">
-            <span class="uppercase text-xs">{{ row.status }}</span>
-          </div>
+          <UnUiBadge
+            :color="row.status === 'active' ? 'green' : 'red'"
+            variant="solid">
+            <span class="uppercase">{{ row.status }}</span>
+          </UnUiBadge>
         </template>
-      </UnUiTable>
+      </NuxtUiTable>
     </div>
   </div>
 </template>
