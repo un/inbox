@@ -1,12 +1,21 @@
 export const uiColors = [
   'red',
-  'pink',
-  'purple',
-  'blue',
-  'green',
   'orange',
+  'amber',
   'yellow',
-  'cyan'
+  'lime',
+  'green',
+  'emerald',
+  'teal',
+  'cyan',
+  'sky',
+  'blue',
+  'indigo',
+  'violet',
+  'purple',
+  'fuchsia',
+  'pink',
+  'rose'
 ] as const;
 
 export type UiColor = (typeof uiColors)[number];
