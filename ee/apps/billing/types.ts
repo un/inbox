@@ -12,14 +12,8 @@ type PlanIds = {
   [K in StripeBillingPeriod]: string;
 };
 
-type LifetimeIds = {
-  current: string;
-  previous: string[] | null;
-};
-
 export type StripeData = {
   plans: Record<StripePlanName, PlanIds>;
-  lifetime: LifetimeIds | null;
   key: string;
   webhookKey: string;
 };

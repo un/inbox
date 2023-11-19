@@ -96,7 +96,7 @@
         width="full"
         icon="ph:at"
         label="Username"
-        helper="Can only contain letters and numbers. Usernames less than 5 characters are available for pro users, 3 or less characters are reserved for lifetime license users"
+        helper="Can only contain letters and numbers."
         placeholder=""
         :remote-validation="true"
         :schema="

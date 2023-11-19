@@ -2,12 +2,7 @@ import { z } from 'zod';
 import { parse, stringify } from 'superjson';
 import { router, eeProcedure } from '../../../trpc';
 import { eq, and, sql } from '@uninbox/database/orm';
-import {
-  lifetimeLicenses,
-  orgBilling,
-  orgMembers,
-  orgs
-} from '@uninbox/database/schema';
+import { orgBilling, orgMembers, orgs } from '@uninbox/database/schema';
 import { nanoId, nanoIdLength } from '@uninbox/utils';
 
 const planNames = ['free', 'starter', 'pro'] as const;
@@ -35,17 +30,9 @@ export const billingRouter = router({
         columns: {
           plan: true,
           period: true
-        },
-        with: {
-          lifetimeLicenses: {
-            columns: {
-              id: true
-            }
-          }
         }
       });
 
-      const totalLifetimeUsers = orgBillingQuery?.lifetimeLicenses.length || 0;
       const orgPlan = orgBillingQuery?.plan || 'free';
       const orgPeriod = orgBillingQuery?.period || 'monthly';
 
@@ -61,47 +48,8 @@ export const billingRouter = router({
 
       return {
         totalUsers: activeOrgMembersCount[0].count,
-        lifetimeUsers: totalLifetimeUsers,
         currentPlan: orgPlan,
         currentPeriod: orgPeriod
-      };
-    }),
-  getUserLifetimeLicenses: eeProcedure
-    .input(z.object({}))
-    .query(async ({ ctx, input }) => {
-      const queryUserId = ctx.user.userId || 0;
-      const db = ctx.db;
-
-      if (!queryUserId || queryUserId === 0) {
-        throw new Error('User not logged in');
-      }
-
-      const userLifetimeLicenses =
-        await db.read.query.lifetimeLicenses.findMany({
-          where: eq(lifetimeLicenses.userId, queryUserId),
-          columns: {
-            publicId: true
-          },
-          with: {
-            orgBillingProfile: {
-              columns: {},
-              with: {
-                org: {
-                  columns: {
-                    publicId: true,
-                    name: true,
-                    avatarId: true
-                  }
-                }
-              }
-            }
-          }
-        });
-
-      const count = userLifetimeLicenses.length;
-      return {
-        count: count,
-        licenses: userLifetimeLicenses
       };
     }),
   getOrgStripePortalLink: eeProcedure
@@ -176,15 +124,13 @@ export const billingRouter = router({
           )
         );
 
-      // note: we assume 0 lifetime users since this link is only used the first time an org subscribes
       const orgSubLink =
         await billingTrpcClient.stripe.links.createSubscriptionPaymentLink.mutate(
           {
             orgId: +userOrg.orgId,
             plan: plan,
             period: period,
-            totalOrgUsers: +activeOrgMembersCount[0].count,
-            lifetimeUsers: 0
+            totalOrgUsers: +activeOrgMembersCount[0].count
           }
         );
 
@@ -193,27 +139,6 @@ export const billingRouter = router({
       }
       return {
         subLink: orgSubLink.link
-      };
-    }),
-  getLifetimePaymentLink: eeProcedure
-    .input(z.object({}))
-    .query(async ({ ctx, input }) => {
-      const queryUserId = ctx.user.userId || 0;
-
-      if (!queryUserId || queryUserId === 0) {
-        throw new Error('User not logged in');
-      }
-
-      const lifetimePurchaseLink =
-        await billingTrpcClient.stripe.links.createLifetimePaymentLink.mutate({
-          userId: +queryUserId
-        });
-
-      if (!lifetimePurchaseLink.link) {
-        throw new Error('No Lifetime Purchase Link');
-      }
-      return {
-        lifetimeLink: lifetimePurchaseLink.link
       };
     }),
   isPro: eeProcedure

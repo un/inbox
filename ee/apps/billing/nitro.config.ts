@@ -50,7 +50,6 @@ const stripeData: StripeData = {
       yearly: process.env.BILLING_STRIPE_PLAN_PRO_YEARLY_ID
     }
   },
-  lifetime: { current: process.env.BILLING_STRIPE_LIFETIME_ID, previous: null },
   key: process.env.BILLING_STRIPE_KEY,
   webhookKey: process.env.BILLING_STRIPE_WEBHOOK_KEY
 };

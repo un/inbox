@@ -21,9 +21,7 @@ import { nanoIdLength } from '@uninbox/utils';
 import { uiColors } from '@uninbox/types/ui';
 import {
   stripeBillingPeriods,
-  stripePlanNames,
-  StripeBillingPeriod,
-  StripePlanName
+  stripePlanNames
 } from '../../ee/apps/billing/types';
 
 //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit
@@ -1325,36 +1323,5 @@ export const orgBillingRelations = relations(orgBilling, ({ one, many }) => ({
   org: one(orgs, {
     fields: [orgBilling.orgId],
     references: [orgs.id]
-  }),
-  lifetimeLicenses: many(lifetimeLicenses)
+  })
 }));
-
-export const lifetimeLicenses = mysqlTable(
-  'lifetime_licenses',
-  {
-    id: serial('id').primaryKey(),
-    publicId: nanoId('public_id').notNull(),
-    userId: foreignKey('user_id').notNull(),
-    orgBillingId: foreignKey('org_billing_id'),
-    stripePaymentId: varchar('stripe_payment_id', { length: 128 }).notNull()
-  },
-  (table) => ({
-    publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
-    userIdIndex: index('user_id_idx').on(table.userId),
-    orgIdIndex: index('org_id_idx').on(table.orgBillingId)
-  })
-);
-
-export const lifetimeLicensesRelations = relations(
-  lifetimeLicenses,
-  ({ one }) => ({
-    owner: one(users, {
-      fields: [lifetimeLicenses.userId],
-      references: [users.id]
-    }),
-    orgBillingProfile: one(orgBilling, {
-      fields: [lifetimeLicenses.orgBillingId],
-      references: [orgBilling.id]
-    })
-  })
-);

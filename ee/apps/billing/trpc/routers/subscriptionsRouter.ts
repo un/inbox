@@ -4,12 +4,7 @@ import { router, protectedProcedure } from '../trpc';
 import { useStripe } from '../../utils/useStripe';
 import { stripeBillingPeriods, stripePlanNames } from '../../types';
 import { and, eq, sql } from '@uninbox/database/orm';
-import {
-  lifetimeLicenses,
-  orgBilling,
-  orgMembers,
-  users
-} from '@uninbox/database/schema';
+import { orgBilling, orgMembers, users } from '@uninbox/database/schema';
 // import {
 //   postalServers,
 //   orgPostalConfigs,
@@ -50,22 +45,9 @@ export const subscriptionsRouter = router({
           and(eq(orgMembers.orgId, orgId), eq(orgMembers.status, 'active'))
         );
 
-      const lifetimeLicensesAssignedToOrg = await db.read
-        .select({
-          count: sql<number>`count(*)`
-        })
-        .from(lifetimeLicenses)
-        .where(eq(lifetimeLicenses.orgBillingId, orgSubscriptionQuery.id));
-
       const totalOrgUsers = activeOrgMembersCount[0].count;
-      const lifetimeUsers = lifetimeLicensesAssignedToOrg[0].count;
-      let chargeableUsers = totalOrgUsers - lifetimeUsers;
-      chargeableUsers < 0 && (chargeableUsers = 0);
 
-      const subscriptionDescription =
-        lifetimeUsers > 0
-          ? `Total users: ${totalOrgUsers} (${chargeableUsers} paid + ${lifetimeUsers} lifetime)`
-          : `Total users: ${totalOrgUsers}`;
+      const subscriptionDescription = `Total users: ${totalOrgUsers}`;
 
       const stripeGetSubscriptionResult =
         await useStripe().sdk.subscriptions.retrieve(
@@ -79,7 +61,7 @@ export const subscriptionsRouter = router({
           items: [
             {
               id: stripeGetSubscriptionResult.items.data[0].id,
-              quantity: chargeableUsers
+              quantity: totalOrgUsers
             }
           ],
           proration_behavior: 'always_invoice',
@@ -88,8 +70,7 @@ export const subscriptionsRouter = router({
             product: 'subscription',
             plan: stripeGetSubscriptionResult.metadata.plan,
             period: stripeGetSubscriptionResult.metadata.period,
-            totalUsers: totalOrgUsers,
-            chargeableUsers: chargeableUsers
+            totalUsers: totalOrgUsers
           }
         }
       );
