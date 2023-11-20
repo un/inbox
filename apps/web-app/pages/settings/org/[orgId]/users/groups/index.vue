@@ -99,19 +99,21 @@
           <div class="flex flex-row items-center gap-2">
             <UnUiAvatar
               :avatar-id="row.avatarId ? row.avatarId : ''"
-              :name="row.name ? row.name : ''"
+              :alt="row.name ? row.name : ''"
               :color="row.color ? row.color : ''"
               size="xs" />
             <span class="">{{ row.name }}</span>
           </div>
         </template>
         <template #members-data="{ row }">
-          <div class="flex flex-row gap-2">
+          <NuxtUiAvatarGroup
+            size="sm"
+            :max="3">
             <UnUiAvatar
               v-for="member in row.members"
               :key="member.publicId"
               :avatar-id="member.avatarId ? member.avatarId : ''"
-              :name="
+              :alt="
                 member.firstName && member.lastName
                   ? member.firstName + ' ' + member.lastName
                   : ''
@@ -119,7 +121,7 @@
               :color="member.color ? member.color : ''"
               size="xs" />
             <span v-if="row.members.length === 0"></span>
-          </div>
+          </NuxtUiAvatarGroup>
         </template>
       </NuxtUiTable>
     </div>

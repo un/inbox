@@ -33,19 +33,6 @@
     { server: false }
   );
 
-  const {
-    data: orgMembersData,
-    pending: orgMembersPending,
-    error: orgMembersError,
-    execute: getOrgMembersList,
-    refresh: orgMembersRefresh
-  } = await $trpc.org.users.members.getOrgMembersList.useLazyQuery(
-    {
-      orgPublicId: orgPublicId
-    },
-    { server: false, immediate: false }
-  );
-
   const tableColumns = [
     {
       key: 'name',
@@ -76,7 +63,8 @@
   const tableRows = ref<TableRow[]>([]);
   watch(groupData, (newResults) => {
     if (newResults?.group?.members) {
-      for (const member of newResults?.group?.members) {
+      console.log(JSON.stringify(newResults.group.members, null, 2));
+      for (const member of newResults.group.members) {
         tableRows.value.push({
           publicId: member.publicId,
           avatarId: member.userProfile?.avatarId || '',
@@ -87,12 +75,23 @@
           role: member.role,
           notifications: member.notifications
         });
-        if (member.userProfile?.publicId) {
-          usersInGroup.value.push(member.userProfile?.publicId);
-        }
+        usersInGroup.value.push(member.orgMember.publicId);
       }
     }
   });
+
+  const {
+    data: orgMembersData,
+    pending: orgMembersPending,
+    error: orgMembersError,
+    execute: getOrgMembersList,
+    refresh: orgMembersRefresh
+  } = await $trpc.org.users.members.getOrgMembersList.useLazyQuery(
+    {
+      orgPublicId: orgPublicId
+    },
+    { server: false, immediate: false }
+  );
 
   // TODO: If Existing SPF, Add checkbox to SPF record: "Select which senders to include" + create dynamic string- suggestion by @KumoMTA
 
@@ -101,20 +100,55 @@
     showAddNewUser.value = true;
   }
 
-  async function addNewUserToGroup(userProfilePublicId: string) {
-    addingUserId.value = userProfilePublicId;
+  interface OrgMemberDropdownData {
+    orgMemberPublicId: string;
+    label: string;
+    name: string;
+    handle: string;
+    avatarId: string;
+    role: string;
+  }
+
+  const orgMembersDropdownData = ref<OrgMemberDropdownData[]>([]);
+  watch(orgMembersData, (newOrgMembersData) => {
+    if (newOrgMembersData?.members) {
+      for (const member of newOrgMembersData.members) {
+        console.log(usersInGroup.value, member.publicId);
+        if (!usersInGroup.value.includes(member.publicId)) {
+          orgMembersDropdownData.value.push({
+            orgMemberPublicId: member.publicId,
+            label:
+              member.profile?.firstName +
+              ' ' +
+              member.profile?.lastName +
+              ' - @' +
+              member.profile?.handle,
+            name: member.profile?.firstName + ' ' + member.profile?.lastName,
+            handle: member.profile?.handle || '',
+            avatarId: member.profile?.avatarId || '',
+            role: member.role
+          });
+        }
+      }
+    }
+  });
+
+  const selectedUserToAdd = ref<OrgMemberDropdownData | undefined>(undefined);
+
+  async function addNewUserToGroup(orgMemberPublicId: string) {
+    addingUserId.value = orgMemberPublicId;
     const result = await $trpc.org.users.userGroups.addUserToGroup.mutate({
       orgPublicId: orgPublicId,
       groupPublicId: groupPublicId,
-      userProfilePublicId: userProfilePublicId
+      orgMemberPublicId: orgMemberPublicId
     });
     if (!result.publicId) {
       console.log('Error adding user to group');
     } else {
-      usersInGroup.value.push(userProfilePublicId);
+      usersInGroup.value.push(orgMemberPublicId);
       // get the user profile from the org members list
       const member = orgMembersData?.value?.members?.find(
-        (member) => member.profile?.publicId === userProfilePublicId
+        (member) => member.publicId === orgMemberPublicId
       );
       tableRows.value.push({
         publicId: member?.profile.publicId || '',
@@ -127,16 +161,29 @@
       });
     }
     addingUserId.value = '';
+    const toast = useToast();
+    toast.add({
+      id: 'user_added_to_group',
+      title: 'User Added',
+      description: `${selectedUserToAdd.value?.name} has been added to the ${groupData.value?.group?.name} group`,
+      icon: 'i-ph-thumbs-up',
+      timeout: 5000
+    });
+    setTimeout(() => {
+      navigateTo(
+        `/settings/org/${orgPublicId}/users/groups/${newGroupPublicId}/?new=true`
+      );
+    }, 1500);
   }
 </script>
 
 <template>
-  <div class="flex flex-col w-full h-full items-start p-4 gap-8">
-    <div class="flex flex-row w-full justify-between items-center">
-      <div class="flex flex-row gap-4 items-center">
+  <div class="h-full w-full flex flex-col items-start gap-8 p-4">
+    <div class="w-full flex flex-row items-center justify-between">
+      <div class="flex flex-row items-center gap-4">
         <UnUiTooltip text="Back to domains">
-          <icon
-            name="ph-arrow-left"
+          <UnUiIcon
+            name="i-ph-arrow-left"
             size="32"
             @click="navigateTo(`/settings/org/${orgPublicId}/users/groups`)" />
         </UnUiTooltip>
@@ -148,64 +195,64 @@
 
         <div class="flex flex-col gap-1">
           <span
-            class="font-display text-2xl"
-            v-if="!groupPending">
+            v-if="!groupPending"
+            class="text-2xl font-display">
             {{ groupData?.group?.name }}
           </span>
           <span
-            class="text-xl"
-            v-if="!groupPending">
+            v-if="!groupPending"
+            class="text-xl">
             {{ groupData?.group?.description }}
           </span>
           <span
-            class="font-mono text-2xl"
-            v-if="groupPending">
+            v-if="groupPending"
+            class="text-2xl font-mono">
             Loading...
           </span>
         </div>
       </div>
     </div>
-    <div class="flex flex-col gap-8 w-full overflow-y-scroll">
+    <div class="w-full flex flex-col gap-8 overflow-y-scroll">
       <div
-        class="flex flex-col gap-8 w-full"
-        v-if="groupPending">
-        <div class="flex flex-row gap-4 items-center">
+        v-if="groupPending"
+        class="w-full flex flex-col gap-8">
+        <div class="flex flex-row items-center gap-4">
           <div class="flex flex-col gap-1">
-            <span class="font-display text-2xl">Loading...</span>
+            <span class="text-2xl font-display">Loading...</span>
             <span class="text-sm">Please wait while we load your group</span>
           </div>
         </div>
       </div>
       <div
-        class="flex flex-col gap-8 w-full"
-        v-if="!groupPending && !groupData?.group">
-        <div class="flex flex-row gap-4 items-center">
+        v-if="!groupPending && !groupData?.group"
+        class="w-full flex flex-col gap-8">
+        <div class="flex flex-row items-center gap-4">
           <div class="flex flex-col gap-1">
-            <span class="font-display text-2xl">Group not found</span>
+            <span class="text-2xl font-display">Group not found</span>
             <span class="text-sm"></span>
           </div>
         </div>
       </div>
 
       <div
-        class="flex flex-col gap-8 w-full"
-        v-if="!groupPending && groupData?.group">
-        <div class="flex flex-col gap-4 items-center">
+        v-if="!groupPending && groupData?.group"
+        class="w-full flex flex-col gap-8">
+        <div class="flex flex-col gap-4">
           <div class="w-full border-b-1 border-base-5 pb-2">
-            <span class="text-sm uppercase text-base-11 font-semibold">
+            <span class="text-sm font-semibold uppercase text-base-11">
               Members
             </span>
           </div>
-          <UnUiTable
+          <NuxtUiTable
             :columns="tableColumns"
             :rows="tableRows"
             class="text-md"
             :loading="groupPending">
             <template #name-data="{ row }">
-              <div class="flex flex-row gap-2 items-center">
+              <div class="flex flex-row items-center gap-2">
                 <UnUiAvatar
-                  :avatarId="row.avatarId"
-                  :name="row.name"
+                  :avatar-id="row.avatarId"
+                  :alt="row.name"
                   size="xs" />
                 <span class="">{{ row.name }}</span>
               </div>
@@ -224,93 +271,94 @@
                   row.notifications === 'active'
                     ? 'Active'
                     : row.notifications === 'muted'
-                    ? 'Muted'
-                    : 'Off'
+                      ? 'Muted'
+                      : 'Off'
                 ">
-                <Icon
+                <UnUiIcon
                   :name="
                     row.notifications === 'active'
-                      ? 'ph:bell-simple-ringing'
+                      ? 'i-ph-bell-simple-ringing'
                       : row.notifications === 'muted'
-                      ? 'ph:speaker-simple-slash'
-                      : 'ph:bell-simple-slash'
+                        ? 'i-ph-speaker-simple-slash'
+                        : 'i-ph-bell-simple-slash'
                   " />
               </UnUiTooltip>
             </template>
 
             <template #receivingMode-data="{ row }">
               <div
-                class="py-1 px-4 rounded-full w-fit"
+                class="w-fit rounded-full px-4 py-1"
                 :class="
                   row.receivingMode === 'native'
                     ? 'bg-grass-5'
                     : row.receivingMode === 'forwarding'
-                    ? 'bg-orange-5'
-                    : 'bg-red-5'
+                      ? 'bg-orange-5'
+                      : 'bg-red-5'
                 ">
-                <span class="uppercase text-xs">{{ row.receivingMode }}</span>
+                <span class="text-xs uppercase">{{ row.receivingMode }}</span>
               </div>
             </template>
-          </UnUiTable>
+          </NuxtUiTable>
           <UnUiButton
+            v-if="!showAddNewUser"
             label="Add more users to the group"
-            size="sm"
-            variant="outline"
-            @click="showAddUser()"
-            v-if="!showAddNewUser" />
+            @click="showAddUser()" />
           <div
-            class="flex flex-row gap-4 w-full items-center justify-center"
-            v-if="showAddNewUser && orgMembersPending">
-            <Icon
-              name="svg-spinners:3-dots-fade"
+            v-if="showAddNewUser && orgMembersPending"
+            class="w-full flex flex-row items-center justify-center gap-4">
+            <UnUiIcon
+              name="i-svg-spinners:3-dots-fade"
               size="32" />
-            <span>Loading organization members</span>
+            <span>Loading group members</span>
           </div>
           <div
-            class="grid grid-cols-2 gap-4 w-full"
-            v-if="showAddNewUser && !orgMembersPending">
-            <template v-for="member of orgMembersData?.members">
-              <div
-                class="flex flex-row justify-between bg-base-2 p-4 rounded-xl items-center"
-                v-if="!usersInGroup.includes(member.profile?.publicId)">
-                <div class="flex flex-row gap-4 items-center">
-                  <UnUiAvatar
-                    :avatar-id="member.profile?.avatarId || ''"
-                    :name="
-                      member.profile?.firstName + ' ' + member.profile?.lastName
-                    "
-                    size="sm" />
-                  <div class="flex flex-col gap-0">
-                    <div class="flex flex-row gap-2 items-center">
-                      <span class="text-xl font-display">
-                        {{
-                          member.profile?.firstName +
-                          ' ' +
-                          member.profile?.lastName
-                        }}
-                      </span>
-                      <UnUiTooltip
-                        text="Organization Admin"
-                        v-if="member.role === 'admin'">
-                        <icon
-                          name="ph:crown"
-                          class="text-yellow-8" />
-                      </UnUiTooltip>
-                    </div>
-                    <span class=""> @{{ member.profile?.handle }} </span>
-                    <span class="">
-                      {{ member.profile?.title }}
-                    </span>
-                  </div>
-                </div>
-                <UnUiButton
-                  label="Add to group"
-                  size="sm"
-                  @click="addNewUserToGroup(member.profile?.publicId)"
-                  :loading="addingUserId === member.profile?.publicId"
-                  :disabled="usersInGroup.includes(member.profile?.publicId)" />
-              </div>
-            </template>
+            v-if="showAddNewUser && !orgMembersPending"
+            class="grid grid-cols-2 w-full gap-4">
+            <NuxtUiSelectMenu
+              v-model="selectedUserToAdd"
+              searchable
+              searchable-placeholder="Search a person..."
+              placeholder="Select a person"
+              :options="orgMembersDropdownData">
+              <template
+                v-if="selectedUserToAdd"
+                #label>
+                <UnUiIcon
+                  name="i-ph-check"
+                  class="h-4 w-4" />
+
+                {{ selectedUserToAdd.label }}
+                <UnUiTooltip
+                  v-if="selectedUserToAdd.role === 'admin'"
+                  text="Organization Admin">
+                  <UnUiIcon
+                    name="i-ph-crown"
+                    class="text-yellow-8" />
+                </UnUiTooltip>
+              </template>
+              <template #option="{ option }">
+                <UnUiAvatar
+                  :avatar-id="option.avatarId"
+                  :alt="option.label"
+                  size="3xs" />
+
+                {{ option.label }}
+                <UnUiTooltip
+                  v-if="option.role === 'admin'"
+                  text="Organization Admin">
+                  <UnUiIcon
+                    name="i-ph-crown"
+                    class="text-yellow-8" />
+                </UnUiTooltip>
+              </template>
+            </NuxtUiSelectMenu>
+            <UnUiButton
+              label="Add to group"
+              size="sm"
+              :disabled="!selectedUserToAdd"
+              @click="
+                addNewUserToGroup(selectedUserToAdd?.orgMemberPublicId || '')
+              " />
           </div>
         </div>
       </div>

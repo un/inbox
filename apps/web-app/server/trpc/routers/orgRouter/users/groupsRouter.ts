@@ -3,12 +3,14 @@ import { parse, stringify } from 'superjson';
 import { router, protectedProcedure } from '../../../trpc';
 import { eq, and } from '@uninbox/database/orm';
 import {
+  orgMembers,
   userGroupMembers,
   userGroups,
   userProfiles
 } from '@uninbox/database/schema';
 import { nanoId, nanoIdLength } from '@uninbox/utils';
-import { uiColors, UiColor } from '@uninbox/types/ui';
+import { uiColors } from '@uninbox/types/ui';
+import type { UiColor } from '@uninbox/types/ui';
 
 export const orgUserGroupsRouter = router({
   createOrgUserGroups: protectedProcedure
@@ -81,7 +83,9 @@ export const orgUserGroupsRouter = router({
         where: and(eq(userGroups.orgId, userInOrg.orgId)),
         with: {
           members: {
-            columns: {},
+            columns: {
+              publicId: true
+            },
             with: {
               userProfile: {
                 columns: {
@@ -144,6 +148,11 @@ export const orgUserGroupsRouter = router({
               publicId: true
             },
             with: {
+              orgMember: {
+                columns: {
+                  publicId: true
+                }
+              },
               userProfile: {
                 columns: {
                   publicId: true,
@@ -168,13 +177,13 @@ export const orgUserGroupsRouter = router({
       z.object({
         orgPublicId: z.string().min(3).max(nanoIdLength),
         groupPublicId: z.string().min(3).max(nanoIdLength),
-        userProfilePublicId: z.string().min(3).max(nanoIdLength)
+        orgMemberPublicId: z.string().min(3).max(nanoIdLength)
       })
     )
     .mutation(async ({ ctx, input }) => {
       const queryUserId = ctx.user.userId || 0;
       const db = ctx.db;
-      const { orgPublicId, groupPublicId, userProfilePublicId } = input;
+      const { orgPublicId, groupPublicId, orgMemberPublicId } = input;
       const newPublicId = nanoId();
 
       console.log({ input });
@@ -192,15 +201,16 @@ export const orgUserGroupsRouter = router({
         throw new Error('User not admin');
       }
 
-      const userProfile = await db.read.query.userProfiles.findFirst({
+      const orgMember = await db.read.query.orgMembers.findFirst({
         columns: {
           userId: true,
-          id: true
+          id: true,
+          userProfileId: true
         },
-        where: eq(userProfiles.publicId, userProfilePublicId)
+        where: eq(orgMembers.publicId, orgMemberPublicId)
       });
 
-      if (!userProfile) {
+      if (!orgMember) {
         throw new Error('User not found');
       }
 
@@ -219,9 +229,10 @@ export const orgUserGroupsRouter = router({
         .insert(userGroupMembers)
         .values({
           publicId: newPublicId,
-          userId: userProfile.userId,
+          orgMemberId: orgMember.id,
+          userId: queryUserId,
           groupId: userGroup.id,
-          userProfileId: userProfile.id,
+          userProfileId: orgMember.userProfileId,
           role: 'member',
           notifications: 'active',
           addedBy: queryUserId

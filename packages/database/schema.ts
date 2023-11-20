@@ -386,6 +386,7 @@ export const userGroupMembers = mysqlTable(
     publicId: nanoId('public_id').notNull(),
     groupId: foreignKey('group_id').notNull(),
     userId: foreignKey('user_id').notNull(),
+    orgMemberId: foreignKey('org_member_id').notNull(),
     userProfileId: foreignKey('user_profile_id'),
     addedBy: foreignKey('added_by').notNull(),
     role: mysqlEnum('role', ['member', 'admin']).notNull().default('member'),
@@ -398,10 +399,10 @@ export const userGroupMembers = mysqlTable(
   },
   (table) => ({
     groupIdIndex: index('group_id_idx').on(table.groupId),
-    userIdIndex: index('user_id_idx').on(table.userId),
+    orgMemberIdIndex: index('user_id_idx').on(table.orgMemberId),
     userToGroupIndex: uniqueIndex('user_to_group_idx').on(
       table.groupId,
-      table.userId
+      table.orgMemberId
     )
   })
 );
@@ -412,8 +413,12 @@ export const userGroupMembersRelations = relations(
       fields: [userGroupMembers.groupId],
       references: [userGroups.id]
     }),
+    orgMember: one(orgMembers, {
+      fields: [userGroupMembers.orgMemberId],
+      references: [orgMembers.id]
+    }),
     user: one(users, {
-      fields: [userGroupMembers.userId],
+      fields: [userGroupMembers.orgMemberId],
       references: [users.id]
     }),
     userProfile: one(userProfiles, {
