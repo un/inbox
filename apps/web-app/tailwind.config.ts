@@ -1,5 +1,6 @@
 import type { Config } from 'tailwindcss';
 import defaultTheme from 'tailwindcss/defaultTheme';
+const radixColors = require('@radix-ui/colors');
 import { createPlugin } from 'windy-radix-palette';
 
 const colors = createPlugin();
