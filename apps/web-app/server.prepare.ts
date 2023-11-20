@@ -40,6 +40,8 @@ export default defineNuxtPrepareHandler(async () => {
   if (eeLicenseKey) {
     console.log('✅ Enterprise Edition is enabled');
     eeConfig.enabled = true;
+  } else {
+    console.log('✅ Running in self hosting mode 💪');
   }
 
   const billingUrl = process.env.BILLING_URL;
