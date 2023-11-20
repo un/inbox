@@ -97,25 +97,6 @@
               orgBillingOverview?.totalUsers
             }}</span>
           </div>
-          <div
-            v-if="orgBillingOverview?.lifetimeUsers"
-            class="flex flex-col">
-            <span class="text-sm font-medium text-base-11">Lifetime Users</span>
-            <span class="text-2xl font-display">
-              {{ orgBillingOverview?.lifetimeUsers }}
-            </span>
-          </div>
-          <div
-            v-if="orgBillingOverview?.lifetimeUsers"
-            class="flex flex-col">
-            <span class="text-sm font-medium text-base-11">Paid Users</span>
-            <span class="text-2xl font-display">
-              {{
-                orgBillingOverview?.totalUsers -
-                orgBillingOverview?.lifetimeUsers
-              }}
-            </span>
-          </div>
         </div>
         <div v-if="orgBillingOverview?.currentPlan === 'free'">
           <UnUiButton
@@ -157,27 +138,27 @@
                 </span>
                 <div class="flex flex-col justify-start gap-4">
                   <div class="flex flex-row items-center gap-2">
-                    <Icon name="ph:check-circle-fill" />
+                    <UnUiIcon name="i-ph-check-circle-fill" />
                     <span class="text-sm leading-none text-base-12">
                       Multiple users
                     </span>
                   </div>
                   <div class="flex flex-row items-center gap-2">
-                    <Icon name="ph:check-circle-fill" />
+                    <UnUiIcon name="i-ph-check-circle-fill" />
                     <span class="text-sm leading-none text-base-12">
                       @uninbox.me email addresses
                     </span>
                   </div>
                   <div class="flex flex-row items-center gap-2">
-                    <Icon name="ph:check-circle-fill" />
+                    <UnUiIcon name="i-ph-check-circle-fill" />
                     <span class="text-sm leading-none text-base-12">
                       Forwarding Address
                     </span>
                   </div>
                   <div class="flex flex-row items-center gap-2">
-                    <Icon name="ph:check-circle-fill" />
+                    <UnUiIcon name="i-ph-check-circle-fill" />
                     <span class="text-sm leading-none text-base-12">
-                      Unlimited Projects
+                      Private Notes
                     </span>
                   </div>
                 </div>
@@ -207,89 +188,31 @@
               <div
                 class="min-w-xs flex flex-col gap-8 border-1 border-base-7 rounded-xl bg-base-2 p-8">
                 <span class="text-xl leading-none font-display">
-                  Starter Plan
+                  Pro Plan
                 </span>
                 <div class="flex flex-col justify-start gap-4">
                   <div class="flex flex-row items-center gap-2">
-                    <Icon name="ph:check-circle-fill" />
-                    <span class="text-sm leading-none text-base-12">
-                      Everything in "Free Plan"
-                    </span>
-                  </div>
-                  <div class="flex flex-row items-center gap-2">
-                    <Icon name="ph:check-circle-fill" />
+                    <UnUiIcon name="i-ph-check-circle-fill" />
                     <span class="text-sm leading-none text-base-12">
                       User Groups
                     </span>
                   </div>
                   <div class="flex flex-row items-center gap-2">
-                    <Icon name="ph:check-circle-fill" />
+                    <UnUiIcon name="i-ph-check-circle-fill" />
                     <span class="text-sm leading-none text-base-12">
-                      Multiple email destinations
+                      Custom Domains
                     </span>
                   </div>
                   <div class="flex flex-row items-center gap-2">
-                    <Icon name="ph:check-circle-fill" />
-                    <span class="text-sm leading-none text-base-12">
-                      1 Custom Domain
-                    </span>
-                  </div>
-                </div>
-                <div class="flex flex-row items-center gap-2">
-                  <span class="text-4xl leading-none font-display"
-                    >${{
-                      pricingTableBillingPeriod === 'yearly' ? '90' : '9'
-                    }}</span
-                  >
-                  <div class="flex flex-col gap-0">
-                    <span class="text-sm font-medium leading-none text-base-11"
-                      >per user</span
-                    >
-                    <span class="text-sm font-medium leading-none text-base-11"
-                      >per
-                      {{
-                        pricingTableBillingPeriod === 'yearly'
-                          ? 'year'
-                          : 'month'
-                      }}</span
-                    >
-                  </div>
-                </div>
-                <UnUiButton
-                  :label="loadingButton === 'starter' ? 'Loading' : 'Subscribe'"
-                  variant="solid"
-                  width="full"
-                  :loading="loadingButton === 'starter'"
-                  @click="subscribeToPlan('starter')" />
-              </div>
-              <div
-                class="min-w-xs flex flex-col gap-8 border-1 border-base-7 rounded-xl bg-base-2 p-8">
-                <span class="text-xl leading-none font-display">
-                  Pro Plan
-                </span>
-                <div class="flex flex-col justify-start gap-4">
-                  <div class="flex flex-row items-center gap-2">
-                    <Icon name="ph:check-circle-fill" />
-                    <span class="text-sm leading-none text-base-12">
-                      Everything in "Starter Plan"
-                    </span>
-                  </div>
-                  <div class="flex flex-row items-center gap-2">
-                    <Icon name="ph:check-circle-fill" />
+                    <UnUiIcon name="i-ph-check-circle-fill" />
                     <span class="text-sm leading-none text-base-12">
                       Catch-all Address
                     </span>
                   </div>
                   <div class="flex flex-row items-center gap-2">
-                    <Icon name="ph:check-circle-fill" />
+                    <UnUiIcon name="i-ph-check-circle-fill" />
                     <span class="text-sm leading-none text-base-12">
-                      Unlimited Projects
-                    </span>
-                  </div>
-                  <div class="flex flex-row items-center gap-2">
-                    <Icon name="ph:check-circle-fill" />
-                    <span class="text-sm leading-none text-base-12">
-                      Unlimited Custom Domains
+                      Shared Notes
                     </span>
                   </div>
                 </div>
@@ -316,7 +239,6 @@
                 <UnUiButton
                   :label="loadingButton === 'pro' ? 'Loading' : 'Subscribe'"
                   variant="solid"
-                  width="full"
                   :loading="loadingButton === 'pro'"
                   @click="subscribeToPlan('pro')" />
               </div>
