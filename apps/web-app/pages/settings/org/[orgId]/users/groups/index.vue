@@ -69,36 +69,36 @@
 </script>
 
 <template>
-  <div class="flex flex-col w-full h-full items-start p-4 gap-8">
-    <div class="flex flex-row w-full justify-between items-center">
-      <div class="flex flex-row gap-4 items-center">
+  <div class="h-full w-full flex flex-col items-start gap-8 p-4">
+    <div class="w-full flex flex-row items-center justify-between">
+      <div class="flex flex-row items-center gap-4">
         <div class="flex flex-col gap-1">
-          <span class="font-display text-2xl">Groups</span>
+          <span class="text-2xl font-display">Groups</span>
           <span class="text-sm">Manage your organizations user groups</span>
         </div>
       </div>
-      <div class="flex flex-row gap-4 items-center">
+      <div class="flex flex-row items-center gap-4">
         <button
-          class="flex flex-row gap-2 p-2 border-1 rounded items-center justify-center border-base-7 bg-base-3 max-w-80"
-          @click="navigateTo('./groups/new')">
-          <icon
-            name="ph-plus"
+          class="max-w-80 flex flex-row items-center justify-center gap-2 border-1 border-base-7 rounded bg-base-3 p-2"
+          @click="navigateTo(`/settings/org/${orgPublicId}/users/groups/new`)">
+          <UnUiIcon
+            name="i-ph-plus"
             size="20" />
           <p class="text-sm">New Group</p>
         </button>
       </div>
     </div>
-    <div class="flex flex-col gap-4 w-full overflow-y-scroll">
-      <UnUiTable
+    <div class="w-full flex flex-col gap-4 overflow-y-scroll">
+      <NuxtUiTable
         :columns="tableColumns"
         :rows="tableRows"
         :loading="pending"
         class=""
         @select="select">
         <template #name-data="{ row }">
-          <div class="flex flex-row gap-2 items-center">
+          <div class="flex flex-row items-center gap-2">
             <UnUiAvatar
-              :avatarId="row.avatarId ? row.avatarId : ''"
+              :avatar-id="row.avatarId ? row.avatarId : ''"
               :name="row.name ? row.name : ''"
               :color="row.color ? row.color : ''"
               size="xs" />
@@ -109,6 +109,7 @@
           <div class="flex flex-row gap-2">
             <UnUiAvatar
               v-for="member in row.members"
+              :key="member.publicId"
               :avatar-id="member.avatarId ? member.avatarId : ''"
               :name="
                 member.firstName && member.lastName
@@ -116,12 +117,11 @@
                   : ''
               "
               :color="member.color ? member.color : ''"
-              :key="member.publicId"
               size="xs" />
             <span v-if="row.members.length === 0"></span>
           </div>
         </template>
-      </UnUiTable>
+      </NuxtUiTable>
     </div>
   </div>
 </template>

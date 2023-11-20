@@ -2,7 +2,7 @@
   definePageMeta({
     layout: 'settings'
   });
-  import { UiColor } from '@uninbox/types/ui';
+  import type { UiColor } from '@uninbox/types/ui';
   import { z } from 'zod';
   const { $trpc, $i18n } = useNuxtApp();
 
@@ -34,6 +34,14 @@
       });
     buttonLoading.value = false;
     buttonLabel.value = 'Done... Redirecting';
+    const toast = useToast();
+    toast.add({
+      id: 'group_xreated',
+      title: 'Group Group Created',
+      description: 'Group has been created successfully',
+      icon: 'i-ph-thumbs-up',
+      timeout: 5000
+    });
     setTimeout(() => {
       navigateTo(
         `/settings/org/${orgPublicId}/users/groups/${newGroupPublicId}/?new=true`
@@ -42,23 +50,19 @@
   }
 
   const canAddUserGroup = ref<boolean | null | undefined>(null);
-  const canAddUserGroupAllowedPlans = ref<string[]>();
   const dataPending = ref(true);
 
   if (useEE().config.modules.billing) {
     dataPending.value = true;
-    console.log('checking if can use feature');
     const { data: canUseFeature } =
-      await $trpc.org.setup.billing.canUseFeature.useLazyQuery(
+      await $trpc.org.setup.billing.isPro.useLazyQuery(
         {
-          orgPublicId: orgPublicId,
-          feature: 'userGroups'
+          orgPublicId: orgPublicId
         },
         { server: false }
       );
 
-    canAddUserGroup.value = canUseFeature.value?.canUse;
-    canAddUserGroupAllowedPlans.value = canUseFeature.value?.allowedPlans;
+    canAddUserGroup.value = canUseFeature.value?.isPro;
     dataPending.value = false;
   } else {
     dataPending.value = false;
@@ -70,9 +74,9 @@
   <div class="h-full w-full flex flex-col items-start gap-8 p-4">
     <div class="w-full flex flex-row items-center justify-between">
       <div class="flex flex-row items-center gap-4">
-        <UnUiTooltip text="Back to domains">
-          <icon
-            name="ph-arrow-left"
+        <UnUiTooltip text="Back to groups">
+          <UnUiIcon
+            name="i-ph-arrow-left"
             size="32"
             @click="navigateTo('./')" />
         </UnUiTooltip>
@@ -84,18 +88,23 @@
     <div
       v-if="dataPending"
       class="w-full flex flex-row justify-center gap-4 rounded-xl rounded-tl-2xl bg-base-3 p-8">
-      <icon
-        name="svg-spinners:3-dots-fade"
+      <UnUiIcon
+        name="i-svg-spinners:3-dots-fade"
         size="24" />
-      <span>Checking groups</span>
+      <span>Checking status</span>
     </div>
     <div
       v-if="!dataPending && !canAddUserGroup"
-      class="w-full flex flex-col gap-4">
+      class="flex flex-col gap-4">
       <span>
         Sorry, your current billing plan does not support adding user groups.
       </span>
-      <span>Supported plans are: {{ canAddUserGroupAllowedPlans }}</span>
+      <div>
+        <UnUiButton
+          icon="i-ph-credit-card"
+          label="Go to billing"
+          :to="`/settings/org/${orgPublicId}/setup/billing`" />
+      </div>
     </div>
     <div
       v-if="!dataPending && canAddUserGroup"
@@ -113,74 +122,74 @@
         <span class="text-sm">Group Color</span>
         <div class="flex flex-row gap-2">
           <div
-            class="h-8 w-8 cursor-pointer rounded bg-red-9 p-1 text-white"
+            class="bg-red-500 h-8 w-8 cursor-pointer rounded p-2 text-white"
             @click="newGroupColorValue = 'red'">
-            <icon
+            <UnUiIcon
               v-if="newGroupColorValue === 'red'"
-              name="ph:check-bold"
+              name="i-ph-check-bold"
               size="24" />
           </div>
           <div
-            class="h-8 w-8 cursor-pointer rounded bg-pink-9 p-1 text-white"
+            class="bg-pink-500 h-8 w-8 cursor-pointer rounded p-2 text-white"
             @click="newGroupColorValue = 'pink'">
-            <icon
+            <UnUiIcon
               v-if="newGroupColorValue === 'pink'"
-              name="ph:check-bold"
+              name="i-ph-check-bold"
               size="24" />
           </div>
           <div
-            class="h-8 w-8 cursor-pointer rounded bg-purple-9 p-1 text-white"
+            class="bg-purple-500 h-8 w-8 cursor-pointer rounded p-2 text-white"
             @click="newGroupColorValue = 'purple'">
-            <icon
+            <UnUiIcon
               v-if="newGroupColorValue === 'purple'"
-              name="ph:check-bold"
+              name="i-ph-check-bold"
               size="24" />
           </div>
           <div
-            class="h-8 w-8 cursor-pointer rounded bg-blue-9 p-1 text-white"
+            class="bg-blue-500 h-8 w-8 cursor-pointer rounded p-2 text-white"
             @click="newGroupColorValue = 'blue'">
-            <icon
+            <UnUiIcon
               v-if="newGroupColorValue === 'blue'"
-              name="ph:check-bold"
+              name="i-ph-check-bold"
               size="24" />
           </div>
           <div
-            class="h-8 w-8 cursor-pointer rounded bg-cyan-9 p-1 text-white"
+            class="bg-cyan-500 h-8 w-8 cursor-pointer rounded p-2 text-white"
             @click="newGroupColorValue = 'cyan'">
-            <icon
+            <UnUiIcon
               v-if="newGroupColorValue === 'cyan'"
-              name="ph:check-bold"
+              name="i-ph-check-bold"
               size="24" />
           </div>
           <div
-            class="h-8 w-8 cursor-pointer rounded bg-green-9 p-1 text-white"
+            class="bg-green-500 h-8 w-8 cursor-pointer rounded p-2 text-white"
             @click="newGroupColorValue = 'green'">
-            <icon
+            <UnUiIcon
               v-if="newGroupColorValue === 'green'"
-              name="ph:check-bold"
+              name="i-ph-check-bold"
               size="24" />
           </div>
           <div
-            class="h-8 w-8 cursor-pointer rounded bg-orange-9 p-1 text-white"
+            class="bg-orange-500 h-8 w-8 cursor-pointer rounded p-2 text-white"
             @click="newGroupColorValue = 'orange'">
-            <icon
+            <UnUiIcon
               v-if="newGroupColorValue === 'orange'"
-              name="ph:check-bold"
+              name="i-ph-check-bold"
               size="24" />
           </div>
           <div
-            class="h-8 w-8 cursor-pointer rounded bg-yellow-9 p-1 text-white"
+            class="bg-yellow-500 h-8 w-8 cursor-pointer rounded p-2 text-white"
             @click="newGroupColorValue = 'yellow'">
-            <icon
+            <UnUiIcon
               v-if="newGroupColorValue === 'yellow'"
-              name="ph:check-bold"
+              name="i-ph-check-bold"
               size="24" />
           </div>
         </div>
       </div>
 
       <UnUiButton
-        icon="ph:plus"
+        icon="i-ph-plus"
         :label="buttonLabel"
         :loading="buttonLoading"
         :disabled="!formValid"
