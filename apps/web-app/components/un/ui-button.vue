@@ -19,5 +19,7 @@
 </script>
 
 <template>
-  <NuxtUiButton v-bind="$props"><slot /> </NuxtUiButton>
+  <div class="w-full">
+    <NuxtUiButton v-bind="$props"><slot /> </NuxtUiButton>
+  </div>
 </template>

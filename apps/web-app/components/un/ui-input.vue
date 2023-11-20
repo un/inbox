@@ -160,7 +160,7 @@
         computedBorderColor
       ]">
       <div v-if="props.icon">
-        <Icon :name="props.icon" />
+        <UnUiIcon :name="props.icon" />
       </div>
       <input
         ref="inputField"
@@ -183,7 +183,7 @@
       <UnUiTooltip
         v-if="props.helper"
         :text="props.helper"
-        ><Icon
+        ><UnUiIcon
           name="ph:question"
           class="cursor-help"
       /></UnUiTooltip>
