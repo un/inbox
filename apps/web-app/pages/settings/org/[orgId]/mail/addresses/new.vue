@@ -2,7 +2,7 @@
   definePageMeta({
     layout: 'settings'
   });
-  import { UiColor } from '@uninbox/types/ui';
+  import type { UiColor } from '@uninbox/types/ui';
   import { z } from 'zod';
   const { $trpc, $i18n } = useNuxtApp();
 
@@ -11,10 +11,6 @@
   const newIdentitySendNameValue = ref('');
   const newIdentitySendNameValid = ref<boolean | 'remote' | null>(null);
   const newIdentityCatchAll = ref(false);
-  const newIdentityDomainPublicId = ref('');
-  const newIdentityDomainName = ref('');
-  const newIdentityRouteToGroupsPublicIds = ref<string[]>([]);
-  const newIdentityRouteToUsersOrgMemberPublicIds = ref<string[]>([]);
 
   const buttonLabel = ref('Create New Email Address');
   const buttonLoading = ref(false);
@@ -24,18 +20,18 @@
       return (
         newIdentityUsernameValid.value === true &&
         newIdentitySendNameValid.value === true &&
-        newIdentityDomainName.value.length > 0 &&
-        (newIdentityRouteToGroupsPublicIds.value.length > 0 ||
-          newIdentityRouteToUsersOrgMemberPublicIds.value.length > 0) &&
+        selectedDomain.value?.domainPublicId &&
+        (selectedOrgGroups.value.length > 0 ||
+          selectedOrgMembers.value.length > 0) &&
         !multipleDestinationsSelected.value
       );
     }
     return (
       newIdentityUsernameValid.value === true &&
       newIdentitySendNameValid.value === true &&
-      newIdentityDomainName.value.length > 0 &&
-      (newIdentityRouteToGroupsPublicIds.value.length > 0 ||
-        newIdentityRouteToUsersOrgMemberPublicIds.value.length > 0)
+      selectedDomain.value?.domainPublicId &&
+      (selectedOrgGroups.value.length > 0 ||
+        selectedOrgMembers.value.length > 0)
     );
   });
 
@@ -44,64 +40,131 @@
   const orgPublicId = route.params.orgId as string;
 
   // get list of domains
+  interface OrgDomains {
+    domainPublicId: string;
+    domain: string;
+  }
+
+  const orgDomains = ref<OrgDomains[]>([]);
+
   const { data: orgDomainsData, pending: orgDomainsPending } =
-    await $trpc.org.mail.domains.getOrgDomains.useLazyQuery({
-      orgPublicId: orgPublicId
-    });
+    await $trpc.org.mail.domains.getOrgDomains.useLazyQuery(
+      {
+        orgPublicId: orgPublicId
+      },
+      { server: false }
+    );
+
+  watch(orgDomainsData, (newOrgDomainsData) => {
+    if (newOrgDomainsData?.domainData) {
+      for (const domain of newOrgDomainsData.domainData) {
+        orgDomains.value.push({
+          domainPublicId: domain.publicId,
+          domain: domain.domain
+        });
+      }
+    }
+  });
+
+  const selectedDomain = ref<OrgDomains | undefined>(undefined);
+
   // get list of groups
   const { data: orgUserGroupsData, pending: orgUserGroupPending } =
-    await $trpc.org.users.userGroups.getOrgUserGroups.useLazyQuery({
-      orgPublicId: orgPublicId
-    });
+    await $trpc.org.users.userGroups.getOrgUserGroups.useLazyQuery(
+      {
+        orgPublicId: orgPublicId
+      },
+      { server: false }
+    );
+  interface OrgUserGroups {
+    publicId: String;
+    name: String;
+    description: String | null;
+    avatarId: String | null;
+    color: String | null;
+  }
+  const orgUserGroups = ref<OrgUserGroups[]>([]);
+
+  watch(orgUserGroupsData, (newOrgUserGroupsData) => {
+    if (newOrgUserGroupsData?.groups) {
+      for (const group of newOrgUserGroupsData.groups) {
+        orgUserGroups.value.push({
+          publicId: group.publicId,
+          name: group.name,
+          description: group.description,
+          avatarId: group.avatarId,
+          color: group.color
+        });
+      }
+    }
+  });
+
+  const selectedOrgGroups = ref<OrgUserGroups[]>([]);
 
   // get list of users
   const { data: orgMembersData, pending: orgMembersPending } =
-    await $trpc.org.users.members.getOrgMembersList.useLazyQuery({
-      orgPublicId: orgPublicId
-    });
+    await $trpc.org.users.members.getOrgMembersList.useLazyQuery(
+      {
+        orgPublicId: orgPublicId
+      },
+      { server: false }
+    );
+  interface OrgMembers {
+    publicId: String;
+    name: String;
+    handle: String;
+    avatarId: String | null;
+    title: String | null;
+  }
+  const orgMembers = ref<OrgMembers[]>([]);
 
-  function setActiveDomain(domainPublicId: string) {
-    newIdentityDomainPublicId.value = domainPublicId;
-    newIdentityDomainName.value =
-      orgDomainsData?.value?.domainData?.find(
-        (domain) => domain.publicId === domainPublicId
-      )?.domain || '';
-  }
-  function addUserGroupToRoute(groupPublicId: string) {
-    newIdentityRouteToGroupsPublicIds.value.push(groupPublicId);
-  }
-  function removeUserGroupFromRoute(groupPublicId: string) {
-    newIdentityRouteToGroupsPublicIds.value =
-      newIdentityRouteToGroupsPublicIds.value.filter(
-        (id) => id !== groupPublicId
-      );
-  }
-  function addUserToRoute(userPublicId: string) {
-    newIdentityRouteToUsersOrgMemberPublicIds.value.push(userPublicId);
-  }
-  function removeUserFromRoute(userPublicId: string) {
-    newIdentityRouteToUsersOrgMemberPublicIds.value =
-      newIdentityRouteToUsersOrgMemberPublicIds.value.filter(
-        (id) => id !== userPublicId
-      );
-  }
+  watch(orgMembersData, (newOrgMembersData) => {
+    if (newOrgMembersData?.members) {
+      for (const member of newOrgMembersData.members) {
+        orgMembers.value.push({
+          publicId: member.publicId,
+          name:
+            member.profile?.firstName + ' ' + member.profile?.lastName || '',
+          handle: member.profile?.handle,
+          avatarId: member.profile?.avatarId || '',
+          title: member.profile?.title || ''
+        });
+      }
+    }
+  });
+
+  const selectedOrgMembers = ref<OrgMembers[]>([]);
 
   async function createNewEmailIdentity() {
     buttonLoading.value = true;
     buttonLabel.value = 'Creating...';
+    const toast = useToast();
+
+    const selectedGroupsPublicIds: string[] = selectedOrgGroups.value.map(
+      (group) => group.publicId as string
+    );
+    const selectedOrgMembersPublicIds: string[] = selectedOrgMembers.value.map(
+      (member) => member.publicId as string
+    );
     const { emailIdentity: newEmailIdentityPublicId } =
       await $trpc.org.mail.emailIdentities.createNewEmailIdentity.mutate({
         orgPublicId,
         emailUsername: newIdentityUsernameValue.value,
-        domainPublicId: newIdentityDomainPublicId.value,
+        domainPublicId: selectedDomain.value?.domainPublicId as string,
         sendName: newIdentitySendNameValue.value,
-        routeToGroupsPublicIds: newIdentityRouteToGroupsPublicIds.value,
-        routeToUsersOrgMemberPublicIds:
-          newIdentityRouteToUsersOrgMemberPublicIds.value,
+        routeToGroupsPublicIds: selectedGroupsPublicIds,
+        routeToUsersOrgMemberPublicIds: selectedOrgMembersPublicIds,
         catchAll: newIdentityCatchAll.value
       });
     buttonLoading.value = false;
     buttonLabel.value = 'Done... Redirecting';
+    toast.add({
+      id: 'address_added',
+      title: 'Address Added',
+      description: `${newIdentityUsernameValue.value}@${selectedDomain.value?.domain} has been added successfully.`,
+      icon: 'i-ph-thumbs-up',
+      timeout: 5000
+    });
     setTimeout(() => {
       navigateTo(
         `/settings/org/${orgPublicId}/mail/addresses/${newEmailIdentityPublicId}/?new=true`
@@ -110,11 +173,7 @@
   }
 
   const multipleDestinationsSelected = computed(() => {
-    return (
-      newIdentityRouteToGroupsPublicIds.value.length +
-        newIdentityRouteToUsersOrgMemberPublicIds.value.length >
-      1
-    );
+    return selectedOrgGroups.value.length + selectedOrgMembers.value.length > 1;
   });
 
   const isPro = ref<boolean | null | undefined>(null);
@@ -139,9 +198,8 @@
     <div class="w-full flex flex-row items-center justify-between">
       <div class="flex flex-row items-center gap-4">
         <UnUiTooltip text="Back to Email Address list">
-          <icon
-            name="ph-arrow-left"
-            size="32"
+          <UnUiIcon
+            name="i-ph-arrow-left"
             @click="navigateTo('./')" />
         </UnUiTooltip>
         <div class="flex flex-col gap-1">
@@ -179,39 +237,17 @@
             " />
 
           <div class="flex flex-col gap-1">
-            <div class="flex flex-row items-end gap-2">
-              <span class="text-sm font-medium text-base-12"
-                >Catch-all{{ isPro ? '' : ' (Disabled)' }}</span
-              >
-              <UnUiTooltip
-                :text="
-                  isPro
-                    ? 'If an email is sent to an address that does not exist, it will be delivered here'
-                    : 'Catch-all is not available on your current billing plan'
-                "
-                class="max-h-[16px] leading-none">
-                <icon
-                  name="ph:info"
-                  size="16"
-                  class="max-h-[16px] max-w-[16px]" />
-              </UnUiTooltip>
-            </div>
-            <button
-              class="w-fit flex flex-row items-center gap-2 rounded-lg px-2 py-2"
-              :class="
+            <UnUiTooltip
+              :text="
                 isPro
-                  ? newIdentityCatchAll
-                    ? 'bg-primary-9'
-                    : 'bg-base-5'
-                  : 'opacity-50 cursor-not-allowed disabled'
-              "
-              @click="
-                isPro ? (newIdentityCatchAll = !newIdentityCatchAll) : null
+                  ? 'Receives all mail sent to unknown addresses'
+                  : 'Catch-all is not available on your current billing plan'
               ">
-              <icon
-                :name="newIdentityCatchAll ? 'ph:check-bold' : 'ph:x-bold'"
-                size="16" />
-            </button>
+              <UnUiCheckbox
+                v-model="newIdentityCatchAll"
+                :label="`Catch-all ${isPro ? '' : ' (Disabled)'}`"
+                :disabled="!isPro" />
+            </UnUiTooltip>
           </div>
         </div>
         <div class="flex flex-col gap-1">
@@ -225,32 +261,25 @@
             <span v-if="orgDomainsData?.domainData?.length === 0">
               No Domains Found
             </span>
-            <div
-              v-for="domain of orgDomainsData?.domainData"
-              :key="domain.publicId">
-              <div
-                class="w-fit flex flex-row items-center gap-4 rounded-xl bg-base-2 p-1">
-                <span class="font-mono">
-                  {{ domain.domain }}
-                </span>
-                <button
-                  class="flex flex-row items-center gap-2 rounded-lg px-2 py-2"
-                  :class="
-                    newIdentityDomainPublicId === domain.publicId
-                      ? 'bg-primary-9'
-                      : 'bg-base-5'
-                  "
-                  @click="setActiveDomain(domain.publicId)">
-                  <icon
-                    :name="
-                      newIdentityDomainPublicId === domain.publicId
-                        ? 'ph:check-bold'
-                        : 'ph:x-bold'
-                    "
-                    size="16" />
-                </button>
-              </div>
-            </div>
+            <NuxtUiSelectMenu
+              v-model="selectedDomain"
+              searchable
+              searchable-placeholder="Search a domain..."
+              placeholder="Select a domain"
+              :options="orgDomains">
+              <template
+                v-if="selectedDomain"
+                #label>
+                <UnUiIcon
+                  name="i-ph-check"
+                  class="h-4 w-4" />
+
+                {{ selectedDomain.domain }}
+              </template>
+              <template #option="{ option }">
+                {{ option.domain }}
+              </template>
+            </NuxtUiSelectMenu>
           </div>
         </div>
       </div>
@@ -273,47 +302,46 @@
             <span v-if="orgUserGroupsData?.groups.length === 0">
               No Groups Found
             </span>
-            <template
-              v-for="group of orgUserGroupsData?.groups"
-              :key="group.publicId">
-              <div
-                class="flex flex-row items-center gap-8 rounded-xl bg-base-2 p-2">
-                <div class="flex flex-row items-center gap-4">
-                  <UnUiAvatar
-                    :avatar-id="group.avatarId || ''"
-                    :name="group.name"
-                    :color="group.color as UiColor"
-                    size="xs" />
-                  <div class="flex flex-col gap-1">
-                    <span class="font-semibold leading-none">
-                      {{ group.name }}
-                    </span>
+            <NuxtUiSelectMenu
+              v-else
+              v-model="selectedOrgGroups"
+              multiple
+              placeholder="Select a group"
+              :options="orgUserGroups">
+              <template
+                v-if="selectedOrgGroups"
+                #label>
+                <UnUiIcon
+                  name="i-ph-check"
+                  class="h-4 w-4" />
 
-                    <span class="leading-none"> {{ group.description }} </span>
+                <div
+                  v-if="selectedOrgGroups.length"
+                  class="flex flex-wrap gap-3">
+                  <div
+                    v-for="(group, index) in selectedOrgGroups"
+                    :key="index"
+                    class="flex flex-row items-center gap-1 truncate">
+                    <UnUiAvatar
+                      :alt="group.name as string"
+                      :avatar-id="group.avatarId as string"
+                      :color="group.color as UiColor"
+                      size="3xs" />
+                    <span>{{ group.name }}</span>
                   </div>
                 </div>
-                <button
-                  class="flex flex-row items-center gap-2 rounded-lg px-2 py-2"
-                  :class="
-                    newIdentityRouteToGroupsPublicIds.includes(group.publicId)
-                      ? 'bg-primary-9'
-                      : 'bg-base-5'
-                  "
-                  @click="
-                    newIdentityRouteToGroupsPublicIds.includes(group.publicId)
-                      ? removeUserGroupFromRoute(group.publicId)
-                      : addUserGroupToRoute(group.publicId)
-                  ">
-                  <icon
-                    :name="
-                      newIdentityRouteToGroupsPublicIds.includes(group.publicId)
-                        ? 'ph:check-bold'
-                        : 'ph:x-bold'
-                    "
-                    size="16" />
-                </button>
-              </div>
-            </template>
+                <span v-else>Select groups</span>
+              </template>
+              <template #option="{ option }">
+                <UnUiAvatar
+                  :avatar-id="option.avatarId"
+                  :alt="option.name"
+                  :color="option.color as UiColor"
+                  size="3xs" />
+
+                {{ option.name }}
+              </template>
+            </NuxtUiSelectMenu>
           </div>
         </div>
 
@@ -325,73 +353,50 @@
           <div
             v-if="!orgMembersPending"
             class="flex flex-row flex-wrap gap-4">
-            <template
-              v-for="member of orgMembersData?.members"
-              :key="member.publicId">
-              <div
-                class="flex flex-row items-center gap-8 rounded-xl bg-base-2 p-2">
-                <div class="flex flex-row items-center gap-4">
-                  <UnUiAvatar
-                    :avatar-id="member.profile?.avatarId || ''"
-                    :name="
-                      member.profile?.firstName + ' ' + member.profile?.lastName
-                    "
-                    size="xs" />
-                  <div class="flex flex-col gap-1">
-                    <div class="h-[16px] flex flex-row items-center gap-1">
-                      <span class="font-semibold leading-none">
-                        {{
-                          member.profile?.firstName +
-                          ' ' +
-                          member.profile?.lastName
-                        }}
-                      </span>
-                      <UnUiTooltip
-                        v-if="member.role === 'admin'"
-                        text="Organization Admin"
-                        class="h-[16px] w-[16px]">
-                        <icon
-                          name="ph:crown"
-                          class="text-yellow-8"
-                          size="16" />
-                      </UnUiTooltip>
-                    </div>
-                    <span class="leading-none">
-                      @{{ member.profile?.handle }}
-                    </span>
-                    <span class="leading-none">
-                      {{ member.profile?.title }}
-                    </span>
+            <NuxtUiSelectMenu
+              v-model="selectedOrgMembers"
+              multiple
+              placeholder="Select a group"
+              :options="orgMembers">
+              <template
+                v-if="selectedOrgMembers"
+                #label>
+                <UnUiIcon
+                  name="i-ph-check"
+                  class="h-4 w-4" />
+
+                <div
+                  v-if="selectedOrgMembers.length"
+                  class="flex flex-wrap gap-3">
+                  <div
+                    v-for="(member, index) in selectedOrgMembers"
+                    :key="index"
+                    class="flex flex-row items-center gap-1 truncate">
+                    <UnUiAvatar
+                      :alt="member.name.toString()"
+                      :avatar-id="member.avatarId?.toString()"
+                      size="3xs" />
+                    <span>{{ member.name }}</span>
                   </div>
                 </div>
-                <button
-                  class="flex flex-row items-center gap-2 rounded-lg px-2 py-2"
-                  :class="
-                    newIdentityRouteToUsersOrgMemberPublicIds.includes(
-                      member.publicId
-                    )
-                      ? 'bg-primary-9'
-                      : 'bg-base-5'
-                  "
-                  @click="
-                    newIdentityRouteToUsersOrgMemberPublicIds.includes(
-                      member.publicId
-                    )
-                      ? removeUserFromRoute(member.publicId)
-                      : addUserToRoute(member.publicId)
-                  ">
-                  <icon
-                    :name="
-                      newIdentityRouteToUsersOrgMemberPublicIds.includes(
-                        member.publicId
-                      )
-                        ? 'ph:check-bold'
-                        : 'ph:x-bold'
-                    "
-                    size="16" />
-                </button>
-              </div>
-            </template>
+                <span v-else>Select Users</span>
+              </template>
+              <template #option="{ option }">
+                <UnUiAvatar
+                  :avatar-id="option.avatarId"
+                  :alt="option.name"
+                  size="xs" />
+
+                <span>
+                  {{ option.name
+                  }}<span
+                    v-if="option.title"
+                    class="text-xs">
+                    - {{ option.title }}</span
+                  ></span
+                >
+              </template>
+            </NuxtUiSelectMenu>
           </div>
         </div>
       </div>
@@ -402,7 +407,7 @@
         plan
       </span>
       <UnUiButton
-        icon="ph:plus"
+        icon="i-ph-plus"
         :label="buttonLabel"
         :loading="buttonLoading"
         :disabled="!formValid"

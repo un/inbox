@@ -113,7 +113,6 @@
   watch(orgMembersData, (newOrgMembersData) => {
     if (newOrgMembersData?.members) {
       for (const member of newOrgMembersData.members) {
-        console.log(usersInGroup.value, member.publicId);
         if (!usersInGroup.value.includes(member.publicId)) {
           orgMembersDropdownData.value.push({
             orgMemberPublicId: member.publicId,

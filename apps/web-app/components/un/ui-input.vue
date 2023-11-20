@@ -152,7 +152,7 @@
       >
     </div>
     <div
-      class="flex flex-row items-center gap-2 border rounded bg-sand-3 px-2 py-2 focus-within:bg-sand-4"
+      class="dark:bg-gray-900 text-gray-900 ring-gray-300 dark:ring-gray-700 focus:ring-primary-500 dark:focus:ring-primary-400 flex flex-row items-center gap-2 rounded bg-white px-2.5 py-1.5 shadow-sm ring-1 ring-inset dark:text-white focus:ring-2"
       :class="[
         inputClasses({
           disabled: computedDisabled
@@ -166,7 +166,7 @@
         ref="inputField"
         v-model="data"
         :aria-labelledby="`input-label-${props.label}`"
-        class="font-lg w-full bg-transparent outline-none placeholder:text-primary-12 placeholder:opacity-70"
+        class="font-xs w-full bg-transparent outline-none"
         :class="
           inputClasses({
             disabled: computedDisabled

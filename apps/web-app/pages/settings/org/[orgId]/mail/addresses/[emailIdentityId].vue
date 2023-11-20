@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { UiColor } from '@uninbox/types/ui';
+  import type { UiColor } from '@uninbox/types/ui';
 
   definePageMeta({
     layout: 'settings'
@@ -30,7 +30,7 @@
     <div class="w-full flex flex-row items-center justify-between">
       <div class="flex flex-row items-center gap-4">
         <UnUiTooltip text="Back to Email Address list">
-          <icon
+          <UnUiIcon
             name="ph-arrow-left"
             size="32"
             @click="navigateTo('./')" />
@@ -89,7 +89,7 @@
               <div class="flex flex-row items-center gap-4">
                 <UnUiAvatar
                   :avatar-id="destination.group?.avatarId || ''"
-                  :name="destination.group?.name"
+                  :alt="destination.group?.name"
                   :color="destination.group?.color as UiColor"
                   size="xs" />
                 <div class="flex flex-col gap-1">
@@ -110,7 +110,7 @@
               <div class="flex flex-row items-center gap-4">
                 <UnUiAvatar
                   :avatar-id="destination.orgMember?.profile?.avatarId || ''"
-                  :name="
+                  :alt="
                     destination.orgMember?.profile?.firstName +
                     ' ' +
                     destination.orgMember?.profile?.lastName

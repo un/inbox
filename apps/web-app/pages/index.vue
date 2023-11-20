@@ -75,7 +75,7 @@
         variant="soft"
         block
         size="lg"
-        to="/join" />
+        @click="navigateTo('/join')" />
       <NuxtLink
         to="/login/findmypasskey"
         class="text-center text-sm hover:(text-primary-11 underline)">

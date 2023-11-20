@@ -24,7 +24,15 @@
   const orgPublicId = useRoute().params.orgId as string;
 
   async function createNewDomain() {
+    const toast = useToast();
     if (newDomainNameValid.value === false) return;
+    toast.add({
+      id: 'adding_domain',
+      title: 'Adding Domain - Please wait',
+      description: `This could take up to 20 seconds.`,
+      icon: 'i-ph-thumbs-up',
+      timeout: 20000
+    });
     buttonLoading.value = true;
     buttonLabel.value = 'Creating domain...';
     const newDomainResponse =
@@ -43,7 +51,7 @@
     buttonLoading.value = false;
     buttonLabel.value = 'All done';
 
-    const toast = useToast();
+    toast.remove('adding_domain');
     toast.add({
       id: 'domain_added',
       title: 'Domain Added',
