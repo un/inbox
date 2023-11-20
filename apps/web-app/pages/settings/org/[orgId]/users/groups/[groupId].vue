@@ -169,11 +169,6 @@
       icon: 'i-ph-thumbs-up',
       timeout: 5000
     });
-    setTimeout(() => {
-      navigateTo(
-        `/settings/org/${orgPublicId}/users/groups/${newGroupPublicId}/?new=true`
-      );
-    }, 1500);
   }
 </script>
 

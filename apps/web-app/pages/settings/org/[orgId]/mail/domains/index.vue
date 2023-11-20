@@ -28,8 +28,6 @@
     { server: false }
   );
 
-  console.log(orgDomainsQuery);
-
   const tableColumns = [
     {
       key: 'domain',
@@ -102,8 +100,8 @@
         <button
           class="max-w-80 flex flex-row items-center justify-center gap-2 border-1 border-base-7 rounded bg-base-3 p-2"
           @click="navigateTo(`/settings/org/${orgPublicId}/mail/domains/new`)">
-          <icon
-            name="ph-plus"
+          <NuxtUiIcon
+            name="i-ph-plus"
             size="20" />
           <p class="text-sm">Add new</p>
         </button>
@@ -111,18 +109,16 @@
     </div>
     <div class="w-full flex flex-col gap-8 overflow-y-scroll">
       <div class="w-full flex flex-col gap-8">
-        <UnUiTable
+        <NuxtUiTable
           :columns="tableColumns"
           :rows="tableRows"
           class=""
           :loading="pending"
           @select="select">
           <template #status-data="{ row }">
-            <div
-              class="w-fit rounded-full px-4 py-1"
-              :class="row.status === 'active' ? 'bg-grass-5' : 'bg-red-5'">
-              <span class="text-xs uppercase">{{ row.status }}</span>
-            </div>
+            <UnUiBadge
+              :label="row.status.toUpperCase()"
+              :color="row.status === 'active' ? 'green' : 'red'" />
           </template>
           <template #domain-data="{ row }">
             <div class="w-fit">
@@ -130,27 +126,23 @@
             </div>
           </template>
           <template #sendingMode-data="{ row }">
-            <div
-              class="w-fit rounded-full px-4 py-1"
-              :class="row.sendingMode === 'native' ? 'bg-grass-5' : 'bg-red-5'">
-              <span class="text-xs uppercase">{{ row.sendingMode }}</span>
-            </div>
+            <UnUiBadge
+              :label="row.sendingMode.toUpperCase()"
+              :color="row.status === 'native' ? 'green' : 'red'" />
           </template>
 
           <template #receivingMode-data="{ row }">
-            <div
-              class="w-fit rounded-full px-4 py-1"
-              :class="
+            <UnUiBadge
+              :label="row.receivingMode.toUpperCase()"
+              :color="
                 row.receivingMode === 'native'
-                  ? 'bg-grass-5'
+                  ? 'green'
                   : row.receivingMode === 'forwarding'
-                  ? 'bg-orange-5'
-                  : 'bg-red-5'
-              ">
-              <span class="text-xs uppercase">{{ row.receivingMode }}</span>
-            </div>
+                    ? 'orange'
+                    : 'red'
+              " />
           </template>
-        </UnUiTable>
+        </NuxtUiTable>
       </div>
     </div>
   </div>

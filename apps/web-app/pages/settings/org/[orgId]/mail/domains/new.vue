@@ -43,9 +43,20 @@
     buttonLoading.value = false;
     buttonLabel.value = 'All done';
 
-    navigateTo(
-      `/settings/org/${orgPublicId}/mail/domains/${newDomainResponse.domainId}/?new=true`
-    );
+    const toast = useToast();
+    toast.add({
+      id: 'domain_added',
+      title: 'Domain Added',
+      description: `${newDomainNameValue.value} has been added successfully.`,
+      icon: 'i-ph-thumbs-up',
+      timeout: 5000
+    });
+
+    setTimeout(() => {
+      navigateTo(
+        `/settings/org/${orgPublicId}/mail/domains/${newDomainResponse.domainId}/?new=true`
+      );
+    }, 1500);
   }
 
   const isPro = ref<boolean | null | undefined>(null);
@@ -74,14 +85,6 @@
         </div>
       </div>
     </div>
-    <!-- <div
-      v-if="dataPending"
-      class="w-full flex flex-row justify-center gap-4 rounded-xl rounded-tl-2xl bg-base-3 p-8">
-      <icon
-        name="svg-spinners:3-dots-fade"
-        size="24" />
-      <span>Checking Domains</span>
-    </div> -->
     <div
       v-if="isPro"
       class="w-full flex flex-col gap-4">

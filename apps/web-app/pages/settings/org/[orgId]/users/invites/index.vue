@@ -151,6 +151,15 @@
     inviteEmailValue.value = '';
     newInviteCode.value = newInviteResponse.inviteToken;
     refresh();
+
+    const toast = useToast();
+    toast.add({
+      id: 'invite_created',
+      title: 'Invite Created',
+      description: `New Invite has been created successfully.`,
+      icon: 'i-ph-thumbs-up',
+      timeout: 5000
+    });
   }
 </script>
 
