@@ -6,6 +6,9 @@ export default defineAppConfig({
   ui: {
     primary: 'slate',
     gray: 'zinc',
-    safelistColors: ['orange']
+    safelistColors: ['orange'],
+    notification: {
+      rounded: 'rounded-lg rounded-br-2xl'
+    }
   }
 });
