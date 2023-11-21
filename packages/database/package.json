@@ -20,11 +20,11 @@
     "@uninbox/types": "workspace:*",
     "@uninbox/utils": "workspace:*",
     "drizzle-orm": "^0.29.0",
-    "mysql2": "^3.6.3"
+    "mysql2": "^3.6.4"
   },
   "devDependencies": {
-    "@faker-js/faker": "^8.2.0",
-    "drizzle-kit": "^0.20.2",
+    "@faker-js/faker": "^8.3.1",
+    "drizzle-kit": "^0.20.4",
     "esno": "^4.0.0"
   }
 }
