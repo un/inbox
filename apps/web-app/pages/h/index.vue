@@ -10,8 +10,8 @@
     <button
       class="max-w-80 w-full flex flex-row items-center justify-center gap-4 border-1 border-base-7 rounded bg-base-3 p-2"
       @click="navigateTo('/h/convo/new')">
-      <icon
-        name="ph-plus"
+      <UnUiIcon
+        name="i-ph-plus"
         size="20" />
       <p class="text-sm">Start new</p>
     </button>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { UiColor } from '@uninbox/types/ui';
+  import type { UiColor } from '@uninbox/types/ui';
   import { useTimeAgo } from '@vueuse/core';
   import { z } from 'zod';
   const { $trpc } = useNuxtApp();
@@ -172,7 +172,7 @@
     <div class="flex flex-col gap-4">
       <span class="text-lg font-display"> Organization </span>
       <span v-if="userOrgsPending">
-        <icon name="svg-spinners:3-dots-fade" /> Loading Organizations
+        <UnUiIcon name="i-svg-spinners:3-dots-fade" /> Loading Organizations
       </span>
       <div
         v-if="!userOrgsPending"
@@ -197,11 +197,11 @@
                   : 'bg-base-5'
               "
               @click="setActiveOrg(org.org.publicId, true)">
-              <icon
+              <UnUiIcon
                 :name="
                   activeOrg.publicId === org.org.publicId
-                    ? 'ph:check-bold'
-                    : 'ph:x-bold'
+                    ? 'i-ph-check-bold'
+                    : 'i-ph-x-bold'
                 "
                 size="16" />
             </button>
@@ -227,11 +227,11 @@
                   : 'bg-base-5'
               "
               @click="setActiveOrg(org.org.publicId)">
-              <icon
+              <UnUiIcon
                 :name="
                   activeOrg.publicId === org.org.publicId
-                    ? 'ph:check-bold'
-                    : 'ph:x-bold'
+                    ? 'i-ph-check-bold'
+                    : 'i-ph-x-bold'
                 "
                 size="16" />
             </button>
@@ -247,7 +247,8 @@
             Select organization to load email identities
           </span>
           <span v-if="userEmailIdentitiesStatus === 'pending'">
-            <icon name="svg-spinners:3-dots-fade" /> Loading Email Identities
+            <UnUiIcon name="svg-spinners:3-dots-fade" /> Loading Email
+            Identities
           </span>
           <div
             v-if="!userEmailIdentitiesPending && showPersonalAddress"
@@ -276,11 +277,11 @@
                       `${identity.sendName} - ${identity.username}@${identity.domainName}`
                     )
                   ">
-                  <icon
+                  <UnUiIcon
                     :name="
                       activeSendAs === identity.publicId
-                        ? 'ph:check-bold'
-                        : 'ph:x-bold'
+                        ? 'i-ph-check-bold'
+                        : 'i-ph-x-bold'
                     "
                     size="16" />
                 </button>
@@ -323,11 +324,11 @@
                       `${identity.sendName} - ${identity.username}@${identity.domainName}`
                     )
                   ">
-                  <icon
+                  <UnUiIcon
                     :name="
                       activeSendAs === identity.publicId
-                        ? 'ph:check-bold'
-                        : 'ph:x-bold'
+                        ? 'i-ph-check-bold'
+                        : 'i-ph-x-bold'
                     "
                     size="16" />
                 </button>
@@ -344,7 +345,7 @@
           v-if="!participantUsersExpanded"
           class="flex flex-row items-center gap-2"
           @click="participantUsersExpanded = true">
-          <Icon
+          <UnUiIcon
             name="ph:plus"
             size="16" />
           <span class="text-sm font-medium">
@@ -357,7 +358,7 @@
           class="flex flex-col gap-2">
           <span class="text-sm font-medium">Users</span>
           <span v-if="orgMembersStatus === 'pending'">
-            <icon name="svg-spinners:3-dots-fade" /> Loading Users
+            <UnUiIcon name="svg-spinners:3-dots-fade" /> Loading Users
           </span>
           <div
             v-if="orgMembersStatus === 'success'"
@@ -388,7 +389,7 @@
                         v-if="member.role === 'admin'"
                         text="Organization Admin"
                         class="h-[16px] w-[16px]">
-                        <icon
+                        <UnUiIcon
                           name="ph:crown"
                           class="text-yellow-8"
                           size="16" />
@@ -408,13 +409,13 @@
                       ? 'bg-primary-9'
                       : 'bg-base-5'
                   ">
-                  <icon
+                  <UnUiIcon
                     :name="
                       newIdentityRouteToUsersOrgMemberPublicIds.includes(
                         member.publicId
                       )
-                        ? 'ph:check-bold'
-                        : 'ph:x-bold'
+                        ? 'i-ph-check-bold'
+                        : 'i-ph-x-bold'
                     "
                     size="16" />
                 </button>
@@ -446,7 +447,7 @@
                         v-if="member.role === 'admin'"
                         text="Organization Admin"
                         class="h-[16px] w-[16px]">
-                        <icon
+                        <UnUiIcon
                           name="ph:crown"
                           class="text-yellow-8"
                           size="16" />
@@ -473,7 +474,7 @@
                       ? removeUserFromRoute(member.publicId)
                       : addUserToRoute(member.publicId)
                   ">
-                  <icon
+                  <UnUiIcon
                     :name="
                       newIdentityRouteToUsersOrgMemberPublicIds.includes(
                         member.publicId
@@ -491,7 +492,7 @@
           v-if="!participantGroupsExpanded"
           class="flex flex-row items-center gap-2"
           @click="participantGroupsExpanded = true">
-          <Icon
+          <UnUiIcon
             name="ph:plus"
             size="16" />
           <span class="text-sm font-medium">Add Groups</span>
@@ -501,7 +502,7 @@
           class="flex flex-col gap-2">
           <span class="text-sm font-medium">Groups</span>
           <span v-if="orgUserGroupsStatus === 'pending'">
-            <icon name="svg-spinners:3-dots-fade" /> Loading User Groups
+            <UnUiIcon name="svg-spinners:3-dots-fade" /> Loading User Groups
           </span>
           <div
             v-if="orgUserGroupsStatus === 'success'"
@@ -538,11 +539,11 @@
                       ? removeUserGroupFromRoute(group.publicId)
                       : addUserGroupToRoute(group.publicId)
                   ">
-                  <icon
+                  <UnUiIcon
                     :name="
                       newIdentityRouteToGroupsPublicIds.includes(group.publicId)
-                        ? 'ph:check-bold'
-                        : 'ph:x-bold'
+                        ? 'i-ph-check-bold'
+                        : 'i-ph-x-bold'
                     "
                     size="16" />
                 </button>
@@ -555,7 +556,7 @@
           v-if="!participantEmailExpanded"
           class="flex flex-row items-center gap-2"
           @click="participantEmailExpanded = true">
-          <Icon
+          <UnUiIcon
             name="ph:plus"
             size="16" />
           <span class="text-sm font-medium">Add External Email</span>
@@ -592,7 +593,7 @@
                       ? removeExternalEmailAddress(address)
                       : addExternalEmailAddress()
                   ">
-                  <icon
+                  <UnUiIcon
                     :name="
                       externalEmailAddresses.includes(address)
                         ? 'ph:check-bold'
@@ -612,7 +613,7 @@
               <button
                 class="h-min max-w-80 flex flex-row items-center justify-center gap-2 border-1 border-base-7 rounded bg-base-3 px-2 py-1.5"
                 @click="addExternalEmailAddress()">
-                <icon
+                <UnUiIcon
                   name="ph-plus"
                   size="20" />
                 <p class="text-sm">Add</p>

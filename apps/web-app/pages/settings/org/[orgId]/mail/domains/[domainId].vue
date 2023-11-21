@@ -84,75 +84,75 @@
 </script>
 
 <template>
-  <div class="flex flex-col w-full h-full items-start p-4 gap-8">
-    <div class="flex flex-row w-full justify-between items-center">
-      <div class="flex flex-row gap-4 items-center">
+  <div class="h-full w-full flex flex-col items-start gap-8 p-4">
+    <div class="w-full flex flex-row items-center justify-between">
+      <div class="flex flex-row items-center gap-4">
         <UnUiTooltip text="Back to domains">
-          <icon
-            name="ph-arrow-left"
+          <UnUicon
+            name="i-ph-arrow-left"
             size="32"
             @click="navigateTo('./')" />
         </UnUiTooltip>
         <div class="flex flex-col gap-1">
           <span
-            class="font-mono text-2xl"
-            v-if="!domainPending">
+            v-if="!domainPending"
+            class="text-2xl font-mono">
             {{ domainQuery?.domainData?.domain }}
           </span>
           <span
-            class="font-mono text-2xl"
-            v-if="domainPending">
+            v-if="domainPending"
+            class="text-2xl font-mono">
             Loading...
           </span>
         </div>
       </div>
       <span
-        class="font-semibold text-base-1 uppercase py-1 px-4 rounded-full"
+        v-if="!domainPending"
+        class="rounded-full px-4 py-1 font-semibold uppercase text-base-1"
         :class="
           domainQuery?.domainData?.domainStatus === 'disabled'
             ? 'bg-red-9'
             : domainQuery?.domainData?.domainStatus === 'pending'
-            ? 'bg-orange-9'
-            : 'bg-green-9'
-        "
-        v-if="!domainPending">
+              ? 'bg-orange-9'
+              : 'bg-green-9'
+        ">
         {{ domainQuery?.domainData?.domainStatus }}
       </span>
     </div>
-    <div class="flex flex-col gap-8 w-full overflow-y-scroll">
+    <div class="w-full flex flex-col gap-8 overflow-y-scroll">
       <div
-        class="flex flex-col gap-8 w-full"
-        v-if="domainPending">
-        <div class="flex flex-row gap-4 items-center">
+        v-if="domainPending"
+        class="w-full flex flex-col gap-8">
+        <div class="flex flex-row items-center gap-4">
           <div class="flex flex-col gap-1">
-            <span class="font-display text-2xl">Loading...</span>
+            <span class="text-2xl font-display">Loading...</span>
             <span class="text-sm">Please wait while we load your domain</span>
           </div>
         </div>
       </div>
       <div
-        class="flex flex-col gap-8 w-full"
-        v-if="!domainPending && !domainQuery?.domainData">
-        <div class="flex flex-row gap-4 items-center">
+        v-if="!domainPending && !domainQuery?.domainData"
+        class="w-full flex flex-col gap-8">
+        <div class="flex flex-row items-center gap-4">
           <div class="flex flex-col gap-1">
-            <span class="font-display text-2xl">Domain not found</span>
+            <span class="text-2xl font-display">Domain not found</span>
             <span class="text-sm"></span>
           </div>
         </div>
       </div>
 
       <div
-        class="flex flex-col gap-8 w-full"
-        v-if="!domainPending && domainQuery?.domainData">
+        v-if="!domainPending && domainQuery?.domainData"
+        class="w-full flex flex-col gap-8">
         <div class="flex flex-col gap-4">
           <div class="w-full border-b-1 border-base-5 pb-2">
-            <span class="text-sm uppercase text-base-11 font-semibold">
+            <span class="text-sm font-semibold uppercase text-base-11">
               Status
             </span>
           </div>
           <div
-            class="flex flex-col gap-0"
-            v-if="domainQuery?.domainData?.domainStatus === 'pending'">
+            v-if="domainQuery?.domainData?.domainStatus === 'pending'"
+            class="flex flex-col gap-0">
             <span class=""> Your domain is unverified. </span>
             <span class="">
               Create at least one DNS record below to verify your domain.
@@ -167,16 +167,16 @@
             </span>
           </div>
           <div
-            class="flex flex-col gap-0"
-            v-if="domainQuery?.domainData?.domainStatus === 'active'">
+            v-if="domainQuery?.domainData?.domainStatus === 'active'"
+            class="flex flex-col gap-0">
             <span class="">
               Your domain has been activated and can be used to send and receive
               as per the settings below.
             </span>
           </div>
           <div
-            class="flex flex-col gap-0"
-            v-if="domainQuery?.domainData?.domainStatus === 'disabled'">
+            v-if="domainQuery?.domainData?.domainStatus === 'disabled'"
+            class="flex flex-col gap-0">
             <span class="">
               Your domain has been disabled and can not be used to send or
               receive mail.
@@ -193,20 +193,20 @@
         </div>
         <div class="flex flex-col gap-4">
           <div class="w-full border-b-1 border-base-5 pb-2">
-            <span class="text-sm uppercase text-base-11 font-semibold">
+            <span class="text-sm font-semibold uppercase text-base-11">
               Mail
             </span>
           </div>
           <div class="flex flex-col gap-4">
             <div
-              class="flex flex-col gap-4 justify-center p-8 bg-base-2 rounded-2xl w-full h-fit">
+              class="h-fit w-full flex flex-col justify-center gap-4 rounded-2xl bg-base-2 p-8">
               <div
-                class="flex flex-row justify-between items-center cursor-pointer"
+                class="flex flex-row cursor-pointer items-center justify-between"
                 @click="mailMethodsExpanded = !mailMethodsExpanded">
-                <span class="font-display text-lg">Incoming</span>
+                <span class="text-lg font-display">Incoming</span>
                 <span
                   v-if="domainQuery.domainData.receivingMode === 'disabled'"
-                  class="text-xs font-semibold text-base-1 uppercase py-1 px-4 rounded-full bg-red-9">
+                  class="rounded-full bg-red-9 px-4 py-1 text-xs font-semibold uppercase text-base-1">
                   Disabled
                 </span>
                 <span
@@ -214,18 +214,18 @@
                     domainQuery.domainData.receivingMode === 'forwarding' ||
                     domainQuery.domainData.receivingMode === 'native'
                   "
-                  class="text-xs font-semibold text-base-1 uppercase py-1 px-4 rounded-full bg-orange-9">
+                  class="rounded-full bg-orange-9 px-4 py-1 text-xs font-semibold uppercase text-base-1">
                   Forwarding
                 </span>
                 <span
                   v-if="domainQuery.domainData.receivingMode === 'native'"
-                  class="text-xs font-semibold text-base-1 uppercase py-1 px-4 rounded-full bg-green-9">
+                  class="rounded-full bg-green-9 px-4 py-1 text-xs font-semibold uppercase text-base-1">
                   Native
                 </span>
               </div>
               <div
                 v-show="mailMethodsExpanded"
-                class="flex flex-col gap-8 justify-center">
+                class="flex flex-col justify-center gap-8">
                 <div v-if="domainQuery.domainData.receivingMode === 'disabled'">
                   <span class=""
                     >Incoming mail is disabled for this domain. Please verify
@@ -234,10 +234,10 @@
                   >
                 </div>
                 <div class="flex flex-col gap-2">
-                  <div class="flex flex-row justify-between items-center">
+                  <div class="flex flex-row items-center justify-between">
                     <span class="font-semibold"> Native Mode </span>
                     <span
-                      class="px-4 py-1 bg-red-5 rounded-full uppercase text-xs font-semibold text-base-1"
+                      class="rounded-full bg-red-5 px-4 py-1 text-xs font-semibold uppercase text-base-1"
                       :class="
                         incomingNativeModeEnabled ? 'bg-green-9' : 'bg-red-9'
                       ">
@@ -252,10 +252,10 @@
                   </span>
                 </div>
                 <div class="flex flex-col gap-2">
-                  <div class="flex flex-row justify-between items-center">
+                  <div class="flex flex-row items-center justify-between">
                     <span class="font-semibold"> Forwarding Mode </span>
                     <span
-                      class="px-4 py-1 bg-red-5 rounded-full uppercase text-xs font-semibold text-base-1"
+                      class="rounded-full bg-red-5 px-4 py-1 text-xs font-semibold uppercase text-base-1"
                       :class="
                         incomingForwardingModeEnabled
                           ? 'bg-green-9'
@@ -274,22 +274,22 @@
                     A single forwarding address can be used for all your
                     domain's email accounts.
                   </span>
-                  <div class="flex flex-col gap-1 mt-[8px]">
+                  <div class="mt-[8px] flex flex-col gap-1">
                     <span
-                      class="text-xs uppercase text-base-11 overflow-hidden">
+                      class="overflow-hidden text-xs uppercase text-base-11">
                       Forwarding Address
                     </span>
-                    <div class="flex flex-row gap-2 items-center">
+                    <div class="flex flex-row items-center gap-2">
                       <div
-                        class="flex flex-col bg-base-3 p-4 rounded-lg w-fit min-w-[50px] items-center">
+                        class="min-w-[50px] w-fit flex flex-col items-center rounded-lg bg-base-3 p-4">
                         <span
-                          class="text-sm font-mono break-anywhere text-left w-fit">
+                          class="w-fit break-anywhere text-left text-sm font-mono">
                           {{ domainQuery?.domainData?.forwardingAddress }}
                         </span>
                       </div>
                       <UnUiTooltip text="Copy to clipboard">
-                        <icon
-                          name="ph-clipboard"
+                        <UnUiIcon
+                          name="i-ph-clipboard"
                           size="20"
                           @click="
                             copy(
@@ -303,30 +303,30 @@
               </div>
             </div>
             <div
-              class="flex flex-col gap-4 justify-center p-8 bg-base-2 rounded-2xl w-full h-fit">
+              class="h-fit w-full flex flex-col justify-center gap-4 rounded-2xl bg-base-2 p-8">
               <div
-                class="flex flex-row justify-between items-center cursor-pointer"
+                class="flex flex-row cursor-pointer items-center justify-between"
                 @click="mailMethodsExpanded = !mailMethodsExpanded">
-                <span class="font-display text-lg">Outgoing</span>
+                <span class="text-lg font-display">Outgoing</span>
                 <span
                   v-if="domainQuery.domainData.sendingMode === 'disabled'"
-                  class="text-xs font-semibold text-base-1 uppercase py-1 px-4 rounded-full bg-red-9">
+                  class="rounded-full bg-red-9 px-4 py-1 text-xs font-semibold uppercase text-base-1">
                   Disabled
                 </span>
                 <span
                   v-if="domainQuery.domainData.sendingMode === 'external'"
-                  class="text-xs font-semibold text-base-1 uppercase py-1 px-4 rounded-full bg-orange-9">
+                  class="rounded-full bg-orange-9 px-4 py-1 text-xs font-semibold uppercase text-base-1">
                   External
                 </span>
                 <span
                   v-if="domainQuery.domainData.sendingMode === 'native'"
-                  class="text-xs font-semibold text-base-1 uppercase py-1 px-4 rounded-full bg-green-9">
+                  class="rounded-full bg-green-9 px-4 py-1 text-xs font-semibold uppercase text-base-1">
                   Native
                 </span>
               </div>
               <div
                 v-show="mailMethodsExpanded"
-                class="flex flex-col gap-8 justify-center">
+                class="flex flex-col justify-center gap-8">
                 <div v-if="domainQuery.domainData.sendingMode === 'disabled'">
                   <span class="">
                     Outgoing mail is disabled for this domain. Please add the
@@ -334,10 +334,10 @@
                   </span>
                 </div>
                 <div class="flex flex-col gap-2">
-                  <div class="flex flex-row justify-between items-center">
+                  <div class="flex flex-row items-center justify-between">
                     <span class="font-semibold"> Native Mode </span>
                     <span
-                      class="px-4 py-1 bg-red-5 rounded-full uppercase text-xs font-semibold text-base-1"
+                      class="rounded-full bg-red-5 px-4 py-1 text-xs font-semibold uppercase text-base-1"
                       :class="
                         outgoingNativeModeEnabled ? 'bg-green-9' : 'bg-red-9'
                       ">
@@ -353,10 +353,10 @@
                   </span>
                 </div>
                 <div class="flex flex-col gap-2">
-                  <div class="flex flex-row justify-between items-center">
+                  <div class="flex flex-row items-center justify-between">
                     <span class="font-semibold"> External Mode </span>
                     <span
-                      class="px-4 py-1 bg-red-5 rounded-full uppercase text-xs font-semibold text-base-1 bg-red-9">
+                      class="rounded-full bg-red-5 bg-red-9 px-4 py-1 text-xs font-semibold uppercase text-base-1">
                       disabled
                     </span>
                   </div>
@@ -375,14 +375,14 @@
         </div>
         <div class="flex flex-col gap-4">
           <div
-            class="flex flex-row justify-between w-full border-b-1 border-base-5 pb-2">
-            <span class="text-md uppercase text-base-11 font-semibold">
+            class="w-full flex flex-row justify-between border-b-1 border-base-5 pb-2">
+            <span class="text-md font-semibold uppercase text-base-11">
               DNS Records
             </span>
           </div>
           <div class="flex flex-col gap-4">
-            <div class="flex flex-row justify-between items-center">
-              <span class="text-xs uppercase text-base-11 font-semibold">
+            <div class="flex flex-row items-center justify-between">
+              <span class="text-xs font-semibold uppercase text-base-11">
                 Last check: {{ timeSinceLastDnsCheck }}
               </span>
               <UnUiButton
@@ -394,8 +394,8 @@
                 @click="recheckDns()" />
             </div>
             <span
-              class="text-sm text-base-11 w-full text-center"
-              v-if="showDnsRefreshMessage">
+              v-if="showDnsRefreshMessage"
+              class="w-full text-center text-sm text-base-11">
               DNS records have been rechecked. If the records are still invalid,
               please recheck your DNS settings.
             </span>

@@ -42,22 +42,22 @@
       avatarId: member.foreignEmailIdentity?.avatarId
         ? member.foreignEmailIdentity?.avatarId
         : member.userGroup?.avatarId
-        ? member.userGroup?.avatarId
-        : member.userProfile?.avatarId
-        ? member.userProfile?.avatarId
-        : '',
+          ? member.userGroup?.avatarId
+          : member.userProfile?.avatarId
+            ? member.userProfile?.avatarId
+            : '',
       name: member.foreignEmailIdentity?.senderName
         ? member.foreignEmailIdentity?.senderName
         : member.userGroup?.name
-        ? member.userGroup?.name
-        : member.userProfile?.firstName
-        ? member.userProfile?.firstName + ' ' + member.userProfile?.lastName
-        : '',
+          ? member.userGroup?.name
+          : member.userProfile?.firstName
+            ? member.userProfile?.firstName + ' ' + member.userProfile?.lastName
+            : '',
       type: member.foreignEmailIdentity?.senderName
         ? 'External'
         : member.userGroup?.name
-        ? 'Group'
-        : 'User',
+          ? 'Group'
+          : 'User',
       color: member.userGroup?.color ? member.userGroup?.color : 'base'
     });
   }
@@ -89,39 +89,39 @@
   const editorData = ref('');
 </script>
 <template>
-  <div class="flex flex-col gap-2 h-full max-h-full w-full max-w-full">
+  <div class="h-full max-h-full max-w-full w-full flex flex-col gap-2">
     <div
-      class="flex flex-col gap-2 border-b-1 border-b-base-6 pb-2 justify-between w-full max-w-full bg-base-3 rounded rounded-tr-xl p-4">
-      <div class="flex flex-row gap-2 overflow-hidden w-full items-center">
+      class="max-w-full w-full flex flex-col justify-between gap-2 border-b-1 border-b-base-6 rounded rounded-tr-xl bg-base-3 p-4 pb-2">
+      <div class="w-full flex flex-row items-center gap-2 overflow-hidden">
         <span class="text-sm">
           {{
             convoDetails?.data?.subjects.length !== 1 ? 'Subjects' : 'Subject'
           }}:
         </span>
-        <div class="flex flex-col gap-0 overflow-hidden w-full">
+        <div class="w-full flex flex-col gap-0 overflow-hidden">
           <span
-            class="truncate"
-            v-for="subject of convoDetails?.data?.subjects">
+            v-for="subject of convoDetails?.data?.subjects"
+            class="truncate">
             {{ subject.subject }}
           </span>
         </div>
       </div>
       <div
-        class="flex flex-row max-w-full gap-2 overflow-hidden flex-wrap"
-        v-if="attachments.length > 0">
+        v-if="attachments.length > 0"
+        class="max-w-full flex flex-row flex-wrap gap-2 overflow-hidden">
         <div v-for="attachment of attachments">
           <div
-            class="px-2 py-1 border border-1 border-base-5 rounded bg-base-2 flex flex-row gap-1">
-            <Icon
-              name="ph-paperclip"
+            class="flex flex-row gap-1 border border-1 border-base-5 rounded bg-base-2 px-2 py-1">
+            <UnUiIcon
+              name="i-ph-paperclip"
               size="16" />
-            <span class="text-xs truncate"> {{ attachment.name }}</span>
+            <span class="truncate text-xs"> {{ attachment.name }}</span>
           </div>
         </div>
       </div>
 
-      <div class="flex flex-row justify-between items-center gap-4 w-full">
-        <div class="flex flex-row items-center gap-2 min-w-fit">
+      <div class="w-full flex flex-row items-center justify-between gap-4">
+        <div class="min-w-fit flex flex-row items-center gap-2">
           <div v-for="member of memberArray">
             <UnUiAvatar
               :avatar-id="member.avatarId"
@@ -131,20 +131,20 @@
               size="sm" />
           </div>
         </div>
-        <div class="flex flex-col min-w-fit">
+        <div class="min-w-fit flex flex-col">
           <span class="text-xs text-base-11">Started: {{ createDate }}</span>
           <span class="text-xs text-base-11">Updated: {{ updateDate }}</span>
         </div>
       </div>
     </div>
-    <div class="flex flex-col gap-0 grow overflow-hidden h-full max-h-full">
-      <div class="h-[24px] mb-[-24px] bg-gradient-to-b from-base-1 z-20000" />
+    <div class="h-full max-h-full flex grow flex-col gap-0 overflow-hidden">
+      <div class="z-20000 mb-[-24px] h-[24px] from-base-1 bg-gradient-to-b" />
       <convos-convo-messages :convo-public-id="convoPublicId" />
-      <div class="h-[24px] mt-[-24px] bg-gradient-to-t from-base-1" />
+      <div class="mt-[-24px] h-[24px] from-base-1 bg-gradient-to-t" />
     </div>
-    <div class="flex flex-row gap-2 justify-items-end w-full max-h-[350px]">
+    <div class="max-h-[350px] w-full flex flex-row justify-items-end gap-2">
       <UnEditor v-model:modelValue="editorData" />
-      <div class="flex flex-col gap-2 min-w-fit justify-end">
+      <div class="min-w-fit flex flex-col justify-end gap-2">
         <UnUiButton
           label="Send"
           icon="ph-envelope"

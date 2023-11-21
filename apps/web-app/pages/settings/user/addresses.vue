@@ -27,8 +27,8 @@
     <div
       v-if="pending"
       class="w-full flex flex-row justify-center gap-4 rounded-xl rounded-tl-2xl bg-base-3 p-8">
-      <icon
-        name="svg-spinners:3-dots-fade"
+      <UnUiIcon
+        name="i-svg-spinners:3-dots-fade"
         size="24" />
       <span>Loading your profiles</span>
     </div>
@@ -56,8 +56,8 @@
             </span>
           </div>
           <UnUiTooltip text="Copy to clipboard">
-            <icon
-              name="ph-clipboard"
+            <UnUiIcon
+              name="i-ph-clipboard"
               size="20"
               @click="
                 copy(`${personalEmail.username}@${personalEmail.domainName}`)
@@ -85,8 +85,8 @@
             </span>
           </div>
           <UnUiTooltip text="Copy to clipboard">
-            <icon
-              name="ph-clipboard"
+            <UnUiIcon
+              name="i-ph-clipboard"
               size="20"
               @click="copy(userAddresses?.personalOrgFwdAddress || '')" />
           </UnUiTooltip>

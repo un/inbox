@@ -138,8 +138,8 @@
     <div
       v-if="pending"
       class="w-full flex flex-row justify-center gap-4 rounded-xl rounded-tl-2xl bg-base-3 p-8">
-      <icon
-        name="svg-spinners:3-dots-fade"
+      <UnUiIcon
+        name="i-svg-spinners:3-dots-fade"
         size="24" />
       <span>Loading organization profile</span>
     </div>
@@ -156,9 +156,11 @@
             v-if="!imageUrl"
             class="h-full w-full flex flex-col items-center justify-center gap-2 p-4">
             <div class="h-[32px] w-[32px]">
-              <Icon
+              <UnUiIcon
                 :name="
-                  uploadLoading ? 'svg-spinners:3-dots-fade' : 'ph-image-square'
+                  uploadLoading
+                    ? 'i-svg-spinners:3-dots-fade'
+                    : 'i-ph-image-square'
                 "
                 size="100%" />
             </div>

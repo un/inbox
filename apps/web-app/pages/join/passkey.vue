@@ -215,8 +215,8 @@
             class="h-24 grow border border-primary-7 rounded px-4 text-xl hover:bg-primary-4"
             :class="instructionSet === 'ios' ? 'bg-primary-5' : 'bg-primary-2'"
             @click="instructionSet = 'ios'">
-            <Icon
-              name="ph-apple-logo-fill"
+            <UnUiIcon
+              name="i-ph-apple-logo-fill"
               class="mr-2 mt-[-6px]" />iOS
           </button>
           <button
@@ -225,8 +225,8 @@
               instructionSet === 'android' ? 'bg-primary-5' : 'bg-primary-2'
             "
             @click="instructionSet = 'android'">
-            <Icon
-              name="ph-android-logo-fill"
+            <UnUiIcon
+              name="i-ph-android-logo-fill"
               class="mr-2 mt-[-6px]" />Android
           </button>
         </div>

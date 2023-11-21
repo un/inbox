@@ -65,8 +65,8 @@
               <UnUiTooltip
                 v-if="block.hasCopyButton"
                 text="Copy to clipboard">
-                <icon
-                  name="ph-clipboard"
+                <UnUiIcon
+                  name="i-ph-clipboard"
                   size="20"
                   @click="copy(block.value)" />
               </UnUiTooltip>

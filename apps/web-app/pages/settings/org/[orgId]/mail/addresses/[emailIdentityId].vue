@@ -129,8 +129,8 @@
                       v-if="destination.orgMember?.role === 'admin'"
                       text="Organization Admin"
                       class="h-[16px] w-[16px]">
-                      <icon
-                        name="ph:crown"
+                      <UnUiIcon
+                        name="i-ph-crown"
                         class="text-yellow-8"
                         size="16" />
                     </UnUiTooltip>

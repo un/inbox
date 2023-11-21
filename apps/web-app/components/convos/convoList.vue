@@ -67,36 +67,39 @@
 </script>
 <template>
   <div
-    class="max-w-full w-full h-full max-h-full overflow-y-scroll"
+    class="h-full max-h-full max-w-full w-full overflow-y-scroll"
     v-bind="containerProps">
     <div
-      class="flex flex-col items-start gap-4 mb-[48px]"
-      v-bind="wrapperProps"
-      v-if="!convosPending">
+      v-if="!convosPending"
+      class="mb-[48px] flex flex-col items-start gap-4"
+      v-bind="wrapperProps">
       <div
         v-if="convosPending"
-        class="flex flex-row w-full p-8 bg-base-3 rounded-xl gap-4 justify-center rounded-tl-2xl">
-        <icon
-          name="svg-spinners:3-dots-fade"
+        class="w-full flex flex-row justify-center gap-4 rounded-xl rounded-tl-2xl bg-base-3 p-8">
+        <UnUiIcon
+          name="i-svg-spinners:3-dots-fade"
           size="24" />
         <span>Loading conversations</span>
       </div>
       <div
         v-if="!convosPending && convos.length === 0"
-        class="flex flex-row w-full p-8 bg-base-3 rounded-xl gap-4 justify-center rounded-tl-2xl">
-        <icon
-          name="ph-chat-circle"
+        class="w-full flex flex-row justify-center gap-4 rounded-xl rounded-tl-2xl bg-base-3 p-8">
+        <UnUiIcon
+          name="i-ph-chat-circle"
           size="24" />
         <span>No conversations found</span>
       </div>
       <div
         v-if="!convosPending && convos.length !== 0"
-        v-for="convo of list"
-        :key="convo.index"
-        :id="convo.data.publicId"
-        @click="navigateTo(`/h/convo/${convo.data.publicId}`)"
         class="max-w-full">
-        <convos-convo-list-item :convo="convo.data" />
+        <div
+          v-for="convo of list"
+          :id="convo.data.publicId"
+          :key="convo.index"
+          class="max-w-full"
+          @click="navigateTo(`/h/convo/${convo.data.publicId}`)">
+          <convos-convo-list-item :convo="convo.data" />
+        </div>
       </div>
     </div>
   </div>
