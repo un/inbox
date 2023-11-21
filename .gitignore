@@ -26,6 +26,7 @@ yarn-error.log*
 *.log*
 test.get.ts
 test.post.ts
+test.vue
 
 # local env files
 .env
