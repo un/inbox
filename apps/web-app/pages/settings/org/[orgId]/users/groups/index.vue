@@ -51,6 +51,7 @@
   const tableRows = ref<TableRow[]>([]);
   watch(orgUserGroupsQuery, (newResults) => {
     if (newResults?.groups) {
+      tableRows.value = [];
       for (const group of newResults.groups) {
         tableRows.value.push({
           publicId: group.publicId,
@@ -66,6 +67,12 @@
   function select(row: (typeof tableRows.value)[number]) {
     navigateTo(`/settings/org/${orgPublicId}/users/groups/${row.publicId}`);
   }
+
+  const addNewModalOpen = ref(false);
+  const closeModal = () => {
+    addNewModalOpen.value = false;
+    refresh();
+  };
 </script>
 
 <template>
@@ -78,14 +85,17 @@
         </div>
       </div>
       <div class="flex flex-row items-center gap-4">
-        <button
-          class="max-w-80 flex flex-row items-center justify-center gap-2 border-1 border-base-7 rounded bg-base-3 p-2"
-          @click="navigateTo(`/settings/org/${orgPublicId}/users/groups/new`)">
-          <UnUiIcon
-            name="i-ph-plus"
-            size="20" />
-          <p class="text-sm">New Group</p>
-        </button>
+        <UnUiButton
+          label="Add new"
+          @click="addNewModalOpen = true" />
+        <UnUiModal v-model="addNewModalOpen">
+          <template #header>
+            <span class="">Add new group</span>
+          </template>
+          <SettingsAddNewGroup
+            lazy
+            @close="closeModal()" />
+        </UnUiModal>
       </div>
     </div>
     <div class="w-full flex flex-col gap-4 overflow-y-scroll">

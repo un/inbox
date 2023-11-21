@@ -4,32 +4,53 @@
 
   export default defineComponent<
     typeof NuxtUiModal extends DefineComponent<infer Props, any, any>
-      ? Props
+      ? Props & {
+          hasClose?: boolean;
+        }
       : never
   >({
     props: {
-      ...NuxtUiModal.props
-    }
+      ...NuxtUiModal.props,
+      hasClose: {
+        type: Boolean,
+        default: true,
+        optional: true
+      }
+    },
+    emits: ['update:modelValue']
   });
 </script>
 <template>
-  <NuxtUiModal v-bind="$props">
+  <NuxtUiModal
+    v-bind="$props"
+    @update:modelValue="$emit('update:modelValue', $event)">
     <NuxtUiCard
       :ui="{
         ring: '',
         divide: 'divide-y divide-gray-100 dark:divide-gray-800'
       }">
-      <template #header>
+      <template
+        v-if="$slots.header || $props.hasClose"
+        #header>
         <slot
-          class="flex flex-col gap-8"
+          class="p-4"
           name="header"></slot>
+        <UnUiButton
+          v-if="$props.hasClose"
+          class="absolute right-4 top-4"
+          icon="i-ph-x"
+          square
+          variant="outline"
+          @click="$emit('update:modelValue', false)" />
       </template>
 
-      <slot class="flex flex-col gap-8"></slot>
+      <slot class="flex flex-col gap-8 p-4"></slot>
 
-      <template #footer>
+      <template
+        v-if="$slots.footer"
+        #footer>
         <slot
-          class="flex flex-col gap-8"
+          class="flex flex-col gap-8 p-4"
           name="footer"></slot>
       </template>
     </NuxtUiCard>

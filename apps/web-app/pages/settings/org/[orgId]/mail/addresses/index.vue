@@ -19,9 +19,12 @@
     pending,
     error,
     refresh
-  } = await $trpc.org.mail.emailIdentities.getOrgEmailIdentities.useLazyQuery({
-    orgPublicId: orgPublicId
-  });
+  } = await $trpc.org.mail.emailIdentities.getOrgEmailIdentities.useLazyQuery(
+    {
+      orgPublicId: orgPublicId
+    },
+    { server: false }
+  );
 
   const tableColumns = [
     {
@@ -62,6 +65,7 @@
   const tableRows = ref<TableRow[]>([]);
   watch(orgEmailIdentities, (newResults) => {
     if (newResults?.emailIdentityData) {
+      tableRows.value = [];
       for (const identity of newResults.emailIdentityData) {
         tableRows.value.push({
           publicId: identity.publicId,
@@ -79,27 +83,35 @@
     navigateTo(`/settings/org/${orgPublicId}/mail/addresses/${row.publicId}`);
   }
 
+  const addNewModalOpen = ref(false);
+  const closeModal = () => {
+    addNewModalOpen.value = false;
+    refresh();
+  };
+
   // TODO: set the destinations column to be an avatar list of users and groups
 </script>
 
 <template>
   <div class="h-full w-full flex flex-col items-start gap-8 p-4">
     <div class="w-full flex flex-row items-center justify-between">
-      <div class="flex flex-row items-center gap-4">
-        <div class="flex flex-col gap-1">
-          <span class="text-2xl font-display">Addresses</span>
-          <span class="text-sm"
-            >Manage your organization's email addresses</span
-          >
-        </div>
+      <div class="flex flex-col gap-1">
+        <span class="text-2xl font-display">Addresses</span>
+        <span class="text-sm">Manage your organization's email addresses</span>
       </div>
+
       <div class="flex flex-row items-center gap-4">
-        <nuxt-link
-          class="max-w-80 flex flex-row items-center justify-center gap-2 border-1 border-base-7 rounded bg-base-3 p-2"
-          :to="`/settings/org/${orgPublicId}/mail/addresses/new`">
-          <UnUiIcon name="i-ph-plus" />
-          <p class="text-sm">Add new</p>
-        </nuxt-link>
+        <UnUiButton
+          label="Add new"
+          @click="addNewModalOpen = true" />
+        <UnUiModal v-model="addNewModalOpen">
+          <template #header>
+            <span class="">Add new email address</span>
+          </template>
+          <SettingsAddNewEmail
+            lazy
+            @close="closeModal()" />
+        </UnUiModal>
       </div>
     </div>
     <div class="w-full flex flex-col gap-4 overflow-y-scroll">

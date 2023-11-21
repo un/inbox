@@ -1,7 +1,4 @@
 <script setup lang="ts">
-  definePageMeta({
-    layout: 'settings'
-  });
   import { z } from 'zod';
   import { useClipboard } from '@vueuse/core';
 
@@ -20,6 +17,8 @@
   const formValid = computed(() => {
     return newDomainNameValid.value === true;
   });
+
+  const emit = defineEmits(['close']);
 
   const orgPublicId = useRoute().params.orgId as string;
 
@@ -61,13 +60,11 @@
     });
 
     setTimeout(() => {
-      navigateTo(
-        `/settings/org/${orgPublicId}/mail/domains/${newDomainResponse.domainId}/?new=true`
-      );
-    }, 1500);
+      emit('close');
+    }, 1000);
   }
 
-  const isPro = ref<boolean | null | undefined>(null);
+  const isPro = ref(false);
   if (useEE().config.modules.billing) {
     const { data: isProQuery } =
       await $trpc.org.setup.billing.isPro.useLazyQuery(
@@ -77,26 +74,17 @@
         { server: false }
       );
 
-    isPro.value = isProQuery.value?.isPro;
+    isPro.value = isProQuery.value?.isPro || false;
   } else {
     isPro.value = true;
   }
 </script>
 
 <template>
-  <div class="h-full w-full flex flex-col items-start gap-8 p-4">
-    <div class="w-full flex flex-row items-center justify-between">
-      <div class="flex flex-row items-center gap-4">
-        <div class="flex flex-col gap-1">
-          <span class="text-2xl font-display">Domains</span>
-          <span class="text-sm">Manage your organizations domains</span>
-        </div>
-      </div>
-    </div>
+  <div class="h-full w-full flex flex-col items-start">
     <div
       v-if="isPro"
       class="w-full flex flex-col gap-4">
-      <span class="text-xl font-semibold">Add a new domain</span>
       <UnUiInput
         v-model:value="newDomainNameValue"
         v-model:valid="newDomainNameValid"
@@ -120,11 +108,9 @@
       v-if="!isPro"
       class="w-full flex flex-col gap-4">
       <span class="text-xl font-semibold">Add a new domain</span>
-      <span
-        >Sorry, your current billing plan does not support adding custom
-        domains.</span
-      >
-      <!-- <span>Supported plans are: {{ canAddDomainAllowedPlans }}</span> -->
+      <span>
+        Sorry, your current billing plan does not support adding custom domains.
+      </span>
     </div>
   </div>
 </template>

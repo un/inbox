@@ -85,26 +85,33 @@
     navigateTo(`/settings/org/${orgPublicId}/mail/domains/${row.domainId}`);
   }
   const selected = ref<typeof tableRows.value>([]);
+
+  const addNewModalOpen = ref(false);
+  const closeModal = () => {
+    addNewModalOpen.value = false;
+    refresh();
+  };
 </script>
 
 <template>
   <div class="h-full w-full flex flex-col items-start gap-8 p-4">
     <div class="w-full flex flex-row items-center justify-between">
-      <div class="flex flex-row items-center gap-4">
-        <div class="flex flex-col gap-1">
-          <span class="text-2xl font-display">Domains</span>
-          <span class="text-sm">Manage your organizations domains</span>
-        </div>
+      <div class="flex flex-col gap-1">
+        <span class="text-2xl font-display">Domains</span>
+        <span class="text-sm">Manage your organizations domains</span>
       </div>
       <div class="flex flex-row items-center gap-4">
-        <button
-          class="max-w-80 flex flex-row items-center justify-center gap-2 border-1 border-base-7 rounded bg-base-3 p-2"
-          @click="navigateTo(`/settings/org/${orgPublicId}/mail/domains/new`)">
-          <NuxtUiIcon
-            name="i-ph-plus"
-            size="20" />
-          <p class="text-sm">Add new</p>
-        </button>
+        <UnUiButton
+          label="Add new"
+          @click="addNewModalOpen = true" />
+        <UnUiModal v-model="addNewModalOpen">
+          <template #header>
+            <span class="">Add new domain</span>
+          </template>
+          <SettingsAddNewDomain
+            lazy
+            @close="closeModal()" />
+        </UnUiModal>
       </div>
     </div>
     <div class="w-full flex flex-col gap-8 overflow-y-scroll">

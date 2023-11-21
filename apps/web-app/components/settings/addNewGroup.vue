@@ -1,7 +1,4 @@
 <script setup lang="ts">
-  definePageMeta({
-    layout: 'settings'
-  });
   import type { UiColor } from '@uninbox/types/ui';
   import { z } from 'zod';
   const { $trpc, $i18n } = useNuxtApp();
@@ -16,6 +13,8 @@
   const formValid = computed(() => {
     return newGroupNameValid.value === true && !!newGroupColorValue.value;
   });
+
+  const emit = defineEmits(['close']);
 
   const route = useRoute();
 
@@ -43,18 +42,15 @@
       timeout: 5000
     });
     setTimeout(() => {
-      navigateTo(
-        `/settings/org/${orgPublicId}/users/groups/${newGroupPublicId}/?new=true`
-      );
-    }, 1500);
+      emit('close');
+    }, 1000);
   }
 
-  const canAddUserGroup = ref<boolean | null | undefined>(null);
   const dataPending = ref(true);
 
+  const isPro = ref(false);
   if (useEE().config.modules.billing) {
-    dataPending.value = true;
-    const { data: canUseFeature } =
+    const { data: isProQuery, pending } =
       await $trpc.org.setup.billing.isPro.useLazyQuery(
         {
           orgPublicId: orgPublicId
@@ -62,29 +58,15 @@
         { server: false }
       );
 
-    canAddUserGroup.value = canUseFeature.value?.isPro;
-    dataPending.value = false;
+    isPro.value = isProQuery.value?.isPro || false;
+    dataPending.value = pending.value;
   } else {
-    dataPending.value = false;
-    canAddUserGroup.value = true;
+    isPro.value = true;
   }
 </script>
 
 <template>
-  <div class="h-full w-full flex flex-col items-start gap-8 p-4">
-    <div class="w-full flex flex-row items-center justify-between">
-      <div class="flex flex-row items-center gap-4">
-        <UnUiTooltip text="Back to groups">
-          <UnUiIcon
-            name="i-ph-arrow-left"
-            size="32"
-            @click="navigateTo('./')" />
-        </UnUiTooltip>
-        <div class="flex flex-col gap-1">
-          <span class="text-2xl font-display">Add a new Group</span>
-        </div>
-      </div>
-    </div>
+  <div class="h-full w-full flex flex-col items-start">
     <div
       v-if="dataPending"
       class="w-full flex flex-row justify-center gap-4 rounded-xl rounded-tl-2xl bg-base-3 p-8">
@@ -94,7 +76,7 @@
       <span>Checking status</span>
     </div>
     <div
-      v-if="!dataPending && !canAddUserGroup"
+      v-if="!dataPending && !isPro"
       class="flex flex-col gap-4">
       <span>
         Sorry, your current billing plan does not support adding user groups.
@@ -107,17 +89,22 @@
       </div>
     </div>
     <div
-      v-if="!dataPending && canAddUserGroup"
-      class="flex flex-col gap-4">
-      <UnUiInput
-        v-model:value="newGroupNameValue"
-        v-model:valid="newGroupNameValid"
-        label="Group Name"
-        :schema="z.string().min(2)" />
-      <UnUiInput
-        v-model:value="newGroupDescriptionValue"
-        label="Description"
-        :schema="z.string().optional()" />
+      v-if="!dataPending && isPro"
+      class="w-full flex flex-col gap-4">
+      <div
+        class="grid grid-cols-1 grid-rows-2 w-full gap-4 md:grid-cols-2 md:grid-rows-1">
+        <UnUiInput
+          v-model:value="newGroupNameValue"
+          v-model:valid="newGroupNameValid"
+          label="Group Name"
+          :schema="z.string().min(2)"
+          width="full" />
+        <UnUiInput
+          v-model:value="newGroupDescriptionValue"
+          label="Description"
+          :schema="z.string().optional()"
+          width="full" />
+      </div>
       <div class="flex flex-col gap-1">
         <span class="text-sm">Group Color</span>
         <div class="flex flex-row gap-2">

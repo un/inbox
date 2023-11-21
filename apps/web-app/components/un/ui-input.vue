@@ -38,13 +38,17 @@
     variants: {
       width: {
         full: 'w-full',
-        fit: 'sm:w-72 md:w-80'
+        fit: 'w-44'
       },
       color: {
-        default: 'border-sand-7 focus-within:border-sand-8',
-        valid: 'border-green-7 focus-within:border-green-8',
-        invalid: 'border-red-11 focus-within:border-red-8',
-        remote: 'border-orange-11 focus-within:border-orange-8'
+        default:
+          'ring-gray-300 dark:ring-gray-700 focus:ring-primary-500 dark:focus:ring-primary-400',
+        valid:
+          'ring-green-300 dark:ring-green-700 focus:ring-primary-500 dark:focus:ring-primary-400',
+        invalid:
+          'ring-red-300 dark:ring-red-700 focus:ring-primary-500 dark:focus:ring-primary-400',
+        remote:
+          'ring-orange-300 dark:ring-orange-700 focus:ring-primary-500 dark:focus:ring-primary-400'
       },
       disabled: {
         true: 'cursor-not-allowed',
@@ -134,25 +138,29 @@
   <div
     class="flex flex-col gap-1 leading-4 text-primary-12"
     :class="inputClasses({ width: props.width })">
-    <div class="flex flex-row justify-between gap-4">
+    <div
+      class="items-bottom max-w-full w-full flex flex-row justify-between gap-4 overflow-hidden">
       <label
         :id="`input-label-${props.label}`"
         class="min-w-fit text-sm font-medium"
         >{{ props.label }}</label
       >
-      <span
+      <UnUiTooltip
         v-if="validationMessage"
-        class="w-full truncate text-right text-sm text-red-11"
-        >{{ validationMessage }}</span
-      >
+        :text="validationMessage || ''"
+        class="max-w-full w-full">
+        <span class="truncate text-right text-xs text-red-11">{{
+          validationMessage
+        }}</span>
+      </UnUiTooltip>
       <span
         v-if="valid === 'remote'"
-        class="w-full truncate text-right text-sm text-orange-11"
+        class="w-full truncate text-right text-xs text-orange-11"
         >Verifying...</span
       >
     </div>
     <div
-      class="dark:bg-gray-900 text-gray-900 ring-gray-300 dark:ring-gray-700 focus:ring-primary-500 dark:focus:ring-primary-400 flex flex-row items-center gap-2 rounded bg-white px-2.5 py-1.5 shadow-sm ring-1 ring-inset dark:text-white focus:ring-2"
+      class="dark:bg-gray-900 text-gray-900 flex flex-row items-center gap-2 rounded bg-white px-2.5 py-1.5 text-sm shadow-sm ring-1 ring-inset dark:text-white focus:ring-2"
       :class="[
         inputClasses({
           disabled: computedDisabled
@@ -166,7 +174,7 @@
         ref="inputField"
         v-model="data"
         :aria-labelledby="`input-label-${props.label}`"
-        class="font-xs w-full bg-transparent outline-none"
+        class="w-full bg-transparent outline-none"
         :class="
           inputClasses({
             disabled: computedDisabled

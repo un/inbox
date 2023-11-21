@@ -1,7 +1,4 @@
 <script setup lang="ts">
-  definePageMeta({
-    layout: 'settings'
-  });
   import type { UiColor } from '@uninbox/types/ui';
   import { z } from 'zod';
   const { $trpc, $i18n } = useNuxtApp();
@@ -14,6 +11,7 @@
 
   const buttonLabel = ref('Create New Email Address');
   const buttonLoading = ref(false);
+  const emit = defineEmits(['close']);
 
   const formValid = computed(() => {
     if (isPro.value === false) {
@@ -146,16 +144,15 @@
     const selectedOrgMembersPublicIds: string[] = selectedOrgMembers.value.map(
       (member) => member.publicId as string
     );
-    const { emailIdentity: newEmailIdentityPublicId } =
-      await $trpc.org.mail.emailIdentities.createNewEmailIdentity.mutate({
-        orgPublicId,
-        emailUsername: newIdentityUsernameValue.value,
-        domainPublicId: selectedDomain.value?.domainPublicId as string,
-        sendName: newIdentitySendNameValue.value,
-        routeToGroupsPublicIds: selectedGroupsPublicIds,
-        routeToUsersOrgMemberPublicIds: selectedOrgMembersPublicIds,
-        catchAll: newIdentityCatchAll.value
-      });
+    await $trpc.org.mail.emailIdentities.createNewEmailIdentity.mutate({
+      orgPublicId,
+      emailUsername: newIdentityUsernameValue.value,
+      domainPublicId: selectedDomain.value?.domainPublicId as string,
+      sendName: newIdentitySendNameValue.value,
+      routeToGroupsPublicIds: selectedGroupsPublicIds,
+      routeToUsersOrgMemberPublicIds: selectedOrgMembersPublicIds,
+      catchAll: newIdentityCatchAll.value
+    });
     buttonLoading.value = false;
     buttonLabel.value = 'Done... Redirecting';
     toast.add({
@@ -166,17 +163,15 @@
       timeout: 5000
     });
     setTimeout(() => {
-      navigateTo(
-        `/settings/org/${orgPublicId}/mail/addresses/${newEmailIdentityPublicId}/?new=true`
-      );
-    }, 1500);
+      emit('close');
+    }, 1000);
   }
 
   const multipleDestinationsSelected = computed(() => {
     return selectedOrgGroups.value.length + selectedOrgMembers.value.length > 1;
   });
 
-  const isPro = ref<boolean | null | undefined>(null);
+  const isPro = ref(false);
   if (useEE().config.modules.billing) {
     const { data: isProQuery } =
       await $trpc.org.setup.billing.isPro.useLazyQuery(
@@ -186,28 +181,14 @@
         { server: false }
       );
 
-    isPro.value = isProQuery.value?.isPro;
+    isPro.value = isProQuery.value?.isPro || false;
   } else {
     isPro.value = true;
   }
 </script>
 
 <template>
-  <div
-    class="h-full w-full flex flex-col items-start gap-8 overflow-y-scroll p-4">
-    <div class="w-full flex flex-row items-center justify-between">
-      <div class="flex flex-row items-center gap-4">
-        <UnUiTooltip text="Back to Email Address list">
-          <UnUiIcon
-            name="i-ph-arrow-left"
-            @click="navigateTo('./')" />
-        </UnUiTooltip>
-        <div class="flex flex-col gap-1">
-          <span class="text-2xl font-display">Add a new Email Address</span>
-        </div>
-      </div>
-    </div>
-
+  <div class="h-full w-full flex flex-col items-start gap-8 overflow-y-scroll">
     <div class="w-full flex flex-col gap-8">
       <div class="w-full flex flex-col gap-4">
         <div class="w-full border-b-1 border-base-6">
@@ -215,13 +196,9 @@
             Email Address
           </span>
         </div>
-        <UnUiInput
-          v-model:value="newIdentitySendNameValue"
-          v-model:valid="newIdentitySendNameValid"
-          label="Send Name"
-          :schema="z.string().min(2).max(64)"
-          :helper="`The name that will appear in the 'From' field of emails sent from this address`" />
-        <div class="flex flex-row flex-wrap items-center gap-4">
+
+        <div
+          class="grid grid-cols-1 grid-rows-2 items-center gap-4 md:grid-cols-2 md:grid-rows-1">
           <UnUiInput
             v-model:value="newIdentityUsernameValue"
             v-model:valid="newIdentityUsernameValid"
@@ -234,56 +211,68 @@
                 .regex(/^[a-zA-Z0-9]*$/, {
                   message: 'Only letters and numbers'
                 })
-            " />
-
+            "
+            width="full" />
           <div class="flex flex-col gap-1">
+            <span class="text-sm font-medium text-base-12">Domain</span>
+            <span v-if="orgDomainsPending">
+              <UnUiIcon name="i-svg-spinners:3-dots-fade" /> Loading Domains
+            </span>
+            <div v-if="!orgDomainsPending">
+              <span v-if="orgDomainsData?.domainData?.length === 0">
+                No Domains Found
+              </span>
+              <NuxtUiSelectMenu
+                v-model="selectedDomain"
+                searchable
+                searchable-placeholder="Search a domain..."
+                placeholder="Select a domain"
+                :options="orgDomains"
+                class="w-full">
+                <template
+                  v-if="selectedDomain"
+                  #label>
+                  <UnUiIcon
+                    name="i-ph-check"
+                    class="h-4 w-4" />
+
+                  {{ selectedDomain.domain }}
+                </template>
+                <template #option="{ option }">
+                  {{ option.domain }}
+                </template>
+              </NuxtUiSelectMenu>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <span class="text-sm font-medium text-base-12">CatchAll</span>
+          <div class="flex flex-row justify-between">
+            <span class="dark:text-gray-200 text-gray-700 text- text-sm">
+              Emails sent to unknown addresses will be delivered here
+            </span>
             <UnUiTooltip
               :text="
                 isPro
                   ? 'Receives all mail sent to unknown addresses'
-                  : 'Catch-all is not available on your current billing plan'
+                  : 'CatchAll is not available on your current billing plan'
               ">
-              <UnUiCheckbox
+              <UnUiToggle
                 v-model="newIdentityCatchAll"
                 :label="`Catch-all ${isPro ? '' : ' (Disabled)'}`"
                 :disabled="!isPro" />
             </UnUiTooltip>
           </div>
         </div>
-        <div class="flex flex-col gap-1">
-          <span class="text-sm font-medium text-base-12">Domain</span>
-          <span v-if="orgDomainsPending">
-            <icon name="svg-spinners:3-dots-fade" /> Loading Domains
-          </span>
-          <div
-            v-if="!orgDomainsPending"
-            class="flex flex-row flex-wrap gap-8">
-            <span v-if="orgDomainsData?.domainData?.length === 0">
-              No Domains Found
-            </span>
-            <NuxtUiSelectMenu
-              v-model="selectedDomain"
-              searchable
-              searchable-placeholder="Search a domain..."
-              placeholder="Select a domain"
-              :options="orgDomains">
-              <template
-                v-if="selectedDomain"
-                #label>
-                <UnUiIcon
-                  name="i-ph-check"
-                  class="h-4 w-4" />
-
-                {{ selectedDomain.domain }}
-              </template>
-              <template #option="{ option }">
-                {{ option.domain }}
-              </template>
-            </NuxtUiSelectMenu>
-          </div>
-        </div>
+        <UnUiInput
+          v-model:value="newIdentitySendNameValue"
+          v-model:valid="newIdentitySendNameValid"
+          label="Send Name"
+          :schema="z.string().min(2).max(64)"
+          :helper="`The name that will appear in the 'From' field of emails sent from this address`" />
       </div>
-
+      <NuxtUiDivider />
       <div class="flex flex-col gap-4">
         <div class="w-full border-b-1 border-base-6">
           <span class="text-sm font-medium uppercase text-base-11">
@@ -291,112 +280,112 @@
           </span>
         </div>
 
-        <div class="flex flex-col gap-2">
-          <span class="text-sm font-medium">Groups</span>
-          <span v-if="orgUserGroupPending">
-            <icon name="svg-spinners:3-dots-fade" /> Loading User Groups
-          </span>
-          <div
-            v-if="!orgUserGroupPending"
-            class="flex flex-row flex-wrap gap-4">
-            <span v-if="orgUserGroupsData?.groups.length === 0">
-              No Groups Found
+        <div
+          class="grid-row-2 md:grid-row-1 grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div class="flex flex-col gap-2">
+            <span class="text-sm font-medium">Groups</span>
+            <span v-if="orgUserGroupPending">
+              <UnUiIcon name="i-svg-spinners:3-dots-fade" /> Loading User Groups
             </span>
-            <NuxtUiSelectMenu
-              v-else
-              v-model="selectedOrgGroups"
-              multiple
-              placeholder="Select a group"
-              :options="orgUserGroups">
-              <template
-                v-if="selectedOrgGroups"
-                #label>
-                <UnUiIcon
-                  name="i-ph-check"
-                  class="h-4 w-4" />
-
-                <div
-                  v-if="selectedOrgGroups.length"
-                  class="flex flex-wrap gap-3">
+            <div
+              v-if="!orgUserGroupPending"
+              class="flex flex-row flex-wrap gap-4">
+              <span v-if="orgUserGroupsData?.groups.length === 0">
+                No Groups Found
+              </span>
+              <NuxtUiSelectMenu
+                v-else
+                v-model="selectedOrgGroups"
+                multiple
+                placeholder="Select a group"
+                :options="orgUserGroups"
+                class="w-full">
+                <template
+                  v-if="selectedOrgGroups"
+                  #label>
+                  <UnUiIcon
+                    name="i-ph-check"
+                    class="h-4 w-4" />
                   <div
-                    v-for="(group, index) in selectedOrgGroups"
-                    :key="index"
-                    class="flex flex-row items-center gap-1 truncate">
-                    <UnUiAvatar
-                      :alt="group.name as string"
-                      :avatar-id="group.avatarId as string"
-                      :color="group.color as UiColor"
-                      size="3xs" />
-                    <span>{{ group.name }}</span>
+                    v-if="selectedOrgGroups.length"
+                    class="flex flex-wrap gap-3">
+                    <div
+                      v-for="(group, index) in selectedOrgGroups"
+                      :key="index"
+                      class="flex flex-row items-center gap-1 truncate">
+                      <UnUiAvatar
+                        :alt="group.name.toString()"
+                        :avatar-id="group.avatarId?.toString()"
+                        :color="group.color as UiColor"
+                        size="3xs" />
+                      <span>{{ group.name }}</span>
+                    </div>
                   </div>
-                </div>
-                <span v-else>Select groups</span>
-              </template>
-              <template #option="{ option }">
-                <UnUiAvatar
-                  :avatar-id="option.avatarId"
-                  :alt="option.name"
-                  :color="option.color as UiColor"
-                  size="3xs" />
-
-                {{ option.name }}
-              </template>
-            </NuxtUiSelectMenu>
+                  <span v-else>Select groups</span>
+                </template>
+                <template #option="{ option }">
+                  <UnUiAvatar
+                    :avatar-id="option.avatarId"
+                    :alt="option.name"
+                    :color="option.color as UiColor"
+                    size="3xs" />
+                  {{ option.name }}
+                </template>
+              </NuxtUiSelectMenu>
+            </div>
           </div>
-        </div>
-
-        <div class="flex flex-col gap-2">
-          <span class="text-sm font-medium">Users</span>
-          <span v-if="orgMembersPending">
-            <icon name="svg-spinners:3-dots-fade" /> Loading Users
-          </span>
-          <div
-            v-if="!orgMembersPending"
-            class="flex flex-row flex-wrap gap-4">
-            <NuxtUiSelectMenu
-              v-model="selectedOrgMembers"
-              multiple
-              placeholder="Select a group"
-              :options="orgMembers">
-              <template
-                v-if="selectedOrgMembers"
-                #label>
-                <UnUiIcon
-                  name="i-ph-check"
-                  class="h-4 w-4" />
-
-                <div
-                  v-if="selectedOrgMembers.length"
-                  class="flex flex-wrap gap-3">
+          <div class="flex flex-col gap-2">
+            <span class="text-sm font-medium">Users</span>
+            <span v-if="orgMembersPending">
+              <UnUiIcon name="i-svg-spinners:3-dots-fade" /> Loading Users
+            </span>
+            <div
+              v-if="!orgMembersPending"
+              class="flex flex-row flex-wrap gap-4">
+              <NuxtUiSelectMenu
+                v-model="selectedOrgMembers"
+                multiple
+                placeholder="Select a group"
+                :options="orgMembers"
+                class="w-full">
+                <template
+                  v-if="selectedOrgMembers"
+                  #label>
+                  <UnUiIcon
+                    name="i-ph-check"
+                    class="h-4 w-4" />
                   <div
-                    v-for="(member, index) in selectedOrgMembers"
-                    :key="index"
-                    class="flex flex-row items-center gap-1 truncate">
-                    <UnUiAvatar
-                      :alt="member.name.toString()"
-                      :avatar-id="member.avatarId?.toString()"
-                      size="3xs" />
-                    <span>{{ member.name }}</span>
+                    v-if="selectedOrgMembers.length"
+                    class="flex flex-wrap gap-3">
+                    <div
+                      v-for="(member, index) in selectedOrgMembers"
+                      :key="index"
+                      class="flex flex-row items-center gap-1 truncate">
+                      <UnUiAvatar
+                        :alt="member.name.toString()"
+                        :avatar-id="member.avatarId?.toString()"
+                        size="3xs" />
+                      <span>{{ member.name }}</span>
+                    </div>
                   </div>
-                </div>
-                <span v-else>Select Users</span>
-              </template>
-              <template #option="{ option }">
-                <UnUiAvatar
-                  :avatar-id="option.avatarId"
-                  :alt="option.name"
-                  size="xs" />
-
-                <span>
-                  {{ option.name
-                  }}<span
-                    v-if="option.title"
-                    class="text-xs">
-                    - {{ option.title }}</span
-                  ></span
-                >
-              </template>
-            </NuxtUiSelectMenu>
+                  <span v-else>Select Users</span>
+                </template>
+                <template #option="{ option }">
+                  <UnUiAvatar
+                    :avatar-id="option.avatarId"
+                    :alt="option.name"
+                    size="xs" />
+                  <span>
+                    {{ option.name
+                    }}<span
+                      v-if="option.title"
+                      class="text-xs">
+                      - {{ option.title }}</span
+                    ></span
+                  >
+                </template>
+              </NuxtUiSelectMenu>
+            </div>
           </div>
         </div>
       </div>
