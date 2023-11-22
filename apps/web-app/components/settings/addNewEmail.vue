@@ -113,6 +113,7 @@
     handle: String;
     avatarId: String | null;
     title: String | null;
+    keywords: String;
   }
   const orgMembers = ref<OrgMembers[]>([]);
 
@@ -125,7 +126,15 @@
             member.profile?.firstName + ' ' + member.profile?.lastName || '',
           handle: member.profile?.handle,
           avatarId: member.profile?.avatarId || '',
-          title: member.profile?.title || ''
+          title: member.profile?.title || '',
+          keywords:
+            member.profile?.firstName +
+            ' ' +
+            member.profile?.lastName +
+            '  @' +
+            member.profile?.handle +
+            ' ' +
+            member.profile?.title
         });
       }
     }
@@ -345,8 +354,10 @@
               <NuxtUiSelectMenu
                 v-model="selectedOrgMembers"
                 multiple
-                placeholder="Select a group"
+                placeholder="Select users"
                 :options="orgMembers"
+                searchable
+                option-attribute="keywords"
                 class="w-full">
                 <template
                   v-if="selectedOrgMembers"
