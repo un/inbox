@@ -98,6 +98,7 @@ export const addressRouter = router({
       const userOrgMembershipId = userOrgMembershipQuery?.id;
       // search for user org group memberships, get id of org group
 
+      //TODO: Add filter for org id
       const userOrgGroupMembershipQuery =
         await db.read.query.userGroupMembers.findMany({
           where: eq(userGroupMembers.userId, queryUserId),
@@ -114,15 +115,18 @@ export const addressRouter = router({
           }
         });
 
-      const userGroupIds = userOrgGroupMembershipQuery
-        .filter(
-          (userOrgGroupMembership) =>
-            userOrgGroupMembership.group.orgId === userInOrg.orgId
-        )
-        .map((userOrgGroupMembership) => userOrgGroupMembership.group.id);
+      const orgGroupIds = userOrgGroupMembershipQuery.filter(
+        (userOrgGroupMembership) =>
+          userOrgGroupMembership.group.orgId === +userInOrg.orgId
+      );
 
-      if (!userGroupIds.length) {
-        userGroupIds.push(0);
+      const userGroupIds = orgGroupIds.map(
+        (orgGroupIds) => orgGroupIds.group.id
+      );
+      const uniqueUserGroupIds = [...new Set(userGroupIds)];
+
+      if (!uniqueUserGroupIds.length) {
+        uniqueUserGroupIds.push(0);
       }
 
       // search email routingrulesdestinations for orgmemberId or orgGroupId
@@ -131,7 +135,10 @@ export const addressRouter = router({
         await db.read.query.emailRoutingRulesDestinations.findMany({
           where: or(
             eq(emailRoutingRulesDestinations.orgMemberId, userOrgMembershipId),
-            inArray(emailRoutingRulesDestinations.groupId, userGroupIds || [0])
+            inArray(
+              emailRoutingRulesDestinations.groupId,
+              uniqueUserGroupIds || [0]
+            )
           ),
           with: {
             rule: {
@@ -148,9 +155,8 @@ export const addressRouter = router({
             }
           }
         });
-
-      const emailIdentities = routingRulesDestinationsQuery.map(
-        (routingRulesDestination) => {
+      const emailIdentities = routingRulesDestinationsQuery
+        .map((routingRulesDestination) => {
           const emailIdentity = routingRulesDestination.rule.mailIdentities[0];
           return {
             publicId: emailIdentity.publicId,
@@ -158,8 +164,11 @@ export const addressRouter = router({
             domainName: emailIdentity.domainName,
             sendName: emailIdentity.sendName
           };
-        }
-      );
+        })
+        .filter(
+          (identity, index, self) =>
+            index === self.findIndex((t) => t.publicId === identity.publicId)
+        );
 
       // TODO: Check if domains are enabled/validated, if not return invalid, but display the email address in the list with a tooltip
       return {

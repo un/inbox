@@ -26,7 +26,7 @@ export const emailIdentityRouter = router({
     .input(
       z.object({
         orgPublicId: z.string().min(3).max(nanoIdLength),
-        emailUsername: z.string().min(3).max(255),
+        emailUsername: z.string().min(1).max(255),
         domainPublicId: z.string().min(3).max(nanoIdLength),
         sendName: z.string().min(3).max(255),
         catchAll: z.boolean().optional().default(false),
