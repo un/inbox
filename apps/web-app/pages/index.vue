@@ -91,11 +91,9 @@
           variant="solid" />
       </div>
 
-      <ClientOnly>
-        <NuxtTurnstile
-          v-model="turnstileToken"
-          class="fixed bottom-5 mb-[-30px] scale-50 hover:(mb-0 scale-100)" />
-      </ClientOnly>
+      <NuxtTurnstile
+        v-model="turnstileToken"
+        class="fixed bottom-5 mb-[-30px] scale-50 hover:(mb-0 scale-100)" />
     </div>
     <UnUiModal v-model="passkeyLocationDialogOpen">
       <template #header>
