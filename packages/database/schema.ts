@@ -156,6 +156,7 @@ export const orgs = mysqlTable(
   {
     id: serial('id').primaryKey(),
     publicId: nanoId('public_id').notNull(),
+    slug: varchar('slug', { length: 64 }).notNull(),
     ownerId: foreignKey('owner_id').notNull(),
     name: varchar('name', { length: 64 }).notNull(),
     avatarId: varchar('avatar_Id', { length: 64 }),
@@ -166,7 +167,8 @@ export const orgs = mysqlTable(
       .notNull()
   },
   (table) => ({
-    publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId)
+    publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
+    slugIndex: uniqueIndex('slug_idx').on(table.slug)
   })
 );
 export const orgsRelations = relations(orgs, ({ one, many }) => ({

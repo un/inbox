@@ -101,6 +101,15 @@ export default defineNuxtConfig({
           process.env.NODE_ENV === 'development'
             ? 60 * 60 * 12
             : 60 * 60 * 24 * 30
+      },
+      'org-slugs': {
+        driver: 'redis',
+        base: 'org-slugs',
+        url: process.env.DB_REDIS_URL,
+        ttl:
+          process.env.NODE_ENV === 'development'
+            ? 60 * 60 * 12
+            : 60 * 60 * 24 * 30
       }
     },
     prerender: {

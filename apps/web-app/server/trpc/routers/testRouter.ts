@@ -7,20 +7,9 @@ import { nanoId } from '@uninbox/utils';
 import { mailBridgeTrpcClient } from '~/server/utils/tRPCServerClients';
 
 export const testRouter = router({
-  runTest: publicProcedure
-    .input(
-      z.object({
-        username: z.string().min(3).max(20)
-      })
-    )
-    .query(async ({ ctx, input }) => {
-      const testResult = await mailBridgeTrpcClient.postal.org.createOrg.mutate(
-        {
-          orgPublicId: 'demo',
-          orgId: 0
-        }
-      );
-
-      return { testResult };
-    })
+  runTest: publicProcedure.query(async ({ ctx, input }) => {
+    const timestamp = new Date().toISOString();
+    const orgIdFromContext = ctx.orgId;
+    return { timestamp, orgIdFromContext };
+  })
 });

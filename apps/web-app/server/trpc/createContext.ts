@@ -9,7 +9,8 @@ import type { ValidatedAuthSessionObject } from '../utils/auth';
 export const createContext = async (event: H3Event) => {
   const user: ValidatedAuthSessionObject = event.context.user;
   const hankoId = event.context.hankoId || null;
-  return { db, user, hankoId };
+  const orgId = event.context.orgId || null;
+  return { db, user, hankoId, orgId };
 };
 
 export type Context = inferAsyncReturnType<typeof createContext>;

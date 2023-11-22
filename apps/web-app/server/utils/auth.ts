@@ -1,4 +1,5 @@
-import { H3Event, createError, getCookie, getHeader, SessionConfig } from 'h3';
+import { H3Event, createError, getCookie, getHeader } from 'h3';
+import type { SessionConfig } from 'h3';
 import { createLocalJWKSet, jwtVerify } from 'jose';
 import { db } from '@uninbox/database';
 import { eq, and } from '@uninbox/database/orm';

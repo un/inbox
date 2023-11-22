@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { parse, stringify } from 'superjson';
-import { router, protectedProcedure } from '../../trpc';
+import { router, protectedProcedure, limitedProcedure } from '../../trpc';
+import type { DBType } from '@uninbox/database';
 import { eq, and } from '@uninbox/database/orm';
 import {
   orgs,
@@ -11,11 +12,63 @@ import {
 import { nanoId, nanoIdLength } from '@uninbox/utils';
 import { mailBridgeTrpcClient } from '~/server/utils/tRPCServerClients';
 
+async function validateOrgSlug(
+  db: DBType,
+  slug: string
+): Promise<{
+  available: boolean;
+  error: string | null;
+}> {
+  const orgId = await db.read
+    .select({ id: orgs.id })
+    .from(orgs)
+    .where(eq(orgs.slug, slug));
+  if (orgId.length !== 0) {
+    return {
+      available: false,
+      error: 'Already taken'
+    };
+  }
+  if (blockedUsernames.includes(slug.toLowerCase())) {
+    return {
+      available: false,
+      error: 'Org slug not allowed'
+    };
+  }
+  return {
+    available: true,
+    error: null
+  };
+}
+
 export const crudRouter = router({
+  checkSlugAvailability: protectedProcedure
+    .input(
+      z.object({
+        slug: z
+          .string()
+          .min(5)
+          .max(64)
+          .regex(/^[a-zA-Z0-9]*$/, {
+            message: 'Only letters and numbers'
+          })
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      return await validateOrgSlug(ctx.db, input.slug);
+    }),
+
   createNewOrg: protectedProcedure
     .input(
       z.object({
-        orgName: z.string().min(3).max(32)
+        orgName: z.string().min(3).max(32),
+        orgSlug: z
+          .string()
+          .min(5)
+          .max(64)
+          .regex(/^[a-zA-Z0-9]*$/, {
+            message: 'Only letters and numbers'
+          })
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -26,6 +79,7 @@ export const crudRouter = router({
       const insertOrgResponse = await db.write.insert(orgs).values({
         ownerId: queryUserId,
         name: input.orgName,
+        slug: input.orgSlug,
         publicId: newPublicId
       });
       const orgId = +insertOrgResponse.insertId;
@@ -90,6 +144,7 @@ export const crudRouter = router({
       const insertOrgResponse = await db.write.insert(orgs).values({
         ownerId: queryUserId,
         name: `${userObject[0].username}'s Personal Org`,
+        slug: userObject[0].username,
         publicId: newPublicId,
         personalOrg: true
       });

@@ -6,6 +6,7 @@ import type { TrpcMailBridgeRouter } from '@uninbox/types/trpc';
 
 export default defineNuxtPlugin(() => {
   const config = useRuntimeConfig();
+  const orgSlug = useRoute().params.orgSlug as string;
   const trpcWebAppClient = createTRPCNuxtClient<TrpcWebAppRouter>({
     transformer: superjson,
     links: [
@@ -16,7 +17,12 @@ export default defineNuxtPlugin(() => {
       }),
       httpBatchLink({
         url: '/api/trpc',
-        maxURLLength: 2083
+        maxURLLength: 2083,
+        headers() {
+          return {
+            'org-slug': orgSlug
+          };
+        }
       })
     ]
   });
