@@ -1,5 +1,10 @@
 import { z } from 'zod';
-import { router, orgProcedure, limitedProcedure } from '../../../trpc';
+import {
+  router,
+  orgProcedure,
+  limitedProcedure,
+  userProcedure
+} from '../../../trpc';
 import { and, eq, or } from '@uninbox/database/orm';
 import {
   orgInvitations,
@@ -9,31 +14,30 @@ import {
   userProfilesToOrgs
 } from '@uninbox/database/schema';
 import { nanoId, nanoIdLength, nanoIdToken } from '@uninbox/utils';
+import { refreshOrgSlugCache } from '~/server/utils/orgSlug';
+import { isUserAdminOfOrg } from '~/server/utils/user';
+import { TRPCError } from '@trpc/server';
 
 export const invitesRouter = router({
   createNewInvite: orgProcedure
     .input(
       z.object({
-        orgPublicId: z.string().min(3).max(nanoIdLength),
         role: z.enum(['admin', 'member']),
         inviteeEmail: z.string().email()
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const { db, user } = ctx;
-      const { inviteeEmail, orgPublicId, role } = input;
+      const { db, user, org } = ctx;
+      const userId = user?.id || 0;
+      const orgId = org?.id || 0;
+      const { inviteeEmail, role } = input;
       const newPublicId = nanoId();
-      const userId = user.userId || 0;
 
       const newInviteToken = nanoIdToken();
 
       // TODO: make this part of the insert query as subquery
-      const orgIdResponse = await db.read
-        .select({ id: orgs.id })
-        .from(orgs)
-        .where(eq(orgs.publicId, input.orgPublicId));
       await db.write.insert(orgInvitations).values({
-        orgId: orgIdResponse[0].id,
+        orgId: +orgId,
         invitedByUserId: userId,
         publicId: newPublicId,
         role: role,
@@ -44,94 +48,71 @@ export const invitesRouter = router({
 
       return {
         success: true,
-        orgId: orgPublicId,
         inviteId: newPublicId,
         inviteToken: newInviteToken,
         error: null
       };
     }),
-  viewInvites: orgProcedure
-    .input(
-      z.object({
-        orgPublicId: z.string().min(3).max(nanoIdLength)
-      })
-    )
-    .query(async ({ ctx, input }) => {
-      const db = ctx.db;
+  viewInvites: orgProcedure.query(async ({ ctx, input }) => {
+    const { db, user, org } = ctx;
+    const userId = user?.id || 0;
+    const orgId = org?.id || 0;
 
-      const orgInvitesResponse = await db.read.query.orgInvitations.findMany({
-        where: eq(
-          orgInvitations.orgId,
-          db.read
-            .select({ id: orgs.id })
-            .from(orgs)
-            .where(eq(orgs.publicId, input.orgPublicId))
-        ),
-        columns: {
-          publicId: true,
-          role: true,
-          inviteToken: true,
-          invitedAt: true,
-          expiresAt: true,
-          acceptedAt: true,
-          email: true
-        },
-        with: {
-          invitedByUser: {
-            columns: {},
-            with: {
-              orgMemberships: {
-                columns: {},
-                where: eq(
-                  orgMembers.orgId,
-                  db.read
-                    .select({ id: orgs.id })
-                    .from(orgs)
-                    .where(eq(orgs.publicId, input.orgPublicId))
-                ),
-                with: {
-                  profile: {
-                    columns: {
-                      firstName: true,
-                      lastName: true,
-                      avatarId: true
-                    }
+    const orgInvitesResponse = await db.read.query.orgInvitations.findMany({
+      where: eq(orgInvitations.orgId, +orgId),
+      columns: {
+        publicId: true,
+        role: true,
+        inviteToken: true,
+        invitedAt: true,
+        expiresAt: true,
+        acceptedAt: true,
+        email: true
+      },
+      with: {
+        invitedByUser: {
+          columns: {},
+          with: {
+            orgMemberships: {
+              columns: {},
+              where: eq(orgMembers.orgId, +orgId),
+              with: {
+                profile: {
+                  columns: {
+                    firstName: true,
+                    lastName: true,
+                    avatarId: true
                   }
                 }
               }
             }
-          },
-          invitedUser: {
-            columns: {},
-            with: {
-              orgMemberships: {
-                columns: {},
-                where: eq(
-                  orgMembers.orgId,
-                  db.read
-                    .select({ id: orgs.id })
-                    .from(orgs)
-                    .where(eq(orgs.publicId, input.orgPublicId))
-                ),
-                with: {
-                  profile: {
-                    columns: {
-                      firstName: true,
-                      lastName: true,
-                      avatarId: true
-                    }
+          }
+        },
+        invitedUser: {
+          columns: {},
+          with: {
+            orgMemberships: {
+              columns: {},
+              where: eq(orgMembers.orgId, +orgId),
+              with: {
+                profile: {
+                  columns: {
+                    firstName: true,
+                    lastName: true,
+                    avatarId: true
                   }
                 }
               }
             }
           }
         }
-      });
+      }
+    });
 
-      return {
-        invites: orgInvitesResponse
-      };
-    }),
+    return {
+      invites: orgInvitesResponse
+    };
+  }),
 
   validateInvite: limitedProcedure
     .input(
@@ -157,7 +138,7 @@ export const invitesRouter = router({
         valid: true
       };
     }),
-  redeemInvite: orgProcedure
+  redeemInvite: userProcedure
     .input(
       z.object({
         inviteToken: z.string().min(3).max(32),
@@ -165,9 +146,9 @@ export const invitesRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const db = ctx.db;
+      const { db, user } = ctx;
+      const userId = user?.id || 0;
       const newPublicId = nanoId();
-      const userId = ctx.user.userId || 0;
 
       const queryInvitesResponse = await db.read
         .select({
@@ -228,6 +209,7 @@ export const invitesRouter = router({
         });
       }
 
+      await refreshOrgSlugCache(+queryInvitesResponse[0].orgId);
       return {
         success: true,
         error: null
@@ -240,7 +222,16 @@ export const invitesRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const db = ctx.db;
+      const { db, user, org } = ctx;
+      const userId = user?.id || 0;
+      const orgId = org?.id || 0;
+      const isAdmin = await isUserAdminOfOrg(org, userId);
+      if (!isAdmin) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'You are not an admin'
+        });
+      }
 
       await db.write
         .delete(orgInvitations)

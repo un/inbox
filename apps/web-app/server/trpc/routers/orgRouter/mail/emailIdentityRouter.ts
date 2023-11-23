@@ -14,18 +14,20 @@ import {
   userGroups,
   emailRoutingRules,
   emailRoutingRulesDestinations,
-  emailIdentities
+  emailIdentities,
+  userGroupMembers
 } from '@uninbox/database/schema';
 import { nanoId, nanoIdLength, nanoIdToken } from '@uninbox/utils';
 import dns from 'dns';
 import { verifyDns } from '~/server/utils/verifyDns';
 import { isUserInOrg } from '~/server/utils/dbQueries';
+import { isUserAdminOfOrg } from '~/server/utils/user';
+import { TRPCError } from '@trpc/server';
 
 export const emailIdentityRouter = router({
   createNewEmailIdentity: orgProcedure
     .input(
       z.object({
-        orgPublicId: z.string().min(3).max(nanoIdLength),
         emailUsername: z.string().min(1).max(255),
         domainPublicId: z.string().min(3).max(nanoIdLength),
         sendName: z.string().min(3).max(255),
@@ -39,9 +41,10 @@ export const emailIdentityRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const { db, user } = ctx;
+      const { db, user, org } = ctx;
+      const userId = user?.id || 0;
+      const orgId = org?.id || 0;
       const {
-        orgPublicId,
         domainPublicId,
         sendName,
         catchAll,
@@ -51,22 +54,13 @@ export const emailIdentityRouter = router({
 
       const emailUsername = input.emailUsername.toLowerCase();
       const newPublicId = nanoId();
-      const userId = user.userId || 0;
 
-      const userOrg = await isUserInOrg({
-        userId,
-        orgPublicId
-      });
-
-      if (!userOrg) {
-        return {
-          error: 'User not in org'
-        };
-      }
-      if (userOrg.role !== 'admin') {
-        return {
-          error: 'User not admin'
-        };
+      const isAdmin = await isUserAdminOfOrg(org, userId);
+      if (!isAdmin) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'You are not an admin'
+        });
       }
 
       if (!routeToUsersOrgMemberPublicIds && !routeToGroupsPublicIds) {
@@ -76,7 +70,7 @@ export const emailIdentityRouter = router({
       const domainResponse = await db.read.query.domains.findFirst({
         where: and(
           eq(domains.publicId, domainPublicId),
-          eq(domains.orgId, +userOrg.orgId)
+          eq(domains.orgId, +orgId)
         ),
         columns: {
           id: true,
@@ -129,8 +123,8 @@ export const emailIdentityRouter = router({
         .insert(emailRoutingRules)
         .values({
           publicId: newPublicId,
-          orgId: +userOrg.orgId,
-          createdBy: userId,
+          orgId: +orgId,
+          createdBy: +userId,
           name: emailUsername,
           description: `Email routing rule for ${emailUsername}@${domainResponse.domain}`
         });
@@ -167,7 +161,7 @@ export const emailIdentityRouter = router({
         .insert(emailIdentities)
         .values({
           publicId: emailIdentityPublicId,
-          orgId: +userOrg.orgId,
+          orgId: +orgId,
           createdBy: userId,
           username: emailUsername,
           domainName: domainResponse.domain,
@@ -194,34 +188,23 @@ export const emailIdentityRouter = router({
   getEmailIdentity: orgProcedure
     .input(
       z.object({
-        orgPublicId: z.string().min(3).max(nanoIdLength),
         emailIdentityPublicId: z.string().min(3).max(nanoIdLength),
         newEmailIdentity: z.boolean().optional()
       })
     )
     .query(async ({ ctx, input }) => {
-      const { db, user } = ctx;
-      const { orgPublicId, emailIdentityPublicId } = input;
-      const userId = user.userId || 0;
+      const { db, user, org } = ctx;
+      const userId = user?.id || 0;
+      const orgId = org?.id || 0;
+      const { emailIdentityPublicId } = input;
 
       const dbReplica = input.newEmailIdentity ? db.write : db.read;
-
-      const userOrg = await isUserInOrg({
-        userId,
-        orgPublicId
-      });
-
-      if (!userOrg) {
-        return {
-          error: 'User not in org'
-        };
-      }
 
       const emailIdentityResponse =
         await dbReplica.query.emailIdentities.findFirst({
           where: and(
             eq(emailIdentities.publicId, emailIdentityPublicId),
-            eq(domains.orgId, +userOrg.orgId)
+            eq(domains.orgId, +orgId)
           ),
           columns: {
             publicId: true,
@@ -282,77 +265,57 @@ export const emailIdentityRouter = router({
         emailIdentityData: emailIdentityResponse
       };
     }),
-  getOrgEmailIdentities: orgProcedure
-    .input(
-      z.object({
-        orgPublicId: z.string().min(3).max(nanoIdLength)
-      })
-    )
-    .query(async ({ ctx, input }) => {
-      const { db, user } = ctx;
-      const { orgPublicId } = input;
-      const userId = user.userId || 0;
+  getOrgEmailIdentities: orgProcedure.query(async ({ ctx, input }) => {
+    const { db, user, org } = ctx;
+    const userId = user?.id || 0;
+    const orgId = org?.id || 0;
 
-      const userOrg = await isUserInOrg({
-        userId,
-        orgPublicId
-      });
-
-      if (!userOrg) {
-        return {
-          error: 'User not in org'
-        };
-      }
-
-      const emailIdentityResponse =
-        await db.read.query.emailIdentities.findMany({
-          where: eq(domains.orgId, +userOrg.orgId),
+    const emailIdentityResponse = await db.read.query.emailIdentities.findMany({
+      where: eq(domains.orgId, +orgId),
+      columns: {
+        publicId: true,
+        username: true,
+        domainName: true,
+        sendName: true,
+        isCatchAll: true,
+        avatarId: true
+      },
+      with: {
+        domain: {
+          columns: {
+            sendingMode: true,
+            receivingMode: true,
+            domainStatus: true
+          }
+        },
+        routingRules: {
           columns: {
             publicId: true,
-            username: true,
-            domainName: true,
-            sendName: true,
-            isCatchAll: true,
-            avatarId: true
+            name: true,
+            description: true
           },
           with: {
-            domain: {
-              columns: {
-                sendingMode: true,
-                receivingMode: true,
-                domainStatus: true
-              }
-            },
-            routingRules: {
-              columns: {
-                publicId: true,
-                name: true,
-                description: true
-              },
+            destinations: {
               with: {
-                destinations: {
+                group: {
+                  columns: {
+                    publicId: true,
+                    name: true,
+                    description: true,
+                    avatarId: true,
+                    color: true
+                  }
+                },
+                orgMember: {
                   with: {
-                    group: {
+                    profile: {
                       columns: {
                         publicId: true,
-                        name: true,
-                        description: true,
                         avatarId: true,
-                        color: true
-                      }
-                    },
-                    orgMember: {
-                      with: {
-                        profile: {
-                          columns: {
-                            publicId: true,
-                            avatarId: true,
-                            firstName: true,
-                            lastName: true,
-                            handle: true,
-                            title: true
-                          }
-                        }
+                        firstName: true,
+                        lastName: true,
+                        handle: true,
+                        title: true
                       }
                     }
                   }
@@ -360,10 +323,105 @@ export const emailIdentityRouter = router({
               }
             }
           }
-        });
+        }
+      }
+    });
 
-      return {
-        emailIdentityData: emailIdentityResponse
-      };
-    })
+    return {
+      emailIdentityData: emailIdentityResponse
+    };
+  }),
+  getUserEmailIdentities: orgProcedure.query(async ({ ctx, input }) => {
+    const { db, user, org } = ctx;
+    const userId = user?.id || 0;
+    const orgId = org?.id || 0;
+
+    // search for user org memberships, get id of membership
+    const userOrgMembershipQuery = await db.read.query.orgMembers.findFirst({
+      where: and(eq(orgMembers.userId, +userId), eq(orgMembers.orgId, +orgId)),
+      columns: {
+        id: true
+      }
+    });
+
+    if (!userOrgMembershipQuery?.id) {
+      throw new Error('User is not in org');
+    }
+    const userOrgMembershipId = userOrgMembershipQuery?.id;
+    // search for user org group memberships, get id of org group
+
+    //TODO: Add filter for org id
+    const userOrgGroupMembershipQuery =
+      await db.read.query.userGroupMembers.findMany({
+        where: eq(userGroupMembers.userId, +userId),
+        columns: {
+          groupId: true
+        },
+        with: {
+          group: {
+            columns: {
+              id: true,
+              orgId: true
+            }
+          }
+        }
+      });
+
+    const orgGroupIds = userOrgGroupMembershipQuery.filter(
+      (userOrgGroupMembership) => userOrgGroupMembership.group.orgId === +orgId
+    );
+
+    const userGroupIds = orgGroupIds.map((orgGroupIds) => orgGroupIds.group.id);
+    const uniqueUserGroupIds = [...new Set(userGroupIds)];
+
+    if (!uniqueUserGroupIds.length) {
+      uniqueUserGroupIds.push(0);
+    }
+
+    // search email routingrulesdestinations for orgmemberId or orgGroupId
+
+    const routingRulesDestinationsQuery =
+      await db.read.query.emailRoutingRulesDestinations.findMany({
+        where: or(
+          eq(emailRoutingRulesDestinations.orgMemberId, userOrgMembershipId),
+          inArray(
+            emailRoutingRulesDestinations.groupId,
+            uniqueUserGroupIds || [0]
+          )
+        ),
+        with: {
+          rule: {
+            with: {
+              mailIdentities: {
+                columns: {
+                  publicId: true,
+                  username: true,
+                  domainName: true,
+                  sendName: true
+                }
+              }
+            }
+          }
+        }
+      });
+    const emailIdentities = routingRulesDestinationsQuery
+      .map((routingRulesDestination) => {
+        const emailIdentity = routingRulesDestination.rule.mailIdentities[0];
+        return {
+          publicId: emailIdentity.publicId,
+          username: emailIdentity.username,
+          domainName: emailIdentity.domainName,
+          sendName: emailIdentity.sendName
+        };
+      })
+      .filter(
+        (identity, index, self) =>
+          index === self.findIndex((t) => t.publicId === identity.publicId)
+      );
+
+    // TODO: Check if domains are enabled/validated, if not return invalid, but display the email address in the list with a tooltip
+    return {
+      emailIdentities: emailIdentities
+    };
+  })
 });

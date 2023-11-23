@@ -187,6 +187,7 @@ export const orgsRelations = relations(orgs, ({ one, many }) => ({
   userProfiles: many(userProfilesToOrgs)
 }));
 
+// changes to status and role must be reflected in types OrgContext
 export const orgMembers = mysqlTable(
   'org_members',
   {

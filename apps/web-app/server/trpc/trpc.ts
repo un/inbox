@@ -33,7 +33,7 @@ const hasOrgSlug = isUserAuthenticated.unstable_pipe(({ next, ctx }) => {
       message: 'You are not logged in, redirecting...'
     });
   }
-  if (!ctx.org.members.includes(ctx.user.id)) {
+  if (!ctx.org.members.some((member) => member.userId === ctx.user?.id)) {
     throw new TRPCError({
       code: 'UNAUTHORIZED',
       message: 'You are not a member of this organization, redirecting...'
@@ -79,7 +79,7 @@ export const limitedProcedure = trpcContext.procedure
   .use(turnstileTokenValidation);
 export const userProcedure = trpcContext.procedure.use(isUserAuthenticated);
 export const orgProcedure = trpcContext.procedure.use(hasOrgSlug);
-export const eeProcedure = userProcedure.use(isEeEnabled);
+export const eeProcedure = orgProcedure.use(isEeEnabled);
 
 export const router = trpcContext.router;
 export const middleware = trpcContext.middleware;

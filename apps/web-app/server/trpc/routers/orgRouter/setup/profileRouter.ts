@@ -4,17 +4,20 @@ import { router, orgProcedure } from '../../../trpc';
 import { eq, and } from '@uninbox/database/orm';
 import { orgs } from '@uninbox/database/schema';
 import { nanoId, nanoIdLength } from '@uninbox/utils';
+import { isUserAdminOfOrg } from '~/server/utils/user';
+import { TRPCError } from '@trpc/server';
 
 export const orgProfileRouter = router({
   getOrgProfile: orgProcedure
     .input(
       z.object({
-        orgPublicId: z.string().min(3).max(nanoIdLength)
+        orgPublicId: z.string().min(3).max(nanoIdLength).optional()
       })
     )
     .query(async ({ ctx, input }) => {
-      const queryUserId = ctx.user.userId || 0;
-      const db = ctx.db;
+      const { db, user, org } = ctx;
+      const userId = user?.id || 0;
+      const orgId = org?.id || 0;
       const { orgPublicId } = input;
 
       const orgProfileQuery = await db.read.query.orgs.findFirst({
@@ -23,9 +26,11 @@ export const orgProfileRouter = router({
           name: true,
           avatarId: true
         },
-        where: and(eq(orgs.publicId, orgPublicId))
+        where: orgPublicId
+          ? eq(orgs.publicId, orgPublicId)
+          : eq(orgs.id, +orgId)
       });
-      console.log({ orgProfileQuery });
+
       return {
         orgProfile: orgProfileQuery
       };
@@ -34,15 +39,23 @@ export const orgProfileRouter = router({
   setOrgProfile: orgProcedure
     .input(
       z.object({
-        orgPublicId: z.string().min(3).max(nanoIdLength),
         orgName: z.string().min(3).max(32),
         orgAvatarId: z.string().optional()
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const queryUserId = ctx.user.userId || 0;
-      const db = ctx.db;
-      const { orgPublicId, orgName, orgAvatarId } = input;
+      const { db, user, org } = ctx;
+      const userId = user?.id || 0;
+      const orgId = org?.id || 0;
+      const { orgName, orgAvatarId } = input;
+
+      const isAdmin = await isUserAdminOfOrg(org, userId);
+      if (!isAdmin) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'You are not an admin'
+        });
+      }
 
       await db.write
         .update(orgs)
@@ -50,7 +63,7 @@ export const orgProfileRouter = router({
           name: orgName,
           ...(orgAvatarId && { avatarId: orgAvatarId })
         })
-        .where(eq(orgs.publicId, orgPublicId));
+        .where(eq(orgs.id, orgId));
 
       return {
         success: true

@@ -6,40 +6,45 @@ import { nanoId, nanoIdLength, nanoIdToken } from '@uninbox/utils';
 import dns from 'node:dns';
 import { verifyDns } from '~/server/utils/verifyDns';
 import { isUserInOrg } from '~/server/utils/dbQueries';
+import { TRPCError } from '@trpc/server';
+import { isUserAdminOfOrg } from '~/server/utils/user';
 
 export const domainsRouter = router({
   createNewDomain: orgProcedure
     .input(
       z.object({
-        orgPublicId: z.string().min(3).max(nanoIdLength),
         domainName: z.string().min(3).max(255)
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const { db, user } = ctx;
-      const { orgPublicId } = input;
+      const { db, user, org } = ctx;
+      const userId = user?.id || 0;
+      const orgId = org?.id || 0;
       const newPublicId = nanoId();
-      const userId = user.userId || 0;
 
       const domainName = input.domainName.toLowerCase();
       console.log({ domainName });
 
-      const userOrg = await isUserInOrg({
-        userId,
-        orgPublicId
-      });
+      const isAdmin = await isUserAdminOfOrg(org, userId);
+      if (!isAdmin) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'You are not an admin'
+        });
+      }
 
-      if (!userOrg) {
-        return {
-          error: 'User not in org'
-        };
+      const orgResponse = await db.read.query.orgs.findFirst({
+        where: eq(orgs.id, orgId),
+        columns: {
+          publicId: true
+        }
+      });
+      if (!orgResponse) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Org not found'
+        });
       }
-      if (userOrg.role !== 'admin') {
-        return {
-          error: 'User not admin'
-        };
-      }
-      // END TODO
 
       await dns.promises.setServers(['1.1.1.1', '1.0.0.1']);
       await dns.promises.resolveNs(domainName).catch((error) => {
@@ -63,8 +68,8 @@ export const domainsRouter = router({
 
       const mailBridgeResponse =
         await mailBridgeTrpcClient.postal.domains.createDomain.mutate({
-          orgId: +userOrg.orgId,
-          orgPublicId: orgPublicId,
+          orgId: +orgId,
+          orgPublicId: orgResponse.publicId,
           domainName: domainName
         });
 
@@ -76,7 +81,7 @@ export const domainsRouter = router({
 
       await db.write.insert(domains).values({
         publicId: newPublicId,
-        orgId: +userOrg.orgId,
+        orgId: +orgId,
         domain: domainName,
         postalHost: mailBridgeResponse.postalServerUrl || '',
         dkimKey: mailBridgeResponse.dkimKey,
@@ -96,38 +101,30 @@ export const domainsRouter = router({
   getDomain: orgProcedure
     .input(
       z.object({
-        orgPublicId: z.string().min(3).max(nanoIdLength),
         domainPublicId: z.string().min(3).max(nanoIdLength),
         newDomain: z.boolean().optional()
       })
     )
     .query(async ({ ctx, input }) => {
-      const { db, user } = ctx;
-      const { orgPublicId, domainPublicId } = input;
-      const userId = user.userId || 0;
+      const { db, user, org } = ctx;
+      const userId = user?.id || 0;
+      const orgId = org?.id || 0;
+      const { domainPublicId } = input;
 
       const dbReplica = input.newDomain ? db.write : db.read;
 
-      const userOrg = await isUserInOrg({
-        userId,
-        orgPublicId
-      });
-
-      if (!userOrg) {
-        return {
-          error: 'User not in org'
-        };
-      }
-      if (userOrg.role !== 'admin') {
-        return {
-          error: 'User not admin'
-        };
+      const isAdmin = await isUserAdminOfOrg(org, userId);
+      if (!isAdmin) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'You are not an admin'
+        });
       }
 
       const domainResponse = await dbReplica.query.domains.findFirst({
         where: and(
           eq(domains.publicId, domainPublicId),
-          eq(domains.orgId, +userOrg.orgId)
+          eq(domains.orgId, +orgId)
         ),
         columns: {
           publicId: true,
@@ -148,35 +145,32 @@ export const domainsRouter = router({
   getDomainDns: orgProcedure
     .input(
       z.object({
-        orgPublicId: z.string().min(3).max(nanoIdLength),
         domainPublicId: z.string().min(3).max(nanoIdLength),
         newDomain: z.boolean().optional()
       })
     )
     .query(async ({ ctx, input }) => {
-      const { db, user } = ctx;
-      const { orgPublicId, domainPublicId } = input;
-      const userId = user.userId || 0;
+      const { db, user, org } = ctx;
+      const userId = user?.id || 0;
+      const orgId = org?.id || 0;
+      const { domainPublicId } = input;
       const postalRootUrl = useRuntimeConfig().mailBridge
         .postalRootUrl as string;
 
       const dbReplica = input.newDomain ? db.write : db.read;
 
-      const userOrg = await isUserInOrg({
-        userId,
-        orgPublicId
-      });
-
-      if (!userOrg) {
-        return {
-          error: 'User not in org'
-        };
+      const isAdmin = await isUserAdminOfOrg(org, userId);
+      if (!isAdmin) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'You are not an admin'
+        });
       }
 
       const domainResponse = await dbReplica.query.domains.findFirst({
         where: and(
           eq(domains.publicId, domainPublicId),
-          eq(domains.orgId, +userOrg.orgId)
+          eq(domains.orgId, +orgId)
         ),
         columns: {
           id: true,
@@ -308,57 +302,27 @@ export const domainsRouter = router({
       };
     }),
 
-  getOrgDomains: orgProcedure
-    .input(
-      z.object({
-        orgPublicId: z.string().min(3).max(nanoIdLength)
-      })
-    )
-    .query(async ({ ctx, input }) => {
-      const { db, user } = ctx;
-      const { orgPublicId } = input;
-      const newPublicId = nanoId();
-      const userId = user.userId || 0;
-      const newInviteToken = nanoIdToken();
+  getOrgDomains: orgProcedure.query(async ({ ctx, input }) => {
+    const { db, user, org } = ctx;
+    const userId = user?.id || 0;
+    const orgId = org?.id || 0;
 
-      const orgIdResponse = await db.read.query.orgMembers.findFirst({
-        where: and(
-          eq(
-            orgMembers.orgId,
-            db.read
-              .select({ id: orgs.id })
-              .from(orgs)
-              .where(eq(orgs.publicId, orgPublicId))
-          ),
-          eq(orgMembers.userId, userId)
-        ),
-        columns: {
-          orgId: true,
-          role: true
-        }
-      });
-      if (!orgIdResponse) {
-        return {
-          error: 'User not in org'
-        };
+    const domainResponse = await db.read.query.domains.findMany({
+      where: eq(domains.orgId, +orgId),
+      columns: {
+        publicId: true,
+        domain: true,
+        domainStatus: true,
+        receivingMode: true,
+        sendingMode: true,
+        forwardingAddress: true,
+        createdAt: true,
+        lastDnsCheckAt: true
       }
+    });
 
-      const domainResponse = await db.read.query.domains.findMany({
-        where: eq(domains.orgId, +orgIdResponse.orgId),
-        columns: {
-          publicId: true,
-          domain: true,
-          domainStatus: true,
-          receivingMode: true,
-          sendingMode: true,
-          forwardingAddress: true,
-          createdAt: true,
-          lastDnsCheckAt: true
-        }
-      });
-
-      return {
-        domainData: domainResponse
-      };
-    })
+    return {
+      domainData: domainResponse
+    };
+  })
 });

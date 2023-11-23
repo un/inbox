@@ -128,7 +128,6 @@ export const signupRouter = router({
           userId: userLookup[0].id,
           providerId: ctx.hankoId
         });
-      console.log(insertUserAuthIdentity);
 
       return {
         success: true,

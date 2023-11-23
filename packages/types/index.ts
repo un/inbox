@@ -1,7 +1,12 @@
 import { ValidatedAuthSessionObject } from './../../apps/web-app/server/utils/auth';
 export type OrgContext = {
   id: number;
-  members: number[];
+  members: {
+    userId: number;
+    // Refer to DB schema orgMembers.role and orgMembers.status
+    role: 'admin' | 'member';
+    status: 'active' | 'removed';
+  }[];
 } | null;
 export type UserContext = {
   id: number;

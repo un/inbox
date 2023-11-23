@@ -8,12 +8,13 @@ import { nanoId, nanoIdLength } from '@uninbox/utils';
 
 export const profileRouter = router({
   generateAvatarUploadUrl: userProcedure.query(async ({ ctx, input }) => {
+    const { user } = ctx;
+    const userId = user?.id || 0;
     const config = useRuntimeConfig();
 
     const formData = new FormData();
-    formData.append('metadata', `{"userId":"${ctx.user.userId}"}`);
+    formData.append('metadata', `{"userId":"${userId}"}`);
 
-    // https://api.cloudflare.com/client/v4/accounts/0821901a4d9392ed1dfc645608f19474/images/v2/direct_upload
     //@ts-ignore - stack depth issue
     const uploadSignedURL: UploadSignedURLResponse = await $fetch(
       `https://api.cloudflare.com/client/v4/accounts/${config.cf.accountId}/images/v2/direct_upload`,
@@ -71,14 +72,15 @@ export const profileRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const db = ctx.db;
+      const { db, user } = ctx;
+      const userId = user?.id || 0;
 
       const newPublicId = nanoId();
       const insertUserProfileResponse = await db.write
         .insert(userProfiles)
         .values({
           //@ts-ignore TS dosnt know that userId must exist on user procedures
-          userId: ctx.user.userId,
+          userId: +userId,
           publicId: newPublicId,
           avatarId: input.imageId,
           firstName: input.fName,
@@ -104,32 +106,30 @@ export const profileRouter = router({
         error: null
       };
     }),
-  getUserSingleProfile: userProcedure
-    .input(z.object({}))
-    .query(async ({ ctx, input }) => {
-      const queryUserId = ctx.user.userId || 0;
-      const db = ctx.db;
+  getUserSingleProfile: userProcedure.query(async ({ ctx, input }) => {
+    const { db, user } = ctx;
+    const userId = user?.id || 0;
 
-      // TODO: Switch to FindMany when supporting multiple profiles
-      const userProfilesQuery = await db.read.query.userProfiles.findFirst({
-        where: and(
-          eq(userProfiles.userId, queryUserId),
-          eq(userProfiles.defaultProfile, true)
-        ),
-        columns: {
-          publicId: true,
-          avatarId: true,
-          firstName: true,
-          lastName: true,
-          handle: true,
-          title: true,
-          blurb: true
-        }
-      });
-      return {
-        profile: userProfilesQuery
-      };
-    }),
+    // TODO: Switch to FindMany when supporting multiple profiles
+    const userProfilesQuery = await db.read.query.userProfiles.findFirst({
+      where: and(
+        eq(userProfiles.userId, +userId),
+        eq(userProfiles.defaultProfile, true)
+      ),
+      columns: {
+        publicId: true,
+        avatarId: true,
+        firstName: true,
+        lastName: true,
+        handle: true,
+        title: true,
+        blurb: true
+      }
+    });
+    return {
+      profile: userProfilesQuery
+    };
+  }),
   updateUserProfile: userProcedure
     .input(
       z.object({
@@ -144,8 +144,8 @@ export const profileRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const queryUserId = ctx.user.userId || 0;
-      const db = ctx.db;
+      const { db, user } = ctx;
+      const userId = user?.id || 0;
 
       const insertUserProfileResponse = await db.write
         .update(userProfiles)
@@ -160,9 +160,17 @@ export const profileRouter = router({
         .where(
           and(
             eq(userProfiles.publicId, input.profilePublicId),
-            eq(userProfiles.userId, queryUserId)
+            eq(userProfiles.userId, userId)
           )
         );
+
+      if (!insertUserProfileResponse.rowsAffected) {
+        return {
+          success: false,
+          error:
+            'Something went wrong, please retry. Contact our team if it persists'
+        };
+      }
 
       return {
         success: true

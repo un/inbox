@@ -1,6 +1,11 @@
 import { z } from 'zod';
 import { parse, stringify } from 'superjson';
-import { router, orgProcedure, limitedProcedure } from '../../trpc';
+import {
+  router,
+  orgProcedure,
+  limitedProcedure,
+  userProcedure
+} from '../../trpc';
 import type { DBType } from '@uninbox/database';
 import { eq, and } from '@uninbox/database/orm';
 import {
@@ -42,7 +47,7 @@ async function validateOrgSlug(
 }
 
 export const crudRouter = router({
-  checkSlugAvailability: orgProcedure
+  checkSlugAvailability: userProcedure
     .input(
       z.object({
         slug: z
@@ -58,7 +63,7 @@ export const crudRouter = router({
       return await validateOrgSlug(ctx.db, input.slug);
     }),
 
-  createNewOrg: orgProcedure
+  createNewOrg: userProcedure
     .input(
       z.object({
         orgName: z.string().min(3).max(32),
@@ -72,12 +77,13 @@ export const crudRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const queryUserId = ctx.user.userId || 0;
-      const db = ctx.db;
+      const { db, user } = ctx;
+      const userId = user?.id || 0;
+
       const newPublicId = nanoId();
 
       const insertOrgResponse = await db.write.insert(orgs).values({
-        ownerId: queryUserId,
+        ownerId: +userId,
         name: input.orgName,
         slug: input.orgSlug,
         publicId: newPublicId
@@ -88,14 +94,14 @@ export const crudRouter = router({
       const userProfile = await db.read
         .select({ id: userProfiles.id })
         .from(userProfiles)
-        .where(eq(userProfiles.userId, queryUserId));
+        .where(eq(userProfiles.userId, +userId));
 
       const newPublicId2 = nanoId();
       await db.write.insert(orgMembers).values({
         orgId: orgId,
         publicId: newPublicId2,
         role: 'admin',
-        userId: queryUserId,
+        userId: +userId,
         status: 'active',
         userProfileId: userProfile[0].id
       });
@@ -113,11 +119,12 @@ export const crudRouter = router({
       };
     }),
 
-  createPersonalOrg: orgProcedure
+  createPersonalOrg: userProcedure
     .input(z.object({}))
     .mutation(async ({ ctx, input }) => {
-      const queryUserId = ctx.user.userId || 0;
-      const db = ctx.db;
+      const { db, user } = ctx;
+      const userId = user?.id || 0;
+
       const primaryRootDomain =
         //@ts-expect-error cant correctly infer the type of useRuntimeConfig mail
         useRuntimeConfig().public.mailDomainPublic[0].name as string;
@@ -125,7 +132,7 @@ export const crudRouter = router({
       const existingPersonalOrg = await db.read
         .select({ id: orgs.id })
         .from(orgs)
-        .where(and(eq(orgs.ownerId, queryUserId), eq(orgs.personalOrg, true)));
+        .where(and(eq(orgs.ownerId, +userId), eq(orgs.personalOrg, true)));
       if (existingPersonalOrg.length > 0) {
         return {
           success: false,
@@ -138,11 +145,11 @@ export const crudRouter = router({
       const userObject = await db.read
         .select({ id: users.id, username: users.username })
         .from(users)
-        .where(eq(users.id, queryUserId));
+        .where(eq(users.id, +userId));
       const newPublicId = nanoId();
 
       const insertOrgResponse = await db.write.insert(orgs).values({
-        ownerId: queryUserId,
+        ownerId: +userId,
         name: `${userObject[0].username}'s Personal Org`,
         slug: userObject[0].username,
         publicId: newPublicId,
@@ -157,13 +164,13 @@ export const crudRouter = router({
           lname: userProfiles.lastName
         })
         .from(userProfiles)
-        .where(eq(userProfiles.userId, queryUserId));
+        .where(eq(userProfiles.userId, userId));
 
       const newPublicId2 = nanoId();
       await db.write.insert(orgMembers).values({
         orgId: newOrgId,
         role: 'admin',
-        userId: queryUserId,
+        userId: userId,
         publicId: newPublicId2,
         status: 'active',
         userProfileId: userProfile[0].id
@@ -183,7 +190,7 @@ export const crudRouter = router({
           rootDomainName: primaryRootDomain,
           sendName: `${userProfile[0].fname} ${userProfile[0].lname}`,
           serverPublicId: (await insertMailBridgeOrgResponse).serverPublicId,
-          userId: +queryUserId,
+          userId: +userId,
           username: userObject[0].username.toLocaleLowerCase()
         }
       );
@@ -196,7 +203,7 @@ export const crudRouter = router({
       };
     }),
 
-  getUserOrgs: orgProcedure
+  getUserOrgs: userProcedure
     .input(
       z.object({
         onlyAdmin: z.boolean().optional(),
@@ -204,18 +211,16 @@ export const crudRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      const queryUserId = ctx.user.userId || 0;
-      const db = ctx.db;
+      const { db, user } = ctx;
+      const userId = user?.id || 0;
+
       const userIsAdmin = input.onlyAdmin || false;
 
       const orgMembersQuery = await db.read.query.orgMembers.findMany({
         columns: {},
         where: userIsAdmin
-          ? and(
-              eq(orgMembers.userId, queryUserId),
-              eq(orgMembers.role, 'admin')
-            )
-          : eq(orgMembers.userId, queryUserId),
+          ? and(eq(orgMembers.userId, userId), eq(orgMembers.role, 'admin'))
+          : eq(orgMembers.userId, userId),
         with: {
           org: {
             columns: {

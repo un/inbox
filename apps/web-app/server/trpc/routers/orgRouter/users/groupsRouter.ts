@@ -11,32 +11,31 @@ import {
 import { nanoId, nanoIdLength } from '@uninbox/utils';
 import { uiColors } from '@uninbox/types/ui';
 import type { UiColor } from '@uninbox/types/ui';
+import { isUserAdminOfOrg } from '~/server/utils/user';
+import { TRPCError } from '@trpc/server';
 
 export const orgUserGroupsRouter = router({
   createOrgUserGroups: orgProcedure
     .input(
       z.object({
-        orgPublicId: z.string().min(3).max(nanoIdLength),
         groupName: z.string().min(2).max(50),
         groupDescription: z.string().min(2).max(500).optional(),
         groupColor: z.enum(uiColors)
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const queryUserId = ctx.user.userId || 0;
-      const db = ctx.db;
-      const { orgPublicId, groupName, groupDescription, groupColor } = input;
+      const { db, user, org } = ctx;
+      const userId = user?.id || 0;
+      const orgId = org?.id || 0;
+      const { groupName, groupDescription, groupColor } = input;
       const newPublicId = nanoId();
 
-      console.log({ input });
-
-      const userInOrg = await isUserInOrg({
-        userId: queryUserId,
-        orgPublicId
-      });
-
-      if (!userInOrg) {
-        throw new Error('User not in org');
+      const isAdmin = await isUserAdminOfOrg(org, userId);
+      if (!isAdmin) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'You are not an admin'
+        });
       }
 
       await db.write.insert(userGroups).values({
@@ -44,7 +43,7 @@ export const orgUserGroupsRouter = router({
         name: groupName,
         description: groupDescription,
         color: groupColor,
-        orgId: userInOrg.orgId,
+        orgId: +orgId,
         avatarId: ''
       });
 
@@ -52,81 +51,57 @@ export const orgUserGroupsRouter = router({
         newGroupPublicId: newPublicId
       };
     }),
-  getOrgUserGroups: orgProcedure
-    .input(
-      z.object({
-        orgPublicId: z.string().min(3).max(nanoIdLength)
-      })
-    )
-    .query(async ({ ctx, input }) => {
-      const queryUserId = ctx.user.userId || 0;
-      const db = ctx.db;
-      const { orgPublicId } = input;
+  getOrgUserGroups: orgProcedure.query(async ({ ctx, input }) => {
+    const { db, user, org } = ctx;
+    const userId = user?.id || 0;
+    const orgId = org?.id || 0;
 
-      const userInOrg = await isUserInOrg({
-        userId: queryUserId,
-        orgPublicId
-      });
-
-      if (!userInOrg) {
-        throw new Error('User not in org');
-      }
-
-      const userGroupQuery = await db.read.query.userGroups.findMany({
-        columns: {
-          publicId: true,
-          name: true,
-          description: true,
-          color: true,
-          avatarId: true
-        },
-        where: and(eq(userGroups.orgId, userInOrg.orgId)),
-        with: {
-          members: {
-            columns: {
-              publicId: true
-            },
-            with: {
-              userProfile: {
-                columns: {
-                  publicId: true,
-                  avatarId: true,
-                  firstName: true,
-                  lastName: true,
-                  handle: true,
-                  title: true
-                }
+    const userGroupQuery = await db.read.query.userGroups.findMany({
+      columns: {
+        publicId: true,
+        name: true,
+        description: true,
+        color: true,
+        avatarId: true
+      },
+      where: and(eq(userGroups.orgId, +orgId)),
+      with: {
+        members: {
+          columns: {
+            publicId: true
+          },
+          with: {
+            userProfile: {
+              columns: {
+                publicId: true,
+                avatarId: true,
+                firstName: true,
+                lastName: true,
+                handle: true,
+                title: true
               }
             }
           }
         }
-      });
-      return {
-        groups: userGroupQuery
-      };
-    }),
+      }
+    });
+
+    return {
+      groups: userGroupQuery
+    };
+  }),
   getUserGroup: orgProcedure
     .input(
       z.object({
-        orgPublicId: z.string().min(3).max(nanoIdLength),
         userGroupPublicId: z.string().min(3).max(nanoIdLength),
         newUserGroup: z.boolean().optional()
       })
     )
     .query(async ({ ctx, input }) => {
-      const queryUserId = ctx.user.userId || 0;
-      const db = ctx.db;
-      const { orgPublicId } = input;
+      const { db, user, org } = ctx;
+      const userId = user?.id || 0;
+      const orgId = org?.id || 0;
       const dbReplica = input.newUserGroup ? db.write : db.read;
-
-      const userInOrg = await isUserInOrg({
-        userId: queryUserId,
-        orgPublicId
-      });
-
-      if (!userInOrg) {
-        throw new Error('User not in org');
-      }
 
       const userGroupQuery = await dbReplica.query.userGroups.findFirst({
         columns: {
@@ -138,7 +113,7 @@ export const orgUserGroupsRouter = router({
         },
         where: and(
           eq(userGroups.publicId, input.userGroupPublicId),
-          eq(userGroups.orgId, userInOrg.orgId)
+          eq(userGroups.orgId, +orgId)
         ),
         with: {
           members: {
@@ -175,30 +150,23 @@ export const orgUserGroupsRouter = router({
   addUserToGroup: orgProcedure
     .input(
       z.object({
-        orgPublicId: z.string().min(3).max(nanoIdLength),
         groupPublicId: z.string().min(3).max(nanoIdLength),
         orgMemberPublicId: z.string().min(3).max(nanoIdLength)
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const queryUserId = ctx.user.userId || 0;
-      const db = ctx.db;
-      const { orgPublicId, groupPublicId, orgMemberPublicId } = input;
+      const { db, user, org } = ctx;
+      const userId = user?.id || 0;
+      const orgId = org?.id || 0;
+      const { groupPublicId, orgMemberPublicId } = input;
       const newPublicId = nanoId();
 
-      console.log({ input });
-
-      const userInOrg = await isUserInOrg({
-        userId: queryUserId,
-        orgPublicId
-      });
-
-      if (!userInOrg) {
-        throw new Error('User not in org');
-      }
-
-      if (userInOrg.role !== 'admin') {
-        throw new Error('User not admin');
+      const isAdmin = await isUserAdminOfOrg(org, userId);
+      if (!isAdmin) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'You are not an admin'
+        });
       }
 
       const orgMember = await db.read.query.orgMembers.findFirst({
@@ -235,7 +203,7 @@ export const orgUserGroupsRouter = router({
           userProfileId: orgMember.userProfileId,
           role: 'member',
           notifications: 'active',
-          addedBy: queryUserId
+          addedBy: +userId
         });
 
       if (!insertUserGroupMemberResult) {

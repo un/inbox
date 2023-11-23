@@ -1,4 +1,18 @@
 {
+  "Is User Admin": {
+    "prefix": "isAdmin",
+    "description": "Checks if the user is an admin and throws error if not",
+    "scope": "typescript",
+    "body": [
+      "const isAdmin = await isUserAdminOfOrg(org, userId);",
+      "      if (!isAdmin) {",
+      "        throw new TRPCError({",
+      "          code: 'UNAUTHORIZED',",
+      "          message: 'You are not an admin'",
+      "        });",
+      "      }"
+    ]
+  },
   "Throw tRPC Error": {
     "prefix": "thr",
     "description": "Throw a new trPC error",

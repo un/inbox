@@ -23,9 +23,10 @@ export const messageRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      const { db, user } = ctx;
+      const { db, user, org } = ctx;
+      const userId = user?.id || 0;
+      const orgId = org?.id || 0;
       const { convoPublicId, cursorLastCreatedAt, cursorLastPublicId } = input;
-      const userId = user.userId || 0;
 
       const inputLastCreatedAt = cursorLastCreatedAt
         ? new Date(cursorLastCreatedAt)

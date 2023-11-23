@@ -34,7 +34,8 @@ export const convoRouter = router({
     .query(async ({ ctx, input }) => {
       const { db, user, org } = ctx;
       const { cursorLastUpdatedAt, cursorLastPublicId } = input;
-      const userId = user.userId || 0;
+      const userId = user?.id || 0;
+      const orgId = org?.id || 0;
 
       const inputLastUpdatedAt = cursorLastUpdatedAt
         ? new Date(cursorLastUpdatedAt)
@@ -187,9 +188,10 @@ export const convoRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      const { db, user } = ctx;
+      const { db, user, org } = ctx;
       const { convoPublicId } = input;
-      const userId = user.userId || 0;
+      const userId = user?.id || 0;
+      const orgId = org?.id || 0;
 
       // TODO: Add filtering for org based on input.filterOrgPublicId
       const convoDetails = await db.read.query.convos.findFirst({
@@ -326,8 +328,9 @@ export const convoRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const { db, user } = ctx;
-      const userId = user.userId || 0;
+      const { db, user, org } = ctx;
+      const userId = user?.id || 0;
+      const orgId = org?.id || 0;
       const {
         orgPublicId,
         participantsExternalEmails,
