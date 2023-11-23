@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { parse, stringify } from 'superjson';
-import { router, protectedProcedure } from '../../../trpc';
+import { router, orgProcedure } from '../../../trpc';
 import { eq, and } from '@uninbox/database/orm';
 import {
   orgMembers,
@@ -13,7 +13,7 @@ import { uiColors } from '@uninbox/types/ui';
 import type { UiColor } from '@uninbox/types/ui';
 
 export const orgUserGroupsRouter = router({
-  createOrgUserGroups: protectedProcedure
+  createOrgUserGroups: orgProcedure
     .input(
       z.object({
         orgPublicId: z.string().min(3).max(nanoIdLength),
@@ -52,7 +52,7 @@ export const orgUserGroupsRouter = router({
         newGroupPublicId: newPublicId
       };
     }),
-  getOrgUserGroups: protectedProcedure
+  getOrgUserGroups: orgProcedure
     .input(
       z.object({
         orgPublicId: z.string().min(3).max(nanoIdLength)
@@ -105,7 +105,7 @@ export const orgUserGroupsRouter = router({
         groups: userGroupQuery
       };
     }),
-  getUserGroup: protectedProcedure
+  getUserGroup: orgProcedure
     .input(
       z.object({
         orgPublicId: z.string().min(3).max(nanoIdLength),
@@ -172,7 +172,7 @@ export const orgUserGroupsRouter = router({
         group: userGroupQuery
       };
     }),
-  addUserToGroup: protectedProcedure
+  addUserToGroup: orgProcedure
     .input(
       z.object({
         orgPublicId: z.string().min(3).max(nanoIdLength),

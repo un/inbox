@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { router, protectedProcedure, limitedProcedure } from '../../../trpc';
+import { router, orgProcedure, limitedProcedure } from '../../../trpc';
 import {
   and,
   eq,
@@ -22,7 +22,7 @@ import { verifyDns } from '~/server/utils/verifyDns';
 import { isUserInOrg } from '~/server/utils/dbQueries';
 
 export const emailIdentityRouter = router({
-  createNewEmailIdentity: protectedProcedure
+  createNewEmailIdentity: orgProcedure
     .input(
       z.object({
         orgPublicId: z.string().min(3).max(nanoIdLength),
@@ -191,7 +191,7 @@ export const emailIdentityRouter = router({
       };
     }),
 
-  getEmailIdentity: protectedProcedure
+  getEmailIdentity: orgProcedure
     .input(
       z.object({
         orgPublicId: z.string().min(3).max(nanoIdLength),
@@ -282,7 +282,7 @@ export const emailIdentityRouter = router({
         emailIdentityData: emailIdentityResponse
       };
     }),
-  getOrgEmailIdentities: protectedProcedure
+  getOrgEmailIdentities: orgProcedure
     .input(
       z.object({
         orgPublicId: z.string().min(3).max(nanoIdLength)

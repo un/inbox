@@ -102,9 +102,9 @@ export default defineNuxtConfig({
             ? 60 * 60 * 12
             : 60 * 60 * 24 * 30
       },
-      'org-slugs': {
+      'org-context': {
         driver: 'redis',
-        base: 'org-slugs',
+        base: 'org-context',
         url: process.env.DB_REDIS_URL,
         ttl:
           process.env.NODE_ENV === 'development'

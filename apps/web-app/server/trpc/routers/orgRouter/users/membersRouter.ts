@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { parse, stringify } from 'superjson';
-import { router, protectedProcedure } from '../../../trpc';
+import { router, orgProcedure } from '../../../trpc';
 import { eq, and } from '@uninbox/database/orm';
 import {
   orgs,
@@ -12,7 +12,7 @@ import { nanoId, nanoIdLength } from '@uninbox/utils';
 import { mailBridgeTrpcClient } from '~/server/utils/tRPCServerClients';
 
 export const orgMembersRouter = router({
-  getOrgMembers: protectedProcedure
+  getOrgMembers: orgProcedure
     .input(
       z.object({
         orgPublicId: z.string().min(3).max(nanoIdLength)
@@ -80,7 +80,7 @@ export const orgMembersRouter = router({
         members: orgQuery?.members
       };
     }),
-  getOrgMembersList: protectedProcedure
+  getOrgMembersList: orgProcedure
     .input(
       z.object({
         orgPublicId: z.string().min(3).max(nanoIdLength),

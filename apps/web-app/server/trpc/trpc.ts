@@ -13,7 +13,19 @@ export const trpcContext = initTRPC
 
 const isUserAuthenticated = trpcContext.middleware(({ next, ctx }) => {
   if (!ctx.user.valid) {
-    throw new TRPCError({ code: 'UNAUTHORIZED' });
+    throw new TRPCError({
+      code: 'UNAUTHORIZED',
+      message: 'You are not logged in, redirecting...'
+    });
+  }
+  return next();
+});
+const hasOrgSlug = isUserAuthenticated.unstable_pipe(({ next, ctx }) => {
+  if (!ctx.orgId) {
+    throw new TRPCError({
+      code: 'NOT_FOUND',
+      message: 'Invalid organization selected, redirecting...'
+    });
   }
   return next();
 });
@@ -53,9 +65,9 @@ export const publicProcedure = trpcContext.procedure;
 export const limitedProcedure = trpcContext.procedure
   .input(z.object({ turnstileToken: z.string() }))
   .use(turnstileTokenValidation);
-export const protectedProcedure =
-  trpcContext.procedure.use(isUserAuthenticated);
-export const eeProcedure = protectedProcedure.use(isEeEnabled);
+export const userProcedure = trpcContext.procedure.use(isUserAuthenticated);
+export const orgProcedure = trpcContext.procedure.use(hasOrgSlug);
+export const eeProcedure = userProcedure.use(isEeEnabled);
 
 export const router = trpcContext.router;
 export const middleware = trpcContext.middleware;

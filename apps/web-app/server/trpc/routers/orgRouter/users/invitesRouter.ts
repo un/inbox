@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { router, protectedProcedure, limitedProcedure } from '../../../trpc';
+import { router, orgProcedure, limitedProcedure } from '../../../trpc';
 import { and, eq, or } from '@uninbox/database/orm';
 import {
   orgInvitations,
@@ -11,7 +11,7 @@ import {
 import { nanoId, nanoIdLength, nanoIdToken } from '@uninbox/utils';
 
 export const invitesRouter = router({
-  createNewInvite: protectedProcedure
+  createNewInvite: orgProcedure
     .input(
       z.object({
         orgPublicId: z.string().min(3).max(nanoIdLength),
@@ -50,7 +50,7 @@ export const invitesRouter = router({
         error: null
       };
     }),
-  viewInvites: protectedProcedure
+  viewInvites: orgProcedure
     .input(
       z.object({
         orgPublicId: z.string().min(3).max(nanoIdLength)
@@ -157,7 +157,7 @@ export const invitesRouter = router({
         valid: true
       };
     }),
-  redeemInvite: protectedProcedure
+  redeemInvite: orgProcedure
     .input(
       z.object({
         inviteToken: z.string().min(3).max(32),
@@ -233,7 +233,7 @@ export const invitesRouter = router({
         error: null
       };
     }),
-  deleteInvite: protectedProcedure
+  deleteInvite: orgProcedure
     .input(
       z.object({
         invitePublicId: z.string().min(3).max(nanoIdLength)

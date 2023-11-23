@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { router, protectedProcedure, limitedProcedure } from '../../trpc';
+import { router, orgProcedure, limitedProcedure } from '../../trpc';
 import {
-  InferInsertModel,
+  type InferInsertModel,
   and,
   desc,
   eq,
@@ -24,7 +24,7 @@ import {
 import { nanoId, nanoIdLength, nanoIdToken } from '@uninbox/utils';
 
 export const convoRouter = router({
-  getUserConvos: protectedProcedure
+  getUserConvos: orgProcedure
     .input(
       z.object({
         filterOrgPublicId: z.string().min(3).max(nanoIdLength).optional(),
@@ -182,7 +182,7 @@ export const convoRouter = router({
         }
       };
     }),
-  getConvo: protectedProcedure
+  getConvo: orgProcedure
     .input(
       z.object({
         convoPublicId: z.string().min(3).max(nanoIdLength)
@@ -314,7 +314,7 @@ export const convoRouter = router({
       };
     }),
 
-  createConvo: protectedProcedure
+  createConvo: orgProcedure
     .input(
       z.object({
         orgPublicId: z.string().min(3).max(nanoIdLength),

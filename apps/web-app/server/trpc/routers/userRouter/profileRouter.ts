@@ -1,13 +1,13 @@
 import { z } from 'zod';
 import { parse, stringify } from 'superjson';
-import { router, protectedProcedure } from '../../trpc';
+import { router, userProcedure } from '../../trpc';
 import type { DBType } from '@uninbox/database';
 import { and, eq } from '@uninbox/database/orm';
 import { users, userProfiles } from '@uninbox/database/schema';
 import { nanoId, nanoIdLength } from '@uninbox/utils';
 
 export const profileRouter = router({
-  generateAvatarUploadUrl: protectedProcedure.query(async ({ ctx, input }) => {
+  generateAvatarUploadUrl: userProcedure.query(async ({ ctx, input }) => {
     const config = useRuntimeConfig();
 
     const formData = new FormData();
@@ -28,7 +28,7 @@ export const profileRouter = router({
     return uploadSignedURL.result;
   }),
 
-  awaitAvatarUpload: protectedProcedure
+  awaitAvatarUpload: userProcedure
     .input(
       z.object({
         uploadId: z.string().uuid()
@@ -60,7 +60,7 @@ export const profileRouter = router({
       return imageId;
     }),
 
-  createProfile: protectedProcedure
+  createProfile: userProcedure
     .input(
       z.object({
         fName: z.string(),
@@ -77,7 +77,7 @@ export const profileRouter = router({
       const insertUserProfileResponse = await db.write
         .insert(userProfiles)
         .values({
-          //@ts-ignore TS dosnt know that userId must exist on protected procedures
+          //@ts-ignore TS dosnt know that userId must exist on user procedures
           userId: ctx.user.userId,
           publicId: newPublicId,
           avatarId: input.imageId,
@@ -104,7 +104,7 @@ export const profileRouter = router({
         error: null
       };
     }),
-  getUserSingleProfile: protectedProcedure
+  getUserSingleProfile: userProcedure
     .input(z.object({}))
     .query(async ({ ctx, input }) => {
       const queryUserId = ctx.user.userId || 0;
@@ -130,7 +130,7 @@ export const profileRouter = router({
         profile: userProfilesQuery
       };
     }),
-  updateUserProfile: protectedProcedure
+  updateUserProfile: userProcedure
     .input(
       z.object({
         profilePublicId: z.string().min(3).max(nanoIdLength),

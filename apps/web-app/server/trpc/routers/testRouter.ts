@@ -13,7 +13,6 @@ export const testRouter = router({
       code: 'FORBIDDEN',
       message: 'User not in org'
     });
-
     const timestamp = new Date().toISOString();
     const orgIdFromContext = ctx.orgId;
     return { timestamp, orgIdFromContext };

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { router, protectedProcedure, limitedProcedure } from '../../trpc';
+import { router, orgProcedure, limitedProcedure } from '../../trpc';
 import { and, desc, eq, inArray, lt, or } from '@uninbox/database/orm';
 import {
   convos,
@@ -14,7 +14,7 @@ import {
 import { nanoId, nanoIdLength, nanoIdToken } from '@uninbox/utils';
 
 export const messageRouter = router({
-  getConvoMessages: protectedProcedure
+  getConvoMessages: orgProcedure
     .input(
       z.object({
         convoPublicId: z.string().min(3).max(nanoIdLength),

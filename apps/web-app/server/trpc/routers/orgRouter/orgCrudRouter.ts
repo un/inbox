@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { parse, stringify } from 'superjson';
-import { router, protectedProcedure, limitedProcedure } from '../../trpc';
+import { router, orgProcedure, limitedProcedure } from '../../trpc';
 import type { DBType } from '@uninbox/database';
 import { eq, and } from '@uninbox/database/orm';
 import {
@@ -42,7 +42,7 @@ async function validateOrgSlug(
 }
 
 export const crudRouter = router({
-  checkSlugAvailability: protectedProcedure
+  checkSlugAvailability: orgProcedure
     .input(
       z.object({
         slug: z
@@ -58,7 +58,7 @@ export const crudRouter = router({
       return await validateOrgSlug(ctx.db, input.slug);
     }),
 
-  createNewOrg: protectedProcedure
+  createNewOrg: orgProcedure
     .input(
       z.object({
         orgName: z.string().min(3).max(32),
@@ -113,7 +113,7 @@ export const crudRouter = router({
       };
     }),
 
-  createPersonalOrg: protectedProcedure
+  createPersonalOrg: orgProcedure
     .input(z.object({}))
     .mutation(async ({ ctx, input }) => {
       const queryUserId = ctx.user.userId || 0;
@@ -196,7 +196,7 @@ export const crudRouter = router({
       };
     }),
 
-  getUserOrgs: protectedProcedure
+  getUserOrgs: orgProcedure
     .input(
       z.object({
         onlyAdmin: z.boolean().optional(),

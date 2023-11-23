@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { router, protectedProcedure, limitedProcedure } from '../../../trpc';
+import { router, orgProcedure, limitedProcedure } from '../../../trpc';
 import { and, eq, or } from '@uninbox/database/orm';
 import { orgs, orgMembers, domains } from '@uninbox/database/schema';
 import { nanoId, nanoIdLength, nanoIdToken } from '@uninbox/utils';
@@ -8,7 +8,7 @@ import { verifyDns } from '~/server/utils/verifyDns';
 import { isUserInOrg } from '~/server/utils/dbQueries';
 
 export const domainsRouter = router({
-  createNewDomain: protectedProcedure
+  createNewDomain: orgProcedure
     .input(
       z.object({
         orgPublicId: z.string().min(3).max(nanoIdLength),
@@ -93,7 +93,7 @@ export const domainsRouter = router({
       };
     }),
 
-  getDomain: protectedProcedure
+  getDomain: orgProcedure
     .input(
       z.object({
         orgPublicId: z.string().min(3).max(nanoIdLength),
@@ -145,7 +145,7 @@ export const domainsRouter = router({
       };
     }),
 
-  getDomainDns: protectedProcedure
+  getDomainDns: orgProcedure
     .input(
       z.object({
         orgPublicId: z.string().min(3).max(nanoIdLength),
@@ -308,7 +308,7 @@ export const domainsRouter = router({
       };
     }),
 
-  getOrgDomains: protectedProcedure
+  getOrgDomains: orgProcedure
     .input(
       z.object({
         orgPublicId: z.string().min(3).max(nanoIdLength)

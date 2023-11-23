@@ -1,7 +1,7 @@
 import { isUserInOrg } from '~/server/utils/dbQueries';
 import { z } from 'zod';
 import { parse, stringify } from 'superjson';
-import { router, protectedProcedure } from '../../trpc';
+import { router, userProcedure } from '../../trpc';
 import { and, eq, inArray, or } from '@uninbox/database/orm';
 import {
   users,
@@ -17,7 +17,7 @@ import {
 import { nanoId, nanoIdLength } from '@uninbox/utils';
 
 export const addressRouter = router({
-  getPersonalAddresses: protectedProcedure
+  getPersonalAddresses: userProcedure
     .input(z.object({}))
     .query(async ({ ctx, input }) => {
       const queryUserId = ctx.user.userId || 0;
@@ -62,7 +62,7 @@ export const addressRouter = router({
           userPersonalOrgFwdAddressQuery?.rootForwardingAddress
       };
     }),
-  getUserEmailIdentities: protectedProcedure
+  getUserEmailIdentities: userProcedure
     .input(
       z.object({
         orgPublicId: z.string().min(1).max(nanoIdLength)
