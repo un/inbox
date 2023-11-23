@@ -1,0 +1,13 @@
+{
+  "Throw tRPC Error": {
+    "prefix": "thr",
+    "description": "Throw a new trPC error",
+    "scope": "typescript",
+    "body": [
+      "throw new TRPCError({",
+      "      code: 'FORBIDDEN',",
+      "      message: 'User not in org',",
+      "    });"
+    ]
+  }
+}
