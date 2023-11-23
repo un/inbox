@@ -1,28 +1,21 @@
 export const useLocalPrefStore = defineStore(
   'localPref',
   () => {
-    const sidebarCollapsed = ref<boolean>(false);
-
-    const toggleSidebar = async () => {
-      console.log('toggleSidebar');
-      sidebarCollapsed.value = !sidebarCollapsed.value;
-    };
-
-    const colorMode = useColorMode();
-    if (colorMode.preference === 'system') {
-      colorMode.value = 'light';
-      colorMode.preference = 'light';
+    const colorModeControl = useColorMode();
+    const currentColorMode = colorModeControl.value;
+    if (colorModeControl.preference === 'system') {
+      colorModeControl.value = 'light';
+      colorModeControl.preference = 'light';
     }
     const toggleColorMode = async () => {
-      const currentColorMode = colorMode.value;
+      const currentColorMode = colorModeControl.value;
       const newColorMode = currentColorMode === 'light' ? 'dark' : 'light';
-      colorMode.value = newColorMode;
-      colorMode.preference = newColorMode;
+      colorModeControl.value = newColorMode;
+      colorModeControl.preference = newColorMode;
     };
     return {
-      toggleColorMode,
-      sidebarCollapsed,
-      toggleSidebar
+      colorMode: currentColorMode,
+      toggleColorMode
     };
   },
   {

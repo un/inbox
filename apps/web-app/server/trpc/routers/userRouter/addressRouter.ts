@@ -20,11 +20,11 @@ export const addressRouter = router({
   getPersonalAddresses: userProcedure
     .input(z.object({}))
     .query(async ({ ctx, input }) => {
-      const queryUserId = ctx.user.userId || 0;
-      const db = ctx.db;
+      const { db, user } = ctx;
+      const userId = user?.id || 0;
 
       const usersPersonalOrgIdQuery = await db.read.query.orgs.findFirst({
-        where: and(eq(orgs.ownerId, queryUserId), eq(orgs.personalOrg, true)),
+        where: and(eq(orgs.ownerId, +userId), eq(orgs.personalOrg, true)),
         columns: {
           id: true
         }
@@ -60,119 +60,6 @@ export const addressRouter = router({
         personalEmailAddresses: userPersonalEmailAddressesQuery,
         personalOrgFwdAddress:
           userPersonalOrgFwdAddressQuery?.rootForwardingAddress
-      };
-    }),
-  getUserEmailIdentities: userProcedure
-    .input(
-      z.object({
-        orgPublicId: z.string().min(1).max(nanoIdLength)
-      })
-    )
-    .query(async ({ ctx, input }) => {
-      const queryUserId = ctx.user.userId || 0;
-      const db = ctx.db;
-
-      const userInOrg = await isUserInOrg({
-        orgPublicId: input.orgPublicId,
-        userId: queryUserId
-      });
-
-      if (!userInOrg) {
-        throw new Error('User is not in org');
-      }
-
-      // search for user org memberships, get id of membership
-      const userOrgMembershipQuery = await db.read.query.orgMembers.findFirst({
-        where: and(
-          eq(orgMembers.userId, queryUserId),
-          eq(orgMembers.orgId, userInOrg.orgId)
-        ),
-        columns: {
-          id: true
-        }
-      });
-
-      if (!userOrgMembershipQuery?.id) {
-        throw new Error('User is not in org');
-      }
-      const userOrgMembershipId = userOrgMembershipQuery?.id;
-      // search for user org group memberships, get id of org group
-
-      //TODO: Add filter for org id
-      const userOrgGroupMembershipQuery =
-        await db.read.query.userGroupMembers.findMany({
-          where: eq(userGroupMembers.userId, queryUserId),
-          columns: {
-            groupId: true
-          },
-          with: {
-            group: {
-              columns: {
-                id: true,
-                orgId: true
-              }
-            }
-          }
-        });
-
-      const orgGroupIds = userOrgGroupMembershipQuery.filter(
-        (userOrgGroupMembership) =>
-          userOrgGroupMembership.group.orgId === +userInOrg.orgId
-      );
-
-      const userGroupIds = orgGroupIds.map(
-        (orgGroupIds) => orgGroupIds.group.id
-      );
-      const uniqueUserGroupIds = [...new Set(userGroupIds)];
-
-      if (!uniqueUserGroupIds.length) {
-        uniqueUserGroupIds.push(0);
-      }
-
-      // search email routingrulesdestinations for orgmemberId or orgGroupId
-
-      const routingRulesDestinationsQuery =
-        await db.read.query.emailRoutingRulesDestinations.findMany({
-          where: or(
-            eq(emailRoutingRulesDestinations.orgMemberId, userOrgMembershipId),
-            inArray(
-              emailRoutingRulesDestinations.groupId,
-              uniqueUserGroupIds || [0]
-            )
-          ),
-          with: {
-            rule: {
-              with: {
-                mailIdentities: {
-                  columns: {
-                    publicId: true,
-                    username: true,
-                    domainName: true,
-                    sendName: true
-                  }
-                }
-              }
-            }
-          }
-        });
-      const emailIdentities = routingRulesDestinationsQuery
-        .map((routingRulesDestination) => {
-          const emailIdentity = routingRulesDestination.rule.mailIdentities[0];
-          return {
-            publicId: emailIdentity.publicId,
-            username: emailIdentity.username,
-            domainName: emailIdentity.domainName,
-            sendName: emailIdentity.sendName
-          };
-        })
-        .filter(
-          (identity, index, self) =>
-            index === self.findIndex((t) => t.publicId === identity.publicId)
-        );
-
-      // TODO: Check if domains are enabled/validated, if not return invalid, but display the email address in the list with a tooltip
-      return {
-        emailIdentities: emailIdentities
       };
     })
 });

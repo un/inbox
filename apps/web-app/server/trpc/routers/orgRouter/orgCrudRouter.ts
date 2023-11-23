@@ -226,6 +226,7 @@ export const crudRouter = router({
             columns: {
               publicId: true,
               name: true,
+              slug: true,
               avatarId: true,
               personalOrg: true
             }

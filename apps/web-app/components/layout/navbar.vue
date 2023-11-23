@@ -1,7 +1,18 @@
 <script setup lang="ts">
-  const localPrefs = useLocalPrefStore();
-  const currentPath = ref(useRouter().currentRoute.value.path as string);
+  const colorMode = useColorMode();
+  const toggleColorMode = () => {
+    colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark';
+  };
 
+  const colorModeLabel = computed(() =>
+    colorMode.value === 'dark' ? 'Light Mode' : 'Dark Mode'
+  );
+  const colorModeIcon = computed(() =>
+    colorMode.value === 'dark' ? 'i-ph-sun' : 'i-ph-moon-stars'
+  );
+
+  const currentPath = ref(useRouter().currentRoute.value.path as string);
+  const orgSlug = useRoute().params.orgSlug as string;
   const router = useRouter();
   router.beforeEach((to, from) => {
     currentPath.value = to.path;
@@ -9,10 +20,10 @@
 
   const activeNav = computed(() => {
     if (currentPath.value === '/h') return 'convos';
-    if (currentPath.value.startsWith('/h/convos')) return 'convos';
-    if (currentPath.value.includes('/h/screener')) return 'screener';
-    if (currentPath.value.includes('/h/feed')) return 'feed';
-    if (currentPath.value.includes('/h/codes')) return 'codes';
+    if (currentPath.value.includes('/convo')) return 'convos';
+    if (currentPath.value.includes('/screener')) return 'screener';
+    if (currentPath.value.includes('/feed')) return 'feed';
+    if (currentPath.value.includes('/codes')) return 'codes';
     if (currentPath.value.includes('/settings')) return 'settings';
     if (currentPath.value.includes('/help')) return 'help';
     return '';
@@ -21,124 +32,290 @@
   const navLinks = [
     {
       label: 'Conversations',
-      to: '/h',
+      to: `/${orgSlug}/convo`,
       icon: 'i-ph-chat-circle'
     },
     {
       label: 'Screener',
-      to: '/h/screener',
+      to: `/${orgSlug}/screener`,
       icon: 'i-ph-hand'
     },
     {
       label: 'Feed',
-      to: '/h/feed',
+      to: `/${orgSlug}/feed`,
       icon: 'i-ph-newspaper'
     },
     {
       label: 'Codes',
-      to: '/h/codes',
+      to: `/${orgSlug}/codes`,
       icon: 'i-ph-password'
     }
   ];
   const footerLinks = [
     {
       label: 'Settings',
-      to: '/settings',
+      to: `/${orgSlug}/settings`,
       icon: 'i-ph-gear'
     },
     {
       label: 'Help',
-      to: '/help',
+      to: `/help`,
       icon: 'i-ph-question'
     }
   ];
+
+  const { $trpc } = useNuxtApp();
+
+  const { data: userProfile } =
+    await $trpc.user.profile.getUserSingleProfile.useQuery(
+      {},
+      { server: false, queryKey: 'getUserSingleProfileNav' }
+    );
+
+  const {
+    data: userOrgs,
+    pending,
+    error,
+    refresh
+  } = await $trpc.org.crud.getUserOrgs.useLazyQuery(
+    {},
+    { server: false, queryKey: 'getUserOrgsNav' }
+  );
+
+  watch(userOrgs, (newUserOrgs) => {
+    const userOrgSlugs = newUserOrgs?.userOrgs.map(
+      (userOrg) => userOrg.org.slug
+    );
+    const userPersonalOrgSlug = newUserOrgs?.personalOrgs?.map(
+      (userOrg) => userOrg.org.slug
+    );
+    if (
+      !userOrgSlugs?.includes(orgSlug) &&
+      !userPersonalOrgSlug?.includes(orgSlug)
+    ) {
+      navigateTo(`/login`);
+    }
+  });
+
+  const currentOrgProfile = computed(() => {
+    if (userOrgs.value && userOrgs.value.userOrgs.length > 0) {
+      return userOrgs.value.userOrgs.find((org) => org.org.slug === orgSlug)
+        ?.org;
+    }
+    return null;
+  });
+
+  interface OrgButtons {
+    slot: 'org';
+    label: string;
+    avatarId: string;
+    slug: string;
+    click: () => void;
+  }
+  const userOrgsButtons = ref<OrgButtons[]>([]);
+
+  watch(userOrgs, (newVal) => {
+    if (newVal && newVal.userOrgs.length > 0) {
+      userOrgsButtons.value = [];
+      for (const org of newVal.userOrgs) {
+        userOrgsButtons.value.push({
+          slot: 'org',
+          label: org.org.name,
+          //@ts-ignore
+          avatarId: org.org.avatarId,
+          slug: org.org.slug,
+          click: () => {
+            navigateTo(`/${org.org.slug}`);
+          }
+        });
+      }
+    }
+  });
+
+  const userMenuItems = computed(() => [
+    [
+      {
+        label: 'ben@example.com',
+        slot: 'account',
+        disabled: true
+      }
+    ],
+    userOrgsButtons.value,
+    [
+      {
+        label: 'Profile',
+        icon: 'i-ph-user'
+      },
+      {
+        label: colorModeLabel.value,
+        icon: colorModeIcon.value,
+        slot: 'darkmode',
+        click: () => {
+          toggleColorMode();
+        }
+      },
+      {
+        label: 'Settings',
+        icon: 'i-ph-gear'
+      },
+      {
+        label: 'Help',
+        icon: 'i-ph-question',
+        slot: 'helpmenu'
+      }
+    ],
+    [
+      {
+        label: 'Sign out',
+        icon: 'i-ph-sign-out',
+        click: () => {
+          showLogoutModal.value = true;
+        }
+      }
+    ]
+  ]);
+  const helpMenuItems = [
+    [
+      {
+        label: 'Documentation',
+        icon: 'i-ph-book'
+      },
+      {
+        label: 'Support',
+        icon: 'i-ph-question'
+      },
+      {
+        label: 'Roadmap',
+        icon: 'i-ph-map-trifold'
+      },
+      {
+        label: 'Changelog',
+        icon: 'i-ph-megaphone'
+      },
+      {
+        label: 'Status',
+        icon: 'i-ph-activity'
+      }
+    ]
+  ];
+
+  const showLogoutModal = ref(false);
+  const closeModal = () => {
+    showLogoutModal.value = false;
+  };
+  async function useLogout() {
+    if (process.server) {
+      return null;
+    }
+    useHanko()?.session._cookie.removeAuthCookie();
+    await useFetch('/api/logout', {
+      method: 'POST'
+    });
+    navigateTo('/');
+  }
 </script>
 <template>
   <div
     class="h-full max-h-full flex flex-col justify-between transition-all duration-300">
-    <!-- :class="localPrefs.sidebarCollapsed ? 'w-[50px]' : 'w-64'"> -->
-    <!-- <div class="flex flex-col gap-2">
-      <nuxt-link
-        to="/h"
-        class="w-full overflow-hidden">
-        <button
-          class="w-full flex flex-row items-center justify-start gap-4 overflow-hidden rounded px-4 py-2 hover:bg-base-4"
-          :class="activeNav === 'convos' ? 'bg-base-5' : ''"
-          aria-label="Conversations">
-          <UnUiIcon
-            name="i-ph-chat-circle"
-            size="1.25rem"
-            class="min-w-[1.25rem]" />
-          <p>Conversations</p>
-        </button>
-      </nuxt-link>
-      <button
-        class="w-full flex flex-row items-center justify-start gap-4 overflow-hidden rounded px-4 py-2 hover:bg-base-4"
-        :class="activeNav === 'screener' ? 'bg-base-5' : ''">
-        <UnUiIcon
-          name="i-ph-hand"
-          size="1.25rem"
-          class="min-w-[1.25rem]" />
-        <p>Screener</p>
-      </button>
-      <button
-        class="w-full flex flex-row items-center justify-start gap-4 overflow-hidden rounded px-4 py-2 hover:bg-base-4"
-        :class="activeNav === 'feed' ? 'bg-base-5' : ''">
-        <UnUiIcon
-          name="i-ph-newspaper"
-          size="1.25rem"
-          class="min-w-[1.25rem]" />
-        <p>Feed</p>
-      </button>
-      <button
-        class="w-full flex flex-row items-center justify-start gap-4 overflow-hidden rounded px-4 py-2 hover:bg-base-4"
-        :class="activeNav === 'codes' ? 'bg-base-5' : ''">
-        <UnUiIcon
-          name="i-ph-password"
-          size="1.25rem"
-          class="min-w-[1.25rem]" />
-        <p>Codes</p>
-      </button>
-    </div> -->
+    <UnUiModal v-model="showLogoutModal">
+      <template #header>
+        <span class="">Logout</span>
+      </template>
+      <div class="w-full flex flex-col gap-8">
+        <p>Are you sure you want to logout?</p>
+        <div class="flex flex-row gap-4">
+          <UnUiButton
+            label="Cancel"
+            size="xl"
+            block
+            @click="closeModal" />
+          <UnUiButton
+            label="Logout"
+            size="xl"
+            color="red"
+            block
+            @click="useLogout()" />
+        </div>
+      </div>
+    </UnUiModal>
     <UnUiVerticalNavigation :links="navLinks"> </UnUiVerticalNavigation>
-    <UnUiVerticalNavigation :links="footerLinks"> </UnUiVerticalNavigation>
-    <!-- <div class="flex flex-col gap-2">
-      <nuxt-link
-        to="/settings"
-        class="w-full overflow-hidden">
-        <button
-          class="w-full flex flex-row items-center justify-start gap-4 overflow-hidden rounded px-4 py-2 hover:bg-base-4"
-          :class="activeNav === 'settings' ? 'bg-base-5' : ''">
+
+    <div class="flex flex-row justify-between">
+      <NuxtUiDropdown
+        :items="userMenuItems"
+        :ui="{ item: { disabled: 'cursor-text select-text' } }"
+        :popper="{ placement: 'top-start' }">
+        <div
+          class="max-w-[140px] w-[140px] flex flex-row items-center justify-between gap-2">
+          <div class="w-full flex flex-row items-center gap-2 overflow-hidden">
+            <UnUiAvatar
+              :avatar-id="currentOrgProfile?.avatarId || ''"
+              :alt="currentOrgProfile?.name"
+              size="xs" />
+            <span class="truncate text-sm">{{ currentOrgProfile?.name }}</span>
+          </div>
+          <UnUiIcon name="i-ph-caret-up" />
+        </div>
+        <template #account="{ item }">
+          <div class="text-left">
+            <p>Signed in as</p>
+            <p class="text-gray-900 truncate font-medium dark:text-white">
+              {{ item.label }}
+            </p>
+          </div>
+        </template>
+        <template #org="{ item }">
+          <div class="max-w-full flex flex-row items-center gap-2">
+            <UnUiAvatar
+              :avatar-id="item.avatarId"
+              :alt="item.label"
+              color="gray"
+              size="sm" />
+            <div class="text-left">
+              <p class="truncate font-medium">
+                {{ item.label }}
+              </p>
+            </div>
+          </div>
           <UnUiIcon
-            name="i-ph-gear"
-            size="1.25rem"
-            class="min-w-[1.25rem]" />
-          <p>Settings</p>
-        </button>
-      </nuxt-link>
-      <button
-        class="w-full flex flex-row items-center justify-start gap-4 overflow-hidden rounded px-4 py-2 hover:bg-base-4"
-        :class="activeNav === 'help' ? 'bg-base-5' : ''"
-        @click="localPrefs.toggleColorMode()">
-        <UnUiIcon
-          name="i-ph-question"
-          size="1.25rem"
-          class="min-w-[1.25rem]" />
-        <p>Help</p>
-      </button>
-      <button
-        class="w-full flex flex-row items-center justify-start gap-4 overflow-hidden truncate rounded px-4 py-2 hover:bg-base-4"
-        @click="localPrefs.toggleSidebar()">
-        <UnUiIcon
-          :name="
-            localPrefs.sidebarCollapsed
-              ? 'i-ph-caret-double-right'
-              : 'i-ph-caret-double-left'
-          "
-          size="1.25rem"
-          class="min-w-[1.25rem]" />
-        <p>Close Sidebar</p>
-      </button>
-    </div> -->
+            v-if="item.slug === orgSlug"
+            name="i-ph-check"
+            class="text-gray-400 dark:text-gray-500 ms-auto h-4 w-4 flex-shrink-0" />
+        </template>
+        <template #darkmode>
+          <span class="truncate">{{ colorModeLabel }}</span>
+          <UnUiIcon
+            :name="colorModeIcon"
+            class="text-gray-400 dark:text-gray-500 ms-auto h-4 w-4 flex-shrink-0" />
+        </template>
+        <template #helpmenu="{ item }">
+          <NuxtUiDropdown
+            :items="helpMenuItems"
+            mode="hover"
+            :ui="{ item: { disabled: 'cursor-text select-text' } }"
+            :popper="{ offsetDistance: -5, placement: 'right-start' }"
+            class="w-full">
+            <div class="w-full flex flex-row justify-between">
+              <span class="truncate">{{ item.label }}</span>
+            </div>
+            <template #item="{ item }">
+              <span class="truncate">{{ item.label }}</span>
+              <UnUiIcon
+                :name="item.icon"
+                class="text-gray-400 dark:text-gray-500 ms-auto h-4 w-4 flex-shrink-0" />
+            </template>
+          </NuxtUiDropdown>
+          <UnUiIcon
+            :name="item.icon"
+            class="text-gray-400 dark:text-gray-500 ms-auto h-4 w-4 flex-shrink-0" />
+        </template>
+        <template #item="{ item }">
+          <span class="truncate">{{ item.label }}</span>
+          <UnUiIcon
+            :name="item.icon"
+            class="text-gray-400 dark:text-gray-500 ms-auto h-4 w-4 flex-shrink-0" />
+        </template>
+      </NuxtUiDropdown>
+    </div>
   </div>
 </template>

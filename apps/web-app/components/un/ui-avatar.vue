@@ -16,7 +16,7 @@
       color: {
         type: String,
         required: false,
-        default: 'red'
+        default: 'gray'
       },
       avatarId: {
         type: String,
