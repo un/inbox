@@ -20,6 +20,11 @@ export type ValidatedAuthSessionObject = Awaited<
 >;
 export type EventSessionObject = Awaited<ReturnType<typeof useSession>>;
 
+export const useAuthSession = async (event: H3Event) => {
+  const session = await useSession<AuthSession>(event, sessionConfig);
+  return session;
+};
+
 export async function verifyHankoJwt(event: H3Event) {
   const jwks = createLocalJWKSet(useRuntimeConfig().hankoJwks);
   const jwt = getCookie(event, useRuntimeConfig().public.hanko.cookieName);
