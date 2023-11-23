@@ -302,27 +302,29 @@ export const domainsRouter = router({
       };
     }),
 
-  getOrgDomains: orgProcedure.query(async ({ ctx, input }) => {
-    const { db, user, org } = ctx;
-    const userId = user?.id || 0;
-    const orgId = org?.id || 0;
+  getOrgDomains: orgProcedure
+    .input(z.object({}))
+    .query(async ({ ctx, input }) => {
+      const { db, user, org } = ctx;
+      const userId = user?.id || 0;
+      const orgId = org?.id || 0;
 
-    const domainResponse = await db.read.query.domains.findMany({
-      where: eq(domains.orgId, +orgId),
-      columns: {
-        publicId: true,
-        domain: true,
-        domainStatus: true,
-        receivingMode: true,
-        sendingMode: true,
-        forwardingAddress: true,
-        createdAt: true,
-        lastDnsCheckAt: true
-      }
-    });
+      const domainResponse = await db.read.query.domains.findMany({
+        where: eq(domains.orgId, +orgId),
+        columns: {
+          publicId: true,
+          domain: true,
+          domainStatus: true,
+          receivingMode: true,
+          sendingMode: true,
+          forwardingAddress: true,
+          createdAt: true,
+          lastDnsCheckAt: true
+        }
+      });
 
-    return {
-      domainData: domainResponse
-    };
-  })
+      return {
+        domainData: domainResponse
+      };
+    })
 });

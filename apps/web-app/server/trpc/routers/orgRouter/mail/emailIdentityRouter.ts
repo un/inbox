@@ -265,57 +265,62 @@ export const emailIdentityRouter = router({
         emailIdentityData: emailIdentityResponse
       };
     }),
-  getOrgEmailIdentities: orgProcedure.query(async ({ ctx, input }) => {
-    const { db, user, org } = ctx;
-    const userId = user?.id || 0;
-    const orgId = org?.id || 0;
+  getOrgEmailIdentities: orgProcedure
+    .input(z.object({}))
+    .query(async ({ ctx, input }) => {
+      const { db, user, org } = ctx;
+      const userId = user?.id || 0;
+      const orgId = org?.id || 0;
 
-    const emailIdentityResponse = await db.read.query.emailIdentities.findMany({
-      where: eq(domains.orgId, +orgId),
-      columns: {
-        publicId: true,
-        username: true,
-        domainName: true,
-        sendName: true,
-        isCatchAll: true,
-        avatarId: true
-      },
-      with: {
-        domain: {
-          columns: {
-            sendingMode: true,
-            receivingMode: true,
-            domainStatus: true
-          }
-        },
-        routingRules: {
+      const emailIdentityResponse =
+        await db.read.query.emailIdentities.findMany({
+          where: eq(domains.orgId, +orgId),
           columns: {
             publicId: true,
-            name: true,
-            description: true
+            username: true,
+            domainName: true,
+            sendName: true,
+            isCatchAll: true,
+            avatarId: true
           },
           with: {
-            destinations: {
+            domain: {
+              columns: {
+                sendingMode: true,
+                receivingMode: true,
+                domainStatus: true
+              }
+            },
+            routingRules: {
+              columns: {
+                publicId: true,
+                name: true,
+                description: true
+              },
               with: {
-                group: {
-                  columns: {
-                    publicId: true,
-                    name: true,
-                    description: true,
-                    avatarId: true,
-                    color: true
-                  }
-                },
-                orgMember: {
+                destinations: {
                   with: {
-                    profile: {
+                    group: {
                       columns: {
                         publicId: true,
+                        name: true,
+                        description: true,
                         avatarId: true,
-                        firstName: true,
-                        lastName: true,
-                        handle: true,
-                        title: true
+                        color: true
+                      }
+                    },
+                    orgMember: {
+                      with: {
+                        profile: {
+                          columns: {
+                            publicId: true,
+                            avatarId: true,
+                            firstName: true,
+                            lastName: true,
+                            handle: true,
+                            title: true
+                          }
+                        }
                       }
                     }
                   }
@@ -323,105 +328,111 @@ export const emailIdentityRouter = router({
               }
             }
           }
-        }
-      }
-    });
+        });
 
-    return {
-      emailIdentityData: emailIdentityResponse
-    };
-  }),
-  getUserEmailIdentities: orgProcedure.query(async ({ ctx, input }) => {
-    const { db, user, org } = ctx;
-    const userId = user?.id || 0;
-    const orgId = org?.id || 0;
+      return {
+        emailIdentityData: emailIdentityResponse
+      };
+    }),
+  getUserEmailIdentities: orgProcedure
+    .input(z.object({}))
+    .query(async ({ ctx, input }) => {
+      const { db, user, org } = ctx;
+      const userId = user?.id || 0;
+      const orgId = org?.id || 0;
 
-    // search for user org memberships, get id of membership
-    const userOrgMembershipQuery = await db.read.query.orgMembers.findFirst({
-      where: and(eq(orgMembers.userId, +userId), eq(orgMembers.orgId, +orgId)),
-      columns: {
-        id: true
-      }
-    });
-
-    if (!userOrgMembershipQuery?.id) {
-      throw new Error('User is not in org');
-    }
-    const userOrgMembershipId = userOrgMembershipQuery?.id;
-    // search for user org group memberships, get id of org group
-
-    //TODO: Add filter for org id
-    const userOrgGroupMembershipQuery =
-      await db.read.query.userGroupMembers.findMany({
-        where: eq(userGroupMembers.userId, +userId),
+      // search for user org memberships, get id of membership
+      const userOrgMembershipQuery = await db.read.query.orgMembers.findFirst({
+        where: and(
+          eq(orgMembers.userId, +userId),
+          eq(orgMembers.orgId, +orgId)
+        ),
         columns: {
-          groupId: true
-        },
-        with: {
-          group: {
-            columns: {
-              id: true,
-              orgId: true
-            }
-          }
+          id: true
         }
       });
 
-    const orgGroupIds = userOrgGroupMembershipQuery.filter(
-      (userOrgGroupMembership) => userOrgGroupMembership.group.orgId === +orgId
-    );
+      if (!userOrgMembershipQuery?.id) {
+        throw new Error('User is not in org');
+      }
+      const userOrgMembershipId = userOrgMembershipQuery?.id;
+      // search for user org group memberships, get id of org group
 
-    const userGroupIds = orgGroupIds.map((orgGroupIds) => orgGroupIds.group.id);
-    const uniqueUserGroupIds = [...new Set(userGroupIds)];
+      //TODO: Add filter for org id
+      const userOrgGroupMembershipQuery =
+        await db.read.query.userGroupMembers.findMany({
+          where: eq(userGroupMembers.userId, +userId),
+          columns: {
+            groupId: true
+          },
+          with: {
+            group: {
+              columns: {
+                id: true,
+                orgId: true
+              }
+            }
+          }
+        });
 
-    if (!uniqueUserGroupIds.length) {
-      uniqueUserGroupIds.push(0);
-    }
+      const orgGroupIds = userOrgGroupMembershipQuery.filter(
+        (userOrgGroupMembership) =>
+          userOrgGroupMembership.group.orgId === +orgId
+      );
 
-    // search email routingrulesdestinations for orgmemberId or orgGroupId
+      const userGroupIds = orgGroupIds.map(
+        (orgGroupIds) => orgGroupIds.group.id
+      );
+      const uniqueUserGroupIds = [...new Set(userGroupIds)];
 
-    const routingRulesDestinationsQuery =
-      await db.read.query.emailRoutingRulesDestinations.findMany({
-        where: or(
-          eq(emailRoutingRulesDestinations.orgMemberId, userOrgMembershipId),
-          inArray(
-            emailRoutingRulesDestinations.groupId,
-            uniqueUserGroupIds || [0]
-          )
-        ),
-        with: {
-          rule: {
-            with: {
-              mailIdentities: {
-                columns: {
-                  publicId: true,
-                  username: true,
-                  domainName: true,
-                  sendName: true
+      if (!uniqueUserGroupIds.length) {
+        uniqueUserGroupIds.push(0);
+      }
+
+      // search email routingrulesdestinations for orgmemberId or orgGroupId
+
+      const routingRulesDestinationsQuery =
+        await db.read.query.emailRoutingRulesDestinations.findMany({
+          where: or(
+            eq(emailRoutingRulesDestinations.orgMemberId, userOrgMembershipId),
+            inArray(
+              emailRoutingRulesDestinations.groupId,
+              uniqueUserGroupIds || [0]
+            )
+          ),
+          with: {
+            rule: {
+              with: {
+                mailIdentities: {
+                  columns: {
+                    publicId: true,
+                    username: true,
+                    domainName: true,
+                    sendName: true
+                  }
                 }
               }
             }
           }
-        }
-      });
-    const emailIdentities = routingRulesDestinationsQuery
-      .map((routingRulesDestination) => {
-        const emailIdentity = routingRulesDestination.rule.mailIdentities[0];
-        return {
-          publicId: emailIdentity.publicId,
-          username: emailIdentity.username,
-          domainName: emailIdentity.domainName,
-          sendName: emailIdentity.sendName
-        };
-      })
-      .filter(
-        (identity, index, self) =>
-          index === self.findIndex((t) => t.publicId === identity.publicId)
-      );
+        });
+      const emailIdentities = routingRulesDestinationsQuery
+        .map((routingRulesDestination) => {
+          const emailIdentity = routingRulesDestination.rule.mailIdentities[0];
+          return {
+            publicId: emailIdentity.publicId,
+            username: emailIdentity.username,
+            domainName: emailIdentity.domainName,
+            sendName: emailIdentity.sendName
+          };
+        })
+        .filter(
+          (identity, index, self) =>
+            index === self.findIndex((t) => t.publicId === identity.publicId)
+        );
 
-    // TODO: Check if domains are enabled/validated, if not return invalid, but display the email address in the list with a tooltip
-    return {
-      emailIdentities: emailIdentities
-    };
-  })
+      // TODO: Check if domains are enabled/validated, if not return invalid, but display the email address in the list with a tooltip
+      return {
+        emailIdentities: emailIdentities
+      };
+    })
 });

@@ -11,68 +11,72 @@ const planNames = ['free', 'starter', 'pro'] as const;
 type PlanName = (typeof planNames)[number];
 
 export const billingRouter = router({
-  getOrgBillingOverview: eeProcedure.query(async ({ ctx, input }) => {
-    const { db, user, org } = ctx;
-    const userId = user?.id || 0;
-    const orgId = org?.id || 0;
+  getOrgBillingOverview: eeProcedure
+    .input(z.object({}))
+    .query(async ({ ctx, input }) => {
+      const { db, user, org } = ctx;
+      const userId = user?.id || 0;
+      const orgId = org?.id || 0;
 
-    const isAdmin = await isUserAdminOfOrg(org, userId);
-    if (!isAdmin) {
-      throw new TRPCError({
-        code: 'UNAUTHORIZED',
-        message: 'You are not an admin'
-      });
-    }
-
-    const orgBillingQuery = await db.read.query.orgBilling.findFirst({
-      where: eq(orgBilling.orgId, +orgId),
-      columns: {
-        plan: true,
-        period: true
+      const isAdmin = await isUserAdminOfOrg(org, userId);
+      if (!isAdmin) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'You are not an admin'
+        });
       }
-    });
 
-    const orgPlan = orgBillingQuery?.plan || 'free';
-    const orgPeriod = orgBillingQuery?.period || 'monthly';
-
-    const activeOrgMembersCount = await db.read
-      .select({ count: sql<number>`count(*)` })
-      .from(orgMembers)
-      .where(
-        and(eq(orgMembers.orgId, +orgId), eq(orgMembers.status, 'active'))
-      );
-
-    return {
-      totalUsers: activeOrgMembersCount[0].count,
-      currentPlan: orgPlan,
-      currentPeriod: orgPeriod
-    };
-  }),
-  getOrgStripePortalLink: eeProcedure.query(async ({ ctx, input }) => {
-    const { db, user, org } = ctx;
-    const userId = user?.id || 0;
-    const orgId = org?.id || 0;
-
-    const isAdmin = await isUserAdminOfOrg(org, userId);
-    if (!isAdmin) {
-      throw new TRPCError({
-        code: 'UNAUTHORIZED',
-        message: 'You are not an admin'
-      });
-    }
-
-    const orgPortalLink =
-      await billingTrpcClient.stripe.links.getPortalLink.query({
-        orgId: +orgId
+      const orgBillingQuery = await db.read.query.orgBilling.findFirst({
+        where: eq(orgBilling.orgId, +orgId),
+        columns: {
+          plan: true,
+          period: true
+        }
       });
 
-    if (!orgPortalLink.link) {
-      throw new Error('Org not subscribed to a plan');
-    }
-    return {
-      portalLink: orgPortalLink.link
-    };
-  }),
+      const orgPlan = orgBillingQuery?.plan || 'free';
+      const orgPeriod = orgBillingQuery?.period || 'monthly';
+
+      const activeOrgMembersCount = await db.read
+        .select({ count: sql<number>`count(*)` })
+        .from(orgMembers)
+        .where(
+          and(eq(orgMembers.orgId, +orgId), eq(orgMembers.status, 'active'))
+        );
+
+      return {
+        totalUsers: activeOrgMembersCount[0].count,
+        currentPlan: orgPlan,
+        currentPeriod: orgPeriod
+      };
+    }),
+  getOrgStripePortalLink: eeProcedure
+    .input(z.object({}))
+    .query(async ({ ctx, input }) => {
+      const { db, user, org } = ctx;
+      const userId = user?.id || 0;
+      const orgId = org?.id || 0;
+
+      const isAdmin = await isUserAdminOfOrg(org, userId);
+      if (!isAdmin) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'You are not an admin'
+        });
+      }
+
+      const orgPortalLink =
+        await billingTrpcClient.stripe.links.getPortalLink.query({
+          orgId: +orgId
+        });
+
+      if (!orgPortalLink.link) {
+        throw new Error('Org not subscribed to a plan');
+      }
+      return {
+        portalLink: orgPortalLink.link
+      };
+    }),
   getOrgSubscriptionPaymentLink: eeProcedure
     .input(
       z.object({
@@ -128,7 +132,7 @@ export const billingRouter = router({
         subLink: orgSubLink.link
       };
     }),
-  isPro: eeProcedure.query(async ({ ctx, input }) => {
+  isPro: eeProcedure.input(z.object({})).query(async ({ ctx, input }) => {
     const { db, user, org } = ctx;
     const userId = user?.id || 0;
     const orgId = org?.id || 0;

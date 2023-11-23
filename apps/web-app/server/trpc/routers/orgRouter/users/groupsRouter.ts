@@ -51,45 +51,47 @@ export const orgUserGroupsRouter = router({
         newGroupPublicId: newPublicId
       };
     }),
-  getOrgUserGroups: orgProcedure.query(async ({ ctx, input }) => {
-    const { db, user, org } = ctx;
-    const userId = user?.id || 0;
-    const orgId = org?.id || 0;
+  getOrgUserGroups: orgProcedure
+    .input(z.object({}))
+    .query(async ({ ctx, input }) => {
+      const { db, user, org } = ctx;
+      const userId = user?.id || 0;
+      const orgId = org?.id || 0;
 
-    const userGroupQuery = await db.read.query.userGroups.findMany({
-      columns: {
-        publicId: true,
-        name: true,
-        description: true,
-        color: true,
-        avatarId: true
-      },
-      where: and(eq(userGroups.orgId, +orgId)),
-      with: {
-        members: {
-          columns: {
-            publicId: true
-          },
-          with: {
-            userProfile: {
-              columns: {
-                publicId: true,
-                avatarId: true,
-                firstName: true,
-                lastName: true,
-                handle: true,
-                title: true
+      const userGroupQuery = await db.read.query.userGroups.findMany({
+        columns: {
+          publicId: true,
+          name: true,
+          description: true,
+          color: true,
+          avatarId: true
+        },
+        where: and(eq(userGroups.orgId, +orgId)),
+        with: {
+          members: {
+            columns: {
+              publicId: true
+            },
+            with: {
+              userProfile: {
+                columns: {
+                  publicId: true,
+                  avatarId: true,
+                  firstName: true,
+                  lastName: true,
+                  handle: true,
+                  title: true
+                }
               }
             }
           }
         }
-      }
-    });
+      });
 
-    return {
-      groups: userGroupQuery
-    };
-  }),
+      return {
+        groups: userGroupQuery
+      };
+    }),
   getUserGroup: orgProcedure
     .input(
       z.object({

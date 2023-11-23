@@ -53,66 +53,68 @@ export const invitesRouter = router({
         error: null
       };
     }),
-  viewInvites: orgProcedure.query(async ({ ctx, input }) => {
-    const { db, user, org } = ctx;
-    const userId = user?.id || 0;
-    const orgId = org?.id || 0;
+  viewInvites: orgProcedure
+    .input(z.object({}))
+    .query(async ({ ctx, input }) => {
+      const { db, user, org } = ctx;
+      const userId = user?.id || 0;
+      const orgId = org?.id || 0;
 
-    const orgInvitesResponse = await db.read.query.orgInvitations.findMany({
-      where: eq(orgInvitations.orgId, +orgId),
-      columns: {
-        publicId: true,
-        role: true,
-        inviteToken: true,
-        invitedAt: true,
-        expiresAt: true,
-        acceptedAt: true,
-        email: true
-      },
-      with: {
-        invitedByUser: {
-          columns: {},
-          with: {
-            orgMemberships: {
-              columns: {},
-              where: eq(orgMembers.orgId, +orgId),
-              with: {
-                profile: {
-                  columns: {
-                    firstName: true,
-                    lastName: true,
-                    avatarId: true
+      const orgInvitesResponse = await db.read.query.orgInvitations.findMany({
+        where: eq(orgInvitations.orgId, +orgId),
+        columns: {
+          publicId: true,
+          role: true,
+          inviteToken: true,
+          invitedAt: true,
+          expiresAt: true,
+          acceptedAt: true,
+          email: true
+        },
+        with: {
+          invitedByUser: {
+            columns: {},
+            with: {
+              orgMemberships: {
+                columns: {},
+                where: eq(orgMembers.orgId, +orgId),
+                with: {
+                  profile: {
+                    columns: {
+                      firstName: true,
+                      lastName: true,
+                      avatarId: true
+                    }
                   }
                 }
               }
             }
-          }
-        },
-        invitedUser: {
-          columns: {},
-          with: {
-            orgMemberships: {
-              columns: {},
-              where: eq(orgMembers.orgId, +orgId),
-              with: {
-                profile: {
-                  columns: {
-                    firstName: true,
-                    lastName: true,
-                    avatarId: true
+          },
+          invitedUser: {
+            columns: {},
+            with: {
+              orgMemberships: {
+                columns: {},
+                where: eq(orgMembers.orgId, +orgId),
+                with: {
+                  profile: {
+                    columns: {
+                      firstName: true,
+                      lastName: true,
+                      avatarId: true
+                    }
                   }
                 }
               }
             }
           }
         }
-      }
-    });
+      });
 
-    return {
-      invites: orgInvitesResponse
-    };
-  }),
+      return {
+        invites: orgInvitesResponse
+      };
+    }),
 
   validateInvite: limitedProcedure
     .input(
