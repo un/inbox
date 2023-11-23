@@ -106,7 +106,6 @@
     const newOrgAvatarId = imageId.value ? imageId.value : null;
 
     const response = await $trpc.org.setup.profile.setOrgProfile.mutate({
-      orgPublicId: orgPublicId,
       orgName: orgNameValue.value,
       ...(imageId.value && { orgAvatarId: imageId.value })
     });
