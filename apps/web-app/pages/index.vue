@@ -1,6 +1,6 @@
 <script setup lang="ts">
   definePageMeta({ skipAuth: true });
-
+  const { $trpc, $i18n } = useNuxtApp();
   const turnstileToken = ref();
   const errorMessage = ref(false);
   const passkeyLocation = ref('');
@@ -50,8 +50,20 @@
       errorMessage.value = true;
       return;
     }
-    console.log(webauthnResult);
-    webauthnResult && navigateTo('/h');
+    if (webauthnResult) {
+      const {
+        data: userOrgSlug,
+        refresh,
+        execute
+      } = await $trpc.auth.getUserDefaultOrgSlug.useLazyQuery(
+        {},
+        { server: false, immediate: false }
+      );
+      await execute();
+      const orgSlug = userOrgSlug.value?.slug;
+      console.log({ orgSlug });
+      navigateTo(`/${orgSlug}`);
+    }
   }
 </script>
 
