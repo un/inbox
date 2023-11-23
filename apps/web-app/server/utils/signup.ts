@@ -518,6 +518,8 @@ export const blockedUsernames = [
   'umac-128-etm',
   'umac-64',
   'umac-64-etm',
+  'unboarding',
+  'uninbox',
   'undefined',
   'unfollow',
   'unlike',
