@@ -12,7 +12,7 @@ export const trpcContext = initTRPC
   .create({ transformer: superjson });
 
 const isUserAuthenticated = trpcContext.middleware(({ next, ctx }) => {
-  if (!ctx.user.valid || !ctx.user.userId) {
+  if (!ctx.user || !ctx.user.session.valid || !ctx.user.id) {
     throw new TRPCError({
       code: 'UNAUTHORIZED',
       message: 'You are not logged in, redirecting...'
@@ -27,13 +27,13 @@ const hasOrgSlug = isUserAuthenticated.unstable_pipe(({ next, ctx }) => {
       message: 'Invalid organization selected, redirecting...'
     });
   }
-  if (!ctx.user.userId) {
+  if (!ctx.user || !ctx.user.id) {
     throw new TRPCError({
       code: 'UNAUTHORIZED',
       message: 'You are not logged in, redirecting...'
     });
   }
-  if (!ctx.org.members.includes(ctx.user.userId)) {
+  if (!ctx.org.members.includes(ctx.user.id)) {
     throw new TRPCError({
       code: 'UNAUTHORIZED',
       message: 'You are not a member of this organization, redirecting...'

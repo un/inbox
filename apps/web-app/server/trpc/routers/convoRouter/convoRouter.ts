@@ -27,15 +27,13 @@ export const convoRouter = router({
   getUserConvos: orgProcedure
     .input(
       z.object({
-        filterOrgPublicId: z.string().min(3).max(nanoIdLength).optional(),
         cursorLastUpdatedAt: z.date().optional(),
         cursorLastPublicId: z.string().min(3).max(nanoIdLength).optional()
       })
     )
     .query(async ({ ctx, input }) => {
-      const { db, user } = ctx;
-      const { filterOrgPublicId, cursorLastUpdatedAt, cursorLastPublicId } =
-        input;
+      const { db, user, org } = ctx;
+      const { cursorLastUpdatedAt, cursorLastPublicId } = input;
       const userId = user.userId || 0;
 
       const inputLastUpdatedAt = cursorLastUpdatedAt
