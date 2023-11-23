@@ -51,18 +51,7 @@
       return;
     }
     if (webauthnResult) {
-      const {
-        data: userOrgSlug,
-        refresh,
-        execute
-      } = await $trpc.auth.getUserDefaultOrgSlug.useLazyQuery(
-        {},
-        { server: false, immediate: false }
-      );
-      await execute();
-      const orgSlug = userOrgSlug.value?.slug;
-      console.log({ orgSlug });
-      navigateTo(`/${orgSlug}`);
+      navigateTo('/login');
     }
   }
 </script>

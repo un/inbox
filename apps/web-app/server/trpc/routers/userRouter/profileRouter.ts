@@ -106,30 +106,32 @@ export const profileRouter = router({
         error: null
       };
     }),
-  getUserSingleProfile: userProcedure.query(async ({ ctx, input }) => {
-    const { db, user } = ctx;
-    const userId = user?.id || 0;
+  getUserSingleProfile: userProcedure
+    .input(z.object({}))
+    .query(async ({ ctx, input }) => {
+      const { db, user } = ctx;
+      const userId = user?.id || 0;
 
-    // TODO: Switch to FindMany when supporting multiple profiles
-    const userProfilesQuery = await db.read.query.userProfiles.findFirst({
-      where: and(
-        eq(userProfiles.userId, +userId),
-        eq(userProfiles.defaultProfile, true)
-      ),
-      columns: {
-        publicId: true,
-        avatarId: true,
-        firstName: true,
-        lastName: true,
-        handle: true,
-        title: true,
-        blurb: true
-      }
-    });
-    return {
-      profile: userProfilesQuery
-    };
-  }),
+      // TODO: Switch to FindMany when supporting multiple profiles
+      const userProfilesQuery = await db.read.query.userProfiles.findFirst({
+        where: and(
+          eq(userProfiles.userId, +userId),
+          eq(userProfiles.defaultProfile, true)
+        ),
+        columns: {
+          publicId: true,
+          avatarId: true,
+          firstName: true,
+          lastName: true,
+          handle: true,
+          title: true,
+          blurb: true
+        }
+      });
+      return {
+        profile: userProfilesQuery
+      };
+    }),
   updateUserProfile: userProcedure
     .input(
       z.object({

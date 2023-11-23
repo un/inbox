@@ -1,21 +1,31 @@
 import { z } from 'zod';
 import { parse, stringify } from 'superjson';
-import { router, publicProcedure } from '../trpc';
+import { router, userProcedure } from '../trpc';
 import { eq } from '@uninbox/database/orm';
 import { users } from '@uninbox/database/schema';
 
-export const registrationRouter = router({
-  checkUsernameAvailability: publicProcedure
-    .input(
-      z.object({
-        username: z.string().min(5).max(32)
-      })
-    )
+export const authRouter = router({
+  getUserDefaultOrgSlug: userProcedure
+    .input(z.object({}))
     .query(async ({ ctx, input }) => {
-      const db = ctx.db;
-      const userLoggedIn = ctx.user.valid;
-      const username = input.username;
-      ctx.db.read.query.users.findFirst({ where: eq(users.id, 1) });
-      return { loggedIn: userLoggedIn, name: username };
+      const { db, user } = ctx;
+      const userId = user?.id || 0;
+
+      const userDefaultOrgSlug = await db.read.query.users.findFirst({
+        where: eq(users.id, userId),
+        with: {
+          orgMemberships: {
+            with: {
+              org: {
+                columns: {
+                  slug: true
+                }
+              }
+            }
+          }
+        }
+      });
+
+      return { slug: userDefaultOrgSlug?.orgMemberships[0].org.slug };
     })
 });

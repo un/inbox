@@ -14,6 +14,15 @@ export const errorHandler: TRPCLink<TrpcWebAppRouter> = () => {
           observer.next(value);
         },
         error(err) {
+          if (
+            err.data?.code === 'UNAUTHORIZED' &&
+            err.message ===
+              'You are not a member of this organization, redirecting...'
+          ) {
+            navigateTo('/login');
+            return;
+          }
+
           const toast = useToast();
           toast.add({
             id: 'error',

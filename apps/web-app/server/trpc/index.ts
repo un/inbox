@@ -1,7 +1,7 @@
 export * from '@trpc/server';
 import { router } from './trpc';
 import { createContext } from './createContext';
-import { registrationRouter } from './routers/authRouter';
+import { authRouter } from './routers/authRouter';
 import { testRouter } from './routers/testRouter';
 import { signupRouter } from './routers/signupRouter';
 import { profileRouter } from './routers/userRouter/profileRouter';
@@ -50,7 +50,7 @@ const trpcWebAppConvoRouter = router({
 
 export const trpcWebAppRouter = router({
   signup: signupRouter,
-  auth: registrationRouter,
+  auth: authRouter,
   user: trpcWebAppUserRouter,
   org: trpcWebAppOrgRouter,
   convos: convoRouter,
