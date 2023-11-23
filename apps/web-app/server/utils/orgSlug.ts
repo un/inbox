@@ -2,12 +2,7 @@ import { H3Event, getHeader } from 'h3';
 import { db } from '@uninbox/database';
 import { eq } from '@uninbox/database/orm';
 import { orgs } from '@uninbox/database/schema';
-
-interface OrgContext {
-  id: number;
-  members: number[];
-}
-
+import type { OrgContext } from '@uninbox/types';
 export const validateOrgSlug = async (
   event: H3Event
 ): Promise<OrgContext | null> => {
@@ -35,7 +30,7 @@ export const validateOrgSlug = async (
     return null;
   }
 
-  const orgContext = {
+  const orgContext: OrgContext = {
     id: +orgLookupResult.id,
     members: orgLookupResult.members.map((member) => +member.id)
   };
