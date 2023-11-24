@@ -30,6 +30,7 @@ export const invitesRouter = router({
       const { db, user, org } = ctx;
       const userId = user?.id || 0;
       const orgId = org?.id || 0;
+      const orgMemberId = org?.memberId || 0;
       const { inviteeEmail, role } = input;
       const newPublicId = nanoId();
 
@@ -38,7 +39,7 @@ export const invitesRouter = router({
       // TODO: make this part of the insert query as subquery
       await db.write.insert(orgInvitations).values({
         orgId: +orgId,
-        invitedByUserId: userId,
+        invitedByOrgMemberId: +orgMemberId,
         publicId: newPublicId,
         role: role,
         email: inviteeEmail,
@@ -72,20 +73,14 @@ export const invitesRouter = router({
           email: true
         },
         with: {
-          invitedByUser: {
+          invitedByOrgMember: {
             columns: {},
             with: {
-              orgMemberships: {
-                columns: {},
-                where: eq(orgMembers.orgId, +orgId),
-                with: {
-                  profile: {
-                    columns: {
-                      firstName: true,
-                      lastName: true,
-                      avatarId: true
-                    }
-                  }
+              profile: {
+                columns: {
+                  firstName: true,
+                  lastName: true,
+                  avatarId: true
                 }
               }
             }
@@ -157,7 +152,7 @@ export const invitesRouter = router({
           id: orgInvitations.id,
           orgId: orgInvitations.orgId,
           role: orgInvitations.role,
-          invitedByUserId: orgInvitations.invitedByUserId
+          invitedByOrgMemberId: orgInvitations.invitedByOrgMemberId
         })
         .from(orgInvitations)
         .where(eq(orgInvitations.inviteToken, input.inviteToken));
@@ -194,7 +189,7 @@ export const invitesRouter = router({
         publicId: newPublicIdOrgMembers,
         userId: userId,
         orgId: +queryInvitesResponse[0].orgId,
-        invitedByUserId: +queryInvitesResponse[0].invitedByUserId,
+        invitedByOrgMemberId: +queryInvitesResponse[0].invitedByOrgMemberId,
         status: 'active',
         role: queryInvitesResponse[0].role,
         userProfileId: userProfileResponse[0].id

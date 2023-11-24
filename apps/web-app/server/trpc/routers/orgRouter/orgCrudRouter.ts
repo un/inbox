@@ -217,7 +217,9 @@ export const crudRouter = router({
       const userIsAdmin = input.onlyAdmin || false;
 
       const orgMembersQuery = await db.read.query.orgMembers.findMany({
-        columns: {},
+        columns: {
+          role: true
+        },
         where: userIsAdmin
           ? and(eq(orgMembers.userId, userId), eq(orgMembers.role, 'admin'))
           : eq(orgMembers.userId, userId),
@@ -243,9 +245,14 @@ export const crudRouter = router({
         (orgMember) => orgMember.org.personalOrg === true
       );
 
+      const adminOrgSlugs = orgMembersQuery
+        .filter((orgMember) => orgMember.role === 'admin')
+        .map((orgMember) => orgMember.org.slug);
+
       return {
         personalOrgs: input.includePersonal ? personalOrg : null,
-        userOrgs: usersOrgs
+        userOrgs: usersOrgs,
+        adminOrgSlugs: adminOrgSlugs
       };
     })
 });

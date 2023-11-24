@@ -32,7 +32,7 @@ export const orgMembersRouter = router({
               status: true,
               addedAt: true,
               removedAt: true,
-              invitedByUserId: true
+              invitedByOrgMemberId: true
             },
             with: {
               profile: {

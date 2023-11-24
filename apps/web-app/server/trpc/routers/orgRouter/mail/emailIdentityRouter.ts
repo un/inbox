@@ -340,6 +340,7 @@ export const emailIdentityRouter = router({
       const { db, user, org } = ctx;
       const userId = user?.id || 0;
       const orgId = org?.id || 0;
+      const orgMemberId = org?.memberId || 0;
 
       // search for user org memberships, get id of membership
       const userOrgMembershipQuery = await db.read.query.orgMembers.findFirst({
@@ -361,7 +362,7 @@ export const emailIdentityRouter = router({
       //TODO: Add filter for org id
       const userOrgGroupMembershipQuery =
         await db.read.query.userGroupMembers.findMany({
-          where: eq(userGroupMembers.userId, +userId),
+          where: eq(userGroupMembers.orgMemberId, +orgMemberId),
           columns: {
             groupId: true
           },

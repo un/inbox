@@ -200,7 +200,6 @@ export const orgUserGroupsRouter = router({
         .values({
           publicId: newPublicId,
           orgMemberId: orgMember.id,
-          userId: orgMember.userId,
           groupId: userGroup.id,
           userProfileId: orgMember.userProfileId,
           role: 'member',
