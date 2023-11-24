@@ -45,7 +45,6 @@ export const errorHandler: TRPCLink<TrpcWebAppRouter> = () => {
 
 export default defineNuxtPlugin(() => {
   const config = useRuntimeConfig();
-  const orgSlug = useRoute().params.orgSlug as string;
   const trpcWebAppClient = createTRPCNuxtClient<TrpcWebAppRouter>({
     transformer: superjson,
     links: [
@@ -60,7 +59,7 @@ export default defineNuxtPlugin(() => {
         maxURLLength: 2083,
         headers() {
           return {
-            'org-slug': orgSlug
+            'org-slug': useRoute().params.orgSlug as string
           };
         }
       })
