@@ -156,7 +156,10 @@
       },
       {
         label: 'Settings',
-        icon: 'i-ph-gear'
+        icon: 'i-ph-gear',
+        click: () => {
+          navigateTo(`/${orgSlug}/settings`);
+        }
       },
       {
         label: 'Help',

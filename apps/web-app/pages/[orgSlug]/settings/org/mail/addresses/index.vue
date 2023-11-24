@@ -12,17 +12,13 @@
   const orgNameValue = ref('');
   const orgNameValidationMessage = ref('');
 
-  const orgPublicId = useRoute().params.orgId as string;
-
   const {
     data: orgEmailIdentities,
     pending,
     error,
     refresh
   } = await $trpc.org.mail.emailIdentities.getOrgEmailIdentities.useLazyQuery(
-    {
-      orgPublicId: orgPublicId
-    },
+    {},
     { server: false }
   );
 
@@ -80,7 +76,7 @@
     }
   });
   function select(row: (typeof tableRows.value)[number]) {
-    navigateTo(`/settings/org/${orgPublicId}/mail/addresses/${row.publicId}`);
+    navigateTo(`/settings/org/mail/addresses/${row.publicId}`);
   }
 
   const addNewModalOpen = ref(false);

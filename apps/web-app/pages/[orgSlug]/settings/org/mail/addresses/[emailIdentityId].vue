@@ -8,14 +8,11 @@
   const { $trpc } = useNuxtApp();
 
   const route = useRoute();
-
-  const orgPublicId = route.params.orgId as string;
   const emailIdentityId = route.params.emailIdentityId as string;
 
   const { data: emailIdentityData, pending: emailIdentityPending } =
     await $trpc.org.mail.emailIdentities.getEmailIdentity.useLazyQuery(
       {
-        orgPublicId,
         emailIdentityPublicId: emailIdentityId
       },
       {

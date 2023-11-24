@@ -12,17 +12,13 @@
   const orgNameValue = ref('');
   const orgNameValidationMessage = ref('');
 
-  const orgPublicId = useRoute().params.orgId as string;
-
   const {
     data: orgMembersQuery,
     pending,
     error,
     refresh
   } = await $trpc.org.users.members.getOrgMembers.useLazyQuery(
-    {
-      orgPublicId: orgPublicId
-    },
+    {},
     {
       server: false
     }

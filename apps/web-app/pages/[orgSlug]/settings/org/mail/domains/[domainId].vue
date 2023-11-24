@@ -15,7 +15,6 @@
 
   const route = useRoute();
 
-  const orgPublicId = route.params.orgId as string;
   const domainPublicId = route.params.domainId as string;
   const isNewDomain = route.query.new === 'true';
 
@@ -50,7 +49,6 @@
     refresh: domainRefresh
   } = await $trpc.org.mail.domains.getDomain.useLazyQuery(
     {
-      orgPublicId: orgPublicId,
       domainPublicId: domainPublicId,
       newDomain: isNewDomain
     },
@@ -63,7 +61,6 @@
     refresh: domainDnsRefresh
   } = await $trpc.org.mail.domains.getDomainDns.useLazyQuery(
     {
-      orgPublicId: orgPublicId,
       domainPublicId: domainPublicId,
       newDomain: isNewDomain
     },

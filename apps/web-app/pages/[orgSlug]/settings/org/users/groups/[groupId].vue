@@ -8,8 +8,8 @@
   const { copy, copied, text } = useClipboard();
   const { $trpc, $i18n } = useNuxtApp();
   const route = useRoute();
+  const orgSlug = useRoute().params.orgSlug as string;
 
-  const orgPublicId = route.params.orgId as string;
   const groupPublicId = route.params.groupId as string;
   const isNewGroup = route.query.new === 'true';
 
@@ -26,7 +26,6 @@
     refresh
   } = await $trpc.org.users.userGroups.getUserGroup.useLazyQuery(
     {
-      orgPublicId: orgPublicId,
       userGroupPublicId: groupPublicId,
       newUserGroup: isNewGroup
     },
@@ -87,9 +86,7 @@
     execute: getOrgMembersList,
     refresh: orgMembersRefresh
   } = await $trpc.org.users.members.getOrgMembersList.useLazyQuery(
-    {
-      orgPublicId: orgPublicId
-    },
+    {},
     { server: false, immediate: false }
   );
 
@@ -137,7 +134,6 @@
   async function addNewUserToGroup(orgMemberPublicId: string) {
     addingUserId.value = orgMemberPublicId;
     const result = await $trpc.org.users.userGroups.addUserToGroup.mutate({
-      orgPublicId: orgPublicId,
       groupPublicId: groupPublicId,
       orgMemberPublicId: orgMemberPublicId
     });
@@ -179,7 +175,7 @@
           <UnUiIcon
             name="i-ph-arrow-left"
             size="32"
-            @click="navigateTo(`/settings/org/${orgPublicId}/users/groups`)" />
+            @click="navigateTo(`${orgSlug}/settings/org/users/groups`)" />
         </UnUiTooltip>
         <UnUiAvatar
           :color="groupData?.group?.color || 'base'"

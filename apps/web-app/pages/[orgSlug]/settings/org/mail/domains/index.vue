@@ -4,6 +4,7 @@
   });
   import { z } from 'zod';
   import { useClipboard } from '@vueuse/core';
+  const orgSlug = useRoute().params.orgSlug as string;
 
   const { copy, copied, text } = useClipboard();
   const { $trpc, $i18n } = useNuxtApp();
@@ -14,17 +15,13 @@
   const pageError = ref(false);
   const newDomainNameValid = ref<boolean | 'remote' | null>(null);
 
-  const orgPublicId = useRoute().params.orgId as string;
-
   const {
     data: orgDomainsQuery,
     pending,
     error,
     refresh
   } = await $trpc.org.mail.domains.getOrgDomains.useLazyQuery(
-    {
-      orgPublicId: orgPublicId
-    },
+    {},
     { server: false }
   );
 
@@ -82,7 +79,7 @@
   );
 
   function select(row: (typeof tableRows.value)[number]) {
-    navigateTo(`/settings/org/${orgPublicId}/mail/domains/${row.domainId}`);
+    navigateTo(`${orgSlug}/settings/org/mail/domains/${row.domainId}`);
   }
   const selected = ref<typeof tableRows.value>([]);
 

@@ -1,4 +1,22 @@
 {
+  "Add Toast": {
+    "prefix": "toas",
+    "description": "Adds a toast message",
+    "scope": "",
+    "body": [
+      "    const toast = useToast();",
+      "    toast.add({",
+      "      id: '$1',",
+      "      title: '$2',",
+      "      description: `$3`,",
+      "      icon: 'i-ph-thumbs-up',",
+      "      timeout: 5000",
+      "    });",
+      "    setTimeout(() => {",
+      "      emit('close');",
+      "    }, 1000);"
+    ]
+  },
   "Is User Admin": {
     "prefix": "isAdmin",
     "description": "Checks if the user is an admin and throws error if not",

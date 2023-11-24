@@ -6,7 +6,7 @@ import { users } from '@uninbox/database/schema';
 
 export const authRouter = router({
   getUserDefaultOrgSlug: userProcedure
-    .input(z.object({}))
+    .input(z.object({}).strict())
     .query(async ({ ctx, input }) => {
       const { db, user } = ctx;
       const userId = user?.id || 0;

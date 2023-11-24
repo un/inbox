@@ -16,10 +16,51 @@
   const orgNameValid = ref<boolean | 'remote' | null>(null);
   const orgNameValue = ref('');
   const orgNameValidationMessage = ref('');
+  const orgSlugValid = ref<boolean | 'remote' | null>(null);
+  const orgSlugValue = ref('');
+  const orgSlugTempValue = ref('');
+  const orgSlugValidationMessage = ref('');
 
   const formValid = computed(() => {
-    return orgNameValid.value;
+    return orgNameValid.value && orgSlugValid.value;
   });
+
+  watchDebounced(
+    orgNameValue,
+    async () => {
+      if (orgSlugTempValue.value === orgSlugValue.value) {
+        const newValue = orgNameValue.value
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, '');
+        orgSlugValue.value = newValue;
+        orgSlugTempValue.value = newValue;
+      }
+    },
+    {
+      debounce: 500,
+      maxWait: 5000
+    }
+  );
+  watchDebounced(
+    orgSlugValue,
+    async () => {
+      if (orgSlugValid.value === 'remote') {
+        const { available, error } =
+          await $trpc.org.crud.checkSlugAvailability.query({
+            slug: orgSlugValue.value
+          });
+        if (!available) {
+          orgSlugValid.value = false;
+          orgSlugValidationMessage.value = 'Not available';
+        }
+        available && (orgSlugValid.value = true);
+      }
+    },
+    {
+      debounce: 500,
+      maxWait: 5000
+    }
+  );
 
   //functions
   async function createNewOrg() {
@@ -27,7 +68,8 @@
 
     newButtonLabel.value = 'Creating your organization';
     const createNewOrgResponse = await $trpc.org.crud.createNewOrg.mutate({
-      orgName: orgNameValue.value
+      orgName: orgNameValue.value,
+      orgSlug: orgSlugValue.value
     });
     if (!createNewOrgResponse.success) {
       newButtonLoading.value = false;
@@ -36,8 +78,18 @@
     }
     newButtonLoading.value = false;
     newButtonLabel.value = 'All Done!';
-    refreshNuxtData('getUserOrgsSidebar');
-    navigateTo(`/settings/org/${createNewOrgResponse.orgId}`);
+    refreshNuxtData('getUserOrgsNav');
+    const toast = useToast();
+    toast.add({
+      id: 'org_created',
+      title: 'New Organization Created',
+      description: `Your new organization ${orgNameValue.value} has been created successfully, redirecting...`,
+      icon: 'i-ph-thumbs-up',
+      timeout: 5000
+    });
+    setTimeout(() => {
+      navigateTo(`/${orgSlugValue.value}/settings/org/`);
+    }, 2000);
   }
 </script>
 
@@ -57,11 +109,28 @@
         v-model:validationMessage="orgNameValidationMessage"
         label="Organization Name"
         placeholder=""
-        :schema="z.string()" />
+        :schema="z.string().min(2).max(32)" />
+      <UnUiInput
+        v-model:value="orgSlugValue"
+        v-model:valid="orgSlugValid"
+        v-model:validationMessage="orgSlugValidationMessage"
+        locked
+        remote-validation
+        label="Organization Slug"
+        placeholder=""
+        :schema="
+          z
+            .string()
+            .min(5)
+            .max(64)
+            .regex(/^[a-z0-9]*$/, {
+              message: 'Only letters and numbers'
+            })
+        " />
 
       <UnUiButton
         :label="newButtonLabel"
-        icon="ph-house"
+        icon="i-ph-house"
         :loading="newButtonLoading"
         :disabled="!formValid"
         @click="createNewOrg()" />

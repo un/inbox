@@ -107,7 +107,7 @@ export const profileRouter = router({
       };
     }),
   getUserSingleProfile: userProcedure
-    .input(z.object({}))
+    .input(z.object({}).strict())
     .query(async ({ ctx, input }) => {
       const { db, user } = ctx;
       const userId = user?.id || 0;

@@ -12,7 +12,7 @@ type PlanName = (typeof planNames)[number];
 
 export const billingRouter = router({
   getOrgBillingOverview: eeProcedure
-    .input(z.object({}))
+    .input(z.object({}).strict())
     .query(async ({ ctx, input }) => {
       const { db, user, org } = ctx;
       const userId = user?.id || 0;
@@ -51,7 +51,7 @@ export const billingRouter = router({
       };
     }),
   getOrgStripePortalLink: eeProcedure
-    .input(z.object({}))
+    .input(z.object({}).strict())
     .query(async ({ ctx, input }) => {
       const { db, user, org } = ctx;
       const userId = user?.id || 0;

@@ -3,17 +3,19 @@
     layout: 'settings'
   });
   const { $trpc, $i18n } = useNuxtApp();
-
-  const orgPublicId = useRoute().params.orgId as string;
+  const orgSlug = useRoute().params.orgSlug as string;
 
   const {
     data: orgUserGroupsQuery,
     pending,
     error,
     refresh
-  } = await $trpc.org.users.userGroups.getOrgUserGroups.useLazyQuery({
-    orgPublicId: orgPublicId
-  });
+  } = await $trpc.org.users.userGroups.getOrgUserGroups.useLazyQuery(
+    {},
+    {
+      server: false
+    }
+  );
 
   const tableColumns = [
     {
@@ -65,7 +67,7 @@
     }
   });
   function select(row: (typeof tableRows.value)[number]) {
-    navigateTo(`/settings/org/${orgPublicId}/users/groups/${row.publicId}`);
+    navigateTo(`${orgSlug}/settings/org/users/groups/${row.publicId}`);
   }
 
   const addNewModalOpen = ref(false);

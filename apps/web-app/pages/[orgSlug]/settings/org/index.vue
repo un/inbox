@@ -15,32 +15,23 @@
   const orgNameValue = ref('');
   const orgNameValidationMessage = ref('');
 
-  const orgPublicId = useRoute().params.orgId as string;
-
   const { data: initialOrgProfile, pending } =
     await $trpc.org.setup.profile.getOrgProfile.useLazyQuery(
-      {
-        orgPublicId: orgPublicId
-      },
+      {},
       { server: false }
     );
 
-  watch(
-    initialOrgProfile,
-    (newVal) => {
-      if (newVal && newVal.orgProfile) {
-        orgNameValue.value = newVal.orgProfile.name;
-        newVal.orgProfile.avatarId
-          ? ((imageUrl.value = useUtils().generateAvatarUrl(
-              newVal.orgProfile.avatarId,
-              '128x128'
-            )) as string)
-          : null;
-      }
+  watch(initialOrgProfile, (newVal) => {
+    if (newVal && newVal.orgProfile) {
+      orgNameValue.value = newVal.orgProfile.name;
+      newVal.orgProfile.avatarId
+        ? ((imageUrl.value = useUtils().generateAvatarUrl(
+            newVal.orgProfile.avatarId,
+            '128x128'
+          )) as string)
+        : null;
     }
-    // ,
-    // { immediate: true }
-  );
+  });
 
   const {
     files: selectedFiles,

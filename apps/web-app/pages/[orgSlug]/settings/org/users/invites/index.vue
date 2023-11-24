@@ -20,16 +20,15 @@
     return inviteEmailValid.value === true;
   });
 
-  const orgPublicId = useRoute().params.orgId as string;
-
   const {
     data: orgInviteQuery,
     pending,
     error,
     refresh
-  } = await $trpc.org.users.invites.viewInvites.useLazyQuery({
-    orgPublicId: orgPublicId
-  });
+  } = await $trpc.org.users.invites.viewInvites.useLazyQuery(
+    {},
+    { server: false }
+  );
 
   const tableColumns = [
     {
@@ -142,7 +141,6 @@
     buttonLabel.value = 'Creating invite...';
     const newInviteResponse =
       await $trpc.org.users.invites.createNewInvite.mutate({
-        orgPublicId: orgPublicId,
         inviteeEmail: inviteEmailValue.value,
         role: 'member'
       });

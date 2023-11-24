@@ -8,16 +8,13 @@
 
   const { copy, copied, text } = useClipboard();
   const { $trpc, $i18n } = useNuxtApp();
-  const orgPublicId = useRoute().params.orgId as string;
 
   const {
     data: orgBillingOverview,
     pending,
     error
   } = await $trpc.org.setup.billing.getOrgBillingOverview.useLazyQuery(
-    {
-      orgPublicId: orgPublicId
-    },
+    {},
     {
       server: false
     }
@@ -32,7 +29,6 @@
     const billingPeriod = pricingTableBillingPeriod.value;
     const { data: linkData, pending: linkPending } =
       await $trpc.org.setup.billing.getOrgSubscriptionPaymentLink.useLazyQuery({
-        orgPublicId: orgPublicId,
         plan: plan,
         period: billingPeriod
       });
@@ -47,9 +43,12 @@
   async function goToBillingPortal() {
     goToPortalButtonLoading.value = true;
     const { data: linkData, pending: linkPending } =
-      await $trpc.org.setup.billing.getOrgStripePortalLink.useLazyQuery({
-        orgPublicId: orgPublicId
-      });
+      await $trpc.org.setup.billing.getOrgStripePortalLink.useLazyQuery(
+        {},
+        {
+          server: false
+        }
+      );
 
     navigateTo(linkData?.value?.portalLink, {
       external: true,

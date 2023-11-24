@@ -52,7 +52,7 @@ export const orgUserGroupsRouter = router({
       };
     }),
   getOrgUserGroups: orgProcedure
-    .input(z.object({}))
+    .input(z.object({}).strict())
     .query(async ({ ctx, input }) => {
       const { db, user, org } = ctx;
       const userId = user?.id || 0;

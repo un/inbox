@@ -18,7 +18,7 @@ import { nanoId, nanoIdLength } from '@uninbox/utils';
 
 export const addressRouter = router({
   getPersonalAddresses: userProcedure
-    .input(z.object({}))
+    .input(z.object({}).strict())
     .query(async ({ ctx, input }) => {
       const { db, user } = ctx;
       const userId = user?.id || 0;

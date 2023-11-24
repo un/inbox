@@ -120,7 +120,7 @@ export const crudRouter = router({
     }),
 
   createPersonalOrg: userProcedure
-    .input(z.object({}))
+    .input(z.object({}).strict())
     .mutation(async ({ ctx, input }) => {
       const { db, user } = ctx;
       const userId = user?.id || 0;

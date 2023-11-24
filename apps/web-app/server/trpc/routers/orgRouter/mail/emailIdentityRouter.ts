@@ -266,7 +266,7 @@ export const emailIdentityRouter = router({
       };
     }),
   getOrgEmailIdentities: orgProcedure
-    .input(z.object({}))
+    .input(z.object({}).strict())
     .query(async ({ ctx, input }) => {
       const { db, user, org } = ctx;
       const userId = user?.id || 0;
@@ -335,7 +335,7 @@ export const emailIdentityRouter = router({
       };
     }),
   getUserEmailIdentities: orgProcedure
-    .input(z.object({}))
+    .input(z.object({}).strict())
     .query(async ({ ctx, input }) => {
       const { db, user, org } = ctx;
       const userId = user?.id || 0;
