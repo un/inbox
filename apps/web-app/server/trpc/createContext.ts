@@ -7,9 +7,9 @@ import type { OrgContext, UserContext } from '@uninbox/types';
 //  * @link https://trpc.io/docs/context
 
 export const createContext = async (event: H3Event) => {
-  const user: UserContext = event.context.user;
-  const hankoId = event.context.hankoId || null;
-  const org: OrgContext = event.context.org || null;
+  const user: UserContext = await event.context.user;
+  const hankoId = (await event.context.hankoId) || null;
+  const org: OrgContext = await event.context.org;
   return { db, user, hankoId, org };
 };
 
