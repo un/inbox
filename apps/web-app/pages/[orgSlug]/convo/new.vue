@@ -7,65 +7,6 @@
     layout: 'convos'
   });
 
-  // orgs
-  const activeOrg = ref({ publicId: '' });
-  const computedOrgPublicIdInput = computed(() => {
-    return {
-      orgPublicId: activeOrg.value.publicId
-    };
-  });
-
-  // TODO: if user only has one org, then set the activeOrg value and hide the selection area
-  interface UserOrgs {
-    publicId: string;
-    name: string;
-    avatarId: string | null;
-    personalOrg: boolean;
-  }
-  const userOrgs = ref<UserOrgs[]>([]);
-  const { data: userOrgsData, pending: userOrgsPending } =
-    await $trpc.org.crud.getUserOrgs.useLazyQuery(
-      {
-        includePersonal: true
-      },
-      {
-        server: false
-      }
-    );
-
-  watch(userOrgsData, (newUserOrgsData) => {
-    if (newUserOrgsData?.userOrgs) {
-      for (const orgObject of newUserOrgsData.userOrgs) {
-        userOrgs.value.push({
-          publicId: orgObject.org.publicId,
-          name: orgObject.org.name,
-          avatarId: orgObject.org.avatarId,
-          personalOrg: orgObject.org.personalOrg
-        });
-      }
-    }
-    if (newUserOrgsData?.personalOrgs) {
-      for (const orgObject of newUserOrgsData.personalOrgs) {
-        userOrgs.value.push({
-          publicId: orgObject.org.publicId,
-          name: orgObject.org.name,
-          avatarId: orgObject.org.avatarId,
-          personalOrg: orgObject.org.personalOrg
-        });
-      }
-    }
-  });
-
-  const selectedUserOrg = ref<UserOrgs | undefined>(undefined);
-  watch(selectedUserOrg, (newSelectedUserOrg) => {
-    activeSendAs.value = '';
-    activeOrg.value.publicId = newSelectedUserOrg?.publicId || '';
-
-    userEmailIdentitiesExecute();
-    orgUserGroupsExecute();
-    orgMembersExecute();
-  });
-
   // TODO: handle if the domain is not valid/enabled. display the email address in the list but show it as disabled and show a tooltip on hover that says "this domain is not enabled for sending"
   interface OrgEmailIdentities {
     publicId: string;
@@ -78,11 +19,10 @@
     pending: userEmailIdentitiesPending,
     refresh: userEmailIdentitiesExecute,
     status: userEmailIdentitiesStatus
-  } = await $trpc.user.addresses.getUserEmailIdentities.useLazyQuery(
-    computedOrgPublicIdInput,
+  } = await $trpc.org.mail.emailIdentities.getUserEmailIdentities.useLazyQuery(
+    {},
     {
-      server: false,
-      immediate: false
+      server: false
     }
   );
   watch(userEmailIdentitiesData, (newuserEmailIdentitiesData) => {
@@ -103,12 +43,7 @@
     undefined
   );
 
-  // send as
-  const activeSendAs = ref<string>('');
-
   // Participants
-
-  //! New Single Dropdown
   interface OrgMembers {
     type: 'user';
     icon: 'i-ph-user';
@@ -185,10 +120,9 @@
     execute: orgMembersExecute,
     status: orgMembersStatus
   } = await $trpc.org.users.members.getOrgMembersList.useLazyQuery(
-    computedOrgPublicIdInput,
+    {},
     {
-      server: false,
-      immediate: false
+      server: false
     }
   );
 
@@ -253,11 +187,6 @@
     }
     removeTypeFromParticipants('user');
     removeTypeFromParticipants('group');
-    // participantOptions.value = [
-    //   ...orgMembers.value,
-    //   ...orgUserGroups.value,
-    //   ...participantOptions.value
-    // ];
   });
 
   const selectedOrgMembers = ref<OrgMembers[]>([]);
@@ -270,10 +199,9 @@
     execute: orgUserGroupsExecute,
     status: orgUserGroupsStatus
   } = await $trpc.org.users.userGroups.getOrgUserGroups.useLazyQuery(
-    computedOrgPublicIdInput,
+    {},
     {
-      server: false,
-      immediate: false
+      server: false
     }
   );
 
@@ -316,55 +244,6 @@
 <template>
   <div class="h-full max-h-full max-w-full w-full flex flex-col gap-4">
     <div class="z-20000 mb-[-24px] h-[24px] from-base-1 bg-gradient-to-b" />
-    <div class="flex flex-col gap-2">
-      <span class="text-md font-display"> Organization </span>
-      <span v-if="userOrgsPending">
-        <UnUiIcon name="i-svg-spinners:3-dots-fade" /> Loading Organizations
-      </span>
-      <div
-        v-if="!userOrgsPending"
-        class="flex flex-row flex-wrap gap-8">
-        <NuxtUiSelectMenu
-          v-model="selectedUserOrg"
-          placeholder="Select Org"
-          :options="userOrgs"
-          class="w-full">
-          <template
-            v-if="selectedUserOrg"
-            #label>
-            <UnUiIcon
-              name="i-ph-check"
-              class="h-4 w-4" />
-            <div
-              v-if="selectedUserOrg"
-              class="flex flex-wrap gap-3">
-              <div class="flex flex-row items-center gap-1 truncate">
-                <UnUiAvatar
-                  :alt="selectedUserOrg.name.toString()"
-                  :avatar-id="selectedUserOrg.avatarId?.toString()"
-                  size="3xs" />
-                <span>{{ selectedUserOrg.name }}</span>
-              </div>
-            </div>
-            <span v-else>Select Org</span>
-          </template>
-          <template #option="{ option }">
-            <UnUiAvatar
-              :avatar-id="option.avatarId"
-              :alt="option.name"
-              size="xs" />
-            <span>
-              {{ option.name }}
-              <span
-                v-if="option.title"
-                class="text-xs">
-                - {{ option.title }}
-              </span>
-            </span>
-          </template>
-        </NuxtUiSelectMenu>
-      </div>
-    </div>
     <div class="flex flex-col gap-2">
       <span class="text-md font-display"> Send As </span>
       <div class="flex flex-col gap-4">

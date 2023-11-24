@@ -2,6 +2,7 @@
   definePageMeta({
     layout: 'convos'
   });
+  const orgSlug = useRoute().params.orgSlug as string;
 </script>
 <template>
   <div
@@ -9,7 +10,7 @@
     <div class="col-span-2 pl-4">Select a conversation from the left, or</div>
     <button
       class="max-w-80 w-full flex flex-row items-center justify-center gap-4 border-1 border-base-7 rounded bg-base-3 p-2"
-      @click="navigateTo('/h/convo/new')">
+      @click="navigateTo(`/${orgSlug}/convo/new`)">
       <UnUiIcon
         name="i-ph-plus"
         size="20" />

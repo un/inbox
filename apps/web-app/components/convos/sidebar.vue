@@ -1,4 +1,6 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+  const orgSlug = useRoute().params.orgSlug as string;
+</script>
 <template>
   <div
     class="h-full max-h-full flex flex-col gap-2 overflow-y-scroll border-r-1 border-base-6 pr-4">
@@ -10,7 +12,7 @@
     <div class="flex flex-row gap-2">
       <button
         class="border-gray-200 bg-gray-100 dark:border-gray-800 dark:bg-gray-900 w-full flex flex-row items-center justify-center gap-4 border border-1 rounded rounded-bl-xl p-2"
-        @click="navigateTo('/h/convo/new')">
+        @click="navigateTo(`/${orgSlug}/convo/new`)">
         <UnUiIcon
           name="i-ph-plus"
           size="20" />
