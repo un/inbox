@@ -78,9 +78,9 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   personalOrg: one(orgs, {
     fields: [users.id],
     references: [orgs.ownerId]
-  }),
+  })
   // conversations: many(convoMembers),
-  userGroups: many(userGroupMembers)
+  // userGroups: many(userGroupMembers)
 }));
 
 // Identity table (user logins)
@@ -195,7 +195,7 @@ export const orgMembers = mysqlTable(
     publicId: nanoId('public_id').notNull(),
     userId: foreignKey('user_id').notNull(),
     orgId: foreignKey('org_id').notNull(),
-    invitedByUserId: foreignKey('invited_by_user_id'),
+    invitedByOrgMemberId: foreignKey('invited_by_org_member_id'),
     status: mysqlEnum('status', ['active', 'removed']).notNull(),
     role: mysqlEnum('role', ['member', 'admin']).notNull(),
     userProfileId: foreignKey('user_profile_id').notNull(),
@@ -258,7 +258,7 @@ export const orgInvitations = mysqlTable(
     id: serial('id').primaryKey(),
     publicId: nanoId('public_id').notNull(),
     orgId: foreignKey('org_id').notNull(),
-    invitedByUserId: foreignKey('invited_by_user_id').notNull(),
+    invitedByOrgMemberId: foreignKey('invited_by_org_member_id').notNull(),
     role: mysqlEnum('role', ['member', 'admin']).notNull(),
     invitedUser: foreignKey('invited_user'),
     email: varchar('email', { length: 128 }),
@@ -283,9 +283,9 @@ export const orgInvitationsRelations = relations(orgInvitations, ({ one }) => ({
     fields: [orgInvitations.orgId],
     references: [orgs.id]
   }),
-  invitedByUser: one(users, {
-    fields: [orgInvitations.invitedByUserId],
-    references: [users.id]
+  invitedByOrgMember: one(orgMembers, {
+    fields: [orgInvitations.invitedByOrgMemberId],
+    references: [orgMembers.id]
   }),
   invitedUser: one(users, {
     fields: [orgInvitations.invitedUser],
@@ -388,7 +388,6 @@ export const userGroupMembers = mysqlTable(
     id: serial('id').primaryKey(),
     publicId: nanoId('public_id').notNull(),
     groupId: foreignKey('group_id').notNull(),
-    userId: foreignKey('user_id').notNull(),
     orgMemberId: foreignKey('org_member_id').notNull(),
     userProfileId: foreignKey('user_profile_id'),
     addedBy: foreignKey('added_by').notNull(),
@@ -419,10 +418,6 @@ export const userGroupMembersRelations = relations(
     orgMember: one(orgMembers, {
       fields: [userGroupMembers.orgMemberId],
       references: [orgMembers.id]
-    }),
-    user: one(users, {
-      fields: [userGroupMembers.orgMemberId],
-      references: [users.id]
     }),
     userProfile: one(userProfiles, {
       fields: [userGroupMembers.userProfileId],
@@ -739,7 +734,7 @@ export const sendAsExternalEmailIdentitiesAuthorizedUsers = mysqlTable(
   {
     id: serial('id').primaryKey(),
     identityId: foreignKey('identity_id').notNull(),
-    userId: foreignKey('user_id'),
+    orgMemberId: foreignKey('org_member_id'),
     userGroupId: foreignKey('user_group_id'),
     addedBy: foreignKey('added_by').notNull(),
     createdAt: timestamp('created_at')
@@ -749,11 +744,11 @@ export const sendAsExternalEmailIdentitiesAuthorizedUsers = mysqlTable(
   (table) => ({
     //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit : userId//userGroupId
     identityIdIndex: index('identity_id_idx').on(table.identityId),
-    userIdIndex: index('user_id_idx').on(table.userId),
+    orgMemberIdIndex: index('org_member_id_idx').on(table.orgMemberId),
     userGroupIdIndex: index('user_group_id_idx').on(table.userGroupId),
-    userToIdentityIndex: uniqueIndex('user_to_identity_idx').on(
+    orgMemberToIdentityIndex: uniqueIndex('org_member_to_identity_idx').on(
       table.identityId,
-      table.userId
+      table.orgMemberId
     )
   })
 );
@@ -764,9 +759,9 @@ export const sendAsExternalEmailIdentitiesAuthorizedUsersRelations = relations(
       fields: [sendAsExternalEmailIdentitiesAuthorizedUsers.identityId],
       references: [sendAsExternalEmailIdentities.id]
     }),
-    user: one(users, {
-      fields: [sendAsExternalEmailIdentitiesAuthorizedUsers.userId],
-      references: [users.id]
+    orgMember: one(orgMembers, {
+      fields: [sendAsExternalEmailIdentitiesAuthorizedUsers.orgMemberId],
+      references: [orgMembers.id]
     }),
     userGroup: one(userGroups, {
       fields: [sendAsExternalEmailIdentitiesAuthorizedUsers.userGroupId],
@@ -901,19 +896,20 @@ export const emailIdentitiesAuthorizedUsers = mysqlTable(
   {
     id: serial('id').primaryKey(),
     identityId: foreignKey('identity_id').notNull(),
-    userId: foreignKey('user_id'),
+    orgMemberId: foreignKey('org_member_id'),
     userGroupId: foreignKey('user_group_id'),
+    default: boolean('default').notNull().default(false),
     addedBy: foreignKey('added_by').notNull(),
     createdAt: timestamp('created_at')
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull()
   },
   (table) => ({
-    //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit : userId//userGroupId
+    //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit : userId//userGroupId, userId//default, userGroupId//default
     identityIdIndex: index('identity_id_idx').on(table.identityId),
-    userToIdentityIndex: uniqueIndex('user_to_identity_idx').on(
+    orgMemberToIdentityIndex: uniqueIndex('org_member_to_identity_idx').on(
       table.identityId,
-      table.userId
+      table.orgMemberId
     ),
     userGroupToIdentityIndex: uniqueIndex('user_group_to_identity_idx').on(
       table.identityId,
@@ -929,9 +925,9 @@ export const emailIdentitiesAuthorizedUsersRelations = relations(
       fields: [emailIdentitiesAuthorizedUsers.identityId],
       references: [emailIdentities.id]
     }),
-    user: one(users, {
-      fields: [emailIdentitiesAuthorizedUsers.userId],
-      references: [users.id]
+    orgMember: one(orgMembers, {
+      fields: [emailIdentitiesAuthorizedUsers.orgMemberId],
+      references: [orgMembers.id]
     }),
     userGroup: one(userGroups, {
       fields: [emailIdentitiesAuthorizedUsers.userGroupId],

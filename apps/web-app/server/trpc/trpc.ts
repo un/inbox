@@ -23,27 +23,35 @@ const isUserAuthenticated = trpcContext.middleware(({ next, ctx }) => {
 const hasOrgSlug = trpcContext.middleware(({ next, ctx }) => {
   //@ts-ignore
   const orgId = +ctx.org?.id;
-  //@ts-ignore
-  const userId = +ctx.user?.id;
-  const orgMemberUserIds = ctx.org?.members.map((member) => member.userId);
-  const isUserInOrg = orgMemberUserIds?.includes(userId);
-  if (!ctx.user || !ctx.user.session.valid || !ctx.user.id) {
-    throw new TRPCError({
-      code: 'UNAUTHORIZED',
-      message: 'You are not logged in, redirecting...'
-    });
-  }
   if (!orgId) {
     throw new TRPCError({
       code: 'BAD_REQUEST',
       message: 'Invalid organization selected, redirecting...'
     });
   }
+  //@ts-ignore
+  const userId = +ctx.user?.id;
+  if (!ctx.user || !ctx.user.session.valid || !ctx.user.id) {
+    throw new TRPCError({
+      code: 'UNAUTHORIZED',
+      message: 'You are not logged in, redirecting...'
+    });
+  }
+  const orgMemberUserIds = ctx.org?.members.map((member) => member.userId);
+  const isUserInOrg = orgMemberUserIds?.includes(userId);
+  //@ts-ignore
   if (!isUserInOrg) {
     throw new TRPCError({
       code: 'UNAUTHORIZED',
       message: 'You are not a member of this organization, redirecting...'
     });
+  }
+  if (ctx.org) {
+    //@ts-ignore
+    const orgMemberId = +ctx.org?.members.find(
+      (member) => member.userId === userId
+    ).id;
+    ctx.org.memberId = orgMemberId;
   }
   return next();
 });
