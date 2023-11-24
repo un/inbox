@@ -36,7 +36,6 @@
     buttonLabel.value = 'Creating domain...';
     const newDomainResponse =
       await $trpc.org.mail.domains.createNewDomain.mutate({
-        orgPublicId: orgPublicId,
         domainName: newDomainNameValue.value
       });
 

@@ -102,9 +102,7 @@
   // get list of users
   const { data: orgMembersData, pending: orgMembersPending } =
     await $trpc.org.users.members.getOrgMembersList.useLazyQuery(
-      {
-        orgPublicId: orgPublicId
-      },
+      {},
       { server: false }
     );
   interface OrgMembers {
@@ -154,7 +152,6 @@
       (member) => member.publicId as string
     );
     await $trpc.org.mail.emailIdentities.createNewEmailIdentity.mutate({
-      orgPublicId,
       emailUsername: newIdentityUsernameValue.value,
       domainPublicId: selectedDomain.value?.domainPublicId as string,
       sendName: newIdentitySendNameValue.value,

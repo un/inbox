@@ -18,17 +18,6 @@
     currentPath.value = to.path;
   });
 
-  const activeNav = computed(() => {
-    if (currentPath.value === '/h') return 'convos';
-    if (currentPath.value.includes('/convo')) return 'convos';
-    if (currentPath.value.includes('/screener')) return 'screener';
-    if (currentPath.value.includes('/feed')) return 'feed';
-    if (currentPath.value.includes('/codes')) return 'codes';
-    if (currentPath.value.includes('/settings')) return 'settings';
-    if (currentPath.value.includes('/help')) return 'help';
-    return '';
-  });
-
   const navLinks = [
     {
       label: 'Conversations',
@@ -51,18 +40,6 @@
       icon: 'i-ph-password'
     }
   ];
-  const footerLinks = [
-    {
-      label: 'Settings',
-      to: `/${orgSlug}/settings`,
-      icon: 'i-ph-gear'
-    },
-    {
-      label: 'Help',
-      to: `/help`,
-      icon: 'i-ph-question'
-    }
-  ];
 
   const { $trpc } = useNuxtApp();
 
@@ -82,6 +59,7 @@
     { server: false, queryKey: 'getUserOrgsNav' }
   );
 
+  const isUserAdminOfActiveOrg = ref(false);
   watch(userOrgs, (newUserOrgs) => {
     const userOrgSlugs = newUserOrgs?.userOrgs.map(
       (userOrg) => userOrg.org.slug
@@ -89,6 +67,12 @@
     const userPersonalOrgSlug = newUserOrgs?.personalOrgs?.map(
       (userOrg) => userOrg.org.slug
     );
+    if (newUserOrgs?.adminOrgSlugs?.includes(orgSlug)) {
+      isUserAdminOfActiveOrg.value = true;
+    } else {
+      isUserAdminOfActiveOrg.value = false;
+    }
+
     if (
       !userOrgSlugs?.includes(orgSlug) &&
       !userPersonalOrgSlug?.includes(orgSlug)
@@ -135,30 +119,40 @@
   const userMenuItems = computed(() => [
     [
       {
-        label: 'ben@example.com',
-        slot: 'account',
-        disabled: true
+        avatarId: userProfile?.value?.profile?.avatarId || '',
+        label:
+          userProfile?.value?.profile?.firstName +
+          ' ' +
+          userProfile?.value?.profile?.lastName,
+        slot: 'account'
       }
     ],
     userOrgsButtons.value,
     [
       {
-        label: 'Profile',
-        icon: 'i-ph-user'
+        label: 'Personal Settings',
+        icon: 'i-ph-user',
+        click: () => {
+          navigateTo(`/${orgSlug}/settings`);
+        }
       },
+      ...(isUserAdminOfActiveOrg.value
+        ? [
+            {
+              label: 'Organization Settings',
+              icon: 'i-ph-gear',
+              click: () => {
+                navigateTo(`/${orgSlug}/settings`);
+              }
+            }
+          ]
+        : []),
       {
         label: colorModeLabel.value,
         icon: colorModeIcon.value,
         slot: 'darkmode',
         click: () => {
           toggleColorMode();
-        }
-      },
-      {
-        label: 'Settings',
-        icon: 'i-ph-gear',
-        click: () => {
-          navigateTo(`/${orgSlug}/settings`);
         }
       },
       {
@@ -259,12 +253,24 @@
           </div>
           <UnUiIcon name="i-ph-caret-up" />
         </div>
-        <template #account="{ item }">
-          <div class="text-left">
+        <template #account>
+          <div class="flex flex-col gap-2 text-left">
             <p>Signed in as</p>
-            <p class="text-gray-900 truncate font-medium dark:text-white">
-              {{ item.label }}
-            </p>
+            <div
+              class="w-full flex flex-row items-center gap-2 overflow-hidden">
+              <UnUiAvatar
+                :avatar-id="userProfile?.profile?.avatarId || ''"
+                :alt="
+                  userProfile?.profile?.firstName +
+                  ' ' +
+                  userProfile?.profile?.lastName
+                " />
+              <span class="truncate text-sm">{{
+                userProfile?.profile?.firstName +
+                ' ' +
+                userProfile?.profile?.lastName
+              }}</span>
+            </div>
           </div>
         </template>
         <template #org="{ item }">
