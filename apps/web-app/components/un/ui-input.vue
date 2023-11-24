@@ -138,25 +138,11 @@
   <div
     class="flex flex-col gap-1 leading-4 text-primary-12"
     :class="inputClasses({ width: props.width })">
-    <div
-      class="items-bottom max-w-full w-full flex flex-row justify-between gap-4 overflow-hidden">
+    <div>
       <label
         :id="`input-label-${props.label}`"
         class="min-w-fit text-sm font-medium"
         >{{ props.label }}</label
-      >
-      <UnUiTooltip
-        v-if="validationMessage"
-        :text="validationMessage || ''"
-        class="max-w-full w-full">
-        <span class="truncate text-right text-xs text-red-11">{{
-          validationMessage
-        }}</span>
-      </UnUiTooltip>
-      <span
-        v-if="valid === 'remote'"
-        class="w-full truncate text-right text-xs text-orange-11"
-        >Verifying...</span
       >
     </div>
     <div
@@ -195,6 +181,23 @@
           name="ph:question"
           class="cursor-help"
       /></UnUiTooltip>
+    </div>
+    <div
+      class="overflow-hidden transition-transform duration-1000"
+      :class="validationMessage || valid === 'remote' ? 'max-h-4' : 'max-h-0'">
+      <UnUiTooltip
+        v-if="validationMessage"
+        :text="validationMessage || ''"
+        class="max-w-full w-full">
+        <span class="truncate text-right text-xs text-red-11">{{
+          validationMessage
+        }}</span>
+      </UnUiTooltip>
+      <span
+        v-if="valid === 'remote'"
+        class="w-full truncate text-right text-xs text-orange-11"
+        >Verifying...</span
+      >
     </div>
   </div>
 </template>

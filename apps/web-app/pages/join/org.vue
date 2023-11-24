@@ -23,6 +23,7 @@
   const orgSlugValue = ref('');
   const orgSlugTempValue = ref('');
   const orgSlugValidationMessage = ref('');
+  const alsoCreatePersonalOrg = ref(false);
 
   watchDebounced(
     orgNameValue,
@@ -164,37 +165,34 @@
 
       <div class="flex flex-col gap-2">
         <p class="text-center">
-          Organizations can share conversations between members, add custom
-          domains, and configure email routing & settings.
+          With an organization you can share conversations, notes and email
+          identities between members and groups.
         </p>
         <p class="text-center text-sm">
-          Tip: You can be a member of multiple organizations, and choose if you
-          want to see all conversations in one place, or view each organization
-          separately.
+          Tip: You can be a member of multiple organizations.
         </p>
       </div>
-      <div class="grid grid-cols-2 content-center items-center gap-4">
-        <div
-          class="aspect-square w-[128px] cursor-pointer border-1 border-base-7 rounded-6 bg-base-3 p-4 text-center hover:(border-primary-8 bg-primary-4)"
-          :class="
-            orgPath === 'new' ? 'bg-primary-5 border-primary-8' : 'bg-base-3'
-          "
-          @click="orgPath = 'new'">
-          <p class="m-auto font-display">Make a new organization</p>
-        </div>
-        <div
-          class="aspect-square w-[128px] cursor-pointer border-1 border-base-7 rounded-6 bg-base-3 p-4 text-center hover:(border-primary-8 bg-primary-4)"
-          :class="
-            orgPath === 'join' ? 'bg-primary-5 border-primary-8' : 'bg-base-3'
-          "
-          @click="orgPath = 'join'">
-          <p class="m-auto font-display">My team is already here</p>
-        </div>
-      </div>
+      <UnUiButtonGroup
+        size="md"
+        orientation="horizontal"
+        class="w-full">
+        <UnUiButton
+          label="Create new organization"
+          icon="i-ph-plus"
+          block
+          :disabled="orgPath === 'new'"
+          @click="orgPath = 'new'" />
+        <UnUiButton
+          label="Join existing organization"
+          icon="i-ph-users-three"
+          block
+          :disabled="orgPath === 'join'"
+          @click="orgPath = 'join'" />
+      </UnUiButtonGroup>
 
       <div
         v-if="orgPath === 'new'"
-        class="w-full flex flex-col gap-8">
+        class="w-full flex flex-col gap-4">
         <UnUiInput
           v-model:value="orgNameValue"
           v-model:valid="orgNameValid"

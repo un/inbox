@@ -15,9 +15,12 @@ export const orgProfileRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
+      if (!ctx.user || !ctx.org) {
+        throw new Error('User or Organization is not defined');
+      }
       const { db, user, org } = ctx;
-      const userId = user?.id || 0;
-      const orgId = org?.id || 0;
+      const userId = +user?.id;
+      const orgId = +org?.id;
       const { orgPublicId } = input;
 
       const orgProfileQuery = await db.read.query.orgs.findFirst({
@@ -50,6 +53,9 @@ export const orgProfileRouter = router({
       const { orgName, orgAvatarId } = input;
 
       const isAdmin = await isUserAdminOfOrg(org, userId);
+      console.log('isAdmin', isAdmin);
+      console.log('org', org);
+      console.log('userId', userId);
       if (!isAdmin) {
         throw new TRPCError({
           code: 'UNAUTHORIZED',
