@@ -22,6 +22,7 @@ import {
   foreignEmailIdentitiesScreenerStatus
 } from '@uninbox/database/schema';
 import { nanoId, nanoIdLength, nanoIdToken } from '@uninbox/utils';
+import { TRPCError } from '@trpc/server';
 
 export const convoRouter = router({
   getUserConvos: orgProcedure
@@ -328,9 +329,15 @@ export const convoRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      if (!ctx.user || !ctx.org) {
+        throw new TRPCError({
+          code: 'UNPROCESSABLE_CONTENT',
+          message: 'User or Organization is not defined'
+        });
+      }
       const { db, user, org } = ctx;
-      const userId = user?.id || 0;
-      const orgId = org?.id || 0;
+      const userId = +user?.id;
+      const orgId = +org?.id;
       const {
         orgPublicId,
         participantsExternalEmails,
@@ -338,15 +345,6 @@ export const convoRouter = router({
         participantsUsers,
         authorPublicId
       } = input;
-
-      const userOrg = await isUserInOrg({
-        userId,
-        orgPublicId
-      });
-
-      if (!userOrg) {
-        throw new Error('User not in org');
-      }
 
       const authorOrgMemberResponse = await db.read.query.orgMembers.findFirst({
         where: eq(orgMembers.publicId, authorPublicId),
@@ -364,7 +362,7 @@ export const convoRouter = router({
       // create convo
       const convoInsertResponse = await db.write.insert(convos).values({
         publicId: newPublicId,
-        orgId: userOrg.orgId,
+        orgId: orgId,
         screenerStatus: 'approved',
         lastUpdatedAt: new Date()
       });

@@ -19,14 +19,20 @@ export const orgUserGroupsRouter = router({
     .input(
       z.object({
         groupName: z.string().min(2).max(50),
-        groupDescription: z.string().min(2).max(500).optional(),
+        groupDescription: z.string().min(0).max(500).optional(),
         groupColor: z.enum(uiColors)
       })
     )
     .mutation(async ({ ctx, input }) => {
+      if (!ctx.user || !ctx.org) {
+        throw new TRPCError({
+          code: 'UNPROCESSABLE_CONTENT',
+          message: 'User or Organization is not defined'
+        });
+      }
       const { db, user, org } = ctx;
-      const userId = user?.id || 0;
-      const orgId = org?.id || 0;
+      const userId = +user?.id;
+      const orgId = +org?.id;
       const { groupName, groupDescription, groupColor } = input;
       const newPublicId = nanoId();
 
@@ -54,9 +60,15 @@ export const orgUserGroupsRouter = router({
   getOrgUserGroups: orgProcedure
     .input(z.object({}).strict())
     .query(async ({ ctx, input }) => {
+      if (!ctx.user || !ctx.org) {
+        throw new TRPCError({
+          code: 'UNPROCESSABLE_CONTENT',
+          message: 'User or Organization is not defined'
+        });
+      }
       const { db, user, org } = ctx;
-      const userId = user?.id || 0;
-      const orgId = org?.id || 0;
+      const userId = +user?.id;
+      const orgId = +org?.id;
 
       const userGroupQuery = await db.read.query.userGroups.findMany({
         columns: {
@@ -100,9 +112,15 @@ export const orgUserGroupsRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
+      if (!ctx.user || !ctx.org) {
+        throw new TRPCError({
+          code: 'UNPROCESSABLE_CONTENT',
+          message: 'User or Organization is not defined'
+        });
+      }
       const { db, user, org } = ctx;
-      const userId = user?.id || 0;
-      const orgId = org?.id || 0;
+      const userId = +user?.id;
+      const orgId = +org?.id;
       const dbReplica = input.newUserGroup ? db.write : db.read;
 
       const userGroupQuery = await dbReplica.query.userGroups.findFirst({
@@ -157,9 +175,15 @@ export const orgUserGroupsRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      if (!ctx.user || !ctx.org) {
+        throw new TRPCError({
+          code: 'UNPROCESSABLE_CONTENT',
+          message: 'User or Organization is not defined'
+        });
+      }
       const { db, user, org } = ctx;
-      const userId = user?.id || 0;
-      const orgId = org?.id || 0;
+      const userId = +user?.id;
+      const orgId = +org?.id;
       const { groupPublicId, orgMemberPublicId } = input;
       const newPublicId = nanoId();
 
@@ -192,7 +216,10 @@ export const orgUserGroupsRouter = router({
       });
 
       if (!userGroup) {
-        throw new Error('Group not found');
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Group not found'
+        });
       }
 
       const insertUserGroupMemberResult = await db.write
@@ -208,7 +235,10 @@ export const orgUserGroupsRouter = router({
         });
 
       if (!insertUserGroupMemberResult) {
-        throw new Error('Could not add user to group');
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Could not add user to group'
+        });
       }
 
       return {

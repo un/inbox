@@ -16,7 +16,10 @@ export const orgProfileRouter = router({
     )
     .query(async ({ ctx, input }) => {
       if (!ctx.user || !ctx.org) {
-        throw new Error('User or Organization is not defined');
+        throw new TRPCError({
+          code: 'UNPROCESSABLE_CONTENT',
+          message: 'User or Organization is not defined'
+        });
       }
       const { db, user, org } = ctx;
       const userId = +user?.id;
@@ -47,9 +50,15 @@ export const orgProfileRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      if (!ctx.user || !ctx.org) {
+        throw new TRPCError({
+          code: 'UNPROCESSABLE_CONTENT',
+          message: 'User or Organization is not defined'
+        });
+      }
       const { db, user, org } = ctx;
-      const userId = user?.id || 0;
-      const orgId = org?.id || 0;
+      const userId = +user?.id;
+      const orgId = +org?.id;
       const { orgName, orgAvatarId } = input;
 
       const isAdmin = await isUserAdminOfOrg(org, userId);

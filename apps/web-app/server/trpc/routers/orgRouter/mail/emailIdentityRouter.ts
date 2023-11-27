@@ -25,6 +25,65 @@ import { isUserAdminOfOrg } from '~/server/utils/user';
 import { TRPCError } from '@trpc/server';
 
 export const emailIdentityRouter = router({
+  checkEmailAvailability: orgProcedure
+    .input(
+      z.object({
+        emailUsername: z.string().min(1).max(255),
+        domainPublicId: z.string().min(3).max(nanoIdLength)
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      if (!ctx.user || !ctx.org) {
+        throw new TRPCError({
+          code: 'UNPROCESSABLE_CONTENT',
+          message: 'User or Organization is not defined'
+        });
+      }
+      const { db, user, org } = ctx;
+      const userId = +user?.id;
+      const orgId = +org?.id;
+
+      const { emailUsername, domainPublicId } = input;
+
+      const domainResponse = await db.read.query.domains.findFirst({
+        where: and(
+          eq(domains.publicId, domainPublicId),
+          eq(domains.orgId, +orgId)
+        ),
+        columns: {
+          id: true,
+          domain: true
+        }
+      });
+
+      if (!domainResponse) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Domain not found'
+        });
+      }
+
+      const emailIdentityResponse =
+        await db.read.query.emailIdentities.findFirst({
+          where: and(
+            eq(emailIdentities.username, emailUsername),
+            eq(emailIdentities.domainId, domainResponse.id)
+          ),
+          columns: {
+            id: true
+          }
+        });
+
+      if (emailIdentityResponse) {
+        return {
+          available: false
+        };
+      }
+
+      return {
+        available: true
+      };
+    }),
   createNewEmailIdentity: orgProcedure
     .input(
       z.object({
@@ -41,9 +100,15 @@ export const emailIdentityRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      if (!ctx.user || !ctx.org) {
+        throw new TRPCError({
+          code: 'UNPROCESSABLE_CONTENT',
+          message: 'User or Organization is not defined'
+        });
+      }
       const { db, user, org } = ctx;
-      const userId = user?.id || 0;
-      const orgId = org?.id || 0;
+      const userId = +user?.id;
+      const orgId = +org?.id;
       const {
         domainPublicId,
         sendName,
@@ -64,7 +129,10 @@ export const emailIdentityRouter = router({
       }
 
       if (!routeToUsersOrgMemberPublicIds && !routeToGroupsPublicIds) {
-        throw new Error('Must route to at least one user or group');
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Must route to at least one user or group'
+        });
       }
 
       const domainResponse = await db.read.query.domains.findFirst({
@@ -79,10 +147,16 @@ export const emailIdentityRouter = router({
         }
       });
       if (!domainResponse) {
-        throw new Error('Domain not found');
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Domain not found'
+        });
       }
       if (domainResponse.catchAllAddress && catchAll) {
-        throw new Error('Domain already has catch all address');
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Domain already has catch all address'
+        });
       }
 
       const orgMemberIds: number[] = [];
@@ -193,9 +267,15 @@ export const emailIdentityRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
+      if (!ctx.user || !ctx.org) {
+        throw new TRPCError({
+          code: 'UNPROCESSABLE_CONTENT',
+          message: 'User or Organization is not defined'
+        });
+      }
       const { db, user, org } = ctx;
-      const userId = user?.id || 0;
-      const orgId = org?.id || 0;
+      const userId = +user?.id;
+      const orgId = +org?.id;
       const { emailIdentityPublicId } = input;
 
       const dbReplica = input.newEmailIdentity ? db.write : db.read;
@@ -268,9 +348,15 @@ export const emailIdentityRouter = router({
   getOrgEmailIdentities: orgProcedure
     .input(z.object({}).strict())
     .query(async ({ ctx, input }) => {
+      if (!ctx.user || !ctx.org) {
+        throw new TRPCError({
+          code: 'UNPROCESSABLE_CONTENT',
+          message: 'User or Organization is not defined'
+        });
+      }
       const { db, user, org } = ctx;
-      const userId = user?.id || 0;
-      const orgId = org?.id || 0;
+      const userId = +user?.id;
+      const orgId = +org?.id;
 
       const emailIdentityResponse =
         await db.read.query.emailIdentities.findMany({
@@ -337,26 +423,16 @@ export const emailIdentityRouter = router({
   getUserEmailIdentities: orgProcedure
     .input(z.object({}).strict())
     .query(async ({ ctx, input }) => {
-      const { db, user, org } = ctx;
-      const userId = user?.id || 0;
-      const orgId = org?.id || 0;
-      const orgMemberId = org?.memberId || 0;
-
-      // search for user org memberships, get id of membership
-      const userOrgMembershipQuery = await db.read.query.orgMembers.findFirst({
-        where: and(
-          eq(orgMembers.userId, +userId),
-          eq(orgMembers.orgId, +orgId)
-        ),
-        columns: {
-          id: true
-        }
-      });
-
-      if (!userOrgMembershipQuery?.id) {
-        throw new Error('User is not in org');
+      if (!ctx.user || !ctx.org) {
+        throw new TRPCError({
+          code: 'UNPROCESSABLE_CONTENT',
+          message: 'User or Organization is not defined'
+        });
       }
-      const userOrgMembershipId = userOrgMembershipQuery?.id;
+      const { db, user, org } = ctx;
+      const userId = +user?.id;
+      const orgId = +org?.id;
+      const orgMemberId = org?.memberId || 0;
       // search for user org group memberships, get id of org group
 
       //TODO: Add filter for org id
@@ -395,7 +471,7 @@ export const emailIdentityRouter = router({
       const routingRulesDestinationsQuery =
         await db.read.query.emailRoutingRulesDestinations.findMany({
           where: or(
-            eq(emailRoutingRulesDestinations.orgMemberId, userOrgMembershipId),
+            eq(emailRoutingRulesDestinations.orgMemberId, orgMemberId),
             inArray(
               emailRoutingRulesDestinations.groupId,
               uniqueUserGroupIds || [0]

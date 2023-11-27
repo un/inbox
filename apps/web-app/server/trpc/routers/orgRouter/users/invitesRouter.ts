@@ -22,14 +22,41 @@ export const invitesRouter = router({
   createNewInvite: orgProcedure
     .input(
       z.object({
-        role: z.enum(['admin', 'member']),
-        inviteeEmail: z.string().email()
+        user: z.object({
+          firstName: z.string().min(1).max(64),
+          lastName: z.string().min(1).max(64).optional(),
+          title: z.string().min(1).max(64).optional(),
+          role: z.enum(['admin', 'member'])
+        }),
+        notification: z
+          .object({
+            notificationEmailAddress: z.string().email()
+          })
+          .optional(),
+        email: z
+          .object({
+            emailUsername: z.string().min(3).max(64),
+            domainPublicId: z.string().min(3).max(nanoIdLength),
+            sendName: z.string().min(3).max(64)
+          })
+          .optional(),
+        groups: z
+          .object({
+            groupsPublicIds: z.string().min(3).max(64).array()
+          })
+          .optional()
       })
     )
     .mutation(async ({ ctx, input }) => {
+      if (!ctx.user || !ctx.org) {
+        throw new TRPCError({
+          code: 'UNPROCESSABLE_CONTENT',
+          message: 'User or Organization is not defined'
+        });
+      }
       const { db, user, org } = ctx;
-      const userId = user?.id || 0;
-      const orgId = org?.id || 0;
+      const userId = +user?.id;
+      const orgId = +org?.id;
       const orgMemberId = org?.memberId || 0;
       const { inviteeEmail, role } = input;
       const newPublicId = nanoId();
@@ -57,9 +84,15 @@ export const invitesRouter = router({
   viewInvites: orgProcedure
     .input(z.object({}).strict())
     .query(async ({ ctx, input }) => {
+      if (!ctx.user || !ctx.org) {
+        throw new TRPCError({
+          code: 'UNPROCESSABLE_CONTENT',
+          message: 'User or Organization is not defined'
+        });
+      }
       const { db, user, org } = ctx;
-      const userId = user?.id || 0;
-      const orgId = org?.id || 0;
+      const userId = +user?.id;
+      const orgId = +org?.id;
 
       const orgInvitesResponse = await db.read.query.orgInvitations.findMany({
         where: eq(orgInvitations.orgId, +orgId),
@@ -143,8 +176,11 @@ export const invitesRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      if (!ctx.user) {
+        throw new Error('User or Organization is not defined');
+      }
       const { db, user } = ctx;
-      const userId = user?.id || 0;
+      const userId = +user?.id;
       const newPublicId = nanoId();
 
       const queryInvitesResponse = await db.read
@@ -219,9 +255,15 @@ export const invitesRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      if (!ctx.user || !ctx.org) {
+        throw new TRPCError({
+          code: 'UNPROCESSABLE_CONTENT',
+          message: 'User or Organization is not defined'
+        });
+      }
       const { db, user, org } = ctx;
-      const userId = user?.id || 0;
-      const orgId = org?.id || 0;
+      const userId = +user?.id;
+      const orgId = +org?.id;
       const isAdmin = await isUserAdminOfOrg(org, userId);
       if (!isAdmin) {
         throw new TRPCError({

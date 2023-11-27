@@ -17,9 +17,15 @@ export const domainsRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      if (!ctx.user || !ctx.org) {
+        throw new TRPCError({
+          code: 'UNPROCESSABLE_CONTENT',
+          message: 'User or Organization is not defined'
+        });
+      }
       const { db, user, org } = ctx;
-      const userId = user?.id || 0;
-      const orgId = org?.id || 0;
+      const userId = +user?.id;
+      const orgId = +org?.id;
       const newPublicId = nanoId();
 
       const domainName = input.domainName.toLowerCase();
@@ -48,8 +54,10 @@ export const domainsRouter = router({
 
       await dns.promises.setServers(['1.1.1.1', '1.0.0.1']);
       await dns.promises.resolveNs(domainName).catch((error) => {
-        console.log({ error }, { domainName });
-        throw new Error('Domain does not exist or is not registered');
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Domain does not exist or is not registered'
+        });
       });
 
       const existingDomains = await db.read.query.domains.findFirst({
@@ -106,9 +114,15 @@ export const domainsRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
+      if (!ctx.user || !ctx.org) {
+        throw new TRPCError({
+          code: 'UNPROCESSABLE_CONTENT',
+          message: 'User or Organization is not defined'
+        });
+      }
       const { db, user, org } = ctx;
-      const userId = user?.id || 0;
-      const orgId = org?.id || 0;
+      const userId = +user?.id;
+      const orgId = +org?.id;
       const { domainPublicId } = input;
 
       const dbReplica = input.newDomain ? db.write : db.read;
@@ -150,9 +164,15 @@ export const domainsRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
+      if (!ctx.user || !ctx.org) {
+        throw new TRPCError({
+          code: 'UNPROCESSABLE_CONTENT',
+          message: 'User or Organization is not defined'
+        });
+      }
       const { db, user, org } = ctx;
-      const userId = user?.id || 0;
-      const orgId = org?.id || 0;
+      const userId = +user?.id;
+      const orgId = +org?.id;
       const { domainPublicId } = input;
       const postalRootUrl = useRuntimeConfig().mailBridge
         .postalRootUrl as string;
@@ -305,9 +325,15 @@ export const domainsRouter = router({
   getOrgDomains: orgProcedure
     .input(z.object({}).strict())
     .query(async ({ ctx, input }) => {
+      if (!ctx.user || !ctx.org) {
+        throw new TRPCError({
+          code: 'UNPROCESSABLE_CONTENT',
+          message: 'User or Organization is not defined'
+        });
+      }
       const { db, user, org } = ctx;
-      const userId = user?.id || 0;
-      const orgId = org?.id || 0;
+      const userId = +user?.id;
+      const orgId = +org?.id;
 
       const domainResponse = await db.read.query.domains.findMany({
         where: eq(domains.orgId, +orgId),

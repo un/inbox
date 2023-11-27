@@ -23,9 +23,15 @@ export const messageRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
+      if (!ctx.user || !ctx.org) {
+        throw new TRPCError({
+          code: 'UNPROCESSABLE_CONTENT',
+          message: 'User or Organization is not defined'
+        });
+      }
       const { db, user, org } = ctx;
-      const userId = user?.id || 0;
-      const orgId = org?.id || 0;
+      const userId = +user?.id;
+      const orgId = +org?.id;
       const { convoPublicId, cursorLastCreatedAt, cursorLastPublicId } = input;
 
       const inputLastCreatedAt = cursorLastCreatedAt

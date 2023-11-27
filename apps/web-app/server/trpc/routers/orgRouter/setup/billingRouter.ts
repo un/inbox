@@ -14,9 +14,15 @@ export const billingRouter = router({
   getOrgBillingOverview: eeProcedure
     .input(z.object({}).strict())
     .query(async ({ ctx, input }) => {
+      if (!ctx.user || !ctx.org) {
+        throw new TRPCError({
+          code: 'UNPROCESSABLE_CONTENT',
+          message: 'User or Organization is not defined'
+        });
+      }
       const { db, user, org } = ctx;
-      const userId = user?.id || 0;
-      const orgId = org?.id || 0;
+      const userId = +user?.id;
+      const orgId = +org?.id;
 
       const isAdmin = await isUserAdminOfOrg(org, userId);
       if (!isAdmin) {
@@ -53,9 +59,15 @@ export const billingRouter = router({
   getOrgStripePortalLink: eeProcedure
     .input(z.object({}).strict())
     .query(async ({ ctx, input }) => {
+      if (!ctx.user || !ctx.org) {
+        throw new TRPCError({
+          code: 'UNPROCESSABLE_CONTENT',
+          message: 'User or Organization is not defined'
+        });
+      }
       const { db, user, org } = ctx;
-      const userId = user?.id || 0;
-      const orgId = org?.id || 0;
+      const userId = +user?.id;
+      const orgId = +org?.id;
 
       const isAdmin = await isUserAdminOfOrg(org, userId);
       if (!isAdmin) {
@@ -71,7 +83,10 @@ export const billingRouter = router({
         });
 
       if (!orgPortalLink.link) {
-        throw new Error('Org not subscribed to a plan');
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Org not subscribed to a plan'
+        });
       }
       return {
         portalLink: orgPortalLink.link
@@ -85,9 +100,15 @@ export const billingRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
+      if (!ctx.user || !ctx.org) {
+        throw new TRPCError({
+          code: 'UNPROCESSABLE_CONTENT',
+          message: 'User or Organization is not defined'
+        });
+      }
       const { db, user, org } = ctx;
-      const userId = user?.id || 0;
-      const orgId = org?.id || 0;
+      const userId = +user?.id;
+      const orgId = +org?.id;
       const { plan, period } = input;
 
       const isAdmin = await isUserAdminOfOrg(org, userId);
@@ -105,7 +126,10 @@ export const billingRouter = router({
         }
       });
       if (orgSubscriptionQuery?.id) {
-        throw new Error('Org already subscribed to a plan');
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Org already subscribed to a plan'
+        });
       }
 
       const activeOrgMembersCount = await db.read
@@ -126,7 +150,10 @@ export const billingRouter = router({
         );
 
       if (!orgSubLink.link) {
-        throw new Error('Org not subscribed to a plan');
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Org not subscribed to a plan'
+        });
       }
       return {
         subLink: orgSubLink.link
