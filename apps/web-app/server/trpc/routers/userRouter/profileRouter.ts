@@ -2,9 +2,16 @@ import { z } from 'zod';
 import { parse, stringify } from 'superjson';
 import { router, userProcedure } from '../../trpc';
 import type { DBType } from '@uninbox/database';
-import { and, eq } from '@uninbox/database/orm';
-import { users, userProfiles } from '@uninbox/database/schema';
+import { and, eq, or } from '@uninbox/database/orm';
+import {
+  users,
+  userProfiles,
+  orgs,
+  userProfilesToOrgs,
+  orgMembers
+} from '@uninbox/database/schema';
 import { nanoId, nanoIdLength } from '@uninbox/utils';
+import { TRPCError } from '@trpc/server';
 
 export const profileRouter = router({
   generateAvatarUploadUrl: userProcedure.query(async ({ ctx, input }) => {
@@ -106,30 +113,74 @@ export const profileRouter = router({
         error: null
       };
     }),
-  getUserSingleProfile: userProcedure
-    .input(z.object({}).strict())
+  getUserOrgProfile: userProcedure
+    .input(
+      z
+        .object({
+          orgPublicId: z.string().min(3).max(nanoIdLength).optional(),
+          orgSlug: z.string().min(1).max(32).optional()
+        })
+        .strict()
+    )
     .query(async ({ ctx, input }) => {
       const { db, user } = ctx;
       const userId = user?.id || 0;
 
-      // TODO: Switch to FindMany when supporting multiple profiles
-      const userProfilesQuery = await db.read.query.userProfiles.findFirst({
-        where: and(
-          eq(userProfiles.userId, +userId),
-          eq(userProfiles.defaultProfile, true)
-        ),
+      let orgId: number | null = null;
+      if (input.orgPublicId || input.orgSlug) {
+        const orgQuery = await db.read.query.orgs.findFirst({
+          where: input.orgPublicId
+            ? eq(orgs.publicId, input.orgPublicId)
+            : input.orgSlug
+              ? eq(orgs.slug, input.orgSlug)
+              : eq(orgs.id, 0),
+          columns: {
+            id: true
+          }
+        });
+        orgId = orgQuery?.id || null;
+      }
+      if ((input.orgPublicId || input.orgSlug) && !orgId) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message:
+            'Could not find your organization profile, please contact support.'
+        });
+      }
+
+      const userOrgMembershipQuery = await db.read.query.orgMembers.findFirst({
+        where: !orgId
+          ? eq(orgMembers.userId, +userId)
+          : and(eq(orgMembers.userId, +userId), eq(orgMembers.orgId, +orgId)),
         columns: {
-          publicId: true,
-          avatarId: true,
-          firstName: true,
-          lastName: true,
-          handle: true,
-          title: true,
-          blurb: true
+          userProfileId: true
+        },
+        with: {
+          profile: {
+            columns: {
+              publicId: true,
+              avatarId: true,
+              firstName: true,
+              lastName: true,
+              handle: true,
+              title: true,
+              blurb: true
+            }
+          }
         }
       });
+
+      if (!userOrgMembershipQuery || !userOrgMembershipQuery.profile) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'We couldnt find your profile, please contact support.'
+        });
+      }
+
+      // TODO: Switch to FindMany when supporting single user multiple profiles to orgs
+
       return {
-        profile: userProfilesQuery
+        profile: userOrgMembershipQuery?.profile
       };
     }),
   updateUserProfile: userProcedure

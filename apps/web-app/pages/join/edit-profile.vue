@@ -218,8 +218,8 @@
       </div>
       <div
         v-if="!pending"
-        class="w-full flex flex-col items-center justify-center gap-8 pb-14">
-        <div class="flex flex-col items-center gap-2">
+        class="w-full flex flex-col items-start justify-center gap-8 pb-14">
+        <div class="flex flex-col gap-2">
           <button
             type="button"
             class="h-[80px] w-[80px] cursor-pointer border-1 border-base-7 rounded-lg bg-base-3 bg-base-4 bg-cover bg-center md:h-[128px] md:w-[128px] hover:border-base-8"

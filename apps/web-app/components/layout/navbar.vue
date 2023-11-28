@@ -44,8 +44,8 @@
   const { $trpc } = useNuxtApp();
 
   const { data: userProfile } =
-    await $trpc.user.profile.getUserSingleProfile.useQuery(
-      {},
+    await $trpc.user.profile.getUserOrgProfile.useQuery(
+      { orgSlug: orgSlug },
       { server: false, queryKey: 'getUserSingleProfileNav' }
     );
 

@@ -16,6 +16,7 @@ import {
 } from '@uninbox/database/schema';
 import { nanoId, nanoIdLength } from '@uninbox/utils';
 import { mailBridgeTrpcClient } from '~/server/utils/tRPCServerClients';
+import { TRPCError } from '@trpc/server';
 
 async function validateOrgSlug(
   db: DBType,
@@ -91,10 +92,52 @@ export const crudRouter = router({
       const orgId = +insertOrgResponse.insertId;
 
       //TODO: fix to where the userProfile ID is looked up on DB via SQL insert
-      const userProfile = await db.read
-        .select({ id: userProfiles.id })
-        .from(userProfiles)
-        .where(eq(userProfiles.userId, +userId));
+      const userProfile = await db.read.query.userProfiles.findFirst({
+        where: and(
+          eq(userProfiles.userId, +userId),
+          eq(userProfiles.defaultProfile, true)
+        ),
+        columns: {
+          id: true
+        }
+      });
+
+      let userProfileId: number;
+      if (userProfile && userProfile.id) {
+        userProfileId = userProfile.id;
+      } else {
+        const newProfilePublicId = nanoId();
+        const { username } =
+          (await db.read.query.users.findFirst({
+            where: eq(users.id, +userId),
+            columns: {
+              username: true
+            }
+          })) || {};
+
+        if (!username) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'User not found. Please contact support.'
+          });
+        }
+
+        const defaultProfileValues = {
+          publicId: newProfilePublicId,
+          userId: +userId,
+          firstName: username,
+          lastName: '',
+          handle: username,
+          title: '',
+          blurb: '',
+          defaultProfile: true
+        };
+
+        const newProfile = await db.write
+          .insert(userProfiles)
+          .values(defaultProfileValues);
+        userProfileId = +newProfile.insertId;
+      }
 
       const newPublicId2 = nanoId();
       await db.write.insert(orgMembers).values({
@@ -103,7 +146,7 @@ export const crudRouter = router({
         role: 'admin',
         userId: +userId,
         status: 'active',
-        userProfileId: userProfile[0].id
+        userProfileId: +userProfileId
       });
 
       mailBridgeTrpcClient.postal.org.createOrg.mutate({

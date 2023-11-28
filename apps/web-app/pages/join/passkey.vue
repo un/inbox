@@ -63,7 +63,7 @@
 
     //TODO: prompt the user to save the name of where they stored the passkey, store in DB, store in localstorage
 
-    navigateTo('/join/profile');
+    navigateTo('/join/org');
   }
 
   watchDebounced(
@@ -115,12 +115,12 @@
             @click="navigateTo('/join/passkey')" />
         </UnUiTooltip>
         <UnUiTooltip
-          text="Create your profile"
+          text="Set up your organization"
           class="w-full">
           <div class="bg-primary-400 h-2 w-full rounded" />
         </UnUiTooltip>
         <UnUiTooltip
-          text="Set up your organization"
+          text="Create your profile"
           class="w-full">
           <div class="bg-primary-400 h-2 w-full rounded" />
         </UnUiTooltip>

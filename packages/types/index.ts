@@ -7,7 +7,7 @@ export type OrgContext = {
     userId: number;
     // Refer to DB schema orgMembers.role and orgMembers.status
     role: 'admin' | 'member';
-    status: 'active' | 'removed';
+    status: 'invited' | 'active' | 'removed';
   }[];
 } | null;
 export type UserContext = {

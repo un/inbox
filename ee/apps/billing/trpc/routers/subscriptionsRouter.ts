@@ -35,7 +35,7 @@ export const subscriptionsRouter = router({
         }
       });
       if (!orgSubscriptionQuery?.id) {
-        throw new Error('Org is not subscribed to a plan');
+        return { error: 'Org is not subscribed to a plan' };
       }
 
       const activeOrgMembersCount = await db.read
@@ -47,8 +47,6 @@ export const subscriptionsRouter = router({
 
       const totalOrgUsers = activeOrgMembersCount[0].count;
 
-      const subscriptionDescription = `Total users: ${totalOrgUsers}`;
-
       const stripeGetSubscriptionResult =
         await useStripe().sdk.subscriptions.retrieve(
           orgSubscriptionQuery.stripeSubscriptionId
@@ -57,7 +55,7 @@ export const subscriptionsRouter = router({
       await useStripe().sdk.subscriptions.update(
         orgSubscriptionQuery.stripeSubscriptionId,
         {
-          description: subscriptionDescription,
+          description: `Total users: ${totalOrgUsers}`,
           items: [
             {
               id: stripeGetSubscriptionResult.items.data[0].id,

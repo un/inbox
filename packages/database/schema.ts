@@ -122,10 +122,10 @@ export const userProfiles = mysqlTable(
   {
     id: serial('id').primaryKey(),
     publicId: nanoId('public_id').notNull(),
-    userId: foreignKey('user_id').notNull(),
+    userId: foreignKey('user_id'),
     firstName: varchar('first_name', { length: 64 }),
     lastName: varchar('last_name', { length: 64 }),
-    handle: varchar('handle', { length: 64 }).notNull(),
+    handle: varchar('handle', { length: 64 }),
     title: varchar('title', { length: 64 }),
     blurb: text('blurb'),
     avatarId: varchar('avatar_id', { length: 64 }),
@@ -135,7 +135,8 @@ export const userProfiles = mysqlTable(
       .notNull()
   },
   (table) => ({
-    publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId)
+    publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
+    userIdIndex: index('user_id_idx').on(table.userId)
   })
 );
 
@@ -193,10 +194,10 @@ export const orgMembers = mysqlTable(
   {
     id: serial('id').primaryKey(),
     publicId: nanoId('public_id').notNull(),
-    userId: foreignKey('user_id').notNull(),
+    userId: foreignKey('user_id'),
     orgId: foreignKey('org_id').notNull(),
     invitedByOrgMemberId: foreignKey('invited_by_org_member_id'),
-    status: mysqlEnum('status', ['active', 'removed']).notNull(),
+    status: mysqlEnum('status', ['invited', 'active', 'removed']).notNull(),
     role: mysqlEnum('role', ['member', 'admin']).notNull(),
     userProfileId: foreignKey('user_profile_id').notNull(),
     addedAt: timestamp('added_at')
@@ -260,7 +261,8 @@ export const orgInvitations = mysqlTable(
     orgId: foreignKey('org_id').notNull(),
     invitedByOrgMemberId: foreignKey('invited_by_org_member_id').notNull(),
     role: mysqlEnum('role', ['member', 'admin']).notNull(),
-    invitedUser: foreignKey('invited_user'),
+    orgMemberId: foreignKey('org_member_id'),
+    invitedUserProfileId: foreignKey('invited_user_profile_id'),
     email: varchar('email', { length: 128 }),
     inviteToken: varchar('invite_token', { length: 64 }),
     invitedAt: timestamp('invited_at')
@@ -272,6 +274,7 @@ export const orgInvitations = mysqlTable(
   (table) => ({
     publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
     orgIdIndex: index('org_id_idx').on(table.orgId),
+    orgMemberIdIndex: uniqueIndex('org_member_id_idx').on(table.orgMemberId),
     orgEmailUniqueIndex: uniqueIndex('org_email_unique_idx').on(
       table.orgId,
       table.email
@@ -287,9 +290,13 @@ export const orgInvitationsRelations = relations(orgInvitations, ({ one }) => ({
     fields: [orgInvitations.invitedByOrgMemberId],
     references: [orgMembers.id]
   }),
-  invitedUser: one(users, {
-    fields: [orgInvitations.invitedUser],
-    references: [users.id]
+  orgMember: one(orgMembers, {
+    fields: [orgInvitations.orgMemberId],
+    references: [orgMembers.id]
+  }),
+  invitedProfile: one(userProfiles, {
+    fields: [orgInvitations.invitedUserProfileId],
+    references: [userProfiles.id]
   })
 }));
 

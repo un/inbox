@@ -35,7 +35,6 @@
             username: usernameValue.value
           });
         //resetTurnstileToken();
-        console.log(available, error);
         if (!available) {
           usernameValid.value = false;
           usernameValidationMessage.value = error || 'something went wrong';
@@ -71,12 +70,12 @@
           <div class="bg-primary-400 h-2 w-full rounded" />
         </UnUiTooltip>
         <UnUiTooltip
-          text="Create your profile"
+          text="Set up your organization"
           class="w-full">
           <div class="bg-primary-400 h-2 w-full rounded" />
         </UnUiTooltip>
         <UnUiTooltip
-          text="Set up your organization"
+          text="Create your profile"
           class="w-full">
           <div class="bg-primary-400 h-2 w-full rounded" />
         </UnUiTooltip>

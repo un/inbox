@@ -33,10 +33,6 @@
     );
   });
 
-  const route = useRoute();
-
-  const orgPublicId = route.params.orgId as string;
-
   // get list of domains
   interface OrgDomains {
     domainPublicId: string;
@@ -47,9 +43,7 @@
 
   const { data: orgDomainsData, pending: orgDomainsPending } =
     await $trpc.org.mail.domains.getOrgDomains.useLazyQuery(
-      {
-        orgPublicId: orgPublicId
-      },
+      {},
       { server: false }
     );
 
@@ -69,9 +63,7 @@
   // get list of groups
   const { data: orgUserGroupsData, pending: orgUserGroupPending } =
     await $trpc.org.users.userGroups.getOrgUserGroups.useLazyQuery(
-      {
-        orgPublicId: orgPublicId
-      },
+      {},
       { server: false }
     );
   interface OrgUserGroups {
@@ -180,12 +172,7 @@
   const isPro = ref(false);
   if (useEE().config.modules.billing) {
     const { data: isProQuery } =
-      await $trpc.org.setup.billing.isPro.useLazyQuery(
-        {
-          orgPublicId: orgPublicId
-        },
-        { server: false }
-      );
+      await $trpc.org.setup.billing.isPro.useLazyQuery({}, { server: false });
 
     isPro.value = isProQuery.value?.isPro || false;
   } else {

@@ -101,26 +101,33 @@
       newButtonLabel.value = 'Something went wrong!';
     }
 
+    const orgSlugCookie = useCookie('un-join-org-slug', {
+      expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+    });
+    orgSlugCookie.value = orgSlugValue.value as string;
     newButtonLabel.value = 'Creating a @uninbox email';
-
     newButtonLoading.value = false;
     newButtonLabel.value = 'All Done!';
-    navigateTo('/unboarding');
+    navigateTo('/join/profile');
   }
   async function joinOrg() {
     joinButtonLoading.value = true;
-    joinButtonLabel.value = 'Creating your profile';
+    joinButtonLabel.value = 'Joining the organization';
     const joinOrgResponse = await $trpc.org.users.invites.redeemInvite.mutate({
       inviteToken: inviteCodeValue.value
     });
-    if (!joinOrgResponse.success && joinOrgResponse.error) {
+    const orgSlugCookie = useCookie('un-join-org-slug', {
+      expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+    });
+    orgSlugCookie.value = joinOrgResponse.orgSlug as string;
+    if (!joinOrgResponse.success) {
       joinButtonLoading.value = false;
       pageError.value = true;
       joinButtonLabel.value = 'Something went wrong!';
     }
     joinButtonLoading.value = false;
     joinButtonLabel.value = 'All Done!';
-    navigateTo('/unboarding');
+    navigateTo('/join/profile');
   }
 </script>
 
@@ -150,16 +157,18 @@
             @click="navigateTo('/join/passkey')" />
         </UnUiTooltip>
         <UnUiTooltip
+          text="Set up your organization"
+          class="w-full">
+          <div
+            class="bg-primary-600 h-2 w-full rounded"
+            @click="navigateTo('/join/org')" />
+        </UnUiTooltip>
+        <UnUiTooltip
           text="Create your profile"
           class="w-full">
           <div
             class="bg-primary-400 h-2 w-full rounded"
             @click="navigateTo('/join/profile')" />
-        </UnUiTooltip>
-        <UnUiTooltip
-          text="Set up your organization"
-          class="w-full">
-          <div class="bg-primary-600 h-2 w-full rounded" />
         </UnUiTooltip>
       </div>
 
@@ -255,13 +264,6 @@
           block
           @click="joinOrg()" />
       </div>
-      <UnUiButton
-        :label="skipButtonLabel"
-        icon="i-ph-skip-forward"
-        :loading="skipButtonLoading"
-        block
-        variant="outline"
-        @click="navigateTo('/unboarding')" />
       <UnUiAlert
         v-if="pageError"
         title="Uh oh!"

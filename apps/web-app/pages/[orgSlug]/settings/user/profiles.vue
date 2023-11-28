@@ -24,9 +24,11 @@
   const blurbValue = ref('');
   const blurbValidationMessage = ref('');
 
+  const orgSlug = useRoute().params.orgSlug as string;
+
   const { data: initialUserProfile, pending } =
-    await $trpc.user.profile.getUserSingleProfile.useLazyQuery(
-      {},
+    await $trpc.user.profile.getUserOrgProfile.useLazyQuery(
+      { orgSlug: orgSlug },
       { server: false }
     );
 
@@ -78,6 +80,7 @@
     resetFiles();
     openFileDialog();
   }
+  //@ts-ignore
   selectedFilesOnChange(async (selectedFiles) => {
     uploadLoading.value = true;
     if (!selectedFiles) return;
@@ -118,7 +121,7 @@
       lName: lNameValue.value,
       title: titleValue.value,
       blurb: blurbValue.value,
-      handle: initialUserProfile.value.profile.handle,
+      handle: initialUserProfile.value.profile.handle || '',
       ...(imageId.value && { imageId: imageId.value })
     });
 

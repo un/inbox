@@ -37,6 +37,11 @@
       sortable: true
     },
     {
+      key: 'usedBy',
+      label: 'User',
+      sortable: true
+    },
+    {
       key: 'code',
       label: 'Invite Code',
       sortable: true
@@ -46,15 +51,9 @@
       label: 'Email',
       sortable: true
     },
-    // {
-    //   key: 'role',
-    //   label: 'Role',
-    //   sortable: true
-    // },
-
     {
-      key: 'usedBy',
-      label: 'Used By',
+      key: 'role',
+      label: 'Role',
       sortable: true
     },
     {
@@ -101,7 +100,7 @@
               ? invite.inviteToken.substring(0, 8) + '...'
               : '',
             email: invite.email,
-            truncatedEmail: truncateEmail(invite.email ? invite.email : ''),
+            truncatedEmail: invite.email ? truncateEmail(invite.email) : '',
             role: invite.role,
             status: invite.expiresAt
               ? invite.acceptedAt
@@ -110,20 +109,19 @@
                   ? 'expired'
                   : 'active'
               : 'active',
-            creatorAvatar:
-              invite.invitedByUser.orgMemberships[0].profile.avatarId,
+            creatorAvatar: invite.invitedByOrgMember.profile.avatarId,
             createdBy:
-              invite.invitedByUser.orgMemberships[0].profile.firstName +
+              invite.invitedByOrgMember.profile.firstName +
               ' ' +
-              invite.invitedByUser.orgMemberships[0].profile.lastName,
+              invite.invitedByOrgMember.profile.lastName,
             created: invite.invitedAt,
-            userAvatar: invite.invitedUser?.orgMemberships[0].profile
-              ? invite.invitedUser?.orgMemberships[0].profile.avatarId
+            userAvatar: invite.orgMember?.profile
+              ? invite.orgMember?.profile.avatarId
               : null,
-            usedBy: invite.invitedUser?.orgMemberships[0].profile
-              ? invite.invitedUser?.orgMemberships[0].profile.firstName +
+            usedBy: invite.orgMember?.profile
+              ? invite.orgMember?.profile.firstName +
                 ' ' +
-                invite.invitedUser?.orgMemberships[0].profile.lastName
+                invite.orgMember?.profile.lastName
               : null,
             expiry: invite.expiresAt
           });
@@ -135,30 +133,11 @@
     // { immediate: true }
   );
 
-  async function createInvite() {
-    if (inviteEmailValid.value === false) return;
-    buttonLoading.value = true;
-    buttonLabel.value = 'Creating invite...';
-    const newInviteResponse =
-      await $trpc.org.users.invites.createNewInvite.mutate({
-        inviteeEmail: inviteEmailValue.value,
-        role: 'member'
-      });
-    buttonLoading.value = false;
-    buttonLabel.value = 'All done';
-    inviteEmailValue.value = '';
-    newInviteCode.value = newInviteResponse.inviteToken;
+  const addNewModalOpen = ref(false);
+  const closeModal = () => {
+    addNewModalOpen.value = false;
     refresh();
-
-    const toast = useToast();
-    toast.add({
-      id: 'invite_created',
-      title: 'Invite Created',
-      description: `New Invite has been created successfully.`,
-      icon: 'i-ph-thumbs-up',
-      timeout: 5000
-    });
-  }
+  };
 </script>
 
 <template>
@@ -171,57 +150,17 @@
         </div>
       </div>
       <div class="flex flex-row items-center gap-4">
-        <button
-          class="max-w-80 flex flex-row items-center justify-center gap-2 border-1 border-base-7 rounded bg-base-3 p-2"
-          @click="showInviteModal = !showInviteModal">
-          <UnUiIcon
-            name="i-ph-plus"
-            size="20" />
-          <p class="text-sm">Invite</p>
-        </button>
-      </div>
-    </div>
-    <div
-      v-if="showInviteModal"
-      class="w-full flex flex-col justify-start gap-4">
-      <span class="text-md font-semibold">Create a new invite</span>
-      <div class="flex flex-row gap-8">
-        <div class="flex flex-col gap-4">
-          <UnUiInput
-            v-model:value="inviteEmailValue"
-            v-model:valid="inviteEmailValid"
-            v-model:validationMessage="inviteEmailValidationMessage"
-            label="Email"
-            placeholder=""
-            :schema="z.string().email()" />
-          <UnUiButton
-            :label="buttonLabel"
-            :loading="buttonLoading"
-            :disabled="!formValid"
-            @click="createInvite()" />
-        </div>
-        <div
-          v-if="newInviteCode"
-          class="w-full flex flex-col gap-0">
-          <span class="text-sm font-semibold uppercase text-base-11"
-            >Invite Code</span
-          >
-          <div class="flex flex-row gap-4">
-            <span class="font-mono">{{ newInviteCode }}</span>
-            <button
-              v-if="newInviteCode"
-              class="flex flex-row items-center justify-center gap-1 rounded bg-base-3 p-1 text-xs hover:bg-base-4"
-              @click="copy(newInviteCode)">
-              <!-- by default, `copied` will be reset in 1.5s -->
-              <UnUiIcon
-                name="i-ph-clipboard"
-                size="16"
-                :class="copied ? 'text-green-500' : 'text-base-11'" />
-              <span v-if="!copied">Copy</span>
-              <span v-else>Copied!</span>
-            </button>
-          </div>
-        </div>
+        <UnUiButton
+          label="Add new"
+          @click="addNewModalOpen = true" />
+        <UnUiModal v-model="addNewModalOpen">
+          <template #header>
+            <span class="">Invite a new user</span>
+          </template>
+          <SettingsAddNewInvite
+            lazy
+            @close="closeModal()" />
+        </UnUiModal>
       </div>
     </div>
     <div class="w-full flex flex-col gap-8 overflow-y-scroll">
@@ -235,6 +174,16 @@
             <UnUiBadge :color="row.status === 'active' ? 'green' : 'red'">
               <span class="uppercase">{{ row.status }}</span>
             </UnUiBadge>
+          </template>
+          <template #usedBy-data="{ row }">
+            <div class="flex flex-row items-center gap-2">
+              <UnUiAvatar
+                v-if="row.userAvatar || row.usedBy"
+                :avatar-id="row.userAvatar ? row.userAvatar : ''"
+                :alt="row.usedBy ? row.usedBy : ''"
+                size="xs" />
+              <span class="">{{ row.usedBy }}</span>
+            </div>
           </template>
           <template #code-data="{ row }">
             <div
@@ -261,28 +210,17 @@
               <span class="">{{ row.truncatedEmail }}</span>
             </UnUiTooltip>
           </template>
-          <!-- <template #role-data="{ row }">
-            <UnUiBadge :color="row.role === 'admin' ? 'amber' : 'blue'">
+          <template #role-data="{ row }">
+            <UnUiBadge :color="row.role === 'admin' ? 'yellow' : 'blue'">
               <span class="uppercase">{{ row.role }}</span>
             </UnUiBadge>
-          </template> -->
-          <template #usedBy-data="{ row }">
-            <div class="flex flex-row items-center gap-2">
-              <UnUiAvatar
-                v-if="row.userAvatar || row.usedBy"
-                :avatar-id="row.userAvatar ? row.userAvatar : ''"
-                :name="row.usedBy ? row.usedBy : ''"
-                size="xs" />
-              <span class="">{{ row.usedBy }}</span>
-            </div>
           </template>
           <template #createdBy-data="{ row }">
             <div class="flex flex-row items-center gap-2">
               <UnUiAvatar
                 :avatar-id="row.creatorAvatar ? row.creatorAvatar : ''"
-                :name="row.createdBy ? row.createdBy : ''"
+                :alt="row.createdBy ? row.createdBy : ''"
                 size="xs" />
-              <span class="">{{ row.createdBy }}</span>
             </div>
           </template>
           <template #created-data="{ row }">

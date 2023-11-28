@@ -9,6 +9,9 @@ export default defineNuxtRouteMiddleware(async (to) => {
     }
     if (to.meta.skipAuth) {
       if (event.context.user) {
+        if (to.path.startsWith('/join/invite/')) {
+          return;
+        }
         if (to.path !== '/login') {
           return navigateTo('/login');
         }

@@ -1,8 +1,10 @@
 import type { OrgContext } from '@uninbox/types';
 
-export async function isUserAdminOfOrg(orgContext: OrgContext, userId: number) {
+export async function isUserAdminOfOrg(orgContext: OrgContext) {
+  if (!orgContext?.memberId) return false;
   const userOrgMembership = orgContext?.members.find((member) => {
-    return +member.userId === +userId;
+    //@ts-ignore
+    return +member.id === +orgContext?.memberId;
   });
   if (!userOrgMembership) {
     return false;
