@@ -12,6 +12,8 @@
   const orgNameValue = ref('');
   const orgNameValidationMessage = ref('');
 
+  const orgSlug = useRoute().params.orgSlug as string;
+
   const {
     data: orgEmailIdentities,
     pending,
@@ -76,7 +78,7 @@
     }
   });
   function select(row: (typeof tableRows.value)[number]) {
-    navigateTo(`/settings/org/mail/addresses/${row.publicId}`);
+    navigateTo(`/${orgSlug}/settings/org/mail/addresses/${row.publicId}`);
   }
 
   const addNewModalOpen = ref(false);

@@ -201,7 +201,7 @@
       firstName: newInviteUserFnameValue.value,
       lastName: newInviteUserLnameValue.value,
       title: newInviteUserTitleValue.value,
-      role: selectedMemberRole.value?.value as 'admin' | 'member'
+      role: (selectedMemberRole.value?.value as 'admin' | 'member') || 'member'
     };
 
     const sendNotification = sendEmailNotification

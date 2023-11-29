@@ -18,7 +18,7 @@
 
   const route = useRoute();
 
-  const orgPublicId = route.params.orgId as string;
+  const orgSlug = route.params.orgSlug as string;
 
   async function createGroup() {
     if (!newGroupColorValue.value) return;
@@ -50,12 +50,7 @@
   const isPro = ref(false);
   if (useEE().config.modules.billing) {
     const { data: isProQuery, pending } =
-      await $trpc.org.setup.billing.isPro.useLazyQuery(
-        {
-          orgPublicId: orgPublicId
-        },
-        { server: false }
-      );
+      await $trpc.org.setup.billing.isPro.useLazyQuery({}, { server: false });
 
     isPro.value = isProQuery.value?.isPro || false;
     dataPending.value = pending.value;
@@ -84,7 +79,7 @@
         <UnUiButton
           icon="i-ph-credit-card"
           label="Go to billing"
-          :to="`/settings/org/${orgPublicId}/setup/billing`" />
+          @click="navigateTo(`/${orgSlug}/settings/org/setup/billing`)" />
       </div>
     </div>
     <div

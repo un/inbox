@@ -5,6 +5,7 @@
 
   const newIdentityUsernameValue = ref('');
   const newIdentityUsernameValid = ref<boolean | 'remote' | null>(null);
+  const newIdentityUsernameValidationMessage = ref('');
   const newIdentitySendNameValue = ref('');
   const newIdentitySendNameValid = ref<boolean | 'remote' | null>(null);
   const newIdentityCatchAll = ref(false);
@@ -114,7 +115,7 @@
           publicId: member.publicId,
           name:
             member.profile?.firstName + ' ' + member.profile?.lastName || '',
-          handle: member.profile?.handle,
+          handle: member.profile?.handle || '',
           avatarId: member.profile?.avatarId || '',
           title: member.profile?.title || '',
           keywords:
@@ -131,6 +132,48 @@
   });
 
   const selectedOrgMembers = ref<OrgMembers[]>([]);
+
+  async function checkEmailAvailability() {
+    if (
+      newIdentityUsernameValid.value === 'remote' ||
+      newIdentityUsernameValidationMessage.value === 'Select domain'
+    ) {
+      if (!selectedDomain.value?.domain) {
+        newIdentityUsernameValid.value = false;
+        newIdentityUsernameValidationMessage.value = 'Select domain';
+        return;
+      }
+      const { available } =
+        await $trpc.org.mail.emailIdentities.checkEmailAvailability.query({
+          domainPublicId: selectedDomain.value?.domainPublicId as string,
+          emailUsername: newIdentityUsernameValue.value
+        });
+      if (!available) {
+        newIdentityUsernameValid.value = false;
+        newIdentityUsernameValidationMessage.value = 'Email already in use';
+      }
+      if (available) {
+        newIdentityUsernameValid.value = true;
+        newIdentityUsernameValidationMessage.value = '';
+      }
+      return;
+    }
+    return;
+  }
+
+  watchDebounced(
+    newIdentityUsernameValue,
+    async () => {
+      await checkEmailAvailability();
+    },
+    {
+      debounce: 500,
+      maxWait: 5000
+    }
+  );
+  watch(selectedDomain, () => {
+    checkEmailAvailability();
+  });
 
   async function createNewEmailIdentity() {
     buttonLoading.value = true;
@@ -191,10 +234,12 @@
         </div>
 
         <div
-          class="grid grid-cols-1 grid-rows-2 items-center gap-4 md:grid-cols-2 md:grid-rows-1">
+          class="items-top grid grid-cols-1 grid-rows-2 gap-4 md:grid-cols-2 md:grid-rows-1">
           <UnUiInput
             v-model:value="newIdentityUsernameValue"
             v-model:valid="newIdentityUsernameValid"
+            :validation-message="newIdentityUsernameValidationMessage"
+            :remote-validation="true"
             label="Address"
             :schema="
               z

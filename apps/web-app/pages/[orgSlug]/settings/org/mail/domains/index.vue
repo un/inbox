@@ -79,7 +79,7 @@
   );
 
   function select(row: (typeof tableRows.value)[number]) {
-    navigateTo(`${orgSlug}/settings/org/mail/domains/${row.domainId}`);
+    navigateTo(`/${orgSlug}/settings/org/mail/domains/${row.domainId}`);
   }
   const selected = ref<typeof tableRows.value>([]);
 

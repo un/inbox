@@ -385,7 +385,7 @@
               <UnUiButton
                 label="Recheck DNS Records"
                 size="sm"
-                icon="ph-arrow-clockwise"
+                icon="i-ph-arrow-clockwise"
                 :loading="dnsRefreshLoading"
                 variant="outline"
                 @click="recheckDns()" />

@@ -130,7 +130,7 @@
     userOrgsButtons.value,
     [
       {
-        label: 'Personal Settings',
+        label: 'Account Settings',
         icon: 'i-ph-user',
         click: () => {
           navigateTo(`/${orgSlug}/settings`);
@@ -240,7 +240,13 @@
     <div class="flex flex-row justify-between">
       <NuxtUiDropdown
         :items="userMenuItems"
-        :ui="{ item: { disabled: 'cursor-text select-text' } }"
+        :ui="{
+          width: 'w-52',
+          item: {
+            disabled: 'cursor-text select-text',
+            base: 'group w-full flex items-center gap-4'
+          }
+        }"
         :popper="{ placement: 'top-start' }">
         <div
           class="max-w-[140px] w-[140px] flex flex-row items-center justify-between gap-2">

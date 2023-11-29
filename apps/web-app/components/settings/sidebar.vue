@@ -13,12 +13,12 @@
   const personalLinks = [
     {
       label: 'Profile',
-      to: '/settings/user/profiles',
+      to: `/${orgSlug}/settings/user/profiles`,
       icon: 'i-ph-user-circle-gear'
     },
     {
       label: 'Personal Addresses',
-      to: '/settings/user/addresses',
+      to: `/${orgSlug}/settings/user/addresses`,
       icon: 'i-ph-envelope-open'
     }
   ];
@@ -65,11 +65,10 @@
   ]);
 </script>
 <template>
-  <div
-    class="h-full max-h-full flex flex-col gap-2 overflow-y-scroll border-r-1 border-base-6 pr-4">
+  <div class="h-full max-h-full flex flex-col gap-2 overflow-y-scroll pr-4">
     <div
       class="h-full max-h-full flex grow flex-col gap-4 overflow-hidden overflow-y-scroll">
-      <div class="w-full flex flex-col gap-2 border-b-1 border-base-6">
+      <div class="w-full flex flex-col gap-2">
         <div>
           <span class="font-display">Personal</span>
         </div>

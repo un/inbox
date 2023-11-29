@@ -133,6 +133,7 @@
     }
     buttonLoading.value = false;
     buttonLabel.value = 'All done!';
+    refreshNuxtData('getUserSingleProfileNav');
     const toast = useToast();
     toast.add({
       id: 'profile_saved',
