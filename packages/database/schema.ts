@@ -17,7 +17,7 @@ import {
   customType
 } from 'drizzle-orm/mysql-core';
 import { relations, sql } from 'drizzle-orm';
-import { nanoIdLength } from '@uninbox/utils';
+import { nanoIdLength, nanoIdLongLength } from '@uninbox/utils';
 import { uiColors } from '@uninbox/types/ui';
 import {
   stripeBillingPeriods,
@@ -34,17 +34,22 @@ const nanoId = customType<{ data: string; notNull: true }>({
     return `varchar(${nanoIdLength})`;
   }
 });
+const nanoIdLong = customType<{ data: string; notNull: true }>({
+  dataType() {
+    return `varchar(${nanoIdLongLength})`;
+  }
+});
 
 // Foreign Key type as drizzle does not support unsigned bigint
 const foreignKey = customType<{ data: number }>({
   dataType() {
-    return 'bigint UNSIGNED';
+    return 'bigint unsigned';
   }
 });
 
 const bigintUnsigned = customType<{ data: number }>({
   dataType() {
-    return 'bigint UNSIGNED';
+    return 'bigint unsigned';
   }
 });
 
@@ -975,9 +980,7 @@ export const convosRelations = relations(convos, ({ one, many }) => ({
   }),
   members: many(convoMembers),
   attachments: many(convoAttachments),
-  messages: many(convoMessages),
-  notes: many(convoNotes),
-  drafts: many(convoDrafts),
+  entries: many(convoEntries),
   subjects: many(convoSubjects)
 }));
 
@@ -985,6 +988,7 @@ export const convoSubjects = mysqlTable(
   'convo_subjects',
   {
     id: serial('id').primaryKey(),
+    publicId: nanoId('public_id').notNull(),
     convoId: foreignKey('convo_id').notNull(),
     subject: varchar('subject', { length: 256 }).notNull(),
     createdAt: timestamp('created_at')
@@ -992,6 +996,7 @@ export const convoSubjects = mysqlTable(
       .notNull()
   },
   (table) => ({
+    publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
     convoIdIndex: index('convo_id_idx').on(table.convoId)
   })
 );
@@ -1006,6 +1011,7 @@ export const convoMembers = mysqlTable(
   'convo_members',
   {
     id: serial('id').primaryKey(),
+    publicId: nanoId('public_id').notNull(),
     orgMemberId: foreignKey('org_member_id'),
     userGroupId: foreignKey('user_group_id'),
     foreignEmailIdentityId: foreignKey('foreign_email_identities_id'),
@@ -1024,6 +1030,7 @@ export const convoMembers = mysqlTable(
   },
   (table) => ({
     //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit : userId//userGroupId
+    publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
     orgMemberIdIndex: index('user_id_idx').on(table.orgMemberId),
     convoIdIndex: index('convo_id_idx').on(table.convoId),
     orgMemberToConvoIndex: uniqueIndex('org_member_to_convo_idx').on(
@@ -1061,9 +1068,7 @@ export const convoAttachments = mysqlTable(
     id: serial('id').primaryKey(),
     publicId: nanoId('public_id').notNull(),
     convoId: foreignKey('convo_id').notNull(),
-    convoMessageId: foreignKey('convo_message_id'),
-    convoNoteId: foreignKey('convo_note_id'),
-    convoDraftId: foreignKey('convo_draft_id'),
+    convoEntryId: foreignKey('convo_entry_id'),
     fileName: varchar('fileName', { length: 256 }).notNull(),
     type: varchar('type', { length: 256 }).notNull(),
     storageId: varchar('storageId', { length: 256 }).notNull(),
@@ -1074,6 +1079,7 @@ export const convoAttachments = mysqlTable(
   },
   (table) => ({
     convoIdIndex: index('convo_id_idx').on(table.convoId),
+    convoEntryIdIndex: index('convo_entry_id_idx').on(table.convoEntryId),
     publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId)
   })
 );
@@ -1084,224 +1090,143 @@ export const convoAttachmentsRelations = relations(
       fields: [convoAttachments.convoId],
       references: [convos.id]
     }),
-    convoMessage: one(convoMessages, {
-      fields: [convoAttachments.convoMessageId],
-      references: [convoMessages.id]
+    convoEntry: one(convoEntries, {
+      fields: [convoAttachments.convoEntryId],
+      references: [convoEntries.id]
     }),
     uploader: one(convoMembers, {
       fields: [convoAttachments.convoMemberId],
       references: [convoMembers.id]
-    }),
-    convoNote: one(convoNotes, {
-      fields: [convoAttachments.convoNoteId],
-      references: [convoNotes.id]
-    }),
-    convoDraft: one(convoDrafts, {
-      fields: [convoAttachments.convoDraftId],
-      references: [convoDrafts.id]
     })
   })
 );
 
-export const convoMessages = mysqlTable(
-  'convo_messages',
+export type ConvoEntryMetadataEmail = {
+  smtpMessageId: string;
+  postalId: number;
+  emailHeaders?: string;
+};
+export type ConvoEntryMetadata = {
+  email?: ConvoEntryMetadataEmail;
+};
+
+export const convoEntries = mysqlTable(
+  'convo_entries',
   {
     id: serial('id').primaryKey(),
-    publicId: nanoId('public_id').notNull(),
+    publicId: nanoIdLong('public_id').notNull(),
+    type: mysqlEnum('type', ['message', 'comment', 'draft']).notNull(),
     convoId: foreignKey('convo_id').notNull(),
     subjectId: foreignKey('subject_id'),
-    replyToId: foreignKey('reply_to_id'),
     author: foreignKey('author').notNull(),
-    body: text('body'),
-    smtpMessageId: varchar('smtp_message_id', { length: 256 }),
-    postalId: bigintUnsigned('postal_id'),
+    replyToId: foreignKey('reply_to_id'),
+    body: json('body').notNull(),
+    bodyPlainText: text('body_plain_text').notNull(),
+    metadata: json('metadata').$type<ConvoEntryMetadata>().default({}),
+    visibility: mysqlEnum('visibility', [
+      'private',
+      'internal_participants',
+      'org',
+      'all_participants'
+    ]).notNull(),
     createdAt: timestamp('created_at')
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull()
   },
   (table) => ({
     convoIdIndex: index('convo_id_idx').on(table.convoId),
-    publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId)
+    publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
+    typeIndex: index('type_idx').on(table.type),
+    replyToIdIndex: index('reply_to_id_idx').on(table.replyToId)
   })
 );
-export const convoMessagesRelations = relations(
-  convoMessages,
+
+export const convoEntriesRelations = relations(
+  convoEntries,
   ({ one, many }) => ({
     convo: one(convos, {
-      fields: [convoMessages.convoId],
+      fields: [convoEntries.convoId],
       references: [convos.id]
     }),
     subject: one(convoSubjects, {
-      fields: [convoMessages.subjectId],
+      fields: [convoEntries.subjectId],
       references: [convoSubjects.id]
     }),
     author: one(convoMembers, {
-      fields: [convoMessages.author],
+      fields: [convoEntries.author],
       references: [convoMembers.id]
     }),
     attachments: many(convoAttachments),
-    replies: many(convoMessageReplies, {
+    replies: many(convoEntryReplies, {
       relationName: 'replies'
     }),
-    replyTo: one(convoMessageReplies, {
-      fields: [convoMessages.replyToId],
-      references: [convoMessageReplies.convoMessageSourceId],
+    replyTo: one(convoEntryReplies, {
+      fields: [convoEntries.replyToId],
+      references: [convoEntryReplies.entrySourceId],
       relationName: 'inReplyTo'
-    }),
-    draftReplies: many(convoMessageReplies, { relationName: 'draftReplies' })
-  })
-);
-
-export const convoMessageReplies = mysqlTable(
-  'convo_message_replies',
-  {
-    id: serial('id').primaryKey(),
-    convoMessageSourceId: foreignKey('convo_message_source_id').notNull(),
-    convoMessageReplyId: foreignKey('convo_message_reply_id'),
-    convoDraftId: foreignKey('convo_draft_id'),
-    createdAt: timestamp('created_at')
-      .default(sql`CURRENT_TIMESTAMP`)
-      .notNull()
-  },
-  (table) => ({
-    //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit : convoMessageReplyId//convoDraftId
-    //TODO: Add indexes
-  })
-);
-
-export const convoMessageRepliesRelations = relations(
-  convoMessageReplies,
-  ({ one }) => ({
-    convoMessageSource: one(convoMessages, {
-      fields: [convoMessageReplies.convoMessageSourceId],
-      references: [convoMessages.id],
-      relationName: 'inReplyTo'
-    }),
-    convoMessageReply: one(convoMessages, {
-      fields: [convoMessageReplies.convoMessageReplyId],
-      references: [convoMessages.id],
-      relationName: 'replies'
-    }),
-    convoDraft: one(convoDrafts, {
-      fields: [convoMessageReplies.convoMessageReplyId],
-      references: [convoDrafts.id],
-      relationName: 'draftReplies'
     })
   })
 );
 
-export const convoNotes = mysqlTable(
-  'convo_notes',
+export const convoEntryReplies = mysqlTable(
+  'convo_entry_replies',
   {
     id: serial('id').primaryKey(),
-    publicId: nanoId('public_id').notNull(),
-    convoId: foreignKey('convo_id').notNull(),
-    replyToId: foreignKey('reply_to_id'),
-    author: foreignKey('convo_members').notNull(),
-    visibility: mysqlEnum('visibility', ['self', 'convo', 'org', 'public'])
-      .notNull()
-      .default('convo'),
-    body: text('body'),
+    entrySourceId: foreignKey('convo_message_source_id').notNull(),
+    entryReplyId: foreignKey('convo_message_reply_id'),
     createdAt: timestamp('created_at')
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull()
   },
   (table) => ({
-    convoIdIndex: index('convo_id_idx').on(table.convoId),
-    publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId)
-  })
-);
-export const convoNotesRelations = relations(convoNotes, ({ one, many }) => ({
-  convo: one(convos, {
-    fields: [convoNotes.convoId],
-    references: [convos.id]
-  }),
-  author: one(convoMembers, {
-    fields: [convoNotes.author],
-    references: [convoMembers.id]
-  }),
-  attachments: many(convoAttachments),
-  replies: many(convoNoteReplies, {
-    relationName: 'replies'
-  }),
-  replyTo: one(convoNoteReplies, {
-    fields: [convoNotes.replyToId],
-    references: [convoNoteReplies.convoNoteSourceId],
-    relationName: 'inReplyTo'
-  })
-}));
-
-export const convoNoteReplies = mysqlTable(
-  'convo_Note_replies',
-  {
-    id: serial('id').primaryKey(),
-    convoNoteSourceId: foreignKey('convo_Note_source_id').notNull(),
-    convoNoteReplyId: foreignKey('convo_Note_reply_id'),
-    createdAt: timestamp('created_at')
-      .default(sql`CURRENT_TIMESTAMP`)
-      .notNull()
-  },
-  (table) => ({
-    //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit : convoNoteReplyId//convoDraftId
     //TODO: Add indexes
   })
 );
 
-export const convoNoteRepliesRelations = relations(
-  convoNoteReplies,
+export const convoEntryRepliesRelations = relations(
+  convoEntryReplies,
   ({ one }) => ({
-    convoNoteSource: one(convoNotes, {
-      fields: [convoNoteReplies.convoNoteSourceId],
-      references: [convoNotes.id],
+    convoMessageSource: one(convoEntries, {
+      fields: [convoEntryReplies.entrySourceId],
+      references: [convoEntries.id],
       relationName: 'inReplyTo'
     }),
-    convoNoteReply: one(convoNotes, {
-      fields: [convoNoteReplies.convoNoteReplyId],
-      references: [convoNotes.id],
+    convoMessageReply: one(convoEntries, {
+      fields: [convoEntryReplies.entryReplyId],
+      references: [convoEntries.id],
       relationName: 'replies'
     })
   })
 );
 
-export const convoDrafts = mysqlTable(
-  'convo_drafts',
+export const convoEntryPrivateVisibilityParticipants = mysqlTable(
+  'convo_entry_private_visibility_participants',
   {
     id: serial('id').primaryKey(),
-    publicId: nanoId('public_id').notNull(),
-    convoId: foreignKey('convo_id').notNull(),
-    replyToId: foreignKey('reply_to_id'),
-    author: foreignKey('author').notNull(),
-    visibility: mysqlEnum('visibility', ['self', 'convo', 'org', 'public'])
-      .notNull()
-      .default('self'),
-    body: text('body'),
-
+    entryId: foreignKey('entry_id').notNull(),
+    convoMemberId: foreignKey('convo_member_id').notNull(),
     createdAt: timestamp('created_at')
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull()
   },
   (table) => ({
-    convoIdIndex: index('convo_id_idx').on(table.convoId),
-    publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId)
+    entryIdIndex: index('entry_id_idx').on(table.entryId)
   })
 );
-export const convoDraftsRelations = relations(convoDrafts, ({ one, many }) => ({
-  convo: one(convos, {
-    fields: [convoDrafts.convoId],
-    references: [convos.id]
-  }),
-  author: one(convoMembers, {
-    fields: [convoDrafts.author],
-    references: [convoMembers.id]
-  }),
-  attachments: many(convoAttachments),
-  replyTo: one(convoMessages, {
-    fields: [convoDrafts.replyToId],
-    references: [convoMessages.id]
-  })
-}));
 
-// TODO: add in tables for convomessages and convonotes read status. This will be a one to one table with convo_members and the messages. This will enable read/seen tracking for each message and note.
+export const convoEntryPrivateVisibilityParticipantsRelations = relations(
+  convoEntryPrivateVisibilityParticipants,
+  ({ one }) => ({
+    convoEntry: one(convoEntries, {
+      fields: [convoEntryPrivateVisibilityParticipants.entryId],
+      references: [convoEntries.id]
+    }),
+    convoMember: one(convoMembers, {
+      fields: [convoEntryPrivateVisibilityParticipants.convoMemberId],
+      references: [convoMembers.id]
+    })
+  })
+);
 
 // Billing Tables - only used in EE packages
 
