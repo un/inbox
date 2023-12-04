@@ -435,7 +435,6 @@ export const emailIdentityRouter = router({
       const orgMemberId = org?.memberId || 0;
       // search for user org group memberships, get id of org group
 
-      //TODO: Add filter for org id
       const userOrgGroupMembershipQuery =
         await db.read.query.userGroupMembers.findMany({
           where: eq(userGroupMembers.orgMemberId, +orgMemberId),

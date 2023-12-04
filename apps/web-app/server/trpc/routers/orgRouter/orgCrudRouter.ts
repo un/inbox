@@ -91,7 +91,6 @@ export const crudRouter = router({
       });
       const orgId = +insertOrgResponse.insertId;
 
-      //TODO: fix to where the userProfile ID is looked up on DB via SQL insert
       const userProfile = await db.read.query.userProfiles.findFirst({
         where: and(
           eq(userProfiles.userId, +userId),

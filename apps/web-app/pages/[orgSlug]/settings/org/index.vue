@@ -67,7 +67,7 @@
     resetFiles();
     openFileDialog();
   }
-  selectedFilesOnChange(async (selectedFiles) => {
+  selectedFilesOnChange(async (selectedFiles: any) => {
     uploadLoading.value = true;
     if (!selectedFiles) return;
     const formData = new FormData();
@@ -81,7 +81,7 @@
         uploadId: imageUploadSignedUrl.value.id
       });
     }
-    //TODO: make the image only appear once it has been loaded to avoid blank box
+    //TODO: make the image only appear once it has been loaded to avoid blank box, find a way to show skeleton loading animation
     if (imageId.value) {
       imageUrl.value = useUtils().generateAvatarUrl(
         imageId.value,

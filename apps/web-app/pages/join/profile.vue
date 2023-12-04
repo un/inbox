@@ -99,7 +99,7 @@
       imageId.value = await $trpc.user.profile.awaitAvatarUpload.query({
         uploadId: imageUploadSignedUrl.value.id
       });
-      //TODO: make the image only appear once it has been loaded to avoid blank box
+      //TODO: make the image only appear once it has been loaded to avoid blank box - maybe some skeleton loading
 
       imageUrl.value = useUtils().generateAvatarUrl(
         imageId.value,

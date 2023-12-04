@@ -77,7 +77,7 @@
     }, 2000);
   }
 
-  // TODO: If Existing SPF, Add checkbox to SPF record: "Select which senders to include" + create dynamic string- suggestion by @KumoMTA
+  // TODO: If Existing SPF, Add checkbox to SPF record: "Select which senders to include" + create dynamic string- suggestion by @KumoMTA. Current behavious injects UnInbox into the string.
 </script>
 
 <template>

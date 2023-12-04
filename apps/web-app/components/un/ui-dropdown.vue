@@ -11,7 +11,7 @@
       ...NuxtUiDropdown.props
     }
   });
-  //TODO: Fix this component
+  //TODO: Fix this component - does not work, NuxtUiDropdown is used in the app
 </script>
 <template>
   <NuxtUiDropdown v-bind="$props">

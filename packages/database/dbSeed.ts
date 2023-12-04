@@ -39,6 +39,7 @@ import {
 } from './schema';
 import { db } from '.';
 
+//! IMPORTANT: This file is outdated and needs to be updated to the new schema
 //! IMPORTANT: This file is only for development purposes, it should not be used in production
 //! CHECK THE COMMENTS FOR REQUIRED FIELDS
 // Register in the app for each type below, obtain your userId and profileId (not PublicId)
@@ -976,8 +977,7 @@ async function seedDb() {
   console.timeLog('⏱️ time');
 
   // Convos
-  // TODO: Need to add in the lastMessageId and lastNoteId.
-  // TODO: this should be an actual id of message/note thats inserted later on in the seed, one that is attached to this convo
+
   const convoScreenerStatuses: ['pending', 'approved', 'rejected', 'deleted'] =
     ['pending', 'approved', 'rejected', 'deleted'];
   for (let i = 0; i < 50; i++) {

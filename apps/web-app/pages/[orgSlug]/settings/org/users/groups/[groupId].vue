@@ -90,8 +90,6 @@
     { server: false, immediate: false }
   );
 
-  // TODO: If Existing SPF, Add checkbox to SPF record: "Select which senders to include" + create dynamic string- suggestion by @KumoMTA
-
   function showAddUser() {
     getOrgMembersList();
     showAddNewUser.value = true;

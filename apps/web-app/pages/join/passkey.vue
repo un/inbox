@@ -61,8 +61,6 @@
     buttonLabel.value = 'All Done!';
     buttonLoading.value = false;
 
-    //TODO: prompt the user to save the name of where they stored the passkey, store in DB, store in localstorage
-
     navigateTo('/join/org');
   }
 

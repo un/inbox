@@ -2,6 +2,7 @@ import { db } from '@uninbox/database';
 import { and, eq } from '@uninbox/database/orm';
 import { orgMembers, orgs } from '@uninbox/database/schema';
 
+// FIX: Check if this is still used and if so, update it to use the orgMembers Cache
 export async function isUserInOrg({
   userId,
   orgPublicId,
@@ -23,11 +24,11 @@ export async function isUserInOrg({
         orgId
           ? orgId
           : orgPublicId
-          ? db.read
-              .select({ id: orgs.id })
-              .from(orgs)
-              .where(eq(orgs.publicId, orgPublicId))
-          : 0
+            ? db.read
+                .select({ id: orgs.id })
+                .from(orgs)
+                .where(eq(orgs.publicId, orgPublicId))
+            : 0
       ),
       eq(orgMembers.userId, userId)
     ),

@@ -5,7 +5,6 @@
 
   const orgSlug = useRoute().params.orgSlug as string;
 
-  // TODO: fix scroll bar positioning, move to right, approx 20 px (may need to move to a parent div)
   const eeBilling = useEE().config.modules.billing;
 
   // Settings Links
