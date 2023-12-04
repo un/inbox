@@ -25,19 +25,38 @@
       icon: 'i-ph-chat-circle'
     },
     {
+      label: 'Contacts',
+      // to: `/${orgSlug}/screener`,
+      icon: 'i-ph-address-book',
+      badge: 'Soon'
+    },
+    {
+      label: 'Group Chats',
+      // to: `/${orgSlug}/convo`,
+      icon: 'i-ph-chats-circle',
+      disabled: true,
+      badge: 'Soon'
+    },
+    {
       label: 'Screener',
-      to: `/${orgSlug}/screener`,
-      icon: 'i-ph-hand'
+      // to: `/${orgSlug}/screener`,
+      icon: 'i-ph-hand',
+      disabled: true,
+      badge: 'Soon'
     },
     {
       label: 'Feed',
-      to: `/${orgSlug}/feed`,
-      icon: 'i-ph-newspaper'
+      // to: `/${orgSlug}/feed`,
+      icon: 'i-ph-newspaper',
+      disabled: true,
+      badge: 'Soon'
     },
     {
       label: 'Codes',
-      to: `/${orgSlug}/codes`,
-      icon: 'i-ph-password'
+      // to: `/${orgSlug}/codes`,
+      icon: 'i-ph-password',
+      disabled: true,
+      badge: 'Soon'
     }
   ];
 
@@ -235,7 +254,17 @@
         </div>
       </div>
     </UnUiModal>
-    <UnUiVerticalNavigation :links="navLinks"> </UnUiVerticalNavigation>
+    <UnUiVerticalNavigation :links="navLinks">
+      <template #badge="{ link }">
+        <div class="relative ml-4 flex flex-1 items-end justify-end truncate">
+          <UnUiBadge
+            v-if="link.badge"
+            size="xs"
+            variant="outline"
+            :label="link.badge" />
+        </div>
+      </template>
+    </UnUiVerticalNavigation>
 
     <div class="flex flex-row justify-between">
       <NuxtUiDropdown
