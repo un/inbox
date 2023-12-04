@@ -14,6 +14,15 @@
     sendName: string | null;
   }
   const orgEmailIdentities = ref<OrgEmailIdentities[]>([]);
+  const orgEmailIdentitiesPlaceholder = computed(() => {
+    if (userEmailIdentitiesStatus.value !== 'success') {
+      return 'Loading Email Identities';
+    }
+    if (orgEmailIdentities.value.length === 0) {
+      return 'No email identities found';
+    }
+    return 'Select Email Identity';
+  });
   const {
     data: userEmailIdentitiesData,
     pending: userEmailIdentitiesPending,
@@ -144,10 +153,9 @@
           ownOrgMemberData.profile?.firstName +
             ' ' +
             ownOrgMemberData.profile?.lastName || '',
-        handle: ownOrgMemberData.profile?.handle,
+        handle: ownOrgMemberData.profile?.handle || '',
         avatarId: ownOrgMemberData.profile?.avatarId || '',
         title: ownOrgMemberData.profile?.title || '',
-        disabled: true,
         keywords:
           ownOrgMemberData.profile?.firstName +
           ' ' +
@@ -171,7 +179,7 @@
           publicId: member.publicId,
           name:
             member.profile?.firstName + ' ' + member.profile?.lastName || '',
-          handle: member.profile?.handle,
+          handle: member.profile?.handle || '',
           avatarId: member.profile?.avatarId || '',
           title: member.profile?.title || '',
           keywords:
@@ -231,6 +239,32 @@
     }
   });
 
+  const participantPlaceholder = computed(() => {
+    if (
+      orgUserGroupsStatus.value !== 'success' ||
+      orgMembersStatus.value !== 'success'
+    ) {
+      return 'Loading Participants';
+    }
+    if (orgEmailIdentities.value.length === 0) {
+      return 'Search (Select "Send As" to enable email participants)';
+    }
+    return 'Search or type email...';
+  });
+
+  const participantsIncludesEmail = computed(() => {
+    return selectedParticipantOptions.value.some(
+      (participant) => participant.type === 'email'
+    );
+  });
+
+  const sendAsValid = computed(() => {
+    return participantsIncludesEmail
+      ? selectedOrgEmailIdentities.value !== undefined ||
+          selectedOrgEmailIdentities.value !== null
+      : true;
+  });
+
   // FIX: TODO: DONT INCLUDE AUTHORS ID IN THE ARRAY OF USER PARTICIPANTS; SEND SEPARATELY
 
   // New Data
@@ -244,31 +278,27 @@
 <template>
   <div class="h-full max-h-full max-w-full w-full flex flex-col gap-4">
     <div class="z-20000 mb-[-24px] h-[24px] from-base-1 bg-gradient-to-b" />
+    <UnUiAlert
+      v-if="
+        orgEmailIdentities.length === 0 &&
+        userEmailIdentitiesStatus === 'success'
+      "
+      icon="i-ph-warning-octagon"
+      color="orange"
+      description="You don't have an email identity assigned to you. Please contact your organization administrator."
+      title="Email sending disabled!" />
     <div class="flex flex-col gap-2">
       <span class="text-md font-display"> Send As </span>
       <div class="flex flex-col gap-4">
         <div class="flex flex-col gap-1">
-          <span v-if="userEmailIdentitiesStatus === 'idle'">
-            Select organization to load email identities
-          </span>
-          <span v-if="userEmailIdentitiesStatus === 'pending'">
-            <UnUiIcon name="svg-spinners:3-dots-fade" /> Loading Email
-            Identities
-          </span>
-          <div
-            v-if="!userEmailIdentitiesPending"
-            class="flex flex-row flex-wrap gap-8">
+          <div class="flex flex-row flex-wrap gap-8">
             <NuxtUiSelectMenu
               v-model="selectedOrgEmailIdentities"
               searchable
               :disabled="orgEmailIdentities.length === 0"
-              :placeholder="
-                orgEmailIdentities.length === 0
-                  ? 'No email identities found'
-                  : 'Select Email Identity'
-              "
+              :placeholder="orgEmailIdentitiesPlaceholder"
               :options="orgEmailIdentities"
-              class="w-full">
+              :ui="{ wrapper: 'ring-red-600 dark:ring-red-500 w-full' }">
               <template
                 v-if="selectedOrgEmailIdentities"
                 #label>
@@ -308,12 +338,7 @@
       <div class="flex flex-col gap-1">
         <div class="flex flex-col gap-2">
           <!-- <span class="text-sm font-medium">Users</span> -->
-          <span v-if="orgMembersStatus === 'pending'">
-            <UnUiIcon name="svg-spinners:3-dots-fade" /> Loading Users
-          </span>
-          <div
-            v-if="orgMembersStatus === 'success'"
-            class="flex flex-row flex-wrap gap-4">
+          <div class="flex flex-row flex-wrap gap-4">
             <NuxtUiSelectMenu
               v-model="participantLabels"
               multiple
@@ -321,10 +346,10 @@
               :options="participantOptions"
               name="name"
               searchable
-              searchable-placeholder="Search or type email..."
+              :searchable-placeholder="participantPlaceholder"
               option-attribute="keywords"
               class="w-full"
-              creatable>
+              :creatable="orgEmailIdentities.length !== 0">
               <template
                 v-if="selectedParticipantOptions"
                 #label>
@@ -371,7 +396,7 @@
                     </div>
                   </div>
                 </div>
-                <span v-else>Select participants or type email address...</span>
+                <span v-else>{{ participantPlaceholder }}</span>
               </template>
               <template #option="{ option }">
                 <UnUiIcon :name="option.icon" />
@@ -407,7 +432,7 @@
                   <UnUiAvatar
                     :avatar-id="option.avatarId"
                     :alt="option.name"
-                    :color="option.color as UiColor"
+                    :color="option.color.toString()"
                     size="xs" />
                   <span>
                     {{ option.name }}
