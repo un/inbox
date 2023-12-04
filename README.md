@@ -11,7 +11,7 @@
   </a>
 
   <h1 align="center"><tt>UnInbox</tt></h1>
-  <h2 align="center">The Communication Infrastructure for tomorrow</h2>
+  <h2 align="center">The Open Source Communication Infrastructure</h2>
 
 <p align="center">
     <a href="https://UnInbox.com"><strong>To our Website & App »</strong></a>
@@ -27,31 +27,41 @@
 
 ## :construction: Current Status
 
-`UnInbox` is currently in under heavy development. The initial public release is expected in October 2023
+`UnInbox` is currently in under heavy development. The initial public release is expected in December 2023
 
 ---
 
 ## About
 
-Your communications should feel intuitive and natural, be calm and organized - but instead its overwhelming and painful.
+Our core infrastructure is designed from the ground up for effective communication between you and the rest of the world.
 
-UnInbox is built from the ground up as a communication infrastructure platform built for better communication.
+The webapp provides a flavoured experience of what email communication would be if it was re-imagined for how we communicate today.
 
-Email is just a single of many possible connectors. Messages arrive and are go through a line of filtering, processing, and contexting before being delivered.
+Features like "team collaboration", "conversation notes" and "new sender screener" are native, making communication easier and more intuitive.
 
-Key communication is at the forefront of your experience, and the noise is pushed to the back of the queue.
+Built to work with your current email infrastructure or replace it entirely.
+
+We're not here to kill email, we're bringing it up to date, killing inboxes along the way.
+
+UnInbox isn't another email service, its a better way to do email.
+
+_And email is just the start_
 
 ---
 
 ## Why
 
-The first email was sent almost 45 years ago (1979), before the invention of the mobile telephone.
+The first email was sent almost 45 years ago (1979). Before the invention of the mobile telephone.
 
-We've seen some advancements in email technology, but very few changes in the way we process and use them.
+Communication workflows have changed dramatically since then, but the email experience has remained the same.
 
-Inboxes have become a dumping ground for anyone to steal our attention and focus.
+The volume of emails we receive has exploded in recent years, with more noise than actual conversations.
 
-The defacto for personal conversations is now a chat app - why cant we have that same experience for email.
+Email is not built for today's noisy, remote, highly collaborative world.
+
+But email is universal, so we can't force the world to replace it.
+
+Instead, we're detaching from its legacy underpinnings, to build something modern on top.
 
 ---
 
@@ -59,14 +69,20 @@ The defacto for personal conversations is now a chat app - why cant we have that
 
 `UnInbox` is built with the following epic technologies & tools:
 
-- [Nuxt JS (VueJS)](https://nuxt.com) FrontEnd & Backend + modules
+- [Nuxt JS](https://nuxt.com) Vue based FrontEnd & Backend + modules
 - [Nitro](https://nitro.unjs.io/) Public API + Misc tooling
-- [UnoCSS](https://unocss.dev/) CSS Engine (fully tailwind compatible)
+- [Tailwind](https://tailwindcss.com/) CSS Engine
 - [tRPC](https://trpc.io/) Typesafe APIs
 - [DrizzleORM](https://orm.drizzle.team/) ORM + MySQL
 - [Hanko.io](https://hanko.io/) User Authentication (PassKeys)
 
-Things will change over time!
+_p.s. Things will change over time!_
+
+## Running Locally
+
+Before the initial release, please join our discord server (link above) for help getting things running locally.
+There are currently several external service dependencies including: Hanko Cloud (Auth), Planetscale (Database), Cloudflare (Captcha + Image hosting), PostalServer (Mail Server).
+Published guides to get started will come in due time - Till then, chat with Omar (@McPizza / @McPizza0)
 
 ## Self Hosting
 
