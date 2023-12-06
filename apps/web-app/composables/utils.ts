@@ -1,5 +1,5 @@
+import { cva, type VariantProps } from 'class-variance-authority';
 function generateAvatarUrl(id: string, size: string | undefined) {
-  // TODO: if cloudflare images are not enabled via config, return a default/ placeholder image
   const imageUrlAccountHash = useRuntimeConfig().public.cfImagesAccountHash;
   if (imageUrlAccountHash) {
     return `https://imagedelivery.net/${imageUrlAccountHash}/${id}/${
@@ -9,5 +9,8 @@ function generateAvatarUrl(id: string, size: string | undefined) {
 }
 
 export const useUtils = () => {
-  return { generateAvatarUrl };
+  return { cva, generateAvatarUrl };
 };
+
+// TODO: Fix exporting types under namespace UseUtilTypes
+export type { VariantProps };
