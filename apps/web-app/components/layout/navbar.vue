@@ -28,18 +28,23 @@
       label: 'Contacts',
       // to: `/${orgSlug}/screener`,
       icon: 'i-ph-address-book',
+      tooltip: 'Manage your contacts',
+      disabled: true,
       badge: 'Soon'
     },
     {
-      label: 'Group Chats',
+      label: 'Group Convos',
       // to: `/${orgSlug}/convo`,
+      tooltip: 'Separate your group and personal conversations',
       icon: 'i-ph-chats-circle',
+
       disabled: true,
       badge: 'Soon'
     },
     {
       label: 'Screener',
       // to: `/${orgSlug}/screener`,
+      tooltip: 'Set who can or cant email you',
       icon: 'i-ph-hand',
       disabled: true,
       badge: 'Soon'
@@ -47,6 +52,8 @@
     {
       label: 'Feed',
       // to: `/${orgSlug}/feed`,
+      tooltip:
+        'All your newsletters, marketing messages, and product updates in one place',
       icon: 'i-ph-newspaper',
       disabled: true,
       badge: 'Soon'
@@ -54,6 +61,7 @@
     {
       label: 'Codes',
       // to: `/${orgSlug}/codes`,
+      tooltip: 'Easily copy your login or verification codes',
       icon: 'i-ph-password',
       disabled: true,
       badge: 'Soon'
@@ -255,6 +263,14 @@
       </div>
     </UnUiModal>
     <UnUiVerticalNavigation :links="navLinks">
+      <template #default="{ link }">
+        <UnUiTooltip
+          v-if="link.tooltip"
+          :text="link.tooltip"
+          :popper="{ placement: 'right-start' }">
+          <span class="truncate">{{ link.label }}</span>
+        </UnUiTooltip>
+      </template>
       <template #badge="{ link }">
         <div class="relative ml-4 flex flex-1 items-end justify-end truncate">
           <UnUiBadge
@@ -266,100 +282,97 @@
       </template>
     </UnUiVerticalNavigation>
 
-    <div class="flex flex-row justify-between">
-      <NuxtUiDropdown
-        :items="userMenuItems"
-        :ui="{
-          width: 'w-52',
-          item: {
-            disabled: 'cursor-text select-text',
-            base: 'group w-full flex items-center gap-4'
-          }
-        }"
-        :popper="{ placement: 'top-start' }">
-        <div
-          class="max-w-[140px] w-[140px] flex flex-row items-center justify-between gap-2">
+    <NuxtUiDropdown
+      :items="userMenuItems"
+      :ui="{
+        // width: 'w-52',
+        item: {
+          disabled: 'cursor-text select-text',
+          base: 'group w-full flex items-center gap-4'
+        }
+      }"
+      :popper="{ placement: 'top-start' }">
+      <div
+        class="max-w-[240px] w-full flex flex-row items-center justify-between gap-2 p-2">
+        <div class="w-full flex flex-row items-center gap-2 overflow-hidden">
+          <UnUiAvatar
+            :avatar-id="currentOrgProfile?.avatarId || ''"
+            :alt="currentOrgProfile?.name"
+            size="xs" />
+          <span class="truncate text-sm">{{ currentOrgProfile?.name }}</span>
+        </div>
+        <UnUiIcon name="i-ph-caret-up" />
+      </div>
+      <template #account>
+        <div class="flex flex-col gap-2 text-left">
+          <p>Signed in as</p>
           <div class="w-full flex flex-row items-center gap-2 overflow-hidden">
             <UnUiAvatar
-              :avatar-id="currentOrgProfile?.avatarId || ''"
-              :alt="currentOrgProfile?.name"
-              size="xs" />
-            <span class="truncate text-sm">{{ currentOrgProfile?.name }}</span>
-          </div>
-          <UnUiIcon name="i-ph-caret-up" />
-        </div>
-        <template #account>
-          <div class="flex flex-col gap-2 text-left">
-            <p>Signed in as</p>
-            <div
-              class="w-full flex flex-row items-center gap-2 overflow-hidden">
-              <UnUiAvatar
-                :avatar-id="userProfile?.profile?.avatarId || ''"
-                :alt="
-                  userProfile?.profile?.firstName +
-                  ' ' +
-                  userProfile?.profile?.lastName
-                " />
-              <span class="truncate text-sm">{{
+              :avatar-id="userProfile?.profile?.avatarId || ''"
+              :alt="
                 userProfile?.profile?.firstName +
                 ' ' +
                 userProfile?.profile?.lastName
-              }}</span>
-            </div>
+              " />
+            <span class="truncate text-sm">{{
+              userProfile?.profile?.firstName +
+              ' ' +
+              userProfile?.profile?.lastName
+            }}</span>
           </div>
-        </template>
-        <template #org="{ item }">
-          <div class="max-w-full flex flex-row items-center gap-2">
-            <UnUiAvatar
-              :avatar-id="item.avatarId"
-              :alt="item.label"
-              color="gray"
-              size="sm" />
-            <div class="text-left">
-              <p class="truncate font-medium">
-                {{ item.label }}
-              </p>
-            </div>
+        </div>
+      </template>
+      <template #org="{ item }">
+        <div class="max-w-full flex flex-row items-center gap-2">
+          <UnUiAvatar
+            :avatar-id="item.avatarId"
+            :alt="item.label"
+            color="gray"
+            size="sm" />
+          <div class="text-left">
+            <p class="truncate font-medium">
+              {{ item.label }}
+            </p>
           </div>
-          <UnUiIcon
-            v-if="item.slug === orgSlug"
-            name="i-ph-check"
-            class="text-gray-400 dark:text-gray-500 ms-auto h-4 w-4 flex-shrink-0" />
-        </template>
-        <template #darkmode>
-          <span class="truncate">{{ colorModeLabel }}</span>
-          <UnUiIcon
-            :name="colorModeIcon"
-            class="text-gray-400 dark:text-gray-500 ms-auto h-4 w-4 flex-shrink-0" />
-        </template>
-        <template #helpmenu="{ item }">
-          <NuxtUiDropdown
-            :items="helpMenuItems"
-            mode="hover"
-            :ui="{ item: { disabled: 'cursor-text select-text' } }"
-            :popper="{ offsetDistance: -5, placement: 'right-start' }"
-            class="w-full">
-            <div class="w-full flex flex-row justify-between">
-              <span class="truncate">{{ item.label }}</span>
-            </div>
-            <template #item="{ item }">
-              <span class="truncate">{{ item.label }}</span>
-              <UnUiIcon
-                :name="item.icon"
-                class="text-gray-400 dark:text-gray-500 ms-auto h-4 w-4 flex-shrink-0" />
-            </template>
-          </NuxtUiDropdown>
-          <UnUiIcon
-            :name="item.icon"
-            class="text-gray-400 dark:text-gray-500 ms-auto h-4 w-4 flex-shrink-0" />
-        </template>
-        <template #item="{ item }">
-          <span class="truncate">{{ item.label }}</span>
-          <UnUiIcon
-            :name="item.icon"
-            class="text-gray-400 dark:text-gray-500 ms-auto h-4 w-4 flex-shrink-0" />
-        </template>
-      </NuxtUiDropdown>
-    </div>
+        </div>
+        <UnUiIcon
+          v-if="item.slug === orgSlug"
+          name="i-ph-check"
+          class="text-gray-400 dark:text-gray-500 ms-auto h-4 w-4 flex-shrink-0" />
+      </template>
+      <template #darkmode>
+        <span class="truncate">{{ colorModeLabel }}</span>
+        <UnUiIcon
+          :name="colorModeIcon"
+          class="text-gray-400 dark:text-gray-500 ms-auto h-4 w-4 flex-shrink-0" />
+      </template>
+      <template #helpmenu="{ item }">
+        <NuxtUiDropdown
+          :items="helpMenuItems"
+          mode="hover"
+          :ui="{ item: { disabled: 'cursor-text select-text' } }"
+          :popper="{ offsetDistance: -5, placement: 'right-start' }"
+          class="w-full">
+          <div class="w-full flex flex-row justify-between">
+            <span class="truncate">{{ item.label }}</span>
+          </div>
+          <template #item="{ item }">
+            <span class="truncate">{{ item.label }}</span>
+            <UnUiIcon
+              :name="item.icon"
+              class="text-gray-400 dark:text-gray-500 ms-auto h-4 w-4 flex-shrink-0" />
+          </template>
+        </NuxtUiDropdown>
+        <UnUiIcon
+          :name="item.icon"
+          class="text-gray-400 dark:text-gray-500 ms-auto h-4 w-4 flex-shrink-0" />
+      </template>
+      <template #item="{ item }">
+        <span class="truncate">{{ item.label }}</span>
+        <UnUiIcon
+          :name="item.icon"
+          class="text-gray-400 dark:text-gray-500 ms-auto h-4 w-4 flex-shrink-0" />
+      </template>
+    </NuxtUiDropdown>
   </div>
 </template>
