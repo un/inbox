@@ -15,9 +15,9 @@
     "@uninbox/types": "workspace:*",
     "@uninbox/utils": "workspace:*",
     "html-to-text": "^9.0.5",
-    "nitropack": "^2.8.0",
+    "nitropack": "^2.8.1",
     "superjson": "^2.2.1",
-    "trpc-nuxt": "^0.10.12",
+    "trpc-nuxt": "^0.10.13",
     "zod": "^3.22.4"
   }
 }

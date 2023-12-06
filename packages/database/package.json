@@ -19,7 +19,7 @@
     "@planetscale/database": "^1.11.0",
     "@uninbox/types": "workspace:*",
     "@uninbox/utils": "workspace:*",
-    "drizzle-orm": "^0.29.0",
+    "drizzle-orm": "^0.29.1",
     "mysql2": "^3.6.5"
   },
   "devDependencies": {
