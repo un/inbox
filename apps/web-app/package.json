@@ -5,7 +5,8 @@
     "build": "nuxt build",
     "dev": "PORT=3000 nuxt dev --host",
     "generate": "nuxt generate",
-    "preview": "nuxt preview"
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
   },
   "devDependencies": {
     "@iconify-json/mdi": "^1.1.59",
@@ -17,9 +18,9 @@
     "@pinia-plugin-persistedstate/nuxt": "^1.2.0",
     "@radix-ui/colors": "^3.0.0",
     "@types/node": "^20.10.3",
-    "@unocss/nuxt": "^0.57.7",
-    "@unocss/preset-uno": "^0.57.7",
-    "@unocss/transformer-variant-group": "^0.57.7",
+    "@unocss/nuxt": "^0.58.0",
+    "@unocss/preset-uno": "^0.58.0",
+    "@unocss/transformer-variant-group": "^0.58.0",
     "nuxt": "^3.8.2",
     "nuxt-icon": "^0.6.7",
     "nuxt-prepare": "^0.2.2",
@@ -43,7 +44,7 @@
     "@uninbox/trpc": "workspace:*",
     "@uninbox/types": "workspace:*",
     "@uninbox/utils": "workspace:*",
-    "@unocss/reset": "^0.57.7",
+    "@unocss/reset": "^0.58.0",
     "@vueuse/nuxt": "^10.7.0",
     "argon2": "^0.31.2",
     "class-variance-authority": "^0.7.0",

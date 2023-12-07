@@ -31,8 +31,13 @@
     "lint": {
       "outputs": []
     },
+    "build:puppet": {
+      "cache": true
+    },
     "dev": {
-      "dependsOn": [],
+      "dependsOn": [
+        "build:puppet"
+      ],
       "cache": false
     },
     "ee:dev": {
