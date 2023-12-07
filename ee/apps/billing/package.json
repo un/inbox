@@ -16,7 +16,7 @@
     "nitropack": "^2.8.1",
     "stripe": "^14.5.0",
     "superjson": "^2.2.1",
-    "trpc-nuxt": "^0.10.13",
+    "trpc-nuxt": "^0.10.15",
     "zod": "^3.22.4"
   }
 }
