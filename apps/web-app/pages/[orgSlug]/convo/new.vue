@@ -13,46 +13,6 @@
     address: string;
     sendName: string | null;
   }
-  const orgEmailIdentities = ref<OrgEmailIdentities[]>([]);
-  const orgEmailIdentitiesPlaceholder = computed(() => {
-    if (userEmailIdentitiesStatus.value !== 'success') {
-      return 'Loading Email Identities';
-    }
-    if (orgEmailIdentities.value.length === 0) {
-      return 'No email identities found';
-    }
-    return 'Select Email Identity';
-  });
-  const {
-    data: userEmailIdentitiesData,
-    pending: userEmailIdentitiesPending,
-    refresh: userEmailIdentitiesExecute,
-    status: userEmailIdentitiesStatus
-  } = await $trpc.org.mail.emailIdentities.getUserEmailIdentities.useLazyQuery(
-    {},
-    {
-      server: false
-    }
-  );
-  watch(userEmailIdentitiesData, (newuserEmailIdentitiesData) => {
-    orgEmailIdentities.value = [];
-    selectedOrgEmailIdentities.value = undefined;
-    if (newuserEmailIdentitiesData?.emailIdentities) {
-      for (const orgObject of newuserEmailIdentitiesData.emailIdentities) {
-        orgEmailIdentities.value.push({
-          publicId: orgObject.publicId,
-          address: orgObject.username + '@' + orgObject.domainName,
-          sendName: orgObject.sendName
-        });
-      }
-    }
-  });
-
-  const selectedOrgEmailIdentities = ref<OrgEmailIdentities | undefined>(
-    undefined
-  );
-
-  // Participants
   interface OrgMembers {
     type: 'user';
     icon: 'i-ph-user';
@@ -83,46 +43,24 @@
   }
 
   type ParticipantOptionsType = OrgMembers | OrgUserGroups | EmailAddresses;
-  const participantOptions = ref<ParticipantOptionsType[]>([]);
-  const selectedParticipantOptions = ref<ParticipantOptionsType[]>([]);
 
-  function removeTypeFromParticipants(type: 'user' | 'group' | 'email') {
-    selectedParticipantOptions.value = selectedParticipantOptions.value.filter(
-      (participant) => participant.type !== type
-    );
-  }
-
-  const participantLabels = computed({
-    get: () => selectedParticipantOptions.value,
-    set: async (labels) => {
-      const promises = labels.map(async (label) => {
-        if (label.publicId) {
-          return label;
-        }
-        const newEntry: EmailAddresses = {
-          type: 'email',
-          icon: 'i-ph-envelope',
-          publicId: participantOptions.value.length + 1,
-          //@ts-ignore
-          address: label.keywords,
-          keywords: label.keywords
-        };
-
-        participantOptions.value.push(newEntry);
-        const inputElement = document.querySelector('input[name="q"]');
-        if (inputElement) {
-          // @ts-ignore
-          inputElement.value = '';
-        }
-
-        return newEntry;
-      });
-
-      selectedParticipantOptions.value = await Promise.all(promises);
+  //* Data Loading
+  // Get email identities
+  const orgEmailIdentities = ref<OrgEmailIdentities[]>([]);
+  const {
+    data: userEmailIdentitiesData,
+    pending: userEmailIdentitiesPending,
+    refresh: userEmailIdentitiesExecute,
+    status: userEmailIdentitiesStatus
+  } = await $trpc.org.mail.emailIdentities.getUserEmailIdentities.useLazyQuery(
+    {},
+    {
+      server: false
     }
-  });
+  );
 
   // get list of users
+  const orgMembers = ref<OrgMembers[]>([]);
   const {
     data: orgMembersData,
     pending: orgMembersPending,
@@ -135,7 +73,35 @@
     }
   );
 
-  const orgMembers = ref<OrgMembers[]>([]);
+  // get list of groups
+  const orgUserGroups = ref<OrgUserGroups[]>([]);
+  const {
+    data: orgUserGroupsData,
+    pending: orgUserGroupsPending,
+    execute: orgUserGroupsExecute,
+    status: orgUserGroupsStatus
+  } = await $trpc.org.users.userGroups.getOrgUserGroups.useLazyQuery(
+    {},
+    {
+      server: false
+    }
+  );
+
+  //* Data Watchers
+
+  watch(userEmailIdentitiesData, (newuserEmailIdentitiesData) => {
+    orgEmailIdentities.value = [];
+    selectedOrgEmailIdentities.value = undefined;
+    if (newuserEmailIdentitiesData?.emailIdentities) {
+      for (const orgObject of newuserEmailIdentitiesData.emailIdentities) {
+        orgEmailIdentities.value.push({
+          publicId: orgObject.publicId,
+          address: orgObject.username + '@' + orgObject.domainName,
+          sendName: orgObject.sendName
+        });
+      }
+    }
+  });
 
   watch(orgMembersData, (newOrgMembersData) => {
     if (newOrgMembersData?.ownMembershipId) {
@@ -196,24 +162,7 @@
     removeTypeFromParticipants('user');
     removeTypeFromParticipants('group');
   });
-
   const selectedOrgMembers = ref<OrgMembers[]>([]);
-
-  // get list of groups
-
-  const {
-    data: orgUserGroupsData,
-    pending: orgUserGroupsPending,
-    execute: orgUserGroupsExecute,
-    status: orgUserGroupsStatus
-  } = await $trpc.org.users.userGroups.getOrgUserGroups.useLazyQuery(
-    {},
-    {
-      server: false
-    }
-  );
-
-  const orgUserGroups = ref<OrgUserGroups[]>([]);
 
   watch(orgUserGroupsData, (newOrgUserGroupsData) => {
     if (newOrgUserGroupsData?.groups) {
@@ -239,6 +188,72 @@
     }
   });
 
+  // Values
+
+  const orgEmailIdentitiesPlaceholder = computed(() => {
+    if (userEmailIdentitiesStatus.value !== 'success') {
+      return 'Loading Email Identities';
+    }
+    if (orgEmailIdentities.value.length === 0) {
+      return 'No email identities found';
+    }
+    return 'Select Email Identity';
+  });
+  const selectedOrgEmailIdentities = ref<OrgEmailIdentities | undefined>(
+    undefined
+  );
+  const participantOptions = ref<ParticipantOptionsType[]>([]);
+  const selectedParticipantOptions = ref<ParticipantOptionsType[]>([]);
+
+  function removeTypeFromParticipants(type: 'user' | 'group' | 'email') {
+    selectedParticipantOptions.value = selectedParticipantOptions.value.filter(
+      (participant) => participant.type !== type
+    );
+  }
+
+  const hasEmailParticipants = computed(() => {
+    return selectedParticipantOptions.value.some(
+      (participant) => participant.type === 'email'
+    );
+  });
+
+  const hasEmailParticipantsNoEmailIdentitySelectedRingColor = computed(() => {
+    return selectedParticipantOptions.value.some(
+      (participant) => participant.type === 'email'
+    ) && selectedOrgEmailIdentities.value === undefined
+      ? 'ring-red-500'
+      : '';
+  });
+
+  const participantLabels = computed({
+    get: () => selectedParticipantOptions.value,
+    set: async (labels) => {
+      const promises = labels.map(async (label) => {
+        if (label.publicId) {
+          return label;
+        }
+        const newEntry: EmailAddresses = {
+          type: 'email',
+          icon: 'i-ph-envelope',
+          publicId: participantOptions.value.length + 1,
+          //@ts-ignore
+          address: label.keywords,
+          keywords: label.keywords
+        };
+
+        participantOptions.value.push(newEntry);
+        const inputElement = document.querySelector('input[name="q"]');
+        if (inputElement) {
+          // @ts-ignore
+          inputElement.value = '';
+        }
+        return newEntry;
+      });
+
+      selectedParticipantOptions.value = await Promise.all(promises);
+    }
+  });
+
   const participantPlaceholder = computed(() => {
     if (
       orgUserGroupsStatus.value !== 'success' ||
@@ -252,14 +267,8 @@
     return 'Search or type email...';
   });
 
-  const participantsIncludesEmail = computed(() => {
-    return selectedParticipantOptions.value.some(
-      (participant) => participant.type === 'email'
-    );
-  });
-
   const sendAsValid = computed(() => {
-    return participantsIncludesEmail
+    return hasEmailParticipants.value
       ? selectedOrgEmailIdentities.value !== undefined ||
           selectedOrgEmailIdentities.value !== null
       : true;
@@ -298,7 +307,15 @@
               :disabled="orgEmailIdentities.length === 0"
               :placeholder="orgEmailIdentitiesPlaceholder"
               :options="orgEmailIdentities"
-              :ui="{ wrapper: 'ring-red-600 dark:ring-red-500 w-full' }">
+              :ui="{
+                wrapper: 'w-full',
+                color: {
+                  white: {
+                    outline:
+                      hasEmailParticipantsNoEmailIdentitySelectedRingColor
+                  }
+                }
+              }">
               <template
                 v-if="selectedOrgEmailIdentities"
                 #label>
@@ -362,7 +379,10 @@
                   <div
                     v-for="(participant, index) in selectedParticipantOptions"
                     :key="index"
-                    class="flex flex-row items-center gap-1 truncate">
+                    class="flex flex-row items-center gap-1 gap-2 truncate">
+                    <span v-if="hasEmailParticipants && index === 0">
+                      To:
+                    </span>
                     <div
                       v-if="participant.type === 'email'"
                       class="flex flex-row items-center gap-2">
@@ -394,6 +414,15 @@
                         {{ participant.name }}
                       </span>
                     </div>
+                    <span
+                      v-if="
+                        hasEmailParticipants &&
+                        index === 0 &&
+                        selectedParticipantOptions.length > 1
+                      "
+                      class="ml-2">
+                      | CC:
+                    </span>
                   </div>
                 </div>
                 <span v-else>{{ participantPlaceholder }}</span>

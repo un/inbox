@@ -5,11 +5,13 @@ export default defineNuxtPrepareHandler(async () => {
 
   // Get and store the Hanko jwks into runtime config
   const hankoUrl = process.env.WEBAPP_HANKO_API_URL;
-  const hankoJwksResponse = await fetch(
-    `${hankoUrl}/.well-known/jwks.json`
-  ).then(function (response) {
-    return response.json();
-  });
+  const hankoJwksResponse = hankoUrl
+    ? await fetch(`${hankoUrl}/.well-known/jwks.json`).then(
+        function (response) {
+          return response.json();
+        }
+      )
+    : '';
 
   // set the primary mail domains
 
