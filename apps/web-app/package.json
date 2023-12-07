@@ -5,8 +5,7 @@
     "build": "nuxt build",
     "dev": "PORT=3000 nuxt dev --host",
     "generate": "nuxt generate",
-    "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "preview": "nuxt preview"
   },
   "devDependencies": {
     "@iconify-json/mdi": "^1.1.59",
