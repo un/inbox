@@ -84,7 +84,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
     fields: [users.id],
     references: [orgs.ownerId]
   })
-  // conversations: many(convoMembers),
+  // conversations: many(convoParticipants),
   // userGroups: many(userGroupMembers)
 }));
 
@@ -577,7 +577,7 @@ export const contactsRelations = relations(contacts, ({ one, many }) => ({
     fields: [contacts.orgId],
     references: [orgs.id]
   }),
-  convoMembers: many(convoMembers),
+  convoParticipants: many(convoParticipants),
   reputation: one(contactGlobalReputations, {
     fields: [contacts.emailUsername, contacts.emailDomain],
     references: [
@@ -1054,7 +1054,7 @@ export const convosRelations = relations(convos, ({ one, many }) => ({
     fields: [convos.orgId],
     references: [orgs.id]
   }),
-  members: many(convoMembers),
+  members: many(convoParticipants),
   attachments: many(convoAttachments),
   entries: many(convoEntries),
   subjects: many(convoSubjects)
@@ -1083,8 +1083,8 @@ export const convoSubjectsRelations = relations(convoSubjects, ({ one }) => ({
   })
 }));
 
-export const convoMembers = mysqlTable(
-  'convo_members',
+export const convoParticipants = mysqlTable(
+  'convo_participants',
   {
     id: serial('id').primaryKey(),
     publicId: nanoId('public_id').notNull(),
@@ -1092,7 +1092,13 @@ export const convoMembers = mysqlTable(
     userGroupId: foreignKey('user_group_id'),
     contactId: foreignKey('contact_id'),
     convoId: foreignKey('convo_id').notNull(),
-    role: mysqlEnum('role', ['assigned', 'contributor', 'watcher', 'guest'])
+    role: mysqlEnum('role', [
+      'assigned',
+      'contributor',
+      'commenter',
+      'watcher',
+      'guest'
+    ]) // Assigned/Contributor will be added to email CCs - other roles will not
       .notNull()
       .default('contributor'),
     notifications: mysqlEnum('notifications', ['active', 'muted', 'off'])
@@ -1119,24 +1125,27 @@ export const convoMembers = mysqlTable(
     )
   })
 );
-export const convoMembersRelations = relations(convoMembers, ({ one }) => ({
-  orgMember: one(orgMembers, {
-    fields: [convoMembers.orgMemberId],
-    references: [orgMembers.id]
-  }),
-  userGroup: one(userGroups, {
-    fields: [convoMembers.userGroupId],
-    references: [userGroups.id]
-  }),
-  contact: one(contacts, {
-    fields: [convoMembers.contactId],
-    references: [contacts.id]
-  }),
-  convo: one(convos, {
-    fields: [convoMembers.convoId],
-    references: [convos.id]
+export const convoParticipantsRelations = relations(
+  convoParticipants,
+  ({ one }) => ({
+    orgMember: one(orgMembers, {
+      fields: [convoParticipants.orgMemberId],
+      references: [orgMembers.id]
+    }),
+    userGroup: one(userGroups, {
+      fields: [convoParticipants.userGroupId],
+      references: [userGroups.id]
+    }),
+    contact: one(contacts, {
+      fields: [convoParticipants.contactId],
+      references: [contacts.id]
+    }),
+    convo: one(convos, {
+      fields: [convoParticipants.convoId],
+      references: [convos.id]
+    })
   })
-}));
+);
 
 export const convoAttachments = mysqlTable(
   'convo_attachments',
@@ -1170,9 +1179,9 @@ export const convoAttachmentsRelations = relations(
       fields: [convoAttachments.convoEntryId],
       references: [convoEntries.id]
     }),
-    uploader: one(convoMembers, {
+    uploader: one(convoParticipants, {
       fields: [convoAttachments.convoMemberId],
-      references: [convoMembers.id]
+      references: [convoParticipants.id]
     })
   })
 );
@@ -1228,9 +1237,9 @@ export const convoEntriesRelations = relations(
       fields: [convoEntries.subjectId],
       references: [convoSubjects.id]
     }),
-    author: one(convoMembers, {
+    author: one(convoParticipants, {
       fields: [convoEntries.author],
-      references: [convoMembers.id]
+      references: [convoParticipants.id]
     }),
     attachments: many(convoAttachments),
     replies: many(convoEntryReplies, {
@@ -1297,9 +1306,9 @@ export const convoEntryPrivateVisibilityParticipantsRelations = relations(
       fields: [convoEntryPrivateVisibilityParticipants.entryId],
       references: [convoEntries.id]
     }),
-    convoMember: one(convoMembers, {
+    convoMember: one(convoParticipants, {
       fields: [convoEntryPrivateVisibilityParticipants.convoMemberId],
-      references: [convoMembers.id]
+      references: [convoParticipants.id]
     })
   })
 );
