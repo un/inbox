@@ -36,7 +36,8 @@
     },
     "dev": {
       "dependsOn": [
-        "build:puppet"
+        "^build:puppet",
+        "db:studio"
       ],
       "cache": false
     },
