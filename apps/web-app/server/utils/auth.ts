@@ -124,6 +124,7 @@ export const validateAuthSession = async (event: H3Event) => {
         reauth: false
       };
     } else {
+      eventSession.clear();
       return {
         session: eventSession,
         valid: false,
@@ -136,6 +137,7 @@ export const validateAuthSession = async (event: H3Event) => {
   if (!eventHanko?.sub) {
     const verifiedSession = await verifySessionData(eventSession);
     if (!verifiedSession) {
+      eventSession.clear();
       return {
         session: eventSession,
         valid: false,
@@ -154,6 +156,7 @@ export const validateAuthSession = async (event: H3Event) => {
 
   const verifiedSession = await verifySessionData(eventSession);
   if (!verifiedSession) {
+    eventSession.clear();
     return { session: eventSession, valid: false, userId: null, reauth: false };
   }
 
@@ -161,6 +164,7 @@ export const validateAuthSession = async (event: H3Event) => {
     console.log(
       '🚨 session mismatch, try clearing cookies and logging back in'
     );
+    eventSession.clear();
     return { session: eventSession, valid: false, userId: null, reauth: false };
   }
   return {
