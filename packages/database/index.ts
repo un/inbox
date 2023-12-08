@@ -8,14 +8,14 @@ import * as schema from './schema';
 // create the connection
 // TODO: add support for read replicas, likely hostname will need to change based on deploy location
 const connectionRead = connect({
-  host: process.env['DB_HOST'],
-  username: process.env['DB_USERNAME'],
-  password: process.env['DB_PASSWORD']
+  host: process.env['DB_PLANETSCALE_HOST'],
+  username: process.env['DB_PLANETSCALE_USERNAME'],
+  password: process.env['DB_PLANETSCALE_PASSWORD']
 });
 const connectionWrite = connect({
-  host: process.env['DB_HOST'],
-  username: process.env['DB_USERNAME'],
-  password: process.env['DB_PASSWORD']
+  host: process.env['DB_PLANETSCALE_HOST'],
+  username: process.env['DB_PLANETSCALE_USERNAME'],
+  password: process.env['DB_PLANETSCALE_PASSWORD']
 });
 
 const connectionOptions = {
