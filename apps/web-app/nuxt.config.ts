@@ -91,31 +91,31 @@ export default defineNuxtConfig({
   // imports: {
   //   dirs: ['stores']
   // },
-  nitro: {
-    // storage: {
-    //   sessions: {
-    //     driver: 'redis',
-    //     base: 'sessions',
-    //     url: 'redis://default:ed8658c6bd3243afa69cbaf76f8e02b0@touching-eagle-33239.upstash.io:33239',
-    //     ttl:
-    //       process.env.NODE_ENV === 'development'
-    //         ? 60 * 60 * 12
-    //         : 60 * 60 * 24 * 30
-    //   },
-    //   'org-context': {
-    //     driver: 'redis',
-    //     base: 'org-context',
-    //     url: process.env.DB_REDIS_URL,
-    //     ttl:
-    //       process.env.NODE_ENV === 'development'
-    //         ? 60 * 60 * 12
-    //         : 60 * 60 * 24 * 30
-    //   }
-    // },
-    prerender: {
-      crawlLinks: true // recommended
-    }
-  },
+  // nitro: {
+  //   // storage: {
+  //   //   sessions: {
+  //   //     driver: 'redis',
+  //   //     base: 'sessions',
+  //   //     url: 'redis://default:ed8658c6bd3243afa69cbaf76f8e02b0@touching-eagle-33239.upstash.io:33239',
+  //   //     ttl:
+  //   //       process.env.NODE_ENV === 'development'
+  //   //         ? 60 * 60 * 12
+  //   //         : 60 * 60 * 24 * 30
+  //   //   },
+  //   //   'org-context': {
+  //   //     driver: 'redis',
+  //   //     base: 'org-context',
+  //   //     url: process.env.DB_REDIS_URL,
+  //   //     ttl:
+  //   //       process.env.NODE_ENV === 'development'
+  //   //         ? 60 * 60 * 12
+  //   //         : 60 * 60 * 24 * 30
+  //   //   }
+  //   // },
+  //   // prerender: {
+  //   //   crawlLinks: true // recommended
+  //   // }
+  // },
   /**
    * * Module Configurations
    */
