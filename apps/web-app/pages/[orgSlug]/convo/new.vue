@@ -34,6 +34,16 @@
     color: String | null;
     keywords: String;
   }
+  interface OrgContacts {
+    type: 'contact';
+    icon: 'i-ph-address-book';
+    publicId: String;
+    name: String;
+    address: string;
+    avatarId: String | null;
+    keywords: String;
+    screenerStatus: 'pending' | 'approve' | 'reject' | null;
+  }
   interface EmailAddresses {
     type: 'email';
     icon: 'i-ph-envelope';
@@ -42,11 +52,14 @@
     keywords: String;
   }
 
-  type ParticipantOptionsType = OrgMembers | OrgUserGroups | EmailAddresses;
+  type ParticipantOptionsType =
+    | OrgMembers
+    | OrgUserGroups
+    | OrgContacts
+    | EmailAddresses;
 
   //* Data Loading
   // Get email identities
-  const orgEmailIdentities = ref<OrgEmailIdentities[]>([]);
   const {
     data: userEmailIdentitiesData,
     pending: userEmailIdentitiesPending,
@@ -60,7 +73,7 @@
   );
 
   // get list of users
-  const orgMembers = ref<OrgMembers[]>([]);
+
   const {
     data: orgMembersData,
     pending: orgMembersPending,
@@ -74,7 +87,6 @@
   );
 
   // get list of groups
-  const orgUserGroups = ref<OrgUserGroups[]>([]);
   const {
     data: orgUserGroupsData,
     pending: orgUserGroupsPending,
@@ -87,7 +99,33 @@
     }
   );
 
+  // get list of org contacts
+  const {
+    data: orgContactsData,
+    pending: orgContactsPending,
+    execute: orgContactsExecute,
+    status: orgContactsStatus
+  } = await $trpc.org.contacts.getOrgContacts.useLazyQuery(
+    {},
+    {
+      server: false
+    }
+  );
+
+  //* List Data
+  const orgEmailIdentities = ref<OrgEmailIdentities[]>([]);
+  const orgMembers = ref<OrgMembers[]>([]);
+  const orgUserGroups = ref<OrgUserGroups[]>([]);
+  const orgContacts = ref<OrgContacts[]>([]);
+
   //* Data Watchers
+  function setParticipantOptions() {
+    participantOptions.value = [
+      ...orgMembers.value,
+      ...orgUserGroups.value,
+      ...orgContacts.value
+    ];
+  }
 
   watch(userEmailIdentitiesData, (newuserEmailIdentitiesData) => {
     orgEmailIdentities.value = [];
@@ -159,10 +197,8 @@
         });
       }
     }
-    removeTypeFromParticipants('user');
-    removeTypeFromParticipants('group');
+    setParticipantOptions();
   });
-  const selectedOrgMembers = ref<OrgMembers[]>([]);
 
   watch(orgUserGroupsData, (newOrgUserGroupsData) => {
     if (newOrgUserGroupsData?.groups) {
@@ -178,16 +214,39 @@
           keywords: group.name + ' ' + group.description
         });
       }
-      removeTypeFromParticipants('user');
-      removeTypeFromParticipants('group');
-      participantOptions.value = [
-        ...orgMembers.value,
-        ...orgUserGroups.value,
-        ...participantOptions.value
-      ];
+      setParticipantOptions();
     }
   });
 
+  watch(orgContactsData, (newOrgContactsData) => {
+    if (newOrgContactsData?.contacts) {
+      for (const contact of newOrgContactsData.contacts) {
+        orgContacts.value.push({
+          type: 'contact',
+          icon: 'i-ph-address-book',
+          publicId: contact.publicId,
+          name:
+            contact.setName ||
+            contact.name ||
+            contact.emailUsername + '@' + contact.emailDomain,
+          address: contact.emailUsername + '@' + contact.emailDomain,
+          avatarId: contact.avatarId,
+          keywords:
+            contact.setName +
+            ' ' +
+            contact.name +
+            ' ' +
+            contact.emailUsername +
+            '@' +
+            contact.emailDomain,
+          screenerStatus: contact.screenerStatus
+        });
+      }
+      setParticipantOptions();
+    }
+  });
+
+  const selectedOrgMembers = ref<OrgMembers[]>([]);
   // Values
 
   const orgEmailIdentitiesPlaceholder = computed(() => {
@@ -213,16 +272,18 @@
 
   const hasEmailParticipants = computed(() => {
     return selectedParticipantOptions.value.some(
-      (participant) => participant.type === 'email'
+      (participant) =>
+        participant.type === 'email' || participant.type === 'contact'
     );
   });
 
   const hasEmailParticipantsNoEmailIdentitySelectedRingColor = computed(() => {
     return selectedParticipantOptions.value.some(
-      (participant) => participant.type === 'email'
+      (participant) =>
+        participant.type === 'email' || participant.type === 'contact'
     ) && selectedOrgEmailIdentities.value === undefined
-      ? 'ring-red-500'
-      : '';
+      ? 'ring-red-500 dark:ring-red-400'
+      : 'ring-gray-200 dark:ring-gray-700';
   });
 
   const participantLabels = computed({
@@ -231,6 +292,10 @@
       const promises = labels.map(async (label) => {
         if (label.publicId) {
           return label;
+        }
+        const isEmail = z.string().email().safeParse(label.keywords);
+        if (!isEmail.success) {
+          return;
         }
         const newEntry: EmailAddresses = {
           type: 'email',
@@ -249,7 +314,7 @@
         }
         return newEntry;
       });
-
+      // @ts-ignore - no idea how to fix this
       selectedParticipantOptions.value = await Promise.all(promises);
     }
   });
@@ -312,7 +377,8 @@
                 color: {
                   white: {
                     outline:
-                      hasEmailParticipantsNoEmailIdentitySelectedRingColor
+                      hasEmailParticipantsNoEmailIdentitySelectedRingColor,
+                    background: 'bg-white dark:bg-gray-800'
                   }
                 }
               }">
@@ -358,11 +424,11 @@
           <div class="flex flex-row flex-wrap gap-4">
             <NuxtUiSelectMenu
               v-model="participantLabels"
-              multiple
               placeholder="Select participants"
               :options="participantOptions"
               name="name"
               searchable
+              multiple
               :searchable-placeholder="participantPlaceholder"
               option-attribute="keywords"
               class="w-full"
@@ -379,21 +445,34 @@
                   <div
                     v-for="(participant, index) in selectedParticipantOptions"
                     :key="index"
-                    class="flex flex-row items-center gap-1 gap-2 truncate">
-                    <span v-if="hasEmailParticipants && index === 0">
-                      To:
+                    class="flex flex-row items-center gap-2 truncate">
+                    <span
+                      v-if="hasEmailParticipants && index === 0"
+                      class="text-gray-400 dark:text-gray-600 text-xs leading-0">
+                      TO:
                     </span>
                     <div
                       v-if="participant.type === 'email'"
-                      class="flex flex-row items-center gap-2">
+                      class="flex flex-row items-center gap-1">
                       <UnUiIcon :name="participant.icon" />
                       <span>
                         {{ participant.address }}
                       </span>
                     </div>
                     <div
+                      v-if="participant.type === 'contact'"
+                      class="flex flex-row items-center gap-1">
+                      <UnUiAvatar
+                        :avatar-id="participant.avatarId?.toString()"
+                        :alt="participant.name.toString()"
+                        size="xs" />
+                      <span>
+                        {{ participant.name }}
+                      </span>
+                    </div>
+                    <div
                       v-if="participant.type === 'user'"
-                      class="flex flex-row items-center gap-2">
+                      class="flex flex-row items-center gap-1">
                       <UnUiAvatar
                         :avatar-id="participant.avatarId?.toString()"
                         :alt="participant.name.toString()"
@@ -404,7 +483,7 @@
                     </div>
                     <div
                       v-if="participant.type === 'group'"
-                      class="flex flex-row items-center gap-2">
+                      class="flex flex-row items-center gap-1">
                       <UnUiAvatar
                         :avatar-id="participant.avatarId?.toString()"
                         :alt="participant.name.toString()"
@@ -420,8 +499,8 @@
                         index === 0 &&
                         selectedParticipantOptions.length > 1
                       "
-                      class="ml-2">
-                      | CC:
+                      class="text-gray-400 dark:text-gray-600 ml-2 border-l border-l-1 border-l-1 pl-2 text-xs leading-0">
+                      CC:
                     </span>
                   </div>
                 </div>
@@ -435,8 +514,20 @@
                   </span>
                 </div>
                 <div
+                  v-if="option.type === 'contact'"
+                  class="flex flex-row items-center gap-2">
+                  <UnUiAvatar
+                    :avatar-id="option.avatarId"
+                    :alt="option.name"
+                    size="xs" />
+                  <span>
+                    {{ option.name }}
+                  </span>
+                  <span class="text-xs"> - {{ option.address }}</span>
+                </div>
+                <div
                   v-if="option.type === 'user'"
-                  class="flex flex-row gap-2">
+                  class="flex flex-row items-center gap-2">
                   <UnUiAvatar
                     :avatar-id="option.avatarId"
                     :alt="option.name"
@@ -457,7 +548,7 @@
                 </div>
                 <div
                   v-if="option.type === 'group'"
-                  class="flex flex-row gap-2">
+                  class="flex flex-row items-center gap-2">
                   <UnUiAvatar
                     :avatar-id="option.avatarId"
                     :alt="option.name"

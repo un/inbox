@@ -8,6 +8,7 @@ import { profileRouter } from './routers/userRouter/profileRouter';
 import { crudRouter } from './routers/orgRouter/orgCrudRouter';
 import { invitesRouter } from './routers/orgRouter/users/invitesRouter';
 import { convoRouter } from './routers/convoRouter/convoRouter';
+import { contactsRouter } from './routers/contactRouter/contactRouter';
 import { orgProfileRouter } from './routers/orgRouter/setup/profileRouter';
 import { orgMembersRouter } from './routers/orgRouter/users/membersRouter';
 import { domainsRouter } from './routers/orgRouter/mail/domainsRouter';
@@ -39,6 +40,7 @@ const trpcWebAppOrgMailRouter = router({
 
 const trpcWebAppOrgRouter = router({
   crud: crudRouter,
+  contacts: contactsRouter,
   setup: trpcWebAppOrgSetupRouter,
   users: trpcWebAppOrgUsersRouter,
   mail: trpcWebAppOrgMailRouter

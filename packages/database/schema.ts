@@ -540,7 +540,9 @@ export const contacts = mysqlTable(
     id: serial('id').primaryKey(),
     publicId: nanoId('public_id').notNull(),
     orgId: foreignKey('org_id').notNull(),
-    name: varchar('name', { length: 128 }).notNull(),
+    reputationId: foreignKey('reputation_id').notNull(),
+    name: varchar('name', { length: 128 }),
+    setName: varchar('set_name', { length: 128 }),
     emailUsername: varchar('email_username', { length: 128 }).notNull(),
     emailDomain: varchar('email_domain', { length: 128 }).notNull(),
     avatarId: varchar('avatar_id', { length: 64 }),
@@ -579,11 +581,8 @@ export const contactsRelations = relations(contacts, ({ one, many }) => ({
   }),
   convoParticipants: many(convoParticipants),
   reputation: one(contactGlobalReputations, {
-    fields: [contacts.emailUsername, contacts.emailDomain],
-    references: [
-      contactGlobalReputations.emailAddress,
-      contactGlobalReputations.emailAddress
-    ]
+    fields: [contacts.reputationId],
+    references: [contactGlobalReputations.id]
   })
 }));
 
