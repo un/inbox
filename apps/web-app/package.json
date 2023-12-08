@@ -44,6 +44,7 @@
     "@uninbox/types": "workspace:*",
     "@uninbox/utils": "workspace:*",
     "@unocss/reset": "^0.58.0",
+    "@upstash/redis": "^1.25.1",
     "@vueuse/nuxt": "^10.7.0",
     "argon2": "^0.31.2",
     "class-variance-authority": "^0.7.0",
