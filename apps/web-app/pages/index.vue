@@ -7,6 +7,11 @@
   const immediatePasskeyPrompt = ref(false);
   const passkeyLocationDialogOpen = ref(false);
 
+  const turnstileEnabled = useRuntimeConfig().public.turnstileEnabled;
+  if (!turnstileEnabled) {
+    turnstileToken.value = '';
+  }
+
   if (process.client) {
     passkeyLocation.value = localStorage.getItem('passkeyLocation') || '';
     immediatePasskeyPrompt.value = JSON.parse(
@@ -21,7 +26,7 @@
   let timeoutId: NodeJS.Timeout | null = null;
 
   async function doLogin() {
-    if (!turnstileToken.value) {
+    if (turnstileEnabled && !turnstileToken.value) {
       errorMessage.value = true;
       return;
     }
@@ -73,15 +78,15 @@
         @click="doLogin()" />
       <UnUiButton
         label="Not a member yet? Join instead"
-        variant="soft"
+        variant="outline"
         block
         size="lg"
         @click="navigateTo('/join')" />
-      <NuxtLink
-        to="/login/findmypasskey"
-        class="text-center text-sm hover:(text-primary-11 underline)">
-        I lost my passkey
-      </NuxtLink>
+      <UnUiButton
+        label="I lost my passkey"
+        variant="ghost"
+        block
+        @click="navigateTo('/login/findmypasskey')" />
       <div class="h-0 max-h-0 max-w-full w-full">
         <UnUiAlert
           v-show="errorMessage"
@@ -91,8 +96,8 @@
           color="red"
           variant="solid" />
       </div>
-
       <NuxtTurnstile
+        v-if="turnstileEnabled"
         v-model="turnstileToken"
         class="fixed bottom-5 mb-[-30px] scale-50 hover:(mb-0 scale-100)" />
     </div>
@@ -111,7 +116,7 @@
       <div class="w-full flex flex-col gap-4 p-4">
         <p v-if="passkeyLocation">
           Tip: You last saved a passkey in this browser called
-          <span class="font-bold text-primary-11">{{ passkeyLocation }}</span>
+          <span class="text-primary-11 font-bold">{{ passkeyLocation }}</span>
         </p>
         <p v-if="!passkeyLocation">
           It looks like you haven't used a passkey in this browser yet.<br />

@@ -57,7 +57,6 @@ export default defineNuxtPrepareHandler(async () => {
   }
 
   return {
-    // Overwrite the runtime config variable `foo`
     runtimeConfig: {
       hankoJwks: hankoJwksResponse,
       billing: billingConfig,
@@ -68,7 +67,8 @@ export default defineNuxtPrepareHandler(async () => {
         mailDomainPremium: JSON.parse(
           mailDomainPremiumEnv
         ) as MailDomainEntries[],
-        ee: eeConfig
+        ee: eeConfig,
+        turnstileEnabled: process.env.WEBAPP_TURNSTILE_SECRET_KEY !== ''
       }
     }
   };

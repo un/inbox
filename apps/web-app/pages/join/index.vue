@@ -6,10 +6,11 @@
 
   const turnstileToken = ref();
   const buttonLoading = ref(false);
-
-  function resetTurnstileToken() {
-    turnstileToken.value?.reset();
+  const turnstileEnabled = useRuntimeConfig().public.turnstileEnabled;
+  if (!turnstileEnabled) {
+    turnstileToken.value = '';
   }
+
   //Form Fields
   const usernameValid = ref<boolean | 'remote' | null>(null);
   const usernameValue = ref('');
@@ -110,7 +111,7 @@
             })
         " />
 
-      <div class="mt-3 w-full">
+      <div class="mt-3 w-full flex flex-col gap-2">
         <UnUiButton
           label="I like it"
           icon="i-ph-check"
@@ -118,9 +119,14 @@
           :disabled="!formValid"
           block
           @click="goToNextStep()" />
+        <UnUiButton
+          label="Sign in instead"
+          variant="ghost"
+          block
+          @click="navigateTo('/')" />
       </div>
-
       <NuxtTurnstile
+        v-if="turnstileEnabled"
         v-model="turnstileToken"
         class="fixed bottom-5 mb-[-30px] scale-50 hover:(mb-0 scale-100)" />
     </div>

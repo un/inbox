@@ -42,7 +42,7 @@ export default defineNuxtConfig({
       }
     },
     turnstile: {
-      secretKey: process.env.WEBAPP_TURNSTILE_SECRET_KEY || ''
+      secretKey: process.env.WEBAPP_TURNSTILE_SECRET_KEYS || ''
     },
     auth: {
       // The session cookie name

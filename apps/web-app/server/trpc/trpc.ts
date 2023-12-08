@@ -56,7 +56,7 @@ const hasOrgSlug = trpcContext.middleware(({ next, ctx }) => {
   return next();
 });
 const isEeEnabled = trpcContext.middleware(({ next }) => {
-  if (useRuntimeConfig().billing.enabled !== true) {
+  if (!useRuntimeConfig().billing?.enabled) {
     throw new TRPCError({
       code: 'PRECONDITION_FAILED',
       message: 'Enterprise Edition features are disabled on this server'
@@ -69,6 +69,8 @@ const isEeEnabled = trpcContext.middleware(({ next }) => {
 const turnstileTokenValidation = experimental_standaloneMiddleware<{
   input: { turnstileToken: string }; // defaults to 'unknown' if not defined
 }>().create(async (opts) => {
+  if (!useRuntimeConfig().public.turnstileEnabled) return opts.next();
+
   if (!opts.input.turnstileToken) {
     if (process.env.NODE_ENV === 'development') return opts.next();
     throw new TRPCError({

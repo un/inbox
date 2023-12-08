@@ -8,6 +8,10 @@
   const inviteId = useRoute().params.inviteId;
   const joinButtonLoading = ref(false);
   const joinButtonLabel = ref('Join organization');
+  const turnstileEnabled = useRuntimeConfig().public.turnstileEnabled;
+  if (!turnstileEnabled) {
+    turnstileToken.value = '';
+  }
 
   const queryVariables = ref({
     turnstileToken: turnstileToken.value,
@@ -139,12 +143,10 @@
       </div>
 
       <NuxtTurnstile
+        v-if="turnstileEnabled"
         ref="turnstile"
         v-model="turnstileToken"
         class="fixed bottom-5 mb-[-30px] scale-50 hover:(mb-0 scale-100)" />
     </div>
-    <NuxtTurnstile
-      v-model="turnstileToken"
-      class="fixed bottom-5 mb-[-30px] scale-50 hover:(mb-0 scale-100)" />
   </div>
 </template>
