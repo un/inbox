@@ -83,5 +83,6 @@
     "w-[64px] h-[64px] text-xl",
     "w-[80px] h-[80px] text-2xl",
     "w-[128px] h-[128px] text-3xl"
-  ]
+  ],
+  "typescript.tsdk": "node_modules/typescript/lib"
 }

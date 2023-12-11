@@ -362,7 +362,7 @@
       description="You don't have an email identity assigned to you. Please contact your organization administrator."
       title="Email sending disabled!" />
     <div class="flex flex-col gap-2">
-      <span class="text-md font-display"> Send As </span>
+      <span class="text-sm font-medium"> Send As </span>
       <div class="flex flex-col gap-4">
         <div class="flex flex-col gap-1">
           <div class="flex flex-row flex-wrap gap-8">
@@ -417,7 +417,7 @@
       </div>
     </div>
     <div class="flex flex-col gap-2">
-      <span class="text-md font-display">Participants</span>
+      <span class="text-sm font-medium">Participants</span>
       <div class="flex flex-col gap-1">
         <div class="flex flex-col gap-2">
           <!-- <span class="text-sm font-medium">Users</span> -->
@@ -569,31 +569,29 @@
       </div>
     </div>
     <div class="w-full flex flex-col gap-2">
-      <span class="text-md font-display">Topic</span>
       <UnUiInput
         v-model:value="conversationSubjectInput"
         v-model:valid="conversationSubjectInputValid"
         width="full"
-        label="Conversation Subject"
+        label="Topic"
         :schema="z.string().min(1).max(128)" />
     </div>
 
-    <div class="w-full flex grow flex-col justify-items-end gap-2">
-      <span class="text-md font-display">Message</span>
+    <div
+      class="h-full max-h-full w-full flex flex-col justify-items-end gap-2 overflow-hidden">
+      <span class="text-sm font-medium">Message</span>
       <UnEditor
         v-model:modelValue="editorData"
-        class="min-h-[300px] grow" />
-      <div class="min-w-fit flex flex-row justify-end gap-2">
-        <UnUiButton
-          label="Send"
-          icon="ph-envelope"
-          variant="outline" />
-        <UnUiButton
-          label="Note"
-          color="orange"
-          icon="ph-note"
-          variant="outline" />
-      </div>
+        class="min-h-[300px] overflow-hidden" />
+    </div>
+    <div class="flex grow flex-row justify-end gap-2">
+      <UnUiButton
+        label="Send"
+        icon="i-ph-envelope" />
+      <UnUiButton
+        label="Note"
+        color="orange"
+        icon="i-ph-note" />
     </div>
     <!-- <div class="mt-[24px] h-[24px] from-base-1 bg-gradient-to-t" /> -->
   </div>

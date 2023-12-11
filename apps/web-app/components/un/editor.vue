@@ -18,7 +18,8 @@
     autofocus: true,
     editorProps: {
       attributes: {
-        class: 'max-w-prose w-full focus:outline-none p-2 overflow-hidden'
+        class:
+          'max-h-full max-w-prose w-full focus:outline-none p-0 overflow-hidden'
       }
     },
     onUpdate: () => {
@@ -35,8 +36,9 @@
 </script>
 
 <template>
-  <div class="w-full bg-base-1 border border-1 border-base-6 rounded-xl p-4">
-    <div class="max-h-[350px] overflow-y-scroll">
+  <div
+    class="h-full max-h-full w-full border border-1 border-base-6 rounded-xl bg-base-1 px-2 py-1">
+    <div class="max-h-full overflow-y-scroll">
       <EditorContent :editor="editor" />
     </div>
   </div>
