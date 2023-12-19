@@ -1,0 +1,1 @@
+{"version":3,"file":"authorization-url.d.ts","sourceRoot":"","sources":["../../src/lib/oauth/authorization-url.ts"],"names":[],"mappings":"AAGA,OAAO,KAAK,EACV,eAAe,EACf,eAAe,EACf,gBAAgB,EACjB,MAAM,gBAAgB,CAAA;AAGvB;;;;GAIG;AACH,wBAAsB,mBAAmB,CACvC,KAAK,EAAE,eAAe,CAAC,OAAO,CAAC,EAC/B,OAAO,EAAE,eAAe,CAAC,OAAO,GAAG,MAAM,CAAC,GACzC,OAAO,CAAC,gBAAgB,CAAC,CAoF3B"}
