@@ -21,7 +21,6 @@ export async function setMailServerRoutingHttpEndpoint(options: {
     await options.puppetInstance.page.waitForNetworkIdle();
     await options.puppetInstance.page.waitForFunction(
       () =>
-        //@ts-expect-error - TS doesn't know it's running in the browser context
         document.querySelectorAll(
           'ul[class="endpointList u-margin"], div[class="noData noData--clean"]'
         ).length

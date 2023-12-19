@@ -26,7 +26,6 @@ export async function setMailServerRouteForDomain(options: {
     await options.puppetInstance.page.waitForNetworkIdle();
     await options.puppetInstance.page.waitForFunction(
       () =>
-        //@ts-expect-error - TS doesn't know it's running in the browser context
         document.querySelectorAll(
           'ul[class="endpointList u-margin"], div[class="noData noData--clean"]'
         ).length
@@ -56,7 +55,6 @@ export async function setMailServerRouteForDomain(options: {
     await options.puppetInstance.page.waitForNetworkIdle();
     await options.puppetInstance.page.waitForFunction(
       () =>
-        //@ts-expect-error - TS doesn't know it's running in the browser context
         document.querySelectorAll(
           'ul[class="routeList u-margin"], div[class="noData noData--clean"]'
         ).length
@@ -94,12 +92,10 @@ export async function setMailServerRouteForDomain(options: {
       // We need to find the value of the dropdown item related to the domain. Selecting via text is not possible
       const domainDropdownValue = await options.puppetInstance.page.evaluate(
         (domain) => {
-          //@ts-expect-error  - TS doesn't know it's running in the browser context
-          const select = document.querySelector('#route_domain_id');
+          const select: any = document.querySelector('#route_domain_id');
           const options = Array.from(select.options);
           for (let i = 0; i < options.length; i++) {
-            //@ts-expect-error  - TS doesn't know it's running in the browser context
-            const option = options[i] as HTMLOptionElement;
+            const option = options[i] as any;
             if (option.innerText === domain) {
               return option.value;
             }

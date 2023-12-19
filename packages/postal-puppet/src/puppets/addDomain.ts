@@ -41,8 +41,8 @@ export async function addDomain(options: {
     return {
       orgId: options.orgId,
       domainId,
-      dkimKey,
-      dkimValue
+      dkimKey: dkimKey || '',
+      dkimValue: dkimValue || '',
     };
   } catch (error: any) {
     console.log('Postal: addDomain Error:', error);
