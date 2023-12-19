@@ -2,6 +2,7 @@
   "name": "@uninbox/database",
   "private": true,
   "types": "./index.ts",
+  "main": "index.js",
   "scripts": {
     "db:generate": "drizzle-kit generate:mysql --config=drizzle.config.ts",
     "db:push": "drizzle-kit push:mysql --config=drizzle.config.ts",
