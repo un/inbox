@@ -62,7 +62,7 @@ export const stripeLinksRouter = router({
       const { stripe, db } = ctx;
       const { orgId } = input;
 
-      const orgBillingQuery = await db.read.query.orgBilling.findFirst({
+      const orgBillingQuery = await db.query.orgBilling.findFirst({
         where: eq(orgBilling.orgId, orgId),
         columns: {
           stripeCustomerId: true

@@ -24,7 +24,7 @@ export const billingRouter = router({
       const userId = +user?.id;
       const orgId = +org?.id;
 
-      const isAdmin = await isUserAdminOfOrg(org, userId);
+      const isAdmin = await isUserAdminOfOrg(org);
       if (!isAdmin) {
         throw new TRPCError({
           code: 'UNAUTHORIZED',
@@ -32,7 +32,7 @@ export const billingRouter = router({
         });
       }
 
-      const orgBillingQuery = await db.read.query.orgBilling.findFirst({
+      const orgBillingQuery = await db.query.orgBilling.findFirst({
         where: eq(orgBilling.orgId, +orgId),
         columns: {
           plan: true,
@@ -43,7 +43,7 @@ export const billingRouter = router({
       const orgPlan = orgBillingQuery?.plan || 'free';
       const orgPeriod = orgBillingQuery?.period || 'monthly';
 
-      const activeOrgMembersCount = await db.read
+      const activeOrgMembersCount = await db
         .select({ count: sql<number>`count(*)` })
         .from(orgMembers)
         .where(
@@ -69,7 +69,7 @@ export const billingRouter = router({
       const userId = +user?.id;
       const orgId = +org?.id;
 
-      const isAdmin = await isUserAdminOfOrg(org, userId);
+      const isAdmin = await isUserAdminOfOrg(org);
       if (!isAdmin) {
         throw new TRPCError({
           code: 'UNAUTHORIZED',
@@ -111,7 +111,7 @@ export const billingRouter = router({
       const orgId = +org?.id;
       const { plan, period } = input;
 
-      const isAdmin = await isUserAdminOfOrg(org, userId);
+      const isAdmin = await isUserAdminOfOrg(org);
       if (!isAdmin) {
         throw new TRPCError({
           code: 'UNAUTHORIZED',
@@ -119,7 +119,7 @@ export const billingRouter = router({
         });
       }
 
-      const orgSubscriptionQuery = await db.read.query.orgBilling.findFirst({
+      const orgSubscriptionQuery = await db.query.orgBilling.findFirst({
         where: eq(orgBilling.orgId, +orgId),
         columns: {
           id: true
@@ -132,7 +132,7 @@ export const billingRouter = router({
         });
       }
 
-      const activeOrgMembersCount = await db.read
+      const activeOrgMembersCount = await db
         .select({ count: sql<number>`count(*)` })
         .from(orgMembers)
         .where(
@@ -164,7 +164,7 @@ export const billingRouter = router({
     const userId = user?.id || 0;
     const orgId = org?.id || 0;
 
-    const orgBillingResponse = await db.read.query.orgBilling.findFirst({
+    const orgBillingResponse = await db.query.orgBilling.findFirst({
       where: eq(orgBilling.orgId, +orgId),
       columns: {
         plan: true

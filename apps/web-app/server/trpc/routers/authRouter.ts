@@ -11,7 +11,7 @@ export const authRouter = router({
       const { db, user } = ctx;
       const userId = user?.id || 0;
 
-      const userDefaultOrgSlug = await db.read.query.users.findFirst({
+      const userDefaultOrgSlug = await db.query.users.findFirst({
         where: eq(users.id, userId),
         with: {
           orgMemberships: {

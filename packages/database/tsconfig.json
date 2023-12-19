@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "moduleResolution": "node" /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */,
+    "esModuleInterop": true /* Emit additional JavaScript to ease support for importing CommonJS modules. This enables 'allowSyntheticDefaultImports' for type compatibility. */,
+    "strict": true /* Enable all strict type-checking options. */,
+    "skipDefaultLibCheck": true /* Skip type checking .d.ts files that are included with TypeScript. */,
+    "skipLibCheck": true /* Skip type checking all .d.ts files. */
+  }
+}

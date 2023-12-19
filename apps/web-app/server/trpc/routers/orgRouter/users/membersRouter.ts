@@ -26,7 +26,7 @@ export const orgMembersRouter = router({
       const userId = +user?.id;
       const orgId = +org?.id;
 
-      const orgQuery = await db.read.query.orgs.findFirst({
+      const orgQuery = await db.query.orgs.findFirst({
         columns: {
           publicId: true
         },
@@ -81,7 +81,7 @@ export const orgMembersRouter = router({
 
       const { includeRemoved } = input;
 
-      const orgQuery = await db.read.query.orgs.findFirst({
+      const orgQuery = await db.query.orgs.findFirst({
         columns: {
           publicId: true
         },

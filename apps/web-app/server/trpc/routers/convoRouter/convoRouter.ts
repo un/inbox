@@ -42,7 +42,7 @@ export const convoRouter = router({
   //       : new Date();
   //     const inputLastPublicId = cursorLastPublicId || '';
   //     // TODO: Add filtering for org based on input.filterOrgPublicId
-  //     const convoQuery = await db.read.query.convos.findMany({
+  //     const convoQuery = await db.query.convos.findMany({
   //       orderBy: [desc(convos.lastUpdatedAt), desc(convos.publicId)],
   //       limit: 15,
   //       columns: {
@@ -59,7 +59,7 @@ export const convoRouter = router({
   //         ),
   //         inArray(
   //           convos.id,
-  //           db.read
+  //           db
   //             .select({ id: convoParticipants.convoId })
   //             .from(convoParticipants)
   //             .where(
@@ -67,7 +67,7 @@ export const convoRouter = router({
   //                 eq(convoParticipants.userId, userId),
   //                 inArray(
   //                   convoParticipants.userGroupId,
-  //                   db.read
+  //                   db
   //                     .select({ id: userGroupMembers.groupId })
   //                     .from(userGroupMembers)
   //                     .where(eq(userGroupMembers.userId, userId))
@@ -190,7 +190,7 @@ export const convoRouter = router({
   //     const userId = user?.id || 0;
   //     const orgId = org?.id || 0;
   //     // TODO: Add filtering for org based on input.filterOrgPublicId
-  //     const convoDetails = await db.read.query.convos.findFirst({
+  //     const convoDetails = await db.query.convos.findFirst({
   //       columns: {
   //         publicId: true,
   //         lastUpdatedAt: true,
@@ -336,7 +336,7 @@ export const convoRouter = router({
   //       participantsUsers,
   //       authorPublicId
   //     } = input;
-  //     const authorOrgMemberResponse = await db.read.query.orgMembers.findFirst({
+  //     const authorOrgMemberResponse = await db.query.orgMembers.findFirst({
   //       where: eq(orgMembers.publicId, authorPublicId),
   //       columns: {
   //         id: true
@@ -347,14 +347,14 @@ export const convoRouter = router({
   //     }
   //     const newPublicId = nanoId();
   //     // create convo
-  //     const convoInsertResponse = await db.write.insert(convos).values({
+  //     const convoInsertResponse = await db.insert(convos).values({
   //       publicId: newPublicId,
   //       orgId: orgId,
   //       screenerStatus: 'approved',
   //       lastUpdatedAt: new Date()
   //     });
   //     // create subject
-  //     const subjectInsertResponse = await db.write
+  //     const subjectInsertResponse = await db
   //       .insert(convoSubjects)
   //       .values({
   //         convoId: +convoInsertResponse.insertId,
@@ -370,7 +370,7 @@ export const convoRouter = router({
   //       });
   //       // 2. Query the database to see if they already exist
   //       const existingForeignIdentities =
-  //         await db.read.query.foreignEmailIdentities.findMany({
+  //         await db.query.foreignEmailIdentities.findMany({
   //           where: or(
   //             ...emailParts.map((part) =>
   //               and(
@@ -399,7 +399,7 @@ export const convoRouter = router({
   //       );
   //       for (const newEmail of newEmails) {
   //         const newPublicId = nanoId();
-  //         const insertNewResponse = await db.write
+  //         const insertNewResponse = await db
   //           .insert(foreignEmailIdentities)
   //           .values({
   //             publicId: newPublicId,
@@ -412,7 +412,7 @@ export const convoRouter = router({
   //     // Get Group ID from groupPublic Id
   //     let groupIds: number[] = [];
   //     if (participantsGroups.length > 0) {
-  //       const groupResponses = await db.read.query.userGroups.findMany({
+  //       const groupResponses = await db.query.userGroups.findMany({
   //         where: inArray(userGroups.publicId, participantsGroups),
   //         columns: {
   //           id: true
@@ -422,7 +422,7 @@ export const convoRouter = router({
   //     }
   //     let orgMemberIds: number[] = [];
   //     if (participantsUsers.length > 0) {
-  //       const orgMemberResponses = await db.read.query.orgMembers.findMany({
+  //       const orgMemberResponses = await db.query.orgMembers.findMany({
   //         where: inArray(orgMembers.publicId, participantsUsers),
   //         columns: {
   //           id: true
@@ -464,10 +464,10 @@ export const convoRouter = router({
   //         active: true
   //       });
   //     });
-  //     await db.write
+  //     await db
   //       .insert(convoParticipants)
   //       .values(convoParticipantsDbInsertValuesArray);
-  //     const authorConvoMemberInsertResponse = await db.write
+  //     const authorConvoMemberInsertResponse = await db
   //       .insert(convoParticipants)
   //       .values({
   //         convoId: +convoInsertResponse.insertId,
@@ -494,14 +494,14 @@ export const convoRouter = router({
   //       });
   //     });
   //     if (foreignEmailIdentitiesScreenerStatusInsertArray.length > 0) {
-  //       await db.write
+  //       await db
   //         .insert(foreignEmailIdentitiesScreenerStatus)
   //         .values(foreignEmailIdentitiesScreenerStatusInsertArray);
   //     }
   //     // send email to external email address
   //     // add message to convo
   //     const newConvoMessagePublicId = nanoId();
-  //     await db.write.insert(convoMessages).values({
+  //     await db.insert(convoMessages).values({
   //       convoId: +convoInsertResponse.insertId,
   //       publicId: newConvoMessagePublicId,
   //       subjectId: +subjectInsertResponse.insertId,

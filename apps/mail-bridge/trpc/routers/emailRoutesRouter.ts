@@ -55,7 +55,7 @@ export const emailRoutesRouter = router({
       await postalPuppet.closePuppet(puppetInstance);
 
       const newroutingRulePublicId = nanoId();
-      const routingRuleInsertResponse = await db.write
+      const routingRuleInsertResponse = await db
         .insert(emailRoutingRules)
         .values({
           publicId: newroutingRulePublicId,
@@ -66,7 +66,7 @@ export const emailRoutesRouter = router({
         });
 
       const newEmailIdentityPublicId = nanoId();
-      const insertEmailIdentityResponse = await db.write
+      const insertEmailIdentityResponse = await db
         .insert(emailIdentities)
         .values({
           publicId: newEmailIdentityPublicId,
@@ -79,13 +79,13 @@ export const emailRoutesRouter = router({
           createdBy: userId
         });
 
-      await db.write.insert(emailIdentitiesAuthorizedUsers).values({
+      await db.insert(emailIdentitiesAuthorizedUsers).values({
         identityId: +insertEmailIdentityResponse.insertId,
         userId: userId,
         addedBy: userId
       });
 
-      await db.write
+      await db
         .update(postalServers)
         .set({
           rootForwardingAddress: setMailServerRouteResult.forwardingAddress

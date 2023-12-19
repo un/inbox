@@ -41,7 +41,7 @@ export const messageRouter = router({
 
       // TODO: Find a better way to do this
       // Verify the user is in the convo
-      const convoDetails = await db.read.query.convos.findFirst({
+      const convoDetails = await db.query.convos.findFirst({
         where: eq(convos.publicId, convoPublicId),
         columns: {
           id: true
@@ -119,7 +119,7 @@ export const messageRouter = router({
         };
       }
 
-      const convoMessagesReturn = await db.read.query.convoMessages.findMany({
+      const convoMessagesReturn = await db.query.convoMessages.findMany({
         orderBy: [desc(convoMessages.createdAt), desc(convoMessages.publicId)],
         limit: 15,
         columns: {

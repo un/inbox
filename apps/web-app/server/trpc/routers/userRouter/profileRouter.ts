@@ -83,18 +83,16 @@ export const profileRouter = router({
       const userId = user?.id || 0;
 
       const newPublicId = nanoId();
-      const insertUserProfileResponse = await db.write
-        .insert(userProfiles)
-        .values({
-          //@ts-ignore TS dosnt know that userId must exist on user procedures
-          userId: +userId,
-          publicId: newPublicId,
-          avatarId: input.imageId,
-          firstName: input.fName,
-          lastName: input.lName,
-          defaultProfile: input.defaultProfile,
-          handle: input.handle
-        });
+      const insertUserProfileResponse = await db.insert(userProfiles).values({
+        //@ts-ignore TS dosnt know that userId must exist on user procedures
+        userId: +userId,
+        publicId: newPublicId,
+        avatarId: input.imageId,
+        firstName: input.fName,
+        lastName: input.lName,
+        defaultProfile: input.defaultProfile,
+        handle: input.handle
+      });
 
       if (!insertUserProfileResponse.insertId) {
         console.log(insertUserProfileResponse);
@@ -128,7 +126,7 @@ export const profileRouter = router({
 
       let orgId: number | null = null;
       if (input.orgPublicId || input.orgSlug) {
-        const orgQuery = await db.read.query.orgs.findFirst({
+        const orgQuery = await db.query.orgs.findFirst({
           where: input.orgPublicId
             ? eq(orgs.publicId, input.orgPublicId)
             : input.orgSlug
@@ -148,7 +146,7 @@ export const profileRouter = router({
         });
       }
 
-      const userOrgMembershipQuery = await db.read.query.orgMembers.findFirst({
+      const userOrgMembershipQuery = await db.query.orgMembers.findFirst({
         where: !orgId
           ? eq(orgMembers.userId, +userId)
           : and(eq(orgMembers.userId, +userId), eq(orgMembers.orgId, +orgId)),
@@ -200,7 +198,7 @@ export const profileRouter = router({
       const { db, user } = ctx;
       const userId = user?.id || 0;
 
-      const insertUserProfileResponse = await db.write
+      const insertUserProfileResponse = await db
         .update(userProfiles)
         .set({
           avatarId: input.imageId,

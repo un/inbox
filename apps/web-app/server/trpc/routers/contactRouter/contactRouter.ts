@@ -23,7 +23,7 @@ export const contactsRouter = router({
       const userId = +user?.id;
       const orgId = +org?.id;
 
-      const orgContactsResponse = await db.read.query.contacts.findMany({
+      const orgContactsResponse = await db.query.contacts.findMany({
         where: and(eq(contacts.orgId, orgId), eq(contacts.type, 'person')),
         columns: {
           publicId: true,

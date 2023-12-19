@@ -35,7 +35,7 @@ import Stripe from 'stripe';
 //     });
 //   }
 
-//   await db.write.insert(lifetimeLicenses).values(lifeTimeLicenceArray);
+//   await db.insert(lifetimeLicenses).values(lifeTimeLicenceArray);
 // };
 
 const handleCustomerSubscriptionUpdated = async (stripeEvent: Stripe.Event) => {
@@ -66,7 +66,7 @@ const handleCustomerSubscriptionUpdated = async (stripeEvent: Stripe.Event) => {
     return;
   }
 
-  const existingOrgBilling = await db.read.query.orgBilling.findFirst({
+  const existingOrgBilling = await db.query.orgBilling.findFirst({
     where: eq(orgBilling.orgId, orgsId),
     columns: {
       id: true
@@ -74,7 +74,7 @@ const handleCustomerSubscriptionUpdated = async (stripeEvent: Stripe.Event) => {
   });
 
   if (existingOrgBilling) {
-    await db.write
+    await db
       .update(orgBilling)
       .set({
         orgId: orgsId,
@@ -85,7 +85,7 @@ const handleCustomerSubscriptionUpdated = async (stripeEvent: Stripe.Event) => {
       })
       .where(eq(orgBilling.id, existingOrgBilling.id));
   } else {
-    await db.write.insert(orgBilling).values({
+    await db.insert(orgBilling).values({
       orgId: orgsId,
       stripeCustomerId: customerId,
       stripeSubscriptionId: subId,

@@ -17,7 +17,7 @@ export const validateOrgSlug = async (
     return cachedSlugOrgContext;
   }
 
-  const orgLookupResult = await db.read.query.orgs.findFirst({
+  const orgLookupResult = await db.query.orgs.findFirst({
     where: eq(orgs.slug, orgSlug),
     columns: { id: true },
     with: {
@@ -45,7 +45,7 @@ export const validateOrgSlug = async (
 };
 
 export async function refreshOrgSlugCache(orgId: number): Promise<void> {
-  const orgLookupResult = await db.read.query.orgs.findFirst({
+  const orgLookupResult = await db.query.orgs.findFirst({
     where: eq(orgs.id, orgId),
     columns: { id: true, slug: true },
     with: {

@@ -36,7 +36,7 @@ export const orgUserGroupsRouter = router({
       const { groupName, groupDescription, groupColor } = input;
       const newPublicId = nanoId();
 
-      const isAdmin = await isUserAdminOfOrg(org, userId);
+      const isAdmin = await isUserAdminOfOrg(org);
       if (!isAdmin) {
         throw new TRPCError({
           code: 'UNAUTHORIZED',
@@ -44,7 +44,7 @@ export const orgUserGroupsRouter = router({
         });
       }
 
-      await db.write.insert(userGroups).values({
+      await db.insert(userGroups).values({
         publicId: newPublicId,
         name: groupName,
         description: groupDescription,
@@ -70,7 +70,7 @@ export const orgUserGroupsRouter = router({
       const userId = +user?.id;
       const orgId = +org?.id;
 
-      const userGroupQuery = await db.read.query.userGroups.findMany({
+      const userGroupQuery = await db.query.userGroups.findMany({
         columns: {
           publicId: true,
           name: true,
@@ -121,7 +121,9 @@ export const orgUserGroupsRouter = router({
       const { db, user, org } = ctx;
       const userId = +user?.id;
       const orgId = +org?.id;
-      const dbReplica = input.newUserGroup ? db.write : db.read;
+
+      // Handle when adding database replicas
+      const dbReplica = db;
 
       const userGroupQuery = await dbReplica.query.userGroups.findFirst({
         columns: {
@@ -187,7 +189,7 @@ export const orgUserGroupsRouter = router({
       const { groupPublicId, orgMemberPublicId } = input;
       const newPublicId = nanoId();
 
-      const isAdmin = await isUserAdminOfOrg(org, userId);
+      const isAdmin = await isUserAdminOfOrg(org);
       if (!isAdmin) {
         throw new TRPCError({
           code: 'UNAUTHORIZED',
@@ -195,7 +197,7 @@ export const orgUserGroupsRouter = router({
         });
       }
 
-      const orgMember = await db.read.query.orgMembers.findFirst({
+      const orgMember = await db.query.orgMembers.findFirst({
         columns: {
           userId: true,
           id: true,
@@ -208,7 +210,7 @@ export const orgUserGroupsRouter = router({
         throw new Error('User not found');
       }
 
-      const userGroup = await db.read.query.userGroups.findFirst({
+      const userGroup = await db.query.userGroups.findFirst({
         columns: {
           id: true
         },
@@ -222,7 +224,7 @@ export const orgUserGroupsRouter = router({
         });
       }
 
-      const insertUserGroupMemberResult = await db.write
+      const insertUserGroupMemberResult = await db
         .insert(userGroupMembers)
         .values({
           publicId: newPublicId,

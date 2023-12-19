@@ -23,7 +23,7 @@ export const subscriptionsRouter = router({
       const { stripe, db } = ctx;
       const { orgId } = input;
 
-      const orgSubscriptionQuery = await db.read.query.orgBilling.findFirst({
+      const orgSubscriptionQuery = await db.query.orgBilling.findFirst({
         where: eq(orgBilling.orgId, orgId),
         columns: {
           id: true,
@@ -38,7 +38,7 @@ export const subscriptionsRouter = router({
         return { error: 'Org is not subscribed to a plan' };
       }
 
-      const activeOrgMembersCount = await db.read
+      const activeOrgMembersCount = await db
         .select({ count: sql<number>`count(*)` })
         .from(orgMembers)
         .where(

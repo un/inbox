@@ -71,7 +71,7 @@ export const invitesRouter = router({
       // Insert user profile - save ID
 
       const userProfilePublicId = nanoId();
-      const userProfileResponse = await db.write.insert(userProfiles).values({
+      const userProfileResponse = await db.insert(userProfiles).values({
         publicId: userProfilePublicId,
         firstName: userInput.firstName,
         lastName: userInput.lastName,
@@ -79,14 +79,14 @@ export const invitesRouter = router({
         defaultProfile: true
       });
       const userProfileId = userProfileResponse.insertId;
-      await db.write.insert(userProfilesToOrgs).values({
+      await db.insert(userProfilesToOrgs).values({
         userProfileId: +userProfileId,
         orgId: +orgId
       });
 
       // Insert orgMember - save ID
       const orgMemberPublicId = nanoId();
-      const orgMemberResponse = await db.write.insert(orgMembers).values({
+      const orgMemberResponse = await db.insert(orgMembers).values({
         publicId: orgMemberPublicId,
         orgId: +orgId,
         invitedByOrgMemberId: orgMemberId,
@@ -98,7 +98,7 @@ export const invitesRouter = router({
       // Insert groupMemberships - save ID
       if (groups) {
         const groupMembershipsPublicId = nanoId();
-        const groupIds = await db.read.query.userGroups.findMany({
+        const groupIds = await db.query.userGroups.findMany({
           where: inArray(userGroups.publicId, groups.groupsPublicIds),
           columns: {
             id: true
@@ -114,13 +114,11 @@ export const invitesRouter = router({
           role: 'member' as 'admin' | 'member'
         }));
 
-        await db.write
-          .insert(userGroupMembers)
-          .values([...newGroupMembershipValues]);
+        await db.insert(userGroupMembers).values([...newGroupMembershipValues]);
       }
       // Insert Email identities
       if (email) {
-        const domainResponse = await db.read.query.domains.findFirst({
+        const domainResponse = await db.query.domains.findFirst({
           where: eq(domains.publicId, email.domainPublicId),
           columns: {
             id: true,
@@ -135,7 +133,7 @@ export const invitesRouter = router({
         }
 
         const emailRoutingRulesPublicId = nanoId();
-        const emailRoutingRulesResponse = await db.write
+        const emailRoutingRulesResponse = await db
           .insert(emailRoutingRules)
           .values({
             orgId: +orgId,
@@ -144,13 +142,13 @@ export const invitesRouter = router({
             createdBy: +orgMemberId
           });
 
-        await db.write.insert(emailRoutingRulesDestinations).values({
+        await db.insert(emailRoutingRulesDestinations).values({
           ruleId: +emailRoutingRulesResponse.insertId,
           orgMemberId: +orgMemberResponse.insertId
         });
 
         const emailIdentityPublicId = nanoId();
-        await db.write.insert(emailIdentities).values({
+        await db.insert(emailIdentities).values({
           publicId: emailIdentityPublicId,
           orgId: +orgId,
           createdBy: +orgMemberId,
@@ -166,7 +164,7 @@ export const invitesRouter = router({
 
       const newInvitePublicId = nanoId();
       const newInviteToken = nanoIdToken();
-      await db.write.insert(orgInvitations).values({
+      await db.insert(orgInvitations).values({
         publicId: newInvitePublicId,
         orgId: +orgId,
         invitedByOrgMemberId: +orgMemberId,
@@ -200,7 +198,7 @@ export const invitesRouter = router({
       const userId = +user?.id;
       const orgId = +org?.id;
 
-      const orgInvitesResponse = await db.read.query.orgInvitations.findMany({
+      const orgInvitesResponse = await db.query.orgInvitations.findMany({
         where: eq(orgInvitations.orgId, +orgId),
         columns: {
           publicId: true,
@@ -254,26 +252,24 @@ export const invitesRouter = router({
       const userLoggedIn = ctx.user?.id ? true : false;
       console.log('userLoggedIn', userLoggedIn);
 
-      const queryInvitesResponse = await db.read.query.orgInvitations.findFirst(
-        {
-          where: eq(orgInvitations.inviteToken, input.inviteToken),
-          columns: {
-            id: true,
-            expiresAt: true,
-            acceptedAt: true,
-            orgId: true
-          },
-          with: {
-            org: {
-              columns: {
-                name: true,
-                avatarId: true,
-                slug: true
-              }
+      const queryInvitesResponse = await db.query.orgInvitations.findFirst({
+        where: eq(orgInvitations.inviteToken, input.inviteToken),
+        columns: {
+          id: true,
+          expiresAt: true,
+          acceptedAt: true,
+          orgId: true
+        },
+        with: {
+          org: {
+            columns: {
+              name: true,
+              avatarId: true,
+              slug: true
             }
           }
         }
-      );
+      });
 
       if (!queryInvitesResponse) {
         throw new TRPCError({
@@ -319,33 +315,31 @@ export const invitesRouter = router({
       const userId = +user?.id;
       const newPublicId = nanoId();
 
-      const queryInvitesResponse = await db.read.query.orgInvitations.findFirst(
-        {
-          where: eq(orgInvitations.inviteToken, input.inviteToken),
-          columns: {
-            id: true,
-            orgId: true,
-            role: true,
-            invitedByOrgMemberId: true,
-            expiresAt: true,
-            acceptedAt: true,
-            invitedUserProfileId: true,
-            orgMemberId: true
+      const queryInvitesResponse = await db.query.orgInvitations.findFirst({
+        where: eq(orgInvitations.inviteToken, input.inviteToken),
+        columns: {
+          id: true,
+          orgId: true,
+          role: true,
+          invitedByOrgMemberId: true,
+          expiresAt: true,
+          acceptedAt: true,
+          invitedUserProfileId: true,
+          orgMemberId: true
+        },
+        with: {
+          invitedProfile: {
+            columns: {
+              publicId: true
+            }
           },
-          with: {
-            invitedProfile: {
-              columns: {
-                publicId: true
-              }
-            },
-            org: {
-              columns: {
-                slug: true
-              }
+          org: {
+            columns: {
+              slug: true
             }
           }
         }
-      );
+      });
 
       const invitedUserProfilePublicId =
         queryInvitesResponse?.invitedProfile?.publicId;
@@ -384,14 +378,14 @@ export const invitesRouter = router({
         });
       }
 
-      const userHandleQuery = await db.read.query.users.findFirst({
+      const userHandleQuery = await db.query.users.findFirst({
         where: eq(users.id, +userId),
         columns: {
           username: true
         }
       });
 
-      await db.write
+      await db
         .update(userProfiles)
         .set({
           userId: +userId,
@@ -399,7 +393,7 @@ export const invitesRouter = router({
         })
         .where(eq(userProfiles.id, +queryInvitesResponse.invitedUserProfileId));
 
-      await db.write
+      await db
         .update(orgMembers)
         .set({
           userId: userId,
@@ -408,7 +402,7 @@ export const invitesRouter = router({
         })
         .where(eq(orgMembers.id, +queryInvitesResponse.orgMemberId));
 
-      await db.write
+      await db
         .update(orgInvitations)
         .set({
           acceptedAt: new Date()
@@ -452,7 +446,7 @@ export const invitesRouter = router({
         });
       }
 
-      await db.write
+      await db
         .update(orgInvitations)
         .set({
           expiresAt: new Date()
@@ -487,7 +481,7 @@ export const invitesRouter = router({
         });
       }
 
-      await db.write
+      await db
         .update(orgInvitations)
         .set({
           expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)

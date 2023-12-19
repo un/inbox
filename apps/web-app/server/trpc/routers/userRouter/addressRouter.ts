@@ -23,7 +23,7 @@ export const addressRouter = router({
       const { db, user } = ctx;
       const userId = user?.id || 0;
 
-      const usersPersonalOrgIdQuery = await db.read.query.orgs.findFirst({
+      const usersPersonalOrgIdQuery = await db.query.orgs.findFirst({
         where: and(eq(orgs.ownerId, +userId), eq(orgs.personalOrg, true)),
         columns: {
           id: true
@@ -35,7 +35,7 @@ export const addressRouter = router({
       }
 
       const userPersonalOrgFwdAddressQuery =
-        await db.read.query.postalServers.findFirst({
+        await db.query.postalServers.findFirst({
           where: and(
             eq(postalServers.rootMailServer, true),
             eq(postalServers.orgId, +usersPersonalOrgIdQuery?.id)
@@ -46,7 +46,7 @@ export const addressRouter = router({
         });
 
       const userPersonalEmailAddressesQuery =
-        await db.read.query.emailIdentities.findMany({
+        await db.query.emailIdentities.findMany({
           where: eq(emailIdentities.orgId, +usersPersonalOrgIdQuery?.id),
           columns: {
             publicId: true,

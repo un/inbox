@@ -38,16 +38,15 @@ export const domainRouter = router({
         domainName: domainName
       });
 
-      const postalServerIdResponse =
-        await db.read.query.postalServers.findFirst({
-          where: and(
-            eq(postalServers.orgId, orgId),
-            eq(postalServers.type, 'email')
-          ),
-          columns: {
-            publicId: true
-          }
-        });
+      const postalServerIdResponse = await db.query.postalServers.findFirst({
+        where: and(
+          eq(postalServers.orgId, orgId),
+          eq(postalServers.type, 'email')
+        ),
+        columns: {
+          publicId: true
+        }
+      });
 
       if (!postalServerIdResponse) {
         await postalPuppet.closePuppet(puppetInstance);

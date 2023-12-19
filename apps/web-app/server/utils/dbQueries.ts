@@ -17,14 +17,14 @@ export async function isUserInOrg({
   }
 
   // TODO: cache if user is member of org
-  const orgIdResponse = await db.read.query.orgMembers.findFirst({
+  const orgIdResponse = await db.query.orgMembers.findFirst({
     where: and(
       eq(
         orgMembers.orgId,
         orgId
           ? orgId
           : orgPublicId
-            ? db.read
+            ? db
                 .select({ id: orgs.id })
                 .from(orgs)
                 .where(eq(orgs.publicId, orgPublicId))

@@ -25,7 +25,7 @@ async function validateOrgSlug(
   available: boolean;
   error: string | null;
 }> {
-  const orgId = await db.read
+  const orgId = await db
     .select({ id: orgs.id })
     .from(orgs)
     .where(eq(orgs.slug, slug));
@@ -83,7 +83,7 @@ export const crudRouter = router({
 
       const newPublicId = nanoId();
 
-      const insertOrgResponse = await db.write.insert(orgs).values({
+      const insertOrgResponse = await db.insert(orgs).values({
         ownerId: +userId,
         name: input.orgName,
         slug: input.orgSlug,
@@ -91,7 +91,7 @@ export const crudRouter = router({
       });
       const orgId = +insertOrgResponse.insertId;
 
-      const userProfile = await db.read.query.userProfiles.findFirst({
+      const userProfile = await db.query.userProfiles.findFirst({
         where: and(
           eq(userProfiles.userId, +userId),
           eq(userProfiles.defaultProfile, true)
@@ -107,7 +107,7 @@ export const crudRouter = router({
       } else {
         const newProfilePublicId = nanoId();
         const { username } =
-          (await db.read.query.users.findFirst({
+          (await db.query.users.findFirst({
             where: eq(users.id, +userId),
             columns: {
               username: true
@@ -132,14 +132,14 @@ export const crudRouter = router({
           defaultProfile: true
         };
 
-        const newProfile = await db.write
+        const newProfile = await db
           .insert(userProfiles)
           .values(defaultProfileValues);
         userProfileId = +newProfile.insertId;
       }
 
       const newPublicId2 = nanoId();
-      await db.write.insert(orgMembers).values({
+      await db.insert(orgMembers).values({
         orgId: orgId,
         publicId: newPublicId2,
         role: 'admin',
@@ -171,7 +171,7 @@ export const crudRouter = router({
         //@ts-expect-error cant correctly infer the type of useRuntimeConfig mail
         useRuntimeConfig().public.mailDomainPublic[0].name as string;
 
-      const existingPersonalOrg = await db.read
+      const existingPersonalOrg = await db
         .select({ id: orgs.id })
         .from(orgs)
         .where(and(eq(orgs.ownerId, +userId), eq(orgs.personalOrg, true)));
@@ -184,13 +184,13 @@ export const crudRouter = router({
         };
       }
 
-      const userObject = await db.read
+      const userObject = await db
         .select({ id: users.id, username: users.username })
         .from(users)
         .where(eq(users.id, +userId));
       const newPublicId = nanoId();
 
-      const insertOrgResponse = await db.write.insert(orgs).values({
+      const insertOrgResponse = await db.insert(orgs).values({
         ownerId: +userId,
         name: `${userObject[0].username}'s Personal Org`,
         slug: userObject[0].username,
@@ -199,7 +199,7 @@ export const crudRouter = router({
       });
       const newOrgId = +insertOrgResponse.insertId;
 
-      const userProfile = await db.read
+      const userProfile = await db
         .select({
           id: userProfiles.id,
           fname: userProfiles.firstName,
@@ -209,7 +209,7 @@ export const crudRouter = router({
         .where(eq(userProfiles.userId, userId));
 
       const newPublicId2 = nanoId();
-      await db.write.insert(orgMembers).values({
+      await db.insert(orgMembers).values({
         orgId: newOrgId,
         role: 'admin',
         userId: userId,
@@ -258,7 +258,7 @@ export const crudRouter = router({
 
       const userIsAdmin = input.onlyAdmin || false;
 
-      const orgMembersQuery = await db.read.query.orgMembers.findMany({
+      const orgMembersQuery = await db.query.orgMembers.findMany({
         columns: {
           role: true
         },

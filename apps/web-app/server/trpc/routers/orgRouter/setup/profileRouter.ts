@@ -26,7 +26,7 @@ export const orgProfileRouter = router({
       const orgId = +org?.id;
       const { orgPublicId } = input;
 
-      const orgProfileQuery = await db.read.query.orgs.findFirst({
+      const orgProfileQuery = await db.query.orgs.findFirst({
         columns: {
           publicId: true,
           name: true,
@@ -61,7 +61,7 @@ export const orgProfileRouter = router({
       const orgId = +org?.id;
       const { orgName, orgAvatarId } = input;
 
-      const isAdmin = await isUserAdminOfOrg(org, userId);
+      const isAdmin = await isUserAdminOfOrg(org);
       console.log('isAdmin', isAdmin);
       console.log('org', org);
       console.log('userId', userId);
@@ -72,7 +72,7 @@ export const orgProfileRouter = router({
         });
       }
 
-      await db.write
+      await db
         .update(orgs)
         .set({
           name: orgName,

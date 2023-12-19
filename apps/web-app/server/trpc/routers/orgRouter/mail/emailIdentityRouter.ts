@@ -45,7 +45,7 @@ export const emailIdentityRouter = router({
 
       const { emailUsername, domainPublicId } = input;
 
-      const domainResponse = await db.read.query.domains.findFirst({
+      const domainResponse = await db.query.domains.findFirst({
         where: and(
           eq(domains.publicId, domainPublicId),
           eq(domains.orgId, +orgId)
@@ -63,16 +63,15 @@ export const emailIdentityRouter = router({
         });
       }
 
-      const emailIdentityResponse =
-        await db.read.query.emailIdentities.findFirst({
-          where: and(
-            eq(emailIdentities.username, emailUsername),
-            eq(emailIdentities.domainId, domainResponse.id)
-          ),
-          columns: {
-            id: true
-          }
-        });
+      const emailIdentityResponse = await db.query.emailIdentities.findFirst({
+        where: and(
+          eq(emailIdentities.username, emailUsername),
+          eq(emailIdentities.domainId, domainResponse.id)
+        ),
+        columns: {
+          id: true
+        }
+      });
 
       if (emailIdentityResponse) {
         return {
@@ -120,7 +119,7 @@ export const emailIdentityRouter = router({
       const emailUsername = input.emailUsername.toLowerCase();
       const newPublicId = nanoId();
 
-      const isAdmin = await isUserAdminOfOrg(org, userId);
+      const isAdmin = await isUserAdminOfOrg(org);
       if (!isAdmin) {
         throw new TRPCError({
           code: 'UNAUTHORIZED',
@@ -135,7 +134,7 @@ export const emailIdentityRouter = router({
         });
       }
 
-      const domainResponse = await db.read.query.domains.findFirst({
+      const domainResponse = await db.query.domains.findFirst({
         where: and(
           eq(domains.publicId, domainPublicId),
           eq(domains.orgId, +orgId)
@@ -163,7 +162,7 @@ export const emailIdentityRouter = router({
       const orgMemberIdsResponse =
         routeToUsersOrgMemberPublicIds &&
         routeToUsersOrgMemberPublicIds.length > 0
-          ? await db.read.query.orgMembers.findMany({
+          ? await db.query.orgMembers.findMany({
               where: inArray(
                 orgMembers.publicId,
                 routeToUsersOrgMemberPublicIds
@@ -180,7 +179,7 @@ export const emailIdentityRouter = router({
       const userGroupIds: number[] = [];
       const userGroupIdsResponse =
         routeToGroupsPublicIds && routeToGroupsPublicIds.length > 0
-          ? await db.read.query.userGroups.findMany({
+          ? await db.query.userGroups.findMany({
               where: inArray(userGroups.publicId, routeToGroupsPublicIds),
               columns: {
                 id: true
@@ -193,15 +192,13 @@ export const emailIdentityRouter = router({
 
       // create email routing rule
 
-      const insertEmailRoutingRule = await db.write
-        .insert(emailRoutingRules)
-        .values({
-          publicId: newPublicId,
-          orgId: +orgId,
-          createdBy: +userId,
-          name: emailUsername,
-          description: `Email routing rule for ${emailUsername}@${domainResponse.domain}`
-        });
+      const insertEmailRoutingRule = await db.insert(emailRoutingRules).values({
+        publicId: newPublicId,
+        orgId: +orgId,
+        createdBy: +userId,
+        name: emailUsername,
+        description: `Email routing rule for ${emailUsername}@${domainResponse.domain}`
+      });
 
       type InsertRoutingRuleDestination = InferInsertModel<
         typeof emailRoutingRulesDestinations
@@ -225,13 +222,13 @@ export const emailIdentityRouter = router({
         });
       }
 
-      await db.write
+      await db
         .insert(emailRoutingRulesDestinations)
         .values(routingRuleInsertValues);
 
       const emailIdentityPublicId = nanoId();
       // create address
-      const insertEmailIdentityResponse = await db.write
+      const insertEmailIdentityResponse = await db
         .insert(emailIdentities)
         .values({
           publicId: emailIdentityPublicId,
@@ -246,7 +243,7 @@ export const emailIdentityRouter = router({
         });
 
       if (catchAll) {
-        await db.write
+        await db
           .update(domains)
           .set({
             catchAllAddress: +insertEmailIdentityResponse.insertId
@@ -278,7 +275,8 @@ export const emailIdentityRouter = router({
       const orgId = +org?.id;
       const { emailIdentityPublicId } = input;
 
-      const dbReplica = input.newEmailIdentity ? db.write : db.read;
+      // Handle when adding database replicas
+      const dbReplica = db;
 
       const emailIdentityResponse =
         await dbReplica.query.emailIdentities.findFirst({
@@ -358,54 +356,52 @@ export const emailIdentityRouter = router({
       const userId = +user?.id;
       const orgId = +org?.id;
 
-      const emailIdentityResponse =
-        await db.read.query.emailIdentities.findMany({
-          where: eq(domains.orgId, +orgId),
-          columns: {
-            publicId: true,
-            username: true,
-            domainName: true,
-            sendName: true,
-            isCatchAll: true,
-            avatarId: true
+      const emailIdentityResponse = await db.query.emailIdentities.findMany({
+        where: eq(domains.orgId, +orgId),
+        columns: {
+          publicId: true,
+          username: true,
+          domainName: true,
+          sendName: true,
+          isCatchAll: true,
+          avatarId: true
+        },
+        with: {
+          domain: {
+            columns: {
+              sendingMode: true,
+              receivingMode: true,
+              domainStatus: true
+            }
           },
-          with: {
-            domain: {
-              columns: {
-                sendingMode: true,
-                receivingMode: true,
-                domainStatus: true
-              }
+          routingRules: {
+            columns: {
+              publicId: true,
+              name: true,
+              description: true
             },
-            routingRules: {
-              columns: {
-                publicId: true,
-                name: true,
-                description: true
-              },
-              with: {
-                destinations: {
-                  with: {
-                    group: {
-                      columns: {
-                        publicId: true,
-                        name: true,
-                        description: true,
-                        avatarId: true,
-                        color: true
-                      }
-                    },
-                    orgMember: {
-                      with: {
-                        profile: {
-                          columns: {
-                            publicId: true,
-                            avatarId: true,
-                            firstName: true,
-                            lastName: true,
-                            handle: true,
-                            title: true
-                          }
+            with: {
+              destinations: {
+                with: {
+                  group: {
+                    columns: {
+                      publicId: true,
+                      name: true,
+                      description: true,
+                      avatarId: true,
+                      color: true
+                    }
+                  },
+                  orgMember: {
+                    with: {
+                      profile: {
+                        columns: {
+                          publicId: true,
+                          avatarId: true,
+                          firstName: true,
+                          lastName: true,
+                          handle: true,
+                          title: true
                         }
                       }
                     }
@@ -414,7 +410,8 @@ export const emailIdentityRouter = router({
               }
             }
           }
-        });
+        }
+      });
 
       return {
         emailIdentityData: emailIdentityResponse
@@ -436,7 +433,7 @@ export const emailIdentityRouter = router({
       // search for user org group memberships, get id of org group
 
       const userOrgGroupMembershipQuery =
-        await db.read.query.userGroupMembers.findMany({
+        await db.query.userGroupMembers.findMany({
           where: eq(userGroupMembers.orgMemberId, +orgMemberId),
           columns: {
             groupId: true
@@ -468,7 +465,7 @@ export const emailIdentityRouter = router({
       // search email routingrulesdestinations for orgmemberId or orgGroupId
 
       const routingRulesDestinationsQuery =
-        await db.read.query.emailRoutingRulesDestinations.findMany({
+        await db.query.emailRoutingRulesDestinations.findMany({
           where: or(
             eq(emailRoutingRulesDestinations.orgMemberId, orgMemberId),
             inArray(

@@ -31,7 +31,7 @@ export const domainsRouter = router({
       const domainName = input.domainName.toLowerCase();
       console.log({ domainName });
 
-      const isAdmin = await isUserAdminOfOrg(org, userId);
+      const isAdmin = await isUserAdminOfOrg(org);
       if (!isAdmin) {
         throw new TRPCError({
           code: 'UNAUTHORIZED',
@@ -39,7 +39,7 @@ export const domainsRouter = router({
         });
       }
 
-      const orgResponse = await db.read.query.orgs.findFirst({
+      const orgResponse = await db.query.orgs.findFirst({
         where: eq(orgs.id, orgId),
         columns: {
           publicId: true
@@ -60,7 +60,7 @@ export const domainsRouter = router({
         });
       });
 
-      const existingDomains = await db.read.query.domains.findFirst({
+      const existingDomains = await db.query.domains.findFirst({
         where: eq(domains.domain, domainName),
         columns: {
           id: true,
@@ -87,7 +87,7 @@ export const domainsRouter = router({
         };
       }
 
-      await db.write.insert(domains).values({
+      await db.insert(domains).values({
         publicId: newPublicId,
         orgId: +orgId,
         domain: domainName,
@@ -125,9 +125,10 @@ export const domainsRouter = router({
       const orgId = +org?.id;
       const { domainPublicId } = input;
 
-      const dbReplica = input.newDomain ? db.write : db.read;
+      // Handle when adding database replicas
+      const dbReplica = db;
 
-      const isAdmin = await isUserAdminOfOrg(org, userId);
+      const isAdmin = await isUserAdminOfOrg(org);
       if (!isAdmin) {
         throw new TRPCError({
           code: 'UNAUTHORIZED',
@@ -177,9 +178,10 @@ export const domainsRouter = router({
       const postalRootUrl = useRuntimeConfig().mailBridge
         .postalRootUrl as string;
 
-      const dbReplica = input.newDomain ? db.write : db.read;
+      // Handle when adding database replicas
+      const dbReplica = db;
 
-      const isAdmin = await isUserAdminOfOrg(org, userId);
+      const isAdmin = await isUserAdminOfOrg(org);
       if (!isAdmin) {
         throw new TRPCError({
           code: 'UNAUTHORIZED',
@@ -284,7 +286,7 @@ export const domainsRouter = router({
           ? (domainStatus = 'active')
           : (domainStatus = 'pending');
 
-        await db.write
+        await db
           .update(domains)
           .set({
             mxDnsValid: dnsResult.mx.valid,
@@ -300,7 +302,7 @@ export const domainsRouter = router({
       }
 
       if (domainStatus === 'disabled') {
-        await db.write
+        await db
           .update(domains)
           .set({
             receivingMode: 'disabled',
@@ -335,7 +337,7 @@ export const domainsRouter = router({
       const userId = +user?.id;
       const orgId = +org?.id;
 
-      const domainResponse = await db.read.query.domains.findMany({
+      const domainResponse = await db.query.domains.findMany({
         where: eq(domains.orgId, +orgId),
         columns: {
           publicId: true,
