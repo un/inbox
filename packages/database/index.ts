@@ -1,22 +1,22 @@
 import { drizzle } from 'drizzle-orm/planetscale-serverless';
 import { connect } from '@planetscale/database';
-import type { Config } from '@planetscale/database';
 import * as schema from './schema';
 
-const planetscaleMode: 'local' | 'remote' =
-  (process.env.DB_PLANETSCALE_MODE as any) || 'remote';
-const connectionConfig: Config =
-  planetscaleMode === 'local'
-    ? {
-        url: `http://root:unsedPassword@localhost:3900`
-      }
-    : {
-        host: process.env['DB_PLANETSCALE_HOST'],
-        username: process.env['DB_PLANETSCALE_USERNAME'],
-        password: process.env['DB_PLANETSCALE_PASSWORD']
-      };
+const connection = connect({
+  host: process.env.DATABASE_HOST,
+  username: process.env.DATABASE_USERNAME,
+  password: process.env.DATABASE_PASSWORD,
 
-const connection = connect(connectionConfig);
+  fetch: (url: string, init: any) => {
+    (init as any).cache = undefined; // Remove cache header
+    const u = new URL(url);
+    // set protocol to http if localhost for CI testing
+    if (u.host.includes('localhost') || u.host.includes('127.0.0.1')) {
+      u.protocol = 'http';
+    }
+    return fetch(u, init);
+  }
+});
 
 const connectionOptions = {
   logger: process.env.NODE_ENV === 'development' ? true : false,
