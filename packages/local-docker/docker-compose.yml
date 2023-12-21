@@ -1,0 +1,82 @@
+version: '3.8'
+
+name: uninbox-local-dev
+
+services:
+  # Local Mysql DB with Planetscale Proxy
+  ps-mysql:
+    container_name: mysql-primary-db
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_DATABASE: planetscale
+      MYSQL_ROOT_HOST: '%'
+      MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+    command:
+      [
+        '--max_connections=1000',
+        '--default-authentication-plugin=mysql_native_password'
+      ]
+    ports:
+      - 3306:3306
+    volumes:
+      - ps-mysql:/var/lib/mysql
+  planetscale-proxy:
+    container_name: planetscale-simulator-proxy
+    image: ghcr.io/mattrobenolt/ps-http-sim:v0.0.3
+    command:
+      [
+        '-mysql-no-pass',
+        '-listen-port=3900',
+        '-mysql-dbname=planetscale',
+        '-mysql-addr=ps-mysql'
+      ]
+    depends_on:
+      - ps-mysql
+    ports:
+      - 3900:3900
+    links:
+      - ps-mysql
+
+  # Local Redis server
+  redis:
+    container_name: redis-cache-db
+    image: redis:7.2-alpine
+    ports:
+      - '3901:6379' # expose redis on port 3102 to not collide with redis from elswhere and match memostash 310X ports
+    restart: unless-stopped
+    command: redis-server --save 20 1 --loglevel warning
+    volumes:
+      - redis-data:/data
+
+  # Local S3 Strorage
+  minio:
+    container_name: minio-storage
+    image: 'bitnami/minio:latest'
+    ports:
+      - '3902:9000'
+      - '3903:9001'
+    environment:
+      - MINIO_ROOT_USER=minioroot
+      - MINIO_ROOT_PASSWORD=minioroot
+    volumes:
+      - minio-data:/bitnami/minio/data
+  createbuckets:
+    container_name: minio-bucket-creation
+    image: minio/mc
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc alias set myminio http://minio:9000 minioroot minioroot;
+      /usr/bin/mc mb myminio/avatars;
+      /usr/bin/mc mb myminio/attachments;
+      echo '{\"Version\": \"2012-10-17\",\"Statement\": [{\"Effect\": \"Allow\",\"Principal\": {\"AWS\": [\"*\"]},\"Action\": [\"s3:GetObject\"],\"Resource\": [\"arn:aws:s3:::avatars/*\"]}]}' > /tmp/policy.json;
+      /usr/bin/mc anonymous set-json /tmp/policy.json myminio/avatars;
+      exit 0;
+      "
+
+volumes:
+  ps-mysql:
+  redis-data:
+  minio-data:

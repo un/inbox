@@ -34,10 +34,20 @@
     "build:puppet": {
       "cache": true
     },
+    "docker:up": {
+      "cache": false
+    },
     "dev": {
       "dependsOn": [
         "^build:puppet",
         "db:studio"
+      ],
+      "cache": false
+    },
+    "dev:local": {
+      "dependsOn": [
+        "^docker:up",
+        "^dev"
       ],
       "cache": false
     },
@@ -46,12 +56,6 @@
       "cache": false
     },
     "cloud": {
-      "cache": false
-    },
-    "dock": {
-      "cache": false
-    },
-    "undock": {
       "cache": false
     }
   }

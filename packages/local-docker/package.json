@@ -1,0 +1,11 @@
+{
+    "name": "@uninbox/local-docker",
+    "version": "0.1.0",
+    "description": "Run required services for local development as docker containers",
+    "scripts": {
+        "docker:up": "docker compose up"
+    },
+    "author": "",
+    "license": "MIT",
+    "packageManager": "pnpm@8.5.1"
+}
