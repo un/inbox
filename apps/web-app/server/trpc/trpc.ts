@@ -12,7 +12,7 @@ export const trpcContext = initTRPC
   .create({ transformer: superjson });
 
 const isUserAuthenticated = trpcContext.middleware(({ next, ctx }) => {
-  if (!ctx.user || !ctx.user.session.valid || !ctx.user.id) {
+  if (!ctx.user || !ctx.user.session.userId || !ctx.user.id) {
     throw new TRPCError({
       code: 'UNAUTHORIZED',
       message: 'You are not logged in, redirecting...'
@@ -31,7 +31,7 @@ const hasOrgSlug = trpcContext.middleware(({ next, ctx }) => {
   }
   //@ts-ignore
   const userId = +ctx.user?.id;
-  if (!ctx.user || !ctx.user.session.valid || !ctx.user.id) {
+  if (!ctx.user || !ctx.user.session.userId || !ctx.user.id) {
     throw new TRPCError({
       code: 'UNAUTHORIZED',
       message: 'You are not logged in, redirecting...'
@@ -70,7 +70,6 @@ const turnstileTokenValidation = experimental_standaloneMiddleware<{
   input: { turnstileToken: string }; // defaults to 'unknown' if not defined
 }>().create(async (opts) => {
   if (!useRuntimeConfig().public.turnstileEnabled) return opts.next();
-
   if (!opts.input.turnstileToken) {
     if (process.env.NODE_ENV === 'development') return opts.next();
     throw new TRPCError({

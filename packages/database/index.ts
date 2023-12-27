@@ -3,9 +3,9 @@ import { connect } from '@planetscale/database';
 import * as schema from './schema';
 
 const connection = connect({
-  host: process.env.DATABASE_HOST,
-  username: process.env.DATABASE_USERNAME,
-  password: process.env.DATABASE_PASSWORD,
+  host: process.env.DB_PLANETSCALE_HOST,
+  username: process.env.DB_PLANETSCALE_USERNAME,
+  password: process.env.DB_PLANETSCALE_PASSWORD,
 
   fetch: (url: string, init: any) => {
     (init as any).cache = undefined; // Remove cache header

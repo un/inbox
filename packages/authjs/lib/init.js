@@ -70,7 +70,7 @@ export async function init({ authOptions, providerId, action, url: reqUrl, cooki
             // Asserted in assert.ts
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             secret: authOptions.secret,
-            maxAge: authOptions.session?.maxAge ?? maxAge,
+            maxAge: authOptions.session?.maxAge ?? maxAge, // default to same as `session.maxAge`
             encode: jwt.encode,
             decode: jwt.decode,
             ...authOptions.jwt,

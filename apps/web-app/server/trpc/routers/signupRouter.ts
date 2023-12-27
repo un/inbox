@@ -3,7 +3,7 @@ import { parse, stringify } from 'superjson';
 import { router, publicProcedure, limitedProcedure } from '../trpc';
 import type { DBType } from '@uninbox/database';
 import { eq } from '@uninbox/database/orm';
-import { users, userAuthIdentities } from '@uninbox/database/schema';
+import { users } from '@uninbox/database/schema';
 import { nanoId } from '@uninbox/utils';
 import { isFakeEmail } from 'fakefilter';
 import { blockedUsernames } from '~/server/utils/signup';
@@ -121,13 +121,13 @@ export const signupRouter = router({
         .where(eq(users.publicId, input.userPublicId));
 
       const newPublicId = nanoId();
-      const insertUserAuthIdentity = await db
-        .insert(userAuthIdentities)
-        .values({
-          provider: 'hanko',
-          userId: userLookup[0].id,
-          providerId: ctx.hankoId
-        });
+      // const insertUserAuthIdentity = await db
+      //   .insert(userAuthIdentities)
+      //   .values({
+      //     provider: 'hanko',
+      //     userId: userLookup[0].id,
+      //     providerId: ctx.hankoId
+      //   });
 
       return {
         success: true,

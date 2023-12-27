@@ -1,26 +1,37 @@
 export default defineNuxtRouteMiddleware(async (to) => {
-  if (process.server) {
-    const event = useRequestEvent();
-    if (!to.meta.skipAuth) {
-      if (!event.context.user) {
-        return navigateTo('/');
-      }
+  if (process.client) {
+    const redirectCookie = useCookie('un-redirect').value;
+    if (redirectCookie) {
+      useCookie('un-redirect', { maxAge: 100 }).value = null;
+      return navigateTo(redirectCookie);
+    }
+    const { status, session } = useAuth();
+    const toGuest = to.meta.guest;
+    const authedRedirect =
+      useRuntimeConfig()?.public?.authJs?.authenticatedRedirectTo ||
+      '/redirect';
+    const guestRedirect =
+      useRuntimeConfig()?.public?.authJs?.guestRedirectTo || '/';
+
+    if (to.path.startsWith('/join/invite/')) {
       return;
     }
-    if (to.meta.skipAuth) {
-      if (event.context.user) {
-        if (to.path.startsWith('/join/invite/')) {
-          return;
-        }
-        if (to.path !== '/login') {
-          return navigateTo('/login');
-        }
+
+    if (useAuth().status.value === 'authenticated') {
+      if (!toGuest) {
         return;
       }
+      return navigateTo(authedRedirect);
     }
-  }
 
-  if (process.client) {
-    return;
+    if (
+      useAuth().status.value === 'unauthenticated' ||
+      useAuth().status.value === 'loading'
+    ) {
+      if (toGuest) {
+        return;
+      }
+      return navigateTo(guestRedirect);
+    }
   }
 });

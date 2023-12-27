@@ -39,16 +39,20 @@
     },
     "dev": {
       "dependsOn": [
+        "^docker:up",
         "^build:puppet",
         "db:studio"
       ],
       "cache": false
     },
-    "dev:local": {
+    "dev:r": {
       "dependsOn": [
-        "^docker:up",
-        "^dev"
+        "^build:puppet",
+        "db:studio:r"
       ],
+      "cache": false
+    },
+    "db:studio:r": {
       "cache": false
     },
     "ee:dev": {

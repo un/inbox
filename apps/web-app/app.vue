@@ -6,6 +6,14 @@
   <NuxtLayout class="h-screen max-h-screen overflow-hidden">
     <NuxtPage />
   </NuxtLayout>
-  <NuxtUiNotifications />
+  <NuxtUiNotifications>
+    <template #title="{ title }">
+      <span v-html="title" />
+    </template>
+
+    <template #description="{ description }">
+      <span v-html="description" />
+    </template>
+  </NuxtUiNotifications>
 </template>
 <style></style>

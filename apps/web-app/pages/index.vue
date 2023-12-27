@@ -1,6 +1,6 @@
 <script setup lang="ts">
-  definePageMeta({ skipAuth: true });
-  const { $trpc, $i18n } = useNuxtApp();
+  import { startAuthentication } from '@simplewebauthn/browser';
+  definePageMeta({ guest: true });
   const turnstileToken = ref();
   const errorMessage = ref(false);
   const passkeyLocation = ref('');
@@ -28,36 +28,83 @@
   async function doLogin() {
     if (turnstileEnabled && !turnstileToken.value) {
       errorMessage.value = true;
-      return;
-    }
-    if (!immediatePasskeyPrompt.value) {
-      passkeyLocationDialogOpen.value = true;
-      if (timeoutId !== null) {
-        clearTimeout(timeoutId);
-      }
 
-      timeoutId = setTimeout(() => {
-        promptForPasskey();
-      }, 10000);
-      return;
+      await new Promise((resolve) => {
+        const unwatch = watch(turnstileToken, (newValue) => {
+          if (newValue !== null) {
+            resolve(newValue);
+            unwatch();
+            errorMessage.value = false;
+          }
+        });
+      });
     }
 
-    immediatePasskeyPrompt.value && promptForPasskey();
+    // TODO: implement passkey location dialog correctly
+    // if (!immediatePasskeyPrompt.value) {
+    //   passkeyLocationDialogOpen.value = true;
+    //   if (timeoutId !== null) {
+    //     clearTimeout(timeoutId);
+    //   }
+
+    //   timeoutId = setTimeout(() => {
+    //     promptForPasskey();
+    //   }, 10000);
+    //   return;
+    // }
+    // immediatePasskeyPrompt.value && promptForPasskey();
+
+    promptForPasskey();
   }
 
   async function promptForPasskey() {
+    const toast = useToast();
     if (timeoutId !== null) {
       clearTimeout(timeoutId);
       timeoutId = null;
     }
-    const webauthnResult = await useHanko()?.webauthn.login();
-    if (!webauthnResult) {
-      errorMessage.value = true;
+
+    const { data } = await useFetch('/api/auth/passkey-options', {
+      transform: (value) => {
+        // @ts-ignore - not sure why this errors
+        return JSON.parse(value);
+      }
+    });
+    if (!data.value.options) {
+      toast.add({
+        title: 'Server error',
+        description:
+          'We couldnt generate a secure login for you, please check your internet connection.',
+        color: 'red',
+        timeout: 5000,
+        icon: 'i-ph-warning-circle'
+      });
       return;
     }
-    if (webauthnResult) {
-      navigateTo('/login');
+    const passkeyData = await startAuthentication(data.value.options);
+
+    if (!passkeyData) {
+      toast.add({
+        title: 'Passkey error',
+        description:
+          'Something went wrong when getting your passkey, please try again.',
+        color: 'red',
+        timeout: 5000,
+        icon: 'i-ph-warning-circle'
+      });
+      return;
     }
+
+    const formData = new FormData();
+    formData.append('action', 'authenticate');
+    formData.append('data', JSON.stringify(passkeyData));
+    await useFetch('/api/auth/callback/passkey', {
+      method: 'post',
+      body: {
+        action: 'authenticate',
+        data: passkeyData
+      }
+    });
   }
 </script>
 
@@ -91,9 +138,9 @@
         <UnUiAlert
           v-show="errorMessage"
           icon="i-ph-warning-circle"
-          title="Human verification failed!"
-          description="Try refreshing the page or contact our amazing support team"
-          color="red"
+          title="Waiting for human verification!"
+          description="This is an automated process and should complete within a few seconds. If it doesn't, please refresh the page."
+          color="orange"
           variant="solid" />
       </div>
       <NuxtTurnstile
@@ -101,7 +148,7 @@
         v-model="turnstileToken"
         class="fixed bottom-5 mb-[-30px] scale-50 hover:(mb-0 scale-100)" />
     </div>
-    <UnUiModal v-model="passkeyLocationDialogOpen">
+    <!-- <UnUiModal v-model="passkeyLocationDialogOpen">
       <template #header>
         <div class="flex items-center justify-end">
           <UnUiButton
@@ -137,6 +184,6 @@
             @click="promptForPasskey()" />
         </div>
       </template>
-    </UnUiModal>
+    </UnUiModal> -->
   </div>
 </template>

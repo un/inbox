@@ -1,18 +1,19 @@
-import { ValidatedAuthSessionObject } from './../../apps/web-app/server/utils/auth';
+import { AdapterSession } from './../authjs/src/adapters';
+
 export type OrgContext = {
   id: number;
   memberId?: number;
   members: {
     id: number;
-    userId: number;
+    userId: number | null;
     // Refer to DB schema orgMembers.role and orgMembers.status
-    role: 'admin' | 'member';
     status: 'invited' | 'active' | 'removed';
+    role: 'admin' | 'member';
   }[];
 } | null;
 export type UserContext = {
   id: number;
-  session: ValidatedAuthSessionObject;
+  session: AdapterSession;
 } | null;
 export type AuthH3SessionData = {
   isUserLoggedIn: boolean;

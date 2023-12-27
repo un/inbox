@@ -1,25 +1,5 @@
 <script setup lang="ts">
   const { $trpc, $i18n } = useNuxtApp();
-
-  // onMounted(async () => {
-  //   await createNewPersonalOrg();
-  // });
-  // async function createNewPersonalOrg() {
-  //   buttonLoading.value = true;
-  //   const createNewPersonalOrgResponse =
-  //     await $trpc.org.crud.createPersonalOrg.mutate({});
-  //   if (!createNewPersonalOrgResponse.success) {
-  //     pageError.value = true;
-  //     buttonLabel.value = 'Take me to my account anyway!';
-  //     buttonLoading.value = false;
-  //   }
-  //   if (createNewPersonalOrgResponse.success) {
-  //     userEmail.value = createNewPersonalOrgResponse.email || '';
-  //     statusReady.value = true;
-  //     buttonLabel.value = 'Take me to my account';
-  //     buttonLoading.value = false;
-  //   }
-  // }
 </script>
 
 <template>
@@ -53,7 +33,7 @@
         label="Take me to my account"
         icon="i-ph-thumbs-up"
         block
-        @click="navigateTo('/login')" />
+        @click="navigateTo('/redirect')" />
     </div>
   </div>
 </template>

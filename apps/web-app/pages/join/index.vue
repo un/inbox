@@ -2,8 +2,7 @@
   import { stringify } from 'superjson';
   import { z } from 'zod';
   const { $trpc, $i18n } = useNuxtApp();
-  definePageMeta({ skipAuth: true });
-
+  definePageMeta({ guest: true });
   const turnstileToken = ref();
   const buttonLoading = ref(false);
   const turnstileEnabled = useRuntimeConfig().public.turnstileEnabled;

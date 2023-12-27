@@ -2,7 +2,7 @@ import { db } from '@uninbox/database';
 import { and, eq } from '@uninbox/database/orm';
 import { orgMembers, orgs } from '@uninbox/database/schema';
 
-// FIX: Check if this is still used and if so, update it to use the orgMembers Cache
+//! FIX: Check if this is still used and if so, update it to use the orgMembers Cache
 export async function isUserInOrg({
   userId,
   orgPublicId,

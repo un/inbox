@@ -1,18 +1,6 @@
 import { defineNuxtPrepareHandler } from 'nuxt-prepare/config';
 
 export default defineNuxtPrepareHandler(async () => {
-  // Do some async magic here, e.g. fetch data from an API
-
-  // Get and store the Hanko jwks into runtime config
-  const hankoUrl = process.env.WEBAPP_HANKO_API_URL;
-  const hankoJwksResponse = hankoUrl
-    ? await fetch(`${hankoUrl}/.well-known/jwks.json`).then(
-        function (response) {
-          return response.json();
-        }
-      )
-    : '';
-
   // set the primary mail domains
 
   const mailDomainPublicEnv = process.env.MAIL_DOMAIN_PUBLIC;
@@ -25,6 +13,11 @@ export default defineNuxtPrepareHandler(async () => {
 
   // Check for EE license, enable billing functionality
 
+  const billingConfig = {
+    enabled: false,
+    url: '',
+    key: ''
+  };
   const eeConfig = {
     enabled: false,
     modules: {
@@ -32,13 +25,7 @@ export default defineNuxtPrepareHandler(async () => {
     }
   };
 
-  const billingConfig = {
-    enabled: false,
-    url: '',
-    key: ''
-  };
-
-  const eeLicenseKey = process.env.EE_LICENSE_KEY;
+  const eeLicenseKey = process.env.EE_LICENSE_KEY || null;
   if (eeLicenseKey) {
     console.log('✅ Enterprise Edition is enabled');
     eeConfig.enabled = true;
@@ -46,8 +33,8 @@ export default defineNuxtPrepareHandler(async () => {
     console.log('✅ Running in self hosting mode 💪');
   }
 
-  const billingUrl = process.env.BILLING_URL;
-  const billingKey = process.env.BILLING_KEY;
+  const billingUrl = process.env.BILLING_URL || null;
+  const billingKey = process.env.BILLING_KEY || null;
   if (eeLicenseKey && billingUrl && billingKey) {
     console.log('✅ EE Billing module is enabled');
     eeConfig.modules.billing = true;
@@ -56,9 +43,9 @@ export default defineNuxtPrepareHandler(async () => {
     billingConfig.key = billingKey;
   }
 
+  const turnstileKey = process.env.WEBAPP_TURNSTILE_SECRET_KEY || null;
   return {
     runtimeConfig: {
-      hankoJwks: hankoJwksResponse,
       billing: billingConfig,
       public: {
         mailDomainPublic: JSON.parse(
@@ -68,7 +55,7 @@ export default defineNuxtPrepareHandler(async () => {
           mailDomainPremiumEnv
         ) as MailDomainEntries[],
         ee: eeConfig,
-        turnstileEnabled: process.env.WEBAPP_TURNSTILE_SECRET_KEY !== ''
+        turnstileEnabled: !!turnstileKey
       }
     }
   };

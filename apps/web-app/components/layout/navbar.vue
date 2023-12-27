@@ -231,7 +231,7 @@
     if (process.server) {
       return null;
     }
-    useHanko()?.session._cookie.removeAuthCookie();
+    // useHanko()?.session._cookie.removeAuthCookie();
     await useFetch('/api/logout', {
       method: 'POST'
     });

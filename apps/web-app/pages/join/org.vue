@@ -6,8 +6,6 @@
   const newButtonLabel = ref('Make my organization');
   const joinButtonLoading = ref(false);
   const joinButtonLabel = ref('Join my team');
-  const skipButtonLoading = ref(false);
-  const skipButtonLabel = ref('I dont need an organization');
   const pageError = ref(false);
   const orgPath = ref<'join' | 'new' | null>();
 
@@ -62,12 +60,6 @@
       maxWait: 5000
     }
   );
-
-  const username = ref('');
-  if (process.client) {
-    const usernameCookie = useCookie('un-join-username').value;
-    usernameCookie ? (username.value = usernameCookie || '') : null;
-  }
 
   if (process.client) {
     const inviteCodeCookie = useCookie('un-invite-code').value;
@@ -181,6 +173,7 @@
           Tip: You can be a member of multiple organizations.
         </p>
       </div>
+
       <UnUiButtonGroup
         size="md"
         orientation="horizontal"
@@ -188,14 +181,14 @@
         <UnUiButton
           label="Create new organization"
           icon="i-ph-plus"
-          block
           :disabled="orgPath === 'new'"
+          class="grow justify-center"
           @click="orgPath = 'new'" />
         <UnUiButton
           label="Join existing organization"
           icon="i-ph-users-three"
-          block
           :disabled="orgPath === 'join'"
+          class="grow justify-center"
           @click="orgPath = 'join'" />
       </UnUiButtonGroup>
 

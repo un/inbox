@@ -1,6 +1,5 @@
 <script setup lang="ts">
-  definePageMeta({ skipAuth: true });
-
+  definePageMeta({ guest: true });
   const { $trpc, $i18n } = useNuxtApp();
 
   const turnstile = ref();

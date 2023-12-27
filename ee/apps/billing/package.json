@@ -4,7 +4,7 @@
   "private": true,
   "types": "types.ts",
   "scripts": {
-    "ee:dev": "PORT=3900 npx nitropack dev",
+    "ee:dev": "PORT=3800 npx nitropack dev",
     "ee:build": "npx nitropack build",
     "ee:preview": "node .output/server/index.mjs"
   },

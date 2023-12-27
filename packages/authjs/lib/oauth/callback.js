@@ -30,7 +30,7 @@ export async function handleOAuth(query, cookies, options, randomState) {
     }
     else {
         as = {
-            issuer: provider.issuer ?? "https://authjs.dev",
+            issuer: provider.issuer ?? "https://authjs.dev", // TODO: review fallback issuer
             token_endpoint: token?.url.toString(),
             userinfo_endpoint: userinfo?.url.toString(),
         };

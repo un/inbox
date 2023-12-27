@@ -1,0 +1,106 @@
+##################################################################################################### 
+# ******************************* TABLE OF CONTENTS ************************************************* 
+#####################################################################################################
+# - WEB-APP 
+# - EE 
+# - MAIL-BRIDGE 
+# - DB 
+# - MAIL-BRIDGE & WEB-APP 
+
+
+
+
+########################################################################################### 
+# ************************************ web-app ******************************************** 
+########################################################################################### 
+# Generate by running in a terminal: openssl rand -hex 32 
+WEBAPP_AUTH_SECRET=
+WEBAPP_CF_ACCOUNT_ID=
+WEBAPP_CF_IMAGES_ACCOUNT_HASH=
+WEBAPP_CF_IMAGES_TOKEN=
+# Same key configured for MAILBRIDGE_KEY 
+WEBAPP_MAILBRIDGE_KEY=
+WEBAPP_MAILBRIDGE_URL=
+WEBAPP_REALTIME_KEY=
+WEBAPP_REALTIME_URL=
+WEBAPP_TURNSTILE_SECRET_KEY=
+WEBAPP_TURNSTILE_SITE_KEY=
+WEBAPP_URL= 
+
+
+
+###################################################################################### 
+# *************************************** ee ***************************************** 
+###################################################################################### 
+BILLING_KEY=
+BILLING_STRIPE_KEY=
+BILLING_STRIPE_PLAN_PRO_MONTHLY_ID=
+BILLING_STRIPE_PLAN_PRO_YEARLY_ID=
+BILLING_STRIPE_PLAN_STARTER_MONTHLY_ID=
+BILLING_STRIPE_PLAN_STARTER_YEARLY_ID=
+BILLING_STRIPE_WEBHOOK_KEY=
+BILLING_URL=
+EE_DB_DATABASE=
+EE_DB_HOST=
+EE_DB_MYSQL_MIGRATION_URL=
+EE_DB_PASSWORD=
+EE_DB_USERNAME=
+EE_LICENSE_KEY= 
+
+
+
+############################################################################################### 
+# ********************************** mail-bridge ********************************************** 
+############################################################################################### 
+# A secure key for intra-service communication. Generate by running in a terminal: openssl rand -hex 32 
+MAILBRIDGE_KEY=
+# name of active ip Pool in postal 
+MAILBRIDGE_POSTAL_ACTIVE_POOL_ID=
+# the subdomain for postal control panel, not the full domain name!!! 
+MAILBRIDGE_POSTAL_CONTROL_PANEL=
+# active ip pool in postal 
+MAILBRIDGE_POSTAL_DEFAULT_IP_POOL=
+MAILBRIDGE_POSTAL_PASSWORD=
+# the postal internal "org" name where the primary public domains are added and configured 
+MAILBRIDGE_POSTAL_PERSONAL_SERVER_ORG=
+MAILBRIDGE_POSTAL_ROOT_URL=
+# the postal server domain name for access and management 
+MAILBRIDGE_POSTAL_URL=
+MAILBRIDGE_POSTAL_USER=
+# This comes from running "postal default-dkim-record" on the postal server. Value is the p={....}; 
+MAILBRIDGE_POSTAL_WEBHOOK_PUBLIC_KEY=
+# webhook destination URL 
+MAILBRIDGE_POSTAL_WEBHOOK_URL=
+MAILBRIDGE_URL= 
+
+
+
+###################################################################################### 
+# *************************************** db ***************************************** 
+###################################################################################### 
+# used by drizzle to push changes.
+# usually in the format of: mysql://${DB_PLANETSCALE_USERNAME}:${DB_PLANETSCALE_PASSWORD}@${DB_PLANETSCALE_HOST}/${DB_PLANETSCALE_DATABASE}?ssl={"rejectUnauthorized":true} 
+DB_MYSQL_MIGRATION_URL=
+DB_PLANETSCALE_DATABASE=
+DB_PLANETSCALE_HOST=
+DB_PLANETSCALE_PASSWORD=
+DB_PLANETSCALE_USERNAME=
+DB_REDIS_CONNECTION_STRING=
+# if using upstash, these values will be used, otherwise fallback to redis 
+DB_UPSTASH_TOKEN=
+# if using upstash, these values will be used, otherwise fallback to redis 
+DB_UPSTASH_URL= 
+
+
+
+######################################################################################################### 
+# ***************************** mail-bridge & web-app *************************************************** 
+######################################################################################################### 
+# The domain name already configured in postal that will be used for premium users. should be in the following format:
+# [{"name":"DOMAINNAME.TLD","postalId":"xxxx-xxxx-UUID-From-Postal-xxxx-xxxx"}] 
+MAIL_DOMAIN_PREMIUM=
+# The domain name already configured in postal that will be used for all users. should be in the following format:
+# [{"name":"DOMAINNAME.TLD","postalId":"xxxx-xxxx-UUID-From-Postal-xxxx-xxxx"}] 
+MAIL_DOMAIN_PUBLIC=
+PRIMARY_DOMAIN= 
+

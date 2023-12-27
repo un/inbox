@@ -1,6 +1,7 @@
 {
   "name": "@uninbox/web-app",
   "private": true,
+  "type": "module",
   "scripts": {
     "build": "nuxt build",
     "dev": "PORT=3000 nuxt dev --host",
@@ -30,8 +31,11 @@
     "windy-radix-palette": "2.0.0-beta.7"
   },
   "dependencies": {
+    "@auth/core": "workspace:*",
+    "@hebilicious/authjs-nuxt": "^0.3.5",
     "@nuxt/ui": "^2.11.0",
     "@pinia/nuxt": "^0.5.1",
+    "@simplewebauthn/browser": "^8.3.4",
     "@teamhanko/hanko-frontend-sdk": "^0.9.1",
     "@tiptap/pm": "^2.1.13",
     "@tiptap/starter-kit": "^2.1.13",
@@ -52,6 +56,7 @@
     "jose": "^5.1.3",
     "pinia": "^2.1.7",
     "pinia-shared-state": "^0.4.5",
+    "preact-render-to-string": "^6.3.1",
     "radix-vue": "^1.2.4",
     "superjson": "^2.2.1",
     "trpc-nuxt": "^0.10.15",

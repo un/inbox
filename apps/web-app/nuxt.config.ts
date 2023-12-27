@@ -1,5 +1,8 @@
+import { resolve } from 'node:path';
+
 export default defineNuxtConfig({
   modules: [
+    '@hebilicious/authjs-nuxt',
     '@nuxt/devtools',
     '@vueuse/nuxt',
     'nuxt-security',
@@ -8,17 +11,13 @@ export default defineNuxtConfig({
     '@pinia/nuxt',
     '@pinia-plugin-persistedstate/nuxt',
     '@nuxt/ui'
-
-    // Handled by NuxtUi
-    // '@unocss/nuxt',
-    // 'nuxt-icon',
-    // '@nuxtjs/color-mode',
   ],
 
   runtimeConfig: {
     // paths: [...pagePaths],
-    recoverySecret: process.env.WEBAPP_RECOVERY_SECRET || '',
-    sessionSecret: process.env.WEBAPP_SESSION_SECRET || '',
+    authJs: {
+      secret: process.env.WEBAPP_AUTH_SECRET // You can generate one with `openssl rand -base64 32`
+    },
     realtime: {
       url: process.env.WEBAPP_REALTIME_URL || '',
       key: process.env.WEBAPP_REALTIME_KEY || ''
@@ -36,29 +35,31 @@ export default defineNuxtConfig({
     public: {
       cfImagesAccountHash: process.env.WEBAPP_CF_IMAGES_ACCOUNT_HASH || '',
       siteUrl: process.env.WEBAPP_URL || '',
-      hanko: {
-        apiURL: process.env.WEBAPP_HANKO_API_URL || '',
-        cookieName: process.env.WEBAPP_HANKO_COOKIE_NAME || 'hanko'
+      authJs: {
+        baseUrl: process.env.WEBAPP_URL,
+        verifyClientOnEveryRequest: true,
+        authenticatedRedirectTo: '/redirect',
+        guestRedirectTo: '/'
       }
     },
     turnstile: {
-      secretKey: process.env.WEBAPP_TURNSTILE_SECRET_KEYS || ''
-    },
-    auth: {
-      // The session cookie name
-      name: 'un-session',
-      password: process.env.WEBAPP_SESSION_SECRET || '',
-      maxAge:
-        process.env.NODE_ENV === 'development'
-          ? 60 * 60 * 12
-          : 60 * 60 * 24 * 30,
-
-      cookie: {
-        sameSite: 'lax',
-        //@ts-ignore
-        domain: process.env.PRIMARY_DOMAIN
-      }
+      secretKey: process.env.WEBAPP_TURNSTILE_SECRET_KEY || ''
     }
+    // auth: {
+    //   // The session cookie name
+    //   name: 'un-session',
+    //   password: process.env.WEBAPP_SESSION_SECRET || '',
+    //   maxAge:
+    //     process.env.NODE_ENV === 'development'
+    //       ? 60 * 60 * 12
+    //       : 60 * 60 * 24 * 30,
+
+    //   cookie: {
+    //     sameSite: 'lax',
+    //     //@ts-ignore
+    //     domain: process.env.PRIMARY_DOMAIN
+    //   }
+    // }
   },
 
   // Styling
@@ -80,7 +81,11 @@ export default defineNuxtConfig({
   },
 
   // Nitro/Build Configs
-
+  // alias: {
+  //     cookie: resolve(__dirname, "node_modules/cookie"),
+  //     "cross-fetch": resolve(__dirname, "node_modules/cross-fetch"),
+  //     "ipaddr.js": resolve(__dirname, "node_modules/ipaddr.js"),
+  //   },
   build: {
     transpile: ['trpc-nuxt']
   },

@@ -8,9 +8,8 @@ import type { OrgContext, UserContext } from '@uninbox/types';
 
 export const createContext = async (event: H3Event) => {
   const user: UserContext = await event.context.user;
-  const hankoId = (await event.context.hankoId) || null;
   const org: OrgContext = await event.context.org;
-  return { db, user, hankoId, org };
+  return { db, user, org };
 };
 
 export type Context = inferAsyncReturnType<typeof createContext>;

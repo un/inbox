@@ -79,7 +79,7 @@ export default function Trakt(options) {
             return {
                 id: profile.ids.slug,
                 name: profile.name,
-                email: null,
+                email: null, // trakt does not provide user emails
                 image: profile.images.avatar.full, // trakt does not allow hotlinking
             };
         },

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  definePageMeta({ skipAuth: true });
+  definePageMeta({ guest: true });
 </script>
 
 <template>

@@ -1,8 +1,8 @@
 <script setup lang="ts">
+  import { startRegistration } from '@simplewebauthn/browser';
   import { z } from 'zod';
   const { $trpc, $i18n } = useNuxtApp();
-  definePageMeta({ skipAuth: true });
-
+  definePageMeta({ guest: true });
   const turnstileToken = ref();
   const buttonLoading = ref(false);
   const buttonLabel = ref('Create my passkey');
@@ -10,6 +10,7 @@
   const instructionSet = ref<'ios' | 'android' | ''>('');
   const userCreated = ref(false);
   const pageError = ref(false);
+  const turnstileError = ref(false);
 
   const turnstileEnabled = useRuntimeConfig().public.turnstileEnabled;
   if (!turnstileEnabled) {
@@ -33,40 +34,127 @@
     return emailValid.value === true;
   });
 
+  const computedEmail = computed(() => {
+    return `${username.value}:${emailValue.value}`;
+  });
+
   //functions
   async function createAccount() {
-    buttonLoading.value = true;
-    buttonLabel.value = 'Creating your account';
-    //create the user in Hanko & db
-    const response = await $trpc.signup.registerUser.mutate({
-      turnstileToken: turnstileToken.value,
-      username: username.value,
-      email: emailValue.value
-    });
-    useCookie('un-join-userId').value = response.userPublicId;
-    if (!response.userPublicId || response.error) {
-      emailValidationMessage.value = response.error || 'Something went wrong';
-      buttonLabel.value = 'Something went wrong';
-      buttonLoading.value = false;
-      pageError.value = true;
+    const toast = useToast();
+
+    if (!formValid.value) {
+      toast.add({
+        title: 'Please enter a valid email address',
+        description: 'We only accept real email addresses',
+        color: 'red',
+        icon: 'i-ph-warning-circle',
+        timeout: 5000
+      });
       return;
     }
 
-    await useHanko()?.user.create(`${username.value}@uninbox.com`);
+    if (turnstileEnabled && turnstileToken.value === null) {
+      turnstileError.value = true;
+      await new Promise((resolve) => {
+        const unwatch = watch(turnstileToken, (newValue) => {
+          if (newValue !== null) {
+            resolve(newValue);
+            unwatch();
+            turnstileError.value = false;
+          }
+        });
+      });
+    }
 
-    await $trpc.signup.setUserAuthIdentity.mutate({
-      turnstileToken: turnstileToken.value,
-      userPublicId: response.userPublicId
+    buttonLoading.value = true;
+    buttonLabel.value = 'Creating your account';
+
+    const { data } = await useFetch('/api/auth/passkey-options', {
+      query: { email: emailValue.value, username: username.value },
+      transform: (value) => {
+        // @ts-ignore - not sure why this errors
+        return JSON.parse(value);
+      }
     });
+    if (!data.value.options) {
+      toast.add({
+        title: 'Server error',
+        description:
+          'We couldnt generate a secure login for you, please check your internet connection.',
+        color: 'red',
+        timeout: 5000,
+        icon: 'i-ph-warning-circle'
+      });
+      return;
+    }
+    if (data.value.action !== 'register') {
+      buttonLoading.value = false;
+      buttonLabel.value = 'Create my passkey';
+      toast.add({
+        title: 'User already exists',
+        description:
+          'A user already exists with this email address, did you mean to login instead?',
+        color: 'orange',
+        timeout: 20000,
+        icon: 'i-ph-question',
 
-    await useHanko()?.webauthn.register();
+        actions: [
+          {
+            label: 'Login instead',
+            click: () => {
+              navigateTo('/');
+            }
+          }
+        ]
+      });
+      return;
+    }
+
+    const registerPasskeyOptions = data.value.options;
+    registerPasskeyOptions.user.displayName = `UnInbox: ${username.value}`;
+    registerPasskeyOptions.user.name = `UnInbox: ${username.value}`;
+
+    const newPasskeyData = await startRegistration(registerPasskeyOptions);
+
+    if (!newPasskeyData) {
+      toast.add({
+        title: 'Passkey error',
+        description:
+          'Something went wrong when generating your passkey, please try again.',
+        color: 'red',
+        timeout: 5000,
+        icon: 'i-ph-warning-circle'
+      });
+      return;
+    }
+
+    await useFetch('/api/auth/callback/passkey', {
+      method: 'post',
+      redirect: 'manual',
+      body: {
+        action: 'register',
+        data: newPasskeyData,
+        email: computedEmail.value
+      }
+    });
 
     userCreated.value = true;
     buttonLoading.value = false;
     buttonLabel.value = 'All Done!';
     buttonLoading.value = false;
 
-    navigateTo('/join/org');
+    toast.add({
+      title: 'Account created',
+      description:
+        'Your account has been created, welcome to UnInbox!<br />You will now be redirected to your organization setup.',
+      color: 'green',
+      timeout: 5000,
+      icon: 'i-ph-check-circle'
+    });
+    useCookie('un-redirect', { maxAge: 120 }).value = '/join/org';
+    setTimeout(() => {
+      reloadNuxtApp({ persistState: true, force: true });
+    }, 2500);
   }
 
   watchDebounced(
@@ -184,6 +272,15 @@
         tip: if you have any issues during this process, reach out to our
         support team
       </p>
+      <div class="h-0 max-h-0 max-w-full w-full">
+        <UnUiAlert
+          v-show="turnstileError"
+          icon="i-ph-warning-circle"
+          title="Waiting for human verification!"
+          description="This is an automated process and should complete within a few seconds. If it doesn't, please refresh the page."
+          color="orange"
+          variant="solid" />
+      </div>
 
       <NuxtTurnstile
         v-if="turnstileEnabled"

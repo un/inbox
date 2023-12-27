@@ -1,16 +1,25 @@
+import { AdapterSession } from '@auth/core/adapters';
 import { defineEventHandler } from 'h3';
-import { validateAuthSession } from '../utils/auth';
+import { getServerSession } from '#auth';
+import { authOptions } from '../api/auth/[...]';
 import type { UserContext } from '@uninbox/types';
 
 export default defineEventHandler(async (event) => {
-  const validatedSession = await validateAuthSession(event);
-  if (!validatedSession.userId) {
+  const sessionCookie = getCookie(event, 'un.session-token');
+  if (!sessionCookie) {
+    event.context.user = null;
+    return;
+  }
+  const sessionStorage = useStorage('sessions');
+  const sessionObject: AdapterSession | null =
+    await sessionStorage.getItem(sessionCookie);
+  if (!sessionObject) {
     event.context.user = null;
     return;
   }
   const userContext: UserContext = {
-    id: validatedSession.userId,
-    session: validatedSession
+    id: +sessionObject.userIdNumber,
+    session: sessionObject
   };
   event.context.user = userContext;
 });
