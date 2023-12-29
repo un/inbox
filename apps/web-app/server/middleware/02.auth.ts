@@ -1,7 +1,5 @@
 import { AdapterSession } from '@auth/core/adapters';
 import { defineEventHandler } from 'h3';
-import { getServerSession } from '#auth';
-import { authOptions } from '../api/auth/[...]';
 import type { UserContext } from '@uninbox/types';
 
 export default defineEventHandler(async (event) => {

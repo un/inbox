@@ -82,7 +82,7 @@
     "build": "pnpm css && pnpm providers && tsc",
     "clean": "rm -rf *.js *.d.ts* lib providers",
     "css": "node scripts/generate-css",
-    "dev": "pnpm css && pnpm providers && tsc -w",
+    "dev:auth": "pnpm css && pnpm providers && tsc -w",
     "providers": "node scripts/generate-providers"
   },
   "devDependencies": {

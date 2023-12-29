@@ -19,7 +19,7 @@ export const validateOrgSlug = async (
 
   const orgLookupResult = await db.query.orgs.findFirst({
     where: eq(orgs.slug, orgSlug),
-    columns: { id: true },
+    columns: { id: true, publicId: true },
     with: {
       members: {
         columns: {
@@ -37,6 +37,7 @@ export const validateOrgSlug = async (
 
   const orgContext: OrgContext = {
     id: +orgLookupResult.id,
+    publicId: orgLookupResult.publicId,
     members: orgLookupResult.members
   };
 
@@ -47,7 +48,7 @@ export const validateOrgSlug = async (
 export async function refreshOrgSlugCache(orgId: number): Promise<void> {
   const orgLookupResult = await db.query.orgs.findFirst({
     where: eq(orgs.id, orgId),
-    columns: { id: true, slug: true },
+    columns: { id: true, publicId: true, slug: true },
     with: {
       members: {
         columns: {
@@ -64,6 +65,7 @@ export async function refreshOrgSlugCache(orgId: number): Promise<void> {
   }
   const orgContext: OrgContext = {
     id: +orgLookupResult.id,
+    publicId: orgLookupResult.publicId,
     members: orgLookupResult.members
   };
   await useStorage('org-context').setItem(orgLookupResult.slug, orgContext);

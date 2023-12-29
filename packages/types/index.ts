@@ -2,6 +2,7 @@ import { AdapterSession } from './../authjs/src/adapters';
 
 export type OrgContext = {
   id: number;
+  publicId: string;
   memberId?: number;
   members: {
     id: number;

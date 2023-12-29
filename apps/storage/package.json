@@ -1,0 +1,20 @@
+{
+  "name": "@uninbox/storage",
+  "private": true,
+  "types": "types.ts",
+  "scripts": {
+    "dev": "PORT=3200 npx nitropack dev",
+    "build": "npx nitropack build",
+    "preview": "node .output/server/index.mjs"
+  },
+  "dependencies": {
+    "@uninbox/database": "workspace:*",
+    "@uninbox/types": "workspace:*",
+    "@uninbox/utils": "workspace:*",
+    "@aws-sdk/client-s3": "^3.481.0",
+    "@aws-sdk/s3-request-presigner": "^3.481.0",
+    "sharp": "^0.33.1",
+    "superjson": "^2.2.1",
+    "nitropack": "latest"
+  }
+}
