@@ -31,8 +31,7 @@ export const contactsRouter = router({
           emailDomain: true,
           name: true,
           setName: true,
-          screenerStatus: true,
-          avatarId: true
+          screenerStatus: true
         }
       });
       return { contacts: orgContactsResponse };

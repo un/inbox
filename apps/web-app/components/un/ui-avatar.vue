@@ -6,7 +6,8 @@
     typeof NuxtUiAvatar extends DefineComponent<infer Props, any, any>
       ? Props & {
           color?: string;
-          avatarId?: string;
+          publicId: string;
+          type: 'user' | 'org' | 'group' | 'contact';
           avatarUrl?: string | undefined;
         }
       : never
@@ -18,10 +19,19 @@
         required: false,
         default: 'gray'
       },
-      avatarId: {
+      publicId: {
         type: String,
         required: false,
         default: null
+      },
+      type: {
+        type: String,
+        required: false,
+        default: null,
+        validator: function (value: string) {
+          // It must be one of these values
+          return ['user', 'org', 'group', 'contact'].includes(value);
+        }
       }
     },
     setup(props: any) {
@@ -29,8 +39,9 @@
         const size: string = props.size;
         return props.src
           ? props.src
-          : props.avatarId
-            ? useUtils().generateAvatarUrl(props.avatarId, size)
+          : props.publicId
+            ? //@ts-ignore
+              useUtils().generateAvatarUrl(props.type, props.publicId, size)
             : null;
       });
 

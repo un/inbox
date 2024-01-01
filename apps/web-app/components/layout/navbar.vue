@@ -119,7 +119,7 @@
   interface OrgButtons {
     slot: 'org';
     label: string;
-    avatarId: string;
+    publicId: string;
     slug: string;
     click: () => void;
   }
@@ -133,7 +133,7 @@
           slot: 'org',
           label: org.org.name,
           //@ts-ignore
-          avatarId: org.org.avatarId,
+          publicId: org.org.publicId,
           slug: org.org.slug,
           click: () => {
             navigateTo(`/${org.org.slug}`);
@@ -146,7 +146,7 @@
   const userMenuItems = computed(() => [
     [
       {
-        avatarId: userProfile?.value?.profile?.avatarId || '',
+        publicId: userProfile?.value?.profile?.publicId || '',
         label:
           userProfile?.value?.profile?.firstName +
           ' ' +
@@ -296,7 +296,8 @@
         class="max-w-[240px] w-full flex flex-row items-center justify-between gap-2 p-2">
         <div class="w-full flex flex-row items-center gap-2 overflow-hidden">
           <UnUiAvatar
-            :avatar-id="currentOrgProfile?.avatarId || ''"
+            :public-id="currentOrgProfile?.publicId || ''"
+            :type="'org'"
             :alt="currentOrgProfile?.name"
             size="xs" />
           <span class="truncate text-sm">{{ currentOrgProfile?.name }}</span>
@@ -308,7 +309,8 @@
           <p>Signed in as</p>
           <div class="w-full flex flex-row items-center gap-2 overflow-hidden">
             <UnUiAvatar
-              :avatar-id="userProfile?.profile?.avatarId || ''"
+              :public-id="userProfile?.profile?.publicId || ''"
+              :type="'user'"
               :alt="
                 userProfile?.profile?.firstName +
                 ' ' +
@@ -325,7 +327,8 @@
       <template #org="{ item }">
         <div class="max-w-full flex flex-row items-center gap-2">
           <UnUiAvatar
-            :avatar-id="item.avatarId"
+            :public-id="item.publicId"
+            :type="'org'"
             :alt="item.label"
             color="gray"
             size="sm" />

@@ -37,26 +37,22 @@
       { server: false }
     );
 
-  watch(
-    userOrgProfile,
-    (newVal) => {
-      if (newVal && newVal.profile) {
-        fNameValue.value = newVal.profile.firstName || '';
-        lNameValue.value = newVal.profile.lastName || '';
-        titleValue.value = newVal.profile.title || '';
-        blurbValue.value = newVal.profile.blurb || '';
+  watch(userOrgProfile, (newVal) => {
+    if (newVal && newVal.profile) {
+      fNameValue.value = newVal.profile.firstName || '';
+      lNameValue.value = newVal.profile.lastName || '';
+      titleValue.value = newVal.profile.title || '';
+      blurbValue.value = newVal.profile.blurb || '';
 
-        newVal.profile.avatarId
-          ? ((imageUrl.value = useUtils().generateAvatarUrl(
-              newVal.profile.avatarId,
-              '128x128'
-            )) as string)
-          : null;
-      }
+      newVal.profile.avatarId
+        ? ((imageUrl.value = useUtils().generateAvatarUrl(
+            'user',
+            newVal.profile.publicId,
+            '5xl'
+          )) as string)
+        : null;
     }
-    // ,
-    // { immediate: true }
-  );
+  });
 
   const {
     files: selectedFiles,
@@ -69,19 +65,8 @@
     reset: true
   });
 
-  const {
-    data: imageUploadSignedUrl,
-    pending: imageUploadSignedUrlPending,
-    execute: getUploadUrl,
-    refresh: getUploadUrlRefresh
-  } = await $trpc.user.profile.generateAvatarUploadUrl.useLazyQuery(void null, {
-    server: false,
-    immediate: false
-  });
-
   //functions
   async function selectAvatar() {
-    await getUploadUrl();
     resetFiles();
     openFileDialog();
   }
@@ -90,22 +75,23 @@
     uploadLoading.value = true;
     if (!selectedFiles) return;
     const formData = new FormData();
+    // @ts-ignore
+    const storageUrl = useRuntimeConfig().public.storageUrl;
     formData.append('file', selectedFiles[0]);
-    if (imageUploadSignedUrl.value) {
-      await useFetch(imageUploadSignedUrl.value.uploadURL, {
-        method: 'post',
-        body: formData
-      });
-      imageId.value = await $trpc.user.profile.awaitAvatarUpload.query({
-        uploadId: imageUploadSignedUrl.value.id
-      });
-      //TODO: make the image only appear once it has been loaded to avoid blank box - maybe some skeleton loading
+    formData.append('type', 'user');
+    formData.append('publicId', userOrgProfile.value?.profile?.publicId || '');
+    await useFetch(`${storageUrl}/api/avatar`, {
+      method: 'post',
+      body: formData,
+      credentials: 'include'
+    });
 
-      imageUrl.value = useUtils().generateAvatarUrl(
-        imageId.value,
-        '128x128'
-      ) as string;
-    }
+    imageUrl.value = useUtils().generateAvatarUrl(
+      'user',
+      userOrgProfile.value.profile.publicId,
+      '5xl'
+    ) as string;
+
     uploadLoading.value = false;
   });
 
@@ -125,8 +111,7 @@
       lName: lNameValue.value,
       title: titleValue.value,
       blurb: blurbValue.value,
-      handle: userOrgProfile.value.profile.handle || '',
-      ...(imageId.value && { imageId: imageId.value })
+      handle: userOrgProfile.value.profile.handle || ''
     });
 
     if (!response.success) {

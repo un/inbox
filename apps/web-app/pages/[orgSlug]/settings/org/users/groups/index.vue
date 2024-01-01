@@ -38,7 +38,6 @@
     publicId: string;
     name: string;
     description: string | null;
-    avatarId: string | null;
     color: string | null;
     members: ({
       publicId: string;
@@ -46,7 +45,6 @@
       lastName: string | null;
       handle: string | null;
       title: string | null;
-      avatarId: string | null;
     } | null)[];
   }
 
@@ -59,7 +57,6 @@
           publicId: group.publicId,
           name: group.name,
           description: group.description,
-          avatarId: group.avatarId,
           color: group.color,
           members: group.members.map((member) => member.userProfile)
         });
@@ -110,7 +107,8 @@
         <template #name-data="{ row }">
           <div class="flex flex-row items-center gap-2">
             <UnUiAvatar
-              :avatar-id="row.avatarId ? row.avatarId : ''"
+              :public-id="row.publicId"
+              :type="'user'"
               :alt="row.name ? row.name : ''"
               :color="row.color ? row.color : ''"
               size="xs" />
@@ -124,7 +122,8 @@
             <UnUiAvatar
               v-for="member in row.members"
               :key="member.publicId"
-              :avatar-id="member.avatarId ? member.avatarId : ''"
+              :public-id="member.publicId"
+              :type="'user'"
               :alt="
                 member.firstName && member.lastName
                   ? member.firstName + ' ' + member.lastName

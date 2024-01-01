@@ -24,10 +24,11 @@
   watch(initialOrgProfile, (newVal) => {
     if (newVal && newVal.orgProfile) {
       orgNameValue.value = newVal.orgProfile.name;
-      newVal.orgProfile.avatarId
+      newVal.orgProfile.publicId
         ? ((imageUrl.value = useUtils().generateAvatarUrl(
-            newVal.orgProfile.avatarId,
-            '128x128'
+            'org',
+            newVal.orgProfile.publicId,
+            '5xl'
           )) as string)
         : null;
     }
@@ -44,16 +45,6 @@
     reset: true
   });
 
-  const {
-    data: imageUploadSignedUrl,
-    pending: imageUploadSignedUrlPending,
-    execute: getUploadUrl,
-    refresh: getUploadUrlRefresh
-  } = await $trpc.user.profile.generateAvatarUploadUrl.useLazyQuery(void null, {
-    server: false,
-    immediate: false
-  });
-
   const formValid = computed(() => {
     if (imageId.value) return true;
     if (orgNameValue.value !== initialOrgProfile.value?.orgProfile?.name) {
@@ -63,7 +54,6 @@
 
   //functions
   async function selectAvatar() {
-    await getUploadUrl();
     resetFiles();
     openFileDialog();
   }
@@ -71,34 +61,37 @@
     uploadLoading.value = true;
     if (!selectedFiles) return;
     const formData = new FormData();
+    // @ts-ignore
+    const storageUrl = useRuntimeConfig().public.storageUrl as string;
     formData.append('file', selectedFiles[0]);
-    if (imageUploadSignedUrl.value) {
-      await useFetch(imageUploadSignedUrl.value.uploadURL, {
-        method: 'post',
-        body: formData
-      });
-      imageId.value = await $trpc.user.profile.awaitAvatarUpload.query({
-        uploadId: imageUploadSignedUrl.value.id
-      });
-    }
-    //TODO: make the image only appear once it has been loaded to avoid blank box, find a way to show skeleton loading animation
-    if (imageId.value) {
-      imageUrl.value = useUtils().generateAvatarUrl(
-        imageId.value,
-        '128x128'
-      ) as string;
-    }
+    formData.append('type', 'org');
+    formData.append(
+      'publicId',
+      initialOrgProfile.value.orgProfile.publicId || ''
+    );
+    await useFetch(`${storageUrl}/api/avatar`, {
+      method: 'post',
+      body: formData,
+      credentials: 'include'
+    });
+
+    imageUrl.value = useUtils().generateAvatarUrl(
+      'org',
+      initialOrgProfile.value.orgProfile.publicId,
+      '5xl'
+    ) as string;
+
     uploadLoading.value = false;
+
+    //TODO: make the image only appear once it has been loaded to avoid blank box, find a way to show skeleton loading animation
   });
 
   async function saveProfile() {
     buttonLoading.value = true;
     buttonLabel.value = 'Saving...';
-    const newOrgAvatarId = imageId.value ? imageId.value : null;
 
     const response = await $trpc.org.setup.profile.setOrgProfile.mutate({
-      orgName: orgNameValue.value,
-      ...(imageId.value && { orgAvatarId: imageId.value })
+      orgName: orgNameValue.value
     });
 
     if (!response.success) {

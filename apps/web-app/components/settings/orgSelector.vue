@@ -14,22 +14,16 @@
   };
 
   const props = defineProps<Props>();
-
-  const imageUrlAccountHash = useRuntimeConfig().public.cfImagesAccountHash;
 </script>
 <template>
   <button
-    class="p-2 rounded flex flex-row justify-start hover:bg-base-4 gap-2 overflow-hidden max-w-full w-full items-center"
+    class="max-w-full w-full flex flex-row items-center justify-start gap-2 overflow-hidden rounded p-2 hover:bg-base-4"
     :class="props.isActive ? 'bg-base-5' : 'bg-base-2'">
-    <div
-      class="bg-cover bg-center font-display flex justify-center items-center w-[24px] h-[24px] rounded-xs"
-      :style="
-        props.orgData.org.avatarId
-          ? `background-image: url(https://imagedelivery.net/${imageUrlAccountHash}/${props.orgData.org.avatarId}/32x32)`
-          : ''
-      ">
-      {{ props.orgData.org.avatarId ? '' : props.orgData.org.name[0] }}
-    </div>
-    <span class="font-medium text-xs"> {{ props.orgData.org.name }}</span>
+    <UnUiAvatar
+      :public-id="props.orgData.org.publicId"
+      :type="'org'"
+      :size="'md'"
+      :alt="props.orgData.org.name" />
+    <span class="text-xs font-medium"> {{ props.orgData.org.name }}</span>
   </button>
 </template>

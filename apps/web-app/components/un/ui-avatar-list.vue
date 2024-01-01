@@ -9,7 +9,7 @@
   } from 'radix-vue';
 
   type AuthorEntry = {
-    avatarId: string;
+    publicId: string;
     name: string;
     type: string;
     color: string;
@@ -71,9 +71,9 @@
   <div class="flex flex-row gap-2">
     <div
       v-for="avatar in avatarArray"
-      :key="avatar.avatarId">
+      :key="avatar.publicId">
       <UnUiAvatar
-        :avatar-id="avatar.avatarId"
+        :public-id="avatar.publicId"
         :name="avatar.name"
         :size="props.size"
         :color="avatar.color" />
@@ -83,7 +83,7 @@
       <TooltipRoot v-model:open="toggleState">
         <TooltipTrigger @click="toggleState = !toggleState">
           <div
-            class="rounded-2 bg-cover bg-center font-display text-base-12 flex justify-center items-center bg-base-5"
+            class="flex items-center justify-center rounded-2 bg-base-5 bg-cover bg-center text-base-12 font-display"
             :class="avatarClasses({ container: props.size })">
             + {{ props.avatars.length - props.limit + 1 }}
           </div>
@@ -96,9 +96,9 @@
             <div class="flex flex-row gap-2">
               <div
                 v-for="avatar in props.avatars"
-                :key="avatar.avatarId">
+                :key="avatar.publicId">
                 <UnUiAvatar
-                  :avatar-id="avatar.avatarId"
+                  :public-id="avatar.publicId"
                   :name="avatar.name"
                   :tooltip-pre-text="avatar.type"
                   :color="avatar.color"

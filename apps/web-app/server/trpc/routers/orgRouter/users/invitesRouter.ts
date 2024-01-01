@@ -215,9 +215,9 @@ export const invitesRouter = router({
             with: {
               profile: {
                 columns: {
+                  publicId: true,
                   firstName: true,
-                  lastName: true,
-                  avatarId: true
+                  lastName: true
                 }
               }
             }
@@ -226,9 +226,9 @@ export const invitesRouter = router({
             with: {
               profile: {
                 columns: {
+                  publicId: true,
                   firstName: true,
-                  lastName: true,
-                  avatarId: true
+                  lastName: true
                 }
               }
             }
@@ -263,8 +263,8 @@ export const invitesRouter = router({
         with: {
           org: {
             columns: {
+              publicId: true,
               name: true,
-              avatarId: true,
               slug: true
             }
           }
@@ -295,8 +295,8 @@ export const invitesRouter = router({
 
       return {
         valid: true,
+        orgPublicId: queryInvitesResponse.org.publicId,
         orgName: queryInvitesResponse.org.name,
-        orgAvatarId: queryInvitesResponse.org.avatarId,
         orgSlug: queryInvitesResponse.org.slug,
         loggedIn: userLoggedIn
       };

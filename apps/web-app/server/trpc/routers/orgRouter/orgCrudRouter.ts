@@ -271,7 +271,6 @@ export const crudRouter = router({
               publicId: true,
               name: true,
               slug: true,
-              avatarId: true,
               personalOrg: true
             }
           }

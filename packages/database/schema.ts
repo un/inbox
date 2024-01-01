@@ -234,7 +234,6 @@ export const userProfiles = mysqlTable(
     handle: varchar('handle', { length: 64 }),
     title: varchar('title', { length: 64 }),
     blurb: text('blurb'),
-    avatarId: varchar('avatar_id', { length: 64 }),
     defaultProfile: boolean('default_profile').notNull().default(false),
     createdAt: timestamp('created_at')
       .default(sql`CURRENT_TIMESTAMP`)
@@ -266,7 +265,6 @@ export const orgs = mysqlTable(
     slug: varchar('slug', { length: 64 }).notNull(),
     ownerId: foreignKey('owner_id').notNull(),
     name: varchar('name', { length: 64 }).notNull(),
-    avatarId: varchar('avatar_Id', { length: 64 }),
     personalOrg: boolean('personal_org').notNull().default(false),
     metadata: json('metadata').$type<Record<string, unknown>>(),
     createdAt: timestamp('created_at')
@@ -473,7 +471,6 @@ export const userGroups = mysqlTable(
     publicId: nanoId('public_id').notNull(),
     orgId: foreignKey('org_id').notNull(),
     name: varchar('name', { length: 128 }).notNull(),
-    avatarId: varchar('avatar_id', { length: 64 }),
     color: mysqlEnum('color', [...uiColors]),
     description: text('description'),
     createdAt: timestamp('created_at')
@@ -646,7 +643,6 @@ export const contacts = mysqlTable(
     setName: varchar('set_name', { length: 128 }),
     emailUsername: varchar('email_username', { length: 128 }).notNull(),
     emailDomain: varchar('email_domain', { length: 128 }).notNull(),
-    avatarId: varchar('avatar_id', { length: 64 }),
     signature: text('signature'),
     type: mysqlEnum('type', [
       'person',
@@ -1047,7 +1043,6 @@ export const emailIdentities = mysqlTable(
     domainId: foreignKey('domain_id'),
     routingRuleId: foreignKey('routing_rule_id').notNull(),
     sendName: varchar('send_name', { length: 128 }),
-    avatarId: varchar('avatar_id', { length: 64 }),
     createdBy: foreignKey('created_by').notNull(),
     isCatchAll: boolean('is_catch_all').notNull().default(false),
     createdAt: timestamp('created_at')

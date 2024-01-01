@@ -50,7 +50,6 @@
   ];
   interface TableRow {
     publicId: string;
-    avatarId: string;
     name: string;
     handle: string;
     title: string;
@@ -66,7 +65,6 @@
       for (const member of newResults.group.members) {
         tableRows.value.push({
           publicId: member.publicId,
-          avatarId: member.userProfile?.avatarId || '',
           name:
             member.userProfile?.firstName + ' ' + member.userProfile?.lastName,
           handle: member.userProfile?.handle || '',
@@ -100,7 +98,6 @@
     label: string;
     name: string;
     handle: string;
-    avatarId: string;
     role: string;
   }
 
@@ -119,7 +116,6 @@
               member.profile?.handle,
             name: member.profile?.firstName + ' ' + member.profile?.lastName,
             handle: member.profile?.handle || '',
-            avatarId: member.profile?.avatarId || '',
             role: member.role
           });
         }
@@ -145,7 +141,6 @@
       );
       tableRows.value.push({
         publicId: member?.profile.publicId || '',
-        avatarId: member?.profile.avatarId || '',
         name: member?.profile.firstName + ' ' + member?.profile.lastName,
         handle: member?.profile.handle || '',
         title: member?.profile.title || '',
@@ -178,7 +173,8 @@
         <UnUiAvatar
           :color="groupData?.group?.color || 'base'"
           :name="groupData?.group?.name"
-          :avatar-id="groupData?.group?.avatarId || ''"
+          :public-id="groupData?.group?.publicId || ''"
+          :type="'group'"
           size="lg" />
 
         <div class="flex flex-col gap-1">
@@ -227,7 +223,7 @@
         class="w-full flex flex-col gap-8">
         <div class="flex flex-col gap-4">
           <div class="w-full border-b-1 border-base-5 pb-2">
-            <span class="text-sm font-semibold uppercase text-base-11">
+            <span class="text-sm text-base-11 font-semibold uppercase">
               Members
             </span>
           </div>
@@ -239,7 +235,8 @@
             <template #name-data="{ row }">
               <div class="flex flex-row items-center gap-2">
                 <UnUiAvatar
-                  :avatar-id="row.avatarId"
+                  :public-id="row.publicId"
+                  :type="'user'"
                   :alt="row.name"
                   size="xs" />
                 <span class="">{{ row.name }}</span>
@@ -326,7 +323,8 @@
               </template>
               <template #option="{ option }">
                 <UnUiAvatar
-                  :avatar-id="option.avatarId"
+                  :public-id="option.publicId"
+                  :type="'user'"
                   :alt="option.label"
                   size="3xs" />
 

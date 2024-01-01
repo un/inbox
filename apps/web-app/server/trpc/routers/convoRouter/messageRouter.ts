@@ -54,7 +54,6 @@ export const messageRouter = router({
                   userId: true,
                   firstName: true,
                   lastName: true,
-                  avatarId: true,
                   publicId: true,
                   handle: true
                 }
@@ -63,7 +62,6 @@ export const messageRouter = router({
                 columns: {
                   name: true,
                   color: true,
-                  avatarId: true,
                   publicId: true
                 },
                 with: {
@@ -77,7 +75,6 @@ export const messageRouter = router({
               foreignEmailIdentity: {
                 columns: {
                   senderName: true,
-                  avatarId: true,
                   username: true,
                   rootDomain: true,
                   publicId: true

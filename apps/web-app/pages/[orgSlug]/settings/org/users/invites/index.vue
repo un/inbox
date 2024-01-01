@@ -109,14 +109,16 @@
                   ? 'expired'
                   : 'active'
               : 'active',
-            creatorAvatar: invite.invitedByOrgMember.profile.avatarId,
             createdBy:
               invite.invitedByOrgMember.profile.firstName +
               ' ' +
               invite.invitedByOrgMember.profile.lastName,
+            createdByAvatar: invite.invitedByOrgMember.profile
+              ? invite.invitedByOrgMember.profile.publicId
+              : null,
             created: invite.invitedAt,
             userAvatar: invite.orgMember?.profile
-              ? invite.orgMember?.profile.avatarId
+              ? invite.orgMember?.profile.publicId
               : null,
             usedBy: invite.orgMember?.profile
               ? invite.orgMember?.profile.firstName +
@@ -179,7 +181,8 @@
             <div class="flex flex-row items-center gap-2">
               <UnUiAvatar
                 v-if="row.userAvatar || row.usedBy"
-                :avatar-id="row.userAvatar ? row.userAvatar : ''"
+                :public-id="row.userAvatar"
+                :type="'user'"
                 :alt="row.usedBy ? row.usedBy : ''"
                 size="xs" />
               <span class="">{{ row.usedBy }}</span>
@@ -218,7 +221,8 @@
           <template #createdBy-data="{ row }">
             <div class="flex flex-row items-center gap-2">
               <UnUiAvatar
-                :avatar-id="row.creatorAvatar ? row.creatorAvatar : ''"
+                :public-id="row.creatorAvatar ? row.creatorAvatar : ''"
+                :type="'user'"
                 :alt="row.createdBy ? row.createdBy : ''"
                 size="xs" />
             </div>

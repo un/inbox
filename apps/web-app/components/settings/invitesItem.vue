@@ -25,8 +25,8 @@
       props.inviteData.invitedByUser.orgMemberships[0].profile.lastName
     );
   });
-  const inviterAvatarId = computed(() => {
-    return props.inviteData.invitedByUser.orgMemberships[0].profile.avatarId;
+  const inviterPublicId = computed(() => {
+    return props.inviteData.invitedByUser.orgMemberships[0].profile.publicId;
   });
 
   const inviteeName = computed(() => {
@@ -34,21 +34,19 @@
       ? props.inviteData.invitedUser.orgMemberships[0].profile.firstName +
           ' ' +
           props.inviteData.invitedUser.orgMemberships[0].profile.lastName
-      : null;
+      : '';
   });
-  const inviteeAvatarId = computed(() => {
+  const inviteePublicId = computed(() => {
     return props.inviteData.invitedUser
-      ? props.inviteData.invitedUser.orgMemberships[0].profile.avatarId
+      ? props.inviteData.invitedUser.orgMemberships[0].profile.PublicId
       : null;
   });
-
-  const imageUrlAccountHash = useRuntimeConfig().public.cfImagesAccountHash;
 </script>
 <template>
   <div class="w-full flex flex-row justify-between gap-4 bg-base-2 p-4">
     <div class="w-full flex flex-col gap-8">
       <div class="w-full flex flex-col gap-0">
-        <span class="text-sm font-semibold uppercase text-base-11"> Code </span>
+        <span class="text-sm text-base-11 font-semibold uppercase"> Code </span>
         <div class="flex flex-row gap-4">
           <span class="font-mono">{{ props.inviteData.inviteToken }}</span>
           <button
@@ -68,7 +66,7 @@
       <div
         v-if="props.inviteData.email"
         class="w-full flex flex-col gap-0">
-        <span class="text-sm font-semibold uppercase text-base-11">
+        <span class="text-sm text-base-11 font-semibold uppercase">
           Email
         </span>
         <div class="flex flex-row gap-4">
@@ -84,7 +82,7 @@
             props.inviteData.expiresAt
           "
           class="flex flex-col gap-0">
-          <span class="text-sm font-semibold uppercase text-base-11">
+          <span class="text-sm text-base-11 font-semibold uppercase">
             {{
               props.inviteData.expiresAt < new Date() ? 'Expired' : 'Expires on'
             }}
@@ -98,25 +96,21 @@
         <div class="flex flex-col gap-0">
           <span
             v-if="props.inviteData.invitedUser?.orgMemberships"
-            class="text-sm font-semibold uppercase text-base-11">
+            class="text-sm text-base-11 font-semibold uppercase">
             Used by
           </span>
           <div
             v-if="props.inviteData.invitedUser?.orgMemberships"
             class="flex flex-row items-center gap-2">
             <div class="flex flex-row items-center gap-2">
-              <div
-                class="h-[32px] w-[32px] flex items-center justify-center rounded bg-cover bg-center font-display"
-                :style="
-                  inviteeAvatarId
-                    ? `background-image: url(https://imagedelivery.net/${imageUrlAccountHash}/${inviteeAvatarId}/32x32)`
-                    : ''
-                ">
-                {{ inviteeAvatarId ? '' : inviteeName }}
-              </div>
+              <UnUiAvatar
+                :public-id="inviteePublicId"
+                :type="'user'"
+                :size="'md'"
+                :alt="inviteeName" />
               <span class="text-sm font-medium"> {{ inviteeName }}</span>
             </div>
-            <span class="text-sm font-semibold uppercase text-base-11">
+            <span class="text-sm text-base-11 font-semibold uppercase">
               on
             </span>
             <div
@@ -135,24 +129,20 @@
         </div>
       </div>
       <div class="w-full flex flex-col gap-0">
-        <span class="text-sm font-semibold uppercase text-base-11">
+        <span class="text-sm text-base-11 font-semibold uppercase">
           Created by
         </span>
         <div class="flex flex-row items-center gap-2">
           <div class="flex flex-row items-center gap-2">
             <div class="flex flex-row items-center gap-2">
-              <div
-                class="h-[32px] w-[32px] flex items-center justify-center rounded bg-cover bg-center font-display"
-                :style="
-                  inviterAvatarId
-                    ? `background-image: url(https://imagedelivery.net/${imageUrlAccountHash}/${inviterAvatarId}/32x32)`
-                    : ''
-                ">
-                {{ inviterAvatarId ? '' : inviterName }}
-              </div>
+              <UnUiAvatar
+                :public-id="inviterPublicId"
+                :type="'user'"
+                :size="'md'"
+                :alt="inviterName" />
               <span class="text-sm font-medium"> {{ inviterName }}</span>
             </div>
-            <span class="text-sm font-semibold uppercase text-base-11">
+            <span class="text-sm text-base-11 font-semibold uppercase">
               on
             </span>
             <div

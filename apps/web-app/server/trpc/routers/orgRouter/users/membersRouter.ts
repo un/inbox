@@ -45,7 +45,6 @@ export const orgMembersRouter = router({
               profile: {
                 columns: {
                   publicId: true,
-                  avatarId: true,
                   firstName: true,
                   lastName: true,
                   handle: true,
@@ -101,7 +100,6 @@ export const orgMembersRouter = router({
               profile: {
                 columns: {
                   publicId: true,
-                  avatarId: true,
                   firstName: true,
                   lastName: true,
                   title: true,

@@ -27,6 +27,10 @@ export default defineNuxtConfig({
       key: process.env.WEBAPP_MAILBRIDGE_KEY || '',
       postalRootUrl: process.env.MAILBRIDGE_POSTAL_ROOT_URL || ''
     },
+    storage: {
+      url: process.env.WEBAPP_STORAGE_URL || '',
+      key: process.env.WEBAPP_STORAGE_KEY || ''
+    },
     cf: {
       accountId: process.env.WEBAPP_CF_ACCOUNT_ID || '',
       zoneId: process.env.WEBAPP_CF_ZONE_ID || '',
@@ -35,6 +39,7 @@ export default defineNuxtConfig({
     public: {
       cfImagesAccountHash: process.env.WEBAPP_CF_IMAGES_ACCOUNT_HASH || '',
       siteUrl: process.env.WEBAPP_URL || '',
+      storageUrl: process.env.WEBAPP_STORAGE_URL || '',
       authJs: {
         baseUrl: process.env.WEBAPP_URL,
         verifyClientOnEveryRequest: true,
@@ -120,7 +125,12 @@ export default defineNuxtConfig({
       crossOriginEmbedderPolicy:
         process.env.NODE_ENV === 'development' ? 'unsafe-none' : 'require-corp',
       contentSecurityPolicy: {
-        'img-src': ["'self'", 'data:', 'imagedelivery.net']
+        'img-src': [
+          "'self'",
+          'data:',
+          'imagedelivery.net',
+          process.env.WEBAPP_STORAGE_URL || ''
+        ]
       }
     }
   }

@@ -289,8 +289,7 @@ export const emailIdentityRouter = router({
             username: true,
             domainName: true,
             sendName: true,
-            isCatchAll: true,
-            avatarId: true
+            isCatchAll: true
           },
           with: {
             domain: {
@@ -314,7 +313,6 @@ export const emailIdentityRouter = router({
                         publicId: true,
                         name: true,
                         description: true,
-                        avatarId: true,
                         color: true
                       }
                     },
@@ -323,7 +321,6 @@ export const emailIdentityRouter = router({
                         profile: {
                           columns: {
                             publicId: true,
-                            avatarId: true,
                             firstName: true,
                             lastName: true,
                             handle: true,
@@ -363,8 +360,7 @@ export const emailIdentityRouter = router({
           username: true,
           domainName: true,
           sendName: true,
-          isCatchAll: true,
-          avatarId: true
+          isCatchAll: true
         },
         with: {
           domain: {
@@ -388,7 +384,6 @@ export const emailIdentityRouter = router({
                       publicId: true,
                       name: true,
                       description: true,
-                      avatarId: true,
                       color: true
                     }
                   },
@@ -397,7 +392,6 @@ export const emailIdentityRouter = router({
                       profile: {
                         columns: {
                           publicId: true,
-                          avatarId: true,
                           firstName: true,
                           lastName: true,
                           handle: true,

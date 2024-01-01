@@ -47,7 +47,7 @@
         v-if="!emailIdentityPending"
         class="flex flex-col gap-4">
         <div class="flex flex-col gap-2">
-          <span class="text-sm font-medium uppercase text-base-12">
+          <span class="text-sm text-base-12 font-medium uppercase">
             Email Address
           </span>
           <span class="">
@@ -57,7 +57,7 @@
           </span>
         </div>
         <div class="flex flex-col gap-2">
-          <span class="text-sm font-medium uppercase text-base-12">
+          <span class="text-sm text-base-12 font-medium uppercase">
             Send Name
           </span>
           <span class="">
@@ -65,7 +65,7 @@
           </span>
         </div>
         <div class="flex flex-col gap-2">
-          <span class="text-sm font-medium uppercase text-base-12">
+          <span class="text-sm text-base-12 font-medium uppercase">
             Is Catch All
           </span>
           <span class="">
@@ -73,7 +73,7 @@
           </span>
         </div>
         <div class="flex flex-col gap-2">
-          <span class="text-sm font-medium uppercase text-base-12">
+          <span class="text-sm text-base-12 font-medium uppercase">
             Desitnations (deliver to)
           </span>
           <div
@@ -85,7 +85,8 @@
               class="flex flex-row items-center gap-8 rounded-xl bg-base-2 p-2">
               <div class="flex flex-row items-center gap-4">
                 <UnUiAvatar
-                  :avatar-id="destination.group?.avatarId || ''"
+                  :public-id="destination.group?.publicId || ''"
+                  :type="'group'"
                   :alt="destination.group?.name"
                   :color="destination.group?.color as UiColor"
                   size="xs" />
@@ -106,7 +107,8 @@
               class="flex flex-row items-center gap-8 rounded-xl bg-base-2 p-2">
               <div class="flex flex-row items-center gap-4">
                 <UnUiAvatar
-                  :avatar-id="destination.orgMember?.profile?.avatarId || ''"
+                  :public-id="destination.orgMember?.profile?.publicId || ''"
+                  :type="'user'"
                   :alt="
                     destination.orgMember?.profile?.firstName +
                     ' ' +

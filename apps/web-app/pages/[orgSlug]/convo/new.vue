@@ -19,7 +19,6 @@
     publicId: String;
     name: String;
     handle: String;
-    avatarId: String | null;
     title: String | null;
     disabled?: boolean;
     keywords: String;
@@ -30,7 +29,6 @@
     publicId: String;
     name: String;
     description: String | null;
-    avatarId: String | null;
     color: String | null;
     keywords: String;
   }
@@ -40,7 +38,6 @@
     publicId: String;
     name: String;
     address: string;
-    avatarId: String | null;
     keywords: String;
     screenerStatus: 'pending' | 'approve' | 'reject' | null;
   }
@@ -158,7 +155,6 @@
             ' ' +
             ownOrgMemberData.profile?.lastName || '',
         handle: ownOrgMemberData.profile?.handle || '',
-        avatarId: ownOrgMemberData.profile?.avatarId || '',
         title: ownOrgMemberData.profile?.title || '',
         keywords:
           ownOrgMemberData.profile?.firstName +
@@ -184,7 +180,6 @@
           name:
             member.profile?.firstName + ' ' + member.profile?.lastName || '',
           handle: member.profile?.handle || '',
-          avatarId: member.profile?.avatarId || '',
           title: member.profile?.title || '',
           keywords:
             member.profile?.firstName +
@@ -209,7 +204,6 @@
           publicId: group.publicId,
           name: group.name,
           description: group.description,
-          avatarId: group.avatarId,
           color: group.color,
           keywords: group.name + ' ' + group.description
         });
@@ -230,7 +224,6 @@
             contact.name ||
             contact.emailUsername + '@' + contact.emailDomain,
           address: contact.emailUsername + '@' + contact.emailDomain,
-          avatarId: contact.avatarId,
           keywords:
             contact.setName +
             ' ' +
@@ -463,7 +456,8 @@
                       v-if="participant.type === 'contact'"
                       class="flex flex-row items-center gap-1">
                       <UnUiAvatar
-                        :avatar-id="participant.avatarId?.toString()"
+                        :public-id="participant.publicId?.toString()"
+                        :type="'contact'"
                         :alt="participant.name.toString()"
                         size="xs" />
                       <span>
@@ -474,7 +468,8 @@
                       v-if="participant.type === 'user'"
                       class="flex flex-row items-center gap-1">
                       <UnUiAvatar
-                        :avatar-id="participant.avatarId?.toString()"
+                        :public-id="participant.publicId?.toString()"
+                        :type="'user'"
                         :alt="participant.name.toString()"
                         size="xs" />
                       <span>
@@ -485,7 +480,8 @@
                       v-if="participant.type === 'group'"
                       class="flex flex-row items-center gap-1">
                       <UnUiAvatar
-                        :avatar-id="participant.avatarId?.toString()"
+                        :public-id="participant.publicId?.toString()"
+                        :type="'group'"
                         :alt="participant.name.toString()"
                         :color="participant.color?.toString()"
                         size="xs" />
@@ -517,7 +513,8 @@
                   v-if="option.type === 'contact'"
                   class="flex flex-row items-center gap-2">
                   <UnUiAvatar
-                    :avatar-id="option.avatarId"
+                    :public-id="option.publicId"
+                    :type="'contact'"
                     :alt="option.name"
                     size="xs" />
                   <span>
@@ -529,7 +526,8 @@
                   v-if="option.type === 'user'"
                   class="flex flex-row items-center gap-2">
                   <UnUiAvatar
-                    :avatar-id="option.avatarId"
+                    :public-id="option.publicId"
+                    :type="'user'"
                     :alt="option.name"
                     size="xs" />
                   <span>
@@ -550,7 +548,8 @@
                   v-if="option.type === 'group'"
                   class="flex flex-row items-center gap-2">
                   <UnUiAvatar
-                    :avatar-id="option.avatarId"
+                    :public-id="option.publicId"
+                    :type="'group'"
                     :alt="option.name"
                     :color="option.color.toString()"
                     size="xs" />

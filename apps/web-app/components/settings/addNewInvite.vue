@@ -165,7 +165,6 @@
     publicId: String;
     name: String;
     description: String | null;
-    avatarId: String | null;
     color: String | null;
   }
   const orgUserGroups = ref<OrgUserGroups[]>([]);
@@ -177,7 +176,6 @@
           publicId: group.publicId,
           name: group.name,
           description: group.description,
-          avatarId: group.avatarId,
           color: group.color
         });
       }
@@ -273,7 +271,7 @@
       <div
         class="grid grid-cols-1 grid-rows-2 gap-2 md:grid-cols-2 md:grid-rows-1 md:gap-4">
         <div class="flex flex-col gap-1">
-          <span class="text-sm font-medium text-base-12">Role</span>
+          <span class="text-sm text-base-12 font-medium">Role</span>
           <NuxtUiSelectMenu
             v-model="selectedMemberRole"
             :options="memberRoles"
@@ -311,7 +309,7 @@
     <div class="w-full flex flex-col gap-2">
       <div class="items-top w-full flex flex-row justify-between gap-1">
         <div>
-          <span class="text-sm font-medium text-base-12"
+          <span class="text-sm text-base-12 font-medium"
             >Send invitation notification</span
           >
           <div
@@ -343,7 +341,7 @@
     <div class="w-full flex flex-col gap-2">
       <div class="items-top w-full flex flex-row justify-between gap-1">
         <div>
-          <span class="text-sm font-medium text-base-12"
+          <span class="text-sm text-base-12 font-medium"
             >Create email address</span
           >
           <div class="w-full flex flex-row justify-between gap-8">
@@ -379,7 +377,7 @@
           "
           width="full" />
         <div class="flex flex-col gap-1">
-          <span class="text-sm font-medium text-base-12">Domain</span>
+          <span class="text-sm text-base-12 font-medium">Domain</span>
           <span v-if="orgDomainsPending">
             <UnUiIcon name="i-svg-spinners:3-dots-fade" /> Loading Domains
           </span>
@@ -429,7 +427,7 @@
     <div class="w-full flex flex-col gap-2">
       <div class="items-top w-full flex flex-row justify-between gap-1">
         <div>
-          <span class="text-sm font-medium text-base-12"
+          <span class="text-sm text-base-12 font-medium"
             >Add user to groups</span
           >
           <div class="w-full flex flex-row justify-between gap-8">
@@ -472,7 +470,8 @@
                 class="flex flex-row items-center gap-1 truncate">
                 <UnUiAvatar
                   :alt="group.name.toString()"
-                  :avatar-id="group.avatarId?.toString()"
+                  :public-id="group.publicId?.toString()"
+                  :type="'group'"
                   :color="group.color?.toString()"
                   size="3xs" />
                 <span>{{ group.name }}</span>
@@ -482,7 +481,8 @@
           </template>
           <template #option="{ option }">
             <UnUiAvatar
-              :avatar-id="option.avatarId"
+              :public-id="option.publicId"
+              :type="'group'"
               :alt="option.name"
               :color="option.color.toString()"
               size="3xs" />

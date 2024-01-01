@@ -113,7 +113,8 @@
         </h2>
         <div class="flex flex-col items-center gap-2">
           <UnUiAvatar
-            :avatar-id="inviteQuery?.orgAvatarId || ''"
+            :public-id="inviteQuery?.orgPublicId || ''"
+            :type="'org'"
             :alt="inviteQuery?.orgName"
             size="3xl" />
           <p class="text-center text-xl font-display">

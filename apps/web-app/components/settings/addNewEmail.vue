@@ -71,7 +71,6 @@
     publicId: String;
     name: String;
     description: String | null;
-    avatarId: String | null;
     color: String | null;
   }
   const orgUserGroups = ref<OrgUserGroups[]>([]);
@@ -83,7 +82,6 @@
           publicId: group.publicId,
           name: group.name,
           description: group.description,
-          avatarId: group.avatarId,
           color: group.color
         });
       }
@@ -102,7 +100,6 @@
     publicId: String;
     name: String;
     handle: String;
-    avatarId: String | null;
     title: String | null;
     keywords: String;
   }
@@ -116,7 +113,6 @@
           name:
             member.profile?.firstName + ' ' + member.profile?.lastName || '',
           handle: member.profile?.handle || '',
-          avatarId: member.profile?.avatarId || '',
           title: member.profile?.title || '',
           keywords:
             member.profile?.firstName +
@@ -228,7 +224,7 @@
     <div class="w-full flex flex-col gap-8">
       <div class="w-full flex flex-col gap-4">
         <div class="w-full border-b-1 border-base-6">
-          <span class="text-sm font-medium uppercase text-base-11">
+          <span class="text-sm text-base-11 font-medium uppercase">
             Email Address
           </span>
         </div>
@@ -252,7 +248,7 @@
             "
             width="full" />
           <div class="flex flex-col gap-1">
-            <span class="text-sm font-medium text-base-12">Domain</span>
+            <span class="text-sm text-base-12 font-medium">Domain</span>
             <span v-if="orgDomainsPending">
               <UnUiIcon name="i-svg-spinners:3-dots-fade" /> Loading Domains
             </span>
@@ -285,7 +281,7 @@
         </div>
 
         <div class="flex flex-col gap-1">
-          <span class="text-sm font-medium text-base-12">CatchAll</span>
+          <span class="text-sm text-base-12 font-medium">CatchAll</span>
           <div class="flex flex-row justify-between">
             <span class="dark:text-gray-200 text-gray-700 text- text-sm">
               Emails sent to unknown addresses will be delivered here
@@ -313,7 +309,7 @@
       <NuxtUiDivider />
       <div class="flex flex-col gap-4">
         <div class="w-full border-b-1 border-base-6">
-          <span class="text-sm font-medium uppercase text-base-11">
+          <span class="text-sm text-base-11 font-medium uppercase">
             Deliver messages to
           </span>
         </div>
@@ -353,7 +349,8 @@
                       class="flex flex-row items-center gap-1 truncate">
                       <UnUiAvatar
                         :alt="group.name.toString()"
-                        :avatar-id="group.avatarId?.toString()"
+                        :public-id="group.publicId?.toString()"
+                        :type="'group'"
                         :color="group.color as UiColor"
                         size="3xs" />
                       <span>{{ group.name }}</span>
@@ -363,7 +360,8 @@
                 </template>
                 <template #option="{ option }">
                   <UnUiAvatar
-                    :avatar-id="option.avatarId"
+                    :public-id="option.publicId"
+                    :type="'group'"
                     :alt="option.name"
                     :color="option.color as UiColor"
                     size="3xs" />
@@ -403,7 +401,8 @@
                       class="flex flex-row items-center gap-1 truncate">
                       <UnUiAvatar
                         :alt="member.name.toString()"
-                        :avatar-id="member.avatarId?.toString()"
+                        :public-id="member.publicId?.toString()"
+                        :type="'user'"
                         size="3xs" />
                       <span>{{ member.name }}</span>
                     </div>
@@ -412,7 +411,8 @@
                 </template>
                 <template #option="{ option }">
                   <UnUiAvatar
-                    :avatar-id="option.avatarId"
+                    :public-id="option.publicId"
+                    :type="'user'"
                     :alt="option.name"
                     size="xs" />
                   <span>
@@ -431,7 +431,7 @@
       </div>
       <span
         v-if="!isPro && multipleDestinationsSelected"
-        class="rounded bg-red-9 p-2 text-sm font-bold text-white">
+        class="rounded bg-red-9 p-2 text-sm text-white font-bold">
         You can only deliver messages to one single destination on your current
         plan
       </span>

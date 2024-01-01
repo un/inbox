@@ -29,8 +29,7 @@ export const orgProfileRouter = router({
       const orgProfileQuery = await db.query.orgs.findFirst({
         columns: {
           publicId: true,
-          name: true,
-          avatarId: true
+          name: true
         },
         where: orgPublicId
           ? eq(orgs.publicId, orgPublicId)
@@ -45,8 +44,7 @@ export const orgProfileRouter = router({
   setOrgProfile: orgProcedure
     .input(
       z.object({
-        orgName: z.string().min(3).max(32),
-        orgAvatarId: z.string().optional()
+        orgName: z.string().min(3).max(32)
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -59,7 +57,7 @@ export const orgProfileRouter = router({
       const { db, user, org } = ctx;
       const userId = +user?.id;
       const orgId = +org?.id;
-      const { orgName, orgAvatarId } = input;
+      const { orgName } = input;
 
       const isAdmin = await isUserAdminOfOrg(org);
       console.log('isAdmin', isAdmin);
@@ -75,8 +73,7 @@ export const orgProfileRouter = router({
       await db
         .update(orgs)
         .set({
-          name: orgName,
-          ...(orgAvatarId && { avatarId: orgAvatarId })
+          name: orgName
         })
         .where(eq(orgs.id, orgId));
 

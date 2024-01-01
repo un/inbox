@@ -61,8 +61,8 @@
     if (newResults?.members) {
       for (const member of newResults.members) {
         tableRows.value.push({
-          avatar: member.profile.avatarId,
           name: member.profile.firstName + ' ' + member.profile.lastName,
+          publicId: member.profile.publicId,
           handle: member.profile.handle,
           title: member.profile.title,
           role: member.role,
@@ -104,7 +104,8 @@
         <template #name-data="{ row }">
           <div class="flex flex-row items-center gap-2">
             <UnUiAvatar
-              :avatar-id="row.avatar ? row.avatar : ''"
+              :public-id="row.publicId"
+              :type="'user'"
               :alt="row.name ? row.name : ''"
               size="xs" />
             <span class="">{{ row.name }}</span>

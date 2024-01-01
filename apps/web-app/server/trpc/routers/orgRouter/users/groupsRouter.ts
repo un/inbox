@@ -49,8 +49,7 @@ export const orgUserGroupsRouter = router({
         name: groupName,
         description: groupDescription,
         color: groupColor,
-        orgId: +orgId,
-        avatarId: ''
+        orgId: +orgId
       });
 
       return {
@@ -75,8 +74,7 @@ export const orgUserGroupsRouter = router({
           publicId: true,
           name: true,
           description: true,
-          color: true,
-          avatarId: true
+          color: true
         },
         where: and(eq(userGroups.orgId, +orgId)),
         with: {
@@ -88,7 +86,6 @@ export const orgUserGroupsRouter = router({
               userProfile: {
                 columns: {
                   publicId: true,
-                  avatarId: true,
                   firstName: true,
                   lastName: true,
                   handle: true,
@@ -130,8 +127,7 @@ export const orgUserGroupsRouter = router({
           publicId: true,
           name: true,
           description: true,
-          color: true,
-          avatarId: true
+          color: true
         },
         where: and(
           eq(userGroups.publicId, input.userGroupPublicId),
@@ -153,7 +149,6 @@ export const orgUserGroupsRouter = router({
               userProfile: {
                 columns: {
                   publicId: true,
-                  avatarId: true,
                   firstName: true,
                   lastName: true,
                   handle: true,

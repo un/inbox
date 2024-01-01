@@ -73,7 +73,6 @@ export const profileRouter = router({
       z.object({
         fName: z.string(),
         lName: z.string(),
-        imageId: z.string().uuid().optional().nullable(),
         handle: z.string().min(2).max(20),
         defaultProfile: z.boolean().optional().default(false)
       })
@@ -87,7 +86,6 @@ export const profileRouter = router({
         //@ts-ignore TS dosnt know that userId must exist on user procedures
         userId: +userId,
         publicId: newPublicId,
-        avatarId: input.imageId,
         firstName: input.fName,
         lastName: input.lName,
         defaultProfile: input.defaultProfile,
@@ -99,7 +97,6 @@ export const profileRouter = router({
         return {
           success: false,
           profileId: null,
-          avatarId: null,
           error:
             'Something went wrong, please retry. Contact our team if it persists'
         };
@@ -107,7 +104,6 @@ export const profileRouter = router({
       return {
         success: true,
         profileId: newPublicId,
-        avatarId: input.imageId,
         error: null
       };
     }),
@@ -157,7 +153,6 @@ export const profileRouter = router({
           profile: {
             columns: {
               publicId: true,
-              avatarId: true,
               firstName: true,
               lastName: true,
               handle: true,
@@ -201,7 +196,6 @@ export const profileRouter = router({
       const insertUserProfileResponse = await db
         .update(userProfiles)
         .set({
-          avatarId: input.imageId,
           firstName: input.fName,
           lastName: input.lName,
           title: input.title,
