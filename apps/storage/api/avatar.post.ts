@@ -1,5 +1,11 @@
+import { orgs, userProfiles, orgMembers } from '@uninbox/database/schema';
+import { eq } from '@uninbox/database/orm';
+import { db } from '@uninbox/database';
 import sharp from 'sharp';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
+
+//?  Avatar Path: /[type.value]/[userProfilePublicId]/[size]
+
 export default defineEventHandler(async (event) => {
   const types = [
     { name: 'user', value: 'u' },
@@ -7,11 +13,6 @@ export default defineEventHandler(async (event) => {
     { name: 'contact', value: 'c' },
     { name: 'group', value: 'g' }
   ];
-  //? Paths
-  //* Users: /u/[userProfilePublicId]/[size]_[avatarId].[ext]
-  //* Orgs: /o/[orgPublicId]/[size]_[avatarId].[ext]
-  //* Contacts: /c/[contactPublicId]/[size]_[avatarId].[ext]
-  //* Groups: /g/[groupPublicId]/[size]_[avatarId].[ext]
   const formInputs = await readMultipartFormData(event);
 
   const typeInput = formInputs
@@ -30,26 +31,93 @@ export default defineEventHandler(async (event) => {
     return send(event, 'Missing publicId value');
   }
   const publicId = publicIdInput.data.toString('utf8');
-
+  const userId = +event.context.user.id;
+  if (!userId) {
+    setResponseStatus(event, 401);
+    return send(event, 'Unauthorized');
+  }
   if (typeObject.name === 'user') {
-    //! check if user is owner of profile
-    // get user id from event context
-    // get profile ownerId from DB
-    // if user id !== ownerId, throw error
+    const profileResponse = await db.query.userProfiles.findFirst({
+      where: eq(userProfiles.publicId, publicId),
+      columns: {
+        id: true,
+        userId: true
+      }
+    });
+    if (!profileResponse) {
+      setResponseStatus(event, 400);
+      return send(event, 'Invalid user profile ');
+    }
+    if (+profileResponse.userId !== userId) {
+      setResponseStatus(event, 401);
+      return send(event, 'Unauthorized');
+    }
   } else if (typeObject.name === 'org') {
-    //! check if user is admin of org
-    // get user id from event context
-    // get orgId from DB publicId > members
-    // if user id !== admin in members array, throw error
+    const orgResponse = await db.query.orgs.findFirst({
+      where: eq(orgs.publicId, publicId),
+      columns: {
+        id: true,
+        slug: true
+      },
+      with: {
+        members: {
+          columns: {
+            userId: true,
+            role: true
+          },
+          where: eq(orgMembers.role, 'admin')
+        }
+      }
+    });
+    if (!orgResponse) {
+      setResponseStatus(event, 400);
+      return send(event, 'Invalid org');
+    }
+    const isAdmin = orgResponse.members.some(
+      (member) => +member.userId === +userId
+    );
+    if (!isAdmin) {
+      setResponseStatus(event, 401);
+      return send(event, 'Unauthorized');
+    }
   } else if (typeObject.name === 'contact') {
+    setResponseStatus(event, 400);
+    return send(event, 'Not implemented');
     // Validate server key against request headers
   } else if (typeObject.name === 'group') {
-    // check if user is admin of group
-    // get user id from event context
-    // get groupId > orgId > members
-    // if user id !== admin in members array, throw error
+    const groupResponse = await db.query.userGroups.findFirst({
+      where: eq(orgs.publicId, publicId),
+      columns: {
+        id: true
+      },
+      with: {
+        org: {
+          with: {
+            members: {
+              columns: {
+                userId: true,
+                role: true
+              },
+              where: eq(orgMembers.role, 'admin')
+            }
+          }
+        }
+      }
+    });
+    if (!groupResponse) {
+      setResponseStatus(event, 400);
+      return send(event, 'Invalid group');
+    }
+    const isAdmin = groupResponse.org.members.some(
+      (member) => +member.userId === +userId
+    );
+    if (!isAdmin) {
+      setResponseStatus(event, 401);
+      return send(event, 'Unauthorized');
+    }
   } else {
-    // throw error
+    setResponseStatus(event, 400);
+    return send(event, 'Invalid type value');
   }
 
   const file = formInputs.find((input) => input.name === 'file');
