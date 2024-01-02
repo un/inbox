@@ -27,11 +27,15 @@
       to: `/${orgSlug}/settings/org`,
       icon: 'i-ph-buildings'
     },
-    {
-      label: 'Billing',
-      to: `/${orgSlug}/settings/org/setup/billing`,
-      icon: 'i-ph-credit-card'
-    }
+    ...(eeBilling
+      ? [
+          {
+            label: 'Billing',
+            to: `/${orgSlug}/settings/org/setup/billing`,
+            icon: 'i-ph-credit-card'
+          }
+        ]
+      : [])
   ]);
   const orgUsersLinks = computed(() => [
     {

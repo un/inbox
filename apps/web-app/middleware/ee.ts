@@ -4,5 +4,5 @@ export default defineNuxtRouteMiddleware(async (to) => {
     return;
   }
 
-  return navigateTo('/h');
+  return navigateTo('/redirect');
 });

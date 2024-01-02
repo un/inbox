@@ -41,13 +41,11 @@
         titleValue.value = newVal.profile.title || '';
         blurbValue.value = newVal.profile.blurb || '';
 
-        newVal.profile.avatarId
-          ? ((imageUrl.value = useUtils().generateAvatarUrl(
-              'user',
-              newVal.profile.publicId,
-              '5xl'
-            )) as string)
-          : null;
+        imageUrl.value = useUtils().generateAvatarUrl(
+          'user',
+          newVal.profile.publicId,
+          '5xl'
+        );
       }
     }
     // ,
@@ -90,9 +88,9 @@
     });
     imageUrl.value = useUtils().generateAvatarUrl(
       'user',
-      initialUserProfile.value?.profile.publicId,
+      initialUserProfile.value?.profile.publicId || '',
       '5xl'
-    ) as string;
+    );
 
     uploadLoading.value = false;
   });

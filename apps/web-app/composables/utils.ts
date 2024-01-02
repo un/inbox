@@ -29,12 +29,9 @@ function generateAvatarUrl(
   //@ts-ignore
   const storageBaseUrl = useRuntimeConfig().public.storageUrl;
 
-  const url = new URL(
-    `${storageBaseUrl}/avatar/${typeObject.value}/${publicId}/${
-      size ? size : '5xl'
-    }?${new Date().getTime()}`
-  );
-  return url;
+  return `${storageBaseUrl}/avatar/${typeObject.value}/${publicId}/${
+    size ? size : '5xl'
+  }?${new Date().getTime()}`;
 }
 
 export const useUtils = () => {
