@@ -82,7 +82,7 @@ To get a local copy up and running, follow these simple steps.
 
 ### Prerequisites
 
-Here is what you need to be able to run Cal.com.
+Here is what you need to be able to run UnInbox locally.
 
 - Node.js (Version: >=20.x)
 - Docker
