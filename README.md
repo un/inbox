@@ -93,10 +93,10 @@ Here is what you need to be able to run Cal.com.
 1. Clone the repo into a public GitHub repository (or fork https://github.com/uninbox/UnInbox/fork). If you plan to distribute the code, keep the source code public to comply with [AGPLv3](https://github.com/uninbox/UnInbox/blob/main/LICENSE). To clone in a private repository, contact us to acquire a commercial license
 
    ```sh
-   git clone https://github.com/calcom/cal.com.git
+   git clone https://github.com/uninbox/UnInbox.git
    ```
 
-   > If you are on Windows, run the following command on `gitbash` with admin privileges: <br> > `git clone -c core.symlinks=true https://github.com/calcom/cal.com.git` <br>
+   > If you are on Windows, run the following command on `gitbash` with admin privileges: <br> > `git clone -c core.symlinks=true https://github.com/uninbox/UnInbox.git` <br>
    > See [docs](https://cal.com/docs/how-to-guides/how-to-troubleshoot-symbolic-link-issues-on-windows#enable-symbolic-links) for more details.
 
 2. Go to the project folder
