@@ -9,12 +9,12 @@
     "postinstall": "nuxt prepare"
   },
   "devDependencies": {
-    "@nuxt/content": "^2.9.0",
-    "@nuxt/devtools": "1.0.5",
+    "@nuxt/content": "^2.10.0",
+    "@nuxt/devtools": "1.0.6",
     "@nuxtjs/color-mode": "^3.3.2",
-    "@types/node": "^20.10.4",
-    "nuxt": "^3.8.2",
-    "nuxt-security": "1.0.0-rc.5"
+    "@types/node": "^20.10.6",
+    "nuxt": "^3.9.0",
+    "nuxt-security": "1.0.0"
   },
   "dependencies": {
     "vue-wrap-balancer": "^1.1.3"

@@ -18,15 +18,15 @@
   },
   "dependencies": {
     "@auth/core": "workspace:*",
-    "@planetscale/database": "^1.11.0",
+    "@planetscale/database": "^1.13.0",
     "@uninbox/types": "workspace:*",
     "@uninbox/utils": "workspace:*",
-    "drizzle-orm": "^0.29.1",
+    "drizzle-orm": "^0.29.3",
     "mysql2": "^3.6.5"
   },
   "devDependencies": {
     "@faker-js/faker": "^8.3.1",
-    "drizzle-kit": "^0.20.6",
+    "drizzle-kit": "^0.20.9",
     "esno": "^4.0.0"
   }
 }

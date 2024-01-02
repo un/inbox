@@ -9,12 +9,12 @@
     "ee:preview": "node .output/server/index.mjs"
   },
   "dependencies": {
-    "@trpc/client": "^10.44.1",
-    "@trpc/server": "^10.44.1",
+    "@trpc/client": "^10.45.0",
+    "@trpc/server": "^10.45.0",
     "@uninbox/database": "workspace:*",
     "@uninbox/utils": "workspace:*",
     "nitropack": "^2.8.1",
-    "stripe": "^14.5.0",
+    "stripe": "^14.10.0",
     "superjson": "^2.2.1",
     "trpc-nuxt": "^0.10.15",
     "zod": "^3.22.4"
