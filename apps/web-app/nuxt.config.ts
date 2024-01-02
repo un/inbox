@@ -16,7 +16,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     // paths: [...pagePaths],
     authJs: {
-      secret: process.env.WEBAPP_AUTH_SECRET // You can generate one with `openssl rand -base64 32`
+      secret: process.env.WEBAPP_AUTH_SECRET
     },
     realtime: {
       url: process.env.WEBAPP_REALTIME_URL || '',
@@ -31,13 +31,7 @@ export default defineNuxtConfig({
       url: process.env.WEBAPP_STORAGE_URL || '',
       key: process.env.WEBAPP_STORAGE_KEY || ''
     },
-    cf: {
-      accountId: process.env.WEBAPP_CF_ACCOUNT_ID || '',
-      zoneId: process.env.WEBAPP_CF_ZONE_ID || '',
-      token: process.env.WEBAPP_CF_IMAGES_TOKEN || ''
-    },
     public: {
-      cfImagesAccountHash: process.env.WEBAPP_CF_IMAGES_ACCOUNT_HASH || '',
       siteUrl: process.env.WEBAPP_URL || '',
       storageUrl: process.env.WEBAPP_STORAGE_URL || '',
       authJs: {
@@ -50,21 +44,6 @@ export default defineNuxtConfig({
     turnstile: {
       secretKey: process.env.WEBAPP_TURNSTILE_SECRET_KEY || ''
     }
-    // auth: {
-    //   // The session cookie name
-    //   name: 'un-session',
-    //   password: process.env.WEBAPP_SESSION_SECRET || '',
-    //   maxAge:
-    //     process.env.NODE_ENV === 'development'
-    //       ? 60 * 60 * 12
-    //       : 60 * 60 * 24 * 30,
-
-    //   cookie: {
-    //     sameSite: 'lax',
-    //     //@ts-ignore
-    //     domain: process.env.PRIMARY_DOMAIN
-    //   }
-    // }
   },
 
   // Styling
@@ -125,12 +104,7 @@ export default defineNuxtConfig({
       crossOriginEmbedderPolicy:
         process.env.NODE_ENV === 'development' ? 'unsafe-none' : 'require-corp',
       contentSecurityPolicy: {
-        'img-src': [
-          "'self'",
-          'data:',
-          'imagedelivery.net',
-          process.env.WEBAPP_STORAGE_URL || ''
-        ]
+        'img-src': ["'self'", 'data:', process.env.WEBAPP_STORAGE_URL || '']
       }
     }
   }

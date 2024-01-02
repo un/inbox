@@ -26,16 +26,12 @@ export default defineNitroConfig({
       process.env.MAILBRIDGE_POSTAL_PERSONAL_SERVER_ORG || 'personal',
     postalWebhookPublicKey:
       process.env.MAILBRIDGE_POSTAL_WEBHOOK_PUBLIC_KEY || 'public',
-    mailDomainPublic: (JSON.parse(
+    mailDomainPublic: JSON.parse(
       process.env.MAIL_DOMAIN_PUBLIC
-    ) as MailDomainEntries[]) || [
-      { name: 'localmode.local.public', postalId: 'localmode' }
-    ],
-    mailDomainPremium: (JSON.parse(
+    ) as MailDomainEntries[],
+    mailDomainPremium: JSON.parse(
       process.env.MAIL_DOMAIN_PREMIUM
-    ) as MailDomainEntries[]) || [
-      { name: 'localmode.local.premium', postalId: 'localmode' }
-    ],
+    ) as MailDomainEntries[],
     postalWebhookUrl:
       process.env.MAILBRIDGE_POSTAL_WEBHOOK_URL || process.env.MAILBRIDGE_URL,
     defaultLimits: {
