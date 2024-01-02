@@ -27,7 +27,7 @@
 
 ## :construction: Current Status
 
-`UnInbox` is currently in under heavy development. The initial public release is expected in December 2023
+`UnInbox` is currently in under heavy development. The initial public release is expected in Jan 2024
 
 ---
 
@@ -74,16 +74,59 @@ Instead, we're detaching from its legacy underpinnings, to build something moder
 - [Tailwind](https://tailwindcss.com/) CSS Engine
 - [tRPC](https://trpc.io/) Typesafe APIs
 - [DrizzleORM](https://orm.drizzle.team/) ORM + MySQL
-- [Hanko.io](https://hanko.io/) User Authentication (PassKeys)
 
 _p.s. Things will change over time!_
 
 ## Running Locally
+To get a local copy up and running, follow these simple steps.
 
-Before the initial release, please join our discord server (link above) for help getting things running locally.
-There are currently several external service dependencies including: Hanko Cloud (Auth), Planetscale (Database), Cloudflare (Captcha + Image hosting), PostalServer (Mail Server).
-Published guides to get started will come in due time - Till then, chat with Omar (@McPizza / @McPizza0)
+### Prerequisites
+
+Here is what you need to be able to run Cal.com.
+
+- Node.js (Version: >=20.x)
+- Docker
+- pnpm (see https://pnpm.io/installation)
+
+### Setup
+
+1. Clone the repo into a public GitHub repository (or fork https://github.com/uninbox/UnInbox/fork). If you plan to distribute the code, keep the source code public to comply with [AGPLv3](https://github.com/uninbox/UnInbox/blob/main/LICENSE). To clone in a private repository, contact us to acquire a commercial license
+
+   ```sh
+   git clone https://github.com/calcom/cal.com.git
+   ```
+
+   > If you are on Windows, run the following command on `gitbash` with admin privileges: <br> > `git clone -c core.symlinks=true https://github.com/calcom/cal.com.git` <br>
+   > See [docs](https://cal.com/docs/how-to-guides/how-to-troubleshoot-symbolic-link-issues-on-windows#enable-symbolic-links) for more details.
+
+2. Go to the project folder
+
+   ```sh
+   cd UnInbox
+   ```
+
+3. Install packages with pnpm
+
+   ```sh
+   pnpm i
+   ```
+
+4. Set up your `.env.local` file
+
+   - Duplicate `.env.local.example` to `.env.local`. This file is already pre-configured for use with the local docker containers
+
+5. Start the docker containers
+
+   ```sh
+   pnpm run docker:up
+   ```
+
+6. In another terminal window, start the app and all services
+
+   ```sh
+   pnpm run dev
+   ```
 
 ## Self Hosting
 
-Self hosting will be possible, but requires some additional manual configuration for email. Please check out Discord community for information on how to self-host UnInbox
+Self hosting will be possible, but requires some additional manual configuration for email. Please check out Discord community for information on how to self-host UnInbox in production

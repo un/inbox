@@ -42,8 +42,8 @@
     },
     "dev": {
       "dependsOn": [
-        "^docker:up",
         "^build:puppet",
+        "^docker:up",
         "db:studio"
       ],
       "cache": false

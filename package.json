@@ -10,6 +10,7 @@
     "build:realtime": "turbo run build",
     "clean": "find . -name node_modules -o -name .nuxt -o -name .nitro -o -name .output -o -name .turbo -o -name dist -type d -prune | xargs rm -rf",
     "dev": "dotenv -e .env.local -- turbo run dev",
+    "docker:up": "turbo run docker:up",
     "db:push": "dotenv -e .env.local -- turbo run db:push",
     "db:studio": "dotenv -e .env.local -- turbo run db:studio",
     "db:generate": "dotenv -e .env.local -- turbo run db:generate",
