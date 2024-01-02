@@ -120,8 +120,14 @@ Here is what you need to be able to run UnInbox locally.
    ```sh
    pnpm run docker:up
    ```
+   
+6. Sync the schema with the database:
 
-6. In another terminal window, start the app and all services
+    ```sh 
+   pnpm run db:push
+    ```
+
+7. In another terminal window, start the app and all services
 
    ```sh
    pnpm run dev
