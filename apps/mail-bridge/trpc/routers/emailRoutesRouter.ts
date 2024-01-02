@@ -34,6 +34,14 @@ export const emailRoutesRouter = router({
       } = input;
       const postalPersonalServerOrg = config.postalPersonalServerOrg;
       const userRootEmailAddress = `${username}@${rootDomainName}`;
+      const localMode = config.localMode;
+      if (localMode) {
+        return {
+          success: true,
+          userId: userId,
+          emailIdentity: userRootEmailAddress
+        };
+      }
 
       const { puppetInstance } = await postalPuppet.initPuppet({
         postalControlPanel: config.postalControlPanel,
@@ -79,10 +87,14 @@ export const emailRoutesRouter = router({
           createdBy: userId
         });
 
+      //! FIX THIS: needs to use orgMemberId instead of userId
       await db.insert(emailIdentitiesAuthorizedUsers).values({
+        // identityId: +insertEmailIdentityResponse.insertId,
+        // userId: userId,
+        // addedBy: userId,
+        addedBy: userId,
         identityId: +insertEmailIdentityResponse.insertId,
-        userId: userId,
-        addedBy: userId
+        orgMemberId: userId
       });
 
       await db

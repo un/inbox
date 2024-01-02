@@ -24,6 +24,19 @@ export const domainRouter = router({
       const { orgId, orgPublicId, domainName } = input;
       const postalOrgId = orgPublicId;
 
+      const localMode = config.localMode;
+      if (localMode) {
+        return {
+          orgId: orgId,
+          postalServerUrl: 'localmode',
+          postalOrgId: postalOrgId,
+          domainId: nanoId(),
+          dkimKey: 'localmode dkimKey',
+          dkimValue: 'localmode dkimValue',
+          forwardingAddress: 'forwardingAddress@localmode.local'
+        };
+      }
+
       const { puppetInstance } = await postalPuppet.initPuppet({
         postalControlPanel: config.postalControlPanel,
         postalUrl: config.postalUrl,

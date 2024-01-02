@@ -22,6 +22,15 @@ export const orgRouter = router({
         ? config.postalPersonalServerOrg
         : orgPublicId;
       const limits = config.defaultLimits;
+      const localMode = config.localMode;
+      if (localMode) {
+        return {
+          success: true,
+          orgId: orgId,
+          serverPublicId: nanoId(),
+          postalOrgId: nanoId()
+        };
+      }
 
       const { puppetInstance } = await postalPuppet.initPuppet({
         postalControlPanel: config.postalControlPanel,

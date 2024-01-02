@@ -24,6 +24,18 @@ export const sendMailRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const { config, db } = ctx;
+      const localMode = config.localMode;
+      if (localMode) {
+        return {
+          orgId: orgId,
+          postalServerUrl: 'localmode',
+          postalOrgId: postalOrgId,
+          domainId: nanoId(),
+          dkimKey: 'localmode dkimKey',
+          dkimValue: 'localmode dkimValue',
+          forwardingAddress: 'forwardingAddress@localmode.local'
+        };
+      }
 
       const plainTextBody = convert(input.htmlBody);
       return {
