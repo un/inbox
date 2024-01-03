@@ -58,5 +58,5 @@ export const db = new Proxy(
       return (dbInstance as any)[prop];
     }
   }
-);
-export type DBType = typeof db;
+) as DBType;
+export type DBType = ReturnType<typeof createDb>;
