@@ -1,4 +1,5 @@
 <script setup lang="ts">
+  import type { AvatarSize } from '@nuxt/ui/dist/runtime/types/avatar';
   import type { VariantProps } from 'class-variance-authority';
   import {
     TooltipArrow,
@@ -11,7 +12,7 @@
   type AuthorEntry = {
     publicId: string;
     name: string;
-    type: string;
+    type: 'user' | 'org' | 'group' | 'contact';
     color: string;
   };
   type Props = {
@@ -75,7 +76,8 @@
       <UnUiAvatar
         :public-id="avatar.publicId"
         :name="avatar.name"
-        :size="props.size"
+        :type="avatar.type"
+        :size="props.size as AvatarSize"
         :color="avatar.color" />
     </div>
 
@@ -100,7 +102,7 @@
                 <UnUiAvatar
                   :public-id="avatar.publicId"
                   :name="avatar.name"
-                  :tooltip-pre-text="avatar.type"
+                  :type="avatar.type"
                   :color="avatar.color"
                   size="sm" />
               </div>
