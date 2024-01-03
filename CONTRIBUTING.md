@@ -1,7 +1,6 @@
 # Contributing Guidelines
 
 _Pull requests, bug reports, and all other forms of contribution are welcomed and highly encouraged!_ :octocat:
-_Based on [Default community health files](https://github.com/jessesquires/.github/tree/main)_
 
 ### Contents
 
