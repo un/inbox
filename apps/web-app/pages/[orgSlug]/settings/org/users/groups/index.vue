@@ -58,6 +58,7 @@
           name: group.name,
           description: group.description,
           color: group.color,
+          // @ts-ignore
           members: group.members.map((member) => member.userProfile)
         });
       }

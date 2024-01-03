@@ -55,6 +55,7 @@
     isPro.value = isProQuery.value?.isPro || false;
     dataPending.value = pending.value;
   } else {
+    dataPending.value = false;
     isPro.value = true;
   }
 </script>
