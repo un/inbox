@@ -24,16 +24,21 @@
 
   watch(userAddresses, (newResults) => {
     const username = userAddresses.value?.username?.toLowerCase();
+    console.log({ identities: newResults?.identities });
     if (newResults?.identities) {
       hasAddresses.value = true;
     }
-    hasAddresses.value = false;
+    if (!newResults?.identities) {
+      hasAddresses.value = false;
+    }
     if (newResults?.available.public) {
+      publicAddressesAvailable.value = [];
       newResults.available.public.forEach((domain) => {
         publicAddressesAvailable.value.push(`${username}@${domain}`);
       });
     }
     if (newResults?.available.premium) {
+      premiumAddressesAvailable.value = [];
       newResults.available.premium.forEach((domain) => {
         premiumAddressesAvailable.value.push(`${username}@${domain}`);
       });
@@ -100,9 +105,7 @@
 <template>
   <div class="h-full w-full flex flex-col items-start gap-8 p-4">
     <div class="w-full flex flex-row items-center justify-between">
-      <span class="text-2xl font-display"
-        >Your Personal Addresses {{ preClaimModalOpen }}</span
-      >
+      <span class="text-2xl font-display"> Your Personal Addresses </span>
     </div>
     <UnUiModal v-model="preClaimModalOpen">
       <template #header>
@@ -147,7 +150,7 @@
             @click="preClaimModalOpen = false" />
           <UnUiButton
             label="Add to this organization"
-            @click="preClaimModalOpen = false" />
+            @click="claim()" />
         </div>
       </template>
     </UnUiModal>
@@ -177,7 +180,7 @@
         You have unclaimed personal addresses, claim them below.
       </div>
       <div
-        v-if="publicAddressesAvailable"
+        v-if="publicAddressesAvailable.length"
         class="w-full flex flex-col items-start justify-center gap-8">
         <div class="flex flex-col gap-2">
           <span class="text-sm text-base-11 font-medium uppercase">
@@ -202,7 +205,7 @@
         </div>
       </div>
       <div
-        v-if="premiumAddressesAvailable"
+        v-if="premiumAddressesAvailable.length"
         class="w-full flex flex-col items-start justify-center gap-8">
         <div class="flex flex-col gap-2">
           <span class="text-sm text-base-11 font-medium uppercase">

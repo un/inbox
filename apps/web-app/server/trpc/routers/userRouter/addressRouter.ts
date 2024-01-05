@@ -12,7 +12,8 @@ import {
   users,
   emailRoutingRules,
   orgPostalConfigs,
-  emailIdentitiesAuthorizedUsers
+  emailIdentitiesAuthorizedUsers,
+  emailRoutingRulesDestinations
 } from '@uninbox/database/schema';
 import { nanoId, nanoIdLength } from '@uninbox/utils';
 import { MailDomainEntries } from '@uninbox/types';
@@ -105,6 +106,7 @@ export const addressRouter = router({
           message: 'User or Organization is not defined'
         });
       }
+      console.log('🔥 hit the claim procedure');
       const userId = +user?.id;
       const orgId = +org.id;
       const orgPublicId = org.publicId;
@@ -270,6 +272,11 @@ export const addressRouter = router({
           description: 'This route helps deliver @uninbox emails to users',
           createdBy: userOrgMembership.id
         });
+
+      await db.insert(emailRoutingRulesDestinations).values({
+        ruleId: +routingRuleInsertResponse.insertId,
+        orgMemberId: userOrgMembership.id
+      });
 
       const newEmailIdentityPublicId = nanoId();
       const insertEmailIdentityResponse = await db

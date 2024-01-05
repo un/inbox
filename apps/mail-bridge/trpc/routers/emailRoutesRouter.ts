@@ -39,8 +39,11 @@ export const emailRoutesRouter = router({
       if (localMode) {
         return {
           success: true,
+          orgId: orgId,
           userId: userId,
-          emailIdentity: userRootEmailAddress
+          emailIdentity: userRootEmailAddress,
+          domainName: rootDomainName,
+          forwardingAddress: 'localForwardingAddress@local.address'
         };
       }
 
