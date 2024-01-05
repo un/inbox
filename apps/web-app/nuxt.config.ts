@@ -1,4 +1,4 @@
-import { resolve } from 'node:path';
+import type { MailDomainEntries } from '@uninbox/types';
 
 export default defineNuxtConfig({
   modules: [
@@ -34,6 +34,8 @@ export default defineNuxtConfig({
     public: {
       siteUrl: process.env.WEBAPP_URL || '',
       storageUrl: process.env.WEBAPP_STORAGE_URL || '',
+      mailDomainPublic: [] as MailDomainEntries[],
+      mailDomainPremium: [] as MailDomainEntries[],
       authJs: {
         baseUrl: process.env.WEBAPP_URL,
         verifyClientOnEveryRequest: true,

@@ -12,7 +12,9 @@ import {
   orgs,
   orgMembers,
   userProfiles,
-  users
+  users,
+  postalServers,
+  orgPostalConfigs
 } from '@uninbox/database/schema';
 import { nanoId, nanoIdLength } from '@uninbox/utils';
 import { mailBridgeTrpcClient } from '~/server/utils/tRPCServerClients';
@@ -148,10 +150,35 @@ export const crudRouter = router({
         userProfileId: +userProfileId
       });
 
-      mailBridgeTrpcClient.postal.org.createOrg.mutate({
+      const createMailBridgeOrgResponse =
+        await mailBridgeTrpcClient.postal.org.createOrg.mutate({
+          orgId: orgId,
+          orgPublicId: newPublicId
+        });
+
+      await db.insert(postalServers).values({
         orgId: orgId,
-        orgPublicId: newPublicId
+        publicId: createMailBridgeOrgResponse.postalServer.serverPublicId,
+        type: 'email',
+        apiKey: createMailBridgeOrgResponse.postalServer.apiKey,
+        smtpKey: createMailBridgeOrgResponse.postalServer.smtpKey,
+        sendLimit: createMailBridgeOrgResponse.postalServer.sendLimit,
+        rootMailServer: createMailBridgeOrgResponse.postalServer.rootMailServer
       });
+
+      const orgPostalConfigResponse = await db.query.orgPostalConfigs.findFirst(
+        {
+          where: eq(orgPostalConfigs.orgId, orgId)
+        }
+      );
+      if (!orgPostalConfigResponse) {
+        await db.insert(orgPostalConfigs).values({
+          orgId: orgId,
+          host: createMailBridgeOrgResponse.config.host,
+          ipPools: createMailBridgeOrgResponse.config.ipPools,
+          defaultIpPool: createMailBridgeOrgResponse.config.defaultIpPool
+        });
+      }
 
       return {
         success: true,
@@ -161,108 +188,108 @@ export const crudRouter = router({
       };
     }),
 
-  createPersonalOrg: userProcedure
-    .input(z.object({}).strict())
-    .mutation(async ({ ctx, input }) => {
-      const { db, user } = ctx;
-      const userId = user?.id || 0;
+  // TODO: DEPRECATED
+  // createPersonalOrg: userProcedure
+  //   .input(z.object({}).strict())
+  //   .mutation(async ({ ctx, input }) => {
+  //     const { db, user } = ctx;
+  //     const userId = user?.id || 0;
 
-      const primaryRootDomain =
-        //@ts-expect-error cant correctly infer the type of useRuntimeConfig mail
-        useRuntimeConfig().public.mailDomainPublic[0].name as string;
+  //     const primaryRootDomain =
+  //       //@ts-expect-error cant correctly infer the type of useRuntimeConfig mail
+  //       useRuntimeConfig().public.mailDomainPublic[0].name as string;
 
-      const existingPersonalOrg = await db
-        .select({ id: orgs.id })
-        .from(orgs)
-        .where(and(eq(orgs.ownerId, +userId), eq(orgs.personalOrg, true)));
-      if (existingPersonalOrg.length > 0) {
-        return {
-          success: false,
-          orgId: null,
-          orgName: null,
-          error: 'You already have a personal org'
-        };
-      }
+  //     const existingPersonalOrg = await db
+  //       .select({ id: orgs.id })
+  //       .from(orgs)
+  //       .where(and(eq(orgs.ownerId, +userId), eq(orgs.personalOrg, true)));
+  //     if (existingPersonalOrg.length > 0) {
+  //       return {
+  //         success: false,
+  //         orgId: null,
+  //         orgName: null,
+  //         error: 'You already have a personal org'
+  //       };
+  //     }
 
-      const userObject = await db
-        .select({ id: users.id, username: users.username })
-        .from(users)
-        .where(eq(users.id, +userId));
-      const newPublicId = nanoId();
+  //     const userObject = await db
+  //       .select({ id: users.id, username: users.username })
+  //       .from(users)
+  //       .where(eq(users.id, +userId));
+  //     const newPublicId = nanoId();
 
-      const insertOrgResponse = await db.insert(orgs).values({
-        ownerId: +userId,
-        name: `${userObject[0].username}'s Personal Org`,
-        slug: userObject[0].username,
-        publicId: newPublicId,
-        personalOrg: true
-      });
-      const newOrgId = +insertOrgResponse.insertId;
+  //     const insertOrgResponse = await db.insert(orgs).values({
+  //       ownerId: +userId,
+  //       name: `${userObject[0].username}'s Personal Org`,
+  //       slug: userObject[0].username,
+  //       publicId: newPublicId,
+  //       personalOrg: true
+  //     });
+  //     const newOrgId = +insertOrgResponse.insertId;
 
-      const userProfile = await db
-        .select({
-          id: userProfiles.id,
-          fname: userProfiles.firstName,
-          lname: userProfiles.lastName
-        })
-        .from(userProfiles)
-        .where(eq(userProfiles.userId, userId));
+  //     const userProfile = await db
+  //       .select({
+  //         id: userProfiles.id,
+  //         fname: userProfiles.firstName,
+  //         lname: userProfiles.lastName
+  //       })
+  //       .from(userProfiles)
+  //       .where(eq(userProfiles.userId, userId));
 
-      const newPublicId2 = nanoId();
-      await db.insert(orgMembers).values({
-        orgId: newOrgId,
-        role: 'admin',
-        userId: userId,
-        publicId: newPublicId2,
-        status: 'active',
-        userProfileId: userProfile[0].id
-      });
+  //     const newPublicId2 = nanoId();
+  //     await db.insert(orgMembers).values({
+  //       orgId: newOrgId,
+  //       role: 'admin',
+  //       userId: userId,
+  //       publicId: newPublicId2,
+  //       status: 'active',
+  //       userProfileId: userProfile[0].id
+  //     });
 
-      const insertMailBridgeOrgResponse =
-        mailBridgeTrpcClient.postal.org.createOrg.mutate({
-          orgId: +newOrgId,
-          orgPublicId: newPublicId,
-          personalOrg: true
-        });
+  //     const insertMailBridgeOrgResponse =
+  //       mailBridgeTrpcClient.postal.org.createOrg.mutate({
+  //         orgId: +newOrgId,
+  //         orgPublicId: newPublicId,
+  //         personalOrg: true
+  //       });
 
-      // creates the new root email address
-      await mailBridgeTrpcClient.postal.emailRoutes.createRootEmailAddress.mutate(
-        {
-          orgId: +newOrgId,
-          rootDomainName: primaryRootDomain,
-          sendName: `${userProfile[0].fname} ${userProfile[0].lname}`,
-          serverPublicId: (await insertMailBridgeOrgResponse).serverPublicId,
-          userId: +userId,
-          username: userObject[0].username.toLocaleLowerCase()
-        }
-      );
+  //     // creates the new root email address
+  //     await mailBridgeTrpcClient.postal.emailRoutes.createRootEmailAddress.mutate(
+  //       {
+  //         orgId: +newOrgId,
+  //         rootDomainName: primaryRootDomain,
+  //         sendName: `${userProfile[0].fname} ${userProfile[0].lname}`,
+  //         serverPublicId: (await insertMailBridgeOrgResponse).serverPublicId,
+  //         userId: +userId,
+  //         username: userObject[0].username.toLocaleLowerCase()
+  //       }
+  //     );
 
-      return {
-        success: true,
-        email: `${userObject[0].username}@${primaryRootDomain}`,
-        orgId: newPublicId,
-        error: null
-      };
-    }),
+  //     return {
+  //       success: true,
+  //       email: `${userObject[0].username}@${primaryRootDomain}`,
+  //       orgId: newPublicId,
+  //       error: null
+  //     };
+  //   }),
 
   getUserOrgs: userProcedure
     .input(
       z.object({
-        onlyAdmin: z.boolean().optional(),
-        includePersonal: z.boolean().optional()
+        onlyAdmin: z.boolean().optional()
       })
     )
     .query(async ({ ctx, input }) => {
       const { db, user } = ctx;
       const userId = user?.id || 0;
 
-      const userIsAdmin = input.onlyAdmin || false;
+      const whereUserIsAdmin = input.onlyAdmin || false;
 
       const orgMembersQuery = await db.query.orgMembers.findMany({
         columns: {
           role: true
         },
-        where: userIsAdmin
+        where: whereUserIsAdmin
           ? and(eq(orgMembers.userId, userId), eq(orgMembers.role, 'admin'))
           : eq(orgMembers.userId, userId),
         with: {
@@ -270,29 +297,18 @@ export const crudRouter = router({
             columns: {
               publicId: true,
               name: true,
-              slug: true,
-              personalOrg: true
+              slug: true
             }
           }
         }
       });
-
-      // filter out orgs that have personalOrg = true
-      const usersOrgs = orgMembersQuery.filter(
-        (orgMember) => orgMember.org.personalOrg !== true
-      );
-
-      const personalOrg = orgMembersQuery.filter(
-        (orgMember) => orgMember.org.personalOrg === true
-      );
 
       const adminOrgSlugs = orgMembersQuery
         .filter((orgMember) => orgMember.role === 'admin')
         .map((orgMember) => orgMember.org.slug);
 
       return {
-        personalOrgs: input.includePersonal ? personalOrg : null,
-        userOrgs: usersOrgs,
+        userOrgs: orgMembersQuery,
         adminOrgSlugs: adminOrgSlugs
       };
     })

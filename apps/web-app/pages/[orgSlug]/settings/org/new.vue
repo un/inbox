@@ -128,12 +128,14 @@
             })
         " />
 
-      <UnUiButton
-        :label="newButtonLabel"
-        icon="i-ph-house"
-        :loading="newButtonLoading"
-        :disabled="!formValid"
-        @click="createNewOrg()" />
+      <div>
+        <UnUiButton
+          :label="newButtonLabel"
+          icon="i-ph-house"
+          :loading="newButtonLoading"
+          :disabled="!formValid"
+          @click="createNewOrg()" />
+      </div>
     </div>
   </div>
 </template>

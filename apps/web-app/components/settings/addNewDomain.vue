@@ -20,7 +20,8 @@
 
   const emit = defineEmits(['close']);
 
-  const orgPublicId = useRoute().params.orgId as string;
+  const route = useRoute();
+  const orgSlug = route.params.orgSlug as string;
 
   async function createNewDomain() {
     const toast = useToast();
@@ -66,12 +67,7 @@
   const isPro = ref(false);
   if (useEE().config.modules.billing) {
     const { data: isProQuery } =
-      await $trpc.org.setup.billing.isPro.useLazyQuery(
-        {
-          orgPublicId: orgPublicId
-        },
-        { server: false }
-      );
+      await $trpc.org.setup.billing.isPro.useLazyQuery({}, { server: false });
 
     isPro.value = isProQuery.value?.isPro || false;
   } else {

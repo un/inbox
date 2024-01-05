@@ -18,17 +18,30 @@ export const orgRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { config, db } = ctx;
       const { orgId, orgPublicId, personalOrg } = input;
+
       const postalOrgId = personalOrg
         ? config.postalPersonalServerOrg
         : orgPublicId;
       const limits = config.defaultLimits;
+
       const localMode = config.localMode;
       if (localMode) {
         return {
           success: true,
           orgId: orgId,
-          serverPublicId: nanoId(),
-          postalOrgId: nanoId()
+          postalOrgId: nanoId(),
+          postalServer: {
+            serverPublicId: nanoId(),
+            apiKey: 'localAPIKey',
+            smtpKey: 'localSMTPKey',
+            sendLimit: limits.sendLimit,
+            rootMailServer: personalOrg
+          },
+          config: {
+            host: config.postalUrl,
+            ipPools: config.postalDefaultIpPool,
+            defaultIpPool: config.postalDefaultIpPool
+          }
         };
       }
 
@@ -92,14 +105,13 @@ export const orgRouter = router({
         serverId: newServerPublicId
       });
 
-      const setMailServerSmtpKeyResult = personalOrg
-        ? { smtpKey: '' }
-        : await postalPuppet.setMailServerSmtpKey({
-            puppetInstance: puppetInstance,
-            orgId: orgId,
-            orgPublicId: postalOrgId,
-            serverId: newServerPublicId
-          });
+      const setMailServerSmtpKeyResult =
+        await postalPuppet.setMailServerSmtpKey({
+          puppetInstance: puppetInstance,
+          orgId: orgId,
+          orgPublicId: postalOrgId,
+          serverId: newServerPublicId
+        });
 
       const mailBridgeWebhookUrl = personalOrg
         ? `${config.postalWebhookUrl}/postal/mail/inbound/root-${newServerPublicId}`
@@ -114,28 +126,22 @@ export const orgRouter = router({
 
       await postalPuppet.closePuppet(puppetInstance);
 
-      await db.insert(postalServers).values({
-        orgId: orgId,
-        publicId: newServerPublicId,
-        type: 'email',
-        apiKey: setMailServerApiKeyResult.apiKey,
-        smtpKey: setMailServerSmtpKeyResult.smtpKey,
-        sendLimit: limits.sendLimit,
-        rootMailServer: personalOrg
-      });
-
-      await db.insert(orgPostalConfigs).values({
-        orgId: orgId,
-        host: config.postalUrl,
-        ipPools: config.postalDefaultIpPool,
-        defaultIpPool: config.postalDefaultIpPool
-      });
-
       return {
         success: true,
         orgId: orgId,
-        serverPublicId: newServerPublicId,
-        postalOrgId: postalOrgId
+        postalOrgId: postalOrgId,
+        postalServer: {
+          serverPublicId: newServerPublicId,
+          apiKey: setMailServerApiKeyResult.apiKey,
+          smtpKey: setMailServerSmtpKeyResult.smtpKey,
+          sendLimit: limits.sendLimit,
+          rootMailServer: personalOrg
+        },
+        config: {
+          host: config.postalUrl,
+          ipPools: config.postalDefaultIpPool,
+          defaultIpPool: config.postalDefaultIpPool
+        }
       };
     })
 });

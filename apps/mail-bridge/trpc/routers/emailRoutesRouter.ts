@@ -4,7 +4,8 @@ import {
   emailIdentities,
   emailRoutingRules,
   emailIdentitiesAuthorizedUsers,
-  postalServers
+  postalServers,
+  personalEmailIdentities
 } from '@uninbox/database/schema';
 import { nanoId, nanoIdLength } from '@uninbox/utils';
 import { postalPuppet } from '@uninbox/postal-puppet';
@@ -62,52 +63,13 @@ export const emailRoutesRouter = router({
 
       await postalPuppet.closePuppet(puppetInstance);
 
-      const newroutingRulePublicId = nanoId();
-      const routingRuleInsertResponse = await db
-        .insert(emailRoutingRules)
-        .values({
-          publicId: newroutingRulePublicId,
-          orgId: orgId,
-          name: `Delivery of emails to ${userRootEmailAddress}`,
-          description: 'This route helps deliver your @uninbox emails to you',
-          createdBy: userId
-        });
-
-      const newEmailIdentityPublicId = nanoId();
-      const insertEmailIdentityResponse = await db
-        .insert(emailIdentities)
-        .values({
-          publicId: newEmailIdentityPublicId,
-          orgId: orgId,
-          username: username,
-          domainName: rootDomainName,
-          routingRuleId: +routingRuleInsertResponse.insertId,
-          sendName: sendName,
-          isCatchAll: false,
-          createdBy: userId
-        });
-
-      //! FIX THIS: needs to use orgMemberId instead of userId
-      await db.insert(emailIdentitiesAuthorizedUsers).values({
-        // identityId: +insertEmailIdentityResponse.insertId,
-        // userId: userId,
-        // addedBy: userId,
-        addedBy: userId,
-        identityId: +insertEmailIdentityResponse.insertId,
-        orgMemberId: userId
-      });
-
-      await db
-        .update(postalServers)
-        .set({
-          rootForwardingAddress: setMailServerRouteResult.forwardingAddress
-        })
-        .where(eq(postalServers.publicId, serverPublicId));
-
       return {
         success: true,
+        orgId: orgId,
         userId: userId,
-        emailIdentity: userRootEmailAddress
+        emailIdentity: userRootEmailAddress,
+        domainName: setMailServerRouteResult.domainName,
+        forwardingAddress: setMailServerRouteResult.forwardingAddress
       };
     })
 });

@@ -20,3 +20,7 @@ export type AuthH3SessionData = {
   isUserLoggedIn: boolean;
   userId?: number | null;
 };
+export interface MailDomainEntries {
+  name: string;
+  postalId: string;
+}

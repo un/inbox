@@ -90,10 +90,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
     fields: [users.id],
     references: [userProfiles.userId]
   }),
-  personalOrg: one(orgs, {
-    fields: [users.id],
-    references: [orgs.ownerId]
-  })
+  personalEmailIdentities: many(personalEmailIdentities)
 }));
 
 // Auth tables
@@ -265,7 +262,6 @@ export const orgs = mysqlTable(
     slug: varchar('slug', { length: 64 }).notNull(),
     ownerId: foreignKey('owner_id').notNull(),
     name: varchar('name', { length: 64 }).notNull(),
-    personalOrg: boolean('personal_org').notNull().default(false),
     metadata: json('metadata').$type<Record<string, unknown>>(),
     createdAt: timestamp('created_at')
       .default(sql`CURRENT_TIMESTAMP`)
@@ -1123,6 +1119,52 @@ export const emailIdentitiesAuthorizedUsersRelations = relations(
     userGroup: one(userGroups, {
       fields: [emailIdentitiesAuthorizedUsers.userGroupId],
       references: [userGroups.id]
+    })
+  })
+);
+
+export const personalEmailIdentities = mysqlTable(
+  'personal_email_identities',
+  {
+    id: serial('id').primaryKey(),
+    publicId: nanoId('public_id').notNull(),
+    userId: foreignKey('user_id').notNull(),
+    orgId: foreignKey('org_id').notNull(),
+    emailIdentityId: foreignKey('email_identity_id').notNull(),
+    postalServerId: foreignKey('postal_server_id').notNull(),
+    forwardingAddress: varchar('forwarding_address', { length: 128 }),
+    createdAt: timestamp('created_at')
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull()
+  },
+  (table) => ({
+    publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
+    userIdIndex: index('user_id_idx').on(table.userId),
+    orgIdIndex: index('org_id_idx').on(table.orgId),
+    emailIdentityIdIndex: index('email_identity_id_idx').on(
+      table.emailIdentityId
+    )
+  })
+);
+
+export const personalEmailIdentitiesRelations = relations(
+  personalEmailIdentities,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [personalEmailIdentities.userId],
+      references: [users.id]
+    }),
+    org: one(orgs, {
+      fields: [personalEmailIdentities.orgId],
+      references: [orgs.id]
+    }),
+    emailIdentity: one(emailIdentities, {
+      fields: [personalEmailIdentities.emailIdentityId],
+      references: [emailIdentities.id]
+    }),
+    postalServer: one(postalServers, {
+      fields: [personalEmailIdentities.postalServerId],
+      references: [postalServers.id]
     })
   })
 );

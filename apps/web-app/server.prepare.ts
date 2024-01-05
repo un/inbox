@@ -1,3 +1,4 @@
+import type { MailDomainEntries } from '@uninbox/types';
 import { defineNuxtPrepareHandler } from 'nuxt-prepare/config';
 
 export default defineNuxtPrepareHandler(async () => {
@@ -60,8 +61,3 @@ export default defineNuxtPrepareHandler(async () => {
     }
   };
 });
-
-export interface MailDomainEntries {
-  name: string;
-  postalId: string;
-}
