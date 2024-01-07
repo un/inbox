@@ -114,12 +114,6 @@
       handle: userOrgProfile.value.profile.handle || ''
     });
 
-    if (!response.success) {
-      pageError.value = true;
-      buttonLoading.value = false;
-      buttonLabel.value = 'Save profile';
-      return;
-    }
     buttonLoading.value = false;
     buttonLabel.value = 'All done!';
     const toast = useToast();
@@ -257,6 +251,7 @@
             :label="buttonLabel"
             icon="i-ph-user"
             :loading="buttonLoading"
+            :disabled="pending"
             block
             @click="saveProfile()" />
         </div>

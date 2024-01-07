@@ -193,7 +193,7 @@ export const profileRouter = router({
       const { db, user } = ctx;
       const userId = user?.id || 0;
 
-      const insertUserProfileResponse = await db
+      await db
         .update(userProfiles)
         .set({
           firstName: input.fName,
@@ -208,14 +208,6 @@ export const profileRouter = router({
             eq(userProfiles.userId, userId)
           )
         );
-
-      if (!insertUserProfileResponse.rowsAffected) {
-        return {
-          success: false,
-          error:
-            'Something went wrong, please retry. Contact our team if it persists'
-        };
-      }
 
       return {
         success: true
