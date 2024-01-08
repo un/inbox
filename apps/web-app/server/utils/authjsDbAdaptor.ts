@@ -13,7 +13,7 @@ import type {
 } from '@auth/core/adapters';
 
 //! Enable debug logging
-const debug = true;
+const debug = false;
 const log = (...args: any[]) => {
   if (debug) {
     console.log(...args);
