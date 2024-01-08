@@ -53,6 +53,7 @@
     if (newResults?.groups) {
       tableRows.value = [];
       for (const group of newResults.groups) {
+        console.log({ members: group.members });
         tableRows.value.push({
           publicId: group.publicId,
           name: group.name,
@@ -65,7 +66,7 @@
     }
   });
   function select(row: (typeof tableRows.value)[number]) {
-    navigateTo(`${orgSlug}/settings/org/users/groups/${row.publicId}`);
+    navigateTo(`/${orgSlug}/settings/org/users/groups/${row.publicId}`);
   }
 
   const addNewModalOpen = ref(false);

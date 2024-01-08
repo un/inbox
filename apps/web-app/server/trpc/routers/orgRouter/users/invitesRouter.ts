@@ -97,7 +97,6 @@ export const invitesRouter = router({
 
       // Insert groupMemberships - save ID
       if (groups) {
-        const groupMembershipsPublicId = nanoId();
         const groupIds = await db.query.userGroups.findMany({
           where: inArray(userGroups.publicId, groups.groupsPublicIds),
           columns: {
@@ -110,6 +109,7 @@ export const invitesRouter = router({
           publicId: nanoId(),
           orgMemberId: +orgMemberResponse.insertId,
           groupId: +group.id,
+          userProfileId: +userProfileId,
           addedBy: +orgMemberId,
           role: 'member' as 'admin' | 'member'
         }));
@@ -170,7 +170,7 @@ export const invitesRouter = router({
         invitedByOrgMemberId: +orgMemberId,
         orgMemberId: +orgMemberResponse.insertId,
         role: userInput.role,
-        email: notification?.notificationEmailAddress || '',
+        email: notification?.notificationEmailAddress || null,
         inviteToken: newInviteToken,
         invitedUserProfileId: +userProfileId,
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 Days from now

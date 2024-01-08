@@ -65,6 +65,9 @@
       (createEmailIdentity.value === true
         ? newInviteEmailUsernameValid.value === true &&
           newInviteEmailSendNameValid.value === true
+        : true) &&
+      (addUserToGroups.value === true
+        ? selectedOrgGroups.value.length > 0
         : true)
     );
   });
@@ -197,8 +200,12 @@
 
     const user = {
       firstName: newInviteUserFnameValue.value,
-      lastName: newInviteUserLnameValue.value,
-      title: newInviteUserTitleValue.value,
+      ...(newInviteUserLnameValue.value && {
+        lastName: newInviteUserLnameValue.value
+      }),
+      ...(newInviteUserTitleValue.value && {
+        title: newInviteUserTitleValue.value
+      }),
       role: (selectedMemberRole.value?.value as 'admin' | 'member') || 'member'
     };
 
