@@ -11,6 +11,7 @@ import {
   emailIdentities,
   emailRoutingRules,
   emailRoutingRulesDestinations,
+  emailIdentitiesAuthorizedUsers,
   orgInvitations,
   orgMembers,
   orgs,
@@ -74,8 +75,9 @@ export const invitesRouter = router({
       const userProfileResponse = await db.insert(userProfiles).values({
         publicId: userProfilePublicId,
         firstName: userInput.firstName,
-        lastName: userInput.lastName,
-        title: userInput.title,
+        lastName: userInput.lastName || '',
+        title: userInput.title || '',
+        handle: '',
         defaultProfile: true
       });
       const userProfileId = userProfileResponse.insertId;
@@ -148,7 +150,7 @@ export const invitesRouter = router({
         });
 
         const emailIdentityPublicId = nanoId();
-        await db.insert(emailIdentities).values({
+        const emailIdentityResponse = await db.insert(emailIdentities).values({
           publicId: emailIdentityPublicId,
           orgId: +orgId,
           createdBy: +orgMemberId,
@@ -159,7 +161,15 @@ export const invitesRouter = router({
           isCatchAll: false,
           sendName: email.sendName
         });
+
+        await db.insert(emailIdentitiesAuthorizedUsers).values({
+          identityId: +emailIdentityResponse.insertId,
+          default: true,
+          addedBy: +orgMemberId,
+          orgMemberId: +orgMemberResponse.insertId
+        });
       }
+
       // Insert orgInvitations - save ID
 
       const newInvitePublicId = nanoId();
