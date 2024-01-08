@@ -106,7 +106,6 @@ export const addressRouter = router({
           message: 'User or Organization is not defined'
         });
       }
-      console.log('🔥 hit the claim procedure');
       const userId = +user?.id;
       const orgId = +org.id;
       const orgPublicId = org.publicId;
@@ -319,6 +318,82 @@ export const addressRouter = router({
       return {
         success: true,
         emailIdentity: rootUserEmailAddress
+      };
+    }),
+  editSendName: orgProcedure
+    .input(
+      z
+        .object({
+          emailIdentityPublicId: z.string().min(3),
+          newSendName: z.string().min(1)
+        })
+        .strict()
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { db, user, org } = ctx;
+      if (!user || !org) {
+        throw new TRPCError({
+          code: 'UNPROCESSABLE_CONTENT',
+          message: 'User or Organization is not defined'
+        });
+      }
+      const userId = +user?.id;
+      const orgId = +org.id;
+      const orgPublicId = org.publicId;
+      const userOrgMembership = org.members.find(
+        (member) => member.userId === userId
+      );
+      if (!userOrgMembership) {
+        throw new TRPCError({
+          code: 'UNPROCESSABLE_CONTENT',
+          message: 'User Organization Member ID is not defined'
+        });
+      }
+
+      console.log({ emailIdentityPublicId: input.emailIdentityPublicId });
+      // get the email identity and list of authorized users
+      const emailIdentityResponse = await db.query.emailIdentities.findFirst({
+        where: eq(emailIdentities.publicId, input.emailIdentityPublicId),
+        columns: {
+          id: true
+        },
+        with: {
+          authorizedUsers: {
+            columns: {
+              orgMemberId: true
+            },
+            with: {
+              orgMember: {
+                columns: {
+                  id: true
+                }
+              }
+            }
+          }
+        }
+      });
+
+      if (!emailIdentityResponse) {
+        throw new TRPCError({
+          code: 'UNPROCESSABLE_CONTENT',
+          message: 'Email Identity not found'
+        });
+      }
+      const authorizedUsersOrgMembersUserIds =
+        emailIdentityResponse.authorizedUsers.map((user) => user.orgMember?.id);
+      console.log({ authorizedUsersOrgMembersUserIds });
+      if (!authorizedUsersOrgMembersUserIds.includes(userId)) {
+        throw new TRPCError({
+          code: 'UNPROCESSABLE_CONTENT',
+          message: 'User ID is not authorized'
+        });
+      }
+      await db
+        .update(emailIdentities)
+        .set({ sendName: input.newSendName })
+        .where(eq(emailIdentities.id, emailIdentityResponse.id));
+      return {
+        success: true
       };
     })
 });

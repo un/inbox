@@ -613,8 +613,7 @@ export const postalServers = mysqlTable(
     //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit: when rootMailServer is false, smtpKey must not be null
     //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit: when rootMailServer is false, rootForwardingAddress must be null
     publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
-    orgIdIndex: index('org_id_idx').on(table.orgId),
-    postalSlug: uniqueIndex('postal_slug').on(table.orgId, table.type)
+    orgIdIndex: index('org_id_idx').on(table.orgId)
   })
 );
 export const postalServersRelations = relations(postalServers, ({ one }) => ({

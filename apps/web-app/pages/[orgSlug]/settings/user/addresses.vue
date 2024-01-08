@@ -12,6 +12,27 @@
   const publicAddressesAvailable = ref<string[]>([]);
   const premiumAddressesAvailable = ref<string[]>([]);
 
+  const tableColumns = [
+    {
+      key: 'address',
+      label: 'Address'
+    },
+    {
+      key: 'sendName',
+      label: 'Send Name'
+    },
+    {
+      key: 'forwarding',
+      label: 'Forwarding Address'
+    },
+    {
+      key: 'org',
+      label: 'Assigned to'
+    }
+  ];
+
+  const tableRows = ref<{}[]>([]);
+
   const {
     data: userAddresses,
     pending,
@@ -25,10 +46,25 @@
   watch(userAddresses, (newResults) => {
     const username = userAddresses.value?.username?.toLowerCase();
     console.log({ identities: newResults?.identities });
-    if (newResults?.identities) {
+    if (newResults?.identities.length) {
       hasAddresses.value = true;
+      tableRows.value = [];
+      newResults.identities.forEach((identity) => {
+        const truncatedForwarding =
+          identity.postalServer?.rootForwardingAddress?.slice(0, 10) || '';
+        tableRows.value.push({
+          address: `${username}@${identity.emailIdentity.domainName}`,
+          sendName: identity.emailIdentity.sendName,
+          forwarding: {
+            truncated: truncatedForwarding,
+            address: identity.postalServer.rootForwardingAddress
+          },
+          org: identity.org,
+          publicId: identity.emailIdentity.publicId
+        });
+      });
     }
-    if (!newResults?.identities) {
+    if (!newResults?.identities.length) {
       hasAddresses.value = false;
     }
     if (newResults?.available.public) {
@@ -44,6 +80,57 @@
       });
     }
   });
+
+  const editSendNameModalOpen = ref(false);
+  const emailIdentityPublicIdToEdit = ref('');
+  const editedSendName = ref('');
+  const editedSendNameValid = ref(false);
+  async function preEdit(publicId: string, sendName: string) {
+    emailIdentityPublicIdToEdit.value = publicId;
+    console.log({ sendName });
+    editedSendName.value = sendName;
+    editSendNameModalOpen.value = true;
+    // open a modal
+  }
+
+  async function editSendName() {
+    const toast = useToast();
+    toast.add({
+      id: 'editing_send_name',
+      title: 'Editing your send name',
+      icon: 'i-ph-clock-countdown',
+      timeout: 5000
+    });
+    const emailIdentityPublicId = emailIdentityPublicIdToEdit.value;
+    const sendName = editedSendName.value;
+    const editResponse = await $trpc.user.addresses.editSendName.mutate({
+      emailIdentityPublicId: emailIdentityPublicId,
+      newSendName: sendName
+    });
+    if (!editResponse.success) {
+      toast.remove('editing_send_name');
+      toast.add({
+        id: 'send_name_edit_fail',
+        title: 'Something went wrong',
+        description: `${emailIdentityPublicId} cant be edited. Refresh the page and try again.`,
+        icon: 'i-ph-warning-octagon',
+        timeout: 5000
+      });
+      return;
+    }
+    toast.remove('editing_send_name');
+    refreshUserAddresses();
+    toast.add({
+      id: 'send_name_edited',
+      title: 'Success',
+      description: `Send name has been edited successfully`,
+      icon: 'i-ph-thumbs-up',
+      timeout: 5000
+    });
+    setTimeout(() => {
+      editSendNameModalOpen.value = false;
+    }, 1000);
+  }
 
   const preClaimModalOpen = ref(false);
   const emailIdentityToClaim = ref('');
@@ -67,7 +154,15 @@
       publicAddressesAvailable.value.includes(emailIdentity);
     const isInPremiumAvailableArray =
       premiumAddressesAvailable.value.includes(emailIdentity);
-    if (!isInPublicAvailableArray && isInPremiumAvailableArray) {
+    if (!isInPublicAvailableArray && !isInPremiumAvailableArray) {
+      toast.remove('claiming_email');
+      toast.add({
+        id: 'email_claim_fail',
+        title: 'Something went wrong',
+        description: `${emailIdentity} cant be claimed. Refresh the page and try again.`,
+        icon: 'i-ph-warning-octagon',
+        timeout: 5000
+      });
       return;
     }
     if (isInPremiumAvailableArray && !isPro.value) {
@@ -154,6 +249,36 @@
         </div>
       </template>
     </UnUiModal>
+    <UnUiModal v-model="editSendNameModalOpen">
+      <template #header>
+        <div class="flex flex-row items-center gap-2">
+          <span class="leading-none">
+            <UnUiIcon name="i-ph-pencil" />
+          </span>
+          <span class="leading-none"> Edit send name </span>
+        </div>
+      </template>
+      <div class="flex flex-col gap-4">
+        <UnUiInput
+          v-model:value="editedSendName"
+          v-model:valid="editedSendNameValid"
+          label="Send name"
+          :schema="z.string().min(3).max(64)"
+          class="w-full" />
+      </div>
+      <template #footer>
+        <div class="flex flex-row justify-end gap-2">
+          <UnUiButton
+            label="Cancel"
+            variant="outline"
+            @click="editSendNameModalOpen = false" />
+          <UnUiButton
+            label="Save"
+            :disabled="!editedSendNameValid"
+            @click="editSendName()" />
+        </div>
+      </template>
+    </UnUiModal>
     <div
       v-if="pending"
       class="w-full flex flex-row justify-center gap-4 rounded-xl rounded-tl-2xl bg-base-3 p-8">
@@ -174,7 +299,7 @@
       <div
         v-if="
           hasAddresses &&
-          (publicAddressesAvailable || premiumAddressesAvailable)
+          (publicAddressesAvailable.length || premiumAddressesAvailable.length)
         "
         class="w-full flex flex-col items-start justify-center gap-8">
         You have unclaimed personal addresses, claim them below.
@@ -184,15 +309,15 @@
         class="w-full flex flex-col items-start justify-center gap-8">
         <div class="flex flex-col gap-2">
           <span class="text-sm text-base-11 font-medium uppercase">
-            Free email address
+            Available Free email address
           </span>
           <template
             v-for="address of publicAddressesAvailable"
             :key="address">
             <div class="flex flex-row items-center gap-2">
               <div
-                class="min-w-[50px] w-fit flex flex-col items-center rounded-lg bg-base-3 px-4 py-2">
-                <span class="w-fit break-anywhere text-left font-mono">
+                class="min-w-[50px] w-fit flex flex-col items-center rounded-lg bg-base-3 px-3 py-2">
+                <span class="w-fit break-anywhere text-left text-sm font-mono">
                   {{ address }}
                 </span>
               </div>
@@ -209,7 +334,7 @@
         class="w-full flex flex-col items-start justify-center gap-8">
         <div class="flex flex-col gap-2">
           <span class="text-sm text-base-11 font-medium uppercase">
-            Premium email address
+            Available Premium email address
           </span>
           <template
             v-for="address of premiumAddressesAvailable"
@@ -217,8 +342,9 @@
             <div class="flex flex-col gap-2">
               <div class="flex flex-row items-center gap-2">
                 <div
-                  class="min-w-[50px] w-fit flex flex-col items-center rounded-lg bg-base-3 px-4 py-2">
-                  <span class="w-fit break-anywhere text-left font-mono">
+                  class="min-w-[50px] w-fit flex flex-col items-center rounded-lg bg-base-3 px-3 py-2">
+                  <span
+                    class="w-fit break-anywhere text-left text-sm font-mono">
                     {{ address }}
                   </span>
                 </div>
@@ -241,63 +367,168 @@
       <div
         v-if="hasAddresses"
         class="w-full flex flex-col items-start justify-center gap-8">
-        <div class="flex flex-col gap-4">
+        <div class="w-full flex flex-col gap-4">
           <span class="text-sm text-base-11 font-medium uppercase">
             Personal email addresses
           </span>
-          <span class="text-sm">
+          <span class="">
             You can use these email addresses to send and receive emails with
             the rest of the world.
           </span>
-          <span class="text-sm"
-            >They are yours personally to keep forever.</span
-          >
-          {{ userAddresses?.identities }}
-          <!-- <div
-            v-for="personalEmail of userAddresses?.personalEmailAddresses"
-            :key="personalEmail.username + personalEmail.domainName"
-            class="flex flex-row items-center gap-2">
-            <div
-              class="min-w-[50px] w-fit flex flex-col items-center rounded-lg bg-base-3 p-4">
-              <span class="w-fit break-anywhere text-left font-mono">
-                {{ personalEmail.username }}@{{ personalEmail.domainName }}
-              </span>
-            </div>
-            <UnUiTooltip text="Copy to clipboard">
-              <UnUiIcon
-                name="i-ph-clipboard"
-                size="20"
-                @click="
-                  copy(`${personalEmail.username}@${personalEmail.domainName}`)
-                " />
-            </UnUiTooltip>
-          </div> -->
-        </div>
-        <div class="flex flex-col gap-4">
-          <!-- <span class="text-sm text-base-11 font-medium uppercase">
-            Personal forwarding address
-          </span>
-          <span class="text-sm">
-            Use this email address to forward in emails from another mail
-            provider.
-          </span>
-          <span class="text-sm">
-            Any emails forwarded to this address will be processed by your
-            personal account.
-          </span>
-          <div class="flex flex-row items-center gap-2">
-            <div
-              class="min-w-[50px] w-fit flex flex-col items-center rounded-lg bg-base-3 p-4">
-              <span class="w-fit break-anywhere text-left font-mono">
-                {{ userAddresses?.personalOrgFwdAddress }}
-              </span>
-            </div>
-            <UnUiTooltip text="Copy to clipboard">
-              <UnUiIcon
-                name="i-ph-clipboard"
-                size="20"
-                @click="copy(userAddresses?.personalOrgFwdAddress || '')" />
-            </UnUiTooltip>
+
+          <NuxtUiTable
+            :columns="tableColumns"
+            :rows="tableRows"
+            :loading="pending"
+            class="w-full overflow-x-scroll">
+            <template #address-data="{ row }">
+              <UnUiTooltip text="Copy to clipboard">
+                <button
+                  class="flex flex-row cursor-pointer items-center gap-2"
+                  @click="copy(row.address)">
+                  <span class="truncate">{{ row.address }}</span>
+                  <UnUiIcon
+                    name="i-ph-clipboard"
+                    size="20" />
+                </button>
+              </UnUiTooltip>
+            </template>
+            <template #sendName-data="{ row }">
+              <UnUiTooltip text="Click to edit">
+                <button
+                  class="flex flex-row cursor-pointer items-center gap-2"
+                  @click="preEdit(row.publicId, row.sendName)">
+                  <span class="truncate">{{ row.sendName }}</span>
+                  <UnUiIcon
+                    name="i-ph-pencil"
+                    size="20" />
+                </button>
+              </UnUiTooltip>
+            </template>
+            <template #forwarding-data="{ row }">
+              <UnUiTooltip
+                :text="`${row.forwarding.address} - Copy to clipboard`">
+                <button
+                  class="flex flex-row cursor-pointer items-center gap-2"
+                  @click="copy(row.address)">
+                  <span class="uppercase">
+                    {{ row.forwarding.truncated }}...
+                  </span>
+                  <UnUiIcon
+                    name="i-ph-clipboard"
+                    size="20" />
+                </button>
+              </UnUiTooltip>
+            </template>
+            <template #org-data="{ row }">
+              <div class="flex flex-row items-center gap-2">
+                <UnUiAvatar
+                  :public-id="row.org.publicId"
+                  type="org"
+                  :alt="row.org.name ? row.org.name : ''"
+                  size="xs" />
+                <span class="">{{ row.org.name }}</span>
+              </div>
+            </template>
+          </NuxtUiTable>
+
+          <!-- <div class="flex flex-col gap-4">
+            <template
+              v-for="identity of userAddresses?.identities"
+              :key="identity.publicId">
+              {{ identity.emailIdentity }}
+              <div
+                class="bg-gray-100 flex flex-col gap-4 rounded-md px-3 py-3 shadow-sm">
+                <div class="flex flex-row gap-4">
+                  <div class="flex flex-col gap-1">
+                    <span class="text-xs text-base-11 uppercase">
+                      Addresses
+                    </span>
+                    <div
+                      class="bg-gray-50 min-w-[50px] w-fit flex flex-row items-center gap-2 rounded-lg px-3 py-2">
+                      <span
+                        class="w-fit break-anywhere text-left text-sm font-mono">
+                        {{ identity.emailIdentity.username }}@{{
+                          identity.emailIdentity.domainName
+                        }}
+                      </span>
+                      <UnUiTooltip text="Copy to clipboard">
+                        <UnUiIcon
+                          name="i-ph-clipboard"
+                          size="20"
+                          @click="
+                            copy(
+                              `${identity.emailIdentity.username}@${identity.emailIdentity.domainName}`
+                            )
+                          " />
+                      </UnUiTooltip>
+                    </div>
+                  </div>
+                  <div class="flex flex-col gap-1">
+                    <span class="text-xs text-base-11 uppercase">
+                      Send Name
+                    </span>
+                    <div
+                      class="bg-gray-50 min-w-[50px] w-fit flex flex-row items-center gap-2 rounded-lg px-3 py-2">
+                      <span
+                        class="w-fit break-anywhere text-left text-sm font-mono">
+                        {{ identity.emailIdentity.sendName }}
+                      </span>
+                      <UnUiTooltip text="Copy to clipboard">
+                        <UnUiIcon
+                          name="i-ph-clipboard"
+                          size="20"
+                          @click="
+                            copy(
+                              `${identity.emailIdentity.username}@${identity.emailIdentity.domainName}`
+                            )
+                          " />
+                      </UnUiTooltip>
+                    </div>
+                  </div>
+                </div>
+                <div class="flex flex-row gap-4">
+                  <div class="flex flex-col gap-1">
+                    <span class="text-xs text-base-11 uppercase">
+                      Forwarding Address
+                    </span>
+                    <div
+                      class="bg-gray-50 min-w-[50px] w-fit flex flex-row items-center gap-2 rounded-lg px-3 py-2">
+                      <span
+                        class="w-fit break-anywhere text-left text-sm font-mono">
+                        {{ identity.postalServer.rootForwardingAddress }}
+                      </span>
+                      <UnUiTooltip text="Copy to clipboard">
+                        <UnUiIcon
+                          name="i-ph-clipboard"
+                          size="20"
+                          @click="
+                            copy(
+                              `${identity.postalServer.rootForwardingAddress}`
+                            )
+                          " />
+                      </UnUiTooltip>
+                    </div>
+                  </div>
+                  <div class="flex flex-col gap-1">
+                    <span class="text-xs text-base-11 uppercase">
+                      Assigned to Organization
+                    </span>
+                    <div class="flex flex-row items-center gap-2">
+                      <UnUiAvatar
+                        type="org"
+                        :public-id="identity.org.publicId"
+                        :alt="identity.org.name"
+                        size="sm" />
+                      <span
+                        class="w-fit break-anywhere text-left text-sm font-mono">
+                        {{ identity.org.name }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </template>
           </div> -->
         </div>
       </div>
