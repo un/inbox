@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { parse, stringify } from 'superjson';
 import { router, orgProcedure } from '../../../trpc';
-import { eq, and } from '@uninbox/database/orm';
+import { eq, and, or } from '@uninbox/database/orm';
 import {
   orgs,
   orgMembers,
@@ -94,7 +94,10 @@ export const orgMembersRouter = router({
               userId: true
             },
             where: !includeRemoved
-              ? eq(orgMembers.status, 'active')
+              ? or(
+                  eq(orgMembers.status, 'active'),
+                  eq(orgMembers.status, 'invited')
+                )
               : undefined,
             with: {
               profile: {
