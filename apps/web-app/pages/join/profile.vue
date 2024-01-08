@@ -44,13 +44,11 @@
       titleValue.value = newVal.profile.title || '';
       blurbValue.value = newVal.profile.blurb || '';
 
-      newVal.profile.avatarId
-        ? ((imageUrl.value = useUtils().generateAvatarUrl(
-            'user',
-            newVal.profile.publicId,
-            '5xl'
-          )) as string)
-        : null;
+      imageUrl.value = useUtils().generateAvatarUrl(
+        'user',
+        newVal.profile.publicId,
+        '5xl'
+      ) as string;
     }
   });
 
@@ -88,7 +86,7 @@
 
     imageUrl.value = useUtils().generateAvatarUrl(
       'user',
-      userOrgProfile.value.profile.publicId,
+      userOrgProfile.value?.profile.publicId || '',
       '5xl'
     ) as string;
 
@@ -105,7 +103,7 @@
       buttonLabel.value = 'Save profile';
       return;
     }
-    const response = await $trpc.user.profile.updateUserProfile.mutate({
+    await $trpc.user.profile.updateUserProfile.mutate({
       profilePublicId: userOrgProfile.value.profile.publicId,
       fName: fNameValue.value,
       lName: lNameValue.value,
