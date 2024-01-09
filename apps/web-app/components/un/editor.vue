@@ -19,7 +19,7 @@
     editorProps: {
       attributes: {
         class:
-          'max-h-full max-w-prose w-full focus:outline-none p-0 overflow-hidden'
+          'max-h-full w-full focus:outline-none p-0 overflow-hidden h-full *:max-w-prose'
       }
     },
     onUpdate: () => {
@@ -38,8 +38,8 @@
 <template>
   <div
     class="h-full max-h-full w-full border border-1 border-base-6 rounded-xl bg-base-1 px-2 py-1">
-    <div class="max-h-full overflow-y-scroll">
-      <EditorContent :editor="editor" />
-    </div>
+    <EditorContent
+      :editor="editor"
+      class="h-full max-h-full overflow-y-scroll" />
   </div>
 </template>
