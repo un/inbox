@@ -85,5 +85,16 @@
     "w-[128px] h-[128px] text-3xl"
   ],
   "typescript.tsdk": "node_modules/typescript/lib",
-  "conventionalCommits.scopes": ["repo"]
+  "conventionalCommits.scopes": [
+    "repo",
+    "web",
+    "mailbridge",
+    "storage",
+    "landing",
+    "ee",
+    "db",
+    "authjs",
+    "local-docker",
+    "postal-puppet"
+  ]
 }
