@@ -84,5 +84,6 @@
     "w-[80px] h-[80px] text-2xl",
     "w-[128px] h-[128px] text-3xl"
   ],
-  "typescript.tsdk": "node_modules/typescript/lib"
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "conventionalCommits.scopes": ["repo"]
 }
