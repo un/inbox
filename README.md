@@ -87,6 +87,7 @@ Here is what you need to be able to run UnInbox locally.
 - Node.js (Version: >=20.x)
 - Docker
 - pnpm (see https://pnpm.io/installation)
+- turbo(see https://turbo.build/repo/docs/installing)
 
 ### Setup
 
@@ -114,6 +115,15 @@ Here is what you need to be able to run UnInbox locally.
 4. Set up your `.env.local` file
 
    - Duplicate `.env.local.example` to `.env.local`. This file is already pre-configured for use with the local docker containers
+
+      mac
+     ```sh
+      cp .env.local.example .env.local
+     ```
+     windows
+     ```sh
+      copy .env.local.example .env.local
+     ```
 
 5. Start the docker containers
 
