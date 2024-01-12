@@ -115,6 +115,15 @@ Here is what you need to be able to run UnInbox locally.
 
    - Duplicate `.env.local.example` to `.env.local`. This file is already pre-configured for use with the local docker containers
 
+      mac
+     ```sh
+      cp .env.local.example .env.local
+     ```
+     windows
+     ```sh
+      copy .env.local.example .env.local
+     ```
+
 5. Start the docker containers
 
    ```sh
