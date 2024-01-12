@@ -87,7 +87,6 @@ Here is what you need to be able to run UnInbox locally.
 - Node.js (Version: >=20.x)
 - Docker
 - pnpm (see https://pnpm.io/installation)
-- turbo(see https://turbo.build/repo/docs/installing)
 
 ### Setup
 
