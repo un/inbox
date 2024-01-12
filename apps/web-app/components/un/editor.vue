@@ -1,13 +1,13 @@
 <script setup lang="ts">
-  import { EditorContent, useEditor } from '@tiptap/vue-3';
+  import { EditorContent, useEditor, type JSONContent } from '@tiptap/vue-3';
   import StarterKit from '@tiptap/starter-kit';
 
   const props = defineProps<{
-    modelValue: string;
+    modelValue: JSONContent;
   }>();
 
   const emit = defineEmits<{
-    (e: 'update:modelValue', value?: string): void;
+    (e: 'update:modelValue', value?: JSONContent): void;
   }>();
 
   const content = useVModel(props, 'modelValue', emit);
@@ -23,12 +23,12 @@
       }
     },
     onUpdate: () => {
-      emit('update:modelValue', editor.value?.getHTML());
+      emit('update:modelValue', editor.value?.getJSON());
     }
   });
 
   watch(content, (val) => {
-    const isSame = editor.value?.getHTML() === val;
+    const isSame = editor.value?.getJSON() === val;
     if (isSame) return;
 
     editor.value?.commands.setContent(val, false);
