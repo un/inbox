@@ -3,7 +3,7 @@ import { parse, stringify } from 'superjson';
 import { router, orgProcedure } from '../../../trpc';
 import { eq, and } from '@uninbox/database/orm';
 import { orgs } from '@uninbox/database/schema';
-import { nanoId, nanoIdLength } from '@uninbox/utils';
+import { nanoId, nanoIdLength, nanoIdSchema } from '@uninbox/utils';
 import { isUserAdminOfOrg } from '~/server/utils/user';
 import { TRPCError } from '@trpc/server';
 
@@ -11,7 +11,7 @@ export const orgProfileRouter = router({
   getOrgProfile: orgProcedure
     .input(
       z.object({
-        orgPublicId: z.string().min(3).max(nanoIdLength).optional()
+        orgPublicId: nanoIdSchema.optional()
       })
     )
     .query(async ({ ctx, input }) => {

@@ -7,7 +7,7 @@ import {
   orgPostalConfigs,
   domains
 } from '@uninbox/database/schema';
-import { nanoId, nanoIdLength } from '@uninbox/utils';
+import { nanoId, nanoIdLength,nanoIdSchema } from '@uninbox/utils';
 import { postalPuppet } from '@uninbox/postal-puppet';
 
 export const domainRouter = router({
@@ -15,7 +15,7 @@ export const domainRouter = router({
     .input(
       z.object({
         orgId: z.number().min(1),
-        orgPublicId: z.string().min(3).max(nanoIdLength),
+        orgPublicId: nanoIdSchema,
         domainName: z.string().min(3).max(255)
       })
     )
