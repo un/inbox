@@ -1,6 +1,6 @@
-import auth from "@auth/core";
+import auth from '@auth/core';
 
-declare module "@auth/core/types" {
+declare module '@auth/core/types' {
   interface User {
     idNumber: number;
     publicId: string;
@@ -16,7 +16,7 @@ declare module "@auth/core/types" {
   }
 }
 
-declare module "@auth/core/adapters" {
+declare module '@auth/core/adapters' {
   interface AdapterUser {
     idNumber: number;
     publicId: string;
