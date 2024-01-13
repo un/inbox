@@ -18,7 +18,9 @@ const isUserAuthenticated = trpcContext.middleware(({ next, ctx }) => {
       message: 'You are not logged in, redirecting...'
     });
   }
-  return next();
+  return next({
+    ctx: { ...ctx, user: ctx.user }
+  });
 });
 const hasOrgSlug = trpcContext.middleware(({ next, ctx }) => {
   //@ts-ignore

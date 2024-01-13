@@ -81,7 +81,7 @@ export const crudRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const { db, user } = ctx;
-      const userId = user?.id || 0;
+      const userId = user.id;
 
       const newPublicId = nanoId();
 
@@ -281,7 +281,7 @@ export const crudRouter = router({
     )
     .query(async ({ ctx, input }) => {
       const { db, user } = ctx;
-      const userId = user?.id || 0;
+      const userId = user.id ;
 
       const whereUserIsAdmin = input.onlyAdmin || false;
 

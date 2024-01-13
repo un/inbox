@@ -159,9 +159,9 @@ export const billingRouter = router({
         subLink: orgSubLink.link
       };
     }),
-  isPro: eeProcedure.input(z.object({})).query(async ({ ctx, input }) => {
+  isPro: eeProcedure.input(z.object({})).query(async ({ ctx,  }) => {
     const { db, user, org } = ctx;
-    const userId = user?.id || 0;
+    const userId = user.id; 
     const orgId = org?.id || 0;
 
     const orgBillingResponse = await db.query.orgBilling.findFirst({
