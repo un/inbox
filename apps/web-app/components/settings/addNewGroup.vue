@@ -9,10 +9,84 @@
   const newGroupDescriptionValue = ref('');
   const buttonLabel = ref('Create New Group');
   const buttonLoading = ref(false);
+  const newIdentityUsernameValue = ref('');
+  const newIdentityUsernameValid = ref<boolean | 'remote' | null>(null);
+  const newIdentityUsernameValidationMessage = ref('');
+  const newIdentitySendNameValue = ref('');
+  const newIdentitySendNameValid = ref<boolean | 'remote' | null>(null);
+  const newDomainNameValid = ref<boolean | 'remote' | null>(null);
+  const createEmailIdentityForGroup = ref(false);
+
+  interface OrgDomains {
+    domainPublicId: string;
+    domain: string;
+  }
+  const selectedDomain = ref<OrgDomains | undefined>(undefined);
+
+  const orgDomains = ref<OrgDomains[]>([]);
+
+  const { data: orgDomainsData, pending: orgDomainsPending } =
+    await $trpc.org.mail.domains.getOrgDomains.useLazyQuery(
+      {},
+      { server: false }
+    );
+
+  watch(orgDomainsData, (newOrgDomainsData) => {
+    if (newOrgDomainsData?.domainData) {
+      for (const domain of newOrgDomainsData.domainData) {
+        orgDomains.value.push({
+          domainPublicId: domain.publicId,
+          domain: domain.domain
+        });
+      }
+    }
+  });
 
   const formValid = computed(() => {
+    if (createEmailIdentityForGroup.value) {
+      if (isPro.value === false) {
+        return (
+          newIdentityUsernameValid.value === true &&
+          newIdentitySendNameValid.value === true &&
+          selectedDomain.value?.domainPublicId &&
+          newGroupNameValid.value === true &&
+          !!newGroupColorValue.value
+        );
+      }
+      return (
+        newIdentityUsernameValid.value === true &&
+        newIdentitySendNameValid.value === true &&
+        selectedDomain.value?.domainPublicId &&
+        newGroupNameValid.value === true &&
+        !!newGroupColorValue.value
+      );
+    }
     return newGroupNameValid.value === true && !!newGroupColorValue.value;
   });
+
+  const toggleableOptions = ref<{
+    address: boolean;
+    sendName: boolean;
+    domainName: boolean;
+  }>({
+    address: false,
+    sendName: false,
+    domainName: false
+  });
+
+  const toggleInputOption = (option: keyof typeof toggleableOptions.value) => {
+    toggleableOptions.value[option] = !toggleableOptions.value[option];
+    if (option === 'address' && !toggleableOptions.value.address) {
+      newIdentityUsernameValid.value = null;
+      newIdentityUsernameValidationMessage.value = '';
+    }
+    if (option === 'sendName' && !toggleableOptions.value.sendName) {
+      newIdentitySendNameValid.value = null;
+    }
+    if (option === 'domainName' && !toggleableOptions.value.domainName) {
+      newDomainNameValid.value = null;
+    }
+  };
 
   const emit = defineEmits(['close']);
 
@@ -21,29 +95,103 @@
   const orgSlug = route.params.orgSlug as string;
 
   async function createGroup() {
-    if (!newGroupColorValue.value) return;
-    buttonLoading.value = true;
-    buttonLabel.value = 'Creating...';
-    const { newGroupPublicId } =
-      await $trpc.org.users.userGroups.createOrgUserGroups.mutate({
-        groupName: newGroupNameValue.value,
-        groupDescription: newGroupDescriptionValue.value,
-        groupColor: newGroupColorValue.value
+    if (createEmailIdentityForGroup.value) {
+      if (!newGroupColorValue.value) return;
+      buttonLoading.value = true;
+      buttonLabel.value = 'Creating...';
+      const toast = useToast();
+      const { newGroupPublicId } =
+        await $trpc.org.users.userGroups.createOrgUserGroups.mutate({
+          groupName: newGroupNameValue.value,
+          groupDescription: newGroupDescriptionValue.value,
+          groupColor: newGroupColorValue.value
+        });
+
+      await $trpc.org.mail.emailIdentities.createNewEmailIdentity.mutate({
+        emailUsername: newIdentityUsernameValue.value,
+        domainPublicId: selectedDomain.value?.domainPublicId as string,
+        sendName: newIdentitySendNameValue.value,
+        routeToGroupsPublicIds: [newGroupPublicId]
       });
-    buttonLoading.value = false;
-    buttonLabel.value = 'Done... Redirecting';
-    const toast = useToast();
-    toast.add({
-      id: 'group_xreated',
-      title: 'Group Group Created',
-      description: 'Group has been created successfully',
-      icon: 'i-ph-thumbs-up',
-      timeout: 5000
-    });
-    setTimeout(() => {
-      emit('close');
-    }, 1000);
+      buttonLoading.value = false;
+      buttonLabel.value = 'Done... Redirecting';
+      toast.add({
+        id: 'address_added & group_created',
+        title: 'Address Added & Group Group Created',
+        description: `${newIdentityUsernameValue.value}@${selectedDomain.value?.domain} has been added successfully & Group has been created successfully`,
+        icon: 'i-ph-thumbs-up',
+        timeout: 5000
+      });
+      setTimeout(() => {
+        emit('close');
+      }, 1000);
+    } else {
+      if (!newGroupColorValue.value) return;
+      buttonLoading.value = true;
+      buttonLabel.value = 'Creating...';
+      const { newGroupPublicId } =
+        await $trpc.org.users.userGroups.createOrgUserGroups.mutate({
+          groupName: newGroupNameValue.value,
+          groupDescription: newGroupDescriptionValue.value,
+          groupColor: newGroupColorValue.value
+        });
+      buttonLoading.value = false;
+      buttonLabel.value = 'Done... Redirecting';
+      const toast = useToast();
+      toast.add({
+        id: 'group_created',
+        title: 'Group Group Created',
+        description: 'Group has been created successfully',
+        icon: 'i-ph-thumbs-up',
+        timeout: 5000
+      });
+      setTimeout(() => {
+        emit('close');
+      }, 1000);
+    }
   }
+
+  async function checkEmailAvailability() {
+    if (
+      newIdentityUsernameValid.value === 'remote' ||
+      newIdentityUsernameValidationMessage.value === 'Select domain'
+    ) {
+      if (!selectedDomain.value?.domain) {
+        newIdentityUsernameValid.value = false;
+        newIdentityUsernameValidationMessage.value = 'Select domain';
+        return;
+      }
+      const { available } =
+        await $trpc.org.mail.emailIdentities.checkEmailAvailability.query({
+          domainPublicId: selectedDomain.value?.domainPublicId as string,
+          emailUsername: newIdentityUsernameValue.value
+        });
+      if (!available) {
+        newIdentityUsernameValid.value = false;
+        newIdentityUsernameValidationMessage.value = 'Email already in use';
+      }
+      if (available) {
+        newIdentityUsernameValid.value = true;
+        newIdentityUsernameValidationMessage.value = '';
+      }
+      return;
+    }
+    return;
+  }
+
+  watchDebounced(
+    newIdentityUsernameValue,
+    async () => {
+      await checkEmailAvailability();
+    },
+    {
+      debounce: 500,
+      maxWait: 5000
+    }
+  );
+  watch(selectedDomain, () => {
+    checkEmailAvailability();
+  });
 
   const dataPending = ref(true);
 
@@ -166,6 +314,83 @@
               v-if="newGroupColorValue === 'yellow'"
               name="i-ph-check-bold"
               size="24" />
+          </div>
+        </div>
+      </div>
+      <div
+        class="grid grid-cols-1 grid-rows-2 w-full gap-4 md:grid-cols-2 md:grid-rows-1">
+        <span class="text-sm">Add Email Address</span>
+        <UnUiToggle
+          v-model="createEmailIdentityForGroup"
+          @click="toggleInputOption('address')" />
+      </div>
+      <NuxtUiDivider v-if="createEmailIdentityForGroup" />
+      <div
+        v-if="createEmailIdentityForGroup"
+        class="h-full w-full flex flex-col items-start gap-8 overflow-y-scroll">
+        <div class="w-full flex flex-col gap-8">
+          <div class="w-full flex flex-col gap-4">
+            <div class="w-full border-b-1 border-base-6">
+              <span class="text-sm text-base-11 font-medium uppercase">
+                Email Address
+              </span>
+            </div>
+            <div
+              class="items-top grid grid-cols-1 grid-rows-2 gap-4 md:grid-cols-2 md:grid-rows-1">
+              <UnUiInput
+                v-model:value="newIdentityUsernameValue"
+                v-model:valid="newIdentityUsernameValid"
+                :validation-message="newIdentityUsernameValidationMessage"
+                :remote-validation="true"
+                label="Address"
+                :schema="
+                  z
+                    .string()
+                    .min(1)
+                    .max(32)
+                    .regex(/^[a-zA-Z0-9]*$/, {
+                      message: 'Only letters and numbers'
+                    })
+                "
+                width="full" />
+              <div class="flex flex-col gap-1">
+                <span class="text-sm text-base-12 font-medium">Domain</span>
+                <span v-if="orgDomainsPending">
+                  <UnUiIcon name="i-svg-spinners:3-dots-fade" /> Loading Domains
+                </span>
+                <div v-if="!orgDomainsPending">
+                  <span v-if="orgDomainsData?.domainData?.length === 0">
+                    No Domains Found
+                  </span>
+                  <NuxtUiSelectMenu
+                    v-model="selectedDomain"
+                    searchable
+                    searchable-placeholder="Search a domain..."
+                    placeholder="Select a domain"
+                    :options="orgDomains"
+                    class="w-full">
+                    <template
+                      v-if="selectedDomain"
+                      #label>
+                      <UnUiIcon
+                        name="i-ph-check"
+                        class="h-4 w-4" />
+
+                      {{ selectedDomain.domain }}
+                    </template>
+                    <template #option="{ option }">
+                      {{ option.domain }}
+                    </template>
+                  </NuxtUiSelectMenu>
+                </div>
+              </div>
+            </div>
+            <UnUiInput
+              v-model:value="newIdentitySendNameValue"
+              v-model:valid="newIdentitySendNameValid"
+              label="Send Name"
+              :schema="z.string().min(2).max(64)"
+              :helper="`The name that will appear in the 'From' field of emails sent from this address`" />
           </div>
         </div>
       </div>
