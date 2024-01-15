@@ -1,36 +1,24 @@
 import { z } from 'zod';
 import { parse } from 'superjson';
-import { router, orgProcedure, limitedProcedure } from '../../trpc';
-import {
-  type InferInsertModel,
-  and,
-  desc,
-  eq,
-  inArray,
-  lt,
-  or
-} from '@uninbox/database/orm';
+import { router, orgProcedure } from '../../trpc';
+import { type InferInsertModel, and, eq, inArray } from '@uninbox/database/orm';
 import {
   convos,
   convoParticipants,
   convoSubjects,
   userProfiles,
-  // foreignEmailIdentities,
   userGroups,
-  userGroupMembers,
-  // convoMessages,
   orgMembers,
   contacts,
   contactGlobalReputations,
-  convoEntries
-  // foreignEmailIdentitiesScreenerStatus
+  convoEntries,
+  emailIdentitiesAuthorizedUsers
 } from '@uninbox/database/schema';
 import { nanoId, nanoIdLength, nanoIdToken } from '@uninbox/utils';
 import { TRPCError } from '@trpc/server';
-import { collapseTextChangeRangesAcrossMultipleVersions } from 'typescript';
 import type { JSONContent } from '@tiptap/vue-3';
-import { generateText } from '@tiptap/core';
-import StarterKit from '@tiptap/starter-kit';
+import { generateText, generateHTML } from '@tiptap/core';
+import { tipTapExtensions } from '~/shared/editorConfig';
 
 export const convoRouter = router({
   createNewConvo: orgProcedure
@@ -51,11 +39,17 @@ export const convoRouter = router({
           .min(3)
           .max(nanoIdLength)
           .optional(),
-        to: z.object({
-          type: z.enum(['user', 'group', 'contact', 'email']),
-          publicId: z.string().min(3).max(nanoIdLength).optional(),
-          emailAddress: z.string().min(3).optional()
-        }),
+        to: z
+          .object({
+            type: z.enum(['user', 'group', 'contact']),
+            publicId: z.string().min(3).max(nanoIdLength)
+          })
+          .or(
+            z.object({
+              type: z.enum(['email']),
+              emailAddress: z.string().min(3)
+            })
+          ),
         topic: z.string().min(1),
         message: z.string().min(1),
         firstMessageType: z.enum(['message', 'draft', 'comment'])
@@ -98,11 +92,133 @@ export const convoRouter = router({
         participantsGroupsPublicIds,
         participantsContactsPublicIds,
         topic,
-        message
+        message,
+        convoMessageTo
       });
 
-      //! To Handle: get the default emailIdentity for each user and each group - use when sending emails
-      //! To Handle: the To field, check type, exclude data from final list of participants when sending emails
+      // early check if "to" value has a valid email address, if not, then return an error
+
+      async function getConvoToAddress() {
+        const convoMessageToType = convoMessageTo.type;
+        if (convoMessageToType === 'email') {
+          return convoMessageTo.emailAddress;
+        } else if (convoMessageToType === 'contact') {
+          const contactResponse = await db.query.contacts.findFirst({
+            where: eq(contacts.publicId, convoMessageTo.publicId),
+            columns: {
+              emailUsername: true,
+              emailDomain: true
+            }
+          });
+          if (!contactResponse) {
+            throw new TRPCError({
+              code: 'UNPROCESSABLE_CONTENT',
+              message: 'TO address contact not found'
+            });
+          }
+          return `${contactResponse.emailUsername}@${contactResponse.emailDomain}`;
+        } else if (convoMessageToType === 'group') {
+          const groupResponse = await db.query.userGroups.findFirst({
+            where: eq(userGroups.publicId, convoMessageTo.publicId),
+            columns: {
+              id: true,
+              name: true
+            }
+          });
+          if (!groupResponse) {
+            throw new TRPCError({
+              code: 'UNPROCESSABLE_CONTENT',
+              message: 'TO address group not found'
+            });
+          }
+          const emailIdentitiesResponse =
+            await db.query.emailIdentitiesAuthorizedUsers.findFirst({
+              where: and(
+                eq(
+                  emailIdentitiesAuthorizedUsers.userGroupId,
+                  groupResponse.id
+                ),
+                eq(emailIdentitiesAuthorizedUsers.default, true)
+              ),
+              columns: {
+                id: true
+              },
+              with: {
+                identity: {
+                  columns: {
+                    username: true,
+                    domainName: true
+                  }
+                }
+              }
+            });
+          if (!emailIdentitiesResponse) {
+            throw new TRPCError({
+              code: 'UNPROCESSABLE_CONTENT',
+              message: `${groupResponse.name} Group does not have a default email identity set and cant be set as the TO address`
+            });
+          }
+          return `${emailIdentitiesResponse.identity.username}@${emailIdentitiesResponse.identity.domainName}`;
+        } else if (convoMessageToType === 'user') {
+          const orgMemberResponse = await db.query.orgMembers.findFirst({
+            where: eq(orgMembers.publicId, convoMessageTo.publicId),
+            columns: {
+              id: true
+            },
+            with: {
+              profile: {
+                columns: {
+                  firstName: true,
+                  lastName: true
+                }
+              }
+            }
+          });
+          if (!orgMemberResponse) {
+            throw new TRPCError({
+              code: 'UNPROCESSABLE_CONTENT',
+              message: 'TO address user not found'
+            });
+          }
+          const emailIdentitiesResponse =
+            await db.query.emailIdentitiesAuthorizedUsers.findFirst({
+              where: and(
+                eq(
+                  emailIdentitiesAuthorizedUsers.orgMemberId,
+                  orgMemberResponse.id
+                ),
+                eq(emailIdentitiesAuthorizedUsers.default, true)
+              ),
+              columns: {
+                id: true
+              },
+              with: {
+                identity: {
+                  columns: {
+                    username: true,
+                    domainName: true
+                  }
+                }
+              }
+            });
+          if (!emailIdentitiesResponse) {
+            throw new TRPCError({
+              code: 'UNPROCESSABLE_CONTENT',
+              message: `${orgMemberResponse.profile.firstName} ${orgMemberResponse.profile.lastName} User does not have a default email identity set and cant be set as the TO address`
+            });
+          }
+          return `${emailIdentitiesResponse.identity.username}@${emailIdentitiesResponse.identity.domainName}`;
+        } else {
+          throw new TRPCError({
+            code: 'UNPROCESSABLE_CONTENT',
+            message: 'TO address type is invalid'
+          });
+        }
+      }
+      let newConvoToEmailAddress;
+      if (participantsContactsPublicIds || participantsEmails) {
+        newConvoToEmailAddress = await getConvoToAddress();
+      }
 
       const orgMemberIds: number[] = [];
       const orgGroupIds: number[] = [];
@@ -174,7 +290,6 @@ export const convoRouter = router({
       // for each of participantsEmails check if a contact or contact reputation exists. if no reputation create one, if reputation but no org contact create one, if reputation and org contact get ID
 
       if (participantsEmails && participantsEmails.length) {
-        // loop throught each instance
         for (const email of participantsEmails) {
           const [emailUsername, emailDomain] = email.split('@');
           const existingContact = await db.query.contacts.findFirst({
@@ -254,7 +369,7 @@ export const convoRouter = router({
 
       // create conversationSubject entry
       const newConvoSubjectPublicId = nanoId();
-      await db.insert(convoSubjects).values({
+      const insertConvoSubjectResponse = await db.insert(convoSubjects).values({
         convoId: +insertConvoResponse.insertId,
         publicId: newConvoSubjectPublicId,
         subject: topic
@@ -324,178 +439,165 @@ export const convoRouter = router({
       // create convoEntry
 
       const newConvoBody = message;
-      const newConvoBodyPlainText = generateText(newConvoBody, [StarterKit]);
+      const newConvoBodyPlainText = generateText(
+        newConvoBody,
+        tipTapExtensions
+      );
 
       const newConvoEntryPublicId = nanoId();
-      const insertConvoMessageResponse = await db.insert(convoEntries).values({
+      await db.insert(convoEntries).values({
         publicId: newConvoEntryPublicId,
         convoId: +insertConvoResponse.insertId,
         author: +insertAuthorConvoParticipantResponse.insertId,
         visibility: 'all_participants',
-        subjectId: +newConvoSubjectPublicId,
+        subjectId: +insertConvoSubjectResponse.insertId,
         type: input.firstMessageType,
         body: newConvoBody,
         bodyPlainText: newConvoBodyPlainText
       });
 
-      // if contacts, send external email via mail bridge
+      //* if convo has contacts, send external email via mail bridge
+      const missingEmailIdentitiesWarnings: {
+        type: 'user' | 'group';
+        publicId: String;
+        name: String;
+      }[] = [];
+
       if (orgContactIds.length) {
-        //! Generate email html form tiptapJson
-        //! check the to field of the new conversation
+        const newConvoBodyHTML = generateHTML(newConvoBody, tipTapExtensions);
+        const ccEmailAddresses: String[] = [];
+
+        // get the email addresses for all contacts
+        orgContactIds.forEach(async (contactId) => {
+          const contactResponse = await db.query.contacts.findFirst({
+            where: eq(contacts.id, contactId),
+            columns: {
+              emailUsername: true,
+              emailDomain: true
+            }
+          });
+          if (contactResponse) {
+            ccEmailAddresses.push(
+              `${contactResponse.emailUsername}@${contactResponse.emailDomain}`
+            );
+          }
+        });
+
+        // get the default email addresses for all users
+        if (orgMemberIds.length) {
+          orgMemberIds.forEach(async (orgMemberId) => {
+            const emailIdentityReponse =
+              await db.query.emailIdentitiesAuthorizedUsers.findFirst({
+                where: and(
+                  eq(emailIdentitiesAuthorizedUsers.orgMemberId, orgMemberId),
+                  eq(emailIdentitiesAuthorizedUsers.default, true)
+                ),
+                columns: {
+                  id: true
+                },
+                with: {
+                  identity: {
+                    columns: {
+                      username: true,
+                      domainName: true
+                    }
+                  }
+                }
+              });
+            if (!emailIdentityReponse) {
+              const memberProfile = await db.query.orgMembers.findFirst({
+                where: eq(orgMembers.id, orgMemberId),
+                columns: {
+                  publicId: true
+                },
+                with: {
+                  profile: {
+                    columns: {
+                      firstName: true,
+                      lastName: true
+                    }
+                  }
+                }
+              });
+              if (memberProfile) {
+                missingEmailIdentitiesWarnings.push({
+                  type: 'user',
+                  publicId: memberProfile.publicId,
+                  name: `${memberProfile.profile.firstName} ${memberProfile.profile.lastName}`
+                });
+                return;
+              }
+            }
+            if (emailIdentityReponse) {
+              ccEmailAddresses.push(
+                `${emailIdentityReponse.identity.username}@${emailIdentityReponse.identity.domainName}`
+              );
+            }
+          });
+        }
+
+        // get the default email addresses for all groups
+        if (orgGroupIds.length) {
+          orgGroupIds.forEach(async (orgGroupId) => {
+            const emailIdentityReponse =
+              await db.query.emailIdentitiesAuthorizedUsers.findFirst({
+                where: and(
+                  eq(emailIdentitiesAuthorizedUsers.userGroupId, orgGroupId),
+                  eq(emailIdentitiesAuthorizedUsers.default, true)
+                ),
+                columns: {
+                  id: true
+                },
+                with: {
+                  identity: {
+                    columns: {
+                      username: true,
+                      domainName: true
+                    }
+                  }
+                }
+              });
+            if (!emailIdentityReponse) {
+              const orgGroupResponse = await db.query.userGroups.findFirst({
+                where: eq(userGroups.id, orgGroupId),
+                columns: {
+                  publicId: true,
+                  name: true
+                }
+              });
+
+              if (orgGroupResponse) {
+                missingEmailIdentitiesWarnings.push({
+                  type: 'group',
+                  publicId: orgGroupResponse.publicId,
+                  name: orgGroupResponse.name
+                });
+                return;
+              }
+            }
+            if (emailIdentityReponse) {
+              ccEmailAddresses.push(
+                `${emailIdentityReponse.identity.username}@${emailIdentityReponse.identity.domainName}`
+              );
+            }
+          });
+        }
+
+        // remove TO email address from CCs if it exists
+        const ccEmailAddressesFiltered = ccEmailAddresses.filter(
+          (emailAddress) => {
+            return emailAddress !== newConvoToEmailAddress;
+          }
+        );
+
         //! send the email via the mailbridge with to and CCs
       }
 
-      //     let foreignIdentitiesIds: number[] = [];
-      //     if (participantsExternalEmails && participantsExternalEmails.length > 0) {
-      //       // Create external people if dont exist in system
-      //       // 1. Split email addresses into username and rootDomain
-      //       const emailParts = participantsExternalEmails.map((email) => {
-      //         const [username, rootDomain] = email.split('@');
-      //         return { username, rootDomain };
-      //       });
-      //       // 2. Query the database to see if they already exist
-      //       const existingForeignIdentities =
-      //         await db.query.foreignEmailIdentities.findMany({
-      //           where: or(
-      //             ...emailParts.map((part) =>
-      //               and(
-      //                 eq(foreignEmailIdentities.username, part.username),
-      //                 eq(foreignEmailIdentities.rootDomain, part.rootDomain)
-      //               )
-      //             )
-      //           ),
-      //           columns: {
-      //             id: true,
-      //             username: true,
-      //             rootDomain: true
-      //           }
-      //         });
-      //       foreignIdentitiesIds = existingForeignIdentities.map(
-      //         (identity) => +identity.id
-      //       );
-      //       // change existing emails formats, and create new array without them (only with missing ones)
-      //       const existingEmails = new Set(
-      //         existingForeignIdentities.map(
-      //           (identity) => `${identity.username}@${identity.rootDomain}`
-      //         )
-      //       );
-      //       const newEmails = emailParts.filter(
-      //         (part) => !existingEmails.has(`${part.username}@${part.rootDomain}`)
-      //       );
-      //       for (const newEmail of newEmails) {
-      //         const newPublicId = nanoId();
-      //         const insertNewResponse = await db
-      //           .insert(foreignEmailIdentities)
-      //           .values({
-      //             publicId: newPublicId,
-      //             username: newEmail.username,
-      //             rootDomain: newEmail.rootDomain
-      //           });
-      //         foreignIdentitiesIds.push(+insertNewResponse.insertId);
-      //       }
-      //     }
-      //     // Get Group ID from groupPublic Id
-      //     let groupIds: number[] = [];
-      //     if (participantsGroups.length > 0) {
-      //       const groupResponses = await db.query.userGroups.findMany({
-      //         where: inArray(userGroups.publicId, participantsGroups),
-      //         columns: {
-      //           id: true
-      //         }
-      //       });
-      //       groupIds = groupResponses.map((group) => group.id);
-      //     }
-      //     let orgMemberIds: number[] = [];
-      //     if (participantsUsers.length > 0) {
-      //       const orgMemberResponses = await db.query.orgMembers.findMany({
-      //         where: inArray(orgMembers.publicId, participantsUsers),
-      //         columns: {
-      //           id: true
-      //         }
-      //       });
-      //       orgMemberIds = orgMemberResponses.map((member) => member.id);
-      //     }
-      //     // add convo members
-      //     type ConvoParticipantsDbInsertValue = InferInsertModel<
-      //       typeof convoParticipants
-      //     >;
-      //     const convoParticipantsDbInsertValuesArray: ConvoParticipantsDbInsertValue[] =
-      //       [];
-      //     // For each foreignIdentitiesIds && groupIds && orgMemberId
-      //     foreignIdentitiesIds.forEach((id) => {
-      //       convoParticipantsDbInsertValuesArray.push({
-      //         convoId: +convoInsertResponse.insertId,
-      //         role: 'contributor',
-      //         notifications: 'active',
-      //         active: true,
-      //         foreignEmailIdentityId: +id
-      //       });
-      //     });
-      //     groupIds.forEach((id) => {
-      //       convoParticipantsDbInsertValuesArray.push({
-      //         convoId: +convoInsertResponse.insertId,
-      //         role: 'contributor',
-      //         notifications: 'active',
-      //         active: true,
-      //         userGroupId: +id
-      //       });
-      //     });
-      //     orgMemberIds.forEach((id) => {
-      //       convoParticipantsDbInsertValuesArray.push({
-      //         convoId: +convoInsertResponse.insertId,
-      //         role: 'contributor',
-      //         orgMemberId: +id,
-      //         notifications: 'active',
-      //         active: true
-      //       });
-      //     });
-      //     await db
-      //       .insert(convoParticipants)
-      //       .values(convoParticipantsDbInsertValuesArray);
-      //     const authorConvoMemberInsertResponse = await db
-      //       .insert(convoParticipants)
-      //       .values({
-      //         convoId: +convoInsertResponse.insertId,
-      //         role: 'assigned',
-      //         orgMemberId: +authorOrgMemberResponse?.id,
-      //         notifications: 'active',
-      //         active: true
-      //       });
-      //     // add external people screener status
-      //     type ForeignEmailIdentitiesScreenerStatusInsertValue = InferInsertModel<
-      //       typeof foreignEmailIdentitiesScreenerStatus
-      //     >;
-      //     const foreignEmailIdentitiesScreenerStatusInsertArray: ForeignEmailIdentitiesScreenerStatusInsertValue[] =
-      //       [];
-      //     foreignIdentitiesIds.forEach((id) => {
-      //       const newPublicId = nanoId();
-      //       foreignEmailIdentitiesScreenerStatusInsertArray.push({
-      //         foreignIdentityId: +id,
-      //         orgId: +userOrg.orgId,
-      //         publicId: newPublicId,
-      //         setByOrgMemberId: +authorOrgMemberResponse.id,
-      //         level: 'org',
-      //         status: 'approve'
-      //       });
-      //     });
-      //     if (foreignEmailIdentitiesScreenerStatusInsertArray.length > 0) {
-      //       await db
-      //         .insert(foreignEmailIdentitiesScreenerStatus)
-      //         .values(foreignEmailIdentitiesScreenerStatusInsertArray);
-      //     }
-      //     // send email to external email address
-      //     // add message to convo
-      //     const newConvoMessagePublicId = nanoId();
-      //     await db.insert(convoMessages).values({
-      //       convoId: +convoInsertResponse.insertId,
-      //       publicId: newConvoMessagePublicId,
-      //       subjectId: +subjectInsertResponse.insertId,
-      //       author: +authorConvoMemberInsertResponse.insertId,
-      //       body: input.message
-      //     });
-      //     return {
-      //       data: convoDetails
-      //     };
+      return {
+        status: 'success',
+        publicId: newConvoPublicId,
+        missingEmailIdentities: missingEmailIdentitiesWarnings
+      };
     })
   // getUserConvos: orgProcedure
   //   .input(
@@ -778,210 +880,4 @@ export const convoRouter = router({
   //       data: convoDetails
   //     };
   //   }),
-  // createConvo: orgProcedure
-  //   .input(
-  //     z.object({
-  //       orgPublicId: z.string().min(3).max(nanoIdLength),
-  //       sendAsPublicId: z.string().min(3).max(nanoIdLength),
-  //       authorPublicId: z.string().min(3).max(nanoIdLength),
-  //       participantsUsers: z.array(z.string().min(3).max(nanoIdLength)),
-  //       participantsGroups: z.array(z.string().min(3).max(nanoIdLength)),
-  //       participantsExternalEmails: z.array(z.string().min(1)),
-  //       topic: z.string().min(1),
-  //       message: z.string().min(1)
-  //     })
-  //   )
-  //   .mutation(async ({ ctx, input }) => {
-  //     if (!ctx.user || !ctx.org) {
-  //       throw new TRPCError({
-  //         code: 'UNPROCESSABLE_CONTENT',
-  //         message: 'User or Organization is not defined'
-  //       });
-  //     }
-  //     const { db, user, org } = ctx;
-  //     const userId = +user?.id;
-  //     const orgId = +org?.id;
-  //     const {
-  //       orgPublicId,
-  //       participantsExternalEmails,
-  //       participantsGroups,
-  //       participantsUsers,
-  //       authorPublicId
-  //     } = input;
-  //     const authorOrgMemberResponse = await db.query.orgMembers.findFirst({
-  //       where: eq(orgMembers.publicId, authorPublicId),
-  //       columns: {
-  //         id: true
-  //       }
-  //     });
-  //     if (!authorOrgMemberResponse || !authorOrgMemberResponse.id) {
-  //       throw new Error('Author Id Not Found!');
-  //     }
-  //     const newPublicId = nanoId();
-  //     // create convo
-  //     const convoInsertResponse = await db.insert(convos).values({
-  //       publicId: newPublicId,
-  //       orgId: orgId,
-  //       screenerStatus: 'approved',
-  //       lastUpdatedAt: new Date()
-  //     });
-  //     // create subject
-  //     const subjectInsertResponse = await db
-  //       .insert(convoSubjects)
-  //       .values({
-  //         convoId: +convoInsertResponse.insertId,
-  //         subject: input.topic
-  //       });
-  //     let foreignIdentitiesIds: number[] = [];
-  //     if (participantsExternalEmails && participantsExternalEmails.length > 0) {
-  //       // Create external people if dont exist in system
-  //       // 1. Split email addresses into username and rootDomain
-  //       const emailParts = participantsExternalEmails.map((email) => {
-  //         const [username, rootDomain] = email.split('@');
-  //         return { username, rootDomain };
-  //       });
-  //       // 2. Query the database to see if they already exist
-  //       const existingForeignIdentities =
-  //         await db.query.foreignEmailIdentities.findMany({
-  //           where: or(
-  //             ...emailParts.map((part) =>
-  //               and(
-  //                 eq(foreignEmailIdentities.username, part.username),
-  //                 eq(foreignEmailIdentities.rootDomain, part.rootDomain)
-  //               )
-  //             )
-  //           ),
-  //           columns: {
-  //             id: true,
-  //             username: true,
-  //             rootDomain: true
-  //           }
-  //         });
-  //       foreignIdentitiesIds = existingForeignIdentities.map(
-  //         (identity) => +identity.id
-  //       );
-  //       // change existing emails formats, and create new array without them (only with missing ones)
-  //       const existingEmails = new Set(
-  //         existingForeignIdentities.map(
-  //           (identity) => `${identity.username}@${identity.rootDomain}`
-  //         )
-  //       );
-  //       const newEmails = emailParts.filter(
-  //         (part) => !existingEmails.has(`${part.username}@${part.rootDomain}`)
-  //       );
-  //       for (const newEmail of newEmails) {
-  //         const newPublicId = nanoId();
-  //         const insertNewResponse = await db
-  //           .insert(foreignEmailIdentities)
-  //           .values({
-  //             publicId: newPublicId,
-  //             username: newEmail.username,
-  //             rootDomain: newEmail.rootDomain
-  //           });
-  //         foreignIdentitiesIds.push(+insertNewResponse.insertId);
-  //       }
-  //     }
-  //     // Get Group ID from groupPublic Id
-  //     let groupIds: number[] = [];
-  //     if (participantsGroups.length > 0) {
-  //       const groupResponses = await db.query.userGroups.findMany({
-  //         where: inArray(userGroups.publicId, participantsGroups),
-  //         columns: {
-  //           id: true
-  //         }
-  //       });
-  //       groupIds = groupResponses.map((group) => group.id);
-  //     }
-  //     let orgMemberIds: number[] = [];
-  //     if (participantsUsers.length > 0) {
-  //       const orgMemberResponses = await db.query.orgMembers.findMany({
-  //         where: inArray(orgMembers.publicId, participantsUsers),
-  //         columns: {
-  //           id: true
-  //         }
-  //       });
-  //       orgMemberIds = orgMemberResponses.map((member) => member.id);
-  //     }
-  //     // add convo members
-  //     type ConvoParticipantsDbInsertValue = InferInsertModel<
-  //       typeof convoParticipants
-  //     >;
-  //     const convoParticipantsDbInsertValuesArray: ConvoParticipantsDbInsertValue[] =
-  //       [];
-  //     // For each foreignIdentitiesIds && groupIds && orgMemberId
-  //     foreignIdentitiesIds.forEach((id) => {
-  //       convoParticipantsDbInsertValuesArray.push({
-  //         convoId: +convoInsertResponse.insertId,
-  //         role: 'contributor',
-  //         notifications: 'active',
-  //         active: true,
-  //         foreignEmailIdentityId: +id
-  //       });
-  //     });
-  //     groupIds.forEach((id) => {
-  //       convoParticipantsDbInsertValuesArray.push({
-  //         convoId: +convoInsertResponse.insertId,
-  //         role: 'contributor',
-  //         notifications: 'active',
-  //         active: true,
-  //         userGroupId: +id
-  //       });
-  //     });
-  //     orgMemberIds.forEach((id) => {
-  //       convoParticipantsDbInsertValuesArray.push({
-  //         convoId: +convoInsertResponse.insertId,
-  //         role: 'contributor',
-  //         orgMemberId: +id,
-  //         notifications: 'active',
-  //         active: true
-  //       });
-  //     });
-  //     await db
-  //       .insert(convoParticipants)
-  //       .values(convoParticipantsDbInsertValuesArray);
-  //     const authorConvoMemberInsertResponse = await db
-  //       .insert(convoParticipants)
-  //       .values({
-  //         convoId: +convoInsertResponse.insertId,
-  //         role: 'assigned',
-  //         orgMemberId: +authorOrgMemberResponse?.id,
-  //         notifications: 'active',
-  //         active: true
-  //       });
-  //     // add external people screener status
-  //     type ForeignEmailIdentitiesScreenerStatusInsertValue = InferInsertModel<
-  //       typeof foreignEmailIdentitiesScreenerStatus
-  //     >;
-  //     const foreignEmailIdentitiesScreenerStatusInsertArray: ForeignEmailIdentitiesScreenerStatusInsertValue[] =
-  //       [];
-  //     foreignIdentitiesIds.forEach((id) => {
-  //       const newPublicId = nanoId();
-  //       foreignEmailIdentitiesScreenerStatusInsertArray.push({
-  //         foreignIdentityId: +id,
-  //         orgId: +userOrg.orgId,
-  //         publicId: newPublicId,
-  //         setByOrgMemberId: +authorOrgMemberResponse.id,
-  //         level: 'org',
-  //         status: 'approve'
-  //       });
-  //     });
-  //     if (foreignEmailIdentitiesScreenerStatusInsertArray.length > 0) {
-  //       await db
-  //         .insert(foreignEmailIdentitiesScreenerStatus)
-  //         .values(foreignEmailIdentitiesScreenerStatusInsertArray);
-  //     }
-  //     // send email to external email address
-  //     // add message to convo
-  //     const newConvoMessagePublicId = nanoId();
-  //     await db.insert(convoMessages).values({
-  //       convoId: +convoInsertResponse.insertId,
-  //       publicId: newConvoMessagePublicId,
-  //       subjectId: +subjectInsertResponse.insertId,
-  //       author: +authorConvoMemberInsertResponse.insertId,
-  //       body: input.message
-  //     });
-  //     return {
-  //       data: convoDetails
-  //     };
-  //   })
 });

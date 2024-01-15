@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { EditorContent, useEditor, type JSONContent } from '@tiptap/vue-3';
-  import StarterKit from '@tiptap/starter-kit';
+  import { tipTapExtensions } from '~/shared/editorConfig';
 
   const props = defineProps<{
     modelValue: JSONContent;
@@ -14,7 +14,7 @@
 
   const editor = useEditor({
     content: content.value,
-    extensions: [StarterKit],
+    extensions: tipTapExtensions,
     autofocus: true,
     editorProps: {
       attributes: {
