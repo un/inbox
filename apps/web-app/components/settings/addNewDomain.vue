@@ -86,7 +86,7 @@
         v-model:validationMessage="newDomainNameValidationMessage"
         label="Domain name"
         placeholder=""
-        :schema="z.string().min(4).trim()" />
+        :schema="z.string().min(4).includes('.').trim()" />
       <UnUiButton
         :label="buttonLabel"
         :loading="buttonLoading"
