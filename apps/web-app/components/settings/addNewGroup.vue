@@ -4,6 +4,7 @@
   const { $trpc, $i18n } = useNuxtApp();
 
   const newGroupNameValue = ref('');
+  const newGroupNameValidationMessage = ref('');
   const newGroupNameValid = ref<boolean | 'remote' | null>(null);
   const newGroupColorValue = ref<UiColor>();
   const newGroupDescriptionValue = ref('');
@@ -13,9 +14,52 @@
   const newIdentityUsernameValid = ref<boolean | 'remote' | null>(null);
   const newIdentityUsernameValidationMessage = ref('');
   const newIdentitySendNameValue = ref('');
+  const newIdentitySendNameValidationMessage = ref('');
+  const newIdentitySendNameTempValue = ref('');
   const newIdentitySendNameValid = ref<boolean | 'remote' | null>(null);
+  const newIdentityCatchAll = ref(false);
   const newDomainNameValid = ref<boolean | 'remote' | null>(null);
   const createEmailIdentityForGroup = ref(false);
+
+  watchDebounced(
+    newGroupNameValue,
+    async () => {
+      if (
+        newIdentitySendNameTempValue.value === newIdentitySendNameValue.value
+      ) {
+        const newValue = newGroupNameValue.value
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, '');
+        newIdentitySendNameValue.value = newValue;
+        newIdentitySendNameTempValue.value = newValue;
+      }
+    },
+    {
+      debounce: 500,
+      maxWait: 5000
+    }
+  );
+
+  watchDebounced(
+    newIdentitySendNameValue,
+    async () => {
+      if (newIdentitySendNameValid.value === 'remote') {
+        const { available, error } =
+          await $trpc.org.crud.checkSlugAvailability.query({
+            slug: newIdentitySendNameValue.value
+          });
+        if (!available) {
+          newIdentitySendNameValid.value = false;
+          newIdentitySendNameValidationMessage.value = 'Not available';
+        }
+        available && (newIdentitySendNameValid.value = true);
+      }
+    },
+    {
+      debounce: 500,
+      maxWait: 5000
+    }
+  );
 
   interface OrgDomains {
     domainPublicId: string;
@@ -30,6 +74,23 @@
       {},
       { server: false }
     );
+
+  interface OrgMembers {
+    publicId: String;
+    name: String;
+    handle: String;
+    title: String | null;
+    keywords: String;
+  }
+  const selectedOrgMembers = ref<OrgMembers[]>([]);
+
+  interface OrgUserGroups {
+    publicId: String;
+    name: String;
+    description: String | null;
+    color: String | null;
+  }
+  const selectedOrgGroups = ref<OrgUserGroups[]>([]);
 
   watch(orgDomainsData, (newOrgDomainsData) => {
     if (newOrgDomainsData?.domainData) {
@@ -107,11 +168,19 @@
           groupColor: newGroupColorValue.value
         });
 
+      const selectedGroupsPublicIds: string[] = selectedOrgGroups.value.map(
+        (group) => group.publicId as string
+      );
+      const selectedOrgMembersPublicIds: string[] =
+        selectedOrgMembers.value.map((member) => member.publicId as string);
+
       await $trpc.org.mail.emailIdentities.createNewEmailIdentity.mutate({
         emailUsername: newIdentityUsernameValue.value,
         domainPublicId: selectedDomain.value?.domainPublicId as string,
         sendName: newIdentitySendNameValue.value,
-        routeToGroupsPublicIds: [newGroupPublicId]
+        routeToGroupsPublicIds: [...selectedGroupsPublicIds, newGroupPublicId],
+        routeToUsersOrgMemberPublicIds: selectedOrgMembersPublicIds,
+        catchAll: newIdentityCatchAll.value
       });
       buttonLoading.value = false;
       buttonLabel.value = 'Done... Redirecting';
@@ -239,6 +308,7 @@
         <UnUiInput
           v-model:value="newGroupNameValue"
           v-model:valid="newGroupNameValid"
+          v-model:validationMessage="newGroupNameValidationMessage"
           label="Group Name"
           :schema="z.string().min(2)"
           width="full" />
@@ -388,6 +458,7 @@
             <UnUiInput
               v-model:value="newIdentitySendNameValue"
               v-model:valid="newIdentitySendNameValid"
+              v-model:validationMessage="newIdentitySendNameValidationMessage"
               label="Send Name"
               :schema="z.string().min(2).max(64)"
               :helper="`The name that will appear in the 'From' field of emails sent from this address`" />
