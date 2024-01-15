@@ -75,23 +75,6 @@
       { server: false }
     );
 
-  interface OrgMembers {
-    publicId: String;
-    name: String;
-    handle: String;
-    title: String | null;
-    keywords: String;
-  }
-  const selectedOrgMembers = ref<OrgMembers[]>([]);
-
-  interface OrgUserGroups {
-    publicId: String;
-    name: String;
-    description: String | null;
-    color: String | null;
-  }
-  const selectedOrgGroups = ref<OrgUserGroups[]>([]);
-
   watch(orgDomainsData, (newOrgDomainsData) => {
     if (newOrgDomainsData?.domainData) {
       for (const domain of newOrgDomainsData.domainData) {
@@ -111,7 +94,6 @@
           (newIdentitySendNameValid.value || newGroupNameValid.value) ===
             true &&
           selectedDomain.value?.domainPublicId &&
-          newGroupNameValid.value === true &&
           !!newGroupColorValue.value
         );
       }
@@ -125,30 +107,6 @@
     return newGroupNameValid.value === true && !!newGroupColorValue.value;
   });
 
-  const toggleableOptions = ref<{
-    address: boolean;
-    sendName: boolean;
-    domainName: boolean;
-  }>({
-    address: false,
-    sendName: false,
-    domainName: false
-  });
-
-  const toggleInputOption = (option: keyof typeof toggleableOptions.value) => {
-    toggleableOptions.value[option] = !toggleableOptions.value[option];
-    if (option === 'address' && !toggleableOptions.value.address) {
-      newIdentityUsernameValid.value = null;
-      newIdentityUsernameValidationMessage.value = '';
-    }
-    if (option === 'sendName' && !toggleableOptions.value.sendName) {
-      newIdentitySendNameValid.value = null;
-    }
-    if (option === 'domainName' && !toggleableOptions.value.domainName) {
-      newDomainNameValid.value = null;
-    }
-  };
-
   const emit = defineEmits(['close']);
 
   const route = useRoute();
@@ -156,57 +114,35 @@
   const orgSlug = route.params.orgSlug as string;
 
   async function createGroup() {
+    if (!newGroupColorValue.value) return;
+
+    buttonLoading.value = true;
+    buttonLabel.value = 'Creating...';
+    const toast = useToast();
+    const { newGroupPublicId } =
+      await $trpc.org.users.userGroups.createOrgUserGroups.mutate({
+        groupName: newGroupNameValue.value,
+        groupDescription: newGroupDescriptionValue.value,
+        groupColor: newGroupColorValue.value
+      });
+
     if (createEmailIdentityForGroup.value) {
-      if (!newGroupColorValue.value) return;
-      buttonLoading.value = true;
-      buttonLabel.value = 'Creating...';
-      const toast = useToast();
-      const { newGroupPublicId } =
-        await $trpc.org.users.userGroups.createOrgUserGroups.mutate({
-          groupName: newGroupNameValue.value,
-          groupDescription: newGroupDescriptionValue.value,
-          groupColor: newGroupColorValue.value
-        });
-
-      const selectedGroupsPublicIds: string[] = selectedOrgGroups.value.map(
-        (group) => group.publicId as string
-      );
-      const selectedOrgMembersPublicIds: string[] =
-        selectedOrgMembers.value.map((member) => member.publicId as string);
-
       await $trpc.org.mail.emailIdentities.createNewEmailIdentity.mutate({
         emailUsername: newIdentityUsernameValue.value,
         domainPublicId: selectedDomain.value?.domainPublicId as string,
         sendName: newIdentitySendNameValue.value,
-        routeToGroupsPublicIds: [...selectedGroupsPublicIds, newGroupPublicId],
-        routeToUsersOrgMemberPublicIds: selectedOrgMembersPublicIds,
+        routeToGroupsPublicIds: [newGroupPublicId],
+        routeToUsersOrgMemberPublicIds: [],
         catchAll: newIdentityCatchAll.value
       });
-      buttonLoading.value = false;
-      buttonLabel.value = 'Done... Redirecting';
       toast.add({
-        id: 'address_added & group_created',
+        id: 'Email Identity Created',
         title: 'Address Added & Group Group Created',
-        description: `${newIdentityUsernameValue.value}@${selectedDomain.value?.domain} has been added successfully & Group has been created successfully`,
+        description: `${newIdentityUsernameValue.value}@${selectedDomain.value?.domain} has been added successfully.`,
         icon: 'i-ph-thumbs-up',
         timeout: 5000
       });
-      setTimeout(() => {
-        emit('close');
-      }, 1000);
     } else {
-      if (!newGroupColorValue.value) return;
-      buttonLoading.value = true;
-      buttonLabel.value = 'Creating...';
-      const { newGroupPublicId } =
-        await $trpc.org.users.userGroups.createOrgUserGroups.mutate({
-          groupName: newGroupNameValue.value,
-          groupDescription: newGroupDescriptionValue.value,
-          groupColor: newGroupColorValue.value
-        });
-      buttonLoading.value = false;
-      buttonLabel.value = 'Done... Redirecting';
-      const toast = useToast();
       toast.add({
         id: 'group_created',
         title: 'Group Group Created',
@@ -214,10 +150,12 @@
         icon: 'i-ph-thumbs-up',
         timeout: 5000
       });
-      setTimeout(() => {
-        emit('close');
-      }, 1000);
     }
+    buttonLoading.value = false;
+    buttonLabel.value = 'Done... Redirecting';
+    setTimeout(() => {
+      emit('close');
+    }, 1000);
   }
 
   async function checkEmailAvailability() {
@@ -392,7 +330,7 @@
         <span class="text-sm">Add Email Address</span>
         <UnUiToggle
           v-model="createEmailIdentityForGroup"
-          @click="toggleInputOption('address')" />
+          @click="createEmailIdentityForGroup = !createEmailIdentityForGroup" />
       </div>
       <NuxtUiDivider v-if="createEmailIdentityForGroup" />
       <div
