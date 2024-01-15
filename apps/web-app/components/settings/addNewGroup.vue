@@ -108,7 +108,8 @@
       if (isPro.value === false) {
         return (
           newIdentityUsernameValid.value === true &&
-          newIdentitySendNameValid.value === true &&
+          (newIdentitySendNameValid.value || newGroupNameValid.value) ===
+            true &&
           selectedDomain.value?.domainPublicId &&
           newGroupNameValid.value === true &&
           !!newGroupColorValue.value
@@ -116,9 +117,8 @@
       }
       return (
         newIdentityUsernameValid.value === true &&
-        newIdentitySendNameValid.value === true &&
+        (newIdentitySendNameValid.value || newGroupNameValid.value) === true &&
         selectedDomain.value?.domainPublicId &&
-        newGroupNameValid.value === true &&
         !!newGroupColorValue.value
       );
     }
@@ -397,7 +397,7 @@
       <NuxtUiDivider v-if="createEmailIdentityForGroup" />
       <div
         v-if="createEmailIdentityForGroup"
-        class="h-full w-full flex flex-col items-start gap-8 overflow-y-scroll">
+        class="h-full w-full flex flex-col items-start gap-8">
         <div class="w-full flex flex-col gap-8">
           <div class="w-full flex flex-col gap-4">
             <div class="w-full border-b-1 border-base-6">
