@@ -251,7 +251,7 @@
         helper="This email will only be used if you ever lose all your passkeys and need to recover your account or for important account notices."
         placeholder=""
         :remote-validation="true"
-        :schema="z.string().email()" />
+        :schema="z.string().email().trim()" />
 
       <div class="mt-3 w-full">
         <UnUiButton

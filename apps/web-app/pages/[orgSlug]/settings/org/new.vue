@@ -109,7 +109,7 @@
         v-model:validationMessage="orgNameValidationMessage"
         label="Organization Name"
         placeholder=""
-        :schema="z.string().min(2).max(32)" />
+        :schema="z.string().min(2).max(32).trim()" />
       <UnUiInput
         v-model:value="orgSlugValue"
         v-model:valid="orgSlugValid"
@@ -126,6 +126,7 @@
             .regex(/^[a-z0-9]*$/, {
               message: 'Only letters and numbers'
             })
+            .trim()
         " />
 
       <div>

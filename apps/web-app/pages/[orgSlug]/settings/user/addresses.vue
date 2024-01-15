@@ -263,7 +263,7 @@
           v-model:value="editedSendName"
           v-model:valid="editedSendNameValid"
           label="Send name"
-          :schema="z.string().min(3).max(64)"
+          :schema="z.string().min(3).max(64).trim()"
           class="w-full" />
       </div>
       <template #footer>

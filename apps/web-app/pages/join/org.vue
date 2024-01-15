@@ -202,7 +202,7 @@
           width="full"
           label="Organization Name"
           placeholder=""
-          :schema="z.string()" />
+          :schema="z.string().trim()" />
         <UnUiInput
           v-model:value="orgSlugValue"
           v-model:valid="orgSlugValid"
@@ -220,6 +220,7 @@
               .regex(/^[a-z0-9]*$/, {
                 message: 'Only letters and numbers'
               })
+              .trim()
           " />
 
         <UnUiButton
@@ -241,7 +242,7 @@
             width="full"
             label="Invite Code"
             placeholder=""
-            :schema="z.string().min(10).max(32)" />
+            :schema="z.string().min(10).max(32).trim()" />
           <p
             v-if="inviteCodePrefilled"
             class="text-sm">

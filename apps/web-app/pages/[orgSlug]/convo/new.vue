@@ -573,7 +573,7 @@
         v-model:valid="conversationSubjectInputValid"
         width="full"
         label="Topic"
-        :schema="z.string().min(1).max(128)" />
+        :schema="z.string().min(1).max(128).trim()" />
     </div>
 
     <div

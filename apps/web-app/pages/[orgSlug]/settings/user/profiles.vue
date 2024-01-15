@@ -184,11 +184,13 @@
           v-model:value="fNameValue"
           v-model:valid="fNameValid"
           label="First Name"
+          :schema="z.string().min(1).max(32).trim()"
           placeholder="" />
         <UnUiInput
           v-model:value="lNameValue"
           v-model:valid="lNameValid"
           label="Last Name"
+          :schema="z.string().min(1).max(32).trim()"
           placeholder="" />
       </div>
       <div class="flex flex-row flex-wrap gap-4">
@@ -196,11 +198,13 @@
           v-model:value="titleValue"
           v-model:valid="titleValid"
           label="Title"
+          :schema="z.string().min(1).max(32).trim()"
           placeholder="" />
         <UnUiInput
           v-model:value="blurbValue"
           v-model:valid="blurbValid"
           label="Bio"
+          :schema="z.string().min(1).max(128).trim()"
           placeholder="" />
       </div>
       <UnUiButton
