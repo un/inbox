@@ -16,7 +16,7 @@ import { TRPCError } from '@trpc/server';
 export const profileRouter = router({
   generateAvatarUploadUrl: userProcedure.query(async ({ ctx, input }) => {
     const { user } = ctx;
-    const userId = user?.id || 0;
+    const userId = user.id;
     const config = useRuntimeConfig();
 
     const formData = new FormData();
@@ -79,7 +79,7 @@ export const profileRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const { db, user } = ctx;
-      const userId = user?.id || 0;
+      const userId = user.id;
 
       const newPublicId = nanoId();
       const insertUserProfileResponse = await db.insert(userProfiles).values({
@@ -118,7 +118,7 @@ export const profileRouter = router({
     )
     .query(async ({ ctx, input }) => {
       const { db, user } = ctx;
-      const userId = user?.id || 0;
+      const userId = user.id;
 
       let orgId: number | null = null;
       if (input.orgPublicId || input.orgSlug) {
@@ -191,7 +191,7 @@ export const profileRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const { db, user } = ctx;
-      const userId = user?.id || 0;
+      const userId = user.id;
 
       await db
         .update(userProfiles)

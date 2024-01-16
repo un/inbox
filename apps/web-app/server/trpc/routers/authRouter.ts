@@ -1,15 +1,14 @@
 import { z } from 'zod';
-import { parse, stringify } from 'superjson';
-import { limitedProcedure, router, userProcedure } from '../trpc';
+import {  router, userProcedure } from '../trpc';
 import { eq } from '@uninbox/database/orm';
 import { users } from '@uninbox/database/schema';
 
 export const authRouter = router({
   getUserDefaultOrgSlug: userProcedure
     .input(z.object({}).strict())
-    .query(async ({ ctx, input }) => {
+    .query(async ({ ctx }) => {
       const { db, user } = ctx;
-      const userId = user?.id || 0;
+      const userId = user.id;
 
       const userDefaultOrgSlug = await db.query.users.findFirst({
         where: eq(users.id, userId),

@@ -18,43 +18,43 @@ const isUserAuthenticated = trpcContext.middleware(({ next, ctx }) => {
       message: 'You are not logged in, redirecting...'
     });
   }
-  return next();
+  return next({
+    ctx: { ...ctx, user: ctx.user }
+  });
 });
-const hasOrgSlug = trpcContext.middleware(({ next, ctx }) => {
-  //@ts-ignore
-  const orgId = +ctx.org?.id;
-  if (!orgId) {
+
+// It is not unstable - only the API might change in the future: https://trpc.io/docs/faq#unstable
+const hasOrgSlug = isUserAuthenticated.unstable_pipe(({ next, ctx }) => {
+  if (!ctx.org) {
     throw new TRPCError({
       code: 'BAD_REQUEST',
       message: 'Invalid organization selected, redirecting...'
     });
   }
-  //@ts-ignore
-  const userId = +ctx.user?.id;
-  if (!ctx.user || !ctx.user.session.userId || !ctx.user.id) {
-    throw new TRPCError({
-      code: 'UNAUTHORIZED',
-      message: 'You are not logged in, redirecting...'
-    });
-  }
-  const orgMemberUserIds = ctx.org?.members.map((member) => member.userId);
-  const isUserInOrg = orgMemberUserIds?.includes(userId);
-  //@ts-ignore
-  if (!isUserInOrg) {
+
+  const userId = ctx.user?.id;
+  const orgMembership = ctx.org?.members.find(
+    (member) => member.userId === userId
+  );
+
+  if (!userId || !orgMembership) {
     throw new TRPCError({
       code: 'UNAUTHORIZED',
       message: 'You are not a member of this organization, redirecting...'
     });
   }
-  if (ctx.org) {
-    //@ts-ignore
-    const orgMemberId = +ctx.org?.members.find(
-      (member) => member.userId === userId
-    ).id;
-    ctx.org.memberId = orgMemberId;
-  }
-  return next();
+
+  return next({
+    ctx: {
+      ...ctx,
+      org: {
+        ...ctx.org,
+        memberId: orgMembership.id
+      }
+    }
+  });
 });
+
 const isEeEnabled = trpcContext.middleware(({ next }) => {
   if (!useRuntimeConfig().billing?.enabled) {
     throw new TRPCError({
