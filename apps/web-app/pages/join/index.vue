@@ -108,7 +108,6 @@
             .regex(/^[a-zA-Z0-9]*$/, {
               message: 'Only letters and numbers'
             })
-            .trim()
         " />
 
       <div class="mt-3 w-full flex flex-col gap-2">

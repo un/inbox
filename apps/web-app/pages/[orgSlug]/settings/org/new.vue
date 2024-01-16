@@ -109,7 +109,7 @@
         v-model:validationMessage="orgNameValidationMessage"
         label="Organization Name"
         placeholder=""
-        :schema="z.string().min(2).max(32).trim()" />
+        :schema="z.string().trim().min(2).max(32)" />
       <UnUiInput
         v-model:value="orgSlugValue"
         v-model:valid="orgSlugValid"

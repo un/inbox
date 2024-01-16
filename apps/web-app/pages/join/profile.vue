@@ -229,13 +229,13 @@
             v-model:value="fNameValue"
             v-model:valid="fNameValid"
             label="First Name"
-            :schema="z.string().min(1).max(32).trim()"
+            :schema="z.string().trim()"
             placeholder="" />
           <UnUiInput
             v-model:value="lNameValue"
             v-model:valid="lNameValid"
             label="Last Name"
-            :schema="z.string().min(1).max(32).trim()"
+            :schema="z.string().trim()"
             placeholder="" />
         </div>
         <div

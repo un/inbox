@@ -166,7 +166,7 @@
         label="Organisation Name"
         placeholder=""
         :locked="true"
-        :schema="z.string().min(1).trim()" />
+        :schema="z.string().trim().min(1)" />
       <UnUiButton
         :label="buttonLabel"
         icon="i-ph-floppy-disk"

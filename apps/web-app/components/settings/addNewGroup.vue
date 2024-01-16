@@ -92,7 +92,7 @@
           v-model:value="newGroupNameValue"
           v-model:valid="newGroupNameValid"
           label="Group Name"
-          :schema="z.string().min(2).trim()"
+          :schema="z.string().trim().min(2)"
           width="full" />
         <UnUiInput
           v-model:value="newGroupDescriptionValue"

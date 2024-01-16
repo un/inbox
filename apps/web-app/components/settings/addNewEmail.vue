@@ -245,7 +245,6 @@
                 .regex(/^[a-zA-Z0-9]*$/, {
                   message: 'Only letters and numbers'
                 })
-                .trim()
             "
             width="full" />
           <div class="flex flex-col gap-1">
@@ -304,7 +303,7 @@
           v-model:value="newIdentitySendNameValue"
           v-model:valid="newIdentitySendNameValid"
           label="Send Name"
-          :schema="z.string().min(2).max(64).trim()"
+          :schema="z.string().trim().min(2).max(64)"
           :helper="`The name that will appear in the 'From' field of emails sent from this address`" />
       </div>
       <NuxtUiDivider />

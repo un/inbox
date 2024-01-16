@@ -220,7 +220,6 @@
               .regex(/^[a-z0-9]*$/, {
                 message: 'Only letters and numbers'
               })
-              .trim()
           " />
 
         <UnUiButton
@@ -242,7 +241,7 @@
             width="full"
             label="Invite Code"
             placeholder=""
-            :schema="z.string().min(10).max(32).trim()" />
+            :schema="z.string().trim().min(10).max(32)" />
           <p
             v-if="inviteCodePrefilled"
             class="text-sm">
