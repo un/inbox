@@ -202,7 +202,7 @@
           width="full"
           label="Organization Name"
           placeholder=""
-          :schema="z.string()" />
+          :schema="z.string().trim()" />
         <UnUiInput
           v-model:value="orgSlugValue"
           v-model:valid="orgSlugValid"
@@ -241,7 +241,7 @@
             width="full"
             label="Invite Code"
             placeholder=""
-            :schema="z.string().min(10).max(32)" />
+            :schema="z.string().trim().min(10).max(32)" />
           <p
             v-if="inviteCodePrefilled"
             class="text-sm">

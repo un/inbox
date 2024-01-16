@@ -267,12 +267,13 @@
           v-model:value="newInviteUserFnameValue"
           v-model:valid="newInviteUserFnameValid"
           label="First name"
-          :schema="z.string().min(1).max(32)"
+          :schema="z.string().trim().min(1).max(32)"
           width="full" />
         <UnUiInput
           v-model:value="newInviteUserLnameValue"
           v-model:valid="newInviteUserLnameValid"
           label="Last name (Optional)"
+          :schema="z.string().trim().min(1).max(32)"
           width="full" />
       </div>
       <div
@@ -308,7 +309,7 @@
           v-model:value="newInviteUserTitleValue"
           v-model:valid="newInviteUserTitleValid"
           label="Title (Optional)"
-          :schema="z.string().min(1).max(32)"
+          :schema="z.string().trim().min(1).max(32)"
           width="full" />
       </div>
     </div>
@@ -340,7 +341,7 @@
         v-model:value="newInviteUserEmailAddressValue"
         v-model:valid="newInviteUserEmailAddressValid"
         label="Notification Email Address"
-        :schema="z.string().email()"
+        :schema="z.string().trim().email()"
         width="full" />
     </div>
 
@@ -426,7 +427,7 @@
           locked
           editable
           width="full"
-          :schema="z.string().min(2).max(64)"
+          :schema="z.string().trim().min(2).max(64)"
           :helper="`The name that will appear in the 'From' field of emails sent from this user`" />
       </div>
     </div>
