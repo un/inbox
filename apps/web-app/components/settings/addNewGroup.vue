@@ -16,7 +16,8 @@
   const newIdentitySendNameValue = ref('');
   const newIdentitySendNameValidationMessage = ref('');
   const newIdentitySendNameTempValue = ref('');
-  const newIdentitySendNameValid = ref<boolean | 'remote' | null>(null);
+  const newIdentitySendNameTempValueValid = ref<boolean | null>(null);
+  const newIdentitySendNameValid = ref<boolean | null>(null);
   const newIdentityCatchAll = ref(false);
   const newDomainNameValid = ref<boolean | 'remote' | null>(null);
   const createEmailIdentityForGroup = ref(false);
@@ -32,27 +33,6 @@
           .replace(/[^a-z0-9]/g, '');
         newIdentitySendNameValue.value = newValue;
         newIdentitySendNameTempValue.value = newValue;
-      }
-    },
-    {
-      debounce: 500,
-      maxWait: 5000
-    }
-  );
-
-  watchDebounced(
-    newIdentitySendNameValue,
-    async () => {
-      if (newIdentitySendNameValid.value === 'remote') {
-        const { available, error } =
-          await $trpc.org.crud.checkSlugAvailability.query({
-            slug: newIdentitySendNameValue.value
-          });
-        if (!available) {
-          newIdentitySendNameValid.value = false;
-          newIdentitySendNameValidationMessage.value = 'Not available';
-        }
-        available && (newIdentitySendNameValid.value = true);
       }
     },
     {
@@ -86,20 +66,52 @@
     }
   });
 
+  const validateSendName = () => {
+    if (
+      typeof newIdentitySendNameTempValue.value === 'string' &&
+      newIdentitySendNameValue.value.trim().length > 0
+    ) {
+      newIdentitySendNameValid.value = true;
+      newIdentitySendNameTempValueValid.value = true;
+    } else {
+      newIdentitySendNameValid.value = false;
+      newIdentitySendNameTempValueValid.value = false;
+    }
+  };
+
+  watch(newIdentitySendNameValue, () => {
+    validateSendName();
+  });
+
   const formValid = computed(() => {
     if (createEmailIdentityForGroup.value) {
       if (isPro.value === false) {
         return (
           newIdentityUsernameValid.value === true &&
-          (newIdentitySendNameValid.value || newGroupNameValid.value) ===
-            true &&
+          newIdentitySendNameValid.value === true &&
+          newGroupNameValid.value === true &&
+          newIdentitySendNameTempValueValid.value === true &&
+          (newIdentitySendNameTempValueValid.value === true ||
+            newIdentitySendNameTempValue.value ===
+              newIdentitySendNameValue.value) === true &&
+          (newIdentitySendNameValid.value === true ||
+            newIdentitySendNameTempValue.value ===
+              newIdentitySendNameValue.value) === true &&
           selectedDomain.value?.domainPublicId &&
           !!newGroupColorValue.value
         );
       }
       return (
         newIdentityUsernameValid.value === true &&
-        (newIdentitySendNameValid.value || newGroupNameValid.value) === true &&
+        newIdentitySendNameValid.value === true &&
+        newGroupNameValid.value === true &&
+        newIdentitySendNameTempValueValid.value === true &&
+        (newIdentitySendNameTempValueValid.value === true ||
+          newIdentitySendNameTempValue.value ===
+            newIdentitySendNameValue.value) === true &&
+        (newIdentitySendNameValid.value === true ||
+          newIdentitySendNameTempValue.value ===
+            newIdentitySendNameValue.value) === true &&
         selectedDomain.value?.domainPublicId &&
         !!newGroupColorValue.value
       );
