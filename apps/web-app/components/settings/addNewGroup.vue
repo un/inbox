@@ -8,31 +8,31 @@
   const newGroupNameValid = ref<boolean | 'remote' | null>(null);
   const newGroupColorValue = ref<UiColor>();
   const newGroupDescriptionValue = ref('');
+
+  const createEmailIdentityForGroup = ref(false);
+
+  const newEmailIdentityUsernameValue = ref('');
+  const newEmailIdentityUsernameValid = ref<boolean | 'remote' | null>(null);
+  const newEmailIdentityUsernameValidationMessage = ref('');
+  const newEmailIdentitySendNameValue = ref('');
+  const newEmailIdentitySendNameValid = ref<boolean | null>(null);
+  const newEmailIdentitySendNameValidationMessage = ref('');
+  const newEmailIdentitySendNameTempValue = ref('');
+  const newDomainNameValid = ref<boolean | 'remote' | null>(null);
+
   const buttonLabel = ref('Create New Group');
   const buttonLoading = ref(false);
-  const newIdentityUsernameValue = ref('');
-  const newIdentityUsernameValid = ref<boolean | 'remote' | null>(null);
-  const newIdentityUsernameValidationMessage = ref('');
-  const newIdentitySendNameValue = ref('');
-  const newIdentitySendNameValidationMessage = ref('');
-  const newIdentitySendNameTempValue = ref('');
-  const newIdentitySendNameTempValueValid = ref<boolean | null>(null);
-  const newIdentitySendNameValid = ref<boolean | null>(null);
-  const newIdentityCatchAll = ref(false);
-  const newDomainNameValid = ref<boolean | 'remote' | null>(null);
-  const createEmailIdentityForGroup = ref(false);
 
   watchDebounced(
     newGroupNameValue,
     async () => {
       if (
-        newIdentitySendNameTempValue.value === newIdentitySendNameValue.value
+        newEmailIdentitySendNameValue.value ===
+        newEmailIdentitySendNameTempValue.value
       ) {
-        const newValue = newGroupNameValue.value
-          .toLowerCase()
-          .replace(/[^a-z0-9]/g, '');
-        newIdentitySendNameValue.value = newValue;
-        newIdentitySendNameTempValue.value = newValue;
+        const newValue = newGroupNameValue.value;
+        newEmailIdentitySendNameValue.value = newValue;
+        newEmailIdentitySendNameTempValue.value = newValue;
       }
     },
     {
@@ -66,57 +66,23 @@
     }
   });
 
-  const validateSendName = () => {
-    if (
-      typeof newIdentitySendNameTempValue.value === 'string' &&
-      newIdentitySendNameValue.value.trim().length > 0
-    ) {
-      newIdentitySendNameValid.value = true;
-      newIdentitySendNameTempValueValid.value = true;
-    } else {
-      newIdentitySendNameValid.value = false;
-      newIdentitySendNameTempValueValid.value = false;
-    }
-  };
-
-  watch(newIdentitySendNameValue, () => {
-    validateSendName();
-  });
-
   const formValid = computed(() => {
+    const groupFormFieldsValid =
+      newGroupNameValid.value === true && !!newGroupColorValue.value;
+    const emailIdentityFormSendNameValid =
+      newEmailIdentitySendNameValid.value === true
+        ? true
+        : newEmailIdentitySendNameValue.value ===
+          newEmailIdentitySendNameTempValue.value;
+    const emailIdentityFormFieldsValid =
+      newEmailIdentityUsernameValid.value === true &&
+      selectedDomain.value?.domainPublicId &&
+      emailIdentityFormSendNameValid === true;
+
     if (createEmailIdentityForGroup.value) {
-      if (isPro.value === false) {
-        return (
-          newIdentityUsernameValid.value === true &&
-          newIdentitySendNameValid.value === true &&
-          newGroupNameValid.value === true &&
-          newIdentitySendNameTempValueValid.value === true &&
-          (newIdentitySendNameTempValueValid.value === true ||
-            newIdentitySendNameTempValue.value ===
-              newIdentitySendNameValue.value) === true &&
-          (newIdentitySendNameValid.value === true ||
-            newIdentitySendNameTempValue.value ===
-              newIdentitySendNameValue.value) === true &&
-          selectedDomain.value?.domainPublicId &&
-          !!newGroupColorValue.value
-        );
-      }
-      return (
-        newIdentityUsernameValid.value === true &&
-        newIdentitySendNameValid.value === true &&
-        newGroupNameValid.value === true &&
-        newIdentitySendNameTempValueValid.value === true &&
-        (newIdentitySendNameTempValueValid.value === true ||
-          newIdentitySendNameTempValue.value ===
-            newIdentitySendNameValue.value) === true &&
-        (newIdentitySendNameValid.value === true ||
-          newIdentitySendNameTempValue.value ===
-            newIdentitySendNameValue.value) === true &&
-        selectedDomain.value?.domainPublicId &&
-        !!newGroupColorValue.value
-      );
+      return groupFormFieldsValid && emailIdentityFormFieldsValid;
     }
-    return newGroupNameValid.value === true && !!newGroupColorValue.value;
+    return groupFormFieldsValid;
   });
 
   const emit = defineEmits(['close']);
@@ -140,25 +106,25 @@
 
     if (createEmailIdentityForGroup.value) {
       await $trpc.org.mail.emailIdentities.createNewEmailIdentity.mutate({
-        emailUsername: newIdentityUsernameValue.value,
+        emailUsername: newEmailIdentityUsernameValue.value,
         domainPublicId: selectedDomain.value?.domainPublicId as string,
-        sendName: newIdentitySendNameValue.value,
+        sendName: newEmailIdentitySendNameValue.value,
         routeToGroupsPublicIds: [newGroupPublicId],
         routeToUsersOrgMemberPublicIds: [],
-        catchAll: newIdentityCatchAll.value
+        catchAll: false
       });
       toast.add({
         id: 'Email Identity Created',
-        title: 'Address Added & Group Group Created',
-        description: `${newIdentityUsernameValue.value}@${selectedDomain.value?.domain} has been added successfully.`,
+        title: 'Group Created Successfully',
+        description: `${newGroupNameValue.value} group with email ${newEmailIdentityUsernameValue.value}@${selectedDomain.value?.domain} created successfully.`,
         icon: 'i-ph-thumbs-up',
         timeout: 5000
       });
     } else {
       toast.add({
         id: 'group_created',
-        title: 'Group Group Created',
-        description: 'Group has been created successfully',
+        title: 'Group Created Successfully',
+        description: `${newGroupNameValue.value} group has been created successfully`,
         icon: 'i-ph-thumbs-up',
         timeout: 5000
       });
@@ -172,26 +138,27 @@
 
   async function checkEmailAvailability() {
     if (
-      newIdentityUsernameValid.value === 'remote' ||
-      newIdentityUsernameValidationMessage.value === 'Select domain'
+      newEmailIdentityUsernameValid.value === 'remote' ||
+      newEmailIdentityUsernameValidationMessage.value === 'Select domain'
     ) {
       if (!selectedDomain.value?.domain) {
-        newIdentityUsernameValid.value = false;
-        newIdentityUsernameValidationMessage.value = 'Select domain';
+        newEmailIdentityUsernameValid.value = false;
+        newEmailIdentityUsernameValidationMessage.value = 'Select domain';
         return;
       }
       const { available } =
         await $trpc.org.mail.emailIdentities.checkEmailAvailability.query({
           domainPublicId: selectedDomain.value?.domainPublicId as string,
-          emailUsername: newIdentityUsernameValue.value
+          emailUsername: newEmailIdentityUsernameValue.value
         });
       if (!available) {
-        newIdentityUsernameValid.value = false;
-        newIdentityUsernameValidationMessage.value = 'Email already in use';
+        newEmailIdentityUsernameValid.value = false;
+        newEmailIdentityUsernameValidationMessage.value =
+          'Email already in use';
       }
       if (available) {
-        newIdentityUsernameValid.value = true;
-        newIdentityUsernameValidationMessage.value = '';
+        newEmailIdentityUsernameValid.value = true;
+        newEmailIdentityUsernameValidationMessage.value = '';
       }
       return;
     }
@@ -199,7 +166,7 @@
   }
 
   watchDebounced(
-    newIdentityUsernameValue,
+    newEmailIdentityUsernameValue,
     async () => {
       await checkEmailAvailability();
     },
@@ -350,17 +317,12 @@
         class="h-full w-full flex flex-col items-start gap-8">
         <div class="w-full flex flex-col gap-8">
           <div class="w-full flex flex-col gap-4">
-            <div class="w-full border-b-1 border-base-6">
-              <span class="text-sm text-base-11 font-medium uppercase">
-                Email Address
-              </span>
-            </div>
             <div
               class="items-top grid grid-cols-1 grid-rows-2 gap-4 md:grid-cols-2 md:grid-rows-1">
               <UnUiInput
-                v-model:value="newIdentityUsernameValue"
-                v-model:valid="newIdentityUsernameValid"
-                :validation-message="newIdentityUsernameValidationMessage"
+                v-model:value="newEmailIdentityUsernameValue"
+                v-model:valid="newEmailIdentityUsernameValid"
+                :validation-message="newEmailIdentityUsernameValidationMessage"
                 :remote-validation="true"
                 label="Address"
                 :schema="
@@ -406,11 +368,13 @@
               </div>
             </div>
             <UnUiInput
-              v-model:value="newIdentitySendNameValue"
-              v-model:valid="newIdentitySendNameValid"
-              v-model:validationMessage="newIdentitySendNameValidationMessage"
+              v-model:value="newEmailIdentitySendNameValue"
+              v-model:valid="newEmailIdentitySendNameValid"
+              v-model:validationMessage="
+                newEmailIdentitySendNameValidationMessage
+              "
               label="Send Name"
-              :schema="z.string().min(2).max(64)"
+              :schema="z.string().trim().min(2).max(64)"
               :helper="`The name that will appear in the 'From' field of emails sent from this address`" />
           </div>
         </div>
