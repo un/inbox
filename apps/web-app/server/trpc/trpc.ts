@@ -32,19 +32,12 @@ const hasOrgSlug = isUserAuthenticated.unstable_pipe(({ next, ctx }) => {
     });
   }
 
-  const orgMemberUserIds = ctx.org?.members.map((member) => member.userId);
-  const isUserInOrg = orgMemberUserIds?.includes(ctx.user.id);
-  if (!isUserInOrg) {
-    throw new TRPCError({
-      code: 'UNAUTHORIZED',
-      message: 'You are not a member of this organization, redirecting...'
-    });
-  }
+  const userId = ctx.user?.id;
   const orgMembership = ctx.org?.members.find(
-    (member) => member.userId === ctx.user.id
+    (member) => member.userId === userId
   );
 
-  if (!orgMembership) {
+  if (!userId || !orgMembership) {
     throw new TRPCError({
       code: 'UNAUTHORIZED',
       message: 'You are not a member of this organization, redirecting...'
