@@ -10,7 +10,7 @@ import {
   userProfilesToOrgs,
   orgMembers
 } from '@uninbox/database/schema';
-import { nanoId, nanoIdLength } from '@uninbox/utils';
+import { nanoId, nanoIdLength, nanoIdSchema } from '@uninbox/utils';
 import { TRPCError } from '@trpc/server';
 
 export const profileRouter = router({
@@ -111,7 +111,7 @@ export const profileRouter = router({
     .input(
       z
         .object({
-          orgPublicId: z.string().min(3).max(nanoIdLength).optional(),
+          orgPublicId: nanoIdSchema.optional(),
           orgSlug: z.string().min(1).max(32).optional()
         })
         .strict()
@@ -179,7 +179,7 @@ export const profileRouter = router({
   updateUserProfile: userProcedure
     .input(
       z.object({
-        profilePublicId: z.string().min(3).max(nanoIdLength),
+        profilePublicId: nanoIdSchema,
         fName: z.string(),
         lName: z.string(),
         title: z.string(),

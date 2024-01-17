@@ -8,7 +8,7 @@ import {
   userGroups,
   userProfiles
 } from '@uninbox/database/schema';
-import { nanoId, nanoIdLength } from '@uninbox/utils';
+import { nanoId, nanoIdLength, nanoIdSchema } from '@uninbox/utils';
 import { uiColors } from '@uninbox/types/ui';
 import type { UiColor } from '@uninbox/types/ui';
 import { isUserAdminOfOrg } from '~/server/utils/user';
@@ -104,7 +104,7 @@ export const orgUserGroupsRouter = router({
   getUserGroup: orgProcedure
     .input(
       z.object({
-        userGroupPublicId: z.string().min(3).max(nanoIdLength),
+        userGroupPublicId: nanoIdSchema,
         newUserGroup: z.boolean().optional()
       })
     )
@@ -167,8 +167,8 @@ export const orgUserGroupsRouter = router({
   addUserToGroup: orgProcedure
     .input(
       z.object({
-        groupPublicId: z.string().min(3).max(nanoIdLength),
-        orgMemberPublicId: z.string().min(3).max(nanoIdLength)
+        groupPublicId: nanoIdSchema,
+        orgMemberPublicId: nanoIdSchema
       })
     )
     .mutation(async ({ ctx, input }) => {
