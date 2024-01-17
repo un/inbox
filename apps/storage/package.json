@@ -8,14 +8,14 @@
     "preview": "node .output/server/index.mjs"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.484.0",
-    "@aws-sdk/s3-request-presigner": "^3.484.0",
+    "@aws-sdk/client-s3": "^3.490.0",
+    "@aws-sdk/s3-request-presigner": "^3.490.0",
     "@uninbox/database": "workspace:*",
     "@uninbox/types": "workspace:*",
     "@uninbox/utils": "workspace:*",
-    "@upstash/redis": "1.20.0",
+    "@upstash/redis": "1.28.1",
     "nitropack": "latest",
-    "sharp": "^0.33.1",
+    "sharp": "^0.33.2",
     "superjson": "^2.2.1"
   }
 }
