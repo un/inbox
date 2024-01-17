@@ -705,129 +705,6 @@ export const contactGlobalReputationsRelations = relations(
   })
 );
 
-// // External senders and their reputations
-// export const foreignEmailIdentities = mysqlTable(
-//   'foreign_email_identities',
-//   {
-//     id: serial('id').primaryKey(),
-//     publicId: nanoId('public_id').notNull(),
-//     rootDomain: varchar('root_domain', { length: 128 }).notNull(),
-//     username: varchar('username', { length: 128 }).notNull(),
-//     avatarId: varchar('avatar_id', { length: 64 }),
-//     senderName: varchar('sender_name', { length: 128 }),
-//     signature: text('signature'),
-//     createdAt: timestamp('created_at')
-//       .default(sql`CURRENT_TIMESTAMP`)
-//       .notNull()
-//   },
-//   (table) => ({
-//     publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
-//     rootDomainIndex: index('root_domain_idx').on(table.rootDomain),
-//     emailIndex: uniqueIndex('email_idx').on(table.rootDomain, table.username)
-//   })
-// );
-
-// export const foreignEmailIdentitiesRelations = relations(
-//   foreignEmailIdentities,
-//   ({ one, many }) => ({
-//     emailIdentitiesReputations: one(foreignEmailIdentitiesReputations, {
-//       fields: [foreignEmailIdentities.id],
-//       references: [foreignEmailIdentitiesReputations.identityId]
-//     }),
-//     screenerStatuses: many(foreignEmailIdentitiesScreenerStatus)
-//   })
-// );
-
-// export const foreignEmailIdentitiesReputations = mysqlTable(
-//   'foreign_email_identities_reputations',
-//   {
-//     id: serial('id').primaryKey(),
-//     identityId: foreignKey('identity_id').notNull(),
-//     spam: tinyint('spam').notNull(),
-//     cold: tinyint('cold').notNull(),
-//     lastUpdated: timestamp('last_updated')
-//       .default(sql`CURRENT_TIMESTAMP`)
-//       .notNull()
-//   },
-//   (table) => ({
-//     identityIdIndex: uniqueIndex('identity_id_idx').on(table.identityId)
-//   })
-// );
-
-// export const foreignEmailIdentitiesReputationsRelations = relations(
-//   foreignEmailIdentitiesReputations,
-//   ({ one }) => ({
-//     identity: one(foreignEmailIdentities, {
-//       fields: [foreignEmailIdentitiesReputations.identityId],
-//       references: [foreignEmailIdentities.id]
-//     })
-//   })
-// );
-
-// export const foreignEmailIdentitiesScreenerStatus = mysqlTable(
-//   'foreign_email_identities_screener_status',
-//   {
-//     id: serial('id').primaryKey(),
-//     publicId: nanoId('public_id').notNull(),
-//     orgId: foreignKey('org_id').notNull(),
-//     foreignIdentityId: foreignKey('foreign_identity_id').notNull(),
-//     rootEmailIdentityId: foreignKey('root_email_identity_id'),
-//     emailIdentityId: foreignKey('email_identity_id'),
-//     status: mysqlEnum('status', ['pending', 'approve', 'reject', 'delete'])
-//       .notNull()
-//       .default('pending'),
-//     level: mysqlEnum('level', ['emailIdentity', 'user', 'org'])
-//       .notNull()
-//       .default('emailIdentity'),
-//     setByOrgMemberId: foreignKey('set_by_org_member_id').notNull(),
-//     lastUpdated: timestamp('last_updated')
-//       .default(sql`CURRENT_TIMESTAMP`)
-//       .notNull()
-//   },
-//   (table) => ({
-//     foreignIdentityIdIndex: index('foreignIdentity_id_idx').on(
-//       table.foreignIdentityId
-//     ),
-//     orgIdIndex: index('org_id_idx').on(table.orgId),
-//     rootEmailIdentityIdIndex: index('root_email_identity_id_idx').on(
-//       table.rootEmailIdentityId
-//     ),
-//     emailIdentityIdIndex: index('email_identity_id_idx').on(
-//       table.emailIdentityId
-//     ),
-//     foreignToInternalIndex: uniqueIndex('foreign_to_internal_idx').on(
-//       table.foreignIdentityId,
-//       table.emailIdentityId
-//     ),
-//     foreignToRootIndex: uniqueIndex('foreign_to_root_idx').on(
-//       table.foreignIdentityId,
-//       table.rootEmailIdentityId
-//     )
-//   })
-// );
-
-// export const foreignEmailIdentitiesScreenerStatusRelations = relations(
-//   foreignEmailIdentitiesScreenerStatus,
-//   ({ one }) => ({
-//     org: one(orgs, {
-//       fields: [foreignEmailIdentitiesScreenerStatus.orgId],
-//       references: [orgs.id]
-//     }),
-//     foreignIdentity: one(foreignEmailIdentities, {
-//       fields: [foreignEmailIdentitiesScreenerStatus.foreignIdentityId],
-//       references: [foreignEmailIdentities.id]
-//     }),
-//     emailIdentity: one(emailIdentities, {
-//       fields: [foreignEmailIdentitiesScreenerStatus.emailIdentityId],
-//       references: [emailIdentities.id]
-//     }),
-//     setByOrgMember: one(orgMembers, {
-//       fields: [foreignEmailIdentitiesScreenerStatus.setByOrgMemberId],
-//       references: [orgMembers.id]
-//     })
-//   })
-// );
-
 //* Send As External Email Identities
 
 export const sendAsExternalEmailIdentities = mysqlTable(
@@ -998,6 +875,7 @@ export const emailRoutingRulesDestinations = mysqlTable(
   'email_routing_rules_destinations',
   {
     id: serial('id').primaryKey(),
+    orgId: foreignKey('org_id').notNull(),
     ruleId: foreignKey('rule_id').notNull(),
     groupId: foreignKey('group_id'),
     orgMemberId: foreignKey('org_member_id'),
@@ -1006,12 +884,17 @@ export const emailRoutingRulesDestinations = mysqlTable(
       .notNull()
   },
   (table) => ({
+    orgIdIndex: index('org_id_idx').on(table.orgId)
     //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit : userId//userGroupId
   })
 );
 export const emailRoutingRulesDestinationsRelations = relations(
   emailRoutingRulesDestinations,
   ({ one }) => ({
+    org: one(orgs, {
+      fields: [emailRoutingRulesDestinations.orgId],
+      references: [orgs.id]
+    }),
     rule: one(emailRoutingRules, {
       fields: [emailRoutingRulesDestinations.ruleId],
       references: [emailRoutingRules.id]
@@ -1040,6 +923,7 @@ export const emailIdentities = mysqlTable(
     sendName: varchar('send_name', { length: 128 }),
     createdBy: foreignKey('created_by').notNull(),
     isCatchAll: boolean('is_catch_all').notNull().default(false),
+    isPersonal: boolean('is_personal').notNull().default(false),
     createdAt: timestamp('created_at')
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull()
@@ -1081,6 +965,7 @@ export const emailIdentitiesAuthorizedUsers = mysqlTable(
   'email_identities_authorized_users',
   {
     id: serial('id').primaryKey(),
+    orgId: foreignKey('org_id').notNull(),
     identityId: foreignKey('identity_id').notNull(),
     orgMemberId: foreignKey('org_member_id'),
     userGroupId: foreignKey('user_group_id'),
@@ -1092,6 +977,7 @@ export const emailIdentitiesAuthorizedUsers = mysqlTable(
   },
   (table) => ({
     //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit : userId//userGroupId, userId//default, userGroupId//default
+    orgIdIndex: index('org_id_idx').on(table.orgId),
     identityIdIndex: index('identity_id_idx').on(table.identityId),
     orgMemberToIdentityIndex: uniqueIndex('org_member_to_identity_idx').on(
       table.identityId,
@@ -1107,6 +993,10 @@ export const emailIdentitiesAuthorizedUsers = mysqlTable(
 export const emailIdentitiesAuthorizedUsersRelations = relations(
   emailIdentitiesAuthorizedUsers,
   ({ one }) => ({
+    org: one(orgs, {
+      fields: [emailIdentitiesAuthorizedUsers.orgId],
+      references: [orgs.id]
+    }),
     identity: one(emailIdentities, {
       fields: [emailIdentitiesAuthorizedUsers.identityId],
       references: [emailIdentities.id]
@@ -1200,6 +1090,7 @@ export const convoSubjects = mysqlTable(
   'convo_subjects',
   {
     id: serial('id').primaryKey(),
+    orgId: foreignKey('org_id').notNull(),
     publicId: nanoId('public_id').notNull(),
     convoId: foreignKey('convo_id').notNull(),
     subject: varchar('subject', { length: 256 }).notNull(),
@@ -1208,11 +1099,16 @@ export const convoSubjects = mysqlTable(
       .notNull()
   },
   (table) => ({
+    orgIdIndex: index('org_id_idx').on(table.orgId),
     publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
     convoIdIndex: index('convo_id_idx').on(table.convoId)
   })
 );
 export const convoSubjectsRelations = relations(convoSubjects, ({ one }) => ({
+  org: one(orgs, {
+    fields: [convoSubjects.orgId],
+    references: [orgs.id]
+  }),
   convo: one(convos, {
     fields: [convoSubjects.convoId],
     references: [convos.id]
@@ -1223,6 +1119,7 @@ export const convoParticipants = mysqlTable(
   'convo_participants',
   {
     id: serial('id').primaryKey(),
+    orgId: foreignKey('org_id').notNull(),
     publicId: nanoId('public_id').notNull(),
     orgMemberId: foreignKey('org_member_id'),
     userGroupId: foreignKey('user_group_id'),
@@ -1248,6 +1145,7 @@ export const convoParticipants = mysqlTable(
   },
   (table) => ({
     //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit : userId//userGroupId
+    orgIdIndex: index('org_id_idx').on(table.orgId),
     publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
     orgMemberIdIndex: index('user_id_idx').on(table.orgMemberId),
     convoIdIndex: index('convo_id_idx').on(table.convoId),
@@ -1264,6 +1162,10 @@ export const convoParticipants = mysqlTable(
 export const convoParticipantsRelations = relations(
   convoParticipants,
   ({ one }) => ({
+    org: one(orgs, {
+      fields: [convoParticipants.orgId],
+      references: [orgs.id]
+    }),
     orgMember: one(orgMembers, {
       fields: [convoParticipants.orgMemberId],
       references: [orgMembers.id]
@@ -1287,6 +1189,7 @@ export const convoAttachments = mysqlTable(
   'convo_attachments',
   {
     id: serial('id').primaryKey(),
+    orgId: foreignKey('org_id').notNull(),
     publicId: nanoId('public_id').notNull(),
     convoId: foreignKey('convo_id').notNull(),
     convoEntryId: foreignKey('convo_entry_id'),
@@ -1299,6 +1202,7 @@ export const convoAttachments = mysqlTable(
       .notNull()
   },
   (table) => ({
+    orgIdIndex: index('org_id_idx').on(table.orgId),
     convoIdIndex: index('convo_id_idx').on(table.convoId),
     convoEntryIdIndex: index('convo_entry_id_idx').on(table.convoEntryId),
     publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId)
@@ -1307,6 +1211,10 @@ export const convoAttachments = mysqlTable(
 export const convoAttachmentsRelations = relations(
   convoAttachments,
   ({ one }) => ({
+    org: one(orgs, {
+      fields: [convoAttachments.orgId],
+      references: [orgs.id]
+    }),
     convo: one(convos, {
       fields: [convoAttachments.convoId],
       references: [convos.id]
@@ -1323,8 +1231,12 @@ export const convoAttachmentsRelations = relations(
 );
 
 export type ConvoEntryMetadataEmail = {
-  smtpMessageId: string;
-  postalId: number;
+  postalMessageId: string;
+  postalMessages: {
+    recipient: string;
+    id: number;
+    token: string;
+  }[];
   emailHeaders?: string;
 };
 export type ConvoEntryMetadata = {
@@ -1335,6 +1247,7 @@ export const convoEntries = mysqlTable(
   'convo_entries',
   {
     id: serial('id').primaryKey(),
+    orgId: foreignKey('org_id').notNull(),
     publicId: nanoIdLong('public_id').notNull(),
     type: mysqlEnum('type', ['message', 'comment', 'draft']).notNull(),
     convoId: foreignKey('convo_id').notNull(),
@@ -1355,6 +1268,7 @@ export const convoEntries = mysqlTable(
       .notNull()
   },
   (table) => ({
+    orgIdIndex: index('org_id_idx').on(table.orgId),
     convoIdIndex: index('convo_id_idx').on(table.convoId),
     publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
     typeIndex: index('type_idx').on(table.type),
@@ -1365,6 +1279,10 @@ export const convoEntries = mysqlTable(
 export const convoEntriesRelations = relations(
   convoEntries,
   ({ one, many }) => ({
+    org: one(orgs, {
+      fields: [convoEntries.orgId],
+      references: [orgs.id]
+    }),
     convo: one(convos, {
       fields: [convoEntries.convoId],
       references: [convos.id]

@@ -1,6 +1,8 @@
 <script setup lang="ts">
+  import type { JSONContent } from '@tiptap/vue-3';
   import type { UiColor } from '@uninbox/types/ui';
   import { useTimeAgo } from '@vueuse/core';
+  import { stringify } from 'superjson';
   import { z } from 'zod';
   const { $trpc } = useNuxtApp();
   definePageMeta({
@@ -13,17 +15,20 @@
     address: string;
     sendName: string | null;
   }
-  interface OrgMembers {
+
+  interface ConvoParticipantOrgMembers {
     type: 'user';
     icon: 'i-ph-user';
     publicId: String;
+    profilePublicId: String;
     name: String;
     handle: String;
     title: String | null;
-    disabled?: boolean;
+    disabled?: Boolean;
     keywords: String;
+    own?: Boolean;
   }
-  interface OrgUserGroups {
+  interface ConvoParticipantOrgUserGroups {
     type: 'group';
     icon: 'i-ph-users-three';
     publicId: String;
@@ -32,28 +37,28 @@
     color: String | null;
     keywords: String;
   }
-  interface OrgContacts {
+  interface ConvoParticipantOrgContacts {
     type: 'contact';
     icon: 'i-ph-address-book';
     publicId: String;
     name: String;
-    address: string;
+    address: String;
     keywords: String;
     screenerStatus: 'pending' | 'approve' | 'reject' | null;
   }
-  interface EmailAddresses {
+  interface NewConvoParticipantEmailAddresses {
     type: 'email';
     icon: 'i-ph-envelope';
-    publicId: number;
-    address: string;
+    publicId: Number;
+    address: String;
     keywords: String;
   }
 
-  type ParticipantOptionsType =
-    | OrgMembers
-    | OrgUserGroups
-    | OrgContacts
-    | EmailAddresses;
+  type NewConvoParticipant =
+    | ConvoParticipantOrgMembers
+    | ConvoParticipantOrgUserGroups
+    | ConvoParticipantOrgContacts
+    | NewConvoParticipantEmailAddresses;
 
   //* Data Loading
   // Get email identities
@@ -70,7 +75,6 @@
   );
 
   // get list of users
-
   const {
     data: orgMembersData,
     pending: orgMembersPending,
@@ -111,9 +115,9 @@
 
   //* List Data
   const orgEmailIdentities = ref<OrgEmailIdentities[]>([]);
-  const orgMembers = ref<OrgMembers[]>([]);
-  const orgUserGroups = ref<OrgUserGroups[]>([]);
-  const orgContacts = ref<OrgContacts[]>([]);
+  const orgMembers = ref<ConvoParticipantOrgMembers[]>([]);
+  const orgUserGroups = ref<ConvoParticipantOrgUserGroups[]>([]);
+  const orgContacts = ref<ConvoParticipantOrgContacts[]>([]);
 
   //* Data Watchers
   function setParticipantOptions() {
@@ -146,10 +150,11 @@
       if (!ownOrgMemberData) {
         throw new Error('own org member data not found');
       }
-      const ownData: OrgMembers = {
+      const ownData: ConvoParticipantOrgMembers = {
         type: 'user',
         icon: 'i-ph-user',
         publicId: ownOrgMemberData.publicId,
+        profilePublicId: ownOrgMemberData.profile.publicId,
         name:
           ownOrgMemberData.profile?.firstName +
             ' ' +
@@ -163,10 +168,12 @@
           '  @' +
           ownOrgMemberData.profile?.handle +
           ' ' +
-          ownOrgMemberData.profile?.title
+          ownOrgMemberData.profile?.title,
+        disabled: true,
+        own: true
       };
       orgMembers.value.push(ownData);
-      selectedOrgMembers.value = [ownData];
+      // selectedOrgMembers.value = [ownData];
     }
     if (newOrgMembersData?.members) {
       for (const member of newOrgMembersData.members) {
@@ -177,6 +184,7 @@
           type: 'user',
           icon: 'i-ph-user',
           publicId: member.publicId,
+          profilePublicId: member.profile.publicId,
           name:
             member.profile?.firstName + ' ' + member.profile?.lastName || '',
           handle: member.profile?.handle || '',
@@ -238,9 +246,9 @@
       setParticipantOptions();
     }
   });
-
-  const selectedOrgMembers = ref<OrgMembers[]>([]);
   // Values
+  const participantOptions = ref<NewConvoParticipant[]>([]);
+  const selectedParticipants = ref<NewConvoParticipant[]>([]);
 
   const orgEmailIdentitiesPlaceholder = computed(() => {
     if (userEmailIdentitiesStatus.value !== 'success') {
@@ -254,33 +262,31 @@
   const selectedOrgEmailIdentities = ref<OrgEmailIdentities | undefined>(
     undefined
   );
-  const participantOptions = ref<ParticipantOptionsType[]>([]);
-  const selectedParticipantOptions = ref<ParticipantOptionsType[]>([]);
-
-  function removeTypeFromParticipants(type: 'user' | 'group' | 'email') {
-    selectedParticipantOptions.value = selectedParticipantOptions.value.filter(
-      (participant) => participant.type !== type
-    );
-  }
 
   const hasEmailParticipants = computed(() => {
-    return selectedParticipantOptions.value.some(
+    return selectedParticipants.value.some(
       (participant) =>
         participant.type === 'email' || participant.type === 'contact'
     );
   });
 
-  const hasEmailParticipantsNoEmailIdentitySelectedRingColor = computed(() => {
-    return selectedParticipantOptions.value.some(
-      (participant) =>
-        participant.type === 'email' || participant.type === 'contact'
-    ) && selectedOrgEmailIdentities.value === undefined
+  const hasEmailParticipantsNoEmailIdentitySelected = computed(() => {
+    return (
+      selectedParticipants.value.some(
+        (participant) =>
+          participant.type === 'email' || participant.type === 'contact'
+      ) && selectedOrgEmailIdentities.value === undefined
+    );
+  });
+
+  const emailButNoIdentityRingColor = computed(() => {
+    return hasEmailParticipantsNoEmailIdentitySelected.value
       ? 'ring-red-500 dark:ring-red-400'
       : 'ring-gray-200 dark:ring-gray-700';
   });
 
   const participantLabels = computed({
-    get: () => selectedParticipantOptions.value,
+    get: () => selectedParticipants.value,
     set: async (labels) => {
       const promises = labels.map(async (label) => {
         if (label.publicId) {
@@ -290,7 +296,7 @@
         if (!isEmail.success) {
           return;
         }
-        const newEntry: EmailAddresses = {
+        const newEntry: NewConvoParticipantEmailAddresses = {
           type: 'email',
           icon: 'i-ph-envelope',
           publicId: participantOptions.value.length + 1,
@@ -308,7 +314,7 @@
         return newEntry;
       });
       // @ts-ignore - no idea how to fix this
-      selectedParticipantOptions.value = await Promise.all(promises);
+      selectedParticipants.value = await Promise.all(promises);
     }
   });
 
@@ -325,22 +331,96 @@
     return 'Search or type email...';
   });
 
-  const sendAsValid = computed(() => {
-    return hasEmailParticipants.value
-      ? selectedOrgEmailIdentities.value !== undefined ||
-          selectedOrgEmailIdentities.value !== null
-      : true;
+  const formValid = computed(() => {
+    console.log(
+      'formValid',
+      !hasEmailParticipantsNoEmailIdentitySelected.value &&
+        selectedParticipants.value.length > 0 &&
+        conversationTopicInput.value.length > 0 &&
+        isTextPresent.value,
+      {
+        hasEmailParticipantsNoEmailIdentitySelected:
+          !hasEmailParticipantsNoEmailIdentitySelected.value
+      },
+      {
+        selectedParticipantOptionsLength: selectedParticipants.value.length > 0
+      },
+      { conversationTopicInput: conversationTopicInput.value.length > 0 },
+      { istext: isTextPresent.value }
+    );
+    return (
+      !hasEmailParticipantsNoEmailIdentitySelected.value &&
+      selectedParticipants.value.length > 0 &&
+      conversationTopicInput.value.length > 0 &&
+      isTextPresent.value
+    );
   });
 
-  // FIX: TODO: DONT INCLUDE AUTHORS ID IN THE ARRAY OF USER PARTICIPANTS; SEND SEPARATELY
+  const messageEditorData = ref<JSONContent>({});
 
-  // New Data
-  const editorData = ref('');
-
+  const isTextPresent = computed(() => {
+    const contentArray = messageEditorData.value?.content;
+    if (!contentArray) return false;
+    if (contentArray.length === 0) return false;
+    if (!contentArray[0].content || contentArray[0].content.length === 0)
+      return false;
+    return true;
+  });
   // Topic/subject+
 
-  const conversationSubjectInput = ref('');
+  const conversationTopicInput = ref('');
   const conversationSubjectInputValid = ref(false);
+
+  async function createNewConvo(type: 'draft' | 'comment' | 'message') {
+    console.log('🔥 create new convo function');
+    const getPublicIdsByType = (
+      type: string,
+      property: string = 'publicId'
+    ) => {
+      return selectedParticipants.value
+        .filter((participant) => participant.type === type)
+        .map((participant: NewConvoParticipant) =>
+          participant[property as keyof NewConvoParticipant].toString()
+        );
+    };
+
+    const convoParticipantsOrgMembersPublicIds = getPublicIdsByType('user');
+    const convoParticipantsGroupPublicIds = getPublicIdsByType('group');
+    const convoParticipantsContactPublicIds = getPublicIdsByType('contact');
+    const convoParticipantsEmailPublicIds = getPublicIdsByType(
+      'email',
+      'address'
+    );
+    const firstParticipant = selectedParticipants.value[0];
+    const firstParticipantPublicId = firstParticipant.publicId?.toString();
+
+    const convoToValue:
+      | { type: 'email'; emailAddress: string }
+      | { type: 'user' | 'group' | 'contact'; publicId: string } =
+      firstParticipant.type === 'email'
+        ? {
+            type: 'email',
+            emailAddress: firstParticipant.address.toString()
+          }
+        : {
+            type: firstParticipant.type,
+            publicId: firstParticipantPublicId
+          };
+
+    console.log({ convoParticipantsGroupPublicIds });
+    const createNewConvoResponse = await $trpc.convos.createNewConvo.mutate({
+      firstMessageType: type,
+      to: convoToValue,
+      participantsOrgMembersPublicIds: convoParticipantsOrgMembersPublicIds,
+      participantsGroupsPublicIds: convoParticipantsGroupPublicIds,
+      participantsContactsPublicIds: convoParticipantsContactPublicIds,
+      participantsEmails: convoParticipantsEmailPublicIds,
+      sendAsEmailIdentityPublicId: selectedOrgEmailIdentities.value?.publicId,
+      topic: conversationTopicInput.value,
+      message: stringify(messageEditorData.value)
+    });
+    console.log({ createNewConvoResponse });
+  }
 </script>
 <template>
   <div class="h-full max-h-full max-w-full w-full flex flex-col gap-4">
@@ -354,8 +434,182 @@
       color="orange"
       description="You don't have an email identity assigned to you. Please contact your organization administrator."
       title="Email sending disabled!" />
+    {{ messageEditorData }}
+    <span>{{ selectedParticipants }}</span>
+    <span>{{ orgMembersData }}</span>
+    <span>has email {{ hasEmailParticipants }}</span>
     <div class="flex flex-col gap-2">
-      <span class="text-sm font-medium"> Send As </span>
+      <span class="text-sm font-medium">Participants</span>
+      <div class="flex flex-col gap-1">
+        <div class="flex flex-col gap-2">
+          <div class="flex flex-row flex-wrap gap-4">
+            <NuxtUiSelectMenu
+              v-model="participantLabels"
+              placeholder="Select participants"
+              :options="
+                participantOptions as Array<{
+                  [key: string]: any;
+                  disabled?: boolean;
+                }>
+              "
+              name="name"
+              searchable
+              multiple
+              :searchable-placeholder="participantPlaceholder"
+              option-attribute="keywords"
+              class="w-full"
+              :creatable="orgEmailIdentities.length !== 0">
+              <template
+                v-if="selectedParticipants"
+                #label>
+                <!-- <UnUiIcon
+                  name="i-ph-check"
+                  class="h-4 w-4" /> -->
+                <div
+                  v-if="selectedParticipants.length"
+                  class="flex flex-wrap gap-3">
+                  <div
+                    v-for="(participant, index) in selectedParticipants"
+                    :key="index"
+                    class="flex flex-row items-center gap-2 truncate">
+                    <span
+                      v-if="hasEmailParticipants && index === 0"
+                      class="text-gray-400 dark:text-gray-600 text-xs leading-0">
+                      TO:
+                    </span>
+                    <div
+                      v-if="participant.type === 'email'"
+                      class="flex flex-row items-center gap-1">
+                      <UnUiIcon :name="participant.icon" />
+                      <span>
+                        {{ participant.address }}
+                      </span>
+                    </div>
+                    <div
+                      v-if="participant.type === 'contact'"
+                      class="flex flex-row items-center gap-1">
+                      <UnUiAvatar
+                        :public-id="participant.publicId?.toString()"
+                        :type="'contact'"
+                        :alt="participant.name.toString()"
+                        size="xs" />
+                      <span>
+                        {{ participant.name }}
+                      </span>
+                    </div>
+                    <div
+                      v-if="participant.type === 'user'"
+                      class="flex flex-row items-center gap-1">
+                      <UnUiAvatar
+                        :public-id="participant.profilePublicId.toString()"
+                        :type="'user'"
+                        :alt="participant.name.toString()"
+                        size="xs" />
+                      <span>
+                        {{ participant.name }}
+                      </span>
+                    </div>
+                    <div
+                      v-if="participant.type === 'group'"
+                      class="flex flex-row items-center gap-1">
+                      <UnUiAvatar
+                        :public-id="participant.publicId?.toString()"
+                        :type="'group'"
+                        :alt="participant.name.toString()"
+                        :color="participant.color?.toString()"
+                        size="xs" />
+                      <span>
+                        {{ participant.name }}
+                      </span>
+                    </div>
+                    <span
+                      v-if="
+                        hasEmailParticipants &&
+                        index === 0 &&
+                        selectedParticipants.length > 1
+                      "
+                      class="text-gray-400 dark:text-gray-600 ml-2 border-l border-l-1 border-l-1 pl-2 text-xs leading-0">
+                      CC:
+                    </span>
+                  </div>
+                </div>
+                <span v-else>{{ participantPlaceholder }}</span>
+              </template>
+              <template #option="{ option }">
+                <UnUiIcon :name="option.icon" />
+                <div v-if="option.type === 'email'">
+                  <span>
+                    {{ option.address }}
+                  </span>
+                </div>
+                <div
+                  v-if="option.type === 'contact'"
+                  class="flex flex-row items-center gap-2">
+                  <UnUiAvatar
+                    :public-id="option.publicId"
+                    :type="'contact'"
+                    :alt="option.name"
+                    size="xs" />
+                  <span>
+                    {{ option.name }}
+                  </span>
+                  <span class="text-xs"> - {{ option.address }}</span>
+                </div>
+                <div
+                  v-if="option.type === 'user'"
+                  class="flex flex-row items-center gap-2">
+                  <UnUiAvatar
+                    :public-id="option.profilePublicId"
+                    :type="'user'"
+                    :alt="option.name"
+                    size="xs" />
+                  <span>
+                    {{ option.own ? 'You' : option.name }}
+                    <span
+                      v-if="option.title"
+                      class="text-xs">
+                      - {{ option.title }}
+                    </span>
+                    <span
+                      v-if="option.disabled && !option.own"
+                      class="text-xs">
+                      - Cant be added
+                    </span>
+                    <span
+                      v-if="option.disabled && option.own"
+                      class="text-xs">
+                      - already a participant
+                    </span>
+                  </span>
+                </div>
+                <div
+                  v-if="option.type === 'group'"
+                  class="flex flex-row items-center gap-2">
+                  <UnUiAvatar
+                    :public-id="option.publicId"
+                    :type="'group'"
+                    :alt="option.name"
+                    :color="option.color.toString()"
+                    size="xs" />
+                  <span>
+                    {{ option.name }}
+                  </span>
+                </div>
+              </template>
+              <template #option-create="{ option }">
+                <span class="flex-shrink-0">New Email:</span>
+                <span class="block truncate">{{ option.keywords }}</span>
+              </template>
+            </NuxtUiSelectMenu>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div
+      v-show="hasEmailParticipants"
+      class="flex flex-col gap-2 transition-all"
+      :class="hasEmailParticipants ? 'opacity-100' : 'opacity-0 h-0'">
+      <span class="text-sm font-medium"> Send External Email As </span>
       <div class="flex flex-col gap-4">
         <div class="flex flex-col gap-1">
           <div class="flex flex-row flex-wrap gap-8">
@@ -369,8 +623,7 @@
                 wrapper: 'w-full',
                 color: {
                   white: {
-                    outline:
-                      hasEmailParticipantsNoEmailIdentitySelectedRingColor,
+                    outline: emailButNoIdentityRingColor,
                     background: 'bg-white dark:bg-gray-800'
                   }
                 }
@@ -409,167 +662,9 @@
         </div>
       </div>
     </div>
-    <div class="flex flex-col gap-2">
-      <span class="text-sm font-medium">Participants</span>
-      <div class="flex flex-col gap-1">
-        <div class="flex flex-col gap-2">
-          <!-- <span class="text-sm font-medium">Users</span> -->
-          <div class="flex flex-row flex-wrap gap-4">
-            <NuxtUiSelectMenu
-              v-model="participantLabels"
-              placeholder="Select participants"
-              :options="participantOptions"
-              name="name"
-              searchable
-              multiple
-              :searchable-placeholder="participantPlaceholder"
-              option-attribute="keywords"
-              class="w-full"
-              :creatable="orgEmailIdentities.length !== 0">
-              <template
-                v-if="selectedParticipantOptions"
-                #label>
-                <!-- <UnUiIcon
-                  name="i-ph-check"
-                  class="h-4 w-4" /> -->
-                <div
-                  v-if="selectedParticipantOptions.length"
-                  class="flex flex-wrap gap-3">
-                  <div
-                    v-for="(participant, index) in selectedParticipantOptions"
-                    :key="index"
-                    class="flex flex-row items-center gap-2 truncate">
-                    <span
-                      v-if="hasEmailParticipants && index === 0"
-                      class="text-gray-400 dark:text-gray-600 text-xs leading-0">
-                      TO:
-                    </span>
-                    <div
-                      v-if="participant.type === 'email'"
-                      class="flex flex-row items-center gap-1">
-                      <UnUiIcon :name="participant.icon" />
-                      <span>
-                        {{ participant.address }}
-                      </span>
-                    </div>
-                    <div
-                      v-if="participant.type === 'contact'"
-                      class="flex flex-row items-center gap-1">
-                      <UnUiAvatar
-                        :public-id="participant.publicId?.toString()"
-                        :type="'contact'"
-                        :alt="participant.name.toString()"
-                        size="xs" />
-                      <span>
-                        {{ participant.name }}
-                      </span>
-                    </div>
-                    <div
-                      v-if="participant.type === 'user'"
-                      class="flex flex-row items-center gap-1">
-                      <UnUiAvatar
-                        :public-id="participant.publicId?.toString()"
-                        :type="'user'"
-                        :alt="participant.name.toString()"
-                        size="xs" />
-                      <span>
-                        {{ participant.name }}
-                      </span>
-                    </div>
-                    <div
-                      v-if="participant.type === 'group'"
-                      class="flex flex-row items-center gap-1">
-                      <UnUiAvatar
-                        :public-id="participant.publicId?.toString()"
-                        :type="'group'"
-                        :alt="participant.name.toString()"
-                        :color="participant.color?.toString()"
-                        size="xs" />
-                      <span>
-                        {{ participant.name }}
-                      </span>
-                    </div>
-                    <span
-                      v-if="
-                        hasEmailParticipants &&
-                        index === 0 &&
-                        selectedParticipantOptions.length > 1
-                      "
-                      class="text-gray-400 dark:text-gray-600 ml-2 border-l border-l-1 border-l-1 pl-2 text-xs leading-0">
-                      CC:
-                    </span>
-                  </div>
-                </div>
-                <span v-else>{{ participantPlaceholder }}</span>
-              </template>
-              <template #option="{ option }">
-                <UnUiIcon :name="option.icon" />
-                <div v-if="option.type === 'email'">
-                  <span>
-                    {{ option.address }}
-                  </span>
-                </div>
-                <div
-                  v-if="option.type === 'contact'"
-                  class="flex flex-row items-center gap-2">
-                  <UnUiAvatar
-                    :public-id="option.publicId"
-                    :type="'contact'"
-                    :alt="option.name"
-                    size="xs" />
-                  <span>
-                    {{ option.name }}
-                  </span>
-                  <span class="text-xs"> - {{ option.address }}</span>
-                </div>
-                <div
-                  v-if="option.type === 'user'"
-                  class="flex flex-row items-center gap-2">
-                  <UnUiAvatar
-                    :public-id="option.publicId"
-                    :type="'user'"
-                    :alt="option.name"
-                    size="xs" />
-                  <span>
-                    {{ option.name }}
-                    <span
-                      v-if="option.title"
-                      class="text-xs">
-                      - {{ option.title }}
-                    </span>
-                    <span
-                      v-if="option.disabled"
-                      class="text-xs">
-                      - Cant be removed
-                    </span>
-                  </span>
-                </div>
-                <div
-                  v-if="option.type === 'group'"
-                  class="flex flex-row items-center gap-2">
-                  <UnUiAvatar
-                    :public-id="option.publicId"
-                    :type="'group'"
-                    :alt="option.name"
-                    :color="option.color.toString()"
-                    size="xs" />
-                  <span>
-                    {{ option.name }}
-                  </span>
-                </div>
-              </template>
-              <template #option-create="{ option }">
-                <span class="flex-shrink-0">New Email:</span>
-                <span class="block truncate">{{ option.keywords }}</span>
-              </template>
-            </NuxtUiSelectMenu>
-          </div>
-        </div>
-      </div>
-    </div>
     <div class="w-full flex flex-col gap-2">
       <UnUiInput
-        v-model:value="conversationSubjectInput"
+        v-model:value="conversationTopicInput"
         v-model:valid="conversationSubjectInputValid"
         width="full"
         label="Topic"
@@ -580,18 +675,28 @@
       class="h-full max-h-full w-full flex flex-col justify-items-end gap-2 overflow-hidden">
       <span class="text-sm font-medium">Message</span>
       <UnEditor
-        v-model:modelValue="editorData"
-        class="min-h-[300px] overflow-hidden" />
+        v-model:modelValue="messageEditorData"
+        class="min-h-[150px] overflow-hidden" />
     </div>
     <div class="flex grow flex-row justify-end gap-2">
       <UnUiButton
-        label="Send"
-        icon="i-ph-envelope" />
-      <UnUiButton
-        label="Note"
+        label="Save Draft"
         color="orange"
+        variant="outline"
+        :disabled="!formValid"
         icon="i-ph-note" />
+      <UnUiButton
+        label="Post Note"
+        color="yellow"
+        variant="outline"
+        :disabled="!formValid"
+        icon="i-ph-note" />
+      <UnUiButton
+        label="Send Message"
+        variant="outline"
+        :disabled="!formValid"
+        icon="i-ph-envelope"
+        @click="createNewConvo('message')" />
     </div>
-    <!-- <div class="mt-[24px] h-[24px] from-base-1 bg-gradient-to-t" /> -->
   </div>
 </template>

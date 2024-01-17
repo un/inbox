@@ -273,6 +273,7 @@ export const addressRouter = router({
         });
 
       await db.insert(emailRoutingRulesDestinations).values({
+        orgId: orgId,
         ruleId: +routingRuleInsertResponse.insertId,
         orgMemberId: userOrgMembership.id
       });
@@ -288,6 +289,7 @@ export const addressRouter = router({
           routingRuleId: +routingRuleInsertResponse.insertId,
           sendName: sendName,
           isCatchAll: false,
+          isPersonal: true,
           createdBy: userOrgMembership.id
         });
 
@@ -302,6 +304,7 @@ export const addressRouter = router({
       });
 
       await db.insert(emailIdentitiesAuthorizedUsers).values({
+        orgId: orgId,
         addedBy: userOrgMembership.id,
         identityId: +insertEmailIdentityResponse.insertId,
         orgMemberId: userOrgMembership.id
@@ -350,7 +353,6 @@ export const addressRouter = router({
         });
       }
 
-      console.log({ emailIdentityPublicId: input.emailIdentityPublicId });
       // get the email identity and list of authorized users
       const emailIdentityResponse = await db.query.emailIdentities.findFirst({
         where: eq(emailIdentities.publicId, input.emailIdentityPublicId),

@@ -17,7 +17,7 @@
       color: {
         type: String,
         required: false,
-        default: 'gray'
+        default: null
       },
       publicId: {
         type: String,
@@ -57,8 +57,12 @@
       :src="avatarUrl"
       :ui="{
         text: 'font-display text-gray-950',
-        placeholder: 'font-display text-gray-950'
+        placeholder: 'font-display text-gray-950 dark:text-gray-800'
       }"
-      :class="`bg-${$props.color}-400`" />
+      :class="
+        $props.color
+          ? `bg-${$props.color}-400 dark:bg-${$props.color}-300`
+          : `bg-gray-400 dark:bg-gray-300`
+      " />
   </UnUiTooltip>
 </template>

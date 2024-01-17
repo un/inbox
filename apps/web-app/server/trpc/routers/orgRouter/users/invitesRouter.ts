@@ -145,6 +145,7 @@ export const invitesRouter = router({
           });
 
         await db.insert(emailRoutingRulesDestinations).values({
+          orgId: orgId,
           ruleId: +emailRoutingRulesResponse.insertId,
           orgMemberId: +orgMemberResponse.insertId
         });
@@ -163,6 +164,7 @@ export const invitesRouter = router({
         });
 
         await db.insert(emailIdentitiesAuthorizedUsers).values({
+          orgId: orgId,
           identityId: +emailIdentityResponse.insertId,
           default: true,
           addedBy: +orgMemberId,
