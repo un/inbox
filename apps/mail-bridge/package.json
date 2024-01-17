@@ -17,7 +17,7 @@
     "html-to-text": "^9.0.5",
     "nitropack": "^2.8.1",
     "superjson": "^2.2.1",
-    "trpc-nuxt": "^0.10.15",
+    "trpc-nuxt": "^0.10.17",
     "zod": "^3.22.4"
   }
 }
