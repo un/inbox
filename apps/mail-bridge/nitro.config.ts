@@ -10,7 +10,7 @@ export default defineNitroConfig({
   // Nitro options
   // TODO: create runtimeconfig group keys to clean up this file
   runtimeConfig: {
-    localMode: !process.env.MAILBRIDGE_POSTAL_URL || true,
+    localMode: process.env.MAILBRIDGE_POSTAL_URL ? false : true,
     url: process.env.MAILBRIDGE_URL,
     key: process.env.MAILBRIDGE_KEY,
     postalUrl: process.env.MAILBRIDGE_POSTAL_URL || 'postal.localmode.local',
