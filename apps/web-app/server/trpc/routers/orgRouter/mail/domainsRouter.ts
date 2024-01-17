@@ -2,7 +2,12 @@ import { z } from 'zod';
 import { router, orgProcedure, limitedProcedure } from '../../../trpc';
 import { and, eq, or } from '@uninbox/database/orm';
 import { orgs, orgMembers, domains } from '@uninbox/database/schema';
-import { nanoId, nanoIdLength, nanoIdToken, nanoIdSchema } from '@uninbox/utils';
+import {
+  nanoId,
+  nanoIdLength,
+  nanoIdToken,
+  nanoIdSchema
+} from '@uninbox/utils';
 import dns from 'node:dns';
 import { verifyDns } from '~/server/utils/verifyDns';
 import { isUserInOrg } from '~/server/utils/dbQueries';
@@ -53,7 +58,7 @@ export const domainsRouter = router({
       }
 
       await dns.promises.setServers(['1.1.1.1', '1.0.0.1']);
-      await dns.promises.resolveNs(domainName).catch((error) => {
+      await dns.promises.resolveNs(domainName).catch(() => {
         throw new TRPCError({
           code: 'FORBIDDEN',
           message: 'Domain does not exist or is not registered'
@@ -68,10 +73,15 @@ export const domainsRouter = router({
         }
       });
 
-      if (existingDomains && existingDomains.domainStatus === 'active') {
-        return {
-          error: 'Domain already in use'
-        };
+      if (
+        existingDomains &&
+        (existingDomains.domainStatus === 'active' ||
+          existingDomains.domainStatus === 'pending')
+      ) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Domain already in use'
+        });
       }
 
       const mailBridgeResponse =
@@ -82,9 +92,10 @@ export const domainsRouter = router({
         });
 
       if (!mailBridgeResponse) {
-        return {
-          error: 'Error creating domain'
-        };
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Error while creating the domain, contact support'
+        });
       }
 
       await db.insert(domains).values({
