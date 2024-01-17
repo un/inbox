@@ -11,15 +11,15 @@ import {
   userGroupMembers,
   convoMessages
 } from '@uninbox/database/schema';
-import { nanoId, nanoIdLength, nanoIdToken } from '@uninbox/utils';
+import { nanoId, nanoIdLength, nanoIdToken, nanoIdSchema } from '@uninbox/utils';
 
 export const messageRouter = router({
   getConvoMessages: orgProcedure
     .input(
       z.object({
-        convoPublicId: z.string().min(3).max(nanoIdLength),
+        convoPublicId: nanoIdSchema,
         cursorLastCreatedAt: z.date().optional(),
-        cursorLastPublicId: z.string().min(3).max(nanoIdLength).optional()
+        cursorLastPublicId: nanoIdSchema.optional()
       })
     )
     .query(async ({ ctx, input }) => {

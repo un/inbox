@@ -3,7 +3,7 @@ import { parse, stringify } from 'superjson';
 import { router, protectedProcedure } from '../trpc';
 import { eq } from '@uninbox/database/orm';
 import { postalServers, orgPostalConfigs } from '@uninbox/database/schema';
-import { nanoId, nanoIdLength } from '@uninbox/utils';
+import { nanoId, nanoIdLength, nanoIdSchema } from '@uninbox/utils';
 import { postalPuppet } from '@uninbox/postal-puppet';
 
 export const orgRouter = router({
@@ -11,7 +11,7 @@ export const orgRouter = router({
     .input(
       z.object({
         orgId: z.number().min(1),
-        orgPublicId: z.string().min(3).max(nanoIdLength),
+        orgPublicId: nanoIdSchema,
         personalOrg: z.boolean().optional()
       })
     )
