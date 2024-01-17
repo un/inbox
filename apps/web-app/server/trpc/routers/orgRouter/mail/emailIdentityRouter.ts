@@ -208,6 +208,7 @@ export const emailIdentityRouter = router({
       if (orgMemberIds.length > 0) {
         orgMemberIds.forEach((orgMemberId) => {
           routingRuleInsertValues.push({
+            orgId: orgId,
             ruleId: +insertEmailRoutingRule.insertId,
             orgMemberId: orgMemberId
           });
@@ -216,6 +217,7 @@ export const emailIdentityRouter = router({
       if (userGroupIds.length > 0) {
         userGroupIds.forEach((userGroupId) => {
           routingRuleInsertValues.push({
+            orgId: orgId,
             ruleId: +insertEmailRoutingRule.insertId,
             groupId: userGroupId
           });
