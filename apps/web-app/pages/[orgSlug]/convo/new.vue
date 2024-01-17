@@ -356,8 +356,6 @@
     );
   });
 
-  // FIX: TODO: DONT INCLUDE AUTHORS ID IN THE ARRAY OF USER PARTICIPANTS; SEND SEPARATELY
-
   const messageEditorData = ref<JSONContent>({});
 
   const isTextPresent = computed(() => {
@@ -373,23 +371,46 @@
   const conversationTopicInput = ref('');
   const conversationSubjectInputValid = ref(false);
 
-  async function createNewConvo(type: 'draft' | 'note' | 'message') {
+  async function createNewConvo(type: 'draft' | 'comment' | 'message') {
     console.log('🔥 create new convo function');
-    const convoParticipantsOrgMembersPublicIds = selectedParticipants.value
-      .filter((participant) => participant.type === 'user')
-      .map((participant) => participant.publicId.toString());
-    const convoParticipantsGroupPublicIds = selectedParticipants.value
-      .filter((participant) => participant.type === 'group')
-      .map((participant) => participant.publicId.toString());
-    const convoParticipantsContactPublicIds = selectedParticipants.value
-      .filter((participant) => participant.type === 'contact')
-      .map((participant) => participant.publicId.toString());
-    const convoParticipantsEmailPublicIds = selectedParticipants.value
-      .filter((participant) => participant.type === 'email')
-      //@ts-ignore - its not correctly detecting the types
-      .map((participant) => participant.address.toString());
+    const getPublicIdsByType = (
+      type: string,
+      property: string = 'publicId'
+    ) => {
+      return selectedParticipants.value
+        .filter((participant) => participant.type === type)
+        .map((participant: NewConvoParticipant) =>
+          participant[property as keyof NewConvoParticipant].toString()
+        );
+    };
+
+    const convoParticipantsOrgMembersPublicIds = getPublicIdsByType('user');
+    const convoParticipantsGroupPublicIds = getPublicIdsByType('group');
+    const convoParticipantsContactPublicIds = getPublicIdsByType('contact');
+    const convoParticipantsEmailPublicIds = getPublicIdsByType(
+      'email',
+      'address'
+    );
+    const firstParticipant = selectedParticipants.value[0];
+    const firstParticipantPublicId = firstParticipant.publicId?.toString();
+
+    const convoToValue:
+      | { type: 'email'; emailAddress: string }
+      | { type: 'user' | 'group' | 'contact'; publicId: string } =
+      firstParticipant.type === 'email'
+        ? {
+            type: 'email',
+            emailAddress: firstParticipant.address.toString()
+          }
+        : {
+            type: firstParticipant.type,
+            publicId: firstParticipantPublicId
+          };
+
     console.log({ convoParticipantsGroupPublicIds });
     const createNewConvoResponse = await $trpc.convos.createNewConvo.mutate({
+      firstMessageType: type,
+      to: convoToValue,
       participantsOrgMembersPublicIds: convoParticipantsOrgMembersPublicIds,
       participantsGroupsPublicIds: convoParticipantsGroupPublicIds,
       participantsContactsPublicIds: convoParticipantsContactPublicIds,

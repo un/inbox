@@ -17,7 +17,8 @@ import {
 import { nanoId, nanoIdLength, nanoIdToken } from '@uninbox/utils';
 import { TRPCError } from '@trpc/server';
 import type { JSONContent } from '@tiptap/vue-3';
-import { generateText, generateHTML } from '@tiptap/core';
+import { generateText } from '@tiptap/core';
+import { generateHTML } from '@tiptap/html';
 import { tipTapExtensions } from '~/shared/editorConfig';
 
 export const convoRouter = router({
@@ -215,9 +216,11 @@ export const convoRouter = router({
           });
         }
       }
-      let newConvoToEmailAddress;
+      let newConvoToEmailAddress: string;
       if (participantsContactsPublicIds || participantsEmails) {
         newConvoToEmailAddress = await getConvoToAddress();
+      } else {
+        newConvoToEmailAddress = '';
       }
 
       const orgMemberIds: number[] = [];
@@ -370,6 +373,7 @@ export const convoRouter = router({
       // create conversationSubject entry
       const newConvoSubjectPublicId = nanoId();
       const insertConvoSubjectResponse = await db.insert(convoSubjects).values({
+        orgId: orgId,
         convoId: +insertConvoResponse.insertId,
         publicId: newConvoSubjectPublicId,
         subject: topic
@@ -383,6 +387,7 @@ export const convoRouter = router({
         orgMemberIds.forEach((orgMemberId) => {
           const convoMemberPublicId = nanoId();
           convoMembersDbInsertValuesArray.push({
+            orgId: orgId,
             convoId: +insertConvoResponse.insertId,
             publicId: convoMemberPublicId,
             orgMemberId: orgMemberId
@@ -400,6 +405,7 @@ export const convoRouter = router({
         orgGroupIds.forEach((groupId) => {
           const convoMemberPublicId = nanoId();
           convoMembersDbInsertValuesArray.push({
+            orgId: orgId,
             convoId: +insertConvoResponse.insertId,
             publicId: convoMemberPublicId,
             userGroupId: groupId
@@ -417,6 +423,7 @@ export const convoRouter = router({
         orgContactIds.forEach((contactId) => {
           const convoMemberPublicId = nanoId();
           convoMembersDbInsertValuesArray.push({
+            orgId: orgId,
             convoId: +insertConvoResponse.insertId,
             publicId: convoMemberPublicId,
             contactId: contactId
@@ -430,6 +437,7 @@ export const convoRouter = router({
       const insertAuthorConvoParticipantResponse = await db
         .insert(convoParticipants)
         .values({
+          orgId: orgId,
           convoId: +insertConvoResponse.insertId,
           publicId: authorConvoParticipantPublicId,
           orgMemberId: userOrgMemberId,
@@ -445,7 +453,8 @@ export const convoRouter = router({
       );
 
       const newConvoEntryPublicId = nanoId();
-      await db.insert(convoEntries).values({
+      const insertConvoEntryResponse = await db.insert(convoEntries).values({
+        orgId: orgId,
         publicId: newConvoEntryPublicId,
         convoId: +insertConvoResponse.insertId,
         author: +insertAuthorConvoParticipantResponse.insertId,
@@ -457,15 +466,16 @@ export const convoRouter = router({
       });
 
       //* if convo has contacts, send external email via mail bridge
+      const convoHasEmailParticipants = orgContactIds.length > 0;
       const missingEmailIdentitiesWarnings: {
         type: 'user' | 'group';
         publicId: String;
         name: String;
       }[] = [];
 
-      if (orgContactIds.length) {
+      if (convoHasEmailParticipants) {
         const newConvoBodyHTML = generateHTML(newConvoBody, tipTapExtensions);
-        const ccEmailAddresses: String[] = [];
+        const ccEmailAddresses: string[] = [];
 
         // get the email addresses for all contacts
         orgContactIds.forEach(async (contactId) => {
@@ -590,7 +600,19 @@ export const convoRouter = router({
           }
         );
 
-        //! send the email via the mailbridge with to and CCs
+        // to, cc, subject, bodyPlain, bodyHTML, attachmentIds, sendAsEmailIdentityPublicId
+
+        await mailBridgeTrpcClient.mail.send.sendNewEmail.mutate({
+          orgId: orgId,
+          convoId: +insertConvoResponse.insertId,
+          entryId: +insertConvoEntryResponse.insertId,
+          sendAsEmailIdentityPublicId: sendAsEmailIdentityPublicId || '',
+          toEmail: newConvoToEmailAddress,
+          ccEmail: ccEmailAddressesFiltered,
+          subject: topic,
+          bodyHtml: newConvoBodyHTML,
+          bodyPlainText: newConvoBodyPlainText
+        });
       }
 
       return {

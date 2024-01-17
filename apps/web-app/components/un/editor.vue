@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { EditorContent, useEditor, type JSONContent } from '@tiptap/vue-3';
-  import { tipTapExtensions } from '~/shared/editorConfig';
+  import { tipTapExtensions } from '../../shared/editorConfig';
 
   const props = defineProps<{
     modelValue: JSONContent;

@@ -37,6 +37,7 @@
     "@pinia/nuxt": "^0.5.1",
     "@simplewebauthn/browser": "^8.3.4",
     "@teamhanko/hanko-frontend-sdk": "^0.9.1",
+    "@tiptap/html": "^2.1.16",
     "@tiptap/pm": "^2.1.16",
     "@tiptap/starter-kit": "^2.1.16",
     "@tiptap/vue-3": "^2.1.16",

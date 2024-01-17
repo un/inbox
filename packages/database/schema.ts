@@ -875,7 +875,7 @@ export const emailRoutingRulesDestinations = mysqlTable(
   'email_routing_rules_destinations',
   {
     id: serial('id').primaryKey(),
-    orgId: foreignKey('convo_id').notNull(),
+    orgId: foreignKey('org_id').notNull(),
     ruleId: foreignKey('rule_id').notNull(),
     groupId: foreignKey('group_id'),
     orgMemberId: foreignKey('org_member_id'),
@@ -923,7 +923,7 @@ export const emailIdentities = mysqlTable(
     sendName: varchar('send_name', { length: 128 }),
     createdBy: foreignKey('created_by').notNull(),
     isCatchAll: boolean('is_catch_all').notNull().default(false),
-    //! Postal Server?
+    isPersonal: boolean('is_personal').notNull().default(false),
     createdAt: timestamp('created_at')
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull()
@@ -965,7 +965,7 @@ export const emailIdentitiesAuthorizedUsers = mysqlTable(
   'email_identities_authorized_users',
   {
     id: serial('id').primaryKey(),
-    orgId: foreignKey('convo_id').notNull(),
+    orgId: foreignKey('org_id').notNull(),
     identityId: foreignKey('identity_id').notNull(),
     orgMemberId: foreignKey('org_member_id'),
     userGroupId: foreignKey('user_group_id'),
@@ -1090,7 +1090,7 @@ export const convoSubjects = mysqlTable(
   'convo_subjects',
   {
     id: serial('id').primaryKey(),
-    orgId: foreignKey('convo_id').notNull(),
+    orgId: foreignKey('org_id').notNull(),
     publicId: nanoId('public_id').notNull(),
     convoId: foreignKey('convo_id').notNull(),
     subject: varchar('subject', { length: 256 }).notNull(),
@@ -1119,7 +1119,7 @@ export const convoParticipants = mysqlTable(
   'convo_participants',
   {
     id: serial('id').primaryKey(),
-    orgId: foreignKey('convo_id').notNull(),
+    orgId: foreignKey('org_id').notNull(),
     publicId: nanoId('public_id').notNull(),
     orgMemberId: foreignKey('org_member_id'),
     userGroupId: foreignKey('user_group_id'),
@@ -1189,7 +1189,7 @@ export const convoAttachments = mysqlTable(
   'convo_attachments',
   {
     id: serial('id').primaryKey(),
-    orgId: foreignKey('convo_id').notNull(),
+    orgId: foreignKey('org_id').notNull(),
     publicId: nanoId('public_id').notNull(),
     convoId: foreignKey('convo_id').notNull(),
     convoEntryId: foreignKey('convo_entry_id'),
@@ -1231,8 +1231,12 @@ export const convoAttachmentsRelations = relations(
 );
 
 export type ConvoEntryMetadataEmail = {
-  smtpMessageId: string;
-  postalId: number;
+  postalMessageId: string;
+  postalMessages: {
+    recipient: string;
+    id: number;
+    token: string;
+  }[];
   emailHeaders?: string;
 };
 export type ConvoEntryMetadata = {
@@ -1243,7 +1247,7 @@ export const convoEntries = mysqlTable(
   'convo_entries',
   {
     id: serial('id').primaryKey(),
-    orgId: foreignKey('convo_id').notNull(),
+    orgId: foreignKey('org_id').notNull(),
     publicId: nanoIdLong('public_id').notNull(),
     type: mysqlEnum('type', ['message', 'comment', 'draft']).notNull(),
     convoId: foreignKey('convo_id').notNull(),
