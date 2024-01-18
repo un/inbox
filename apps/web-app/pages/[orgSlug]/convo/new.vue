@@ -8,6 +8,7 @@
   definePageMeta({
     layout: 'convos'
   });
+  const orgSlug = useRoute().params.orgSlug as string;
 
   // TODO: handle if the domain is not valid/enabled. display the email address in the list but show it as disabled and show a tooltip on hover that says "this domain is not enabled for sending"
   interface OrgEmailIdentities {
@@ -371,7 +372,11 @@
   const conversationTopicInput = ref('');
   const conversationSubjectInputValid = ref(false);
 
+  const actionLoading = ref(false);
+
   async function createNewConvo(type: 'draft' | 'comment' | 'message') {
+    const toast = useToast();
+    actionLoading.value = true;
     console.log('🔥 create new convo function');
     const getPublicIdsByType = (
       type: string,
@@ -406,9 +411,8 @@
             type: firstParticipant.type,
             publicId: firstParticipantPublicId
           };
-
-    console.log({ convoParticipantsGroupPublicIds });
-    const createNewConvoResponse = await $trpc.convos.createNewConvo.mutate({
+    const createNewConvoTrpc = $trpc.convos.createNewConvo.useMutation();
+    await createNewConvoTrpc.mutate({
       firstMessageType: type,
       to: convoToValue,
       participantsOrgMembersPublicIds: convoParticipantsOrgMembersPublicIds,
@@ -419,7 +423,21 @@
       topic: conversationTopicInput.value,
       message: stringify(messageEditorData.value)
     });
-    console.log({ createNewConvoResponse });
+
+    if (createNewConvoTrpc.error) {
+      actionLoading.value = false;
+    } else {
+      toast.add({
+        title: 'Conversation created',
+        icon: 'i-ph-thumbs-up',
+        timeout: 5000
+      });
+      setTimeout(() => {
+        navigateTo(
+          `/${orgSlug}/convo/${createNewConvoTrpc.data.value?.publicId}`
+        );
+      }, 1500);
+    }
   }
 </script>
 <template>
@@ -683,18 +701,18 @@
         label="Save Draft"
         color="orange"
         variant="outline"
-        :disabled="!formValid"
+        :disabled="!formValid || actionLoading"
         icon="i-ph-note" />
       <UnUiButton
         label="Post Note"
         color="yellow"
         variant="outline"
-        :disabled="!formValid"
+        :disabled="!formValid || actionLoading"
         icon="i-ph-note" />
       <UnUiButton
         label="Send Message"
         variant="outline"
-        :disabled="!formValid"
+        :disabled="!formValid || actionLoading"
         icon="i-ph-envelope"
         @click="createNewConvo('message')" />
     </div>
