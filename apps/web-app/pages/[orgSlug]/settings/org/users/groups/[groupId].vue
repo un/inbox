@@ -127,11 +127,12 @@
 
   async function addNewUserToGroup(orgMemberPublicId: string) {
     addingUserId.value = orgMemberPublicId;
-    const result = await $trpc.org.users.userGroups.addUserToGroup.mutate({
+    const addUserToGroupTrpc = $trpc.org.users.userGroups.addUserToGroup.useMutation();
+    const result = await addUserToGroupTrpc.mutate({
       groupPublicId: groupPublicId,
       orgMemberPublicId: orgMemberPublicId
     });
-    if (!result.publicId) {
+    if (result!.publicId) {
       console.log('Error adding user to group');
     } else {
       usersInGroup.value.push(orgMemberPublicId);

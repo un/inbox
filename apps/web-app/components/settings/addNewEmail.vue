@@ -182,7 +182,8 @@
     const selectedOrgMembersPublicIds: string[] = selectedOrgMembers.value.map(
       (member) => member.publicId as string
     );
-    await $trpc.org.mail.emailIdentities.createNewEmailIdentity.mutate({
+    const createNewEmailIdentityTrpc = $trpc.org.mail.emailIdentities.createNewEmailIdentity.useMutation();
+    await createNewEmailIdentityTrpc.mutate({
       emailUsername: newIdentityUsernameValue.value,
       domainPublicId: selectedDomain.value?.domainPublicId as string,
       sendName: newIdentitySendNameValue.value,

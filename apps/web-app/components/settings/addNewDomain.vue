@@ -35,17 +35,19 @@
     });
     buttonLoading.value = true;
     buttonLabel.value = 'Creating domain...';
-    const newDomainResponse =
-      await $trpc.org.mail.domains.createNewDomain.mutate({
+    const createNewDomainTrpc =
+    $trpc.org.mail.domains.createNewDomain.useMutation();
+    await createNewDomainTrpc.mutate({
         domainName: newDomainNameValue.value
-      });
+    })
 
-    if (newDomainResponse.error) {
+    if (createNewDomainTrpc.status.value === 'error') {
       buttonLoading.value = false;
       buttonLabel.value = 'Add Domain';
       newDomainNameValid.value = false;
-      newDomainResponseError.value = newDomainResponse.error;
-      return;
+      newDomainResponseError.value =
+          createNewDomainTrpc.error?.value?.message || 'An unexpected error occurred';
+          return
     }
     buttonLoading.value = false;
     buttonLabel.value = 'All done';

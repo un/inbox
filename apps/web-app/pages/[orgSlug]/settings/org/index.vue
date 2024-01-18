@@ -89,12 +89,12 @@
   async function saveProfile() {
     buttonLoading.value = true;
     buttonLabel.value = 'Saving...';
-
-    const response = await $trpc.org.setup.profile.setOrgProfile.mutate({
+    const setOrgProfileTrpc = $trpc.org.setup.profile.setOrgProfile.useMutation();
+     await setOrgProfileTrpc.mutate({
       orgName: orgNameValue.value
     });
 
-    if (!response.success) {
+    if (setOrgProfileTrpc.status.value === 'error') {
       pageError.value = true;
       buttonLoading.value = false;
       buttonLabel.value = 'Save profile';

@@ -67,11 +67,12 @@
     newButtonLoading.value = true;
 
     newButtonLabel.value = 'Creating your organization';
-    const createNewOrgResponse = await $trpc.org.crud.createNewOrg.mutate({
+    const createNewOrgTrpc = $trpc.org.crud.createNewOrg.useMutation()
+     await createNewOrgTrpc.mutate({
       orgName: orgNameValue.value,
       orgSlug: orgSlugValue.value
     });
-    if (!createNewOrgResponse.success) {
+    if (createNewOrgTrpc.status.value === 'error') {
       newButtonLoading.value = false;
       pageError.value = true;
       newButtonLabel.value = 'Something went wrong!';

@@ -103,7 +103,8 @@
       buttonLabel.value = 'Save profile';
       return;
     }
-    await $trpc.user.profile.updateUserProfile.mutate({
+    const updateUserProfileTrpc = $trpc.user.profile.updateUserProfile.useMutation();
+    await updateUserProfileTrpc.mutate({
       profilePublicId: userOrgProfile.value.profile.publicId,
       fName: fNameValue.value,
       lName: lNameValue.value,

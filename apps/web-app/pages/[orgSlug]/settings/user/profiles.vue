@@ -106,16 +106,17 @@
       buttonLabel.value = 'Save profile';
       return;
     }
-    const response = await $trpc.user.profile.updateUserProfile.mutate({
-      profilePublicId: initialUserProfile.value.profile.publicId,
-      fName: fNameValue.value,
-      lName: lNameValue.value,
-      title: titleValue.value,
-      blurb: blurbValue.value,
-      handle: initialUserProfile.value.profile.handle || ''
+    const updateUserProfileTrpc = $trpc.user.profile.updateUserProfile.useMutation();
+      await updateUserProfileTrpc.mutate({
+        profilePublicId: initialUserProfile.value.profile.publicId,
+        fName: fNameValue.value,
+        lName: lNameValue.value,
+        title: titleValue.value,
+        blurb: blurbValue.value,
+        handle: initialUserProfile.value.profile.handle || ''
     });
 
-    if (!response.success) {
+    if (updateUserProfileTrpc.status.value === 'error') {
       pageError.value = true;
       buttonLoading.value = false;
       buttonLabel.value = 'Save profile';

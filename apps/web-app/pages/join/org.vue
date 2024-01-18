@@ -83,11 +83,12 @@
     newButtonLoading.value = true;
 
     newButtonLabel.value = 'Creating your organization';
-    const createNewOrgResponse = await $trpc.org.crud.createNewOrg.mutate({
-      orgName: orgNameValue.value,
-      orgSlug: orgSlugValue.value
+    const createNewOrgTrpc = $trpc.org.crud.createNewOrg.useMutation();
+      await createNewOrgTrpc.mutate({
+        orgName: orgNameValue.value,
+        orgSlug: orgSlugValue.value
     });
-    if (!createNewOrgResponse.success) {
+    if (createNewOrgTrpc.status.value === 'error') {
       newButtonLoading.value = false;
       pageError.value = true;
       newButtonLabel.value = 'Something went wrong!';
@@ -105,14 +106,15 @@
   async function joinOrg() {
     joinButtonLoading.value = true;
     joinButtonLabel.value = 'Joining the organization';
-    const joinOrgResponse = await $trpc.org.users.invites.redeemInvite.mutate({
+    const redeemInviteTrpc = $trpc.org.users.invites.redeemInvite.useMutation();
+    const joinOrgResponse = await redeemInviteTrpc.mutate({
       inviteToken: inviteCodeValue.value
     });
     const orgSlugCookie = useCookie('un-join-org-slug', {
       expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
     });
-    orgSlugCookie.value = joinOrgResponse.orgSlug as string;
-    if (!joinOrgResponse.success) {
+    orgSlugCookie.value = joinOrgResponse!.orgSlug as string;
+    if (redeemInviteTrpc.status.value === 'error') {
       joinButtonLoading.value = false;
       pageError.value = true;
       joinButtonLabel.value = 'Something went wrong!';

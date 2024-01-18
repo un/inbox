@@ -41,15 +41,16 @@
   async function joinOrg() {
     joinButtonLoading.value = true;
     joinButtonLabel.value = 'Joining the organization';
-    const joinOrgResponse = await $trpc.org.users.invites.redeemInvite.mutate({
+    const redeemInviteTrpc = $trpc.org.users.invites.redeemInvite.useMutation();
+    const joinOrgResponse = await redeemInviteTrpc.mutate({
       inviteToken: inviteId as string
     });
     const orgSlugCookie = useCookie('un-org-slug', {
       expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
     });
-    orgSlugCookie.value = joinOrgResponse.orgSlug as string;
+    orgSlugCookie.value = joinOrgResponse!.orgSlug as string;
 
-    if (!joinOrgResponse.success) {
+    if (redeemInviteTrpc.status.value === 'error') {
       joinButtonLoading.value = false;
       joinButtonLabel.value = 'Something went wrong!';
     }

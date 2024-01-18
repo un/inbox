@@ -233,8 +233,8 @@
 
     buttonLoading.value = true;
     buttonLabel.value = 'Creating invite...';
-
-    await $trpc.org.users.invites.createNewInvite.mutate({
+    const createNewInviteTrpc = $trpc.org.users.invites.createNewInvite.useMutation();
+    await createNewInviteTrpc.mutate({
       user,
       notification: sendEmailNotification.value ? sendNotification : undefined,
       email: createEmailIdentity.value ? createEmail : undefined,

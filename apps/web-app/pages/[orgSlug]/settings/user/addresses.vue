@@ -103,11 +103,12 @@
     });
     const emailIdentityPublicId = emailIdentityPublicIdToEdit.value;
     const sendName = editedSendName.value;
-    const editResponse = await $trpc.user.addresses.editSendName.mutate({
+    const editSendNameTrpc = $trpc.user.addresses.editSendName.useMutation();
+     await editSendNameTrpc.mutate({
       emailIdentityPublicId: emailIdentityPublicId,
       newSendName: sendName
     });
-    if (!editResponse.success) {
+    if (editSendNameTrpc.status.value === 'error') {
       toast.remove('editing_send_name');
       toast.add({
         id: 'send_name_edit_fail',
@@ -168,10 +169,10 @@
     if (isInPremiumAvailableArray && !isPro.value) {
       return;
     }
-    const claimResponse =
-      await $trpc.user.addresses.claimPersonalAddress.mutate({
-        emailIdentity: emailIdentity
-      });
+    const claimPersonalAddressTrpc = $trpc.user.addresses.claimPersonalAddress.useMutation();
+      await claimPersonalAddressTrpc.mutate({
+      emailIdentity: emailIdentity
+      })
     toast.remove('claiming_email');
     refreshUserAddresses();
     toast.add({
