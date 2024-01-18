@@ -10,7 +10,8 @@ export default defineNuxtConfig({
     '@nuxtjs/turnstile',
     '@pinia/nuxt',
     '@pinia-plugin-persistedstate/nuxt',
-    '@nuxt/ui'
+    '@nuxt/ui',
+    '@vue-email/nuxt'
   ],
 
   runtimeConfig: {
@@ -95,6 +96,11 @@ export default defineNuxtConfig({
     //   'acceptHMRUpdate',
     //   'storeToRefs'
     // ]
+  },
+
+  //* vue-email
+  vueEmail: {
+    baseUrl: process.env.WEBAPP_URL
   },
 
   //* Nuxt-Security

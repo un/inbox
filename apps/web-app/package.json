@@ -50,6 +50,7 @@
     "@uninbox/utils": "workspace:*",
     "@unocss/reset": "^0.58.3",
     "@upstash/redis": "1.20.0",
+    "@vue-email/nuxt": "^0.8.8",
     "@vueuse/nuxt": "^10.7.2",
     "argon2": "^0.31.2",
     "class-variance-authority": "^0.7.0",
