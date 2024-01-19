@@ -9,7 +9,7 @@
   const { $trpc, $i18n } = useNuxtApp();
   const inviteEmailValid = ref<boolean | 'remote' | null>(null);
   const dnsRecordsExpanded = ref(false);
-  const mailMethodsExpanded = ref(true);
+  const mailMethodsExpanded = ref(false);
   const showDnsRefreshMessage = ref(false);
   const dnsRefreshLoading = ref(false);
 
@@ -378,11 +378,7 @@
               </div>
             </div>
 
-      <div class="flex flex-col items-center">
-        <code>$ npm i @nuxt/ui</code>
-        <code>$ yarn add @nuxt/ui</code>
-        <code>$ pnpm add @nuxt/ui</code>
-      </div>
+    
     </template>
   </NuxtUiAccordion>
           <div class="flex flex-col gap-4">
