@@ -99,23 +99,6 @@
 
   const selectedDomain = ref<OrgDomains | undefined>(undefined);
 
-  // watchDebounced(
-  //   newInviteEmailUsernameValue,
-  //   (newUsername) => {
-  //     if (selectedDomain) {
-  //       newInviteEmailUsernameValid.value = 'remote';
-  //       newInviteEmailUsernameValidationMessage.value = 'Checking availability';
-  //     } else {
-  //       newInviteEmailUsernameValid.value = true;
-  //       newInviteEmailUsernameValidationMessage.value = '';
-  //     }
-  //   },
-  //   {
-  //     debounce: 500,
-  //     maxWait: 5000
-  //   }
-  // );
-
   async function checkEmailAvailability() {
     if (
       newInviteEmailUsernameValid.value === 'remote' ||
@@ -233,13 +216,28 @@
 
     buttonLoading.value = true;
     buttonLabel.value = 'Creating invite...';
-
-    await $trpc.org.users.invites.createNewInvite.mutate({
+    const createNewInviteTrpc =
+      $trpc.org.users.invites.createNewInvite.useMutation();
+    await createNewInviteTrpc.mutate({
       user,
       notification: sendEmailNotification.value ? sendNotification : undefined,
       email: createEmailIdentity.value ? createEmail : undefined,
       groups: addUserToGroups.value ? addToGroups : undefined
     });
+
+    if (createNewInviteTrpc.status.value === 'error') {
+      buttonLoading.value = false;
+      buttonLabel.value = 'Create Invite';
+      toast.add({
+        id: 'invite_add_fail',
+        title: 'Invite Creation Failed',
+        description: `The invite could not be created.`,
+        color: 'red',
+        icon: 'i-ph-warning-circle',
+        timeout: 5000
+      });
+      return;
+    }
 
     buttonLoading.value = false;
     buttonLabel.value = 'All done';

@@ -64,22 +64,34 @@
 
   //functions
   async function createNewOrg() {
+    const toast = useToast();
     newButtonLoading.value = true;
-
     newButtonLabel.value = 'Creating your organization';
-    const createNewOrgResponse = await $trpc.org.crud.createNewOrg.mutate({
+
+    const createNewOrgTrpc = $trpc.org.crud.createNewOrg.useMutation();
+    await createNewOrgTrpc.mutate({
       orgName: orgNameValue.value,
       orgSlug: orgSlugValue.value
     });
-    if (!createNewOrgResponse.success) {
+    if (createNewOrgTrpc.status.value === 'error') {
       newButtonLoading.value = false;
       pageError.value = true;
-      newButtonLabel.value = 'Something went wrong!';
+      newButtonLabel.value = 'Make my organization';
+
+      toast.add({
+        id: 'create_new_org_fail',
+        title: 'Org Creation Failed',
+        description: `${orgNameValue.value} organization could not be created.`,
+        color: 'red',
+        icon: 'i-ph-warning-circle',
+        timeout: 5000
+      });
+      return;
     }
+
     newButtonLoading.value = false;
     newButtonLabel.value = 'All Done!';
     refreshNuxtData('getUserOrgsNav');
-    const toast = useToast();
     toast.add({
       id: 'org_created',
       title: 'New Organization Created',

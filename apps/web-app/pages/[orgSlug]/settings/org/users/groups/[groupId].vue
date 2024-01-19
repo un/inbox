@@ -126,30 +126,41 @@
   const selectedUserToAdd = ref<OrgMemberDropdownData | undefined>(undefined);
 
   async function addNewUserToGroup(orgMemberPublicId: string) {
+    const toast = useToast();
     addingUserId.value = orgMemberPublicId;
-    const result = await $trpc.org.users.userGroups.addUserToGroup.mutate({
+    const addUserToGroupTrpc =
+      $trpc.org.users.userGroups.addUserToGroup.useMutation();
+    await addUserToGroupTrpc.mutate({
       groupPublicId: groupPublicId,
       orgMemberPublicId: orgMemberPublicId
     });
-    if (!result.publicId) {
-      console.log('Error adding user to group');
-    } else {
-      usersInGroup.value.push(orgMemberPublicId);
-      // get the user profile from the org members list
-      const member = orgMembersData?.value?.members?.find(
-        (member) => member.publicId === orgMemberPublicId
-      );
-      tableRows.value.push({
-        publicId: member?.profile.publicId || '',
-        name: member?.profile.firstName + ' ' + member?.profile.lastName,
-        handle: member?.profile.handle || '',
-        title: member?.profile.title || '',
-        role: '',
-        notifications: ''
+    if (addUserToGroupTrpc.status.value === 'error') {
+      toast.add({
+        id: 'add_user_to_group_fail',
+        title: 'Could not add user to group',
+        description: `${selectedUserToAdd.value?.name} could not be added to the ${groupData.value?.group?.name} group`,
+        color: 'red',
+        icon: 'i-ph-warning-circle',
+        timeout: 5000
       });
+      return;
     }
+
+    usersInGroup.value.push(orgMemberPublicId);
+    // get the user profile from the org members list
+    const member = orgMembersData?.value?.members?.find(
+      (member) => member.publicId === orgMemberPublicId
+    );
+    tableRows.value.push({
+      publicId: member?.profile.publicId || '',
+      name: member?.profile.firstName + ' ' + member?.profile.lastName,
+      handle: member?.profile.handle || '',
+      title: member?.profile.title || '',
+      role: '',
+      notifications: ''
+    });
+
     addingUserId.value = '';
-    const toast = useToast();
     toast.add({
       id: 'user_added_to_group',
       title: 'User Added',

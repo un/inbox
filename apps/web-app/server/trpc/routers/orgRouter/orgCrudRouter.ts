@@ -181,10 +181,8 @@ export const crudRouter = router({
       }
 
       return {
-        success: true,
         orgId: newPublicId,
-        orgName: input.orgName,
-        error: null
+        orgName: input.orgName
       };
     }),
 
@@ -196,7 +194,7 @@ export const crudRouter = router({
     )
     .query(async ({ ctx, input }) => {
       const { db, user } = ctx;
-      const userId = user.id ;
+      const userId = user.id;
 
       const whereUserIsAdmin = input.onlyAdmin || false;
 

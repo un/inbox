@@ -182,7 +182,9 @@
     const selectedOrgMembersPublicIds: string[] = selectedOrgMembers.value.map(
       (member) => member.publicId as string
     );
-    await $trpc.org.mail.emailIdentities.createNewEmailIdentity.mutate({
+    const createNewEmailIdentityTrpc =
+      $trpc.org.mail.emailIdentities.createNewEmailIdentity.useMutation();
+    await createNewEmailIdentityTrpc.mutate({
       emailUsername: newIdentityUsernameValue.value,
       domainPublicId: selectedDomain.value?.domainPublicId as string,
       sendName: newIdentitySendNameValue.value,
@@ -190,6 +192,19 @@
       routeToUsersOrgMemberPublicIds: selectedOrgMembersPublicIds,
       catchAll: newIdentityCatchAll.value
     });
+    if (createNewEmailIdentityTrpc.status.value === 'error') {
+      buttonLoading.value = false;
+      buttonLabel.value = 'Create New Email Address';
+      toast.add({
+        id: 'email_add_fail',
+        title: 'Email Creation Failed',
+        description: `${newIdentityUsernameValue.value}@${selectedDomain.value?.domain} email address could not be created.`,
+        color: 'red',
+        icon: 'i-ph-warning-circle',
+        timeout: 5000
+      });
+      return;
+    }
     buttonLoading.value = false;
     buttonLabel.value = 'Done... Redirecting';
     toast.add({

@@ -39,23 +39,33 @@
   inviteCookie.value = inviteId as string;
 
   async function joinOrg() {
+    const toast = useToast();
     joinButtonLoading.value = true;
     joinButtonLabel.value = 'Joining the organization';
-    const joinOrgResponse = await $trpc.org.users.invites.redeemInvite.mutate({
+    const redeemInviteTrpc = $trpc.org.users.invites.redeemInvite.useMutation();
+    const joinOrgResponse = await redeemInviteTrpc.mutate({
       inviteToken: inviteId as string
     });
+    if (redeemInviteTrpc.status.value === 'error') {
+      joinButtonLoading.value = false;
+      joinButtonLabel.value = 'Join organization';
+      toast.add({
+        id: 'redeem_invite_fail',
+        title: 'Could not redeem the invite',
+        description: `Something went wrong.`,
+        color: 'red',
+        icon: 'i-ph-warning-circle',
+        timeout: 5000
+      });
+      return;
+    }
     const orgSlugCookie = useCookie('un-org-slug', {
       expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
     });
-    orgSlugCookie.value = joinOrgResponse.orgSlug as string;
+    orgSlugCookie.value = joinOrgResponse!.orgSlug as string;
 
-    if (!joinOrgResponse.success) {
-      joinButtonLoading.value = false;
-      joinButtonLabel.value = 'Something went wrong!';
-    }
     joinButtonLoading.value = false;
     joinButtonLabel.value = 'All Done!';
-    const toast = useToast();
     toast.add({
       id: 'org_joined',
       title: 'Success',

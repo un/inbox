@@ -96,6 +96,7 @@
   });
 
   async function saveProfile() {
+    const toast = useToast();
     buttonLoading.value = true;
     buttonLabel.value = 'Saving...';
     const newOrgAvatarId = imageId.value ? imageId.value : null;
@@ -106,7 +107,9 @@
       buttonLabel.value = 'Save profile';
       return;
     }
-    const response = await $trpc.user.profile.updateUserProfile.mutate({
+    const updateUserProfileTrpc =
+      $trpc.user.profile.updateUserProfile.useMutation();
+    await updateUserProfileTrpc.mutate({
       profilePublicId: initialUserProfile.value.profile.publicId,
       fName: fNameValue.value,
       lName: lNameValue.value,
@@ -115,16 +118,24 @@
       handle: initialUserProfile.value.profile.handle || ''
     });
 
-    if (!response.success) {
+    if (updateUserProfileTrpc.status.value === 'error') {
       pageError.value = true;
       buttonLoading.value = false;
       buttonLabel.value = 'Save profile';
+      toast.add({
+        id: 'save_profile_fail',
+        title: 'Failed to save profile',
+        description: `Something went wrong when saving your profile. Refresh the page and try again.`,
+        color: 'red',
+        icon: 'i-ph-warning-circle',
+        timeout: 5000
+      });
       return;
     }
+
     buttonLoading.value = false;
     buttonLabel.value = 'All done!';
     refreshNuxtData('getUserSingleProfileNav');
-    const toast = useToast();
     toast.add({
       id: 'profile_saved',
       title: 'Profile Saved',
