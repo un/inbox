@@ -9,7 +9,7 @@
   const { $trpc, $i18n } = useNuxtApp();
   const inviteEmailValid = ref<boolean | 'remote' | null>(null);
   const dnsRecordsExpanded = ref(false);
-  const mailMethodsExpanded = ref(false);
+  const mailMethodsExpanded = ref(true);
   const showDnsRefreshMessage = ref(false);
   const dnsRefreshLoading = ref(false);
 
@@ -207,7 +207,12 @@
           <NuxtUiAccordion :items="items">
           <template #incoming>
           
-            <span
+            <div class="flex flex-col gap-4">
+            <div
+              class="h-fit w-full flex flex-col justify-center gap-4 rounded-2xl bg-base-2 p-8">
+             
+                <span class="text-lg font-display">Incoming</span>
+                <span
                   v-if="domainQuery.domainData.receivingMode === 'disabled'"
                   class="rounded-full bg-red-9 px-4 py-1 text-xs text-base-1 font-semibold uppercase">
                   Disabled
@@ -225,9 +230,9 @@
                   class="rounded-full bg-green-9 px-4 py-1 text-xs text-base-1 font-semibold uppercase">
                   Native
                 </span>
-
-                <div
-                
+              
+              <div
+               
                 class="flex flex-col justify-center gap-8">
                 <div v-if="domainQuery.domainData.receivingMode === 'disabled'">
                   <span class=""
@@ -304,15 +309,15 @@
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
             
     </template>
 
     <template #outgoing>
       <div
               class="h-fit w-full flex flex-col justify-center gap-4 rounded-2xl bg-base-2 p-8">
-              <div
-                class="flex flex-row cursor-pointer items-center justify-between"
-                @click="mailMethodsExpanded = !mailMethodsExpanded">
+             
                 <span class="text-lg font-display">Outgoing</span>
                 <span
                   v-if="domainQuery.domainData.sendingMode === 'disabled'"
@@ -329,9 +334,9 @@
                   class="rounded-full bg-green-9 px-4 py-1 text-xs text-base-1 font-semibold uppercase">
                   Native
                 </span>
-              </div>
+             
               <div
-                v-show="mailMethodsExpanded"
+               
                 class="flex flex-col justify-center gap-8">
                 <div v-if="domainQuery.domainData.sendingMode === 'disabled'">
                   <span class="">
