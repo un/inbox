@@ -9,7 +9,7 @@
   const { $trpc, $i18n } = useNuxtApp();
   const inviteEmailValid = ref<boolean | 'remote' | null>(null);
   const dnsRecordsExpanded = ref(false);
-  const mailMethodsExpanded = ref(false);
+  const mailMethodsExpanded = ref(true);
   const showDnsRefreshMessage = ref(false);
   const dnsRefreshLoading = ref(false);
 
@@ -67,6 +67,16 @@
     { server: false }
   );
 
+  const items = [{
+  label: 'Incoming',
+  defaultOpen: true,
+  slot: 'incoming'
+}, {
+  label: 'Outgoing',
+  defaultOpen: true,
+  slot: 'outgoing'
+}];
+
   async function recheckDns() {
     dnsRefreshLoading.value = true;
     await domainDnsRefresh();
@@ -105,7 +115,7 @@
       </div>
       <span
         v-if="!domainPending"
-        class="rounded-full px-4 py-1 font-semibold uppercase text-base-1"
+        class="rounded-full px-4 py-1 text-base-1 font-semibold uppercase"
         :class="
           domainQuery?.domainData?.domainStatus === 'disabled'
             ? 'bg-red-9'
@@ -143,7 +153,7 @@
         class="w-full flex flex-col gap-8">
         <div class="flex flex-col gap-4">
           <div class="w-full border-b-1 border-base-5 pb-2">
-            <span class="text-sm font-semibold uppercase text-base-11">
+            <span class="text-sm text-base-11 font-semibold uppercase">
               Status
             </span>
           </div>
@@ -190,20 +200,16 @@
         </div>
         <div class="flex flex-col gap-4">
           <div class="w-full border-b-1 border-base-5 pb-2">
-            <span class="text-sm font-semibold uppercase text-base-11">
+            <span class="text-sm text-base-11 font-semibold uppercase">
               Mail
             </span>
           </div>
-          <div class="flex flex-col gap-4">
-            <div
-              class="h-fit w-full flex flex-col justify-center gap-4 rounded-2xl bg-base-2 p-8">
-              <div
-                class="flex flex-row cursor-pointer items-center justify-between"
-                @click="mailMethodsExpanded = !mailMethodsExpanded">
-                <span class="text-lg font-display">Incoming</span>
-                <span
+          <NuxtUiAccordion :items="items">
+          <template #incoming>
+          
+            <span
                   v-if="domainQuery.domainData.receivingMode === 'disabled'"
-                  class="rounded-full bg-red-9 px-4 py-1 text-xs font-semibold uppercase text-base-1">
+                  class="rounded-full bg-red-9 px-4 py-1 text-xs text-base-1 font-semibold uppercase">
                   Disabled
                 </span>
                 <span
@@ -211,17 +217,17 @@
                     domainQuery.domainData.receivingMode === 'forwarding' ||
                     domainQuery.domainData.receivingMode === 'native'
                   "
-                  class="rounded-full bg-orange-9 px-4 py-1 text-xs font-semibold uppercase text-base-1">
+                  class="rounded-full bg-orange-9 px-4 py-1 text-xs text-base-1 font-semibold uppercase">
                   Forwarding
                 </span>
                 <span
                   v-if="domainQuery.domainData.receivingMode === 'native'"
-                  class="rounded-full bg-green-9 px-4 py-1 text-xs font-semibold uppercase text-base-1">
+                  class="rounded-full bg-green-9 px-4 py-1 text-xs text-base-1 font-semibold uppercase">
                   Native
                 </span>
-              </div>
-              <div
-                v-show="mailMethodsExpanded"
+
+                <div
+                
                 class="flex flex-col justify-center gap-8">
                 <div v-if="domainQuery.domainData.receivingMode === 'disabled'">
                   <span class=""
@@ -234,7 +240,7 @@
                   <div class="flex flex-row items-center justify-between">
                     <span class="font-semibold"> Native Mode </span>
                     <span
-                      class="rounded-full bg-red-5 px-4 py-1 text-xs font-semibold uppercase text-base-1"
+                      class="rounded-full bg-red-5 px-4 py-1 text-xs text-base-1 font-semibold uppercase"
                       :class="
                         incomingNativeModeEnabled ? 'bg-green-9' : 'bg-red-9'
                       ">
@@ -252,7 +258,7 @@
                   <div class="flex flex-row items-center justify-between">
                     <span class="font-semibold"> Forwarding Mode </span>
                     <span
-                      class="rounded-full bg-red-5 px-4 py-1 text-xs font-semibold uppercase text-base-1"
+                      class="rounded-full bg-red-5 px-4 py-1 text-xs text-base-1 font-semibold uppercase"
                       :class="
                         incomingForwardingModeEnabled
                           ? 'bg-green-9'
@@ -273,7 +279,7 @@
                   </span>
                   <div class="mt-[8px] flex flex-col gap-1">
                     <span
-                      class="overflow-hidden text-xs uppercase text-base-11">
+                      class="overflow-hidden text-xs text-base-11 uppercase">
                       Forwarding Address
                     </span>
                     <div class="flex flex-row items-center gap-2">
@@ -298,8 +304,11 @@
                   </div>
                 </div>
               </div>
-            </div>
-            <div
+            
+    </template>
+
+    <template #outgoing>
+      <div
               class="h-fit w-full flex flex-col justify-center gap-4 rounded-2xl bg-base-2 p-8">
               <div
                 class="flex flex-row cursor-pointer items-center justify-between"
@@ -307,17 +316,17 @@
                 <span class="text-lg font-display">Outgoing</span>
                 <span
                   v-if="domainQuery.domainData.sendingMode === 'disabled'"
-                  class="rounded-full bg-red-9 px-4 py-1 text-xs font-semibold uppercase text-base-1">
+                  class="rounded-full bg-red-9 px-4 py-1 text-xs text-base-1 font-semibold uppercase">
                   Disabled
                 </span>
                 <span
                   v-if="domainQuery.domainData.sendingMode === 'external'"
-                  class="rounded-full bg-orange-9 px-4 py-1 text-xs font-semibold uppercase text-base-1">
+                  class="rounded-full bg-orange-9 px-4 py-1 text-xs text-base-1 font-semibold uppercase">
                   External
                 </span>
                 <span
                   v-if="domainQuery.domainData.sendingMode === 'native'"
-                  class="rounded-full bg-green-9 px-4 py-1 text-xs font-semibold uppercase text-base-1">
+                  class="rounded-full bg-green-9 px-4 py-1 text-xs text-base-1 font-semibold uppercase">
                   Native
                 </span>
               </div>
@@ -334,7 +343,7 @@
                   <div class="flex flex-row items-center justify-between">
                     <span class="font-semibold"> Native Mode </span>
                     <span
-                      class="rounded-full bg-red-5 px-4 py-1 text-xs font-semibold uppercase text-base-1"
+                      class="rounded-full bg-red-5 px-4 py-1 text-xs text-base-1 font-semibold uppercase"
                       :class="
                         outgoingNativeModeEnabled ? 'bg-green-9' : 'bg-red-9'
                       ">
@@ -353,7 +362,7 @@
                   <div class="flex flex-row items-center justify-between">
                     <span class="font-semibold"> External Mode </span>
                     <span
-                      class="rounded-full bg-red-5 bg-red-9 px-4 py-1 text-xs font-semibold uppercase text-base-1">
+                      class="rounded-full bg-red-5 bg-red-9 px-4 py-1 text-xs text-base-1 font-semibold uppercase">
                       disabled
                     </span>
                   </div>
@@ -368,18 +377,29 @@
                 </div>
               </div>
             </div>
+
+      <div class="flex flex-col items-center">
+        <code>$ npm i @nuxt/ui</code>
+        <code>$ yarn add @nuxt/ui</code>
+        <code>$ pnpm add @nuxt/ui</code>
+      </div>
+    </template>
+  </NuxtUiAccordion>
+          <div class="flex flex-col gap-4">
+            
+            
           </div>
         </div>
         <div class="flex flex-col gap-4">
           <div
             class="w-full flex flex-row justify-between border-b-1 border-base-5 pb-2">
-            <span class="text-md font-semibold uppercase text-base-11">
+            <span class="text-md text-base-11 font-semibold uppercase">
               DNS Records
             </span>
           </div>
           <div class="flex flex-col gap-4">
             <div class="flex flex-row items-center justify-between">
-              <span class="text-xs font-semibold uppercase text-base-11">
+              <span class="text-xs text-base-11 font-semibold uppercase">
                 Last check: {{ timeSinceLastDnsCheck }}
               </span>
               <UnUiButton
