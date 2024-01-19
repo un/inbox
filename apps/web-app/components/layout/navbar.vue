@@ -146,11 +146,11 @@
   const userMenuItems = computed(() => [
     [
       {
-        publicId: userProfile?.value?.profile?.publicId || '',
+        publicId: userProfile.value?.profile?.publicId || '',
         label:
-          userProfile?.value?.profile?.firstName +
+          userProfile.value?.profile?.firstName +
           ' ' +
-          userProfile?.value?.profile?.lastName,
+          userProfile.value?.profile?.lastName,
         slot: 'account'
       }
     ],
