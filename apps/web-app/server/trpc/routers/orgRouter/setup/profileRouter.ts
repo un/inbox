@@ -36,6 +36,13 @@ export const orgProfileRouter = router({
           : eq(orgs.id, +orgId)
       });
 
+      if (!orgProfileQuery || !orgProfileQuery.publicId) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Organization profile not found'
+        });
+      }
+
       return {
         orgProfile: orgProfileQuery
       };

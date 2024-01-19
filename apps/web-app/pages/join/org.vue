@@ -78,20 +78,29 @@
       return true;
   });
 
+  const toast = useToast();
   //functions
   async function createNewOrg() {
     newButtonLoading.value = true;
 
     newButtonLabel.value = 'Creating your organization';
     const createNewOrgTrpc = $trpc.org.crud.createNewOrg.useMutation();
-      await createNewOrgTrpc.mutate({
-        orgName: orgNameValue.value,
-        orgSlug: orgSlugValue.value
+    await createNewOrgTrpc.mutate({
+      orgName: orgNameValue.value,
+      orgSlug: orgSlugValue.value
     });
     if (createNewOrgTrpc.status.value === 'error') {
       newButtonLoading.value = false;
-      pageError.value = true;
-      newButtonLabel.value = 'Something went wrong!';
+      newButtonLabel.value = 'Make my organization';
+      toast.add({
+        id: 'create_new_org_fail',
+        title: 'Could not create organization',
+        description: `Check the errors and try again.`,
+        color: 'red',
+        icon: 'i-ph-warning-circle',
+        timeout: 5000
+      });
+      return;
     }
 
     const orgSlugCookie = useCookie('un-join-org-slug', {
@@ -110,15 +119,24 @@
     const joinOrgResponse = await redeemInviteTrpc.mutate({
       inviteToken: inviteCodeValue.value
     });
+    if (redeemInviteTrpc.status.value === 'error') {
+      joinButtonLoading.value = false;
+      joinButtonLabel.value = 'Join my team';
+      toast.add({
+        id: 'redeem_invite_fail',
+        title: 'Could not join organization',
+        description: `Check the errors and try again.`,
+        color: 'red',
+        icon: 'i-ph-warning-circle',
+        timeout: 5000
+      });
+      return;
+    }
     const orgSlugCookie = useCookie('un-join-org-slug', {
       expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
     });
     orgSlugCookie.value = joinOrgResponse!.orgSlug as string;
-    if (redeemInviteTrpc.status.value === 'error') {
-      joinButtonLoading.value = false;
-      pageError.value = true;
-      joinButtonLabel.value = 'Something went wrong!';
-    }
+
     joinButtonLoading.value = false;
     joinButtonLabel.value = 'All Done!';
     navigateTo('/join/profile');

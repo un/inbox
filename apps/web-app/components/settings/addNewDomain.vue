@@ -36,18 +36,24 @@
     buttonLoading.value = true;
     buttonLabel.value = 'Creating domain...';
     const createNewDomainTrpc =
-    $trpc.org.mail.domains.createNewDomain.useMutation();
+      $trpc.org.mail.domains.createNewDomain.useMutation();
     await createNewDomainTrpc.mutate({
-        domainName: newDomainNameValue.value
-    })
+      domainName: newDomainNameValue.value
+    });
 
     if (createNewDomainTrpc.status.value === 'error') {
       buttonLoading.value = false;
       buttonLabel.value = 'Add Domain';
       newDomainNameValid.value = false;
-      newDomainResponseError.value =
-          createNewDomainTrpc.error?.value?.message || 'An unexpected error occurred';
-          return
+      toast.add({
+        id: 'domain_add_fail',
+        title: 'Domain Creation Failed',
+        description: `${newDomainNameValue.value} domain could not be created.`,
+        color: 'red',
+        icon: 'i-ph-warning-circle',
+        timeout: 5000
+      });
+      return;
     }
     buttonLoading.value = false;
     buttonLabel.value = 'All done';

@@ -67,7 +67,7 @@
     formData.append('type', 'org');
     formData.append(
       'publicId',
-      initialOrgProfile.value.orgProfile.publicId || ''
+      initialOrgProfile.value?.orgProfile.publicId || ''
     );
     await useFetch(`${storageUrl}/api/avatar`, {
       method: 'post',
@@ -75,11 +75,13 @@
       credentials: 'include'
     });
 
-    imageUrl.value = useUtils().generateAvatarUrl(
-      'org',
-      initialOrgProfile.value.orgProfile.publicId,
-      '5xl'
-    ) as string;
+    if (initialOrgProfile.value?.orgProfile.publicId) {
+      imageUrl.value = useUtils().generateAvatarUrl(
+        'org',
+        initialOrgProfile.value?.orgProfile.publicId,
+        '5xl'
+      ) as string;
+    }
 
     uploadLoading.value = false;
 
@@ -87,10 +89,12 @@
   });
 
   async function saveProfile() {
+    const toast = useToast();
     buttonLoading.value = true;
     buttonLabel.value = 'Saving...';
-    const setOrgProfileTrpc = $trpc.org.setup.profile.setOrgProfile.useMutation();
-     await setOrgProfileTrpc.mutate({
+    const setOrgProfileTrpc =
+      $trpc.org.setup.profile.setOrgProfile.useMutation();
+    await setOrgProfileTrpc.mutate({
       orgName: orgNameValue.value
     });
 
@@ -98,12 +102,21 @@
       pageError.value = true;
       buttonLoading.value = false;
       buttonLabel.value = 'Save profile';
+      toast.add({
+        id: 'save_profile_fail',
+        title: 'Could not save profile',
+        description: `The profile could not be saved.`,
+        color: 'red',
+        icon: 'i-ph-warning-circle',
+        timeout: 5000
+      });
       return;
     }
+
     buttonLoading.value = false;
     buttonLabel.value = 'All done!';
     refreshNuxtData('getUserOrgsNav');
-    const toast = useToast();
+
     toast.add({
       id: 'profile_saved',
       title: 'Profile Saved',

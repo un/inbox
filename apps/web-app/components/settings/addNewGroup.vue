@@ -97,16 +97,36 @@
     buttonLoading.value = true;
     buttonLabel.value = 'Creating...';
     const toast = useToast();
-    const createOrgUserGroupsTrpc = $trpc.org.users.userGroups.createOrgUserGroups.useMutation();
-    const { newGroupPublicId } =
+    const createOrgUserGroupsTrpc =
+      $trpc.org.users.userGroups.createOrgUserGroups.useMutation();
+    const createOrgUserGroupsTrpcResponse =
       await createOrgUserGroupsTrpc.mutate({
         groupName: newGroupNameValue.value,
         groupDescription: newGroupDescriptionValue.value,
         groupColor: newGroupColorValue.value
-      })?? {};
-       
-    if (createEmailIdentityForGroup.value && newGroupPublicId !== undefined) {
-      const createNewEmailIdentityTrpc = $trpc.org.mail.emailIdentities.createNewEmailIdentity.useMutation();
+      });
+
+    if (
+      createOrgUserGroupsTrpc.status.value === 'error' ||
+      !createOrgUserGroupsTrpcResponse?.newGroupPublicId
+    ) {
+      buttonLoading.value = false;
+      buttonLabel.value = 'Create New Group';
+      toast.add({
+        id: 'group_created',
+        title: 'Group Creation Failed',
+        description: `${newGroupNameValue.value} group could not be created.`,
+        color: 'red',
+        icon: 'i-ph-warning-circle',
+        timeout: 5000
+      });
+      return;
+    }
+    const newGroupPublicId = createOrgUserGroupsTrpcResponse?.newGroupPublicId;
+
+    if (createEmailIdentityForGroup.value) {
+      const createNewEmailIdentityTrpc =
+        $trpc.org.mail.emailIdentities.createNewEmailIdentity.useMutation();
       await createNewEmailIdentityTrpc.mutate({
         emailUsername: newEmailIdentityUsernameValue.value,
         domainPublicId: selectedDomain.value?.domainPublicId as string,
@@ -115,13 +135,26 @@
         routeToUsersOrgMemberPublicIds: [],
         catchAll: false
       });
-      toast.add({
-        id: 'Email Identity Created',
-        title: 'Group Created Successfully',
-        description: `${newGroupNameValue.value} group with email ${newEmailIdentityUsernameValue.value}@${selectedDomain.value?.domain} created successfully.`,
-        icon: 'i-ph-thumbs-up',
-        timeout: 5000
-      });
+      if (createNewEmailIdentityTrpc.status.value === 'error') {
+        buttonLoading.value = false;
+        buttonLabel.value = 'Create New Group';
+        toast.add({
+          id: 'group_created',
+          title: 'Group Creation Failed',
+          description: `${newGroupNameValue.value} group could not be created.`,
+          icon: 'i-ph-thumbs-up',
+          timeout: 5000
+        });
+        return;
+      } else {
+        toast.add({
+          id: 'Email Identity Created',
+          title: 'Group Created Successfully',
+          description: `${newGroupNameValue.value} group with email ${newEmailIdentityUsernameValue.value}@${selectedDomain.value?.domain} created successfully.`,
+          icon: 'i-ph-thumbs-up',
+          timeout: 5000
+        });
+      }
     } else {
       toast.add({
         id: 'group_created',
