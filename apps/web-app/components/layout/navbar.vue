@@ -70,11 +70,11 @@
 
   const { $trpc } = useNuxtApp();
 
-  // const { data: userProfile } =
-  //   await $trpc.user.profile.getUserOrgProfile.useQuery(
-  //     { orgSlug: orgSlug },
-  //     { server: false, queryKey: 'getUserSingleProfileNav' }
-  //   );
+  const { data: userProfile } =
+    $trpc.user.profile.getUserOrgProfile.useQuery(
+      { orgSlug: orgSlug },
+      { server: false, queryKey: 'getUserSingleProfileNav', lazy: true }
+    );
 
   const {
     data: userOrgs,
@@ -91,13 +91,19 @@
     const userOrgSlugs = newUserOrgs?.userOrgs.map(
       (userOrg) => userOrg.org.slug
     );
+    const userPersonalOrgSlug = newUserOrgs?.personalOrgs?.map(
+      (userOrg) => userOrg.org.slug
+    );
     if (newUserOrgs?.adminOrgSlugs?.includes(orgSlug)) {
       isUserAdminOfActiveOrg.value = true;
     } else {
       isUserAdminOfActiveOrg.value = false;
     }
 
-    if (!userOrgSlugs?.includes(orgSlug)) {
+    if (
+      !userOrgSlugs?.includes(orgSlug) &&
+      !userPersonalOrgSlug?.includes(orgSlug)
+    ) {
       navigateTo(`/login`);
     }
   });
@@ -138,16 +144,16 @@
   });
 
   const userMenuItems = computed(() => [
-    // [
-    //   {
-    //     publicId: userProfile?.value?.profile?.publicId || '',
-    //     label:
-    //       userProfile?.value?.profile?.firstName +
-    //       ' ' +
-    //       userProfile?.value?.profile?.lastName,
-    //     slot: 'account'
-    //   }
-    // ],
+    [
+      {
+        publicId: userProfile?.value?.profile?.publicId || '',
+        label:
+          userProfile?.value?.profile?.firstName +
+          ' ' +
+          userProfile?.value?.profile?.lastName,
+        slot: 'account'
+      }
+    ],
     userOrgsButtons.value,
     [
       {
@@ -298,7 +304,7 @@
         </div>
         <UnUiIcon name="i-ph-caret-up" />
       </div>
-      <!-- <template #account>
+      <template #account>
         <div class="flex flex-col gap-2 text-left">
           <p>Signed in as</p>
           <div class="w-full flex flex-row items-center gap-2 overflow-hidden">
@@ -317,7 +323,7 @@
             }}</span>
           </div>
         </div>
-      </template> -->
+      </template>
       <template #org="{ item }">
         <div class="max-w-full flex flex-row items-center gap-2">
           <UnUiAvatar
