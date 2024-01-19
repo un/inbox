@@ -97,7 +97,7 @@
     }
 
     if (!userOrgSlugs?.includes(orgSlug)) {
-      navigateTo(`/login`);
+      navigateTo(`/redirect`);
     }
   });
 
