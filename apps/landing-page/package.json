@@ -14,7 +14,7 @@
     "@nuxtjs/color-mode": "^3.3.2",
     "@types/node": "^20.11.5",
     "nuxt": "^3.9.3",
-    "nuxt-security": "1.0.0"
+    "nuxt-security": "1.0.1"
   },
   "dependencies": {
     "vue-wrap-balancer": "^1.1.3"
