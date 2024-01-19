@@ -70,11 +70,10 @@
 
   const { $trpc } = useNuxtApp();
 
-  const { data: userProfile } =
-    $trpc.user.profile.getUserOrgProfile.useQuery(
-      { orgSlug: orgSlug },
-      { server: false, queryKey: 'getUserSingleProfileNav', lazy: true }
-    );
+  const { data: userProfile } = $trpc.user.profile.getUserOrgProfile.useQuery(
+    { orgSlug: orgSlug },
+    { server: false, queryKey: 'getUserSingleProfileNav', lazy: true }
+  );
 
   const {
     data: userOrgs,
@@ -91,19 +90,13 @@
     const userOrgSlugs = newUserOrgs?.userOrgs.map(
       (userOrg) => userOrg.org.slug
     );
-    const userPersonalOrgSlug = newUserOrgs?.personalOrgs?.map(
-      (userOrg) => userOrg.org.slug
-    );
     if (newUserOrgs?.adminOrgSlugs?.includes(orgSlug)) {
       isUserAdminOfActiveOrg.value = true;
     } else {
       isUserAdminOfActiveOrg.value = false;
     }
 
-    if (
-      !userOrgSlugs?.includes(orgSlug) &&
-      !userPersonalOrgSlug?.includes(orgSlug)
-    ) {
+    if (!userOrgSlugs?.includes(orgSlug)) {
       navigateTo(`/login`);
     }
   });
