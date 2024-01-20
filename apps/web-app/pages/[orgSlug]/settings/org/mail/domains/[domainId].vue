@@ -67,7 +67,7 @@
     { server: false }
   );
 
-  const items = [{
+  const items1 = [{
   label: 'Incoming',
   defaultOpen: true,
   slot: 'incoming'
@@ -75,6 +75,28 @@
   label: 'Outgoing',
   defaultOpen: true,
   slot: 'outgoing'
+}];
+
+const items2 = [
+{
+  label: 'MX-Records',
+  defaultOpen: true,
+  slot: 'mx-records'
+},
+{
+  label: 'DKIM-Record',
+  defaultOpen: true,
+  slot: 'dkim-records'
+},
+{
+  label: 'SPF-Record',
+  defaultOpen: true,
+  slot: 'spf-record'
+},
+{
+  label: 'Return Path',
+  defaultOpen: true,
+  slot: 'return-path'
 }];
 
   async function recheckDns() {
@@ -204,7 +226,7 @@
               Mail
             </span>
           </div>
-          <NuxtUiAccordion :items="items">
+          <NuxtUiAccordion multiple :items="items1">
           <template #incoming>
           
             <div class="flex flex-col gap-4">
@@ -386,10 +408,7 @@
     
     </template>
   </NuxtUiAccordion>
-          <div class="flex flex-col gap-4">
-            
-            
-          </div>
+          
         </div>
         <div class="flex flex-col gap-4">
           <div
@@ -417,6 +436,9 @@
               DNS records have been rechecked. If the records are still invalid,
               please recheck your DNS settings.
             </span>
+            <NuxtUiAccordion multiple :items="items2">
+          <template #mx-records>
+
             <SettingsDomainDnsItem
               title="MX Records"
               :valid="domainDnsQuery?.dns?.mx.valid || false"
@@ -440,8 +462,9 @@
                   hasCopyButton: true
                 }
               ]"
-              :expanded="dnsRecordsExpanded"
-              @clicked="dnsRecordsExpanded = !dnsRecordsExpanded" />
+               />
+            </template>
+              <template #dkim-records>
             <SettingsDomainDnsItem
               title="DKIM Record"
               :valid="domainDnsQuery?.dns?.dkim.valid || false"
@@ -462,9 +485,9 @@
                   hasCopyButton: true
                 }
               ]"
-              :expanded="dnsRecordsExpanded"
-              @clicked="dnsRecordsExpanded = !dnsRecordsExpanded" />
-
+              />
+            </template>
+              <template #spf-record>
             <SettingsDomainDnsItem
               title="SPF Record"
               :valid="domainDnsQuery?.dns?.spf.valid || false"
@@ -489,8 +512,9 @@
                   hasCopyButton: true
                 }
               ]"
-              :expanded="dnsRecordsExpanded"
-              @clicked="dnsRecordsExpanded = !dnsRecordsExpanded" />
+               />
+            </template>
+              <template #return-path>
 
             <SettingsDomainDnsItem
               title="Return Path"
@@ -512,8 +536,9 @@
                   hasCopyButton: true
                 }
               ]"
-              :expanded="dnsRecordsExpanded"
-              @clicked="dnsRecordsExpanded = !dnsRecordsExpanded" />
+               />
+            </template>
+  </NuxtUiAccordion>
           </div>
         </div>
       </div>
