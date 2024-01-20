@@ -1,0 +1,121 @@
+<script setup lang="ts">
+  import { defineProps, withDefaults } from 'vue';
+  import {
+    EBody,
+    EColumn,
+    EContainer,
+    EHead,
+    EHeading,
+    EHtml,
+    EImg,
+    EPreview,
+    ERow,
+    ESection,
+    EText,
+    ETailwind,
+    ELink,
+    EHr
+  } from 'vue-email';
+
+  interface Props {
+    orgName?: string;
+    inviteCode?: string;
+    expiryDate?: string;
+  }
+
+  const props = withDefaults(defineProps<Props>(), {
+    orgName: 'orgName',
+    inviteCode: 'XXX-NNN-XN',
+    expiryDate: 'June 23, 2022 4:06:00 pm UTC'
+  });
+
+  const inviteLink = 'https://uninbox.com/invite';
+
+  const previewText = `Hey ${props.orgName} Invited You On UnInbox`;
+</script>
+
+<template>
+  <ETailwind>
+    <EHtml>
+      <EHead />
+      <EPreview>{{ previewText }}</EPreview>
+      <EBody
+        class="bg-white my-auto mx-auto font-sans"
+        :style="{
+          fontFamily:
+            '-apple-system,BlinkMacSystemFont,&quot;Segoe UI&quot;,Roboto,Oxygen-Sans,Ubuntu,Cantarell,&quot;Helvetica Neue&quot;,sans-serif'
+        }">
+        <EContainer
+          class="border border-solid border-[#eaeaea] p-[20px] md:p-7 rounded-md my-[20px] mx-auto max-w-[565px]">
+          <ESection class="mt-[20px]">
+            <EText class="text-4xl font-bold text-center"
+              >UnInbox Replacing Email</EText
+            >
+          </ESection>
+          <EHr />
+          <EHeading
+            class="text-black text-[24px] font-normal text-center p-0 my-[30px] mx-0">
+            Hey <strong>{{ orgName }}</strong> Invited You On
+            <strong>UnInbox</strong>
+          </EHeading>
+          <EText class="text-black text-lg leading-[24px] text-center">
+            <strong>McPizza</strong> from (
+            <ELink
+              :href="inviteLink"
+              class="text-blue-600 no-underline">
+              {{ orgName }}
+            </ELink>
+            ) has invited you to the
+            <strong>{{ orgName }}</strong> team on <strong> UnInbox</strong>.
+          </EText>
+          <ESection class="text-center mt-[32px] mb-[32px]">
+            <ERow class="px-10 pt-0"
+              ><EColumn
+                class="flex justify-center"
+                col-span="{4}"
+                ><EText
+                  class="bg-gray-800 rounded px-10 py-4 cursor-pointer text-white text-xl font-bold no-underline text-center">
+                  {{ inviteCode }}
+                </EText></EColumn
+              ></ERow
+            >
+          </ESection>
+          <EText class="text-black text-md leading-5 text-center">
+            copy and paste this into UnInbox Join Page:
+            <ELink
+              :href="inviteLink"
+              class="text-blue-600 no-underline">
+              {{ inviteLink }}
+            </ELink>
+            <br />
+            <strong>Note :</strong> This code will expire within time & data [
+            {{ expiryDate }} ]
+          </EText>
+          <EHr
+            class="border border-solid border-[#eaeaea] my-[26px] mx-0 w-full" />
+          <EText class="text-[#666666] text-sm leading-5">
+            This invitation was sent by
+            <span class="text-black">{{ orgName }} </span>.This invite was sent
+            from
+            <span class="text-black">{{ orgName }}</span>
+            located in <span class="text-black">USA</span>. If you were not
+            expecting this invitation, you can ignore this email. If you are
+            concerned about your account's safety, please reply to this email to
+            get in touch with us.
+          </EText>
+        </EContainer>
+        <EContainer>
+          <ESection class="py-4">
+            <EImg
+              width="620"
+              src="https://vue-email-demo.vercel.app/static/yelp-footer.png" />
+          </ESection>
+          <EText class="text-center text-sm text-gray-700 py-2">
+            © 2024 | UnInbox Inc..., Earth |
+            <ELink href="https://unibox.com">UnInbox.com</ELink>
+          </EText>
+        </EContainer>
+      </EBody>
+    </EHtml>
+  </ETailwind>
+</template>
