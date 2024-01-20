@@ -1,6 +1,4 @@
 <script setup lang="ts">
-  const { copy, copied } = useClipboard();
-
   type DnsItemBlockProps = {
     title: string;
     value: string;
@@ -11,16 +9,6 @@
     text: { type: String, required: true },
     blocks: { type: Array as PropType<DnsItemBlockProps[]>, required: true }
   });
-
-  const copiedString = ref('');
-
-  async function copyString(value: string) {
-    await copy(value);
-    copiedString.value = value;
-    setTimeout(() => {
-      copiedString.value = '';
-    }, 2000);
-  }
 </script>
 <template>
   <div class="mr-10 h-fit w-full flex flex-col justify-center gap-4 p-3.5">
@@ -44,20 +32,9 @@
                 {{ block.value }}
               </span>
             </div>
-            <UnUiTooltip
+            <UnUiCopy
               v-if="block.hasCopyButton"
-              :text="
-                copiedString === block.value ? 'Copied' : 'Copy to clipboard'
-              ">
-              <UnUiButton
-                square
-                :icon="
-                  copiedString === block.value ? 'i-ph-check' : 'i-ph-clipboard'
-                "
-                variant="soft"
-                :color="copiedString === block.value ? 'green' : 'gray'"
-                @click="copyString(block.value)" />
-            </UnUiTooltip>
+              :text="block.value" />
           </div>
         </div>
       </div>

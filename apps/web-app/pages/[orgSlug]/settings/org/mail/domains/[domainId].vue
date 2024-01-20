@@ -325,17 +325,10 @@
                               {{ domainQuery?.domainData?.forwardingAddress }}
                             </span>
                           </div>
-                          <UnUiTooltip text="Copy to clipboard">
-                            <UnUiIcon
-                              name="i-ph-clipboard"
-                              size="20"
-                              @click="
-                                copy(
-                                  domainQuery?.domainData?.forwardingAddress ||
-                                    ''
-                                )
-                              " />
-                          </UnUiTooltip>
+                          <UnUiCopy
+                            :text="
+                              domainQuery?.domainData?.forwardingAddress || ''
+                            " />
                         </div>
                       </div>
                     </div>
