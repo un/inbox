@@ -194,18 +194,9 @@
               <UnUiTooltip :text="row.code">
                 <span class="">{{ row.truncatedCode }}</span>
               </UnUiTooltip>
-              <button
+              <UnUiCopy
                 v-if="row.code"
-                class="flex flex-row items-center justify-center gap-1 rounded bg-base-3 p-1 text-xs hover:bg-base-4"
-                @click="copy(row.code)">
-                <!-- by default, `copied` will be reset in 1.5s -->
-                <UnUiIcon
-                  name="i-ph-clipboard"
-                  size="16"
-                  :class="copied ? 'text-green-500' : 'text-base-11'" />
-                <span v-if="text !== row.code">Copy</span>
-                <span v-else>Copied!</span>
-              </button>
+                :text="row.code" />
             </div>
           </template>
           <template #email-data="{ row }">
