@@ -20,13 +20,13 @@
   interface Props {
     orgName?: string;
     inviteCode?: string;
-    expiryDate?: string;
+    expiryDate?: Date;
   }
 
   const props = withDefaults(defineProps<Props>(), {
     orgName: 'orgName',
     inviteCode: 'XXX-NNN-XN',
-    expiryDate: 'June 23, 2022 4:06:00 pm UTC'
+    expiryDate: () => new Date('June 23, 2022 4:06:00 pm UTC')
   });
 
   const inviteLink = 'https://uninbox.com/invite';
