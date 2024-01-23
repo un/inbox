@@ -54,7 +54,7 @@
     // }
     // immediatePasskeyPrompt.value && promptForPasskey();
 
-    promptForPasskey();
+    await promptForPasskey();
   }
 
   async function promptForPasskey() {
@@ -103,8 +103,11 @@
       body: {
         action: 'authenticate',
         data: passkeyData
-      }
+      },
+      redirect: 'manual'
     });
+    useAuth().status.value = 'authenticated';
+    navigateTo('/redirect');
   }
 </script>
 

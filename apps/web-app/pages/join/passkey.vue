@@ -151,10 +151,8 @@
       timeout: 5000,
       icon: 'i-ph-check-circle'
     });
-    useCookie('un-redirect', { maxAge: 120 }).value = '/join/org';
-    setTimeout(() => {
-      reloadNuxtApp({ persistState: true, force: true });
-    }, 2500);
+    useAuth().status.value = 'authenticated';
+    navigateTo('/join/org');
   }
 
   watchDebounced(
