@@ -211,6 +211,7 @@ export const domainsRouter = router({
           dkimKey: true,
           dkimValue: true,
           postalHost: true,
+          postalId: true,
           lastDnsCheckAt: true,
           sendingMode: true,
           receivingMode: true,
@@ -281,6 +282,7 @@ export const domainsRouter = router({
           dnsResult.returnPath.valid ||
           dnsResult.mx.valid;
 
+        console.log({ anyValidRecords });
         !validSendingRecords
           ? (domainSendingMode = 'disabled')
           : (domainSendingMode = 'native');
@@ -293,9 +295,9 @@ export const domainsRouter = router({
           domainReceivingMode = 'native';
         }
 
-        domainStatus === 'pending' && anyValidRecords
-          ? (domainStatus = 'active')
-          : (domainStatus = 'pending');
+        if (anyValidRecords && domainStatus === 'pending') {
+          domainStatus = 'active';
+        }
 
         await db
           .update(domains)
@@ -325,6 +327,22 @@ export const domainsRouter = router({
           .where(eq(domains.id, domainResponse.id));
       }
 
+      if (domainResponse.postalId) {
+        mailBridgeTrpcClient.postal.domains.refreshDomainDns.query({
+          orgId: +orgId,
+          orgPublicId: org.publicId,
+          postalDomainId: domainResponse.postalId
+        });
+      }
+
+      console.log({
+        dns: dnsResult,
+        domainStatus: domainStatus,
+        domainSendingMode: domainSendingMode,
+        domainReceivingMode: domainReceivingMode,
+        forwardingAddress: domainResponse.forwardingAddress,
+        checked: new Date()
+      });
       return {
         dns: dnsResult,
         domainStatus: domainStatus,

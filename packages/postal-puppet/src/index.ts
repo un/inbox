@@ -2,6 +2,7 @@ import type { Browser, Page } from 'puppeteer';
 import { initPuppet } from './puppets/initPuppet';
 import { closePuppet } from './puppets/closePuppet';
 import { addDomain } from './puppets/addDomain';
+import { refreshDomainDns } from './puppets/domainRefreshDns';
 import { addMailServer } from './puppets/addMailServer';
 import { createOrg } from './puppets/createOrg';
 import { setMailServerApiKey } from './puppets/setMailServerApiKey';
@@ -23,6 +24,7 @@ export const postalPuppet = {
   addDomain,
   addMailServer,
   createOrg,
+  refreshDomainDns,
   setMailServerApiKey,
   setMailServerSmtpKey,
   setMailServerConfig,
