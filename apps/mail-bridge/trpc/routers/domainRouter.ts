@@ -7,7 +7,7 @@ import {
   orgPostalConfigs,
   domains
 } from '@uninbox/database/schema';
-import { nanoId, nanoIdLength,nanoIdSchema } from '@uninbox/utils';
+import { nanoId, nanoIdLength, nanoIdSchema } from '@uninbox/utils';
 import { postalPuppet } from '@uninbox/postal-puppet';
 
 export const domainRouter = router({
@@ -88,5 +88,42 @@ export const domainRouter = router({
         dkimValue: puppetDomainResponse.dkimValue,
         forwardingAddress: setMailServerRouteResult.forwardingAddress
       };
+    }),
+  refreshDomainDns: protectedProcedure
+    .input(
+      z.object({
+        orgId: z.number().min(1),
+        orgPublicId: nanoIdSchema,
+        postalDomainId: z.string().min(3).max(255)
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const { config, db } = ctx;
+      const { orgId, orgPublicId, postalDomainId } = input;
+      const postalOrgId = orgPublicId;
+
+      const localMode = config.localMode;
+      if (localMode) {
+        return {
+          success: true
+        };
+      }
+
+      const { puppetInstance } = await postalPuppet.initPuppet({
+        postalControlPanel: config.postalControlPanel,
+        postalUrl: config.postalUrl,
+        postalUser: config.postalUser,
+        postalPass: config.postalPass
+      });
+
+      await postalPuppet.refreshDomainDns({
+        puppetInstance: puppetInstance,
+        orgId: orgId,
+        orgPublicId: postalOrgId,
+        domainId: postalDomainId
+      });
+      await postalPuppet.closePuppet(puppetInstance);
+
+      return;
     })
 });
