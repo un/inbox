@@ -14,7 +14,8 @@ function generateAvatarUrl(
     | '3xl'
     | '4xl'
     | '5xl'
-    | undefined
+    | undefined,
+    hasAvatar: boolean
 ) {
   const types = [
     { name: 'user', value: 'u' },
@@ -29,9 +30,11 @@ function generateAvatarUrl(
   //@ts-ignore
   const storageBaseUrl = useRuntimeConfig().public.storageUrl;
 
-  return `${storageBaseUrl}/avatar/${typeObject.value}/${publicId}/${
+  return hasAvatar ? 
+  `${storageBaseUrl}/avatar/${typeObject.value}/${publicId}/${
     size ? size : '5xl'
-  }?${new Date().getTime()}`;
+  }?${new Date().getTime()}` :
+  null;
 }
 
 export const useUtils = () => {
