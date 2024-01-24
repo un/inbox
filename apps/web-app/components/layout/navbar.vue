@@ -220,6 +220,7 @@
   const closeModal = () => {
     showLogoutModal.value = false;
   };
+
   async function useLogout() {
     const toast = useToast();
     if (process.server) {
@@ -243,7 +244,7 @@
       </template>
       <div class="w-full flex flex-col gap-8">
         <p>Are you sure you want to logout?</p>
-        <div class="w-full flex flex-row justify-stretch gap-4">
+        <div class="w-full flex flex-row justify-end gap-4">
           <UnUiButton
             label="Cancel"
             size="xl"
