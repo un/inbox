@@ -14,6 +14,9 @@
 </script>
 <template>
   <NuxtUiTooltip v-bind="$props">
+    <template #text>
+      <slot name="text"> </slot>
+    </template>
     <slot />
   </NuxtUiTooltip>
 </template>
