@@ -95,9 +95,7 @@
             class="border border-solid border-[#eaeaea] my-[26px] mx-0 w-full" />
           <EText class="text-[#666666] text-sm leading-5">
             This invitation was sent by
-            <span class="text-black">{{ orgName }} </span>.This invite was sent
-            from
-            <span class="text-black">{{ orgName }}</span>
+            <span class="text-black">{{ orgName }} </span>
             located in <span class="text-black">USA</span>. If you were not
             expecting this invitation, you can ignore this email. If you are
             concerned about your account's safety, please reply to this email to
