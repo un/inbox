@@ -1,14 +1,12 @@
 <script setup lang="ts">
-  const { $trpc, $i18n } = useNuxtApp();
+  const { $trpc } = useNuxtApp();
 
-  const { data: userOrgSlug, execute } =
-    await $trpc.auth.getUserDefaultOrgSlug.useLazyQuery({}, { server: false });
-  watch(userOrgSlug, () => {
-    if (!userOrgSlug.value) {
+  onMounted(async () => {
+    const { slug } = await $trpc.auth.getUserDefaultOrgSlug.query({});
+    if (!slug) {
       return navigateTo(`/`);
     }
-    const orgSlug = userOrgSlug.value?.slug;
-    navigateTo(`/${orgSlug}`);
+    navigateTo(`/${slug}`);
   });
 </script>
 <template>
