@@ -291,12 +291,6 @@
       <template #header>
         <div class="flex items-center justify-between">
           <p>How to add a passkey?</p>
-          <UnUiButton
-            color="gray"
-            variant="ghost"
-            icon="i-ph-x"
-            class="-my-1"
-            @click="howToAddPasskeyDialogOpen = false" />
         </div>
       </template>
       <div class="w-full flex flex-col items-center gap-4">
