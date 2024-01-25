@@ -1,11 +1,14 @@
 <script lang="ts">
   import type { DefineComponent } from 'vue';
   import { NuxtUiAvatar } from '#components';
+  import { uiColors } from '@uninbox/types/ui';
+
+  type UiColors = (typeof uiColors)[number] | null;
 
   export default defineComponent<
     typeof NuxtUiAvatar extends DefineComponent<infer Props, any, any>
       ? Props & {
-          color?: string;
+          color?: UiColors;
           publicId: string;
           type: 'user' | 'org' | 'group' | 'contact';
           tooltip?: string;
@@ -19,9 +22,9 @@
     props: {
       ...NuxtUiAvatar.props,
       color: {
-        type: String,
+        type: uiColors || null || undefined,
         required: false,
-        default: null
+        default: () => null
       },
       publicId: {
         type: String,
