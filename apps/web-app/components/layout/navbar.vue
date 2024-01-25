@@ -70,10 +70,11 @@
 
   const { $trpc } = useNuxtApp();
 
-  const { data: userProfile } = $trpc.user.profile.getUserOrgProfile.useQuery(
-    { orgSlug: orgSlug },
-    { server: false, queryKey: 'getUserSingleProfileNav', lazy: true }
-  );
+  const { data: userProfile } =
+    $trpc.user.profile.getUserOrgProfile.useLazyQuery(
+      { orgSlug: orgSlug },
+      { server: false, queryKey: 'getUserSingleProfileNav' }
+    );
 
   const {
     data: userOrgs,
@@ -323,7 +324,6 @@
             :public-id="item.publicId"
             :type="'org'"
             :alt="item.label"
-            color="gray"
             size="sm" />
           <div class="text-left">
             <p class="truncate font-medium">
