@@ -161,7 +161,7 @@
       for (const group of newOrgUserGroupsData.groups) {
         orgUserGroups.value.push({
           publicId: group.publicId,
-          avatarId: group.avatarId,
+          avatarId: group.avatarId || '',
           name: group.name,
           description: group.description,
           color: group.color
@@ -491,6 +491,7 @@
           <template #option="{ option }">
             <UnUiAvatar
               :public-id="option.publicId"
+              :avatar-id="option.avatarId"
               :type="'group'"
               :alt="option.name"
               :color="option.color.toString()"
