@@ -44,12 +44,13 @@
       titleValue.value = newVal.profile.title || '';
       blurbValue.value = newVal.profile.blurb || '';
 
-      imageUrl.value = useUtils().generateAvatarUrl(
-        'user',
-        newVal.profile.publicId,
-        newVal.profile.avatarId,
-        '5xl'
-      ) as string;
+      if (newVal.profile.avatarId) {
+        imageUrl.value = useUtils().generateAvatarUrl(
+          'user',
+          newVal.profile.avatarId,
+          '5xl'
+        ) as string;
+      }
     }
   });
 
@@ -86,12 +87,13 @@
       credentials: 'include'
     });
 
-    imageUrl.value = useUtils().generateAvatarUrl(
-      'user',
-      userOrgProfile.value?.profile.publicId || '',
-      userOrgProfile.value?.profile.avatarId || '',
-      '5xl'
-    ) as string;
+    if (userOrgProfile.value?.profile.avatarId) {
+      imageUrl.value = useUtils().generateAvatarUrl(
+        'user',
+        userOrgProfile.value?.profile.avatarId,
+        '5xl'
+      ) as string;
+    }
 
     uploadLoading.value = false;
   });
@@ -111,7 +113,6 @@
       $trpc.user.profile.updateUserProfile.useMutation();
     await updateUserProfileTrpc.mutate({
       profilePublicId: userOrgProfile.value.profile.publicId,
-      profileAvatarId: userOrgProfile.value.profile.avatarId,
       fName: fNameValue.value,
       lName: lNameValue.value,
       title: titleValue.value,
