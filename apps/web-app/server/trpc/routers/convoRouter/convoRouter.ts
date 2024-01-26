@@ -14,27 +14,34 @@ import {
   convoEntries,
   emailIdentitiesAuthorizedUsers
 } from '@uninbox/database/schema';
-import { nanoId, nanoIdLength, nanoIdToken } from '@uninbox/utils';
+import {
+  nanoId,
+  nanoIdLength,
+  nanoIdSchema,
+  nanoIdToken
+} from '@uninbox/utils';
 import { TRPCError } from '@trpc/server';
 import type { JSONContent } from '@tiptap/vue-3';
 import { generateText } from '@tiptap/core';
 import { generateHTML } from '@tiptap/html';
 import { tipTapExtensions } from '~/shared/editorConfig';
+import { convoEntryRouter } from './entryRouter';
 
 export const convoRouter = router({
+  entries: convoEntryRouter,
   createNewConvo: orgProcedure
     .input(
       z.object({
         participantsOrgMembersPublicIds: z.array(
           z.string().min(3).max(nanoIdLength)
         ),
-        participantsGroupsPublicIds: z
-          .array(z.string().min(3).max(nanoIdLength))
-          .optional(),
-        participantsContactsPublicIds: z
-          .array(z.string().min(3).max(nanoIdLength))
-          .optional(),
-        participantsEmails: z.array(z.string()).optional(),
+        participantsGroupsPublicIds: z.array(
+          z.string().min(3).max(nanoIdLength)
+        ),
+        participantsContactsPublicIds: z.array(
+          z.string().min(3).max(nanoIdLength)
+        ),
+        participantsEmails: z.array(z.string()),
         sendAsEmailIdentityPublicId: z
           .string()
           .min(3)
@@ -217,7 +224,7 @@ export const convoRouter = router({
         }
       }
       let newConvoToEmailAddress: string;
-      if (participantsContactsPublicIds || participantsEmails) {
+      if (participantsContactsPublicIds.length || participantsEmails.length) {
         newConvoToEmailAddress = await getConvoToAddress();
       } else {
         newConvoToEmailAddress = '';
@@ -381,12 +388,12 @@ export const convoRouter = router({
 
       // create conversationParticipants Entries
       if (orgMemberIds.length) {
-        const convoMembersDbInsertValuesArray: InferInsertModel<
+        const convoParticipantsDbInsertValuesArray: InferInsertModel<
           typeof convoParticipants
         >[] = [];
         orgMemberIds.forEach((orgMemberId) => {
           const convoMemberPublicId = nanoId();
-          convoMembersDbInsertValuesArray.push({
+          convoParticipantsDbInsertValuesArray.push({
             orgId: orgId,
             convoId: +insertConvoResponse.insertId,
             publicId: convoMemberPublicId,
@@ -395,16 +402,16 @@ export const convoRouter = router({
         });
         await db
           .insert(convoParticipants)
-          .values(convoMembersDbInsertValuesArray);
+          .values(convoParticipantsDbInsertValuesArray);
       }
 
       if (orgGroupIds.length) {
-        const convoMembersDbInsertValuesArray: InferInsertModel<
+        const convoParticipantsDbInsertValuesArray: InferInsertModel<
           typeof convoParticipants
         >[] = [];
         orgGroupIds.forEach((groupId) => {
           const convoMemberPublicId = nanoId();
-          convoMembersDbInsertValuesArray.push({
+          convoParticipantsDbInsertValuesArray.push({
             orgId: orgId,
             convoId: +insertConvoResponse.insertId,
             publicId: convoMemberPublicId,
@@ -413,16 +420,16 @@ export const convoRouter = router({
         });
         await db
           .insert(convoParticipants)
-          .values(convoMembersDbInsertValuesArray);
+          .values(convoParticipantsDbInsertValuesArray);
       }
 
       if (orgContactIds.length) {
-        const convoMembersDbInsertValuesArray: InferInsertModel<
+        const convoParticipantsDbInsertValuesArray: InferInsertModel<
           typeof convoParticipants
         >[] = [];
         orgContactIds.forEach((contactId) => {
           const convoMemberPublicId = nanoId();
-          convoMembersDbInsertValuesArray.push({
+          convoParticipantsDbInsertValuesArray.push({
             orgId: orgId,
             convoId: +insertConvoResponse.insertId,
             publicId: convoMemberPublicId,
@@ -431,7 +438,7 @@ export const convoRouter = router({
         });
         await db
           .insert(convoParticipants)
-          .values(convoMembersDbInsertValuesArray);
+          .values(convoParticipantsDbInsertValuesArray);
       }
       const authorConvoParticipantPublicId = nanoId();
       const insertAuthorConvoParticipantResponse = await db
@@ -620,7 +627,222 @@ export const convoRouter = router({
         publicId: newConvoPublicId,
         missingEmailIdentities: missingEmailIdentitiesWarnings
       };
-    })
+    }),
+
+  //* get a specific conversation
+  getConvo: orgProcedure
+    .input(
+      z.object({
+        convoPublicId: nanoIdSchema
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const { db, user, org } = ctx;
+
+      if (!ctx.user || !ctx.org) {
+        throw new TRPCError({
+          code: 'UNPROCESSABLE_CONTENT',
+          message: 'User or Organization is not defined'
+        });
+      }
+      if (!org?.memberId) {
+        throw new TRPCError({
+          code: 'UNPROCESSABLE_CONTENT',
+          message: 'User is not a member of the organization'
+        });
+      }
+
+      const userId = user.id;
+      const orgId = org.id;
+      const userOrgMemberId = org.memberId;
+
+      const { convoPublicId } = input;
+
+      // check if the conversation belongs to the same org, early return if not before multiple db selects
+      const convoResponse = await db.query.convos.findFirst({
+        where: eq(convos.publicId, convoPublicId),
+        columns: {
+          id: true,
+          orgId: true
+        }
+      });
+      if (!convoResponse) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Conversation not found'
+        });
+      }
+      if (Number(convoResponse.orgId) !== orgId) {
+        const convoOrgOwnerMembersIds = await db.query.orgMembers.findMany({
+          where: eq(orgMembers.orgId, convoResponse.orgId),
+          columns: {
+            userId: true
+          },
+          with: {
+            org: {
+              columns: {
+                name: true
+              }
+            }
+          }
+        });
+        const convoOrgOwnerUserIds = convoOrgOwnerMembersIds.map((member) =>
+          Number(member?.userId ?? 0)
+        );
+        if (!convoOrgOwnerUserIds.includes(userId)) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Conversation not found'
+          });
+        }
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: `Conversation is owned by ${convoOrgOwnerMembersIds[0].org.name} organization.`
+        });
+      }
+
+      // TODO: Add filtering for org based on input.filterOrgPublicId
+      const convoDetails = await db.query.convos.findFirst({
+        columns: {
+          publicId: true,
+          lastUpdatedAt: true,
+          createdAt: true
+        },
+        where: eq(convos.id, convoResponse.id),
+        with: {
+          subjects: {
+            columns: {
+              publicId: true,
+              subject: true
+            }
+          },
+          participants: {
+            columns: {
+              publicId: true,
+              orgMemberId: true,
+              userGroupId: true,
+              contactId: true,
+              lastReadAt: true,
+              notifications: true,
+              active: true,
+              role: true
+            },
+            with: {
+              orgMember: {
+                columns: {
+                  id: true,
+                  publicId: true
+                },
+                with: {
+                  profile: {
+                    columns: {
+                      firstName: true,
+                      lastName: true,
+                      publicId: true,
+                      handle: true,
+                      title: true
+                    }
+                  }
+                }
+              },
+              userGroup: {
+                columns: {
+                  id: true,
+                  name: true,
+                  color: true,
+                  publicId: true,
+                  description: true
+                },
+                with: {
+                  members: {
+                    columns: {
+                      orgMemberId: true
+                    }
+                  }
+                }
+              },
+              contact: {
+                columns: {
+                  publicId: true,
+                  name: true,
+                  emailUsername: true,
+                  emailDomain: true,
+                  setName: true,
+                  signature: true
+                }
+              }
+            }
+          },
+          attachments: {
+            columns: {
+              publicId: true,
+              fileName: true,
+              type: true,
+              storageId: true
+            }
+          }
+        }
+      });
+      if (!convoDetails) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Conversation not found'
+        });
+      }
+
+      // Find the participant.publicId for the userOrgMemberId
+      let participantPublicId: string | undefined;
+
+      // Check if the user's orgMemberId is in the conversation participants
+      convoDetails?.participants.forEach((participant) => {
+        if (participant.orgMember?.id === userOrgMemberId) {
+          participantPublicId = participant.publicId;
+        }
+      });
+
+      // If not found, check if the user's orgMemberId is in any participant's userGroup members
+      if (!participantPublicId) {
+        convoDetails?.participants.forEach((participant) => {
+          participant.userGroup?.members.forEach((groupMember) => {
+            if (groupMember.orgMemberId === userOrgMemberId) {
+              participantPublicId = participant.publicId;
+            }
+          });
+        });
+      }
+
+      // If participantPublicId is still not found, the user is not a participant of this conversation
+      if (!participantPublicId) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'You are not a participant of this conversation'
+        });
+      }
+
+      // strip the user IDs from the response
+      convoDetails.participants.forEach((participant) => {
+        if (participant.orgMember?.id) participant.orgMember.id = 0;
+        participant.userGroup?.members.forEach((groupMember) => {
+          if (groupMember.orgMemberId) groupMember.orgMemberId = 0;
+        });
+      });
+      return {
+        data: convoDetails,
+        participantPublicId: participantPublicId
+      };
+    }),
+
+  //* get convo entries
+  getConvoEntries: orgProcedure
+    .input(
+      z.object({
+        convoPublicId: nanoIdSchema,
+        cursorLastUpdatedAt: z.date().optional(),
+        cursorLastPublicId: z.string().min(3).max(nanoIdLength).optional()
+      })
+    )
+    .query(async ({ ctx, input }) => {})
+
   // getUserConvos: orgProcedure
   //   .input(
   //     z.object({
@@ -772,134 +994,6 @@ export const convoRouter = router({
   //         lastUpdatedAt: newCursorLastUpdatedAt,
   //         lastPublicId: newCursorLastPublicId
   //       }
-  //     };
-  //   }),
-  // getConvo: orgProcedure
-  //   .input(
-  //     z.object({
-  //       convoPublicId: z.string().min(3).max(nanoIdLength)
-  //     })
-  //   )
-  //   .query(async ({ ctx, input }) => {
-  //     const { db, user, org } = ctx;
-  //     const { convoPublicId } = input;
-  //     const userId = user?.id || 0;
-  //     const orgId = org?.id || 0;
-  //     // TODO: Add filtering for org based on input.filterOrgPublicId
-  //     const convoDetails = await db.query.convos.findFirst({
-  //       columns: {
-  //         publicId: true,
-  //         lastUpdatedAt: true,
-  //         createdAt: true
-  //       },
-  //       where: eq(convos.publicId, convoPublicId),
-  //       with: {
-  //         org: {
-  //           columns: {
-  //             publicId: true,
-  //             name: true,
-  //             avatarId: true
-  //           }
-  //         },
-  //         subjects: {
-  //           columns: {
-  //             subject: true
-  //           }
-  //         },
-  //         members: {
-  //           with: {
-  //             orgMember: {
-  //               with: {
-  //                 profile: {
-  //                   columns: {
-  //                     userId: true,
-  //                     firstName: true,
-  //                     lastName: true,
-  //                     avatarId: true,
-  //                     publicId: true,
-  //                     handle: true
-  //                   }
-  //                 }
-  //               }
-  //             },
-  //             userGroup: {
-  //               columns: {
-  //                 name: true,
-  //                 color: true,
-  //                 avatarId: true,
-  //                 publicId: true
-  //               },
-  //               with: {
-  //                 members: {
-  //                   columns: {
-  //                     userId: true
-  //                   }
-  //                 }
-  //               }
-  //             },
-  //             foreignEmailIdentity: {
-  //               columns: {
-  //                 senderName: true,
-  //                 avatarId: true,
-  //                 username: true,
-  //                 rootDomain: true,
-  //                 publicId: true
-  //               }
-  //             }
-  //           },
-  //           columns: {
-  //             orgMemberId: true,
-  //             userGroupId: true,
-  //             foreignEmailIdentityId: true,
-  //             role: true
-  //           }
-  //         },
-  //         attachments: {
-  //           columns: {
-  //             publicId: true,
-  //             fileName: true,
-  //             type: true,
-  //             storageId: true
-  //           }
-  //         }
-  //       }
-  //     });
-  //     if (!convoDetails) {
-  //       console.log('Convo not found');
-  //       return {
-  //         data: null
-  //       };
-  //     }
-  //     //Check if the user is in the conversation
-  //     const convoParticipantsUserIds: number[] = [];
-  //     convoDetails?.members.forEach((member) => {
-  //       member.orgMember?.userId &&
-  //         convoParticipantsUserIds.push(member.orgMember?.userId);
-  //       member.orgMember?.profile?.userId &&
-  //         convoParticipantsUserIds.push(member.orgMember?.profile.userId);
-  //       member.userGroup?.members.forEach((groupMember) => {
-  //         groupMember.userId &&
-  //           convoParticipantsUserIds.push(groupMember.userId);
-  //       });
-  //     });
-  //     if (!convoParticipantsUserIds.includes(+userId)) {
-  //       console.log('User not in convo');
-  //       console.log({ userId, convoParticipantsUserIds });
-  //       return {
-  //         data: null
-  //       };
-  //     }
-  //     // strip the user IDs from the response
-  //     convoDetails.members.forEach((member) => {
-  //       if (member.orgMember?.userId) member.orgMember.userId = 0;
-  //       if (member.orgMember?.profile?.userId)
-  //         member.orgMember.profile.userId = 0;
-  //       member.userGroup?.members.forEach((groupMember) => {
-  //         if (groupMember.userId) groupMember.userId = 0;
-  //       });
-  //     });
-  //     return {
-  //       data: convoDetails
   //     };
   //   }),
 });
