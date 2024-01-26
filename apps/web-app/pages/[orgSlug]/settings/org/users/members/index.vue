@@ -63,7 +63,7 @@
         tableRows.value.push({
           name: member.profile.firstName + ' ' + member.profile.lastName,
           publicId: member.profile.publicId,
-          avatarId: member.profile.avatarId,
+          avatarId: member.profile.avatarId || '',
           handle: member.profile.handle,
           title: member.profile.title,
           role: member.role,
