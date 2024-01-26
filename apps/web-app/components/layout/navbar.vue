@@ -113,7 +113,7 @@
     slot: 'org';
     label: string;
     publicId: string;
-    avatarId:string;
+    avatarId: string | null;
     slug: string;
     click: () => void;
   }
@@ -294,7 +294,7 @@
         <div class="w-full flex flex-row items-center gap-2 overflow-hidden">
           <UnUiAvatar
             :public-id="currentOrgProfile?.publicId || ''"
-            :avatar_id="currentOrgProfile?.avatarId || ''"
+            :avatar-id="currentOrgProfile?.avatarId || ''"
             :type="'org'"
             :alt="currentOrgProfile?.name"
             size="xs" />
