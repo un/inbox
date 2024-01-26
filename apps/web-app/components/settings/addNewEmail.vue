@@ -69,7 +69,7 @@
     );
   interface OrgUserGroups {
     publicId: String;
-    avatarId: String
+    avatarId: String;
     name: String;
     description: String | null;
     color: String | null;
@@ -81,7 +81,7 @@
       for (const group of newOrgUserGroupsData.groups) {
         orgUserGroups.value.push({
           publicId: group.publicId,
-          avatarId: group.avatarId,
+          avatarId: group.avatarId || '',
           name: group.name,
           description: group.description,
           color: group.color
@@ -113,7 +113,7 @@
       for (const member of newOrgMembersData.members) {
         orgMembers.value.push({
           publicId: member.publicId,
-          avatarId: member.avatarId,
+          avatarId: member.profile?.avatarId || '',
           name:
             member.profile?.firstName + ' ' + member.profile?.lastName || '',
           handle: member.profile?.handle || '',
