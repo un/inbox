@@ -114,10 +114,16 @@
               ' ' +
               invite.invitedByOrgMember.profile.lastName,
             createdByAvatar: invite.invitedByOrgMember.profile
+              ? invite.invitedByOrgMember.profile.publicId
+              : null,
+            createdByAvatarId: invite.invitedByOrgMember.profile
               ? invite.invitedByOrgMember.profile.avatarId
               : null,
             created: invite.invitedAt,
             userAvatar: invite.orgMember?.profile
+              ? invite.orgMember?.profile.publicId
+              : null,
+            userAvatarId: invite.orgMember?.profile
               ? invite.orgMember?.profile.avatarId
               : null,
             usedBy: invite.orgMember?.profile
@@ -182,6 +188,7 @@
               <UnUiAvatar
                 v-if="row.userAvatar || row.usedBy"
                 :public-id="row.userAvatar"
+                :avatar-id="row.userAvatarId"
                 :type="'user'"
                 :alt="row.usedBy ? row.usedBy : ''"
                 size="xs" />
