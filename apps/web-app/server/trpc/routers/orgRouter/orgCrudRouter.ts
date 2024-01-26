@@ -100,7 +100,7 @@ export const crudRouter = router({
         ),
         columns: {
           id: true,
-          avatarId:true
+          avatarId: true
         }
       });
 
@@ -210,6 +210,7 @@ export const crudRouter = router({
           org: {
             columns: {
               publicId: true,
+              avatarId: true,
               name: true,
               slug: true
             }

@@ -130,7 +130,7 @@ export const profileRouter = router({
               : eq(orgs.id, 0),
           columns: {
             id: true,
-            avatarId:true
+            avatarId: true
           }
         });
         orgId = orgQuery?.id || null;
@@ -154,6 +154,7 @@ export const profileRouter = router({
           profile: {
             columns: {
               publicId: true,
+              avatarId: true,
               firstName: true,
               lastName: true,
               handle: true,
