@@ -1,4 +1,11 @@
-import { orgs, userProfiles, orgMembers, userGroupMembers, userGroups, contacts } from '@uninbox/database/schema';
+import {
+  orgs,
+  userProfiles,
+  orgMembers,
+  userGroupMembers,
+  userGroups,
+  contacts
+} from '@uninbox/database/schema';
 import { nanoIdLong } from '@uninbox/utils';
 import { eq } from '@uninbox/database/orm';
 import { db } from '@uninbox/database';
@@ -89,13 +96,12 @@ export default defineEventHandler(async (event) => {
   } else if (typeObject.name === 'contact') {
     setResponseStatus(event, 400);
     return send(event, 'Not implemented');
-    // Validate server key against request headers
   } else if (typeObject.name === 'group') {
     const groupResponse = await db.query.userGroups.findFirst({
       where: eq(orgs.publicId, publicId),
       columns: {
         id: true,
-        avatarId:true,
+        avatarId: true
       },
       with: {
         org: {
@@ -165,18 +171,35 @@ export default defineEventHandler(async (event) => {
     await s3Client.send(command);
   }
 
-    const updatedGroup = await db.update(userGroups).set({
-      avatarId: avatarId, 
-      }).where(eq(userGroups.publicId, publicId));
-    const updateProfile = await db.update(userProfiles).set({
-      avatarId: avatarId, 
-      }).where(eq(userProfiles.publicId, publicId));
-    const updateContacts = await db.update(contacts).set({
-      avatarId: avatarId, 
-      }).where(eq(contacts.publicId, publicId));
-    const updatedOrgs = await db.update(orgs).set({
-      avatarId: avatarId, 
-      }).where(eq(orgs.publicId, publicId));
+  if (typeObject.name === 'user') {
+    await db
+      .update(userProfiles)
+      .set({
+        avatarId: avatarId
+      })
+      .where(eq(userProfiles.publicId, publicId));
+  } else if (typeObject.name === 'org') {
+    await db
+      .update(orgs)
+      .set({
+        avatarId: avatarId
+      })
+      .where(eq(orgs.publicId, publicId));
+  } else if (typeObject.name === 'group') {
+    await db
+      .update(userGroups)
+      .set({
+        avatarId: avatarId
+      })
+      .where(eq(userGroups.publicId, publicId));
+  } else if (typeObject.name === 'contact') {
+    await db
+      .update(contacts)
+      .set({
+        avatarId: avatarId
+      })
+      .where(eq(contacts.publicId, publicId));
+  }
 
-  return send(event,{ avatarId: avatarId });
+  return send(event, { avatarId: avatarId });
 });
