@@ -225,7 +225,7 @@ export const userProfiles = mysqlTable(
   {
     id: serial('id').primaryKey(),
     publicId: nanoId('public_id').notNull(),
-    avatarId: varchar('avatar_id', { length: 32 }),
+    avatarId: nanoIdLong('avatar_id'),
     userId: foreignKey('user_id'),
     firstName: varchar('first_name', { length: 64 }),
     lastName: varchar('last_name', { length: 64 }),
@@ -260,7 +260,7 @@ export const orgs = mysqlTable(
   {
     id: serial('id').primaryKey(),
     publicId: nanoId('public_id').notNull(),
-    avatarId: varchar('avatar_id', { length: 32 }),
+    avatarId: nanoIdLong('avatar_id'),
     slug: varchar('slug', { length: 64 }).notNull(),
     ownerId: foreignKey('owner_id').notNull(),
     name: varchar('name', { length: 64 }).notNull(),
@@ -467,7 +467,7 @@ export const userGroups = mysqlTable(
   {
     id: serial('id').primaryKey(),
     publicId: nanoId('public_id').notNull(),
-    avatarId: varchar('avatar_id', { length: 32 }),
+    avatarId: nanoIdLong('avatar_id'),
     orgId: foreignKey('org_id').notNull(),
     name: varchar('name', { length: 128 }).notNull(),
     color: mysqlEnum('color', [...uiColors]),
@@ -635,7 +635,7 @@ export const contacts = mysqlTable(
   {
     id: serial('id').primaryKey(),
     publicId: nanoId('public_id').notNull(),
-    avatarId: varchar('avatar_id', { length: 32 }),
+    avatarId: nanoIdLong('avatar_id'),
     orgId: foreignKey('org_id').notNull(),
     reputationId: foreignKey('reputation_id').notNull(),
     name: varchar('name', { length: 128 }),
