@@ -28,7 +28,8 @@ export const orgMembersRouter = router({
 
       const orgQuery = await db.query.orgs.findFirst({
         columns: {
-          publicId: true
+          publicId: true,
+          avatarId:true
         },
         where: and(eq(orgs.id, orgId)),
         with: {
@@ -45,6 +46,7 @@ export const orgMembersRouter = router({
               profile: {
                 columns: {
                   publicId: true,
+                  avatarId:true,
                   firstName: true,
                   lastName: true,
                   handle: true,
@@ -82,7 +84,8 @@ export const orgMembersRouter = router({
 
       const orgQuery = await db.query.orgs.findFirst({
         columns: {
-          publicId: true
+          publicId: true,
+          avatarId:true
         },
         where: eq(orgs.id, +orgId),
         with: {
@@ -103,6 +106,7 @@ export const orgMembersRouter = router({
               profile: {
                 columns: {
                   publicId: true,
+                  avatarId:true,
                   firstName: true,
                   lastName: true,
                   title: true,

@@ -129,7 +129,8 @@ export const profileRouter = router({
               ? eq(orgs.slug, input.orgSlug)
               : eq(orgs.id, 0),
           columns: {
-            id: true
+            id: true,
+            avatarId:true
           }
         });
         orgId = orgQuery?.id || null;

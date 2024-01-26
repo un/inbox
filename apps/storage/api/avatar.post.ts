@@ -62,7 +62,8 @@ export default defineEventHandler(async (event) => {
       where: eq(orgs.publicId, publicId),
       columns: {
         id: true,
-        slug: true
+        slug: true,
+        avatarId: true
       },
       with: {
         members: {
@@ -93,7 +94,8 @@ export default defineEventHandler(async (event) => {
     const groupResponse = await db.query.userGroups.findFirst({
       where: eq(orgs.publicId, publicId),
       columns: {
-        id: true
+        id: true,
+        avatarId:true,
       },
       with: {
         org: {

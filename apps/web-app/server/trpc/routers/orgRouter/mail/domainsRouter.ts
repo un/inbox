@@ -47,7 +47,8 @@ export const domainsRouter = router({
       const orgResponse = await db.query.orgs.findFirst({
         where: eq(orgs.id, orgId),
         columns: {
-          publicId: true
+          publicId: true,
+          avatarId:true
         }
       });
       if (!orgResponse) {

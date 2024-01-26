@@ -102,7 +102,8 @@ export const invitesRouter = router({
         const groupIds = await db.query.userGroups.findMany({
           where: inArray(userGroups.publicId, groups.groupsPublicIds),
           columns: {
-            id: true
+            id: true,
+            avatarId:true,
           }
         });
 
