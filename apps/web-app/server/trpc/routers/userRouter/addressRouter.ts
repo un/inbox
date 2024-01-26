@@ -41,8 +41,9 @@ export const addressRouter = router({
           with: {
             org: {
               columns: {
-                name: true,
                 publicId: true,
+                avatarId: true,
+                name: true,
                 slug: true
               }
             },

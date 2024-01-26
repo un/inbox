@@ -153,6 +153,7 @@ export const profileRouter = router({
           profile: {
             columns: {
               publicId: true,
+              avatarId: true,
               firstName: true,
               lastName: true,
               handle: true,

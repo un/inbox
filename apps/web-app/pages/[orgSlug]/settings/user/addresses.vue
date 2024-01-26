@@ -60,6 +60,7 @@
             address: identity.postalServer.rootForwardingAddress
           },
           org: identity.org,
+          avatarId: identity.org.avatarId,
           publicId: identity.emailIdentity.publicId
         });
       });
@@ -417,6 +418,7 @@
               <div class="flex flex-row items-center gap-2">
                 <UnUiAvatar
                   :public-id="row.org.publicId"
+                  :avatar-id="row.org.avatarId"
                   type="org"
                   :alt="row.org.name ? row.org.name : ''"
                   size="xs" />

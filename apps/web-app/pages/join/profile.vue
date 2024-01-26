@@ -44,11 +44,13 @@
       titleValue.value = newVal.profile.title || '';
       blurbValue.value = newVal.profile.blurb || '';
 
-      imageUrl.value = useUtils().generateAvatarUrl(
-        'user',
-        newVal.profile.publicId,
-        '5xl'
-      ) as string;
+      if (newVal.profile.avatarId) {
+        imageUrl.value = useUtils().generateAvatarUrl(
+          'user',
+          newVal.profile.avatarId,
+          '5xl'
+        ) as string;
+      }
     }
   });
 
@@ -78,17 +80,20 @@
     formData.append('file', selectedFiles[0]);
     formData.append('type', 'user');
     formData.append('publicId', userOrgProfile.value?.profile?.publicId || '');
+    formData.append('avatarId', userOrgProfile.value?.profile?.avatarId || '');
     await useFetch(`${storageUrl}/api/avatar`, {
       method: 'post',
       body: formData,
       credentials: 'include'
     });
 
-    imageUrl.value = useUtils().generateAvatarUrl(
-      'user',
-      userOrgProfile.value?.profile.publicId || '',
-      '5xl'
-    ) as string;
+    if (userOrgProfile.value?.profile.avatarId) {
+      imageUrl.value = useUtils().generateAvatarUrl(
+        'user',
+        userOrgProfile.value?.profile.avatarId,
+        '5xl'
+      ) as string;
+    }
 
     uploadLoading.value = false;
   });

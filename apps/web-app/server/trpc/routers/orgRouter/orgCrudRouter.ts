@@ -209,6 +209,7 @@ export const crudRouter = router({
           org: {
             columns: {
               publicId: true,
+              avatarId: true,
               name: true,
               slug: true
             }

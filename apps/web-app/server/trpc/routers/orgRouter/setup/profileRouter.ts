@@ -29,6 +29,7 @@ export const orgProfileRouter = router({
       const orgProfileQuery = await db.query.orgs.findFirst({
         columns: {
           publicId: true,
+          avatarId:true,
           name: true
         },
         where: orgPublicId

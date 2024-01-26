@@ -21,6 +21,7 @@
     :class="props.isActive ? 'bg-base-5' : 'bg-base-2'">
     <UnUiAvatar
       :public-id="props.orgData.org.publicId"
+      :avatar-id="props.orgData.org.avatarId"
       :type="'org'"
       :size="'md'"
       :alt="props.orgData.org.name" />
