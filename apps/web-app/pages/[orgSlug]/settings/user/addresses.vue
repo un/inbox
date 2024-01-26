@@ -60,8 +60,8 @@
             address: identity.postalServer.rootForwardingAddress
           },
           org: identity.org,
-          publicId: identity.emailIdentity.publicId,
-          avatarId: identity.emailIdentity.avatarId
+          avatarId: identity.org.avatarId,
+          publicId: identity.emailIdentity.publicId
         });
       });
     }
