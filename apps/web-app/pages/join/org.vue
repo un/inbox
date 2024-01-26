@@ -84,6 +84,13 @@
     newButtonLoading.value = true;
 
     newButtonLabel.value = 'Creating your organization';
+    toast.add({
+      id: 'creating_org',
+      title: 'Creating your organization',
+      description: `This may take a few seconds`,
+      icon: 'i-ph-clock-clockwise',
+      timeout: 20000
+    });
     const createNewOrgTrpc = $trpc.org.crud.createNewOrg.useMutation();
     await createNewOrgTrpc.mutate({
       orgName: orgNameValue.value,
@@ -107,7 +114,14 @@
       expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
     });
     orgSlugCookie.value = orgSlugValue.value as string;
-    newButtonLabel.value = 'Creating a @uninbox email';
+    toast.remove('creating_org');
+    toast.add({
+      id: 'created_org',
+      title: 'Organization created',
+      description: `🎉`,
+      icon: 'i-ph-check',
+      timeout: 5000
+    });
     newButtonLoading.value = false;
     newButtonLabel.value = 'All Done!';
     navigateTo('/join/profile');
@@ -136,7 +150,13 @@
       expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
     });
     orgSlugCookie.value = joinOrgResponse!.orgSlug as string;
-
+    toast.add({
+      id: 'joined_org',
+      title: 'Organization joined',
+      description: `🎉`,
+      icon: 'i-ph-check',
+      timeout: 5000
+    });
     joinButtonLoading.value = false;
     joinButtonLabel.value = 'All Done!';
     navigateTo('/join/profile');

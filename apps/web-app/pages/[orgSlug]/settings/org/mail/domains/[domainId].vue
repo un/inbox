@@ -25,23 +25,6 @@
     return '';
   });
 
-  const incomingForwardingModeEnabled = computed(() => {
-    return domainQuery.value?.domainData?.receivingMode === 'forwarding' ||
-      domainQuery.value?.domainData?.receivingMode === 'native'
-      ? true
-      : false;
-  });
-  const incomingNativeModeEnabled = computed(() => {
-    return domainQuery.value?.domainData?.receivingMode === 'native'
-      ? true
-      : false;
-  });
-  const outgoingNativeModeEnabled = computed(() => {
-    return domainQuery.value?.domainData?.sendingMode === 'native'
-      ? true
-      : false;
-  });
-
   const {
     data: domainQuery,
     pending: domainPending,
@@ -67,41 +50,71 @@
     { server: false }
   );
 
-  const mail = [
-    {
-      label: 'Incoming',
-      slot: 'incoming',
-      status: domainQuery.value?.domainData?.receivingMode || 'disabled'
-    },
-    {
-      label: 'Outgoing',
-      slot: 'outgoing',
-      status: domainQuery.value?.domainData?.sendingMode || 'disabled'
-    }
-  ];
+  const domainStatus = ref('pending');
+  const incomingForwardingModeEnabled = ref(false);
+  const incomingNativeModeEnabled = ref(false);
+  const outgoingNativeModeEnabled = ref(false);
+  const incomingStatus = ref<'disabled' | 'native' | 'forwarding'>('disabled');
+  const outgoingStatus = ref<'disabled' | 'native' | 'external'>('disabled');
 
-  const dns = [
-    {
-      label: 'MX-Records',
-      slot: 'mx-records',
-      status: domainDnsQuery.value?.dns?.mx.valid || false
+  watch(
+    domainQuery,
+    (data) => {
+      console.log(data.domainData);
+      domainStatus.value = data.domainData?.domainStatus || 'pending';
+      incomingForwardingModeEnabled.value =
+        data.domainData?.receivingMode === 'forwarding' ||
+        data.domainData?.receivingMode === 'native'
+          ? true
+          : false;
+      incomingNativeModeEnabled.value =
+        data.domainData?.receivingMode === 'native' ? true : false;
+      outgoingNativeModeEnabled.value =
+        data.domainData?.sendingMode === 'native' ? true : false;
     },
-    {
-      label: 'DKIM-Record',
-      slot: 'dkim-records',
-      status: domainDnsQuery.value?.dns?.dkim.valid || false
-    },
-    {
-      label: 'SPF-Record',
-      slot: 'spf-record',
-      status: domainDnsQuery.value?.dns?.spf.valid || false
-    },
-    {
-      label: 'Return Path',
-      slot: 'return-path',
-      status: domainDnsQuery.value?.dns?.returnPath.valid || false
-    }
-  ];
+    { deep: true }
+  );
+
+  const mail = computed(() => {
+    const mailStatus = [
+      {
+        label: 'Incoming',
+        slot: 'incoming',
+        status: domainQuery.value?.domainData?.receivingMode || 'disabled'
+      },
+      {
+        label: 'Outgoing',
+        slot: 'outgoing',
+        status: domainQuery.value?.domainData?.sendingMode || 'disabled'
+      }
+    ];
+    return mailStatus;
+  });
+
+  const dns = computed(() => {
+    return [
+      {
+        label: 'MX-Records',
+        slot: 'mx-records',
+        status: domainDnsQuery.value?.dns?.mx.valid || false
+      },
+      {
+        label: 'DKIM-Record',
+        slot: 'dkim-records',
+        status: domainDnsQuery.value?.dns?.dkim.valid || false
+      },
+      {
+        label: 'SPF-Record',
+        slot: 'spf-record',
+        status: domainDnsQuery.value?.dns?.spf.valid || false
+      },
+      {
+        label: 'Return Path',
+        slot: 'return-path',
+        status: domainDnsQuery.value?.dns?.returnPath.valid || false
+      }
+    ];
+  });
 
   async function recheckDns() {
     dnsRefreshLoading.value = true;
@@ -141,13 +154,13 @@
       </div>
       <UnUiBadge
         :color="
-          domainQuery?.domainData?.domainStatus === 'disabled'
+          domainStatus === 'disabled'
             ? 'red'
-            : domainQuery?.domainData?.domainStatus === 'pending'
+            : domainStatus === 'pending'
               ? 'orange'
               : 'green'
         "
-        :label="domainQuery?.domainData?.domainStatus.toUpperCase()"
+        :label="domainStatus.toUpperCase()"
         size="lg" />
     </div>
     <div class="w-full flex flex-col gap-8 overflow-y-scroll">
@@ -182,7 +195,7 @@
             </span>
           </div>
           <div
-            v-if="domainQuery?.domainData?.domainStatus === 'pending'"
+            v-if="domainStatus === 'pending'"
             class="flex flex-col gap-0">
             <span class=""> Your domain is unverified. </span>
             <span class="">
@@ -198,7 +211,7 @@
             </span>
           </div>
           <div
-            v-if="domainQuery?.domainData?.domainStatus === 'active'"
+            v-if="domainStatus === 'active'"
             class="flex flex-col gap-0">
             <span class="">
               Your domain has been activated and can be used to send and receive
@@ -206,7 +219,7 @@
             </span>
           </div>
           <div
-            v-if="domainQuery?.domainData?.domainStatus === 'disabled'"
+            v-if="domainStatus === 'disabled'"
             class="flex flex-col gap-0">
             <span class="">
               Your domain has been disabled and can not be used to send or
@@ -265,10 +278,7 @@
               <div class="mr-10 flex flex-col gap-4">
                 <div class="h-fit w-full flex flex-col gap-4 p-3">
                   <div class="flex flex-col justify-center gap-8">
-                    <div
-                      v-if="
-                        domainQuery.domainData.receivingMode === 'disabled'
-                      ">
+                    <div v-if="incomingStatus === 'disabled'">
                       <span class=""
                         >Incoming mail is disabled for this domain. Please
                         verify the domain by adding a DNS record to start
@@ -340,7 +350,7 @@
             <template #outgoing>
               <div class="h-fit w-full flex flex-col justify-center gap-4 p-3">
                 <div class="mr-10 flex flex-col justify-center gap-8">
-                  <div v-if="domainQuery.domainData.sendingMode === 'disabled'">
+                  <div v-if="outgoingStatus === 'disabled'">
                     <span class="">
                       Outgoing mail is disabled for this domain. Please add the
                       SPF, DKIM and Return Path DNS records listed below.
@@ -524,6 +534,8 @@
               </template>
             </NuxtUiAccordion>
           </div>
+          {{ mail }}
+          {{ incomingStatus }}
         </div>
       </div>
     </div>

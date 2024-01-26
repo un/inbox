@@ -151,10 +151,8 @@
       timeout: 5000,
       icon: 'i-ph-check-circle'
     });
-    useCookie('un-redirect', { maxAge: 120 }).value = '/join/org';
-    setTimeout(() => {
-      reloadNuxtApp({ persistState: true, force: true });
-    }, 2500);
+    useAuth().status.value = 'authenticated';
+    navigateTo('/join/org');
   }
 
   watchDebounced(
@@ -293,12 +291,6 @@
       <template #header>
         <div class="flex items-center justify-between">
           <p>How to add a passkey?</p>
-          <UnUiButton
-            color="gray"
-            variant="ghost"
-            icon="i-ph-x"
-            class="-my-1"
-            @click="howToAddPasskeyDialogOpen = false" />
         </div>
       </template>
       <div class="w-full flex flex-col items-center gap-4">
