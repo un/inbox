@@ -108,7 +108,6 @@ export const convoRouter = router({
             where: eq(contacts.publicId, convoMessageTo.publicId),
             columns: {
               emailUsername: true,
-              avatarId:true,
               emailDomain: true
             }
           });
@@ -124,7 +123,6 @@ export const convoRouter = router({
             where: eq(userGroups.publicId, convoMessageTo.publicId),
             columns: {
               id: true,
-              avatarId:true,
               name: true
             }
           });
@@ -258,8 +256,7 @@ export const convoRouter = router({
         const groupResponses = await db.query.userGroups.findMany({
           where: inArray(userGroups.publicId, participantsGroupsPublicIds),
           columns: {
-            id: true,
-            avatarId:true,
+            id: true
           }
         });
         orgGroupIds.push(...groupResponses.map((userGroups) => userGroups.id));
@@ -280,8 +277,7 @@ export const convoRouter = router({
         const contactResponses = await db.query.contacts.findMany({
           where: inArray(userProfiles.publicId, participantsContactsPublicIds),
           columns: {
-            id: true,
-            avatarId:true,
+            id: true
           }
         });
         orgContactIds.push(...contactResponses.map((contact) => contact.id));
@@ -307,7 +303,6 @@ export const convoRouter = router({
             ),
             columns: {
               id: true,
-              avatarId:true,
               reputationId: true
             }
           });
@@ -488,7 +483,6 @@ export const convoRouter = router({
             where: eq(contacts.id, contactId),
             columns: {
               emailUsername: true,
-              avatarId:true,
               emailDomain: true
             }
           });
@@ -578,7 +572,6 @@ export const convoRouter = router({
                 where: eq(userGroups.id, orgGroupId),
                 columns: {
                   publicId: true,
-                  avatarId:true,
                   name: true
                 }
               });
