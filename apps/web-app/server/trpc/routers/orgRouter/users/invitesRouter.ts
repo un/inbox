@@ -21,7 +21,12 @@ import {
   userProfilesToOrgs,
   users
 } from '@uninbox/database/schema';
-import { nanoId, nanoIdLength, nanoIdToken, nanoIdSchema } from '@uninbox/utils';
+import {
+  nanoId,
+  nanoIdLength,
+  nanoIdToken,
+  nanoIdSchema
+} from '@uninbox/utils';
 import { refreshOrgSlugCache } from '~/server/utils/orgSlug';
 import { isUserAdminOfOrg } from '~/server/utils/user';
 import { TRPCError } from '@trpc/server';
@@ -103,7 +108,7 @@ export const invitesRouter = router({
           where: inArray(userGroups.publicId, groups.groupsPublicIds),
           columns: {
             id: true,
-            avatarId:true,
+            avatarId: true
           }
         });
 
@@ -229,6 +234,7 @@ export const invitesRouter = router({
               profile: {
                 columns: {
                   publicId: true,
+                  avatarId: true,
                   firstName: true,
                   lastName: true
                 }
@@ -240,6 +246,7 @@ export const invitesRouter = router({
               profile: {
                 columns: {
                   publicId: true,
+                  avatarId: true,
                   firstName: true,
                   lastName: true
                 }
@@ -277,6 +284,7 @@ export const invitesRouter = router({
           org: {
             columns: {
               publicId: true,
+              avatarId: true,
               name: true,
               slug: true
             }

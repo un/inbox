@@ -113,19 +113,13 @@
               invite.invitedByOrgMember.profile.firstName +
               ' ' +
               invite.invitedByOrgMember.profile.lastName,
-            createdByAvatar: invite.invitedByOrgMember.profile
-              ? invite.invitedByOrgMember.profile.publicId
-              : null,
             createdByAvatarId: invite.invitedByOrgMember.profile
               ? invite.invitedByOrgMember.profile.avatarId
-              : null,
+              : '',
             created: invite.invitedAt,
-            userAvatar: invite.orgMember?.profile
-              ? invite.orgMember?.profile.publicId
-              : null,
             userAvatarId: invite.orgMember?.profile
               ? invite.orgMember?.profile.avatarId
-              : null,
+              : '',
             usedBy: invite.orgMember?.profile
               ? invite.orgMember?.profile.firstName +
                 ' ' +
@@ -187,7 +181,7 @@
             <div class="flex flex-row items-center gap-2">
               <UnUiAvatar
                 v-if="row.userAvatar || row.usedBy"
-                :public-id="row.userAvatar"
+                :public-id="''"
                 :avatar-id="row.userAvatarId"
                 :type="'user'"
                 :alt="row.usedBy ? row.usedBy : ''"
@@ -219,7 +213,8 @@
           <template #createdBy-data="{ row }">
             <div class="flex flex-row items-center gap-2">
               <UnUiAvatar
-                :public-id="row.creatorAvatar ? row.creatorAvatar : ''"
+                :public-id="''"
+                :avatar-id="row.creatorAvatarId"
                 :type="'user'"
                 :alt="row.createdBy ? row.createdBy : ''"
                 size="xs" />
