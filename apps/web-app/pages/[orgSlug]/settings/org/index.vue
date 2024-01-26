@@ -28,6 +28,7 @@
         ? ((imageUrl.value = useUtils().generateAvatarUrl(
             'org',
             newVal.orgProfile.publicId,
+            newVal.orgProfile.avatarId,
             '5xl'
           )) as string)
         : null;
@@ -79,6 +80,7 @@
       imageUrl.value = useUtils().generateAvatarUrl(
         'org',
         initialOrgProfile.value?.orgProfile.publicId,
+        initialOrgProfile.value?.orgProfile.avatarId,
         '5xl'
       ) as string;
     }
