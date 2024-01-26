@@ -110,6 +110,7 @@
           <div class="flex flex-row items-center gap-2">
             <UnUiAvatar
               :public-id="row.publicId"
+              :avatar-id="row.avatarId"
               :type="'user'"
               :alt="row.name ? row.name : ''"
               :color="row.color ? row.color : ''"
@@ -125,6 +126,7 @@
               v-for="member in row.members"
               :key="member.publicId"
               :public-id="member.publicId"
+              :avatar-id="member.avatarId"
               :type="'user'"
               :alt="
                 member.firstName && member.lastName

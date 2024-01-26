@@ -292,6 +292,7 @@
         <div class="w-full flex flex-row items-center gap-2 overflow-hidden">
           <UnUiAvatar
             :public-id="currentOrgProfile?.publicId || ''"
+            :avatar_id="currentOrgProfile?.publicId || ''"
             :type="'org'"
             :alt="currentOrgProfile?.name"
             size="xs" />
@@ -305,6 +306,7 @@
           <div class="w-full flex flex-row items-center gap-2 overflow-hidden">
             <UnUiAvatar
               :public-id="userProfile?.profile?.publicId || ''"
+              :avatar-id="userProfile?.profile?.avatarId || ''"
               :type="'user'"
               :alt="
                 userProfile?.profile?.firstName +
@@ -323,6 +325,7 @@
         <div class="max-w-full flex flex-row items-center gap-2">
           <UnUiAvatar
             :public-id="item.publicId"
+            :avatar-id="item.avatarId"
             :type="'org'"
             :alt="item.label"
             color="gray"

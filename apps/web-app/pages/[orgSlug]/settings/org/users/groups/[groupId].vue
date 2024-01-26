@@ -185,6 +185,7 @@
           :color="groupData?.group?.color || 'base'"
           :name="groupData?.group?.name"
           :public-id="groupData?.group?.publicId || ''"
+          :avatar-id="groupData?.group?.avatarId || ''"
           :type="'group'"
           size="lg" />
 
@@ -247,6 +248,7 @@
               <div class="flex flex-row items-center gap-2">
                 <UnUiAvatar
                   :public-id="row.publicId"
+                  :avatar-id="row.avatarId"
                   :type="'user'"
                   :alt="row.name"
                   size="xs" />
@@ -335,6 +337,7 @@
               <template #option="{ option }">
                 <UnUiAvatar
                   :public-id="option.publicId"
+                  :avatar-id="option.avatarId"
                   :type="'user'"
                   :alt="option.label"
                   size="3xs" />
