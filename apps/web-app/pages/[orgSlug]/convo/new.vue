@@ -541,7 +541,7 @@
                         :public-id="participant.publicId?.toString()"
                         :type="'group'"
                         :alt="participant.name.toString()"
-                        :color="participant.color?.toString()"
+                        :color="participant.color as UiColor"
                         size="xs" />
                       <span>
                         {{ participant.name }}
