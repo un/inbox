@@ -114,11 +114,11 @@
               ' ' +
               invite.invitedByOrgMember.profile.lastName,
             createdByAvatar: invite.invitedByOrgMember.profile
-              ? invite.invitedByOrgMember.profile.publicId
+              ? invite.invitedByOrgMember.profile.avatarId
               : null,
             created: invite.invitedAt,
             userAvatar: invite.orgMember?.profile
-              ? invite.orgMember?.profile.publicId
+              ? invite.orgMember?.profile.avatarId
               : null,
             usedBy: invite.orgMember?.profile
               ? invite.orgMember?.profile.firstName +
