@@ -2,14 +2,12 @@
   import { useVirtualList, useInfiniteScroll, useTimeAgo } from '@vueuse/core';
   const { $trpc } = useNuxtApp();
   type PromiseType<T> = T extends Promise<infer U> ? U : never;
-  type ConvoMessageDataType = PromiseType<
-    ReturnType<typeof $trpc.convos.getConvoMessages.query>
-  >['messages'];
-
-  const noMessagesError = ref(false);
+  type ConvoEntriesDataType = PromiseType<
+    ReturnType<typeof $trpc.convos.entries.getConvoEntries.query>
+  >['entries'];
   //@ts-expect-error
   const el = ref<HTMLElement>(null);
-  const messagesArray = ref<ConvoMessageDataType>([]);
+  const entriesArray = ref<ConvoEntriesDataType>([]);
 
   type Props = {
     convoPublicId: string;
@@ -17,23 +15,21 @@
 
   const props = defineProps<Props>();
 
-  const convoMessagesReturn = await $trpc.convos.getConvoMessages.query({
-    convoPublicId: props.convoPublicId
+  const { data: convoEntries } =
+    await $trpc.convos.entries.getConvoEntries.useQuery(
+      {
+        convoPublicId: props.convoPublicId
+      },
+      { server: false }
+    );
+
+  watch(convoEntries, () => {
+    if (convoEntries.value?.entries) {
+      entriesArray.value.push(...convoEntries.value.entries);
+    }
   });
 
-  if (convoMessagesReturn.error || !convoMessagesReturn.messages) {
-    noMessagesError.value = true;
-  } else {
-    if (messagesArray.value) {
-      for (const message of convoMessagesReturn.messages) {
-        messagesArray.value.push({
-          ...message
-        });
-      }
-    }
-  }
-
-  // const { list, containerProps, wrapperProps } = useVirtualList(messages, {
+  // const { list, containerProps, wrapperProps } = useVirtualList(entriesArray, {
   //   itemHeight: 152,
   //   overscan: 3
   // });
@@ -47,13 +43,14 @@
 </script>
 <template>
   <div
-    class="max-w-full w-full h-full max-h-full overflow-y-scroll flex flex-col-reverse">
+    class="h-full max-h-full max-w-full w-full flex flex-col-reverse overflow-y-scroll">
     <div
-      class="flex flex-col-reverse items-start gap-4 mb-[24px] mt-[24px] w-full">
+      class="mb-[24px] mt-[24px] w-full flex flex-col-reverse items-start gap-4">
       <div
-        v-for="message of messagesArray"
+        v-for="entry of entriesArray"
+        :key="entry.publicId"
         class="max-w-full w-full">
-        <convos-convo-message-item :message="message" />
+        <convos-convo-message-item :entry="entry" />
       </div>
     </div>
   </div>

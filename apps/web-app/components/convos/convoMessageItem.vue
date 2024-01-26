@@ -1,106 +1,126 @@
 <script setup lang="ts">
   import { useTimeAgo } from '@vueuse/core';
+  import { generateHTML } from '@tiptap/html';
+  import { tipTapExtensions } from '../../shared/editorConfig';
   const { $trpc } = useNuxtApp();
 
   type PromiseType<T> = T extends Promise<infer U> ? U : never;
-  type ConvoMessageDataType = PromiseType<
-    ReturnType<typeof $trpc.convos.getConvoMessages.query>
-  >['messages'];
+  type ConvoEntryDataType = PromiseType<
+    ReturnType<typeof $trpc.convos.entries.getConvoEntries.query>
+  >['entries'];
 
-  type ConvoMessageItem = NonNullable<ConvoMessageDataType>[number];
+  type ConvoEntryItem = NonNullable<ConvoEntryDataType>[number];
   type Props = {
-    message: ConvoMessageItem;
+    entry: ConvoEntryItem;
   };
 
   const props = defineProps<Props>();
+  const participantPublicId = inject('participantPublicId');
+  const convoParticipants = inject('convoParticipants');
 
-  const timeAgo = useTimeAgo(props.message.createdAt || new Date());
-  // const authorName = computed(() => {
-  //   if (
-  //     props.convo.messages[0].author.userProfile?.firstName &&
-  //     props.convo.messages[0].author.userProfile?.lastName
-  //   ) {
-  //     return (
-  //       props.convo.messages[0].author.userProfile.firstName +
-  //       ' ' +
-  //       props.convo.messages[0].author.userProfile.lastName
-  //     );
-  //   }
-  //   if (props.convo.messages[0].author.userGroup?.name) {
-  //     return props.convo.messages[0].author.userGroup.name + ' Team';
-  //   }
+  const timeAgo = useTimeAgo(props.entry.createdAt || new Date());
 
-  //   if (props.convo.messages[0].author.foreignEmailIdentity?.senderName) {
-  //     return props.convo.messages[0].author.foreignEmailIdentity.senderName;
-  //   }
-  //   return '';
+  const convoEntryBody = computed(() => {
+    if (props.entry.body) {
+      return generateHTML(props.entry.body, tipTapExtensions);
+    }
+    return '';
+  });
+
+  const author = computed(() => {
+    //@ts-expect-error vue3 provide/inject types are whack to set up: https://vuejs.org/guide/typescript/composition-api#typing-provide-inject
+    return convoParticipants.value.find(
+      //@ts-expect-error ts dosnt know the type of this reactive string
+      (participant) =>
+        participant.participantPublicId == props.entry.author.publicId
+    );
+  });
+  const userIsAuthor = computed(() => {
+    //@ts-expect-error ts dosnt know the type of this reactive string
+    return props.entry.author.publicId == participantPublicId.value;
+  });
+
+  const tempColor = 'message';
+  const typeClasses = computed(() => {
+    // switch (props.entry.type) {
+    switch (tempColor) {
+      case 'message':
+        return 'bg-white dark:bg-black';
+      default:
+        return 'bg-gray-100 dark:bg-gray-900';
+    }
+  });
+  const containerClasses = computed(() => {
+    return userIsAuthor.value ? 'items-end' : 'items-start';
+  });
+  // const authorClasses = computed(() => {
+  //   return userIsAuthor.value ? 'rounded-br-none' : 'rounded-bl-none';
   // });
 
-  // const authorAvatar = computed(() => {
-  //   if (props.convo.messages[0].author.userProfile?.avatarId) {
-  //     return props.convo.messages[0].author.userProfile.avatarId;
-  //   }
-  //   if (props.convo.messages[0].author.userGroup?.avatarId) {
-  //     return props.convo.messages[0].author.userGroup.avatarId;
-  //   }
-
-  //   if (props.convo.messages[0].author.foreignEmailIdentity?.avatarId) {
-  //     return props.convo.messages[0].author.foreignEmailIdentity.avatarId;
-  //   }
-  //   return '';
-  // });
-
-  // const authorColor = computed(() => {
-  //   if (props.convo.messages[0].author.userGroup?.color) {
-  //     return props.convo.messages[0].author.userGroup.color;
-  //   }
-  //   return '';
-  // });
-
-  // type AuthorEntry = {
-  //   avatarId: string;
-  //   name: string;
-  //   type: string;
-  //   color: string;
-  // };
-  // const avatarArray = ref<AuthorEntry[]>([]);
-  // for (const author of props.convo.members) {
-  //   avatarArray.value.push({
-  //     avatarId: author.foreignEmailIdentity?.avatarId
-  //       ? author.foreignEmailIdentity?.avatarId
-  //       : author.userGroup?.avatarId
-  //       ? author.userGroup?.avatarId
-  //       : author.userProfile?.avatarId
-  //       ? author.userProfile?.avatarId
-  //       : '',
-  //     name: author.foreignEmailIdentity?.senderName
-  //       ? author.foreignEmailIdentity?.senderName
-  //       : author.userGroup?.name
-  //       ? author.userGroup?.name
-  //       : author.userProfile?.firstName
-  //       ? author.userProfile?.firstName + ' ' + author.userProfile?.lastName
-  //       : '',
-  //     type: author.foreignEmailIdentity?.senderName
-  //       ? 'External'
-  //       : author.userGroup?.name
-  //       ? 'Group'
-  //       : 'User',
-  //     color: author.userGroup?.color ? author.userGroup?.color : 'base'
-  //   });
-  // }
+  const convoBubbleClasses = computed(() => {
+    // return `${typeClasses.value} ${authorClasses.value}`;
+    return `${typeClasses.value}`;
+  });
 </script>
 <template>
-  <div class="flex flex-row gap-4">
-    <div
-      class="p-4 rounded flex flex-col justify-between bg-base-3 hover:bg-base-4 gap-2 overflow-hidden max-w-[80%] w-full">
-      <div class="flex flex-row gap-6 items-center w-full">
-        {{ props.message.body }}
+  <!-- <div
+    class="w-full flex flex-col gap-2"
+    :class="containerClasses">
+    <div class="max-w-[80%] w-full flex flex-col gap-1 border-2 rounded-xl p-0">
+      <div class="w-full flex flex-row items-end justify-between p-2">
+        <div
+          v-if="author"
+          class="flex flex-row items-center gap-1">
+          <UnUiAvatar
+            :public-id="author.avatarPublicId"
+            :alt="author.name"
+            :type="author.type"
+            :color="author.color"
+            class="rounded-full" />
+          <span>{{ author.name }}</span>
+        </div>
+        <UnUiTooltip :text="props.entry.createdAt.toLocaleString()">
+          <span class="text-gray-500 text-xs uppercase">{{ timeAgo }}</span>
+        </UnUiTooltip>
       </div>
-      <div class="flex flex-row w-full justify-end items-center gap-1">
-        {{ props.message.author }}
+      <div
+        class="bg-gray-100 dark:bg-gray-900 w-full overflow-hidden p-2"
+        :class="convoBubbleClasses"
+        v-html="convoEntryBody"></div>
+    </div>
+  </div> -->
+  <div
+    class="w-full flex flex-col gap-2"
+    :class="containerClasses">
+    <div class="w-full flex flex-row items-start gap-2">
+      <div
+        v-if="author"
+        class="flex flex-row items-center gap-1">
+        <UnUiAvatar
+          :public-id="author.avatarPublicId"
+          :alt="author.name"
+          :type="author.type"
+          :color="author.color"
+          size="lg"
+          class="rounded-full" />
       </div>
-      <div class="flex flex-row w-full justify-end items-center gap-1">
-        {{ timeAgo }} {{ props.message.createdAt }}
+      <div class="w-full flex flex-col gap-2 p-0">
+        <div class="w-full flex flex-row items-end gap-2 pl-2">
+          <span
+            v-if="author"
+            class="text-sm leading-none">
+            {{ author.name }}
+          </span>
+          <UnUiTooltip :text="props.entry.createdAt.toLocaleString()">
+            <span class="text-gray-500 text-xs leading-none">
+              {{ timeAgo }}
+            </span>
+          </UnUiTooltip>
+        </div>
+        <div
+          class="bg-gray-100 dark:bg-gray-900 w-full overflow-hidden rounded-bl-xl rounded-br-xl p-2"
+          :class="convoBubbleClasses"
+          v-html="convoEntryBody"></div>
       </div>
     </div>
   </div>
