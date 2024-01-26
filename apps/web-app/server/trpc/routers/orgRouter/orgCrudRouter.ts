@@ -99,8 +99,7 @@ export const crudRouter = router({
           eq(userProfiles.defaultProfile, true)
         ),
         columns: {
-          id: true,
-          avatarId: true
+          id: true
         }
       });
 

@@ -183,8 +183,7 @@ export const emailIdentityRouter = router({
           ? await db.query.userGroups.findMany({
               where: inArray(userGroups.publicId, routeToGroupsPublicIds),
               columns: {
-                id: true,
-                avatarId: true
+                id: true
               }
             })
           : [];

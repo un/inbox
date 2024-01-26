@@ -19,7 +19,7 @@ export const validateOrgSlug = async (
 
   const orgLookupResult = await db.query.orgs.findFirst({
     where: eq(orgs.slug, orgSlug),
-    columns: { id: true, publicId: true, avatarId:true },
+    columns: { id: true, publicId: true },
     with: {
       members: {
         columns: {
@@ -48,7 +48,7 @@ export const validateOrgSlug = async (
 export async function refreshOrgSlugCache(orgId: number): Promise<void> {
   const orgLookupResult = await db.query.orgs.findFirst({
     where: eq(orgs.id, orgId),
-    columns: { id: true, publicId: true, avatarId:true, slug: true },
+    columns: { id: true, publicId: true, slug: true },
     with: {
       members: {
         columns: {

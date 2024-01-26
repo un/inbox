@@ -211,8 +211,7 @@ export const orgUserGroupsRouter = router({
 
       const userGroup = await db.query.userGroups.findFirst({
         columns: {
-          id: true,
-          avatarId: true
+          id: true
         },
         where: eq(userGroups.publicId, groupPublicId)
       });
