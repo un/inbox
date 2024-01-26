@@ -13,7 +13,6 @@
   // TODO: handle if the domain is not valid/enabled. display the email address in the list but show it as disabled and show a tooltip on hover that says "this domain is not enabled for sending"
   interface OrgEmailIdentities {
     publicId: string;
-    avatarId: string;
     address: string;
     sendName: string | null;
   }
@@ -24,7 +23,6 @@
     publicId: String;
     avatarId: String;
     profilePublicId: String;
-    profileAvatarId: String;
     name: String;
     handle: String;
     title: String | null;
@@ -56,7 +54,6 @@
     type: 'email';
     icon: 'i-ph-envelope';
     publicId: Number;
-    avatarId: Number;
     address: String;
     keywords: String;
   }
@@ -142,7 +139,6 @@
       for (const orgObject of newuserEmailIdentitiesData.emailIdentities) {
         orgEmailIdentities.value.push({
           publicId: orgObject.publicId,
-          avatarId: orgObject.avatarId,
           address: orgObject.username + '@' + orgObject.domainName,
           sendName: orgObject.sendName
         });
@@ -162,9 +158,8 @@
         type: 'user',
         icon: 'i-ph-user',
         publicId: ownOrgMemberData.publicId,
-        avatarId: ownOrgMemberData.avatarId,
         profilePublicId: ownOrgMemberData.profile.publicId,
-        profileAvatarId: ownOrgMemberData.profile.avatarId,
+        avatarId: ownOrgMemberData.profile.avatarId || '',
         name:
           ownOrgMemberData.profile?.firstName +
             ' ' +
@@ -194,9 +189,8 @@
           type: 'user',
           icon: 'i-ph-user',
           publicId: member.publicId,
-          avatarId: member.avatarId,
           profilePublicId: member.profile.publicId,
-          profileAvatarId: member.profile.avatarId,
+          avatarId: member.profile.avatarId || '',
           name:
             member.profile?.firstName + ' ' + member.profile?.lastName || '',
           handle: member.profile?.handle || '',
@@ -222,7 +216,7 @@
           type: 'group',
           icon: 'i-ph-users-three',
           publicId: group.publicId,
-          avatarId: group.avatarId,
+          avatarId: group.avatarId || '',
           name: group.name,
           description: group.description,
           color: group.color,
@@ -240,7 +234,7 @@
           type: 'contact',
           icon: 'i-ph-address-book',
           publicId: contact.publicId,
-          avatarId: contact.avatarId,
+          avatarId: contact.avatarId || '',
           name:
             contact.setName ||
             contact.name ||
@@ -314,7 +308,6 @@
           type: 'email',
           icon: 'i-ph-envelope',
           publicId: participantOptions.value.length + 1,
-          avatarId: participantOptions.value.length + 1,
           //@ts-ignore
           address: label.keywords,
           keywords: label.keywords
@@ -535,7 +528,7 @@
                       class="flex flex-row items-center gap-1">
                       <UnUiAvatar
                         :public-id="participant.profilePublicId.toString()"
-                        :avatar-id="participant.profileAvatarId.toString()"
+                        :avatar-id="participant.avatarId.toString()"
                         :type="'user'"
                         :alt="participant.name.toString()"
                         size="xs" />
