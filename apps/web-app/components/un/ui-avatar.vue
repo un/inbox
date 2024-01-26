@@ -7,6 +7,7 @@
       ? Props & {
           color?: string;
           publicId: string;
+          avatarId: string;
           type: 'user' | 'org' | 'group' | 'contact';
           avatarUrl?: string | undefined;
         }
@@ -20,6 +21,11 @@
         default: null
       },
       publicId: {
+        type: String,
+        required: false,
+        default: null
+      },
+      avatarId: {
         type: String,
         required: false,
         default: null
@@ -41,7 +47,7 @@
           ? props.src
           : props.publicId
             ? //@ts-ignore
-              useUtils().generateAvatarUrl(props.type, props.publicId, size)
+              useUtils().generateAvatarUrl(props.type, props.publicId,props.avatarId, size)
             : null;
       });
 

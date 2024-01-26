@@ -47,6 +47,7 @@
       imageUrl.value = useUtils().generateAvatarUrl(
         'user',
         newVal.profile.publicId,
+        newVal.profile.avatarId,
         '5xl'
       ) as string;
     }
@@ -78,6 +79,7 @@
     formData.append('file', selectedFiles[0]);
     formData.append('type', 'user');
     formData.append('publicId', userOrgProfile.value?.profile?.publicId || '');
+    formData.append('avatarId', userOrgProfile.value?.profile?.avatarId || '');
     await useFetch(`${storageUrl}/api/avatar`, {
       method: 'post',
       body: formData,
@@ -87,6 +89,7 @@
     imageUrl.value = useUtils().generateAvatarUrl(
       'user',
       userOrgProfile.value?.profile.publicId || '',
+      userOrgProfile.value?.profile.avatarId || '',
       '5xl'
     ) as string;
 
@@ -108,6 +111,7 @@
       $trpc.user.profile.updateUserProfile.useMutation();
     await updateUserProfileTrpc.mutate({
       profilePublicId: userOrgProfile.value.profile.publicId,
+      profileAvatarId: userOrgProfile.value.profile.avatarId,
       fName: fNameValue.value,
       lName: lNameValue.value,
       title: titleValue.value,
