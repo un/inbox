@@ -317,6 +317,7 @@ export const invitesRouter = router({
       return {
         valid: true,
         orgPublicId: queryInvitesResponse.org.publicId,
+        orgAvatarId: queryInvitesResponse.org.avatarId,
         orgName: queryInvitesResponse.org.name,
         orgSlug: queryInvitesResponse.org.slug,
         loggedIn: userLoggedIn
