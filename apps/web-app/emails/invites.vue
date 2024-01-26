@@ -18,20 +18,26 @@
   } from 'vue-email';
 
   interface Props {
-    orgName?: string;
-    inviteCode?: string;
-    expiryDate?: Date;
+    inviterName: string;
+    inviterAvatarId: string;
+    orgName: string;
+    orgAvatarId: string;
+    inviteCode: string;
+    expiryDate: Date;
   }
 
   const props = withDefaults(defineProps<Props>(), {
+    inviterName: 'inviterName',
+    inviterAvatarId: 'https://avatars.githubusercontent.com/u/135225712',
     orgName: 'orgName',
+    orgAvatarId: 'https://avatars.githubusercontent.com/u/135225712',
     inviteCode: 'XXX-NNN-XN',
     expiryDate: () => new Date('June 23, 2022 4:06:00 pm UTC')
   });
 
   const inviteLink = 'https://uninbox.com/invite';
 
-  const previewText = `Hey ${props.orgName} Invited You On UnInbox`;
+  const previewText = `Hey ${props.inviterName} Invited You On ${props.orgName}`;
 </script>
 
 <template>
@@ -54,20 +60,42 @@
           </ESection>
           <EHr />
           <EHeading
-            class="text-black text-[24px] font-normal text-center p-0 my-[30px] mx-0">
-            Hey <strong>{{ orgName }}</strong> Invited You On
-            <strong>UnInbox</strong>
-          </EHeading>
-          <EText class="text-black text-lg leading-[24px] text-center">
-            <strong>McPizza</strong> from (
+            class="text-black text-[20px] font-normal text-center p-0 my-[30px] mx-0">
+            Hey
+            <strong>{{ inviterName }}</strong> from (
             <ELink
               :href="inviteLink"
               class="text-blue-600 no-underline">
               {{ orgName }}
             </ELink>
             ) has invited you to the
-            <strong>{{ orgName }}</strong> team on <strong> UnInbox</strong>.
-          </EText>
+            <strong>{{ orgName }}</strong> Team.
+          </EHeading>
+          <ESection>
+            <ERow>
+              <EColumn align="right">
+                <EImg
+                  :src="props.inviterAvatarId"
+                  class="rounded-full"
+                  width="64"
+                  height="64" />
+              </EColumn>
+              <EColumn align="center">
+                <EImg
+                  src="https://vue-email-demo.vercel.app/static/vercel-arrow.png"
+                  width="12"
+                  height="10"
+                  alt="invited you to" />
+              </EColumn>
+              <EColumn align="left">
+                <EImg
+                  :src="props.orgAvatarId"
+                  class="rounded-full"
+                  width="64"
+                  height="64" />
+              </EColumn>
+            </ERow>
+          </ESection>
           <ESection class="text-center mt-[32px] mb-[32px]">
             <ERow class="px-10 pt-0"
               ><EColumn

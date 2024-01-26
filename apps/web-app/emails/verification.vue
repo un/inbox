@@ -53,7 +53,7 @@
             <ERow class="px-10">
               <EColumn class="text-black">
                 <EHeading class="text-2xl text-slate-250 font-bold text-center">
-                  Hi {{ props.username }},
+                  Hi {{ username }},
                 </EHeading>
                 <EHeading class="text-2xl font-bold text-center">
                   Welcome to UnInbox.
@@ -78,16 +78,16 @@
                 col-span="{4}">
                 <EText
                   class="bg-gray-800 px-10 py-4 rounded cursor-pointer text-white font-bold text-xl">
-                  {{ props.verificationCode }}
+                  {{ verificationCode }}
                 </EText>
               </EColumn>
             </ERow>
             <EText class="text-black text-[14px] leading-[24px] text-center">
               copy the <strong>code</strong> and paste it on this page:
               <ELink
-                :href="props.verificationLink"
+                :href="verificationLink"
                 class="text-blue-600 no-underline">
-                {{ props.verificationLink }}
+                {{ verificationLink }}
               </ELink>
             </EText>
           </ESection>
