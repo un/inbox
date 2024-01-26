@@ -72,7 +72,7 @@ export const orgUserGroupsRouter = router({
       const userGroupQuery = await db.query.userGroups.findMany({
         columns: {
           publicId: true,
-          avatarId:true,
+          avatarId: true,
           name: true,
           description: true,
           color: true
@@ -81,13 +81,13 @@ export const orgUserGroupsRouter = router({
         with: {
           members: {
             columns: {
-              publicId: true,
+              publicId: true
             },
             with: {
               userProfile: {
                 columns: {
                   publicId: true,
-                  avatarId:true,
+                  avatarId: true,
                   firstName: true,
                   lastName: true,
                   handle: true,
@@ -127,6 +127,7 @@ export const orgUserGroupsRouter = router({
       const userGroupQuery = await dbReplica.query.userGroups.findFirst({
         columns: {
           publicId: true,
+          avatarId: true,
           name: true,
           description: true,
           color: true
@@ -151,6 +152,7 @@ export const orgUserGroupsRouter = router({
               userProfile: {
                 columns: {
                   publicId: true,
+                  avatarId: true,
                   firstName: true,
                   lastName: true,
                   handle: true,
@@ -210,7 +212,7 @@ export const orgUserGroupsRouter = router({
       const userGroup = await db.query.userGroups.findFirst({
         columns: {
           id: true,
-          avatarId:true,
+          avatarId: true
         },
         where: eq(userGroups.publicId, groupPublicId)
       });

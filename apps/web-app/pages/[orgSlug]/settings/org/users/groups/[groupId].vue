@@ -66,7 +66,7 @@
       for (const member of newResults.group.members) {
         tableRows.value.push({
           publicId: member.publicId,
-          avatarId: member.avatarId,
+          avatarId: member.userProfile?.avatarId || '',
           name:
             member.userProfile?.firstName + ' ' + member.userProfile?.lastName,
           handle: member.userProfile?.handle || '',

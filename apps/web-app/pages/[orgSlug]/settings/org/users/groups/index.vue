@@ -58,7 +58,7 @@
         console.log({ members: group.members });
         tableRows.value.push({
           publicId: group.publicId,
-          avatarId: group.avatarId,
+          avatarId: group.avatarId || '',
           name: group.name,
           description: group.description,
           color: group.color,
