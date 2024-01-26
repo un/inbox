@@ -113,6 +113,7 @@
     slot: 'org';
     label: string;
     publicId: string;
+    avatarId:string;
     slug: string;
     click: () => void;
   }
@@ -127,6 +128,7 @@
           label: org.org.name,
           //@ts-ignore
           publicId: org.org.publicId,
+          avatarId: org.org.avatarId,
           slug: org.org.slug,
           click: () => {
             navigateTo(`/${org.org.slug}`);
@@ -292,7 +294,7 @@
         <div class="w-full flex flex-row items-center gap-2 overflow-hidden">
           <UnUiAvatar
             :public-id="currentOrgProfile?.publicId || ''"
-            :avatar_id="currentOrgProfile?.publicId || ''"
+            :avatar_id="currentOrgProfile?.avatarId || ''"
             :type="'org'"
             :alt="currentOrgProfile?.name"
             size="xs" />

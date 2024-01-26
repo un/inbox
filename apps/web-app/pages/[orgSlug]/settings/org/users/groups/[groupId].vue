@@ -50,6 +50,7 @@
   ];
   interface TableRow {
     publicId: string;
+    avatarId: string;
     name: string;
     handle: string;
     title: string;
@@ -65,6 +66,7 @@
       for (const member of newResults.group.members) {
         tableRows.value.push({
           publicId: member.publicId,
+          avatarId: member.avatarId,
           name:
             member.userProfile?.firstName + ' ' + member.userProfile?.lastName,
           handle: member.userProfile?.handle || '',
@@ -153,6 +155,7 @@
     );
     tableRows.value.push({
       publicId: member?.profile.publicId || '',
+      avatarId: member?.profile.avatarId || '',
       name: member?.profile.firstName + ' ' + member?.profile.lastName,
       handle: member?.profile.handle || '',
       title: member?.profile.title || '',

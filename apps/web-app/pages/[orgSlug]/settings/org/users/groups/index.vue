@@ -36,11 +36,13 @@
 
   interface TableRow {
     publicId: string;
+    avatarId: string;
     name: string;
     description: string | null;
     color: string | null;
     members: ({
       publicId: string;
+      avatarId: string;
       firstName: string | null;
       lastName: string | null;
       handle: string | null;
@@ -56,6 +58,7 @@
         console.log({ members: group.members });
         tableRows.value.push({
           publicId: group.publicId,
+          avatarId: group.avatarId,
           name: group.name,
           description: group.description,
           color: group.color,

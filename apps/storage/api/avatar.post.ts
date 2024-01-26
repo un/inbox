@@ -167,16 +167,16 @@ export default defineEventHandler(async (event) => {
 
     const updatedGroup = await db.update(userGroups).set({
       avatarId: avatarId, 
-      });
+      }).where(eq(userGroups.publicId, publicId));
     const updateProfile = await db.update(userProfiles).set({
       avatarId: avatarId, 
-      });
+      }).where(eq(userProfiles.publicId, publicId));
     const updateContacts = await db.update(contacts).set({
       avatarId: avatarId, 
-      });
+      }).where(eq(contacts.publicId, publicId));
     const updatedOrgs = await db.update(orgs).set({
       avatarId: avatarId, 
-      });
+      }).where(eq(orgs.publicId, publicId));
 
   return send(event,{ avatarId: avatarId });
 });

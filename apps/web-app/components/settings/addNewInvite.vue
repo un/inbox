@@ -149,6 +149,7 @@
     );
   interface OrgUserGroups {
     publicId: String;
+    avatarId: String;
     name: String;
     description: String | null;
     color: String | null;
@@ -160,6 +161,7 @@
       for (const group of newOrgUserGroupsData.groups) {
         orgUserGroups.value.push({
           publicId: group.publicId,
+          avatarId: group.avatarId,
           name: group.name,
           description: group.description,
           color: group.color
@@ -477,6 +479,7 @@
                 <UnUiAvatar
                   :alt="group.name.toString()"
                   :public-id="group.publicId?.toString()"
+                  :avatar-id="group.avatarId?.toString()"
                   :type="'group'"
                   :color="group.color?.toString()"
                   size="3xs" />
