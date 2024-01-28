@@ -709,7 +709,7 @@
         v-model:modelValue="messageEditorData"
         class="min-h-[150px] overflow-hidden" />
     </div>
-    <div class="flex grow flex-row justify-end gap-2">
+    <div class="flex grow flex-col justify-end gap-2 md:flex-row">
       <UnUiButton
         label="Save Draft"
         color="orange"

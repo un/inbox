@@ -6,7 +6,7 @@
 </script>
 <template>
   <div
-    class="col-span-2 h-full w-full flex flex-col items-center justify-center gap-2 pl-4">
+    class="col-span-2 hidden h-full w-full flex-col items-center justify-center pl-4 md:flex md:gap-2">
     <div class="col-span-2 pl-4">Select a conversation from the left, or</div>
     <button
       class="max-w-80 w-full flex flex-row items-center justify-center gap-4 border-1 border-base-7 rounded bg-base-3 p-2"

@@ -68,7 +68,8 @@
   ]);
 </script>
 <template>
-  <div class="h-full max-h-full flex flex-col gap-2 overflow-y-scroll pr-4">
+  <div
+    class="h-full max-h-full flex-col gap-2 overflow-y-scroll md:flex md:pr-4">
     <div
       class="h-full max-h-full flex grow flex-col gap-4 overflow-hidden overflow-y-scroll">
       <div class="w-full flex flex-col gap-2">
@@ -85,21 +86,21 @@
         <div class="flex flex-col gap-2">
           <div class="flex flex-col gap-2 pb-2 pl-2">
             <span
-              class="border-b-1 border-base-3 pb-1 text-xs font-semibold uppercase text-base-11">
+              class="border-b-1 border-base-3 pb-1 text-xs text-base-11 font-semibold uppercase">
               Setup
             </span>
             <UnUiVerticalNavigation :links="orgSetupLinks" />
           </div>
           <div class="flex flex-col gap-2 pb-2 pl-2">
             <span
-              class="border-b-1 border-base-3 pb-1 text-xs font-semibold uppercase text-base-11">
+              class="border-b-1 border-base-3 pb-1 text-xs text-base-11 font-semibold uppercase">
               Users
             </span>
             <UnUiVerticalNavigation :links="orgUsersLinks" />
           </div>
           <div class="flex flex-col gap-2 pb-2 pl-2">
             <span
-              class="border-b-1 border-base-3 pb-1 text-xs font-semibold uppercase text-base-11">
+              class="border-b-1 border-base-3 pb-1 text-xs text-base-11 font-semibold uppercase">
               Mail
             </span>
             <UnUiVerticalNavigation :links="orgMailLinks" />
