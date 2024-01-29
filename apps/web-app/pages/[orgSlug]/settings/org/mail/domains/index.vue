@@ -132,7 +132,7 @@
           <template #sendingMode-data="{ row }">
             <UnUiBadge
               :label="row.sendingMode.toUpperCase()"
-              :color="row.status === 'native' ? 'green' : 'red'" />
+              :color="row.sendingMode === 'native' ? 'green' : 'red'" />
           </template>
 
           <template #receivingMode-data="{ row }">

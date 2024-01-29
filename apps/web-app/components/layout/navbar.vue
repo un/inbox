@@ -221,15 +221,19 @@
   const closeModal = () => {
     showLogoutModal.value = false;
   };
+
   async function useLogout() {
+    const toast = useToast();
     if (process.server) {
       return null;
     }
-    // useHanko()?.session._cookie.removeAuthCookie();
-    await useFetch('/api/logout', {
-      method: 'POST'
+    await useAuth().signOut();
+    toast.add({
+      title: 'Logged out',
+      description: 'You have been logged out',
+      color: 'green',
+      timeout: 5000
     });
-    navigateTo('/');
   }
 </script>
 <template>
@@ -241,17 +245,15 @@
       </template>
       <div class="w-full flex flex-col gap-8">
         <p>Are you sure you want to logout?</p>
-        <div class="flex flex-row gap-4">
+        <div class="w-full flex flex-row justify-end gap-4">
           <UnUiButton
             label="Cancel"
             size="xl"
-            block
             @click="closeModal" />
           <UnUiButton
             label="Logout"
             size="xl"
             color="red"
-            block
             @click="useLogout()" />
         </div>
       </div>

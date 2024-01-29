@@ -1,7 +1,6 @@
 <script setup lang="ts">
   import { useTimeAgo } from '@vueuse/core';
   import { useClipboard } from '@vueuse/core';
-  const { copy, copied } = useClipboard();
 
   const { $trpc } = useNuxtApp();
 
@@ -49,18 +48,7 @@
         <span class="text-sm text-base-11 font-semibold uppercase"> Code </span>
         <div class="flex flex-row gap-4">
           <span class="font-mono">{{ props.inviteData.inviteToken }}</span>
-          <button
-            v-if="props.inviteData.inviteToken"
-            class="flex flex-row items-center justify-center gap-1 rounded bg-base-3 p-1 text-xs hover:bg-base-4"
-            @click="copy(props.inviteData.inviteToken)">
-            <!-- by default, `copied` will be reset in 1.5s -->
-            <UnUiIcon
-              name="i-ph-clipboard"
-              size="16"
-              :class="copied ? 'text-green-500' : 'text-base-11'" />
-            <span v-if="!copied">Copy</span>
-            <span v-else>Copied!</span>
-          </button>
+          <UnUiCopy :text="props.inviteData.inviteToken" />
         </div>
       </div>
       <div

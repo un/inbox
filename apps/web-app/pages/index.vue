@@ -1,11 +1,11 @@
 <script setup lang="ts">
   import { startAuthentication } from '@simplewebauthn/browser';
+  import type { PublicKeyCredentialRequestOptionsJSON } from '@simplewebauthn/typescript-types';
   definePageMeta({ guest: true });
   const turnstileToken = ref();
   const errorMessage = ref(false);
   const passkeyLocation = ref('');
   const immediatePasskeyPrompt = ref(false);
-  const passkeyLocationDialogOpen = ref(false);
 
   const turnstileEnabled = useRuntimeConfig().public.turnstileEnabled;
   if (!turnstileEnabled) {
@@ -54,7 +54,7 @@
     // }
     // immediatePasskeyPrompt.value && promptForPasskey();
 
-    promptForPasskey();
+    await promptForPasskey();
   }
 
   async function promptForPasskey() {
@@ -64,13 +64,13 @@
       timeoutId = null;
     }
 
-    const { data } = await useFetch('/api/auth/passkey-options', {
-      transform: (value) => {
-        // @ts-ignore - not sure why this errors
-        return JSON.parse(value);
-      }
+    const data = await $fetch<{
+      options?: PublicKeyCredentialRequestOptionsJSON;
+    }>('/api/auth/passkey-options', {
+      parseResponse: JSON.parse
     });
-    if (!data.value.options) {
+
+    if (!data?.options) {
       toast.add({
         title: 'Server error',
         description:
@@ -81,9 +81,35 @@
       });
       return;
     }
-    const passkeyData = await startAuthentication(data.value.options);
+    try {
+      const passkeyData = await startAuthentication(data.options);
 
-    if (!passkeyData) {
+      if (!passkeyData) {
+        throw new Error('No passkey data returned');
+      }
+
+      const formData = new FormData();
+      formData.append('action', 'authenticate');
+      formData.append('data', JSON.stringify(passkeyData));
+      const res = await fetch('/api/auth/callback/passkey', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          action: 'authenticate',
+          data: passkeyData
+        }),
+        redirect: 'manual'
+      });
+
+      // we know that the passkey is correct if we get an opaque redirect
+      if (res.type !== 'opaqueredirect') {
+        throw new Error('Passkey error');
+      }
+
+      window.location.assign('/redirect');
+    } catch (e) {
       toast.add({
         title: 'Passkey error',
         description:
@@ -92,19 +118,7 @@
         timeout: 5000,
         icon: 'i-ph-warning-circle'
       });
-      return;
     }
-
-    const formData = new FormData();
-    formData.append('action', 'authenticate');
-    formData.append('data', JSON.stringify(passkeyData));
-    await useFetch('/api/auth/callback/passkey', {
-      method: 'post',
-      body: {
-        action: 'authenticate',
-        data: passkeyData
-      }
-    });
   }
 </script>
 

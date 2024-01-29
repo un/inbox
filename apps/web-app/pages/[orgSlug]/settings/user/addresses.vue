@@ -396,16 +396,7 @@
             :loading="pending"
             class="w-full overflow-x-scroll">
             <template #address-data="{ row }">
-              <UnUiTooltip text="Copy to clipboard">
-                <button
-                  class="flex flex-row cursor-pointer items-center gap-2"
-                  @click="copy(row.address)">
-                  <span class="truncate">{{ row.address }}</span>
-                  <UnUiIcon
-                    name="i-ph-clipboard"
-                    size="20" />
-                </button>
-              </UnUiTooltip>
+              <UnUiCopy :text="row.address" />
             </template>
             <template #sendName-data="{ row }">
               <UnUiTooltip text="Click to edit">
@@ -420,19 +411,7 @@
               </UnUiTooltip>
             </template>
             <template #forwarding-data="{ row }">
-              <UnUiTooltip
-                :text="`${row.forwarding.address} - Copy to clipboard`">
-                <button
-                  class="flex flex-row cursor-pointer items-center gap-2"
-                  @click="copy(row.address)">
-                  <span class="uppercase">
-                    {{ row.forwarding.truncated }}...
-                  </span>
-                  <UnUiIcon
-                    name="i-ph-clipboard"
-                    size="20" />
-                </button>
-              </UnUiTooltip>
+              <UnUiCopy :text="row.forwarding.address" />
             </template>
             <template #org-data="{ row }">
               <div class="flex flex-row items-center gap-2">
