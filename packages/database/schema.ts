@@ -41,7 +41,7 @@ const nanoIdLong = customType<{ data: string; notNull: true }>({
     return `varchar(${nanoIdLongLength})`;
   }
 });
-const avatarId = avatarId<{ data: string }>({
+const avatarId = customType<{ data: string }>({
   dataType() {
     return `varchar(${nanoIdLongLength})`;
   }
