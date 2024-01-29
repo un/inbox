@@ -36,11 +36,13 @@
 
   interface TableRow {
     publicId: string;
+    avatarId: string;
     name: string;
     description: string | null;
     color: string | null;
     members: ({
       publicId: string;
+      avatarId: string;
       firstName: string | null;
       lastName: string | null;
       handle: string | null;
@@ -56,6 +58,7 @@
         console.log({ members: group.members });
         tableRows.value.push({
           publicId: group.publicId,
+          avatarId: group.avatarId || '',
           name: group.name,
           description: group.description,
           color: group.color,
@@ -110,6 +113,7 @@
           <div class="flex flex-row items-center gap-2">
             <UnUiAvatar
               :public-id="row.publicId"
+              :avatar-id="row.avatarId"
               :type="'user'"
               :alt="row.name ? row.name : ''"
               :color="row.color ? row.color : ''"
@@ -125,6 +129,7 @@
               v-for="member in row.members"
               :key="member.publicId"
               :public-id="member.publicId"
+              :avatar-id="member.avatarId"
               :type="'user'"
               :alt="
                 member.firstName && member.lastName

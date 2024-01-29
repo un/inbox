@@ -1,4 +1,12 @@
-import { orgs, userProfiles, orgMembers } from '@uninbox/database/schema';
+import {
+  orgs,
+  userProfiles,
+  orgMembers,
+  userGroupMembers,
+  userGroups,
+  contacts
+} from '@uninbox/database/schema';
+import { nanoIdLong } from '@uninbox/utils';
 import { eq } from '@uninbox/database/orm';
 import { db } from '@uninbox/database';
 import sharp from 'sharp';
@@ -14,6 +22,8 @@ export default defineEventHandler(async (event) => {
     { name: 'group', value: 'g' }
   ];
   const formInputs = await readMultipartFormData(event);
+
+  const avatarId = nanoIdLong();
 
   const typeInput = formInputs
     .find((input) => input.name === 'type')
@@ -42,7 +52,8 @@ export default defineEventHandler(async (event) => {
       where: eq(userProfiles.publicId, publicId),
       columns: {
         id: true,
-        userId: true
+        userId: true,
+        avatarId: true
       }
     });
     if (!profileResponse) {
@@ -58,7 +69,8 @@ export default defineEventHandler(async (event) => {
       where: eq(orgs.publicId, publicId),
       columns: {
         id: true,
-        slug: true
+        slug: true,
+        avatarId: true
       },
       with: {
         members: {
@@ -84,12 +96,12 @@ export default defineEventHandler(async (event) => {
   } else if (typeObject.name === 'contact') {
     setResponseStatus(event, 400);
     return send(event, 'Not implemented');
-    // Validate server key against request headers
   } else if (typeObject.name === 'group') {
     const groupResponse = await db.query.userGroups.findFirst({
       where: eq(orgs.publicId, publicId),
       columns: {
-        id: true
+        id: true,
+        avatarId: true
       },
       with: {
         org: {
@@ -152,12 +164,42 @@ export default defineEventHandler(async (event) => {
       .toBuffer();
     const command = new PutObjectCommand({
       Bucket: 'avatars',
-      Key: `${typeObject.value}/${publicId}/${size.name}`,
+      Key: `${typeObject.value}_${avatarId}/${size.name}`,
       Body: resizedImage,
       ContentType: file.type
     });
     await s3Client.send(command);
   }
 
-  return send(event, 'ok');
+  if (typeObject.name === 'user') {
+    await db
+      .update(userProfiles)
+      .set({
+        avatarId: avatarId
+      })
+      .where(eq(userProfiles.publicId, publicId));
+  } else if (typeObject.name === 'org') {
+    await db
+      .update(orgs)
+      .set({
+        avatarId: avatarId
+      })
+      .where(eq(orgs.publicId, publicId));
+  } else if (typeObject.name === 'group') {
+    await db
+      .update(userGroups)
+      .set({
+        avatarId: avatarId
+      })
+      .where(eq(userGroups.publicId, publicId));
+  } else if (typeObject.name === 'contact') {
+    await db
+      .update(contacts)
+      .set({
+        avatarId: avatarId
+      })
+      .where(eq(contacts.publicId, publicId));
+  }
+
+  return send(event, { avatarId: avatarId });
 });

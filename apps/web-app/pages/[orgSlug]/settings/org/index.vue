@@ -24,10 +24,10 @@
   watch(initialOrgProfile, (newVal) => {
     if (newVal && newVal.orgProfile) {
       orgNameValue.value = newVal.orgProfile.name;
-      newVal.orgProfile.publicId
+      newVal.orgProfile.avatarId
         ? ((imageUrl.value = useUtils().generateAvatarUrl(
             'org',
-            newVal.orgProfile.publicId,
+            newVal.orgProfile.avatarId,
             '5xl'
           )) as string)
         : null;
@@ -75,10 +75,10 @@
       credentials: 'include'
     });
 
-    if (initialOrgProfile.value?.orgProfile.publicId) {
+    if (initialOrgProfile.value?.orgProfile.avatarId) {
       imageUrl.value = useUtils().generateAvatarUrl(
         'org',
-        initialOrgProfile.value?.orgProfile.publicId,
+        initialOrgProfile.value?.orgProfile.avatarId,
         '5xl'
       ) as string;
     }

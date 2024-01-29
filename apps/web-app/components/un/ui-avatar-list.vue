@@ -11,6 +11,7 @@
 
   type AuthorEntry = {
     publicId: string;
+    avatarId: string;
     name: string;
     type: 'user' | 'org' | 'group' | 'contact';
     color: string;
@@ -75,6 +76,7 @@
       :key="avatar.publicId">
       <UnUiAvatar
         :public-id="avatar.publicId"
+        :avatar-id="avatar.avatarId"
         :name="avatar.name"
         :type="avatar.type"
         :size="props.size as AvatarSize"
@@ -101,6 +103,7 @@
                 :key="avatar.publicId">
                 <UnUiAvatar
                   :public-id="avatar.publicId"
+                  :avatar-id="avatar.avatarId"
                   :name="avatar.name"
                   :type="avatar.type"
                   :color="avatar.color"

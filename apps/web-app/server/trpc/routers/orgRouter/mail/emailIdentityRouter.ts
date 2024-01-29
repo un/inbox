@@ -17,7 +17,12 @@ import {
   emailIdentities,
   userGroupMembers
 } from '@uninbox/database/schema';
-import { nanoId, nanoIdLength, nanoIdToken, nanoIdSchema } from '@uninbox/utils';
+import {
+  nanoId,
+  nanoIdLength,
+  nanoIdToken,
+  nanoIdSchema
+} from '@uninbox/utils';
 import dns from 'dns';
 import { verifyDns } from '~/server/utils/verifyDns';
 import { isUserInOrg } from '~/server/utils/dbQueries';
@@ -90,12 +95,8 @@ export const emailIdentityRouter = router({
         domainPublicId: nanoIdSchema,
         sendName: z.string().min(3).max(255),
         catchAll: z.boolean().optional().default(false),
-        routeToUsersOrgMemberPublicIds: z
-          .array(nanoIdSchema)
-          .optional(),
-        routeToGroupsPublicIds: z
-          .array(nanoIdSchema)
-          .optional()
+        routeToUsersOrgMemberPublicIds: z.array(nanoIdSchema).optional(),
+        routeToGroupsPublicIds: z.array(nanoIdSchema).optional()
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -313,6 +314,7 @@ export const emailIdentityRouter = router({
                     group: {
                       columns: {
                         publicId: true,
+                        avatarId: true,
                         name: true,
                         description: true,
                         color: true
@@ -323,6 +325,7 @@ export const emailIdentityRouter = router({
                         profile: {
                           columns: {
                             publicId: true,
+                            avatarId: true,
                             firstName: true,
                             lastName: true,
                             handle: true,

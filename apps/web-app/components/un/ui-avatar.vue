@@ -7,6 +7,7 @@
       ? Props & {
           color?: string;
           publicId: string;
+          avatarId: string;
           type: 'user' | 'org' | 'group' | 'contact';
           avatarUrl?: string | undefined;
         }
@@ -24,6 +25,11 @@
         required: false,
         default: null
       },
+      avatarId: {
+        type: String,
+        required: false,
+        default: null
+      },
       type: {
         type: String,
         required: false,
@@ -36,12 +42,23 @@
     },
     setup(props: any) {
       const avatarUrl = computed(() => {
-        const size: string = props.size;
+        const size:
+          | '3xs'
+          | '2xs'
+          | 'xs'
+          | 'sm'
+          | 'md'
+          | 'lg'
+          | 'xl'
+          | '2xl'
+          | '3xl'
+          | '4xl'
+          | '5xl'
+          | undefined = props.size;
         return props.src
           ? props.src
-          : props.publicId
-            ? //@ts-ignore
-              useUtils().generateAvatarUrl(props.type, props.publicId, size)
+          : props.avatarId
+            ? useUtils().generateAvatarUrl(props.type, props.avatarId, size)
             : null;
       });
 

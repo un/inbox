@@ -27,6 +27,7 @@ export const contactsRouter = router({
         where: and(eq(contacts.orgId, orgId), eq(contacts.type, 'person')),
         columns: {
           publicId: true,
+          avatarId:true,
           emailUsername: true,
           emailDomain: true,
           name: true,

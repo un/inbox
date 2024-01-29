@@ -1,7 +1,7 @@
 import { cva, type VariantProps } from 'class-variance-authority';
 function generateAvatarUrl(
   type: 'user' | 'org' | 'group' | 'contact',
-  publicId: string,
+  avatarId: string,
   size:
     | '3xs'
     | '2xs'
@@ -29,9 +29,9 @@ function generateAvatarUrl(
   //@ts-ignore
   const storageBaseUrl = useRuntimeConfig().public.storageUrl;
 
-  return `${storageBaseUrl}/avatar/${typeObject.value}/${publicId}/${
+  return `${storageBaseUrl}/avatar/${typeObject.value}_${avatarId}/${
     size ? size : '5xl'
-  }?${new Date().getTime()}`;
+  }`;
 }
 
 export const useUtils = () => {
