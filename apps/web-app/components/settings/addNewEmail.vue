@@ -69,6 +69,7 @@
     );
   interface OrgUserGroups {
     publicId: String;
+    avatarId: String;
     name: String;
     description: String | null;
     color: String | null;
@@ -80,6 +81,7 @@
       for (const group of newOrgUserGroupsData.groups) {
         orgUserGroups.value.push({
           publicId: group.publicId,
+          avatarId: group.avatarId || '',
           name: group.name,
           description: group.description,
           color: group.color
@@ -98,6 +100,7 @@
     );
   interface OrgMembers {
     publicId: String;
+    avatarId: String;
     name: String;
     handle: String;
     title: String | null;
@@ -110,6 +113,7 @@
       for (const member of newOrgMembersData.members) {
         orgMembers.value.push({
           publicId: member.publicId,
+          avatarId: member.profile?.avatarId || '',
           name:
             member.profile?.firstName + ' ' + member.profile?.lastName || '',
           handle: member.profile?.handle || '',
@@ -365,6 +369,7 @@
                       <UnUiAvatar
                         :alt="group.name.toString()"
                         :public-id="group.publicId?.toString()"
+                        :avatar-id="group.avatarId?.toString()"
                         :type="'group'"
                         :color="group.color as UiColor"
                         size="3xs" />
@@ -376,6 +381,7 @@
                 <template #option="{ option }">
                   <UnUiAvatar
                     :public-id="option.publicId"
+                    :avatar-id="option.avatarId"
                     :type="'group'"
                     :alt="option.name"
                     :color="option.color as UiColor"
@@ -417,6 +423,7 @@
                       <UnUiAvatar
                         :alt="member.name.toString()"
                         :public-id="member.publicId?.toString()"
+                        :avatar-id="member.avatarId?.toString()"
                         :type="'user'"
                         size="3xs" />
                       <span>{{ member.name }}</span>
@@ -427,6 +434,7 @@
                 <template #option="{ option }">
                   <UnUiAvatar
                     :public-id="option.publicId"
+                    :avatar-id="option.avatarId"
                     :type="'user'"
                     :alt="option.name"
                     size="xs" />

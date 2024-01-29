@@ -124,6 +124,7 @@
         <div class="flex flex-col items-center gap-2">
           <UnUiAvatar
             :public-id="inviteQuery?.orgPublicId || ''"
+            :avatar-id="inviteQuery?.orgAvatarId || ''"
             :type="'org'"
             :alt="inviteQuery?.orgName"
             size="3xl" />

@@ -114,6 +114,7 @@
     slot: 'org';
     label: string;
     publicId: string;
+    avatarId: string | null;
     slug: string;
     click: () => void;
   }
@@ -128,6 +129,7 @@
           label: org.org.name,
           //@ts-ignore
           publicId: org.org.publicId,
+          avatarId: org.org.avatarId,
           slug: org.org.slug,
           click: () => {
             navigateTo(`/${org.org.slug}`);
@@ -293,6 +295,7 @@
         <div class="w-full flex flex-row items-center gap-2 overflow-hidden">
           <UnUiAvatar
             :public-id="currentOrgProfile?.publicId || ''"
+            :avatar-id="currentOrgProfile?.avatarId || ''"
             :type="'org'"
             :alt="currentOrgProfile?.name"
             size="xs" />
@@ -306,6 +309,7 @@
           <div class="w-full flex flex-row items-center gap-2 overflow-hidden">
             <UnUiAvatar
               :public-id="userProfile?.profile?.publicId || ''"
+              :avatar-id="userProfile?.profile?.avatarId || ''"
               :type="'user'"
               :alt="
                 userProfile?.profile?.firstName +
@@ -324,6 +328,7 @@
         <div class="max-w-full flex flex-row items-center gap-2">
           <UnUiAvatar
             :public-id="item.publicId"
+            :avatar-id="item.avatarId"
             :type="'org'"
             :alt="item.label"
             size="sm" />

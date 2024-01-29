@@ -86,6 +86,7 @@
               <div class="flex flex-row items-center gap-4">
                 <UnUiAvatar
                   :public-id="destination.group?.publicId || ''"
+                  :avatar-id="destination.group?.avatarId || ''"
                   :type="'group'"
                   :alt="destination.group?.name"
                   :color="destination.group?.color as UiColor"
@@ -108,6 +109,7 @@
               <div class="flex flex-row items-center gap-4">
                 <UnUiAvatar
                   :public-id="destination.orgMember?.profile?.publicId || ''"
+                  :avatar-id="destination.orgMember?.profile?.avatarId || ''"
                   :type="'user'"
                   :alt="
                     destination.orgMember?.profile?.firstName +

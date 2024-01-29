@@ -41,11 +41,13 @@
         titleValue.value = newVal.profile.title || '';
         blurbValue.value = newVal.profile.blurb || '';
 
-        imageUrl.value = useUtils().generateAvatarUrl(
-          'user',
-          newVal.profile.publicId,
-          '5xl'
-        );
+        if (newVal.profile.avatarId) {
+          imageUrl.value = useUtils().generateAvatarUrl(
+            'user',
+            newVal.profile.avatarId,
+            '5xl'
+          );
+        }
       }
     }
     // ,
@@ -81,16 +83,22 @@
       'publicId',
       initialUserProfile.value?.profile.publicId || ''
     );
+    formData.append(
+      'avatarId',
+      initialUserProfile.value?.profile.avatarId || ''
+    );
     await useFetch(`${storageUrl}/api/avatar`, {
       method: 'post',
       body: formData,
       credentials: 'include'
     });
-    imageUrl.value = useUtils().generateAvatarUrl(
-      'user',
-      initialUserProfile.value?.profile.publicId || '',
-      '5xl'
-    );
+    if (initialUserProfile.value?.profile.avatarId) {
+      imageUrl.value = useUtils().generateAvatarUrl(
+        'user',
+        initialUserProfile.value?.profile.avatarId || '',
+        '5xl'
+      );
+    }
 
     uploadLoading.value = false;
   });

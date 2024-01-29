@@ -21,7 +21,12 @@ import {
   userProfilesToOrgs,
   users
 } from '@uninbox/database/schema';
-import { nanoId, nanoIdLength, nanoIdToken, nanoIdSchema } from '@uninbox/utils';
+import {
+  nanoId,
+  nanoIdLength,
+  nanoIdToken,
+  nanoIdSchema
+} from '@uninbox/utils';
 import { refreshOrgSlugCache } from '~/server/utils/orgSlug';
 import { isUserAdminOfOrg } from '~/server/utils/user';
 import { TRPCError } from '@trpc/server';
@@ -228,6 +233,7 @@ export const invitesRouter = router({
               profile: {
                 columns: {
                   publicId: true,
+                  avatarId: true,
                   firstName: true,
                   lastName: true
                 }
@@ -239,6 +245,7 @@ export const invitesRouter = router({
               profile: {
                 columns: {
                   publicId: true,
+                  avatarId: true,
                   firstName: true,
                   lastName: true
                 }
@@ -276,6 +283,7 @@ export const invitesRouter = router({
           org: {
             columns: {
               publicId: true,
+              avatarId: true,
               name: true,
               slug: true
             }
@@ -308,6 +316,7 @@ export const invitesRouter = router({
       return {
         valid: true,
         orgPublicId: queryInvitesResponse.org.publicId,
+        orgAvatarId: queryInvitesResponse.org.avatarId,
         orgName: queryInvitesResponse.org.name,
         orgSlug: queryInvitesResponse.org.slug,
         loggedIn: userLoggedIn

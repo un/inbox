@@ -21,6 +21,7 @@
     type: 'user';
     icon: 'i-ph-user';
     publicId: String;
+    avatarId: String;
     profilePublicId: String;
     name: String;
     handle: String;
@@ -33,6 +34,7 @@
     type: 'group';
     icon: 'i-ph-users-three';
     publicId: String;
+    avatarId: String;
     name: String;
     description: String | null;
     color: String | null;
@@ -42,6 +44,7 @@
     type: 'contact';
     icon: 'i-ph-address-book';
     publicId: String;
+    avatarId: String;
     name: String;
     address: String;
     keywords: String;
@@ -156,6 +159,7 @@
         icon: 'i-ph-user',
         publicId: ownOrgMemberData.publicId,
         profilePublicId: ownOrgMemberData.profile.publicId,
+        avatarId: ownOrgMemberData.profile.avatarId || '',
         name:
           ownOrgMemberData.profile?.firstName +
             ' ' +
@@ -186,6 +190,7 @@
           icon: 'i-ph-user',
           publicId: member.publicId,
           profilePublicId: member.profile.publicId,
+          avatarId: member.profile.avatarId || '',
           name:
             member.profile?.firstName + ' ' + member.profile?.lastName || '',
           handle: member.profile?.handle || '',
@@ -211,6 +216,7 @@
           type: 'group',
           icon: 'i-ph-users-three',
           publicId: group.publicId,
+          avatarId: group.avatarId || '',
           name: group.name,
           description: group.description,
           color: group.color,
@@ -228,6 +234,7 @@
           type: 'contact',
           icon: 'i-ph-address-book',
           publicId: contact.publicId,
+          avatarId: contact.avatarId || '',
           name:
             contact.setName ||
             contact.name ||
@@ -515,6 +522,7 @@
                       class="flex flex-row items-center gap-1">
                       <UnUiAvatar
                         :public-id="participant.publicId?.toString()"
+                        :avatar-id="participant.avatarId?.toString()"
                         :type="'contact'"
                         :alt="participant.name.toString()"
                         size="xs" />
@@ -527,6 +535,7 @@
                       class="flex flex-row items-center gap-1">
                       <UnUiAvatar
                         :public-id="participant.profilePublicId.toString()"
+                        :avatar-id="participant.avatarId.toString()"
                         :type="'user'"
                         :alt="participant.name.toString()"
                         size="xs" />
@@ -539,6 +548,7 @@
                       class="flex flex-row items-center gap-1">
                       <UnUiAvatar
                         :public-id="participant.publicId?.toString()"
+                        :avatar-id="participant.avatarId?.toString()"
                         :type="'group'"
                         :alt="participant.name.toString()"
                         :color="participant.color as UiColor"
@@ -572,6 +582,7 @@
                   class="flex flex-row items-center gap-2">
                   <UnUiAvatar
                     :public-id="option.publicId"
+                    :avatar-id="option.avatarId"
                     :type="'contact'"
                     :alt="option.name"
                     size="xs" />
@@ -585,6 +596,7 @@
                   class="flex flex-row items-center gap-2">
                   <UnUiAvatar
                     :public-id="option.profilePublicId"
+                    :avatar-id="option.profileAvatarId"
                     :type="'user'"
                     :alt="option.name"
                     size="xs" />
@@ -612,6 +624,7 @@
                   class="flex flex-row items-center gap-2">
                   <UnUiAvatar
                     :public-id="option.publicId"
+                    :avatar-id="option.avatarId"
                     :type="'group'"
                     :alt="option.name"
                     :color="option.color.toString()"

@@ -28,6 +28,10 @@
     return props.inviteData.invitedByUser.orgMemberships[0].profile.publicId;
   });
 
+  const inviterAvatarId = computed(() => {
+    return props.inviteData.invitedByUser.orgMemberships[0].profile.avatarId;
+  });
+
   const inviteeName = computed(() => {
     return props.inviteData.invitedUser
       ? props.inviteData.invitedUser.orgMemberships[0].profile.firstName +
@@ -38,6 +42,12 @@
   const inviteePublicId = computed(() => {
     return props.inviteData.invitedUser
       ? props.inviteData.invitedUser.orgMemberships[0].profile.PublicId
+      : null;
+  });
+
+  const inviteeAvatarId = computed(() => {
+    return props.inviteData.invitedUser
+      ? props.inviteData.invitedUser.orgMemberships[0].profile.AvatarId
       : null;
   });
 </script>
@@ -93,6 +103,7 @@
             <div class="flex flex-row items-center gap-2">
               <UnUiAvatar
                 :public-id="inviteePublicId"
+                :avatar-id="inviteeAvatarId"
                 :type="'user'"
                 :size="'md'"
                 :alt="inviteeName" />
@@ -125,6 +136,7 @@
             <div class="flex flex-row items-center gap-2">
               <UnUiAvatar
                 :public-id="inviterPublicId"
+                :avatar-id="inviterAvatarId"
                 :type="'user'"
                 :size="'md'"
                 :alt="inviterName" />
