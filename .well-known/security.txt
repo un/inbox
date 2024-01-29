@@ -1,0 +1,4 @@
+Contact: security@UnInbox.io
+Preferred-Languages: en
+Canonical: https://uninbox.com/.well-known/security.txt
+Policy: https://github.com/uninbox/UnInbox/security/policy
