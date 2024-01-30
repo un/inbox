@@ -1074,7 +1074,7 @@ export const convos = mysqlTable(
     id: serial('id').primaryKey(),
     orgId: foreignKey('org_id').notNull(),
     publicId: nanoId('public_id').notNull(),
-    lastUpdatedAt: timestamp('last_updated_at'),
+    lastUpdatedAt: timestamp('last_updated_at').notNull(),
     createdAt: timestamp('created_at')
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull()
