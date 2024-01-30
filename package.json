@@ -18,7 +18,7 @@
     "db:check": "dotenv -e .env.local -- turbo run db:generate",
     "db:drop": "dotenv -e .env.local -- turbo run db:drop",
     "dev:r": "infisical run --env=local -- turbo run dev",
-    "db:push:r": "infisical run --env=local -- turbo run db:push",
+    "db:push:r": "pnpm --dir packages/database db:push:r",
     "db:studio:r": "infisical run --env=local -- turbo run db:studio",
     "db:generate:r": "infisical run --env=local -- turbo run db:generate",
     "db:up:r": "infisical run --env=local -- turbo run db:up",
