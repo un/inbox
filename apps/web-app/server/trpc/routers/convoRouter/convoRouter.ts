@@ -1,7 +1,15 @@
 import { z } from 'zod';
 import { parse } from 'superjson';
 import { router, orgProcedure } from '../../trpc';
-import { type InferInsertModel, and, eq, inArray } from '@uninbox/database/orm';
+import {
+  type InferInsertModel,
+  and,
+  eq,
+  inArray,
+  desc,
+  or,
+  lt
+} from '@uninbox/database/orm';
 import {
   convos,
   convoParticipants,
@@ -12,7 +20,8 @@ import {
   contacts,
   contactGlobalReputations,
   convoEntries,
-  emailIdentitiesAuthorizedUsers
+  emailIdentitiesAuthorizedUsers,
+  userGroupMembers
 } from '@uninbox/database/schema';
 import {
   nanoId,
@@ -374,7 +383,8 @@ export const convoRouter = router({
       const newConvoPublicId = nanoId();
       const insertConvoResponse = await db.insert(convos).values({
         publicId: newConvoPublicId,
-        orgId: orgId
+        orgId: orgId,
+        lastUpdatedAt: new Date()
       });
 
       // create conversationSubject entry
@@ -841,159 +851,172 @@ export const convoRouter = router({
         cursorLastPublicId: z.string().min(3).max(nanoIdLength).optional()
       })
     )
-    .query(async ({ ctx, input }) => {})
+    .query(async ({ ctx, input }) => {}),
 
-  // getUserConvos: orgProcedure
-  //   .input(
-  //     z.object({
-  //       cursorLastUpdatedAt: z.date().optional(),
-  //       cursorLastPublicId: z.string().min(3).max(nanoIdLength).optional()
-  //     })
-  //   )
-  //   .query(async ({ ctx, input }) => {
-  //     const { db, user, org } = ctx;
-  //     const { cursorLastUpdatedAt, cursorLastPublicId } = input;
-  //     const userId = user?.id || 0;
-  //     const orgId = org?.id || 0;
-  //     const inputLastUpdatedAt = cursorLastUpdatedAt
-  //       ? new Date(cursorLastUpdatedAt)
-  //       : new Date();
-  //     const inputLastPublicId = cursorLastPublicId || '';
-  //     // TODO: Add filtering for org based on input.filterOrgPublicId
-  //     const convoQuery = await db.query.convos.findMany({
-  //       orderBy: [desc(convos.lastUpdatedAt), desc(convos.publicId)],
-  //       limit: 15,
-  //       columns: {
-  //         publicId: true,
-  //         lastUpdatedAt: true
-  //       },
-  //       where: and(
-  //         or(
-  //           and(
-  //             eq(convos.lastUpdatedAt, inputLastUpdatedAt),
-  //             lt(convos.publicId, inputLastPublicId)
-  //           ),
-  //           lt(convos.lastUpdatedAt, inputLastUpdatedAt)
-  //         ),
-  //         inArray(
-  //           convos.id,
-  //           db
-  //             .select({ id: convoParticipants.convoId })
-  //             .from(convoParticipants)
-  //             .where(
-  //               or(
-  //                 eq(convoParticipants.userId, userId),
-  //                 inArray(
-  //                   convoParticipants.userGroupId,
-  //                   db
-  //                     .select({ id: userGroupMembers.groupId })
-  //                     .from(userGroupMembers)
-  //                     .where(eq(userGroupMembers.userId, userId))
-  //                 )
-  //               )
-  //             )
-  //         )
-  //       ),
-  //       with: {
-  //         org: {
-  //           columns: {
-  //             publicId: true,
-  //             name: true,
-  //             avatarId: true
-  //           }
-  //         },
-  //         subjects: {
-  //           columns: {
-  //             subject: true
-  //           }
-  //         },
-  //         members: {
-  //           with: {
-  //             orgMember: {
-  //               with: {
-  //                 profile: {
-  //                   columns: {
-  //                     firstName: true,
-  //                     lastName: true,
-  //                     avatarId: true,
-  //                     handle: true
-  //                   }
-  //                 }
-  //               }
-  //             },
-  //             userGroup: {
-  //               columns: {
-  //                 name: true,
-  //                 color: true,
-  //                 avatarId: true
-  //               }
-  //             },
-  //             foreignEmailIdentity: {
-  //               columns: {
-  //                 senderName: true,
-  //                 avatarId: true,
-  //                 username: true,
-  //                 rootDomain: true
-  //               }
-  //             }
-  //           },
-  //           columns: {
-  //             id: true,
-  //             orgMemberId: true,
-  //             userGroupId: true,
-  //             foreignEmailIdentityId: true,
-  //             role: true
-  //           }
-  //         },
-  //         messages: {
-  //           orderBy: [desc(convoMessages.createdAt)],
-  //           limit: 1,
-  //           columns: {
-  //             body: true
-  //           },
-  //           with: {
-  //             author: {
-  //               with: {
-  //                 orgMember: {
-  //                   with: {
-  //                     profile: {
-  //                       columns: {
-  //                         firstName: true,
-  //                         lastName: true,
-  //                         avatarId: true,
-  //                         handle: true
-  //                       }
-  //                     }
-  //                   }
-  //                 },
-  //                 userGroup: {
-  //                   columns: {
-  //                     name: true,
-  //                     color: true,
-  //                     avatarId: true
-  //                   }
-  //                 },
-  //                 foreignEmailIdentity: {
-  //                   columns: {
-  //                     senderName: true,
-  //                     avatarId: true
-  //                   }
-  //                 }
-  //               }
-  //             }
-  //           }
-  //         }
-  //       }
-  //     });
-  //     const newCursorLastUpdatedAt =
-  //       convoQuery[convoQuery.length - 1].lastUpdatedAt;
-  //     const newCursorLastPublicId = convoQuery[convoQuery.length - 1].publicId;
-  //     return {
-  //       data: convoQuery,
-  //       cursor: {
-  //         lastUpdatedAt: newCursorLastUpdatedAt,
-  //         lastPublicId: newCursorLastPublicId
-  //       }
-  //     };
-  //   }),
+  getUserConvos: orgProcedure
+    .input(
+      z.object({
+        cursorLastUpdatedAt: z.date().optional(),
+        cursorLastPublicId: z.string().min(3).max(nanoIdLength).optional()
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const { db, user, org } = ctx;
+      const { cursorLastUpdatedAt, cursorLastPublicId } = input;
+
+      const userId = user.id;
+      const orgId = org.id;
+      const orgMemberId = org.memberId;
+
+      const inputLastUpdatedAt = cursorLastUpdatedAt
+        ? new Date(cursorLastUpdatedAt)
+        : new Date();
+
+      console.log('🔥', { inputLastUpdatedAt });
+      const inputLastPublicId = cursorLastPublicId || '';
+
+      const convoQuery = await db.query.convos.findMany({
+        orderBy: [desc(convos.lastUpdatedAt), desc(convos.publicId)],
+        limit: 15,
+        columns: {
+          publicId: true,
+          lastUpdatedAt: true
+        },
+        where: and(
+          or(
+            and(
+              eq(convos.lastUpdatedAt, inputLastUpdatedAt),
+              lt(convos.publicId, inputLastPublicId)
+            ),
+            lt(convos.lastUpdatedAt, inputLastUpdatedAt)
+          ),
+          inArray(
+            convos.id,
+            db
+              .select({ id: convoParticipants.convoId })
+              .from(convoParticipants)
+              .where(
+                or(
+                  eq(convoParticipants.orgMemberId, orgMemberId),
+                  inArray(
+                    convoParticipants.userGroupId,
+                    db
+                      .select({ id: userGroupMembers.groupId })
+                      .from(userGroupMembers)
+                      .where(eq(userGroupMembers.orgMemberId, orgMemberId))
+                  )
+                )
+              )
+          )
+        ),
+        with: {
+          subjects: {
+            columns: {
+              subject: true
+            }
+          },
+          participants: {
+            columns: {
+              role: true
+            },
+            with: {
+              orgMember: {
+                columns: {},
+                with: {
+                  profile: {
+                    columns: {
+                      firstName: true,
+                      lastName: true,
+                      avatarId: true,
+                      handle: true
+                    }
+                  }
+                }
+              },
+              userGroup: {
+                columns: {
+                  name: true,
+                  color: true,
+                  avatarId: true
+                }
+              },
+              contact: {
+                columns: {
+                  name: true,
+                  avatarId: true,
+                  setName: true,
+                  emailUsername: true,
+                  emailDomain: true,
+                  type: true
+                }
+              }
+            }
+          },
+          entries: {
+            orderBy: [desc(convoEntries.createdAt)],
+            limit: 1,
+            columns: {
+              bodyPlainText: true,
+              type: true
+            },
+            with: {
+              author: {
+                columns: {},
+                with: {
+                  orgMember: {
+                    columns: {},
+                    with: {
+                      profile: {
+                        columns: {
+                          firstName: true,
+                          lastName: true,
+                          avatarId: true,
+                          handle: true
+                        }
+                      }
+                    }
+                  },
+                  userGroup: {
+                    columns: {
+                      name: true,
+                      color: true,
+                      avatarId: true
+                    }
+                  },
+                  contact: {
+                    columns: {
+                      name: true,
+                      avatarId: true,
+                      setName: true,
+                      emailUsername: true,
+                      emailDomain: true,
+                      type: true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      });
+
+      if (!convoQuery.length) {
+        return {
+          data: [],
+          cursor: null
+        };
+      }
+
+      const newCursorLastUpdatedAt =
+        convoQuery[convoQuery.length - 1].lastUpdatedAt;
+      const newCursorLastPublicId = convoQuery[convoQuery.length - 1].publicId;
+
+      return {
+        data: convoQuery,
+        cursor: {
+          lastUpdatedAt: newCursorLastUpdatedAt,
+          lastPublicId: newCursorLastPublicId
+        }
+      };
+    })
 });
