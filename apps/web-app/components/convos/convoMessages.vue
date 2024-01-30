@@ -16,11 +16,12 @@
   const props = defineProps<Props>();
 
   const { data: convoEntries } =
-    await $trpc.convos.entries.getConvoEntries.useQuery(
+    await $trpc.convos.entries.getConvoEntries.useLazyQuery(
       {
         convoPublicId: props.convoPublicId
       },
-      { server: false }
+      // { server: false }
+      { server: false, queryKey: `convoEntries-${props.convoPublicId}` }
     );
 
   watch(convoEntries, () => {
