@@ -7,30 +7,26 @@
   type UserConvosDataType = PromiseType<
     ReturnType<typeof $trpc.convos.getUserConvos.query>
   >['data'];
-  // const convoStore = useConvoStore();
-  // if (process.client && convoStore.convos.length === 0) {
-  //   await convoStore.getInitialConvos();
-  // }
-  // console.log(convoStore.convos.length);
 
   const orgSlug = useRoute().params.orgSlug as string;
+  const infiniteContainer = ref<HTMLElement | null>(null);
 
   const convoCursor = ref({
-    lastUpdatedAt: null as Date | null,
-    lastPublicId: null as string | null
+    cursorLastUpdatedAt: null as Date | null,
+    cursorLastPublicId: null as string | null
   });
   const userHasMoreConvos = ref(true);
+  const pauseLoading = ref(false);
   const convos = ref<{}[]>([]);
   // const convos = ref<UserConvosDataType[]>([]);
 
-  const userConvoQueryParams = computed(() => {
-    if (!convoCursor.value.lastUpdatedAt || !convoCursor.value.lastPublicId)
-      return {};
-    return {
-      cursorLastUpdatedAt: convoCursor.value.lastUpdatedAt,
-      cursorLastPublicId: convoCursor.value.lastPublicId
-    };
-  });
+  type UserConvoQueryParams =
+    | {
+        cursorLastUpdatedAt: Date;
+        cursorLastPublicId: string;
+      }
+    | {};
+  const userConvoQueryParams = ref<UserConvoQueryParams>({});
   const userConvoQueryPending = computed(() => {
     return userConvosStatus.value === 'idle';
   });
@@ -41,13 +37,13 @@
   const {
     data: userConvosData,
     status: userConvosStatus,
-    execute: userConvosFetch
-  } = await $trpc.convos.getUserConvos.useLazyQuery(
-    userConvoQueryParams.value,
-    {
-      server: false
-    }
-  );
+    execute: getUserConvos
+  } = await $trpc.convos.getUserConvos.useLazyQuery(userConvoQueryParams, {
+    server: false,
+    queryKey: `userConvos-${orgSlug}`,
+    immediate: false,
+    watch: [userConvoQueryParams]
+  });
 
   watch(
     userConvosData,
@@ -58,8 +54,8 @@
         return;
       }
       convos.value.push(...newVal.data);
-      convoCursor.value.lastUpdatedAt = newVal.cursor.lastUpdatedAt;
-      convoCursor.value.lastPublicId = newVal.cursor.lastPublicId;
+      convoCursor.value.cursorLastUpdatedAt = newVal.cursor.lastUpdatedAt;
+      convoCursor.value.cursorLastPublicId = newVal.cursor.lastPublicId;
     },
     {
       immediate: true,
@@ -67,16 +63,28 @@
     }
   );
 
-  // useInfiniteScroll(
-  //   containerProps.ref,
-  //   () => {
-  //     getNextConvos();
-  //   },
-  //   { distance: 300, canLoadMore: () => userHasMoreConvos.value }
-  // );
+  useInfiniteScroll(
+    infiniteContainer,
+    async () => {
+      if (pauseLoading.value) return;
+      if (!userHasMoreConvos.value) return;
+      if (userConvosStatus.value === 'pending') return;
+      pauseLoading.value = true;
+      userConvoQueryParams.value = {
+        cursorLastUpdatedAt: convoCursor.value.cursorLastUpdatedAt,
+        cursorLastPublicId: convoCursor.value.cursorLastPublicId
+      };
+      pauseLoading.value = false;
+    },
+    { distance: 100, canLoadMore: () => userHasMoreConvos.value }
+  );
+
+  onMounted(() => {
+    if (convos.value.length === 0) getUserConvos();
+  });
 </script>
 <template>
-  <div class="h-full max-h-full max-w-full w-full overflow-y-scroll">
+  <div class="h-full max-h-full max-w-full w-full overflow-hidden">
     <div
       v-if="userConvoQueryPending"
       class="w-full flex flex-row justify-center gap-4 rounded-xl rounded-tl-2xl bg-base-3 p-8">
@@ -87,7 +95,7 @@
     </div>
     <div
       v-if="!userConvoQueryPending"
-      class="mb-[48px] flex flex-col items-start gap-4">
+      class="mb-[48px] max-h-full flex flex-col items-start gap-4 overflow-hidden">
       <div
         v-if="!userHasConvos"
         class="w-full flex flex-row justify-center gap-4 rounded-xl rounded-tl-2xl bg-base-3 p-8">
@@ -98,7 +106,8 @@
       </div>
       <div
         v-if="userHasConvos"
-        class="max-w-full">
+        ref="infiniteContainer"
+        class="h-full max-h-full max-w-full w-full overflow-scroll">
         <DynamicScroller
           :items="convos"
           key-field="publicId"
@@ -115,10 +124,14 @@
             </DynamicScrollerItem>
           </template>
         </DynamicScroller>
-        <div>convos exist</div>
-        <div>{{ convos.length }}</div>
-        <div>{{ convoCursor }}</div>
-        <div>{{ convos[0] }}</div>
+        <div
+          v-if="userHasMoreConvos && pauseLoading"
+          class="w-full flex flex-row justify-center gap-4 rounded-xl rounded-tl-2xl bg-base-3 p-8">
+          <UnUiIcon
+            name="i-svg-spinners:3-dots-fade"
+            size="24" />
+          <span>Loading more conversations</span>
+        </div>
       </div>
     </div>
   </div>
