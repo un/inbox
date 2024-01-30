@@ -32,19 +32,23 @@
 
   const orgSlug = useRoute().params.orgSlug as string;
   const convoPublicId = useRoute().params.id as string;
-  const { data: convoDetails, pending: convoDetailsPending } =
+  const { data: convoDetails, status: convoDetailsStatus } =
     await $trpc.convos.getConvo.useLazyQuery(
       {
         convoPublicId: convoPublicId
       },
-      { server: false }
+      { server: false, queryKey: `convoDetails-${convoPublicId}` }
     );
 
-  watch(convoDetailsPending, () => {
-    if (!convoDetailsPending.value) {
-      if (!convoDetails.value?.data) navigateTo(`/${orgSlug}/convo/404`);
-      if (!convoDetails.value?.data?.participants)
+  watch(convoDetails, () => {
+    if (convoDetailsStatus.value === 'idle') return;
+    if (convoDetailsStatus.value === 'success') {
+      if (!convoDetails.value?.data) {
         navigateTo(`/${orgSlug}/convo/404`);
+      }
+      if (!convoDetails.value?.data?.participants) {
+        navigateTo(`/${orgSlug}/convo/404`);
+      }
     }
 
     createDate.value = convoDetails.value?.data?.createdAt || new Date();
