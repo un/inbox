@@ -746,6 +746,7 @@ export const convoRouter = router({
                 with: {
                   profile: {
                     columns: {
+                      avatarId: true,
                       firstName: true,
                       lastName: true,
                       publicId: true,
@@ -757,6 +758,7 @@ export const convoRouter = router({
               },
               userGroup: {
                 columns: {
+                  avatarId: true,
                   id: true,
                   name: true,
                   color: true,
@@ -773,6 +775,7 @@ export const convoRouter = router({
               },
               contact: {
                 columns: {
+                  avatarId: true,
                   publicId: true,
                   name: true,
                   emailUsername: true,
@@ -917,14 +920,16 @@ export const convoRouter = router({
           },
           participants: {
             columns: {
-              role: true
+              role: true,
+              publicId: true
             },
             with: {
               orgMember: {
-                columns: {},
+                columns: { publicId: true },
                 with: {
                   profile: {
                     columns: {
+                      publicId: true,
                       firstName: true,
                       lastName: true,
                       avatarId: true,
@@ -935,6 +940,7 @@ export const convoRouter = router({
               },
               userGroup: {
                 columns: {
+                  publicId: true,
                   name: true,
                   color: true,
                   avatarId: true
@@ -942,6 +948,7 @@ export const convoRouter = router({
               },
               contact: {
                 columns: {
+                  publicId: true,
                   name: true,
                   avatarId: true,
                   setName: true,
@@ -964,10 +971,13 @@ export const convoRouter = router({
                 columns: {},
                 with: {
                   orgMember: {
-                    columns: {},
+                    columns: {
+                      publicId: true
+                    },
                     with: {
                       profile: {
                         columns: {
+                          publicId: true,
                           firstName: true,
                           lastName: true,
                           avatarId: true,
@@ -978,6 +988,7 @@ export const convoRouter = router({
                   },
                   userGroup: {
                     columns: {
+                      publicId: true,
                       name: true,
                       color: true,
                       avatarId: true
@@ -985,6 +996,7 @@ export const convoRouter = router({
                   },
                   contact: {
                     columns: {
+                      publicId: true,
                       name: true,
                       avatarId: true,
                       setName: true,

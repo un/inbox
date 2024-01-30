@@ -17,6 +17,7 @@
 <template>
   <UnUiAvatar
     v-if="participant"
+    :avatar-id="participant.avatarPublicId"
     :public-id="participant.avatarPublicId"
     :alt="participant.name"
     :type="participant.type"

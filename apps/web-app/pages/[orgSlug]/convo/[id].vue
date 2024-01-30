@@ -64,9 +64,9 @@
         participant.orgMember?.publicId ||
         '';
       const avatarPublicId =
-        participant.contact?.publicId ||
-        participant.userGroup?.publicId ||
-        participant.orgMember?.profile.publicId ||
+        participant.contact?.avatarId ||
+        participant.userGroup?.avatarId ||
+        participant.orgMember?.profile.avatarId ||
         '';
       const participantName =
         participant.contact?.name || participant.contact?.emailUsername
