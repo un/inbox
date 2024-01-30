@@ -22,7 +22,6 @@
   });
 
   const primaryAvatar = computed(() => {
-    console.log({ primary: props.primary, avatars: props.avatars });
     if (props.primary) {
       return props.primary;
     }
@@ -41,7 +40,7 @@
     <NuxtUiPopover
       v-if="props.avatars.length + 1 > props.limit"
       class="-mb-4 -ml-4"
-      :popper="{ placement: 'top' }"
+      :popper="{ placement: 'right' }"
       mode="hover">
       <div
         class="bg-gray-50 h-[32px] w-[32px] flex items-center justify-center rounded-2 text-sm font-display shadow backdrop-blur-2xl">

@@ -80,12 +80,6 @@
     } else {
       participantArray.value.push(participantData);
     }
-    console.log('avatar data', {
-      avatarPublicId,
-      contact: participant.contact?.publicId,
-      group: participant.userGroup?.publicId,
-      user: participant.orgMember?.profile.publicId
-    });
   }
 </script>
 <template>
