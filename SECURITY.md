@@ -1,6 +1,6 @@
 # Security
 
-Contact: security@UnInbox.io
+Contact: security@uninbox.com
 
 Based on [https://supabase.com/.well-known/security.txt](https://supabase.com/.well-known/security.txt)
 
@@ -22,7 +22,7 @@ If you discover a vulnerability, we would like to know about it so we can take s
 
 ## Please do the following:
 
-- E-mail your findings to [security@UnInbox.io](mailto:security@UnInbox.io) - **_PLEASE NOTE: THE TLD FOR THE DOMAIN IS .io AND NOT .com_**
+- E-mail your findings to [security@uninbox.com](mailto:security@uninbox.com)
 - Do not run automated scanners on our infrastructure or dashboard. If you wish to do this, contact us and we will set up a sandbox for you.
 - Do not take advantage of the vulnerability or problem you have discovered, for example by downloading more data than necessary to demonstrate the vulnerability or deleting or modifying other people's data,
 - Do not reveal the problem to others until it has been resolved,
