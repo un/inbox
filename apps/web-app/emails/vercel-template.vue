@@ -1,6 +1,4 @@
 <script setup lang="ts">
-  import { defineProps, withDefaults } from 'vue';
-
   interface Props {
     invitedByUsername?: string;
     teamName?: string;
@@ -39,7 +37,6 @@
               alt="Vercel"
               class="mx-auto my-0" />
           </ESection>
-          <Hello />
           <EHeading
             class="mx-0 my-[30px] p-0 text-center text-[24px] text-black font-normal">
             Join <strong>{{ teamName }}</strong> on <strong>Vercel</strong>

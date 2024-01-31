@@ -1,29 +1,11 @@
 <script setup lang="ts">
-  import { defineProps, withDefaults } from 'vue';
-  import {
-    EBody,
-    EColumn,
-    EContainer,
-    EHead,
-    EHeading,
-    EHtml,
-    EImg,
-    EPreview,
-    ERow,
-    ESection,
-    EText,
-    ETailwind,
-    ELink,
-    EHr
-  } from 'vue-email';
-
   interface Props {
-    inviterName: string;
-    inviterAvatarId: string;
-    orgName: string;
-    orgAvatarId: string;
-    inviteCode: string;
-    expiryDate: Date;
+    inviterName?: string;
+    inviterAvatarId?: string;
+    orgName?: string;
+    orgAvatarId?: string;
+    inviteCode?: string;
+    expiryDate?: Date;
   }
 
   const props = withDefaults(defineProps<Props>(), {
@@ -75,21 +57,21 @@
             <ERow>
               <EColumn align="right">
                 <EImg
-                  :src="props.inviterAvatarId"
+                  src="/static/uninbox-user.png"
                   class="rounded-full"
                   width="64"
                   height="64" />
               </EColumn>
               <EColumn align="center">
                 <EImg
-                  src="https://vue-email-demo.vercel.app/static/vercel-arrow.png"
+                  src="/static/uninbox-arrow.png"
                   width="12"
                   height="10"
                   alt="invited you to" />
               </EColumn>
               <EColumn align="left">
                 <EImg
-                  :src="props.orgAvatarId"
+                  src="/static/uninbox-team.png"
                   class="rounded-full"
                   width="64"
                   height="64" />
@@ -124,7 +106,7 @@
           <EText class="text-[#666666] text-sm leading-5">
             This invitation was sent by
             <span class="text-black">{{ orgName }} </span>
-            located in <span class="text-black">USA</span>. If you were not
+            located in <span class="text-black">Earth</span>. If you were not
             expecting this invitation, you can ignore this email. If you are
             concerned about your account's safety, please reply to this email to
             get in touch with us.
@@ -134,7 +116,7 @@
           <ESection class="py-4">
             <EImg
               width="620"
-              src="https://vue-email-demo.vercel.app/static/yelp-footer.png" />
+              src="/static/footer.png" />
           </ESection>
           <EText class="text-center text-sm text-gray-700 py-2">
             © 2024 | UnInbox Inc..., Earth |

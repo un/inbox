@@ -1,22 +1,4 @@
 <script setup lang="ts">
-  import { defineProps, withDefaults } from 'vue';
-  import {
-    EBody,
-    EColumn,
-    EContainer,
-    EHead,
-    EHeading,
-    EHtml,
-    EImg,
-    EPreview,
-    ERow,
-    ESection,
-    EText,
-    ELink,
-    ETailwind,
-    EHr
-  } from 'vue-email';
-
   interface Props {
     username?: string;
     loginCode?: string;
@@ -96,7 +78,7 @@
           <ESection class="py-4">
             <EImg
               width="620"
-              src="https://vue-email-demo.vercel.app/static/yelp-footer.png" />
+              src="/static/footer.png" />
           </ESection>
           <EText class="text-center text-sm text-gray-700 py-2">
             © 2024 | UnInbox Inc..., Earth |
