@@ -14,6 +14,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
       useRuntimeConfig()?.public?.authJs?.guestRedirectTo || '/';
 
     if (to.path.startsWith('/join/invite/')) {
+      console.log('join invite');
       return;
     }
 
@@ -28,10 +29,17 @@ export default defineNuxtRouteMiddleware(async (to) => {
       useAuth().status.value === 'unauthenticated' ||
       useAuth().status.value === 'loading'
     ) {
-      if (toGuest) {
-        return;
+      const { data: verifyAuthStatus } = await useFetch('/api/auth/status', {
+        method: 'GET'
+      });
+      useAuth().status.value =
+        verifyAuthStatus.value?.status || 'unauthenticated';
+      if (useAuth().status.value === 'unauthenticated') {
+        if (toGuest) {
+          return;
+        }
+        return navigateTo(guestRedirect);
       }
-      return navigateTo(guestRedirect);
     }
   }
 });
