@@ -14,7 +14,6 @@ export default defineNuxtRouteMiddleware(async (to) => {
       useRuntimeConfig()?.public?.authJs?.guestRedirectTo || '/';
 
     if (to.path.startsWith('/join/invite/')) {
-      console.log('join invite');
       return;
     }
 
