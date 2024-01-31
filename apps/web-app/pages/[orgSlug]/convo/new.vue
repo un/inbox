@@ -459,10 +459,6 @@
       color="orange"
       description="You don't have an email identity assigned to you. Please contact your organization administrator."
       title="Email sending disabled!" />
-    {{ messageEditorData }}
-    <span>{{ selectedParticipants }}</span>
-    <span>{{ orgMembersData }}</span>
-    <span>has email {{ hasEmailParticipants }}</span>
     <div class="flex flex-col gap-2">
       <span class="text-sm font-medium">Participants</span>
       <div class="flex flex-col gap-1">
