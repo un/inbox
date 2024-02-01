@@ -65,7 +65,6 @@ export default eventHandler({
       expiresIn: 3600
     });
 
-    console.log({ publicId: attachmentPublicId, signedUrl: signedUrl });
     return { publicId: attachmentPublicId, signedUrl: signedUrl };
   }
 });
