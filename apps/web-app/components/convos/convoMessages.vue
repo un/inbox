@@ -5,8 +5,7 @@
   type ConvoEntriesDataType = PromiseType<
     ReturnType<typeof $trpc.convos.entries.getConvoEntries.query>
   >['entries'];
-  //@ts-expect-error
-  const el = ref<HTMLElement>(null);
+  const el = ref<HTMLElement | null>(null);
   const entriesArray = ref<ConvoEntriesDataType>([]);
 
   type Props = {
