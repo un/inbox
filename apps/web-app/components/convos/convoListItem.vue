@@ -1,13 +1,9 @@
 <script setup lang="ts">
   import { useTimeAgo } from '@vueuse/core';
-  import { string } from 'zod';
-  import type { ConvoParticipantEntry } from '~/composables/types';
-  const { $trpc } = useNuxtApp();
-
-  type PromiseType<T> = T extends Promise<infer U> ? U : never;
-  type UserConvosDataType = PromiseType<
-    ReturnType<typeof $trpc.convos.getUserConvos.query>
-  >['data'];
+  import type {
+    ConvoParticipantEntry,
+    UserConvosDataType
+  } from '~/composables/types';
 
   type Props = {
     convo: UserConvosDataType[number];
@@ -18,61 +14,43 @@
 
   const participantArray = ref<ConvoParticipantEntry[]>([]);
   const author = ref<ConvoParticipantEntry>();
+  const firstEntryAuthor =
+    props.convo.entries[0].author || props.convo.participants[0];
   const authorEntryPublicId = computed(() => {
-    const entryAuthor = props.convo.entries[0].author;
     return (
-      entryAuthor.orgMember?.publicId ||
-      entryAuthor.userGroup?.publicId ||
-      entryAuthor.contact?.publicId
+      firstEntryAuthor.orgMember?.publicId ||
+      firstEntryAuthor.userGroup?.publicId ||
+      firstEntryAuthor.contact?.publicId
     );
   });
   const authorEntryName = computed(() => {
-    const entryAuthor = props.convo.entries[0].author;
     return (
-      entryAuthor.userGroup?.publicId ||
-      entryAuthor.contact?.publicId ||
-      entryAuthor.orgMember?.profile.firstName +
+      firstEntryAuthor.userGroup?.publicId ||
+      firstEntryAuthor.contact?.publicId ||
+      firstEntryAuthor.orgMember?.profile.firstName +
         ' ' +
-        entryAuthor.orgMember?.profile.lastName ||
+        firstEntryAuthor.orgMember?.profile.lastName ||
       'Participant'
     );
   });
 
   for (const participant of props.convo.participants) {
-    const participantPublicId = participant.publicId;
-    const participantTypePublicId =
-      participant.contact?.publicId ||
-      participant.userGroup?.publicId ||
-      participant.orgMember?.publicId ||
-      '';
-    const avatarPublicId =
-      participant.contact?.avatarId ||
-      participant.userGroup?.avatarId ||
-      participant.orgMember?.profile.avatarId ||
-      '';
-    const participantName =
-      participant.contact?.name || participant.contact?.emailUsername
-        ? participant.contact?.emailUsername +
-          '@' +
-          participant.contact?.emailDomain
-        : participant.userGroup?.name ||
-          participant.orgMember?.profile?.firstName +
-            ' ' +
-            participant.orgMember?.profile?.lastName ||
-          '';
-    const participantType = participant.contact?.publicId
-      ? 'contact'
-      : participant.userGroup?.name
-        ? 'group'
-        : 'user';
-    const participantColor = participant.userGroup?.color || null;
+    const {
+      participantPublicId,
+      participantTypePublicId,
+      avatarPublicId,
+      participantName,
+      participantType,
+      participantColor,
+      participantRole
+    } = useUtils().convos.useParticipantData(participant);
     const participantData: ConvoParticipantEntry = {
       participantPublicId: participantPublicId,
       typePublicId: participantTypePublicId,
       avatarPublicId: avatarPublicId,
       name: participantName,
       type: participantType,
-      role: participant.role,
+      role: participantRole,
       color: participantColor
     };
     if (participantTypePublicId === authorEntryPublicId.value) {
