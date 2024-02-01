@@ -1,9 +1,5 @@
 import { cva, type VariantProps } from 'class-variance-authority';
-const { $trpc } = useNuxtApp();
-
-type UserConvosDataType = Awaited<
-  ReturnType<typeof $trpc.convos.getUserConvos.query>
->['data'];
+import type { UserConvosDataType } from '~/composables/types';
 
 function generateAvatarUrl(
   type: 'user' | 'org' | 'group' | 'contact',
