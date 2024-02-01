@@ -18,11 +18,11 @@
   const attachmentsCollapsed = ref(true);
   const participantPublicId = ref('');
   const participantArray = ref<ConvoParticipantEntry[]>([]);
-  const participantsAssignedPublicIds = ref<string[]>([]);
-  const participantContributorsPublicIds = ref<string[]>([]);
-  const participantCommentersPublicIds = ref<string[]>([]);
-  const participantWatchersPublicIds = ref<string[]>([]);
-  const participantGuestsPublicIds = ref<string[]>([]);
+  const participantsAssignedArray = ref<ConvoParticipantEntry[]>([]);
+  const participantContributorsArray = ref<ConvoParticipantEntry[]>([]);
+  const participantCommentersArray = ref<ConvoParticipantEntry[]>([]);
+  const participantWatchersArray = ref<ConvoParticipantEntry[]>([]);
+  const participantGuestsArray = ref<ConvoParticipantEntry[]>([]);
   const attachments = ref<AttachmentEntry[]>([]);
   const subjectsArray = ref<string[]>([]);
   const createDate = ref<Date | null>(null);
@@ -56,8 +56,13 @@
       convoDetails.value?.data?.lastUpdatedAt ||
       convoDetails.value?.data?.createdAt ||
       new Date();
-    createdAgo.value = useTimeAgo(createDate.value).value;
-    updatedAgo.value = useTimeAgo(updateDate.value).value;
+    // Ensure createDate and updateDate are always Date objects before passing to useTimeAgo
+    createdAgo.value = useTimeAgo(
+      createDate.value ? createDate.value : new Date()
+    ).value;
+    updatedAgo.value = useTimeAgo(
+      updateDate.value ? updateDate.value : new Date()
+    ).value;
 
     const convoParticipants = convoDetails.value?.data?.participants || [];
     for (const participant of convoParticipants) {
@@ -100,25 +105,15 @@
 
       participantArray.value.push(participantData);
       if (participant.role === 'assigned')
-        participantsAssignedPublicIds.value.push(
-          participantData.participantPublicId
-        );
+        participantsAssignedArray.value.push(participantData);
       if (participant.role === 'contributor')
-        participantContributorsPublicIds.value.push(
-          participantData.participantPublicId
-        );
+        participantContributorsArray.value.push(participantData);
       if (participant.role === 'commenter')
-        participantCommentersPublicIds.value.push(
-          participantData.participantPublicId
-        );
+        participantCommentersArray.value.push(participantData);
       if (participant.role === 'watcher')
-        participantWatchersPublicIds.value.push(
-          participantData.participantPublicId
-        );
+        participantWatchersArray.value.push(participantData);
       if (participant.role === 'guest')
-        participantGuestsPublicIds.value.push(
-          participantData.participantPublicId
-        );
+        participantGuestsArray.value.push(participantData);
     }
 
     if (
@@ -249,35 +244,31 @@
               @click="convoParticiapntsCollapsed = !convoParticiapntsCollapsed">
               <NuxtUiAvatarGroup>
                 <template
-                  v-for="participantPublicId of participantsAssignedPublicIds"
-                  :key="participantPublicId">
+                  v-for="participant of participantsAssignedArray"
+                  :key="participant.participantPublicId">
                   <ConvosConvoAvatar
-                    :participant-public-id="participantPublicId"
-                    :participants="participantArray"
+                    :participant="participant"
                     size="sm" />
                 </template>
                 <template
-                  v-for="participantPublicId of participantContributorsPublicIds"
-                  :key="participantPublicId">
+                  v-for="participant of participantContributorsArray"
+                  :key="participant.participantPublicId">
                   <ConvosConvoAvatar
-                    :participant-public-id="participantPublicId"
-                    :participants="participantArray"
+                    :participant="participant"
                     size="sm" />
                 </template>
                 <template
-                  v-for="participantPublicId of participantCommentersPublicIds"
-                  :key="participantPublicId">
+                  v-for="participant of participantCommentersArray"
+                  :key="participant.participantPublicId">
                   <ConvosConvoAvatar
-                    :participant-public-id="participantPublicId"
-                    :participants="participantArray"
+                    :participant="participant"
                     size="sm" />
                 </template>
                 <template
-                  v-for="participantPublicId of participantGuestsPublicIds"
-                  :key="participantPublicId">
+                  v-for="participant of participantGuestsArray"
+                  :key="participant.participantPublicId">
                   <ConvosConvoAvatar
-                    :participant-public-id="participantPublicId"
-                    :participants="participantArray"
+                    :participant="participant"
                     size="sm" />
                 </template>
               </NuxtUiAvatarGroup>
@@ -287,7 +278,7 @@
               class="h-fit max-w-full w-full flex flex-col gap-4 overflow-hidden"
               @click="convoParticiapntsCollapsed = !convoParticiapntsCollapsed">
               <div
-                v-if="participantsAssignedPublicIds.length"
+                v-if="participantsAssignedArray.length"
                 class="max-w-full w-full flex flex-col gap-2 overflow-hidden">
                 <span class="text-gray-600 dark:text-gray-400 text-xs">
                   ASSIGNED
@@ -295,23 +286,20 @@
                 <div
                   class="max-w-full w-full flex flex-col gap-2 overflow-hidden">
                   <template
-                    v-for="participantPublicId of participantsAssignedPublicIds"
-                    :key="participantPublicId">
+                    v-for="participant of participantsAssignedArray"
+                    :key="participant.participantPublicId">
                     <div
                       class="max-w-full w-full flex flex-row items-center gap-2 overflow-hidden">
                       <ConvosConvoAvatar
-                        :participant-public-id="participantPublicId"
-                        :participants="participantArray"
+                        :participant="participant"
                         size="md" />
-                      <span>{{
-                        findParticipant(participantPublicId)?.name
-                      }}</span>
+                      <span>{{ participant.name }}</span>
                     </div>
                   </template>
                 </div>
               </div>
               <div
-                v-if="participantContributorsPublicIds.length"
+                v-if="participantContributorsArray.length"
                 class="max-w-full w-full flex flex-col gap-2 overflow-hidden">
                 <span
                   class="text-gray-600 dark:text-gray-400 max-w-full w-full overflow-hidden text-xs">
@@ -320,82 +308,70 @@
                 <div
                   class="max-w-full w-full flex flex-col gap-2 overflow-hidden">
                   <template
-                    v-for="participantPublicId of participantContributorsPublicIds"
-                    :key="participantPublicId">
+                    v-for="participant of participantContributorsArray"
+                    :key="participant.participantPublicId">
                     <div class="flex flex-row items-center gap-2">
                       <ConvosConvoAvatar
-                        :participant-public-id="participantPublicId"
-                        :participants="participantArray"
+                        :participant="participant"
                         size="md" />
-                      <span class="truncate">{{
-                        findParticipant(participantPublicId)?.name
-                      }}</span>
+                      <span class="truncate">{{ participant.name }}</span>
                     </div>
                   </template>
                 </div>
               </div>
               <div
-                v-if="participantCommentersPublicIds.length"
+                v-if="participantCommentersArray.length"
                 class="flex flex-col gap-2">
                 <span class="text-gray-600 dark:text-gray-400 text-xs">
                   COMMENTERS
                 </span>
                 <div class="flex flex-col gap-2">
                   <template
-                    v-for="participantPublicId of participantCommentersPublicIds"
-                    :key="participantPublicId">
+                    v-for="participant of participantCommentersArray"
+                    :key="participant.participantPublicId">
                     <div class="flex flex-row items-center gap-2">
                       <ConvosConvoAvatar
-                        :participant-public-id="participantPublicId"
-                        :participants="participantArray"
+                        :participant="participant"
                         size="md" />
-                      <span>{{
-                        findParticipant(participantPublicId)?.name
-                      }}</span>
+                      <span>{{ participant.name }}</span>
                     </div>
                   </template>
                 </div>
               </div>
               <div
-                v-if="participantWatchersPublicIds.length"
+                v-if="participantWatchersArray.length"
                 class="flex flex-col gap-2">
                 <span class="text-gray-600 dark:text-gray-400 text-xs">
                   WATCHERS
                 </span>
                 <div class="flex flex-col gap-2">
                   <template
-                    v-for="participantPublicId of participantWatchersPublicIds"
-                    :key="participantPublicId">
+                    v-for="participant of participantWatchersArray"
+                    :key="participant.participantPublicId">
                     <div class="flex flex-row items-center gap-2">
                       <ConvosConvoAvatar
-                        :participant-public-id="participantPublicId"
-                        :participants="participantArray"
+                        :participant="participant"
                         size="md" />
-                      <span>{{
-                        findParticipant(participantPublicId)?.name
-                      }}</span>
+                      <span>{{ participant.name }}</span>
                     </div>
                   </template>
                 </div>
               </div>
               <div
-                v-if="participantGuestsPublicIds.length"
+                v-if="participantGuestsArray.length"
                 class="flex flex-col gap-2">
                 <span class="text-gray-600 dark:text-gray-400 text-xs">
                   GUEST
                 </span>
                 <div class="flex flex-col gap-2">
                   <template
-                    v-for="participantPublicId of participantGuestsPublicIds"
-                    :key="participantPublicId">
+                    v-for="participant of participantGuestsArray"
+                    :key="participant.participantPublicId">
                     <div class="flex flex-row items-center gap-2">
                       <ConvosConvoAvatar
-                        :participant-public-id="participantPublicId"
-                        :participants="participantArray"
+                        :participant="participant"
                         size="md" />
-                      <span>{{
-                        findParticipant(participantPublicId)?.name
-                      }}</span>
+                      <span>{{ participant.name }}</span>
                     </div>
                   </template>
                 </div>

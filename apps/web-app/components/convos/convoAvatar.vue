@@ -1,27 +1,20 @@
 <script setup lang="ts">
   import type { ConvoParticipantEntry } from '~/composables/types';
   type Props = {
-    participantPublicId: string;
-    participants: ConvoParticipantEntry[];
+    participant: ConvoParticipantEntry;
     size?: 'xs' | 'sm' | 'md' | 'lg';
   };
 
   const props = defineProps<Props>();
-  const participant = computed(() => {
-    return props.participants.find(
-      (participant) =>
-        participant.participantPublicId === props.participantPublicId
-    );
-  });
 </script>
 <template>
   <UnUiAvatar
-    v-if="participant"
-    :avatar-id="participant.avatarPublicId"
-    :public-id="participant.avatarPublicId"
-    :alt="participant.name"
-    :type="participant.type"
-    :color="participant.color"
+    v-if="props.participant"
+    :avatar-id="props.participant.avatarPublicId"
+    :public-id="props.participant.avatarPublicId"
+    :alt="props.participant.name"
+    :type="props.participant.type"
+    :color="props.participant.color"
     :show-icon="true"
     :size="props.size ? props.size : 'sm'" />
 </template>
