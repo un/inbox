@@ -19,7 +19,6 @@
       {
         convoPublicId: props.convoPublicId
       },
-      // { server: false }
       { server: false, queryKey: `convoEntries-${props.convoPublicId}` }
     );
 
