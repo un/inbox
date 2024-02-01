@@ -28,10 +28,6 @@
     }
   });
 
-  // const { list, containerProps, wrapperProps } = useVirtualList(entriesArray, {
-  //   itemHeight: 152,
-  //   overscan: 3
-  // });
   useInfiniteScroll(
     el,
     () => {
