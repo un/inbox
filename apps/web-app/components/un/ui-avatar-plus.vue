@@ -15,9 +15,6 @@
   });
 
   const avatarArray = computed(() => {
-    // if (props.avatars.length + 1 > props.limit) {
-    //   return props.avatars.slice(0, props.limit - 1);
-    // }
     return props.avatars;
   });
 
