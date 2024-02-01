@@ -11,7 +11,7 @@ export default defineNitroConfig({
   },
   routeRules: {
     '/avatar/**': {
-      proxy: `${process.env.STORAGE_S3_ENDPOINT}/avatars/**`
+      proxy: { to: `${process.env.STORAGE_S3_ENDPOINT}/avatars/**` }
     },
     '/api/**': {
       cors: true,
