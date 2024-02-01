@@ -66,33 +66,15 @@
 
     const convoParticipants = convoDetails.value?.data?.participants || [];
     for (const participant of convoParticipants) {
-      const participantPublicId = participant.publicId;
-      const participantTypePublicId =
-        participant.contact?.publicId ||
-        participant.userGroup?.publicId ||
-        participant.orgMember?.publicId ||
-        '';
-      const avatarPublicId =
-        participant.contact?.avatarId ||
-        participant.userGroup?.avatarId ||
-        participant.orgMember?.profile.avatarId ||
-        '';
-      const participantName =
-        participant.contact?.name || participant.contact?.emailUsername
-          ? participant.contact?.emailUsername +
-            '@' +
-            participant.contact?.emailDomain
-          : participant.userGroup?.name ||
-            participant.orgMember?.profile?.firstName +
-              ' ' +
-              participant.orgMember?.profile?.lastName ||
-            '';
-      const participantType = participant.contact?.publicId
-        ? 'contact'
-        : participant.userGroup?.name
-          ? 'group'
-          : 'user';
-      const participantColor = participant.userGroup?.color || null;
+      const {
+        participantPublicId,
+        participantTypePublicId,
+        avatarPublicId,
+        participantName,
+        participantType,
+        participantColor,
+        participantRole
+      } = useUtils().convos.useParticipantData(participant);
       const participantData: ConvoParticipantEntry = {
         participantPublicId: participantPublicId,
         typePublicId: participantTypePublicId,
