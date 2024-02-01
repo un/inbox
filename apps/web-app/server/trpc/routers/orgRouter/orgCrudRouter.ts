@@ -124,7 +124,7 @@ export const crudRouter = router({
           handle: userProfile.handle,
           title: userProfile.title,
           blurb: userProfile.blurb,
-          defaultProfile: userProfile.defaultProfile,
+          defaultProfile: false,
           createdAt: userProfile.createdAt
         };
         const newProfile = await db
