@@ -16,7 +16,7 @@ const bodySchema = z.object({
 export default eventHandler({
   onRequest: [loggedIn],
   async handler(event) {
-    const inputValidation = await readValidatedBody(event, (body) =>
+    const inputValidation = await getValidatedQuery(event, (body) =>
       bodySchema.safeParse(body)
     );
     if (!inputValidation.success) {
@@ -65,6 +65,7 @@ export default eventHandler({
       expiresIn: 3600
     });
 
+    console.log({ publicId: attachmentPublicId, signedUrl: signedUrl });
     return { publicId: attachmentPublicId, signedUrl: signedUrl };
   }
 });
