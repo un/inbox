@@ -3,3 +3,8 @@ type PromiseType<T> = T extends Promise<infer U> ? U : never;
 export type UserConvosDataType = PromiseType<
   ReturnType<typeof $trpc.convos.getUserConvos.query>
 >['data'];
+
+export type ConvoAttachmentUpload = {
+  filename: string;
+  attachmentPublicId: string;
+};
