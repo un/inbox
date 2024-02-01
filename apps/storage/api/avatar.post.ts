@@ -41,7 +41,6 @@ export default defineEventHandler(async (event) => {
     return send(event, 'Missing publicId value');
   }
   const publicId = publicIdInput.data.toString('utf8');
-  console.log({ event: event.context.user });
   const userId = +event.context.user?.id || null;
   if (!userId) {
     setResponseStatus(event, 401);
