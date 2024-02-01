@@ -11,12 +11,12 @@ export default defineNitroConfig({
   },
   routeRules: {
     '/avatar/**': {
-      proxy: 'http://localhost:3902/avatars/**'
+      proxy: `${process.env.STORAGE_S3_ENDPOINT}/avatars/**`
     },
     '/api/**': {
       cors: true,
       headers: {
-        'Access-Control-Allow-Origin': 'http://localhost:3000',
+        'Access-Control-Allow-Origin': process.env.WEBAPP_URL,
         'Access-Control-Allow-Credentials': 'true'
       }
     }
