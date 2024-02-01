@@ -1,4 +1,10 @@
 import { cva, type VariantProps } from 'class-variance-authority';
+const { $trpc } = useNuxtApp();
+
+type UserConvosDataType = Awaited<
+  ReturnType<typeof $trpc.convos.getUserConvos.query>
+>['data'];
+
 function generateAvatarUrl(
   type: 'user' | 'org' | 'group' | 'contact',
   avatarId: string,
@@ -34,8 +40,67 @@ function generateAvatarUrl(
   }`;
 }
 
+function useParticipantData(
+  participant: UserConvosDataType[number]['participants'][0]
+) {
+  const {
+    publicId: participantPublicId,
+    contact,
+    userGroup,
+    orgMember,
+    role: participantRole
+  } = participant;
+
+  let participantType: 'user' | 'group' | 'contact',
+    participantTypePublicId,
+    avatarPublicId,
+    participantName,
+    participantColor;
+
+  switch (true) {
+    case !!contact?.publicId:
+      participantType = 'contact';
+      participantTypePublicId = contact.publicId;
+      avatarPublicId = contact.avatarId || '';
+      participantName =
+        contact.name || `${contact.emailUsername}@${contact.emailDomain}`;
+      participantColor = null;
+      break;
+    case !!userGroup?.name:
+      participantType = 'group';
+      participantTypePublicId = userGroup.publicId;
+      avatarPublicId = userGroup.avatarId || '';
+      participantName = userGroup.name;
+      participantColor = userGroup.color;
+      break;
+    case !!orgMember?.publicId:
+      participantType = 'user';
+      participantTypePublicId = orgMember.publicId;
+      avatarPublicId = orgMember.profile.avatarId || '';
+      participantName = `${orgMember.profile.firstName} ${orgMember.profile.lastName}`;
+      participantColor = null;
+      break;
+    default:
+      participantType = 'user';
+      participantTypePublicId = '';
+      avatarPublicId = '';
+      participantName = '';
+      participantColor = null;
+  }
+
+  return {
+    participantPublicId,
+    participantType,
+    participantTypePublicId,
+    avatarPublicId,
+    participantName,
+    participantColor,
+    participantRole
+  };
+}
+
 export const useUtils = () => {
-  return { cva, generateAvatarUrl };
+  return { cva, generateAvatarUrl, convos: { useParticipantData } };
 };
 
 // TODO: Fix exporting types under namespace UseUtilTypes
