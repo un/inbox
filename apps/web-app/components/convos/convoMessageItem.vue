@@ -4,8 +4,7 @@
   import { tipTapExtensions } from '../../shared/editorConfig';
   const { $trpc } = useNuxtApp();
 
-  type PromiseType<T> = T extends Promise<infer U> ? U : never;
-  type ConvoEntryDataType = PromiseType<
+  type ConvoEntryDataType = Awaited<
     ReturnType<typeof $trpc.convos.entries.getConvoEntries.query>
   >['entries'];
 
@@ -42,7 +41,6 @@
 
   const tempColor = 'message';
   const typeClasses = computed(() => {
-    // switch (props.entry.type) {
     switch (tempColor) {
       case 'message':
         return 'bg-white dark:bg-black';
@@ -53,42 +51,12 @@
   const containerClasses = computed(() => {
     return userIsAuthor.value ? 'items-end' : 'items-start';
   });
-  // const authorClasses = computed(() => {
-  //   return userIsAuthor.value ? 'rounded-br-none' : 'rounded-bl-none';
-  // });
 
   const convoBubbleClasses = computed(() => {
-    // return `${typeClasses.value} ${authorClasses.value}`;
     return `${typeClasses.value}`;
   });
 </script>
 <template>
-  <!-- <div
-    class="w-full flex flex-col gap-2"
-    :class="containerClasses">
-    <div class="max-w-[80%] w-full flex flex-col gap-1 border-2 rounded-xl p-0">
-      <div class="w-full flex flex-row items-end justify-between p-2">
-        <div
-          v-if="author"
-          class="flex flex-row items-center gap-1">
-          <UnUiAvatar
-            :public-id="author.avatarPublicId"
-            :alt="author.name"
-            :type="author.type"
-            :color="author.color"
-            class="rounded-full" />
-          <span>{{ author.name }}</span>
-        </div>
-        <UnUiTooltip :text="props.entry.createdAt.toLocaleString()">
-          <span class="text-gray-500 text-xs uppercase">{{ timeAgo }}</span>
-        </UnUiTooltip>
-      </div>
-      <div
-        class="bg-gray-100 dark:bg-gray-900 w-full overflow-hidden p-2"
-        :class="convoBubbleClasses"
-        v-html="convoEntryBody"></div>
-    </div>
-  </div> -->
   <div
     class="w-full flex flex-col gap-2"
     :class="containerClasses">
@@ -97,7 +65,8 @@
         v-if="author"
         class="flex flex-row items-center gap-1">
         <UnUiAvatar
-          :public-id="author.avatarPublicId"
+          :public-id="author.publicId"
+          :avatar-id="author.avatarPublicId"
           :alt="author.name"
           :type="author.type"
           :color="author.color"

@@ -1,24 +1,20 @@
 <script setup lang="ts">
-  import { useVirtualList, useInfiniteScroll } from '@vueuse/core';
-  import { useConvoStore } from '@/stores/convoStore';
+  import { useInfiniteScroll } from '@vueuse/core';
   const { $trpc } = useNuxtApp();
-
-  type PromiseType<T> = T extends Promise<infer U> ? U : never;
-  type UserConvosDataType = PromiseType<
-    ReturnType<typeof $trpc.convos.getUserConvos.query>
-  >['data'];
 
   const orgSlug = useRoute().params.orgSlug as string;
   const infiniteContainer = ref<HTMLElement | null>(null);
 
-  const convoCursor = ref<{cursorLastUpdatedAt: Date | null, cursorLastPublicId: string | null}>({
+  const convoCursor = ref<{
+    cursorLastUpdatedAt: Date | null;
+    cursorLastPublicId: string | null;
+  }>({
     cursorLastUpdatedAt: null,
     cursorLastPublicId: null
   });
   const userHasMoreConvos = ref(true);
   const pauseLoading = ref(false);
   const convos = ref<{}[]>([]);
-  // const convos = ref<UserConvosDataType[]>([]);
 
   type UserConvoQueryParams =
     | {

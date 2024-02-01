@@ -1,8 +1,7 @@
 <script setup lang="ts">
-  import { useVirtualList, useInfiniteScroll, useTimeAgo } from '@vueuse/core';
+  import { useInfiniteScroll } from '@vueuse/core';
   const { $trpc } = useNuxtApp();
-  type PromiseType<T> = T extends Promise<infer U> ? U : never;
-  type ConvoEntriesDataType = PromiseType<
+  type ConvoEntriesDataType = Awaited<
     ReturnType<typeof $trpc.convos.entries.getConvoEntries.query>
   >['entries'];
   const el = ref<HTMLElement | null>(null);
