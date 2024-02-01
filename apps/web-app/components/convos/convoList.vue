@@ -11,9 +11,9 @@
   const orgSlug = useRoute().params.orgSlug as string;
   const infiniteContainer = ref<HTMLElement | null>(null);
 
-  const convoCursor = ref({
-    cursorLastUpdatedAt: null as Date | null,
-    cursorLastPublicId: null as string | null
+  const convoCursor = ref<{cursorLastUpdatedAt: Date | null, cursorLastPublicId: string | null}>({
+    cursorLastUpdatedAt: null,
+    cursorLastPublicId: null
   });
   const userHasMoreConvos = ref(true);
   const pauseLoading = ref(false);
