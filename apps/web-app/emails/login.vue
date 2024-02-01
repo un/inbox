@@ -28,7 +28,7 @@
             '-apple-system,BlinkMacSystemFont,&quot;Segoe UI&quot;,Roboto,Oxygen-Sans,Ubuntu,Cantarell,&quot;Helvetica Neue&quot;,sans-serif'
         }">
         <EContainer
-          class="border border-solid border-[#eaeaea] p-[20px] md:p-7 rounded-md my-[20px] mx-auto max-w-[565px]">
+          class="border border-solid border-[#eaeaea] p-[20px] md:p-7 rounded-md my-[20px] mx-auto max-w-[465px]">
           <ESection class="border border-opacity-10 rounded-lg overflow-hidden">
             <EText class="text-4xl font-bold text-center"> UnInbox </EText>
             <EHr />
@@ -73,11 +73,9 @@
               </ELink>
             </EText>
           </ESection>
-        </EContainer>
-        <EContainer>
           <ESection class="py-4">
             <EImg
-              width="620"
+              width="450"
               src="/static/footer.png" />
           </ESection>
           <EText class="text-center text-sm text-gray-700 py-2">

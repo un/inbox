@@ -10,16 +10,16 @@
 
   const props = withDefaults(defineProps<Props>(), {
     inviterName: 'inviterName',
-    inviterAvatarId: 'https://avatars.githubusercontent.com/u/135225712',
+    inviterAvatarId: '135225712',
     orgName: 'orgName',
-    orgAvatarId: 'https://avatars.githubusercontent.com/u/135225712',
+    orgAvatarId: '135225712',
     inviteCode: 'XXX-NNN-XN',
     expiryDate: () => new Date('June 23, 2022 4:06:00 pm UTC')
   });
 
   const inviteLink = 'https://uninbox.com/invite';
 
-  const previewText = `Hey ${props.inviterName} Invited You On ${props.orgName}`;
+  const previewText = `Hey ${props.inviterName} from ${props.orgName} Invited You On ${props.orgName} Team.`;
 </script>
 
 <template>
@@ -34,12 +34,10 @@
             '-apple-system,BlinkMacSystemFont,&quot;Segoe UI&quot;,Roboto,Oxygen-Sans,Ubuntu,Cantarell,&quot;Helvetica Neue&quot;,sans-serif'
         }">
         <EContainer
-          class="border border-solid border-[#eaeaea] p-[20px] md:p-7 rounded-md my-[20px] mx-auto max-w-[565px]">
-          <ESection class="mt-[20px]">
-            <EText class="text-4xl font-bold text-center"
-              >UnInbox Replacing Email</EText
-            >
-          </ESection>
+          class="border border-solid border-[#eaeaea] p-[20px] md:p-7 rounded-md my-[20px] mx-auto max-w-[465px]">
+          <EText class="text-4xl font-bold text-center"
+            >UnInbox Replacing Email</EText
+          >
           <EHr />
           <EHeading
             class="text-black text-[20px] font-normal text-center p-0 my-[30px] mx-0">
@@ -57,7 +55,7 @@
             <ERow>
               <EColumn align="right">
                 <EImg
-                  src="/static/uninbox-user.png"
+                  :src="props.inviterAvatarId"
                   class="rounded-full"
                   width="64"
                   height="64" />
@@ -71,7 +69,7 @@
               </EColumn>
               <EColumn align="left">
                 <EImg
-                  src="/static/uninbox-team.png"
+                  :src="props.orgAvatarId"
                   class="rounded-full"
                   width="64"
                   height="64" />
@@ -111,11 +109,9 @@
             concerned about your account's safety, please reply to this email to
             get in touch with us.
           </EText>
-        </EContainer>
-        <EContainer>
           <ESection class="py-4">
             <EImg
-              width="620"
+              width="450"
               src="/static/footer.png" />
           </ESection>
           <EText class="text-center text-sm text-gray-700 py-2">
