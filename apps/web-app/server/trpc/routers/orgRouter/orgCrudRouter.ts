@@ -112,11 +112,11 @@ export const crudRouter = router({
           createdAt: true
         }
       });
-
+      const newProfilePublicId = nanoId();
       let userProfileId: number;
       if (userProfile && userProfile.id) {
         const existingFields = {
-          publicId: userProfile.publicId,
+          publicId: newProfilePublicId,
           avatarId: userProfile.avatarId,
           userId: userProfile.userId,
           firstName: userProfile.firstName,
@@ -125,14 +125,12 @@ export const crudRouter = router({
           title: userProfile.title,
           blurb: userProfile.blurb,
           defaultProfile: false,
-          createdAt: userProfile.createdAt
         };
         const newProfile = await db
           .insert(userProfiles)
           .values(existingFields);
           userProfileId = +newProfile.insertId;
       } else {
-        const newProfilePublicId = nanoId();
         const { username } =
           (await db.query.users.findFirst({
             where: eq(users.id, +userId),
