@@ -35,7 +35,7 @@
         }">
         <EContainer
           class="border border-solid border-[#eaeaea] p-[20px] md:p-7 rounded-md my-[20px] mx-auto max-w-[465px]">
-          <EText class="text-4xl font-bold text-center"
+          <EText class="text-3xl font-semibold text-center"
             >UnInbox Replacing Email</EText
           >
           <EHr />

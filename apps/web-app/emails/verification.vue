@@ -30,14 +30,16 @@
         <EContainer
           class="border border-solid border-[#eaeaea] p-[20px] md:p-7 rounded-md my-[20px] mx-auto max-w-[465px]">
           <ESection class="border border-opacity-10 rounded-lg overflow-hidden">
-            <EText class="text-4xl font-bold text-center"> UnInbox </EText>
+            <EText class="text-3xl font-bold text-center"> UnInbox </EText>
             <EHr />
             <ERow class="px-10">
               <EColumn class="text-black">
-                <EHeading class="text-2xl text-slate-250 font-bold text-center">
-                  Hi {{ username }},
+                <EHeading
+                  class="text-2xl text-slate-250 font-medium text-center">
+                  Hi <strong>{{ username }}</strong
+                  >,
                 </EHeading>
-                <EHeading class="text-2xl font-bold text-center">
+                <EHeading class="text-2xl font-normal text-center">
                   Welcome to UnInbox.
                 </EHeading>
                 <EText class="text-base mt-0.5">
