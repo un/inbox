@@ -28,11 +28,10 @@ export default defineNuxtRouteMiddleware(async (to) => {
       useAuth().status.value === 'unauthenticated' ||
       useAuth().status.value === 'loading'
     ) {
-      const { data: verifyAuthStatus } = await useFetch('/api/auth/status', {
+      const verifyAuthStatus = await $fetch('/api/auth/status', {
         method: 'GET'
       });
-      useAuth().status.value =
-        verifyAuthStatus.value?.status || 'unauthenticated';
+      useAuth().status.value = verifyAuthStatus.authStatus || 'unauthenticated';
       if (useAuth().status.value === 'unauthenticated') {
         if (toGuest) {
           return;

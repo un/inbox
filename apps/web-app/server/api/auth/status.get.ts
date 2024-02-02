@@ -1,7 +1,9 @@
-type ResponseType = 'loading' | 'authenticated' | 'unauthenticated' | 'error';
-export default eventHandler((event) => {
-  if (event.context.user.id) {
-    return { status: 'authenticated' as ResponseType };
+type AuthStatusResponseType = {
+  authStatus: 'loading' | 'authenticated' | 'unauthenticated' | 'error';
+};
+export default eventHandler((event): AuthStatusResponseType => {
+  if (event.context.user?.id) {
+    return { authStatus: 'authenticated' };
   }
-  return { status: 'unauthenticated' as ResponseType };
+  return { authStatus: 'unauthenticated' };
 });
