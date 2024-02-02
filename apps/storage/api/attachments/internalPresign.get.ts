@@ -23,11 +23,8 @@ export default eventHandler({
       setResponseStatus(event, 400);
       return send(event, 'Invalid input');
     }
-    const data = inputValidation.data;
-
-    const orgPublicId = data.orgPublicId;
+    const { orgPublicId, filename } = inputValidation.data;
     const attachmentPublicId = nanoId();
-    const filename = data.filename;
 
     const command = new PutObjectCommand({
       Bucket: 'attachments',
