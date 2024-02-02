@@ -15,24 +15,12 @@
   import { useFileDialog } from '@vueuse/core';
 
   type Props = {
-    /**
-     * The organization slug required for the file upload process.
-     * @type {string}
-     */
     orgSlug: string;
   };
   const props = defineProps<Props>();
 
-  /**
-   * Tracks the loading state of the file upload process.
-   * @type {Ref<boolean>}
-   */
   const loading = ref(false);
 
-  /**
-   * provides the value of attachments uploaded by the user.
-   * @type {Ref<ConvoAttachmentUpload[]>}
-   */
   const uploadedAttachments = defineModel<ConvoAttachmentUpload[]>(
     'uploadedAttachments',
     {
@@ -62,7 +50,7 @@
         publicId: string;
         signedUrl: string;
       };
-      const { data: preSignedData } = await useFetch<PreSignedData>(
+      const preSignedData = await $fetch<PreSignedData>(
         `${storageUrl}/api/attachments/presign`,
         {
           method: 'get',
@@ -73,27 +61,28 @@
           credentials: 'include'
         }
       );
-      console.log({ result: preSignedData.value });
+
       if (
-        !preSignedData.value ||
-        !preSignedData.value.publicId ||
-        !preSignedData.value.signedUrl
+        !preSignedData ||
+        !preSignedData.publicId ||
+        !preSignedData.signedUrl
       ) {
         throw new Error('Missing attachmentPublicId or presignedUrl');
       }
-      const attachmentPublicId = preSignedData.value.publicId;
-      const presignedUrl = preSignedData.value.signedUrl;
+      const attachmentPublicId = preSignedData.publicId;
+      const presignedUrl = preSignedData.signedUrl;
 
-      const { error } = await useFetch(presignedUrl, {
-        method: 'put',
-        body: file,
-        headers: {
-          'Content-Type': fileType
-        }
-      });
-      if (error.value) {
-        console.log({ error: error.value });
-        throw new Error('Error uploading file');
+      try {
+        await $fetch(presignedUrl, {
+          method: 'put',
+          body: file,
+          headers: {
+            'Content-Type': fileType
+          }
+        });
+      } catch (error) {
+        console.error('Error uploading file to presigned URL:', error);
+        throw error; // Rethrow to handle it in the outer catch block
       }
 
       return {
@@ -107,8 +96,8 @@
       uploadedAttachments.value.push(...uploadedFiles);
     } catch (error) {
       console.error(error);
-      resetSelectedFiles();
     } finally {
+      resetSelectedFiles();
       loading.value = false;
     }
   });
