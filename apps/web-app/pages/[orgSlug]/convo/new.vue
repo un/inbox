@@ -419,7 +419,7 @@
             publicId: firstParticipantPublicId
           };
     const createNewConvoTrpc = $trpc.convos.createNewConvo.useMutation();
-    await createNewConvoTrpc.mutate({
+    const createNewConvo = await createNewConvoTrpc.mutate({
       firstMessageType: type,
       to: convoToValue,
       participantsOrgMembersPublicIds: convoParticipantsOrgMembersPublicIds,
@@ -431,20 +431,27 @@
       message: stringify(messageEditorData.value)
     });
 
-    if (createNewConvoTrpc.error) {
+    if (createNewConvoTrpc.status.value === 'error') {
       actionLoading.value = false;
-    } else {
       toast.add({
-        title: 'Conversation created',
-        icon: 'i-ph-thumbs-up',
+        id: 'create_new_convo_fail',
+        title: 'Conversation creation failed',
+        description: `Conversation could not be created.`,
+        color: 'red',
+        icon: 'i-ph-warning-circle',
         timeout: 5000
       });
-      setTimeout(() => {
-        navigateTo(
-          `/${orgSlug}/convo/${createNewConvoTrpc.data.value?.publicId}`
-        );
-      }, 1500);
+      return;
     }
+    toast.add({
+      title: 'Conversation created',
+      description: `Redirecting to new conversation...`,
+      icon: 'i-ph-thumbs-up',
+      timeout: 5000
+    });
+    setTimeout(() => {
+      navigateTo(`/${orgSlug}/convo/${createNewConvo?.publicId}`);
+    }, 1500);
   }
 </script>
 <template>
@@ -540,7 +547,7 @@
                         :avatar-id="participant.avatarId?.toString()"
                         :type="'group'"
                         :alt="participant.name.toString()"
-                        :color="participant.color?.toString()"
+                        :color="participant.color as UiColor"
                         size="xs" />
                       <span>
                         {{ participant.name }}

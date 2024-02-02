@@ -19,12 +19,6 @@
         icon="i-ph-plus"
         variant="outline"
         :to="`/${orgSlug}/convo/new`" />
-      <!-- <UnUiButton
-        class="flex-grow justify-center"
-        label="Filter"
-        icon="i-ph-list-checks"
-        variant="outline"
-        :to="`/${orgSlug}/convo/new`" /> -->
     </div>
   </div>
 </template>
