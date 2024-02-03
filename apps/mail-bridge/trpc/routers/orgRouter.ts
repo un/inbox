@@ -10,7 +10,7 @@ export const orgRouter = router({
   createOrg: protectedProcedure
     .input(
       z.object({
-        orgId: z.number().min(1),
+        orgId: z.string().min(1),
         orgPublicId: nanoIdSchema,
         personalOrg: z.boolean().optional()
       })

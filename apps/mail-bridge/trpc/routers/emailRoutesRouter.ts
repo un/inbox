@@ -17,8 +17,8 @@ export const emailRoutesRouter = router({
       z.object({
         username: z.string().min(3).max(32),
         sendName: z.string().max(64),
-        userId: z.number().min(1),
-        orgId: z.number().min(1),
+        userId: z.string().min(1),
+        orgId: z.string().min(1),
         serverPublicId: z.string().min(1).max(nanoIdLength),
         rootDomainName: z.string().min(1).max(255)
       })

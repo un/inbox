@@ -1243,7 +1243,7 @@ export type ConvoEntryMetadataEmail = {
   postalMessageId: string;
   postalMessages: {
     recipient: string;
-    id: number;
+    id: string;
     token: string;
   }[];
   emailHeaders?: string;
