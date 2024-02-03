@@ -94,8 +94,9 @@
         '5xl'
       ) as string;
     }
-
     uploadLoading.value = false;
+    refreshNuxtData('getUserSingleProfileNav');
+    refreshNuxtData('getUserOrgsNav');
   });
 
   async function saveProfile() {
