@@ -87,7 +87,7 @@
       'avatarId',
       initialUserProfile.value?.profile.avatarId || ''
     );
-    const response =await useFetch(`${storageUrl}/api/avatar`, {
+    const response =await $fetch(`${storageUrl}/api/avatar`, {
       method: 'post',
       body: formData,
       credentials: 'include'
