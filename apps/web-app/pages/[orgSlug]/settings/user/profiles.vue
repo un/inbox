@@ -87,20 +87,20 @@
       'avatarId',
       initialUserProfile.value?.profile.avatarId || ''
     );
-    await useFetch(`${storageUrl}/api/avatar`, {
+    const response =await useFetch(`${storageUrl}/api/avatar`, {
       method: 'post',
       body: formData,
       credentials: 'include'
-    });
-    if (initialUserProfile.value?.profile.avatarId) {
+    }) as any;
+    if (response.avatarId) {
       imageUrl.value = useUtils().generateAvatarUrl(
         'user',
-        initialUserProfile.value?.profile.avatarId || '',
+        response.avatarId,
         '5xl'
       );
     }
-    uploadLoading.value = false;
     refreshNuxtData('getUserSingleProfileNav');
+    uploadLoading.value = false;
   });
 
   async function saveProfile() {
