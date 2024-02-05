@@ -14,6 +14,14 @@ export default defineNuxtConfig({
     '@nuxt/ui',
     '@vue-email/nuxt'
   ],
+  // ssr: false,
+  routeRules: {
+    '/**': { ssr: false },
+    '/redirect': { ssr: true },
+    '/join/**': { ssr: true },
+    '/login/**': { ssr: true },
+    '/': { ssr: true }
+  },
 
   runtimeConfig: {
     // paths: [...pagePaths],

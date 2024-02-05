@@ -1204,7 +1204,7 @@ export const convoAttachments = mysqlTable(
     convoEntryId: foreignKey('convo_entry_id'),
     fileName: varchar('fileName', { length: 256 }).notNull(),
     type: varchar('type', { length: 256 }).notNull(),
-    storageId: varchar('storageId', { length: 256 }).notNull(),
+    public: boolean('public').notNull().default(false),
     convoParticipantId: foreignKey('convo_participant_id').notNull(),
     createdAt: timestamp('created_at')
       .default(sql`CURRENT_TIMESTAMP`)
