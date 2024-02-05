@@ -23,7 +23,7 @@ export default eventHandler({
       setResponseStatus(event, 400);
       return send(event, 'Invalid input');
     }
-    const { orgPublicId, filename } = inputValidation.data;
+    const { orgPublicId, filename } = inputValidation.data;
     const attachmentPublicId = nanoId();
 
     const command = new PutObjectCommand({
