@@ -99,15 +99,38 @@ export const crudRouter = router({
           eq(userProfiles.defaultProfile, true)
         ),
         columns: {
-          id: true
+          id: true,
+          publicId: true,
+          avatarId: true,
+          userId: true,
+          firstName: true,
+          lastName: true,
+          handle: true,
+          title: true,
+          blurb: true,
+          defaultProfile: true,
+          createdAt: true
         }
       });
-
+      const newProfilePublicId = nanoId();
       let userProfileId: number;
       if (userProfile && userProfile.id) {
-        userProfileId = userProfile.id;
+        const existingFields = {
+          publicId: newProfilePublicId,
+          avatarId: userProfile.avatarId,
+          userId: userProfile.userId,
+          firstName: userProfile.firstName,
+          lastName: userProfile.lastName,
+          handle: userProfile.handle,
+          title: userProfile.title,
+          blurb: userProfile.blurb,
+          defaultProfile: false,
+        };
+        const newProfile = await db
+          .insert(userProfiles)
+          .values(existingFields);
+          userProfileId = +newProfile.insertId;
       } else {
-        const newProfilePublicId = nanoId();
         const { username } =
           (await db.query.users.findFirst({
             where: eq(users.id, +userId),

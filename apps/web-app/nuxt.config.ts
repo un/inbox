@@ -1,6 +1,7 @@
 import type { MailDomainEntries } from '@uninbox/types';
 
 export default defineNuxtConfig({
+  telemetry: false,
   modules: [
     '@hebilicious/authjs-nuxt',
     '@nuxt/devtools',

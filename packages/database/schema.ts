@@ -1074,7 +1074,7 @@ export const convos = mysqlTable(
     id: serial('id').primaryKey(),
     orgId: foreignKey('org_id').notNull(),
     publicId: nanoId('public_id').notNull(),
-    lastUpdatedAt: timestamp('last_updated_at'),
+    lastUpdatedAt: timestamp('last_updated_at').notNull(),
     createdAt: timestamp('created_at')
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull()
@@ -1089,7 +1089,7 @@ export const convosRelations = relations(convos, ({ one, many }) => ({
     fields: [convos.orgId],
     references: [orgs.id]
   }),
-  members: many(convoParticipants),
+  participants: many(convoParticipants),
   attachments: many(convoAttachments),
   entries: many(convoEntries),
   subjects: many(convoSubjects)
@@ -1204,8 +1204,8 @@ export const convoAttachments = mysqlTable(
     convoEntryId: foreignKey('convo_entry_id'),
     fileName: varchar('fileName', { length: 256 }).notNull(),
     type: varchar('type', { length: 256 }).notNull(),
-    convoMemberId: foreignKey('convo_members').notNull(),
     public: boolean('public').notNull().default(false),
+    convoParticipantId: foreignKey('convo_participant_id').notNull(),
     createdAt: timestamp('created_at')
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull()
@@ -1233,7 +1233,7 @@ export const convoAttachmentsRelations = relations(
       references: [convoEntries.id]
     }),
     uploader: one(convoParticipants, {
-      fields: [convoAttachments.convoMemberId],
+      fields: [convoAttachments.convoParticipantId],
       references: [convoParticipants.id]
     })
   })

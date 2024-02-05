@@ -1,3 +1,5 @@
+import { uiColors } from '@uninbox/types/ui';
+
 const { $trpc } = useNuxtApp();
 type PromiseType<T> = T extends Promise<infer U> ? U : never;
 export type UserConvosDataType = PromiseType<
@@ -7,4 +9,14 @@ export type UserConvosDataType = PromiseType<
 export type ConvoAttachmentUpload = {
   filename: string;
   attachmentPublicId: string;
+};
+
+export type ConvoParticipantEntry = {
+  participantPublicId: string;
+  typePublicId: string;
+  avatarPublicId: string;
+  name: string;
+  type: 'user' | 'group' | 'contact';
+  role: 'assigned' | 'contributor' | 'commenter' | 'watcher' | 'guest';
+  color: (typeof uiColors)[number] | null;
 };
