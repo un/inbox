@@ -6,6 +6,11 @@ export type UserConvosDataType = PromiseType<
   ReturnType<typeof $trpc.convos.getUserConvos.query>
 >['data'];
 
+export type ConvoAttachmentUpload = {
+  filename: string;
+  attachmentPublicId: string;
+};
+
 export type ConvoParticipantEntry = {
   participantPublicId: string;
   typePublicId: string;

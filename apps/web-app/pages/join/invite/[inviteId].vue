@@ -77,6 +77,11 @@
       navigateTo(`/${inviteQuery.value?.orgSlug}`);
     }, 1000);
   }
+
+  const pageReady: Ref<boolean> = ref(false);
+  onNuxtReady(() => {
+    pageReady.value = true;
+  });
 </script>
 
 <template>
@@ -154,7 +159,7 @@
       </div>
 
       <NuxtTurnstile
-        v-if="turnstileEnabled"
+        v-if="pageReady && turnstileEnabled"
         ref="turnstile"
         v-model="turnstileToken"
         class="fixed bottom-5 mb-[-30px] scale-50 hover:(mb-0 scale-100)" />
