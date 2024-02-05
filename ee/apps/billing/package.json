@@ -14,7 +14,7 @@
     "@uninbox/database": "workspace:*",
     "@uninbox/utils": "workspace:*",
     "nitropack": "^2.8.1",
-    "stripe": "^14.10.0",
+    "stripe": "^14.14.0",
     "superjson": "^2.2.1",
     "trpc-nuxt": "^0.10.17",
     "zod": "^3.22.4"

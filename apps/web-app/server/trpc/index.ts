@@ -46,10 +46,6 @@ const trpcWebAppOrgRouter = router({
   mail: trpcWebAppOrgMailRouter
 });
 
-const trpcWebAppConvoRouter = router({
-  convos: convoRouter
-});
-
 export const trpcWebAppRouter = router({
   signup: signupRouter,
   auth: authRouter,

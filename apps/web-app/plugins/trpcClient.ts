@@ -18,7 +18,7 @@ export const errorHandler: TRPCLink<TrpcWebAppRouter> = () => {
             err.message ===
               'You are not a member of this organization, redirecting...'
           ) {
-            navigateTo('/login');
+            navigateTo('/redirect');
             return;
           }
 

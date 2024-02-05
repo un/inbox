@@ -8,8 +8,8 @@
     "preview": "node .output/server/index.mjs"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.496.0",
-    "@aws-sdk/s3-request-presigner": "^3.496.0",
+    "@aws-sdk/client-s3": "^3.503.1",
+    "@aws-sdk/s3-request-presigner": "^3.503.1",
     "@uninbox/database": "workspace:*",
     "@uninbox/types": "workspace:*",
     "@uninbox/utils": "workspace:*",
