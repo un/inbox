@@ -69,22 +69,21 @@
       'publicId',
       initialOrgProfile.value?.orgProfile.publicId || ''
     );
-    await useFetch(`${storageUrl}/api/avatar`, {
+    const response =await $fetch(`${storageUrl}/api/avatar`, {
       method: 'post',
       body: formData,
       credentials: 'include'
-    });
+    }) as any;
 
-    if (initialOrgProfile.value?.orgProfile.avatarId) {
+    if (response.avatarId) {
       imageUrl.value = useUtils().generateAvatarUrl(
         'org',
-        initialOrgProfile.value?.orgProfile.avatarId,
+        response.avatarId,
         '5xl'
       ) as string;
     }
-
+    refreshNuxtData('getUserOrgsNav');
     uploadLoading.value = false;
-
     //TODO: make the image only appear once it has been loaded to avoid blank box, find a way to show skeleton loading animation
   });
 

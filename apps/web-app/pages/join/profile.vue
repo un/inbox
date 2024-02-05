@@ -81,20 +81,18 @@
     formData.append('type', 'user');
     formData.append('publicId', userOrgProfile.value?.profile?.publicId || '');
     formData.append('avatarId', userOrgProfile.value?.profile?.avatarId || '');
-    await useFetch(`${storageUrl}/api/avatar`, {
+    const response =await $fetch(`${storageUrl}/api/avatar`, {
       method: 'post',
       body: formData,
       credentials: 'include'
-    });
-
-    if (userOrgProfile.value?.profile.avatarId) {
+    }) as any;
+    if (response.avatarId) {
       imageUrl.value = useUtils().generateAvatarUrl(
         'user',
-        userOrgProfile.value?.profile.avatarId,
+        response.avatarId,
         '5xl'
       ) as string;
     }
-
     uploadLoading.value = false;
   });
 

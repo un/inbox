@@ -87,19 +87,19 @@
       'avatarId',
       initialUserProfile.value?.profile.avatarId || ''
     );
-    await useFetch(`${storageUrl}/api/avatar`, {
+    const response =await $fetch(`${storageUrl}/api/avatar`, {
       method: 'post',
       body: formData,
       credentials: 'include'
-    });
-    if (initialUserProfile.value?.profile.avatarId) {
+    }) as any;
+    if (response.avatarId) {
       imageUrl.value = useUtils().generateAvatarUrl(
         'user',
-        initialUserProfile.value?.profile.avatarId || '',
+        response.avatarId,
         '5xl'
       );
     }
-
+    refreshNuxtData('getUserSingleProfileNav');
     uploadLoading.value = false;
   });
 
