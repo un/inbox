@@ -47,6 +47,11 @@
       maxWait: 5000
     }
   );
+
+  const pageReady: Ref<boolean> = ref(false);
+  onNuxtReady(() => {
+    pageReady.value = true;
+  });
 </script>
 
 <template>
@@ -125,7 +130,7 @@
           @click="navigateTo('/')" />
       </div>
       <NuxtTurnstile
-        v-if="turnstileEnabled"
+        v-if="pageReady && turnstileEnabled"
         v-model="turnstileToken"
         class="fixed bottom-5 mb-[-30px] scale-50 hover:(mb-0 scale-100)" />
     </div>
