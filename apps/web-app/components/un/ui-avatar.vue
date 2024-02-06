@@ -81,7 +81,7 @@
   });
 
   const tooltipText = computed(() => {
-    return props.tooltip ? props.tooltip : props.alt;
+    return props.tooltip ? props.tooltip : altText.value;
   });
 
   const tooltipIcon = computed(() => {
