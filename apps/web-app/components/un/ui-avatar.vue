@@ -1,104 +1,104 @@
-<script lang="ts">
+<script setup lang="ts">
   import type { DefineComponent } from 'vue';
   import { NuxtUiAvatar } from '#components';
   import { uiColors } from '@uninbox/types/ui';
 
   type UiColors = (typeof uiColors)[number] | null;
 
-  export default defineComponent<
-    typeof NuxtUiAvatar extends DefineComponent<infer Props, any, any>
-      ? Props & {
-          color?: UiColors;
-          publicId: string;
-          avatarId: string;
-          type: 'user' | 'org' | 'group' | 'contact';
-          tooltip?: string;
-          avatarUrl?: string | undefined;
-          tooltipText?: string | undefined;
-          showIcon?: boolean | undefined;
-          tooltipIcon?: string | undefined;
-        }
-      : never
-  >({
-    props: {
-      ...NuxtUiAvatar.props,
-      color: {
-        type: uiColors || null || undefined,
-        required: false,
-        default: () => null
-      },
-      publicId: {
-        type: String,
-        required: false,
-        default: null
-      },
-      avatarId: {
-        type: String,
-        required: false,
-        default: null
-      },
-      type: {
-        type: String,
-        required: false,
-        default: null,
-        validator: function (value: string) {
-          // It must be one of these values
-          return ['user', 'org', 'group', 'contact'].includes(value);
-        }
-      },
-      tooltip: {
-        type: String,
-        required: false,
-        default: null
-      },
-      showIcon: {
-        type: Boolean,
-        required: false,
-        default: false
-      }
-    },
-    setup(props: any) {
-      const avatarUrl = computed(() => {
-        const size:
-          | '3xs'
-          | '2xs'
-          | 'xs'
-          | 'sm'
-          | 'md'
-          | 'lg'
-          | 'xl'
-          | '2xl'
-          | '3xl'
-          | '4xl'
-          | '5xl'
-          | undefined = props.size;
-        return props.src
-          ? props.src
-          : props.avatarId
-            ? useUtils().generateAvatarUrl(props.type, props.avatarId, size)
-            : null;
-      });
-      const tooltipText = computed(() => {
-        return props.tooltip ? props.tooltip : props.alt;
-      });
-      const tooltipIcon = computed(() => {
-        switch (props.type) {
-          case 'user':
-            return 'i-ph-user';
-          case 'org':
-            return 'i-ph-buildings';
-          case 'group':
-            return 'i-ph-users-three';
-          case 'contact':
-            return 'i-ph-at';
-          default:
-            return 'i-ph-user';
-        }
-      });
+  type AvatarSize = InstanceType<typeof NuxtUiAvatar>['$props']['size'];
 
-      return { avatarUrl, tooltipText, tooltipIcon };
+  type Props = {
+    color: UiColors;
+    avatarId: string | null;
+    name?: string;
+    alt?: string;
+    type: 'user' | 'org' | 'group' | 'contact';
+    tooltip?: string;
+    avatarUrl?: string;
+    tooltipText?: string;
+    showIcon?: boolean;
+    tooltipIcon?: string;
+    size?: AvatarSize;
+  };
+
+  const props = defineProps<Props>();
+
+  const size = computed(() => {
+    return props.size || 'sm';
+  });
+
+  const colorClass = computed(() => {
+    switch (props.color) {
+      case 'red':
+        return 'bg-red-400 dark:bg-red-700';
+      case 'orange':
+        return 'bg-orange-400 dark:bg-orange-700';
+      case 'amber':
+        return 'bg-amber-400 dark:bg-amber-700';
+      case 'yellow':
+        return 'bg-yellow-400 dark:bg-yellow-700';
+      case 'lime':
+        return 'bg-lime-400 dark:bg-lime-700';
+      case 'green':
+        return 'bg-green-400 dark:bg-green-700';
+      case 'emerald':
+        return 'bg-emerald-400 dark:bg-emerald-700';
+      case 'teal':
+        return 'bg-teal-400 dark:bg-teal-700';
+      case 'cyan':
+        return 'bg-cyan-400 dark:bg-cyan-700';
+      case 'sky':
+        return 'bg-sky-400 dark:bg-sky-700';
+      case 'blue':
+        return 'bg-blue-400 dark:bg-blue-700';
+      case 'indigo':
+        return 'bg-indigo-400 dark:bg-indigo-700';
+      case 'violet':
+        return 'bg-violet-400 dark:bg-violet-700';
+      case 'purple':
+        return 'bg-purple-400 dark:bg-purple-700';
+      case 'fuchsia':
+        return 'bg-fuchsia-400 dark:bg-fuchsia-700';
+      case 'pink':
+        return 'bg-pink-400 dark:bg-pink-700';
+      case 'rose':
+        return 'bg-rose-400 dark:bg-rose-700';
+      default:
+        return 'bg-gray-400 dark:bg-gray-700';
     }
   });
+
+  const altText = computed(() => {
+    return props.name || props.alt || '';
+  });
+
+  const avatarUrl = computed(() => {
+    return props.avatarUrl
+      ? props.avatarUrl
+      : props.avatarId
+        ? useUtils().generateAvatarUrl(props.type, props.avatarId, size.value)
+        : undefined;
+  });
+
+  const tooltipText = computed(() => {
+    return props.tooltip ? props.tooltip : altText.value;
+  });
+
+  const tooltipIcon = computed(() => {
+    switch (props.type) {
+      case 'user':
+        return 'i-ph-user';
+      case 'org':
+        return 'i-ph-buildings';
+      case 'group':
+        return 'i-ph-users-three';
+      case 'contact':
+        return 'i-ph-at';
+      default:
+        return 'i-ph-user';
+    }
+  });
+
   //TODO: Ensure that the color prop is a pre-defined color so tailwindcss correctly generates it for the css
 </script>
 <template>
@@ -112,16 +112,13 @@
       </div>
     </template>
     <NuxtUiAvatar
-      v-bind="$props"
+      :size="size"
+      :alt="altText"
       :src="avatarUrl"
       :ui="{
         text: 'font-display text-gray-900 dark:text-white',
         placeholder: 'font-display text-gray-600 dark:text-gray-400'
       }"
-      :class="
-        $props.color
-          ? `bg-${$props.color}-200 dark:bg-${$props.color}-700`
-          : `bg-gray-100 dark:bg-gray-800`
-      " />
+      :class="colorClass" />
   </UnUiTooltip>
 </template>
