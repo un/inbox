@@ -26,7 +26,7 @@ function generateAvatarUrl(
   ];
   const typeObject = types.find((t) => t.name === type);
   if (!typeObject) {
-    return null;
+    return undefined;
   }
   //@ts-ignore
   const storageBaseUrl = useRuntimeConfig().public.storageUrl;
