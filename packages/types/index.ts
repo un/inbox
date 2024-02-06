@@ -1,5 +1,4 @@
-import { AdapterSession } from './../authjs/src/adapters';
-
+import type { DatabaseSession } from 'lucia';
 export type OrgContext = {
   id: number;
   publicId: string;
@@ -14,7 +13,7 @@ export type OrgContext = {
 } | null;
 export type UserContext = {
   id: number;
-  session: AdapterSession;
+  session: DatabaseSession;
 } | null;
 export type AuthH3SessionData = {
   isUserLoggedIn: boolean;
