@@ -2,7 +2,6 @@ import type { MailDomainEntries } from '@uninbox/types';
 
 export default defineNuxtConfig({
   modules: [
-    '@hebilicious/authjs-nuxt',
     '@nuxt/devtools',
     '@vueuse/nuxt',
     'nuxt-security',
