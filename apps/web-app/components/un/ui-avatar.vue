@@ -8,7 +8,7 @@
   type AvatarSize = InstanceType<typeof NuxtUiAvatar>['$props']['size'];
 
   type Props = {
-    color: UiColors;
+    color?: UiColors;
     avatarId: string | null;
     name?: string;
     alt?: string;

@@ -534,8 +534,6 @@
               </template>
             </NuxtUiAccordion>
           </div>
-          {{ mail }}
-          {{ incomingStatus }}
         </div>
       </div>
     </div>
