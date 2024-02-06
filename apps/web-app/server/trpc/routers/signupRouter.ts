@@ -67,6 +67,8 @@ export const signupRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      //! refactor
+
       const db = ctx.db;
       const { available: validName } = await validateUsername(
         ctx.db,
@@ -84,9 +86,10 @@ export const signupRouter = router({
       const newPublicId = nanoId();
       const insertUserResponse = await db.insert(users).values({
         publicId: newPublicId,
-        username: input.username,
-        recoveryEmail: input.email
+        username: input.username
       });
+
+      //! add user Auth recovery email into auth table
 
       if (!insertUserResponse.insertId) {
         console.log(insertUserResponse);
@@ -102,36 +105,6 @@ export const signupRouter = router({
         success: true,
         username: input.username,
         userPublicId: newPublicId,
-        error: null
-      };
-    }),
-
-  setUserAuthIdentity: limitedProcedure
-    .input(
-      z.object({
-        userPublicId: z.string().length(16)
-      })
-    )
-    .mutation(async ({ ctx, input }) => {
-      const db = ctx.db;
-
-      const userLookup = await db
-        .select({ id: users.id })
-        .from(users)
-        .where(eq(users.publicId, input.userPublicId));
-
-      const newPublicId = nanoId();
-      // const insertUserAuthIdentity = await db
-      //   .insert(userAuthIdentities)
-      //   .values({
-      //     provider: 'hanko',
-      //     userId: userLookup[0].id,
-      //     providerId: ctx.hankoId
-      //   });
-
-      return {
-        success: true,
-        userPublicId: input.userPublicId,
         error: null
       };
     })
