@@ -62,7 +62,6 @@
   const tableRows = ref<TableRow[]>([]);
   watch(groupData, (newResults) => {
     if (newResults?.group?.members) {
-      console.log(JSON.stringify(newResults.group.members, null, 2));
       for (const member of newResults.group.members) {
         tableRows.value.push({
           publicId: member.publicId,
@@ -178,11 +177,11 @@
   <div class="h-full w-full flex flex-col items-start gap-8 p-4">
     <div class="w-full flex flex-row items-center justify-between">
       <div class="flex flex-row items-center gap-4">
-        <UnUiTooltip text="Back to domains">
+        <UnUiTooltip text="Back to groups">
           <UnUiIcon
             name="i-ph-arrow-left"
             size="32"
-            @click="navigateTo(`${orgSlug}/settings/org/users/groups`)" />
+            @click="navigateTo('./')" />
         </UnUiTooltip>
         <UnUiAvatar
           :color="groupData?.group?.color || 'base'"
