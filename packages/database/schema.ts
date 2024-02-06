@@ -159,7 +159,7 @@ export const authenticatorRelationships = relations(
   ({ one }) => ({
     authMethod: one(auth, {
       fields: [authenticators.providerAccountId],
-      references: [auth.providerAccountId]
+      references: [auth.passkeyProviderAccountId]
     })
   })
 );
