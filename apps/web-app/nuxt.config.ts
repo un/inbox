@@ -61,7 +61,8 @@ export default defineNuxtConfig({
   // Styling
   css: ['@/assets/css/main.css'],
   app: {
-    pageTransition: { name: 'page', mode: 'out-in', duration: 300 }
+    pageTransition: { name: 'page', mode: 'out-in', duration: 100 },
+    layoutTransition: { name: 'layout', mode: 'out-in', duration: 100 }
   },
   ui: {
     prefix: 'nuxt-ui-',
