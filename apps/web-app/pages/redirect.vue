@@ -2,7 +2,7 @@
   const { $trpc } = useNuxtApp();
 
   onMounted(async () => {
-    const { slug } = await $trpc.auth.getUserDefaultOrgSlug.query({});
+    const { slug } = await $trpc.user.defaults.getDefaultOrgSlug.query({});
     if (!slug) {
       return navigateTo(`/`);
     }

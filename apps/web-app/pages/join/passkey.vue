@@ -159,10 +159,11 @@
     emailValue,
     async () => {
       if (emailValid.value === 'remote') {
-        const { validEmail } = await $trpc.signup.validateEmailAddress.query({
-          turnstileToken: turnstileToken.value,
-          email: emailValue.value
-        });
+        const { validEmail } =
+          await $trpc.auth.signup.validateEmailAddress.query({
+            turnstileToken: turnstileToken.value,
+            email: emailValue.value
+          });
 
         if (!validEmail) {
           emailValid.value = false;

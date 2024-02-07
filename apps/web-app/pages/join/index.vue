@@ -30,7 +30,7 @@
     async () => {
       if (usernameValid.value === 'remote') {
         const { available, error } =
-          await $trpc.signup.checkUsernameAvailability.query({
+          await $trpc.auth.signup.checkUsernameAvailability.query({
             turnstileToken: turnstileToken.value,
             username: usernameValue.value
           });

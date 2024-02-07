@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { parse, stringify } from 'superjson';
-import { router, publicProcedure, limitedProcedure } from '../trpc';
+import { router, publicProcedure, limitedProcedure } from '../../trpc';
 import type { DBType } from '@uninbox/database';
 import { eq } from '@uninbox/database/orm';
 import { users } from '@uninbox/database/schema';
