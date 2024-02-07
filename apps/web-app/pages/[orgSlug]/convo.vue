@@ -1,4 +1,8 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+  definePageMeta({
+    layout: 'home'
+  });
+</script>
 <template>
   <div class="h-full max-h-full max-w-full w-full overflow-hidden">
     <div
