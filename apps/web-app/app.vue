@@ -4,7 +4,9 @@
 
 <template>
   <div class="h-screen max-h-screen">
-    <NuxtPage />
+    <NuxtLayout class="h-screen max-h-screen">
+      <NuxtPage />
+    </NuxtLayout>
     <NuxtUiNotifications>
       <template #title="{ title }">
         <span v-html="title" />
