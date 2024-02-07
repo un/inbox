@@ -1,12 +1,8 @@
-<script setup lang="ts">
-  definePageMeta({
-    layout: 'convos'
-  });
-</script>
+<script setup lang="ts"></script>
 <template>
   <div
-    class="flex flex-col gap-2 h-full max-h-full overflow-y-scroll w-full items-center align-middle justify-center">
-    <div class="flex flex-row gap-2 font-display text-xl">
+    class="h-full max-h-full w-full flex flex-col items-center justify-center gap-2 overflow-y-scroll align-middle">
+    <div class="flex flex-row gap-2 text-xl font-display">
       Oops, we cant find that conversation
     </div>
     <div class="flex flex-row gap-2 text-lg">

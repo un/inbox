@@ -1,7 +1,4 @@
 <script setup lang="ts">
-  definePageMeta({
-    layout: 'convos'
-  });
   const orgSlug = useRoute().params.orgSlug as string;
 </script>
 <template>

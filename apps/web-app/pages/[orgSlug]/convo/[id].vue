@@ -3,9 +3,6 @@
   import type { ConvoParticipantEntry } from '~/composables/types';
 
   const { $trpc } = useNuxtApp();
-  definePageMeta({
-    layout: 'convos'
-  });
 
   type AttachmentEntry = {
     name: string;

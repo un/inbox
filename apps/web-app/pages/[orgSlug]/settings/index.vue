@@ -1,11 +1,7 @@
-<script setup lang="ts">
-  definePageMeta({
-    layout: 'settings'
-  });
-</script>
+<script setup lang="ts"></script>
 <template>
   <div
-    class="flex-col flex justify-center gap-2 items-center w-full col-span-2 pl-4 h-full">
+    class="col-span-2 h-full w-full flex flex-col items-center justify-center gap-2 pl-4">
     <div class="col-span-2 pl-4">Select a category from the left</div>
   </div>
 </template>

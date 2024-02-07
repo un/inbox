@@ -1,6 +1,5 @@
 <script setup lang="ts">
   definePageMeta({
-    layout: 'settings',
     middleware: 'ee'
   });
   import { z } from 'zod';
@@ -85,13 +84,13 @@
           v-if="!pending"
           class="w-full flex flex-row gap-8">
           <div class="flex flex-col">
-            <span class="text-sm font-medium text-base-11">Current Plan</span>
+            <span class="text-sm text-base-11 font-medium">Current Plan</span>
             <span class="text-2xl font-display capitalize">{{
               orgBillingOverview?.currentPlan
             }}</span>
           </div>
           <div class="flex flex-col">
-            <span class="text-sm font-medium text-base-11">Users</span>
+            <span class="text-sm text-base-11 font-medium">Users</span>
             <span class="text-2xl font-display">{{
               orgBillingOverview?.totalUsers
             }}</span>
@@ -138,25 +137,25 @@
                 <div class="flex flex-col justify-start gap-4">
                   <div class="flex flex-row items-center gap-2">
                     <UnUiIcon name="i-ph-check-circle-fill" />
-                    <span class="text-sm leading-none text-base-12">
+                    <span class="text-sm text-base-12 leading-none">
                       Multiple users
                     </span>
                   </div>
                   <div class="flex flex-row items-center gap-2">
                     <UnUiIcon name="i-ph-check-circle-fill" />
-                    <span class="text-sm leading-none text-base-12">
+                    <span class="text-sm text-base-12 leading-none">
                       @uninbox.me email addresses
                     </span>
                   </div>
                   <div class="flex flex-row items-center gap-2">
                     <UnUiIcon name="i-ph-check-circle-fill" />
-                    <span class="text-sm leading-none text-base-12">
+                    <span class="text-sm text-base-12 leading-none">
                       Forwarding Address
                     </span>
                   </div>
                   <div class="flex flex-row items-center gap-2">
                     <UnUiIcon name="i-ph-check-circle-fill" />
-                    <span class="text-sm leading-none text-base-12">
+                    <span class="text-sm text-base-12 leading-none">
                       Private Notes
                     </span>
                   </div>
@@ -164,10 +163,10 @@
                 <div class="flex flex-row items-center gap-2">
                   <span class="text-4xl leading-none font-display">$0</span>
                   <div class="flex flex-col gap-0">
-                    <span class="text-sm font-medium leading-none text-base-11"
+                    <span class="text-sm text-base-11 font-medium leading-none"
                       >per user</span
                     >
-                    <span class="text-sm font-medium leading-none text-base-11"
+                    <span class="text-sm text-base-11 font-medium leading-none"
                       >per
                       {{
                         pricingTableBillingPeriod === 'yearly'
@@ -192,25 +191,25 @@
                 <div class="flex flex-col justify-start gap-4">
                   <div class="flex flex-row items-center gap-2">
                     <UnUiIcon name="i-ph-check-circle-fill" />
-                    <span class="text-sm leading-none text-base-12">
+                    <span class="text-sm text-base-12 leading-none">
                       User Groups
                     </span>
                   </div>
                   <div class="flex flex-row items-center gap-2">
                     <UnUiIcon name="i-ph-check-circle-fill" />
-                    <span class="text-sm leading-none text-base-12">
+                    <span class="text-sm text-base-12 leading-none">
                       Custom Domains
                     </span>
                   </div>
                   <div class="flex flex-row items-center gap-2">
                     <UnUiIcon name="i-ph-check-circle-fill" />
-                    <span class="text-sm leading-none text-base-12">
+                    <span class="text-sm text-base-12 leading-none">
                       Catch-all Address
                     </span>
                   </div>
                   <div class="flex flex-row items-center gap-2">
                     <UnUiIcon name="i-ph-check-circle-fill" />
-                    <span class="text-sm leading-none text-base-12">
+                    <span class="text-sm text-base-12 leading-none">
                       Shared Notes
                     </span>
                   </div>
@@ -222,10 +221,10 @@
                     }}</span
                   >
                   <div class="flex flex-col gap-0">
-                    <span class="text-sm font-medium leading-none text-base-11"
+                    <span class="text-sm text-base-11 font-medium leading-none"
                       >per user</span
                     >
-                    <span class="text-sm font-medium leading-none text-base-11"
+                    <span class="text-sm text-base-11 font-medium leading-none"
                       >per
                       {{
                         pricingTableBillingPeriod === 'yearly'

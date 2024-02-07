@@ -1,7 +1,4 @@
 <script setup lang="ts">
-  definePageMeta({
-    layout: 'settings'
-  });
   import { z } from 'zod';
   import { useClipboard, useTimeAgo } from '@vueuse/core';
 

@@ -1,10 +1,6 @@
 <script setup lang="ts">
   import type { UiColor } from '@uninbox/types/ui';
 
-  definePageMeta({
-    layout: 'settings'
-  });
-
   const { $trpc } = useNuxtApp();
 
   const route = useRoute();

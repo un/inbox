@@ -1,7 +1,4 @@
 <script setup lang="ts">
-  definePageMeta({
-    layout: 'settings'
-  });
   import { z } from 'zod';
   import { useFileDialog } from '@vueuse/core';
   const { $trpc, $i18n } = useNuxtApp();
@@ -87,11 +84,11 @@
       'avatarId',
       initialUserProfile.value?.profile.avatarId || ''
     );
-    const response =await $fetch(`${storageUrl}/api/avatar`, {
+    const response = (await $fetch(`${storageUrl}/api/avatar`, {
       method: 'post',
       body: formData,
       credentials: 'include'
-    }) as any;
+    })) as any;
     if (response.avatarId) {
       imageUrl.value = useUtils().generateAvatarUrl(
         'user',
