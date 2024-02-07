@@ -1,10 +1,6 @@
 <script setup lang="ts">
   import type { UiColor } from '@uninbox/types/ui';
 
-  definePageMeta({
-    layout: 'settings'
-  });
-
   const { $trpc } = useNuxtApp();
 
   const route = useRoute();
@@ -28,7 +24,7 @@
       <div class="flex flex-row items-center gap-4">
         <UnUiTooltip text="Back to Email Address list">
           <UnUiIcon
-            name="ph-arrow-left"
+            name="i-ph-arrow-left"
             size="32"
             @click="navigateTo('./')" />
         </UnUiTooltip>

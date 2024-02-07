@@ -1,7 +1,4 @@
 <script setup lang="ts">
-  definePageMeta({
-    layout: 'settings'
-  });
   import { z } from 'zod';
 
   const { $trpc, $i18n } = useNuxtApp();

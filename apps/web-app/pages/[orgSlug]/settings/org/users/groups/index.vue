@@ -1,7 +1,4 @@
 <script setup lang="ts">
-  definePageMeta({
-    layout: 'settings'
-  });
   const { $trpc, $i18n } = useNuxtApp();
   const orgSlug = useRoute().params.orgSlug as string;
 

@@ -5,9 +5,6 @@
   import { stringify } from 'superjson';
   import { z } from 'zod';
   const { $trpc } = useNuxtApp();
-  definePageMeta({
-    layout: 'convos'
-  });
   const orgSlug = useRoute().params.orgSlug as string;
 
   // TODO: handle if the domain is not valid/enabled. display the email address in the list but show it as disabled and show a tooltip on hover that says "this domain is not enabled for sending"

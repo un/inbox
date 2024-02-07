@@ -1,7 +1,4 @@
 <script setup lang="ts">
-  definePageMeta({
-    layout: 'settings'
-  });
   import { z } from 'zod';
   import { useClipboard } from '@vueuse/core';
   const orgSlug = useRoute().params.orgSlug as string;

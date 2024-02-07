@@ -1,6 +1,7 @@
 import type { MailDomainEntries } from '@uninbox/types';
 
 export default defineNuxtConfig({
+  telemetry: false,
   modules: [
     '@nuxt/devtools',
     '@vueuse/nuxt',
@@ -12,6 +13,14 @@ export default defineNuxtConfig({
     '@nuxt/ui',
     '@vue-email/nuxt'
   ],
+  // ssr: false,
+  routeRules: {
+    '/**': { ssr: false },
+    '/redirect': { ssr: true },
+    '/join/**': { ssr: true },
+    '/login/**': { ssr: true },
+    '/': { ssr: true }
+  },
 
   runtimeConfig: {
     // paths: [...pagePaths],
@@ -51,7 +60,8 @@ export default defineNuxtConfig({
   // Styling
   css: ['@/assets/css/main.css'],
   app: {
-    pageTransition: { name: 'page', mode: 'out-in', duration: 300 }
+    pageTransition: { name: 'page', mode: 'out-in', duration: 100 },
+    layoutTransition: { name: 'layout', mode: 'out-in', duration: 100 }
   },
   ui: {
     prefix: 'nuxt-ui-',
