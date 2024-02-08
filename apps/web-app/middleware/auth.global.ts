@@ -5,7 +5,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
       useCookie('un-redirect', { maxAge: 100 }).value = null;
       return navigateTo(redirectCookie);
     }
-    const { status, session } = useAuth();
+    const status = 'unauthenticated';
     const toGuest = to.meta.guest;
     const authedRedirect =
       useRuntimeConfig()?.public?.authJs?.authenticatedRedirectTo ||
@@ -17,22 +17,19 @@ export default defineNuxtRouteMiddleware(async (to) => {
       return;
     }
 
-    if (useAuth().status.value === 'authenticated') {
+    if (status === 'authenticated') {
       if (!toGuest) {
         return;
       }
       return navigateTo(authedRedirect);
     }
 
-    if (
-      useAuth().status.value === 'unauthenticated' ||
-      useAuth().status.value === 'loading'
-    ) {
+    if (status === 'unauthenticated' || status === 'loading') {
       const verifyAuthStatus = await $fetch('/api/auth/status', {
         method: 'GET'
       });
-      useAuth().status.value = verifyAuthStatus.authStatus || 'unauthenticated';
-      if (useAuth().status.value === 'unauthenticated') {
+      // status = verifyAuthStatus.authStatus || 'unauthenticated';
+      if (status === 'unauthenticated') {
         if (toGuest) {
           return;
         }
