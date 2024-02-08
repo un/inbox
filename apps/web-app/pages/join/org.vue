@@ -186,7 +186,7 @@
           class="w-full">
           <div
             class="bg-primary-400 h-2 w-full rounded"
-            @click="navigateTo('/join/passkey')" />
+            @click="navigateTo('/join/secure')" />
         </UnUiTooltip>
         <UnUiTooltip
           text="Set up your organization"

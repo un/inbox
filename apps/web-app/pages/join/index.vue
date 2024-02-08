@@ -22,7 +22,7 @@
   //functions
   async function goToNextStep() {
     useCookie('un-join-username', { maxAge: 3600 }).value = usernameValue.value;
-    navigateTo('/join/passkey');
+    navigateTo('/join/secure');
   }
 
   watchDebounced(
