@@ -6,7 +6,9 @@
     if (!slug) {
       return navigateTo(`/`);
     }
-    navigateTo(`/${slug}`);
+    setTimeout(() => {
+      navigateTo(`/${slug}`);
+    }, 500);
   });
 </script>
 <template>
