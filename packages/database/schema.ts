@@ -78,13 +78,13 @@ export const users = mysqlTable(
 );
 
 export const usersRelations = relations(users, ({ one, many }) => ({
+  account: one(accounts, {
+    fields: [users.id],
+    references: [accounts.userId]
+  }),
   sessions: many(sessions),
   orgMemberships: many(orgMembers),
   profiles: many(userProfiles),
-  authMethod: one(auth, {
-    fields: [users.id],
-    references: [auth.userId]
-  }),
   defaultProfile: one(userProfiles, {
     fields: [users.id],
     references: [userProfiles.userId]
@@ -93,8 +93,8 @@ export const usersRelations = relations(users, ({ one, many }) => ({
 }));
 
 // Auth tables
-export const auth = mysqlTable(
-  'auth',
+export const accounts = mysqlTable(
+  'accounts',
   {
     id: serial('id').primaryKey(),
     userId: foreignKey('userId').notNull(),
@@ -104,23 +104,22 @@ export const auth = mysqlTable(
       .notNull()
       .default(false),
     recoveryEmail: varchar('recovery_email', { length: 255 }),
-    emailVerified: timestamp('emailVerified'),
-    passkeysEnabled: boolean('passkeysEnabled').notNull().default(false),
-    passkeyProviderAccountId: varchar('providerAccountId', {
-      length: 255
-    }),
-    twoFactorEnabled: boolean('twoFactorEnabled').notNull().default(false),
-    twoFactorSecret: varchar('twoFactorSecret', { length: 255 })
+    emailVerified: timestamp('email_verified'),
+    passkeysEnabled: boolean('passkeys_enabled').notNull().default(false),
+    twoFactorEnabled: boolean('two_factor_enabled').notNull().default(false),
+    twoFactorSecret: varchar('two_factor_secret', { length: 255 })
   },
-  (auth) => ({
-    userIdIndex: index('user_id_idx').on(auth.userId),
-    recoveryEmailIndex: uniqueIndex('recovery_email_idx').on(auth.recoveryEmail)
+  (accounts) => ({
+    userIdIndex: index('user_id_idx').on(accounts.userId),
+    recoveryEmailIndex: uniqueIndex('recovery_email_idx').on(
+      accounts.recoveryEmail
+    )
   })
 );
 
-export const authRelationships = relations(auth, ({ one, many }) => ({
+export const accountsRelationships = relations(accounts, ({ one, many }) => ({
   user: one(users, {
-    fields: [auth.userId],
+    fields: [accounts.userId],
     references: [users.id]
   }),
   authenticators: many(authenticators)
@@ -130,26 +129,23 @@ export const authenticators = mysqlTable(
   'authenticators',
   {
     id: serial('id').primaryKey(),
-    providerAccountId: varchar('providerAccountId', { length: 255 }).notNull(),
-    credentialID: varchar('credentialID', { length: 255 }).notNull(),
-    credentialPublicKey: varchar('credentialPublicKey', {
+    accountId: foreignKey('account_id').notNull(),
+    credentialID: varchar('credential_id', { length: 255 }).notNull(), //Uint8Array
+    credentialPublicKey: varchar('credential_public_key', {
       length: 255
+    }).notNull(), //Uint8Array
+    counter: bigint('counter', { unsigned: true, mode: 'bigint' }).notNull(), //bigint
+    credentialDeviceType: varchar('credential_public_key', {
+      length: 32
     }).notNull(),
-    counter: int('counter').notNull(),
-    credentialDeviceType: mysqlEnum('credentialDeviceType', [
-      'singleDevice',
-      'multiDevice'
-    ]).notNull(),
-    credentialBackedUp: boolean('credentialBackedUp').notNull(),
+    credentialBackedUp: boolean('credential_backed_up').notNull(),
     transports:
       json('transports').$type<
         ('ble' | 'hybrid' | 'internal' | 'nfc' | 'usb')[]
       >()
   },
   (table) => ({
-    providerAccountIdIndex: index('provider_account_id_idx').on(
-      table.providerAccountId
-    ),
+    accountIdIndex: index('provider_account_id_idx').on(table.accountId),
     credentialIDIndex: uniqueIndex('credential_id_idx').on(table.credentialID)
   })
 );
@@ -157,9 +153,9 @@ export const authenticators = mysqlTable(
 export const authenticatorRelationships = relations(
   authenticators,
   ({ one }) => ({
-    authMethod: one(auth, {
-      fields: [authenticators.providerAccountId],
-      references: [auth.passkeyProviderAccountId]
+    account: one(accounts, {
+      fields: [authenticators.accountId],
+      references: [accounts.id]
     })
   })
 );
@@ -170,7 +166,7 @@ export const sessions = mysqlTable(
     id: serial('id').primaryKey(),
     userId: foreignKey('user_id').notNull(),
     userPublicId: nanoId('user_public_id').notNull(),
-    sessionToken: varchar('sessionToken', { length: 255 }).notNull(),
+    sessionToken: varchar('session_token', { length: 255 }).notNull(),
     device: varchar('device', { length: 255 }).notNull(),
     browser: varchar('browser', { length: 255 }).notNull(),
     expiresAt: timestamp('expires_at').notNull(),
