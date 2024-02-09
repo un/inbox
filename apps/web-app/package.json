@@ -34,6 +34,7 @@
     "@nuxt/ui": "^2.13.0",
     "@pinia/nuxt": "^0.5.1",
     "@simplewebauthn/browser": "^8.3.4",
+    "@simplewebauthn/server": "^9.0.1",
     "@tiptap/html": "^2.2.1",
     "@tiptap/pm": "^2.2.1",
     "@tiptap/starter-kit": "^2.2.1",
