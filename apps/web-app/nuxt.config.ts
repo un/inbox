@@ -24,6 +24,7 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     // paths: [...pagePaths],
+    primaryDomain: process.env.PRIMARY_DOMAIN || 'localhost',
     authJs: {
       secret: process.env.WEBAPP_AUTH_SECRET
     },
