@@ -8,7 +8,7 @@ import { sessions, users } from '@uninbox/database/schema';
 const debug = true;
 const log = (...args: any[]) => {
   if (debug) {
-    console.log(...args);
+    console.log('🔐 Lucia Auth DB Adapter', ...args);
   }
 };
 
