@@ -108,7 +108,7 @@ export const auth = mysqlTable(
     passkeysEnabled: boolean('passkeysEnabled').notNull().default(false),
     passkeyProviderAccountId: varchar('providerAccountId', {
       length: 255
-    }).notNull(),
+    }),
     twoFactorEnabled: boolean('twoFactorEnabled').notNull().default(false),
     twoFactorSecret: varchar('twoFactorSecret', { length: 255 })
   },
