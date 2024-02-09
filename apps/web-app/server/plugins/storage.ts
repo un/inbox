@@ -11,7 +11,7 @@ export default defineNitroPlugin(() => {
 
   const storage = useStorage();
 
-  const defaultTTL = import.meta.dev ? 60 * 60 * 12 : 60 * 60 * 24 * 28;
+  const defaultTTL = import.meta.dev ? 60 * 60 * 24 : 60 * 60 * 24 * 28;
 
   function getCacheDb(base: string, ttl: number = defaultTTL) {
     if (useUpstash) {
@@ -30,7 +30,7 @@ export default defineNitroPlugin(() => {
   }
 
   // Mount driver
-  storage.mount('auth', getCacheDb('auth'));
+  storage.mount('auth', getCacheDb('auth', 60 * 5));
   storage.mount('sessions', getCacheDb('sessions'));
-  storage.mount('org-context', getCacheDb('org-context'));
+  storage.mount('org-context', getCacheDb('org-context', 60 * 60 * 12));
 });
