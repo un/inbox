@@ -55,7 +55,7 @@
     "fakefilter": "^0.1.734",
     "jose": "^5.2.0",
     "lucia": "^3.0.1",
-    "oslo": "^1.0.4",
+    "oslo": "^1.1.0",
     "pinia": "^2.1.7",
     "pinia-shared-state": "^0.5.1",
     "radix-vue": "^1.3.2",
