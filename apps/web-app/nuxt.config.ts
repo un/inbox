@@ -25,9 +25,16 @@ export default defineNuxtConfig({
   runtimeConfig: {
     // paths: [...pagePaths],
     primaryDomain: process.env.PRIMARY_DOMAIN || 'localhost',
-    authJs: {
-      secret: process.env.WEBAPP_AUTH_SECRET
+    auth: {
+      baseUrl: process.env.WEBAPP_URL || 'http://localhost:3000',
+      secret: process.env.WEBAPP_AUTH_SECRET,
+      passkeys: {
+        rpName: process.env.APP_NAME || 'UnInbox',
+        rpID: process.env.PRIMARY_DOMAIN || 'localhost',
+        origin: process.env.WEBAPP_URL || 'http://localhost:3000'
+      }
     },
+    authJs: {},
     realtime: {
       url: process.env.WEBAPP_REALTIME_URL || '',
       key: process.env.WEBAPP_REALTIME_KEY || ''
@@ -45,13 +52,7 @@ export default defineNuxtConfig({
       siteUrl: process.env.WEBAPP_URL || '',
       storageUrl: process.env.WEBAPP_STORAGE_URL || '',
       mailDomainPublic: [] as MailDomainEntries[],
-      mailDomainPremium: [] as MailDomainEntries[],
-      authJs: {
-        baseUrl: process.env.WEBAPP_URL,
-        verifyClientOnEveryRequest: true,
-        authenticatedRedirectTo: '/redirect',
-        guestRedirectTo: '/'
-      }
+      mailDomainPremium: [] as MailDomainEntries[]
     },
     turnstile: {
       secretKey: process.env.WEBAPP_TURNSTILE_SECRET_KEY || ''
