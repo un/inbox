@@ -68,8 +68,8 @@ export const invitesRouter = router({
         });
       }
       const { db, user, org } = ctx;
-      const userId = +user?.id;
-      const orgId = +org?.id;
+      const userId = user?.id;
+      const orgId = org?.id;
       const orgMemberId = org?.memberId || 0;
 
       const { user: userInput, notification, email, groups } = input;
@@ -212,8 +212,8 @@ export const invitesRouter = router({
         });
       }
       const { db, user, org } = ctx;
-      const userId = +user?.id;
-      const orgId = +org?.id;
+      const userId = user?.id;
+      const orgId = org?.id;
 
       const orgInvitesResponse = await db.query.orgInvitations.findMany({
         where: eq(orgInvitations.orgId, +orgId),
@@ -333,7 +333,7 @@ export const invitesRouter = router({
         throw new Error('User is not defined');
       }
       const { db, user } = ctx;
-      const userId = +user?.id;
+      const userId = user?.id;
       const newPublicId = nanoId();
 
       const queryInvitesResponse = await db.query.orgInvitations.findFirst({
@@ -457,8 +457,8 @@ export const invitesRouter = router({
         });
       }
       const { db, user, org } = ctx;
-      const userId = +user?.id;
-      const orgId = +org?.id;
+      const userId = user?.id;
+      const orgId = org?.id;
       const isAdmin = await isUserAdminOfOrg(org);
       if (!isAdmin) {
         throw new TRPCError({
@@ -492,8 +492,8 @@ export const invitesRouter = router({
         });
       }
       const { db, user, org } = ctx;
-      const userId = +user?.id;
-      const orgId = +org?.id;
+      const userId = user?.id;
+      const orgId = org?.id;
       const isAdmin = await isUserAdminOfOrg(org);
       if (!isAdmin) {
         throw new TRPCError({

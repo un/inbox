@@ -23,8 +23,8 @@ export const orgMembersRouter = router({
         });
       }
       const { db, user, org } = ctx;
-      const userId = +user?.id;
-      const orgId = +org?.id;
+      const userId = user?.id;
+      const orgId = org?.id;
 
       const orgQuery = await db.query.orgs.findFirst({
         columns: {
@@ -76,8 +76,8 @@ export const orgMembersRouter = router({
         });
       }
       const { db, user, org } = ctx;
-      const userId = +user?.id;
-      const orgId = +org?.id;
+      const userId = user?.id;
+      const orgId = org?.id;
 
       const { includeRemoved } = input;
 

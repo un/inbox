@@ -22,8 +22,8 @@ export const orgProfileRouter = router({
         });
       }
       const { db, user, org } = ctx;
-      const userId = +user?.id;
-      const orgId = +org?.id;
+      const userId = user?.id;
+      const orgId = org?.id;
       const { orgPublicId } = input;
 
       const orgProfileQuery = await db.query.orgs.findFirst({
@@ -63,8 +63,8 @@ export const orgProfileRouter = router({
         });
       }
       const { db, user, org } = ctx;
-      const userId = +user?.id;
-      const orgId = +org?.id;
+      const userId = user?.id;
+      const orgId = org?.id;
       const { orgName } = input;
 
       const isAdmin = await isUserAdminOfOrg(org);

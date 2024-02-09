@@ -45,8 +45,8 @@ export const emailIdentityRouter = router({
         });
       }
       const { db, user, org } = ctx;
-      const userId = +user?.id;
-      const orgId = +org?.id;
+      const userId = user?.id;
+      const orgId = org?.id;
 
       const { emailUsername, domainPublicId } = input;
 
@@ -107,8 +107,8 @@ export const emailIdentityRouter = router({
         });
       }
       const { db, user, org } = ctx;
-      const userId = +user?.id;
-      const orgId = +org?.id;
+      const userId = user?.id;
+      const orgId = org?.id;
       const {
         domainPublicId,
         sendName,
@@ -274,8 +274,8 @@ export const emailIdentityRouter = router({
         });
       }
       const { db, user, org } = ctx;
-      const userId = +user?.id;
-      const orgId = +org?.id;
+      const userId = user?.id;
+      const orgId = org?.id;
       const { emailIdentityPublicId } = input;
 
       // Handle when adding database replicas
@@ -355,8 +355,8 @@ export const emailIdentityRouter = router({
         });
       }
       const { db, user, org } = ctx;
-      const userId = +user?.id;
-      const orgId = +org?.id;
+      const userId = user?.id;
+      const orgId = org?.id;
 
       const emailIdentityResponse = await db.query.emailIdentities.findMany({
         where: eq(domains.orgId, +orgId),
@@ -426,8 +426,8 @@ export const emailIdentityRouter = router({
         });
       }
       const { db, user, org } = ctx;
-      const userId = +user?.id;
-      const orgId = +org?.id;
+      const userId = user?.id;
+      const orgId = org?.id;
       const orgMemberId = org?.memberId || 0;
       // search for user org group memberships, get id of org group
 

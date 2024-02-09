@@ -31,8 +31,8 @@ export const orgUserGroupsRouter = router({
         });
       }
       const { db, user, org } = ctx;
-      const userId = +user?.id;
-      const orgId = +org?.id;
+      const userId = user?.id;
+      const orgId = org?.id;
       const { groupName, groupDescription, groupColor } = input;
       const newPublicId = nanoId();
 
@@ -66,8 +66,8 @@ export const orgUserGroupsRouter = router({
         });
       }
       const { db, user, org } = ctx;
-      const userId = +user?.id;
-      const orgId = +org?.id;
+      const userId = user?.id;
+      const orgId = org?.id;
 
       const userGroupQuery = await db.query.userGroups.findMany({
         columns: {
@@ -118,8 +118,8 @@ export const orgUserGroupsRouter = router({
         });
       }
       const { db, user, org } = ctx;
-      const userId = +user?.id;
-      const orgId = +org?.id;
+      const userId = user?.id;
+      const orgId = org?.id;
 
       // Handle when adding database replicas
       const dbReplica = db;
@@ -183,8 +183,8 @@ export const orgUserGroupsRouter = router({
         });
       }
       const { db, user, org } = ctx;
-      const userId = +user?.id;
-      const orgId = +org?.id;
+      const userId = user?.id;
+      const orgId = org?.id;
       const { groupPublicId, orgMemberPublicId } = input;
       const newPublicId = nanoId();
 

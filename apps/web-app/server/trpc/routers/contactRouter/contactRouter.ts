@@ -20,8 +20,8 @@ export const contactsRouter = router({
         });
       }
       const { db, user, org } = ctx;
-      const userId = +user?.id;
-      const orgId = +org?.id;
+      const userId = user?.id;
+      const orgId = org?.id;
 
       const orgContactsResponse = await db.query.contacts.findMany({
         where: and(eq(contacts.orgId, orgId), eq(contacts.type, 'person')),

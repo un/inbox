@@ -107,8 +107,8 @@ export const addressRouter = router({
           message: 'User or Organization is not defined'
         });
       }
-      const userId = +user?.id;
-      const orgId = +org.id;
+      const userId = user?.id;
+      const orgId = org.id;
       const orgPublicId = org.publicId;
       const userOrgMembership = org.members.find(
         (member) => member.userId === userId
@@ -341,8 +341,8 @@ export const addressRouter = router({
           message: 'User or Organization is not defined'
         });
       }
-      const userId = +user?.id;
-      const orgId = +org.id;
+      const userId = user?.id;
+      const orgId = org.id;
       const orgPublicId = org.publicId;
       const userOrgMembership = org.members.find(
         (member) => member.userId === userId

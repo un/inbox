@@ -21,8 +21,8 @@ export const billingRouter = router({
         });
       }
       const { db, user, org } = ctx;
-      const userId = +user?.id;
-      const orgId = +org?.id;
+      const userId = user?.id;
+      const orgId = org?.id;
 
       const isAdmin = await isUserAdminOfOrg(org);
       if (!isAdmin) {
@@ -66,8 +66,8 @@ export const billingRouter = router({
         });
       }
       const { db, user, org } = ctx;
-      const userId = +user?.id;
-      const orgId = +org?.id;
+      const userId = user?.id;
+      const orgId = org?.id;
 
       const isAdmin = await isUserAdminOfOrg(org);
       if (!isAdmin) {
@@ -107,8 +107,8 @@ export const billingRouter = router({
         });
       }
       const { db, user, org } = ctx;
-      const userId = +user?.id;
-      const orgId = +org?.id;
+      const userId = user?.id;
+      const orgId = org?.id;
       const { plan, period } = input;
 
       const isAdmin = await isUserAdminOfOrg(org);

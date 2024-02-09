@@ -29,8 +29,8 @@ export const domainsRouter = router({
         });
       }
       const { db, user, org } = ctx;
-      const userId = +user?.id;
-      const orgId = +org?.id;
+      const userId = user?.id;
+      const orgId = org?.id;
       const newPublicId = nanoId();
 
       const domainName = input.domainName.toLowerCase();
@@ -132,8 +132,8 @@ export const domainsRouter = router({
         });
       }
       const { db, user, org } = ctx;
-      const userId = +user?.id;
-      const orgId = +org?.id;
+      const userId = user?.id;
+      const orgId = org?.id;
       const { domainPublicId } = input;
 
       // Handle when adding database replicas
@@ -183,8 +183,8 @@ export const domainsRouter = router({
         });
       }
       const { db, user, org } = ctx;
-      const userId = +user?.id;
-      const orgId = +org?.id;
+      const userId = user?.id;
+      const orgId = org?.id;
       const { domainPublicId } = input;
       const postalRootUrl = useRuntimeConfig().mailBridge
         .postalRootUrl as string;
@@ -363,8 +363,8 @@ export const domainsRouter = router({
         });
       }
       const { db, user, org } = ctx;
-      const userId = +user?.id;
-      const orgId = +org?.id;
+      const userId = user?.id;
+      const orgId = org?.id;
 
       const domainResponse = await db.query.domains.findMany({
         where: eq(domains.orgId, +orgId),
