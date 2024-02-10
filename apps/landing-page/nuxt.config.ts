@@ -1,62 +1,21 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  //! FIXME: remove after update of nuxt-content to above 2.7.2
-  // alias: {
-  //   'micromark/lib/preprocess.js': 'micromark',
-  //   'micromark/lib/postprocess.js': 'micromark'
-  // },
-
-  devtools: { enabled: true },
-  modules: [
-    // '@nuxt/content',
-    '@nuxtjs/color-mode'
-  ],
-  // Styling
+  extends: ['@nuxt/ui-pro'],
+  modules: ['@nuxt/content', '@nuxt/ui', 'nuxt-og-image'],
+  ui: {
+    icons: ['heroicons', 'simple-icons']
+  },
   css: ['@/assets/css/main.css'],
-  app: {
-    pageTransition: { name: 'page', mode: 'out-in', duration: 300 }
+  colorMode: {
+    // classSuffix: '',
+    preference: 'light', // default value of $colorMode.preference
+    fallback: 'light', // fallback value if not system preference found
+    storageKey: 'un-color-mode'
   },
-  // colorMode: {
-  //   classSuffix: ''
-  // }
-  // content: {
-  //   // https://content.nuxtjs.org/api/configuration
-  // }
-  //   ogImage: {
-  //   host: 'https://uninbox.com',
-  //   fonts: [
-  //     'Inter:400',
-  //     {
-  //       name: 'CalSans',
-  //       weight: 800,
-  //       // path must point to a public font file
-  //       path: '/fonts/CalSans-SemiBold.ttf'
-  //     }
-  //   ]
-  // },
+  devtools: {
+    enabled: true
+  },
   typescript: {
-    shim: false
-  },
-
-  nitro: {
-    prerender: {
-      crawlLinks: true // recommended
-    }
+    strict: false
   }
-  /**
-   * * Module Configurations
-   */
-
-  //* Nuxt-Security
-  // security: {
-  //   headers: {
-  //     crossOriginEmbedderPolicy: {
-  //       value:
-  //         process.env.NODE_ENV === 'development'
-  //           ? 'unsafe-none'
-  //           : 'require-corp',
-  //       route: '/**'
-  //     }
-  //   }
-  // }
 });
