@@ -1,62 +1,63 @@
 <script setup lang="ts">
-const links = [{
-  label: 'Resources',
-  children: [{
-    label: 'Help center'
-  }, {
-    label: 'Docs'
-  }, {
-    label: 'Roadmap'
-  }, {
-    label: 'Changelog'
-  }]
-}, {
-  label: 'Features',
-  children: [{
-    label: 'Affiliates'
-  }, {
-    label: 'Portal'
-  }, {
-    label: 'Jobs'
-  }, {
-    label: 'Sponsors'
-  }]
-}, {
-  label: 'Company',
-  children: [{
-    label: 'About'
-  }, {
-    label: 'Pricing'
-  }, {
-    label: 'Careers'
-  }, {
-    label: 'Blog'
-  }]
-}]
+  const emit = defineEmits(['openWaitlistModal']);
+  // const links = [{
+  //   label: 'Resources',
+  //   children: [{
+  //     label: 'Help center'
+  //   }, {
+  //     label: 'Docs'
+  //   }, {
+  //     label: 'Roadmap'
+  //   }, {
+  //     label: 'Changelog'
+  //   }]
+  // }, {
+  //   label: 'Features',
+  //   children: [{
+  //     label: 'Affiliates'
+  //   }, {
+  //     label: 'Portal'
+  //   }, {
+  //     label: 'Jobs'
+  //   }, {
+  //     label: 'Sponsors'
+  //   }]
+  // }, {
+  //   label: 'Company',
+  //   children: [{
+  //     label: 'About'
+  //   }, {
+  //     label: 'Pricing'
+  //   }, {
+  //     label: 'Careers'
+  //   }, {
+  //     label: 'Blog'
+  //   }]
+  // }]
 
-const toast = useToast()
+  const toast = useToast();
 
-const email = ref('')
-const loading = ref(false)
+  // const email = ref('')
+  // const loading = ref(false)
 
-function onSubmit () {
-  loading.value = true
+  // function onSubmit () {
+  //   loading.value = true
 
-  setTimeout(() => {
-    toast.add({
-      title: 'Subscribed!',
-      description: 'You\'ve been subscribed to our newsletter.'
-    })
+  //   setTimeout(() => {
+  //     toast.add({
+  //       title: 'Subscribed!',
+  //       description: 'You\'ve been subscribed to our newsletter.'
+  //     })
 
-    loading.value = false
-  }, 1000)
-}
+  //     loading.value = false
+  //   }, 1000)
+  // }
 </script>
 
 <template>
   <UFooter>
     <template #top>
-      <UFooterColumns :links="links">
+      <!-- <UFooterColumns :links="links">
         <template #right>
           <form @submit.prevent="onSubmit">
             <UFormGroup label="Subscribe to our newsletter" :ui="{ container: 'mt-3' }">
@@ -68,7 +69,7 @@ function onSubmit () {
             </UFormGroup>
           </form>
         </template>
-      </UFooterColumns>
+      </UFooterColumns> -->
     </template>
 
     <template #left>
@@ -78,9 +79,35 @@ function onSubmit () {
     </template>
 
     <template #right>
-      <UColorModeButton size="sm" />
+      <UButton
+        color="black"
+        icon="i-simple-icons-github"
+        class="hidden lg:flex"
+        to="https://github.com/uninbox/UnInbox"
+        variant="ghost"
+        :target="'_blank'" />
+      <UButton
+        color="black"
+        icon="i-simple-icons-discord"
+        to="https://discord.gg/dGBff6zBwQ"
+        :target="'_blank'"
+        variant="ghost"
+        class="hidden lg:flex" />
+      <UButton
+        color="black"
+        icon="i-simple-icons-x"
+        to="https://x.com/uninbox"
+        :target="'_blank'"
+        variant="ghost"
+        class="hidden lg:flex" />
 
-      <UButton to="https://github.com/nuxt-ui-pro/landing" target="_blank" icon="i-simple-icons-github" aria-label="GitHub" color="gray" variant="ghost" />
+      <UButton
+        label="Join the waitlist"
+        color="black"
+        variant="ghost"
+        icon="i-heroicons-rocket-launch"
+        class="hidden lg:flex"
+        @click="$emit('openWaitlistModal')" />
     </template>
   </UFooter>
 </template>
