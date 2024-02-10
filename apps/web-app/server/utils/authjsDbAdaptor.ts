@@ -102,7 +102,7 @@ export function customDrizzleAdapter(): Adapter {
 
       return {
         id: user.id,
-        idNumber: +user.idNumber,
+        idNumber: user.idNumber,
         publicId: user.publicId,
         name: user.name,
         username: user.username,

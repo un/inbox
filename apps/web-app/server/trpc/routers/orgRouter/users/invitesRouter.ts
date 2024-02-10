@@ -115,10 +115,11 @@ export const invitesRouter = router({
         const newGroupMembershipValues = groupIds.map((group: any) => ({
           publicId: nanoId(),
           orgMemberId: +orgMemberResponse.insertId,
-          groupId: +group.id,
+          groupId: group.id,
           userProfileId: +userProfileId,
           addedBy: +orgMemberId,
           role: 'member' as 'admin' | 'member'
+          
         }));
 
         await db.insert(userGroupMembers).values([...newGroupMembershipValues]);
