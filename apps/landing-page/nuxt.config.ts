@@ -1,62 +1,32 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  //! FIXME: remove after update of nuxt-content to above 2.7.2
-  // alias: {
-  //   'micromark/lib/preprocess.js': 'micromark',
-  //   'micromark/lib/postprocess.js': 'micromark'
-  // },
-
-  devtools: { enabled: true },
-  modules: [
-    // '@nuxt/content',
-    '@nuxtjs/color-mode'
-  ],
-  // Styling
+  extends: ['@nuxt/ui-pro'],
+  modules: ['@nuxt/content', '@nuxt/ui', 'nuxt-og-image', '@vueuse/nuxt'],
+  ui: {
+    icons: ['heroicons', 'simple-icons', 'ph']
+  },
   css: ['@/assets/css/main.css'],
-  app: {
-    pageTransition: { name: 'page', mode: 'out-in', duration: 300 }
+  colorMode: {
+    // classSuffix: '',
+    preference: 'light', // default value of $colorMode.preference
+    fallback: 'light', // fallback value if not system preference found
+    storageKey: 'un-color-mode'
   },
-  // colorMode: {
-  //   classSuffix: ''
-  // }
-  // content: {
-  //   // https://content.nuxtjs.org/api/configuration
-  // }
-  //   ogImage: {
-  //   host: 'https://uninbox.com',
-  //   fonts: [
-  //     'Inter:400',
-  //     {
-  //       name: 'CalSans',
-  //       weight: 800,
-  //       // path must point to a public font file
-  //       path: '/fonts/CalSans-SemiBold.ttf'
-  //     }
-  //   ]
-  // },
+  devtools: {
+    enabled: true
+  },
   typescript: {
-    shim: false
+    strict: false
   },
-
-  nitro: {
-    prerender: {
-      crawlLinks: true // recommended
+  runtimeConfig: {
+    // paths: [...pagePaths],
+    databaseHost: process.env.NUXT_DATABASE_HOST || '',
+    databaseUsername: process.env.NUXT_DATABASE_USERNAME || '',
+    databasePassword: process.env.NUXT_DATABASE_PASSWORD || '',
+    emailApiUrl: process.env.NUXT_EMAIL_API_URL || '',
+    emailApiKey: process.env.NUXT_EMAIL_API_KEY || '',
+    public: {
+      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'https://uninbox.com'
     }
   }
-  /**
-   * * Module Configurations
-   */
-
-  //* Nuxt-Security
-  // security: {
-  //   headers: {
-  //     crossOriginEmbedderPolicy: {
-  //       value:
-  //         process.env.NODE_ENV === 'development'
-  //           ? 'unsafe-none'
-  //           : 'require-corp',
-  //       route: '/**'
-  //     }
-  //   }
-  // }
 });

@@ -1,6 +1,6 @@
-@import '@unocss/reset/tailwind.css';
+/* @import '@unocss/reset/tailwind.css'; */
 
-: root {
+:root {
   font-family: 'Inter var', sans-serif;
 }
 @supports (font-variation-settings: normal) {
@@ -37,7 +37,7 @@
 }
 
 /* CSS Reset Override */
-*,
+/* *,
 ::before,
 ::after {
   box-sizing: border-box;
@@ -240,7 +240,7 @@ video {
   display: none;
 }
 /* Anthony's addition */
-.dark {
+/* .dark {
   color-scheme: dark;
 }
 .dark ::-moz-selection {
@@ -259,4 +259,4 @@ div[row=''] {
 }
 div[block=''] {
   display: block;
-}
+} */
