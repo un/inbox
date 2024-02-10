@@ -274,7 +274,7 @@
 
       <div class="flex flex-col gap-2">
         <img
-          src="/public/images/screenshot.png"
+          src="/images/screenshot.png?url"
           class="ring-gray-300 dark:ring-gray-700 w-full rounded-md shadow-xl ring-1" />
         <span class="text-gray-500 text-sm">
           This is a development screenshot
