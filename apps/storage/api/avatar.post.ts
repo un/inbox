@@ -43,7 +43,7 @@ export default eventHandler({
       return send(event, 'Missing publicId value');
     }
     const publicId = publicIdInput.data.toString('utf8');
-    const userId = +event.context.user?.id || null;
+    const userId = event.context.user?.id || null;
 
     if (typeObject.name === 'user') {
       const profileResponse = await db.query.userProfiles.findFirst({

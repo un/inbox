@@ -45,7 +45,7 @@ export default eventHandler({
     }
 
     if (!attachmentQueryResponse.public) {
-      const userId = +event.context.user.id;
+      const userId = event.context.user.id;
       if (!userId) {
         setResponseStatus(event, 401);
         return send(event, 'Unauthorized');

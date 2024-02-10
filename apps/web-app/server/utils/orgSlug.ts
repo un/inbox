@@ -36,7 +36,7 @@ export const validateOrgSlug = async (
   }
 
   const orgContext: OrgContext = {
-    id: +orgLookupResult.id,
+    id: orgLookupResult.id,
     publicId: orgLookupResult.publicId,
     members: orgLookupResult.members
   };
@@ -64,7 +64,7 @@ export async function refreshOrgSlugCache(orgId: number): Promise<void> {
     return;
   }
   const orgContext: OrgContext = {
-    id: +orgLookupResult.id,
+    id: orgLookupResult.id,
     publicId: orgLookupResult.publicId,
     members: orgLookupResult.members
   };
