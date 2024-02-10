@@ -257,7 +257,7 @@ export const addressRouter = router({
             sendName: sendName,
             serverPublicId:
               createMailBridgeOrgResponse.postalServer.serverPublicId,
-            userId: +userOrgMembership.id,
+            userId: userOrgMembership.id,
             username: username.toLocaleLowerCase()
           }
         );

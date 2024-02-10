@@ -160,7 +160,7 @@ export const invitesRouter = router({
           publicId: emailIdentityPublicId,
           orgId: +orgId,
           createdBy: +orgMemberId,
-          domainId: +domainResponse?.id,
+          domainId: domainResponse?.id,
           username: email.emailUsername,
           domainName: domainResponse?.domain,
           routingRuleId: +emailRoutingRulesResponse.insertId,
@@ -428,7 +428,7 @@ export const invitesRouter = router({
         .set({
           acceptedAt: new Date()
         })
-        .where(eq(orgInvitations.id, +queryInvitesResponse.id));
+        .where(eq(orgInvitations.id, queryInvitesResponse.id));
 
       if (useRuntimeConfig().billing.enabled) {
         billingTrpcClient.stripe.subscriptions.updateOrgUserCount.mutate({
