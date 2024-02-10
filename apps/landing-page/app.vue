@@ -80,58 +80,57 @@
 </script>
 
 <template>
-  <Header @open-waitlist-modal="() => (showWaitlistModal = true)" />
-  <UModal
-    v-model="showWaitlistModal"
-    class="max-w-md">
-    <UCard>
-      <template #header>
-        <div class="flex flex-row items-center justify-between">
-          <h2 class="text-2xl font-display">Join the waitlist</h2>
-          <UButton
-            icon="i-ph-x"
-            color="black"
-            size="sm"
-            @click="() => (showWaitlistModal = false)" />
+  <div class="h-full w-full">
+    <Header @open-waitlist-modal="() => (showWaitlistModal = true)" />
+    <UModal
+      v-model="showWaitlistModal"
+      class="max-w-md">
+      <UCard>
+        <template #header>
+          <div class="flex flex-row items-center justify-between">
+            <h2 class="text-2xl font-display">Join the waitlist</h2>
+            <UButton
+              icon="i-ph-x"
+              color="black"
+              size="sm"
+              @click="() => (showWaitlistModal = false)" />
+          </div>
+        </template>
+        <div class="flex flex-col gap-2">
+          <UFormGroup
+            label="Email Address"
+            :error="!validEmail">
+            <UInput
+              v-model="email"
+              type="email"
+              placeholder="Enter your email"
+              :error="!validEmail"
+              :disabled="loading"
+              required
+              size="lg"
+              autocomplete="off"
+              class="max-w-sm" />
+          </UFormGroup>
+          <p class="text-gray-500 text-sm">
+            We'll email you when we're ready to launch. No spam, we promise.
+          </p>
         </div>
-      </template>
-
-      <div class="flex flex-col gap-2">
-        <UFormGroup
-          label="Email Address"
-          :error="!validEmail">
-          <UInput
-            v-model="email"
-            type="email"
-            placeholder="Enter your email"
-            :error="!validEmail"
-            :disabled="loading"
-            required
+        <template #footer>
+          <UButton
+            label="Join"
+            color="black"
             size="lg"
-            autocomplete="off"
-            class="max-w-sm" />
-        </UFormGroup>
-        <p class="text-gray-500 text-sm">
-          We'll email you when we're ready to launch. No spam, we promise.
-        </p>
-      </div>
-
-      <template #footer>
-        <UButton
-          label="Join"
-          color="black"
-          size="lg"
-          :disabled="!validEmail || loading"
-          :loading="loading"
-          @click="registerWaitlist()" />
-      </template>
-      <template #close> </template>
-    </UCard>
-  </UModal>
-
-  <UMain>
-    <NuxtPage @open-waitlist-modal="() => (showWaitlistModal = true)" />
-  </UMain>
-
-  <Footer @open-waitlist-modal="() => (showWaitlistModal = true)" />
+            :disabled="!validEmail || loading"
+            :loading="loading"
+            @click="registerWaitlist()" />
+        </template>
+        <template #close> </template>
+      </UCard>
+    </UModal>
+    <UMain>
+      <NuxtPage @open-waitlist-modal="() => (showWaitlistModal = true)" />
+    </UMain>
+    <Footer @open-waitlist-modal="() => (showWaitlistModal = true)" />
+    <UNotifications />
+  </div>
 </template>
