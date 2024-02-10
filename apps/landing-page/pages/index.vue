@@ -135,7 +135,7 @@
       badge: { label: 'Introductory Price' },
       price: '$8',
       discount: '',
-      cycle: '/month',
+      cycle: '/user /month',
       highlight: true,
       scale: true
     },
