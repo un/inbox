@@ -6,16 +6,18 @@
   const emit = defineEmits(['openWaitlistModal']);
 
   useSeoMeta({
-    title: page.value.title,
-    ogTitle: page.value.title,
-    description: page.value.description,
-    ogDescription: page.value.description
+    title:
+      'UnInbox - Modern email for teams and professionals. 100% Open Source.',
+    ogSiteName: 'UnInbox',
+    ogDescription:
+      'Modern email for teams and professionals. 100% Open Source.',
+    twitterCard: 'summary_large_image'
   });
 
   defineOgImage({
     component: 'Landing',
-    title: page.value.title,
-    description: page.value.description
+    title: 'UnInbox',
+    description: 'Modern email for teams and professionals. 100% Open Source.'
   });
 
   const heroLinks = [
