@@ -211,7 +211,7 @@
     {
       label: 'Can I use UnInbox for my personal email?',
       content:
-        'Yes, most of our features are designed for collaboration, but everything should work if its just you.'
+        'Yes, most of our features are designed for collaboration, but everything should work if its just you. '
     },
     {
       label: 'Can I use custom domains?',
@@ -229,21 +229,36 @@
     },
     {
       label: 'Can I self-host UnInbox?',
-      content: "Yes, we'll even give you a handy guide to get things set up."
+      content:
+        "Yes, we'll even give you a handy guide to get things set up. Support for self-hosting is through our Discord community or by purchasing a support contract."
     },
     {
       label: 'Will you have a calendar?',
-      content: "It's planned, but likely to come after the email app is stable."
+      content: "It's planned, but will come after the email app is stable."
+    },
+    {
+      label: 'Will you have an email aliasing feature?',
+      content:
+        'Yes, it will come soon after launch and let you create email aliases either with our domain UnAlias.com or your own custom domains.'
+    },
+    {
+      label: 'Any plans for a document writing feature?',
+      content: 'Yes.'
+    },
+    {
+      label: 'Will you support encryption?',
+      content:
+        'Yes, but not initially. Once we are out of Beta mode you can expect some encryption.'
+    },
+    {
+      label: 'Can I migrate my emails from Google or another provider?',
+      content:
+        'We want to make De-Googling and migrating from other providers super easy. Its not yet possible but its on our priorities list.'
     },
     {
       label: 'Will your prices ever increase?',
       content:
-        'Yes, as time goes on things become more expensive. BUT, once you have an active subscription, the price is locked in for the life for your whole organization.'
-    },
-    {
-      label: 'Will you do what Skiff did and abandon us?',
-      content:
-        "No, we do not plan on getting acquired, that's not our end goal. If we were ever to shut down, our code will remain freely available for you to self-host."
+        'Yes, as time goes on things become more expensive. BUT, when you have an active subscription, the price is locked in till your subscription expires.'
     },
     {
       label: 'Can I use UnInbox with another email client?',
@@ -254,6 +269,21 @@
       label: 'Can I forward mail in from another service?',
       content:
         'Yes, you get a personal email address with UnInbox, and a dedicated forwarding address. Any emails sent to your forwarding address will appear in your UnInbox. You can also forward all emails for a custom domain to your UnInbox organization.'
+    },
+    {
+      label: 'Will you do what Skiff did and abandon us?',
+      content:
+        "No, we do not plan on getting acquired, that's not our end goal. If we were ever to shut down, our code will remain freely available for you to self-host and we will take some steps to ensure the online platform can remain active."
+    },
+    {
+      label: 'Do you plan on raising funds or taking investments?',
+      content:
+        'Yes, in order to bring our vision to life, we will need significant time and resources. Crowdfunding, donations and bootstrapping were deeply considered, but deemed not viable enough for our vision. Any potential investor will be carefully vetted by our founders - and by peers in the open source community - to ensure they align with our open source principles, and it will be made abundantly clear that an acquisition is not in our future. Special agreements will be put into place to ensure the longevity of UnInbox if we were ever to halt doing business.'
+    },
+    {
+      label: 'What does "100% Open Source" mean?',
+      content:
+        '100% of the code for all the features and functionality needed to run your own instance of UnInbox are released under a permissive software license called AGPLv3. This allows anyone to copy the code and modify it however they want, so long as they also release the code publicly under the same license. A few features or modules in the app are not open source, but instead released under a commercial license and mostly publicly available. These features or modules are things that are only relevant to large enterprise companies such as SSO or OIDC - or related to the billing system of UnInbox.'
     }
   ];
 </script>
