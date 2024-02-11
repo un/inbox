@@ -44,9 +44,9 @@
 
   nuxtApp.hooks.hookOnce('page:finish', () => {
     updateHeadings([
+      document.querySelector('#way'),
       document.querySelector('#features'),
       document.querySelector('#pricing'),
-      document.querySelector('#testimonials'),
       document.querySelector('#faq')
     ]);
   });
