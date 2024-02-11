@@ -44,9 +44,9 @@
 
   nuxtApp.hooks.hookOnce('page:finish', () => {
     updateHeadings([
+      document.querySelector('#way'),
       document.querySelector('#features'),
       document.querySelector('#pricing'),
-      document.querySelector('#testimonials'),
       document.querySelector('#faq')
     ]);
   });
@@ -97,13 +97,30 @@
       <UDivider class="my-6" />
 
       <UButton
-        label="Sign in"
-        color="white"
-        block
-        class="mb-3" />
+        color="black"
+        icon="i-simple-icons-github"
+        class="hidden lg:flex"
+        to="https://github.com/uninbox/UnInbox"
+        :target="'_blank'" />
       <UButton
-        label="Get started"
-        block />
+        color="black"
+        icon="i-simple-icons-discord"
+        to="https://discord.gg/dGBff6zBwQ"
+        :target="'_blank'"
+        class="hidden lg:flex" />
+      <UButton
+        color="black"
+        icon="i-simple-icons-x"
+        to="https://x.com/uninbox"
+        :target="'_blank'"
+        class="hidden lg:flex" />
+
+      <UButton
+        label="Join the waitlist"
+        color="black"
+        icon="i-heroicons-rocket-launch"
+        class="hidden lg:flex"
+        @click="$emit('openWaitlistModal')" />
     </template>
   </UHeader>
 </template>
