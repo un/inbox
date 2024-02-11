@@ -127,7 +127,7 @@
       align: 'top',
       features: [
         '@unin.me email address',
-        'Custom Domains',
+        'Unlimited Custom Domains',
         'User Groups',
         'SMTP, API & Webhooks',
         'Priority Chat Support'
@@ -269,6 +269,11 @@
       label: 'Can I forward mail in from another service?',
       content:
         'Yes, you get a personal email address with UnInbox, and a dedicated forwarding address. Any emails sent to your forwarding address will appear in your UnInbox. You can also forward all emails for a custom domain to your UnInbox organization.'
+    },
+    {
+      label: 'Will you have Encryption?',
+      content:
+        'Yes, not initially but its high on our priority list. Due to the way data is stored and shared between users of the same organization, we need to implement encryption in a way that ensures no features are blocked from functioning.'
     },
     {
       label: 'Will you do what Skiff did and abandon us?',
