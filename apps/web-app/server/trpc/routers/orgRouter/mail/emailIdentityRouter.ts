@@ -53,7 +53,7 @@ export const emailIdentityRouter = router({
       const domainResponse = await db.query.domains.findFirst({
         where: and(
           eq(domains.publicId, domainPublicId),
-          eq(domains.orgId, +orgId)
+          eq(domains.orgId, orgId)
         ),
         columns: {
           id: true,
@@ -138,7 +138,7 @@ export const emailIdentityRouter = router({
       const domainResponse = await db.query.domains.findFirst({
         where: and(
           eq(domains.publicId, domainPublicId),
-          eq(domains.orgId, +orgId)
+          eq(domains.orgId, orgId)
         ),
         columns: {
           id: true,
@@ -195,8 +195,8 @@ export const emailIdentityRouter = router({
 
       const insertEmailRoutingRule = await db.insert(emailRoutingRules).values({
         publicId: newPublicId,
-        orgId: +orgId,
-        createdBy: +userId,
+        orgId: orgId,
+        createdBy: userId,
         name: emailUsername,
         description: `Email routing rule for ${emailUsername}@${domainResponse.domain}`
       });
@@ -235,7 +235,7 @@ export const emailIdentityRouter = router({
         .insert(emailIdentities)
         .values({
           publicId: emailIdentityPublicId,
-          orgId: +orgId,
+          orgId: orgId,
           createdBy: userId,
           username: emailUsername,
           domainName: domainResponse.domain,
@@ -285,7 +285,7 @@ export const emailIdentityRouter = router({
         await dbReplica.query.emailIdentities.findFirst({
           where: and(
             eq(emailIdentities.publicId, emailIdentityPublicId),
-            eq(domains.orgId, +orgId)
+            eq(domains.orgId, orgId)
           ),
           columns: {
             publicId: true,
@@ -359,7 +359,7 @@ export const emailIdentityRouter = router({
       const orgId = org?.id;
 
       const emailIdentityResponse = await db.query.emailIdentities.findMany({
-        where: eq(domains.orgId, +orgId),
+        where: eq(domains.orgId, orgId),
         columns: {
           publicId: true,
           username: true,
@@ -433,7 +433,7 @@ export const emailIdentityRouter = router({
 
       const userOrgGroupMembershipQuery =
         await db.query.userGroupMembers.findMany({
-          where: eq(userGroupMembers.orgMemberId, +orgMemberId),
+          where: eq(userGroupMembers.orgMemberId, orgMemberId),
           columns: {
             groupId: true
           },
@@ -448,8 +448,7 @@ export const emailIdentityRouter = router({
         });
 
       const orgGroupIds = userOrgGroupMembershipQuery.filter(
-        (userOrgGroupMembership) =>
-          userOrgGroupMembership.group.orgId === +orgId
+        (userOrgGroupMembership) => userOrgGroupMembership.group.orgId === orgId
       );
 
       const userGroupIds = orgGroupIds.map(

@@ -87,7 +87,7 @@ export const convoRouter = router({
         });
       }
       const userId = user?.id;
-      const userOrgMemberId = +org?.memberId;
+      const userOrgMemberId = org?.memberId;
       const orgId = org?.id;
       const {
         sendAsEmailIdentityPublicId,

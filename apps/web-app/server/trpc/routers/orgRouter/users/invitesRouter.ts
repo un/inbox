@@ -85,21 +85,21 @@ export const invitesRouter = router({
         handle: '',
         defaultProfile: true
       });
-      const userProfileId = userProfileResponse.insertId;
+      const userProfileId = +userProfileResponse.insertId;
       await db.insert(userProfilesToOrgs).values({
-        userProfileId: +userProfileId,
-        orgId: +orgId
+        userProfileId: userProfileId,
+        orgId: orgId
       });
 
       // Insert orgMember - save ID
       const orgMemberPublicId = nanoId();
       const orgMemberResponse = await db.insert(orgMembers).values({
         publicId: orgMemberPublicId,
-        orgId: +orgId,
+        orgId: orgId,
         invitedByOrgMemberId: orgMemberId,
         status: 'invited',
         role: userInput.role,
-        userProfileId: +userProfileId
+        userProfileId: userProfileId
       });
 
       // Insert groupMemberships - save ID
@@ -112,14 +112,13 @@ export const invitesRouter = router({
         });
 
         // Fix type any
-        const newGroupMembershipValues = groupIds.map((group: any) => ({
+        const newGroupMembershipValues = groupIds.map((group) => ({
           publicId: nanoId(),
           orgMemberId: +orgMemberResponse.insertId,
           groupId: group.id,
-          userProfileId: +userProfileId,
-          addedBy: +orgMemberId,
+          userProfileId: userProfileId,
+          addedBy: orgMemberId,
           role: 'member' as 'admin' | 'member'
-          
         }));
 
         await db.insert(userGroupMembers).values([...newGroupMembershipValues]);
@@ -144,10 +143,10 @@ export const invitesRouter = router({
         const emailRoutingRulesResponse = await db
           .insert(emailRoutingRules)
           .values({
-            orgId: +orgId,
+            orgId: orgId,
             publicId: emailRoutingRulesPublicId,
             name: `Email routing rule for ${email.emailUsername}@${domainResponse?.domain}`,
-            createdBy: +orgMemberId
+            createdBy: orgMemberId
           });
 
         await db.insert(emailRoutingRulesDestinations).values({
@@ -159,8 +158,8 @@ export const invitesRouter = router({
         const emailIdentityPublicId = nanoId();
         const emailIdentityResponse = await db.insert(emailIdentities).values({
           publicId: emailIdentityPublicId,
-          orgId: +orgId,
-          createdBy: +orgMemberId,
+          orgId: orgId,
+          createdBy: orgMemberId,
           domainId: domainResponse?.id,
           username: email.emailUsername,
           domainName: domainResponse?.domain,
@@ -173,7 +172,7 @@ export const invitesRouter = router({
           orgId: orgId,
           identityId: +emailIdentityResponse.insertId,
           default: true,
-          addedBy: +orgMemberId,
+          addedBy: orgMemberId,
           orgMemberId: +orgMemberResponse.insertId
         });
       }
@@ -184,13 +183,13 @@ export const invitesRouter = router({
       const newInviteToken = nanoIdToken();
       await db.insert(orgInvitations).values({
         publicId: newInvitePublicId,
-        orgId: +orgId,
-        invitedByOrgMemberId: +orgMemberId,
+        orgId: orgId,
+        invitedByOrgMemberId: orgMemberId,
         orgMemberId: +orgMemberResponse.insertId,
         role: userInput.role,
         email: notification?.notificationEmailAddress || null,
         inviteToken: newInviteToken,
-        invitedUserProfileId: +userProfileId,
+        invitedUserProfileId: userProfileId,
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 Days from now
       });
 
@@ -217,7 +216,7 @@ export const invitesRouter = router({
       const orgId = org?.id;
 
       const orgInvitesResponse = await db.query.orgInvitations.findMany({
-        where: eq(orgInvitations.orgId, +orgId),
+        where: eq(orgInvitations.orgId, orgId),
         columns: {
           publicId: true,
           role: true,
@@ -401,7 +400,7 @@ export const invitesRouter = router({
       }
 
       const userHandleQuery = await db.query.users.findFirst({
-        where: eq(users.id, +userId),
+        where: eq(users.id, userId),
         columns: {
           username: true
         }
@@ -410,7 +409,7 @@ export const invitesRouter = router({
       await db
         .update(userProfiles)
         .set({
-          userId: +userId,
+          userId: userId,
           handle: userHandleQuery?.username || ''
         })
         .where(eq(userProfiles.id, +queryInvitesResponse.invitedUserProfileId));

@@ -34,7 +34,7 @@ export const addressRouter = router({
 
       const usersPersonalEmailIdentities =
         await db.query.personalEmailIdentities.findMany({
-          where: eq(personalEmailIdentities.userId, +userId),
+          where: eq(personalEmailIdentities.userId, userId),
           columns: {
             publicId: true
           },
@@ -82,7 +82,7 @@ export const addressRouter = router({
         .map((domain) => domain.name);
 
       const userObject = await db.query.users.findFirst({
-        where: eq(users.id, +userId),
+        where: eq(users.id, userId),
         columns: {
           username: true
         }
@@ -128,7 +128,7 @@ export const addressRouter = router({
       // Check the users already claimed personal addresses
       const usersPersonalEmailIdentities =
         await db.query.personalEmailIdentities.findMany({
-          where: eq(personalEmailIdentities.userId, +userId),
+          where: eq(personalEmailIdentities.userId, userId),
           columns: {
             publicId: true
           },
