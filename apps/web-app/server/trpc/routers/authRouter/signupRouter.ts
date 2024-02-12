@@ -3,10 +3,13 @@ import { parse, stringify } from 'superjson';
 import { router, publicProcedure, limitedProcedure } from '../../trpc';
 import type { DBType } from '@uninbox/database';
 import { eq } from '@uninbox/database/orm';
-import { users } from '@uninbox/database/schema';
+import { accounts, users } from '@uninbox/database/schema';
 import { nanoId } from '@uninbox/utils';
 import { isFakeEmail } from 'fakefilter';
+import { UAParser } from 'ua-parser-js';
 import { blockedUsernames } from '~/server/utils/signup';
+import { TRPCError } from '@trpc/server';
+import { lucia } from '~/server/utils/auth';
 
 async function validateUsername(
   db: DBType,
@@ -37,6 +40,15 @@ async function validateUsername(
   };
 }
 
+async function validateEmailAddress(email: string): Promise<{
+  validEmail: boolean;
+}> {
+  const fakeEmail = isFakeEmail(email);
+  return {
+    validEmail: !fakeEmail
+  };
+}
+
 export const signupRouter = router({
   checkUsernameAvailability: limitedProcedure
     .input(
@@ -55,8 +67,7 @@ export const signupRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      const fakeEmail = isFakeEmail(input.email);
-      return { validEmail: fakeEmail === false ? true : false };
+      return await validateEmailAddress(input.email);
     }),
 
   registerUser: limitedProcedure
@@ -67,45 +78,64 @@ export const signupRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      //! refactor
-
       const db = ctx.db;
+
+      // we recheck the username availability and email validity to ensure bad actors don't bypass the check
       const { available: validName } = await validateUsername(
         ctx.db,
         input.username
       );
+      const { validEmail } = await validateEmailAddress(input.email);
       if (!validName) {
-        return {
-          success: false,
-          username: input.username,
-          userPublicId: null,
-          error: 'Username is not available to register'
-        };
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Username is not available to register'
+        });
+      }
+      if (!validEmail) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Email is not valid'
+        });
       }
 
-      const newPublicId = nanoId();
+      const newUserPublicId = nanoId();
       const insertUserResponse = await db.insert(users).values({
-        publicId: newPublicId,
+        publicId: newUserPublicId,
         username: input.username
       });
-
-      //! add user Auth recovery email into auth table
-
       if (!insertUserResponse.insertId) {
-        console.log(insertUserResponse);
-        return {
-          success: false,
-          username: input.username,
-          userPublicId: null,
-          error:
-            'Something went wrong, please retry. Contact our team if it persists'
-        };
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Something went wrong, please retry'
+        });
       }
+
+      const userId = +insertUserResponse.insertId;
+      await db.insert(accounts).values({
+        userId: userId,
+        recoveryEmail: input.email,
+        recoveryEmailEnabled: true
+      });
+
+      const { device, os } = UAParser(await getHeader(ctx.event, 'User-Agent'));
+      const userDevice =
+        device.type === 'mobile' ? device.toString() : device.vendor;
+
+      const userSession = await lucia.createSession(newUserPublicId, {
+        user: {
+          id: userId,
+          username: input.username,
+          publicId: newUserPublicId
+        },
+        device: userDevice || 'Unknown',
+        os: os.name || 'Unknown'
+      });
+      const cookie = lucia.createSessionCookie(userSession.id);
+      setCookie(ctx.event, cookie.name, cookie.value, cookie.attributes);
+
       return {
-        success: true,
-        username: input.username,
-        userPublicId: newPublicId,
-        error: null
+        success: true
       };
     })
 });
