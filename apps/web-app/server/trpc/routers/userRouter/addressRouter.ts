@@ -34,7 +34,7 @@ export const addressRouter = router({
 
       const usersPersonalEmailIdentities =
         await db.query.personalEmailIdentities.findMany({
-          where: eq(personalEmailIdentities.userId, +userId),
+          where: eq(personalEmailIdentities.userId, userId),
           columns: {
             publicId: true
           },
@@ -82,7 +82,7 @@ export const addressRouter = router({
         .map((domain) => domain.name);
 
       const userObject = await db.query.users.findFirst({
-        where: eq(users.id, +userId),
+        where: eq(users.id, userId),
         columns: {
           username: true
         }
@@ -107,8 +107,8 @@ export const addressRouter = router({
           message: 'User or Organization is not defined'
         });
       }
-      const userId = +user?.id;
-      const orgId = +org.id;
+      const userId = user?.id;
+      const orgId = org.id;
       const orgPublicId = org.publicId;
       const userOrgMembership = org.members.find(
         (member) => member.userId === userId
@@ -128,7 +128,7 @@ export const addressRouter = router({
       // Check the users already claimed personal addresses
       const usersPersonalEmailIdentities =
         await db.query.personalEmailIdentities.findMany({
-          where: eq(personalEmailIdentities.userId, +userId),
+          where: eq(personalEmailIdentities.userId, userId),
           columns: {
             publicId: true
           },
@@ -257,7 +257,7 @@ export const addressRouter = router({
             sendName: sendName,
             serverPublicId:
               createMailBridgeOrgResponse.postalServer.serverPublicId,
-            userId: +userOrgMembership.id,
+            userId: userOrgMembership.id,
             username: username.toLocaleLowerCase()
           }
         );
@@ -341,8 +341,8 @@ export const addressRouter = router({
           message: 'User or Organization is not defined'
         });
       }
-      const userId = +user?.id;
-      const orgId = +org.id;
+      const userId = user?.id;
+      const orgId = org.id;
       const orgPublicId = org.publicId;
       const userOrgMembership = org.members.find(
         (member) => member.userId === userId

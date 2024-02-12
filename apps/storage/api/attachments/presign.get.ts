@@ -25,7 +25,7 @@ export default eventHandler({
     }
     const data = inputValidation.data;
 
-    const userId = +event.context.user.id;
+    const userId = event.context.user.id;
 
     const orgQueryResponse = await db.query.orgs.findFirst({
       where: eq(orgs.slug, data.orgSlug),

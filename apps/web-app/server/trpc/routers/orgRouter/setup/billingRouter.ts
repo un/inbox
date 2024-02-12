@@ -21,8 +21,8 @@ export const billingRouter = router({
         });
       }
       const { db, user, org } = ctx;
-      const userId = +user?.id;
-      const orgId = +org?.id;
+      const userId = user?.id;
+      const orgId = org?.id;
 
       const isAdmin = await isUserAdminOfOrg(org);
       if (!isAdmin) {
@@ -33,7 +33,7 @@ export const billingRouter = router({
       }
 
       const orgBillingQuery = await db.query.orgBilling.findFirst({
-        where: eq(orgBilling.orgId, +orgId),
+        where: eq(orgBilling.orgId, orgId),
         columns: {
           plan: true,
           period: true
@@ -47,7 +47,7 @@ export const billingRouter = router({
         .select({ count: sql<number>`count(*)` })
         .from(orgMembers)
         .where(
-          and(eq(orgMembers.orgId, +orgId), eq(orgMembers.status, 'active'))
+          and(eq(orgMembers.orgId, orgId), eq(orgMembers.status, 'active'))
         );
 
       return {
@@ -66,8 +66,8 @@ export const billingRouter = router({
         });
       }
       const { db, user, org } = ctx;
-      const userId = +user?.id;
-      const orgId = +org?.id;
+      const userId = user?.id;
+      const orgId = org?.id;
 
       const isAdmin = await isUserAdminOfOrg(org);
       if (!isAdmin) {
@@ -79,7 +79,7 @@ export const billingRouter = router({
 
       const orgPortalLink =
         await billingTrpcClient.stripe.links.getPortalLink.query({
-          orgId: +orgId
+          orgId: orgId
         });
 
       if (!orgPortalLink.link) {
@@ -107,8 +107,8 @@ export const billingRouter = router({
         });
       }
       const { db, user, org } = ctx;
-      const userId = +user?.id;
-      const orgId = +org?.id;
+      const userId = user?.id;
+      const orgId = org?.id;
       const { plan, period } = input;
 
       const isAdmin = await isUserAdminOfOrg(org);
@@ -120,7 +120,7 @@ export const billingRouter = router({
       }
 
       const orgSubscriptionQuery = await db.query.orgBilling.findFirst({
-        where: eq(orgBilling.orgId, +orgId),
+        where: eq(orgBilling.orgId, orgId),
         columns: {
           id: true
         }
@@ -136,16 +136,16 @@ export const billingRouter = router({
         .select({ count: sql<number>`count(*)` })
         .from(orgMembers)
         .where(
-          and(eq(orgMembers.orgId, +orgId), eq(orgMembers.status, 'active'))
+          and(eq(orgMembers.orgId, orgId), eq(orgMembers.status, 'active'))
         );
 
       const orgSubLink =
         await billingTrpcClient.stripe.links.createSubscriptionPaymentLink.mutate(
           {
-            orgId: +orgId,
+            orgId: orgId,
             plan: plan,
             period: period,
-            totalOrgUsers: +activeOrgMembersCount[0].count
+            totalOrgUsers: activeOrgMembersCount[0].count
           }
         );
 
@@ -159,13 +159,13 @@ export const billingRouter = router({
         subLink: orgSubLink.link
       };
     }),
-  isPro: eeProcedure.input(z.object({})).query(async ({ ctx,  }) => {
+  isPro: eeProcedure.input(z.object({})).query(async ({ ctx }) => {
     const { db, user, org } = ctx;
-    const userId = user.id; 
+    const userId = user.id;
     const orgId = org?.id || 0;
 
     const orgBillingResponse = await db.query.orgBilling.findFirst({
-      where: eq(orgBilling.orgId, +orgId),
+      where: eq(orgBilling.orgId, orgId),
       columns: {
         plan: true
       }

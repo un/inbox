@@ -23,8 +23,8 @@ export const orgMembersRouter = router({
         });
       }
       const { db, user, org } = ctx;
-      const userId = +user?.id;
-      const orgId = +org?.id;
+      const userId = user?.id;
+      const orgId = org?.id;
 
       const orgQuery = await db.query.orgs.findFirst({
         columns: {
@@ -76,8 +76,8 @@ export const orgMembersRouter = router({
         });
       }
       const { db, user, org } = ctx;
-      const userId = +user?.id;
-      const orgId = +org?.id;
+      const userId = user?.id;
+      const orgId = org?.id;
 
       const { includeRemoved } = input;
 
@@ -85,7 +85,7 @@ export const orgMembersRouter = router({
         columns: {
           id: true
         },
-        where: eq(orgs.id, +orgId),
+        where: eq(orgs.id, orgId),
         with: {
           members: {
             columns: {
@@ -117,7 +117,7 @@ export const orgMembersRouter = router({
       });
 
       const ownMembershipId = orgQuery?.members.find(
-        (member) => member.userId === +userId
+        (member) => member.userId === userId
       )?.publicId;
 
       orgQuery?.members.forEach((member) => {
