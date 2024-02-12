@@ -77,7 +77,7 @@ export function customDrizzleAdapter(): Adapter {
 
       return {
         id: userData.id.toString(),
-        idNumber: +userData.id,
+        idNumber: userData.id,
         username: userData?.username,
         recoveryEmail: userData?.recoveryEmail,
         emailVerified: userData?.emailVerified,
@@ -102,7 +102,7 @@ export function customDrizzleAdapter(): Adapter {
 
       return {
         id: user.id,
-        idNumber: +user.idNumber,
+        idNumber: user.idNumber,
         publicId: user.publicId,
         name: user.name,
         username: user.username,
@@ -139,7 +139,7 @@ export function customDrizzleAdapter(): Adapter {
 
       return {
         id: userData.id.toString(),
-        idNumber: +userData.id,
+        idNumber: userData.id,
         publicId: userData.publicId,
         name: userData.username,
         username: userData.username,
@@ -175,7 +175,7 @@ export function customDrizzleAdapter(): Adapter {
 
       return {
         id: accountResponse.user.id.toString(),
-        idNumber: +accountResponse.user.id,
+        idNumber: accountResponse.user.id,
         publicId: accountResponse.user.publicId,
         name: accountResponse.user.username,
         username: accountResponse.user.username,
@@ -222,10 +222,10 @@ export function customDrizzleAdapter(): Adapter {
       const sessionObject = {
         sessionToken: session.sessionToken,
         userId: userObject.id.toString(),
-        userIdNumber: +userObject.id,
+        userIdNumber: userObject.id,
         user: {
           id: userObject.id.toString(),
-          idNumber: +userObject.id,
+          idNumber: userObject.id,
           publicId: userObject.publicId,
           name: userObject.username,
           username: userObject.username,
@@ -313,7 +313,7 @@ export function customDrizzleAdapter(): Adapter {
         throw new Error('No user found.');
       }
       const insertData = {
-        userId: +userObject?.id,
+        userId: userObject?.id,
         type: account.type,
         provider: account.provider,
         providerAccountId: account.providerAccountId,

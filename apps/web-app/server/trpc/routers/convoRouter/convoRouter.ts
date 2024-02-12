@@ -86,9 +86,9 @@ export const convoRouter = router({
           message: 'User is not a member of the organization'
         });
       }
-      const userId = +user?.id;
-      const userOrgMemberId = +org?.memberId;
-      const orgId = +org?.id;
+      const userId = user?.id;
+      const userOrgMemberId = org?.memberId;
+      const orgId = org?.id;
       const {
         sendAsEmailIdentityPublicId,
         participantsEmails,

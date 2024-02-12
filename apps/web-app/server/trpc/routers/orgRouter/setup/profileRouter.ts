@@ -22,19 +22,17 @@ export const orgProfileRouter = router({
         });
       }
       const { db, user, org } = ctx;
-      const userId = +user?.id;
-      const orgId = +org?.id;
+      const userId = user?.id;
+      const orgId = org?.id;
       const { orgPublicId } = input;
 
       const orgProfileQuery = await db.query.orgs.findFirst({
         columns: {
           publicId: true,
-          avatarId:true,
+          avatarId: true,
           name: true
         },
-        where: orgPublicId
-          ? eq(orgs.publicId, orgPublicId)
-          : eq(orgs.id, +orgId)
+        where: orgPublicId ? eq(orgs.publicId, orgPublicId) : eq(orgs.id, orgId)
       });
 
       if (!orgProfileQuery || !orgProfileQuery.publicId) {
@@ -63,8 +61,8 @@ export const orgProfileRouter = router({
         });
       }
       const { db, user, org } = ctx;
-      const userId = +user?.id;
-      const orgId = +org?.id;
+      const userId = user?.id;
+      const orgId = org?.id;
       const { orgName } = input;
 
       const isAdmin = await isUserAdminOfOrg(org);

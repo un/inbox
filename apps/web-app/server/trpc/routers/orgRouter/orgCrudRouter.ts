@@ -86,7 +86,7 @@ export const crudRouter = router({
       const newPublicId = nanoId();
 
       const insertOrgResponse = await db.insert(orgs).values({
-        ownerId: +userId,
+        ownerId: userId,
         name: input.orgName,
         slug: input.orgSlug,
         publicId: newPublicId
@@ -95,7 +95,7 @@ export const crudRouter = router({
 
       const userProfile = await db.query.userProfiles.findFirst({
         where: and(
-          eq(userProfiles.userId, +userId),
+          eq(userProfiles.userId, userId),
           eq(userProfiles.defaultProfile, true)
         ),
         columns: {
@@ -124,16 +124,14 @@ export const crudRouter = router({
           handle: userProfile.handle,
           title: userProfile.title,
           blurb: userProfile.blurb,
-          defaultProfile: false,
+          defaultProfile: false
         };
-        const newProfile = await db
-          .insert(userProfiles)
-          .values(existingFields);
-          userProfileId = +newProfile.insertId;
+        const newProfile = await db.insert(userProfiles).values(existingFields);
+        userProfileId = +newProfile.insertId;
       } else {
         const { username } =
           (await db.query.users.findFirst({
-            where: eq(users.id, +userId),
+            where: eq(users.id, userId),
             columns: {
               username: true
             }
@@ -148,7 +146,7 @@ export const crudRouter = router({
 
         const defaultProfileValues = {
           publicId: newProfilePublicId,
-          userId: +userId,
+          userId: userId,
           firstName: username,
           lastName: '',
           handle: username,
@@ -168,9 +166,9 @@ export const crudRouter = router({
         orgId: orgId,
         publicId: newPublicId2,
         role: 'admin',
-        userId: +userId,
+        userId: userId,
         status: 'active',
-        userProfileId: +userProfileId
+        userProfileId: userProfileId
       });
 
       const createMailBridgeOrgResponse =

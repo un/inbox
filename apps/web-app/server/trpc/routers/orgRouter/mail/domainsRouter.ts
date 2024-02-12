@@ -29,8 +29,8 @@ export const domainsRouter = router({
         });
       }
       const { db, user, org } = ctx;
-      const userId = +user?.id;
-      const orgId = +org?.id;
+      const userId = user?.id;
+      const orgId = org?.id;
       const newPublicId = nanoId();
 
       const domainName = input.domainName.toLowerCase();
@@ -86,7 +86,7 @@ export const domainsRouter = router({
 
       const mailBridgeResponse =
         await mailBridgeTrpcClient.postal.domains.createDomain.mutate({
-          orgId: +orgId,
+          orgId: orgId,
           orgPublicId: orgResponse.publicId,
           domainName: domainName
         });
@@ -100,7 +100,7 @@ export const domainsRouter = router({
 
       await db.insert(domains).values({
         publicId: newPublicId,
-        orgId: +orgId,
+        orgId: orgId,
         domain: domainName,
         postalHost: mailBridgeResponse.postalServerUrl || '',
         dkimKey: mailBridgeResponse.dkimKey,
@@ -132,8 +132,8 @@ export const domainsRouter = router({
         });
       }
       const { db, user, org } = ctx;
-      const userId = +user?.id;
-      const orgId = +org?.id;
+      const userId = user?.id;
+      const orgId = org?.id;
       const { domainPublicId } = input;
 
       // Handle when adding database replicas
@@ -150,7 +150,7 @@ export const domainsRouter = router({
       const domainResponse = await dbReplica.query.domains.findFirst({
         where: and(
           eq(domains.publicId, domainPublicId),
-          eq(domains.orgId, +orgId)
+          eq(domains.orgId, orgId)
         ),
         columns: {
           publicId: true,
@@ -183,8 +183,8 @@ export const domainsRouter = router({
         });
       }
       const { db, user, org } = ctx;
-      const userId = +user?.id;
-      const orgId = +org?.id;
+      const userId = user?.id;
+      const orgId = org?.id;
       const { domainPublicId } = input;
       const postalRootUrl = useRuntimeConfig().mailBridge
         .postalRootUrl as string;
@@ -203,7 +203,7 @@ export const domainsRouter = router({
       const domainResponse = await dbReplica.query.domains.findFirst({
         where: and(
           eq(domains.publicId, domainPublicId),
-          eq(domains.orgId, +orgId)
+          eq(domains.orgId, orgId)
         ),
         columns: {
           id: true,
@@ -329,7 +329,7 @@ export const domainsRouter = router({
 
       if (domainResponse.postalId) {
         mailBridgeTrpcClient.postal.domains.refreshDomainDns.query({
-          orgId: +orgId,
+          orgId: orgId,
           orgPublicId: org.publicId,
           postalDomainId: domainResponse.postalId
         });
@@ -363,11 +363,11 @@ export const domainsRouter = router({
         });
       }
       const { db, user, org } = ctx;
-      const userId = +user?.id;
-      const orgId = +org?.id;
+      const userId = user?.id;
+      const orgId = org?.id;
 
       const domainResponse = await db.query.domains.findMany({
-        where: eq(domains.orgId, +orgId),
+        where: eq(domains.orgId, orgId),
         columns: {
           publicId: true,
           domain: true,
