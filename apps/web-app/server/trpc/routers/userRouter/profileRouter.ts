@@ -83,8 +83,7 @@ export const profileRouter = router({
 
       const newPublicId = nanoId();
       const insertUserProfileResponse = await db.insert(userProfiles).values({
-        //@ts-ignore TS dosnt know that userId must exist on user procedures
-        userId: +userId,
+        userId: userId,
         publicId: newPublicId,
         firstName: input.fName,
         lastName: input.lName,
@@ -144,8 +143,8 @@ export const profileRouter = router({
 
       const userOrgMembershipQuery = await db.query.orgMembers.findFirst({
         where: !orgId
-          ? eq(orgMembers.userId, +userId)
-          : and(eq(orgMembers.userId, +userId), eq(orgMembers.orgId, +orgId)),
+          ? eq(orgMembers.userId, userId)
+          : and(eq(orgMembers.userId, userId), eq(orgMembers.orgId, orgId)),
         columns: {
           userProfileId: true
         },

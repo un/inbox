@@ -31,8 +31,8 @@ export const orgUserGroupsRouter = router({
         });
       }
       const { db, user, org } = ctx;
-      const userId = +user?.id;
-      const orgId = +org?.id;
+      const userId = user?.id;
+      const orgId = org?.id;
       const { groupName, groupDescription, groupColor } = input;
       const newPublicId = nanoId();
 
@@ -49,7 +49,7 @@ export const orgUserGroupsRouter = router({
         name: groupName,
         description: groupDescription,
         color: groupColor,
-        orgId: +orgId
+        orgId: orgId
       });
 
       return {
@@ -66,8 +66,8 @@ export const orgUserGroupsRouter = router({
         });
       }
       const { db, user, org } = ctx;
-      const userId = +user?.id;
-      const orgId = +org?.id;
+      const userId = user?.id;
+      const orgId = org?.id;
 
       const userGroupQuery = await db.query.userGroups.findMany({
         columns: {
@@ -77,7 +77,7 @@ export const orgUserGroupsRouter = router({
           description: true,
           color: true
         },
-        where: and(eq(userGroups.orgId, +orgId)),
+        where: and(eq(userGroups.orgId, orgId)),
         with: {
           members: {
             columns: {
@@ -118,8 +118,8 @@ export const orgUserGroupsRouter = router({
         });
       }
       const { db, user, org } = ctx;
-      const userId = +user?.id;
-      const orgId = +org?.id;
+      const userId = user?.id;
+      const orgId = org?.id;
 
       // Handle when adding database replicas
       const dbReplica = db;
@@ -134,7 +134,7 @@ export const orgUserGroupsRouter = router({
         },
         where: and(
           eq(userGroups.publicId, input.userGroupPublicId),
-          eq(userGroups.orgId, +orgId)
+          eq(userGroups.orgId, orgId)
         ),
         with: {
           members: {
@@ -183,8 +183,8 @@ export const orgUserGroupsRouter = router({
         });
       }
       const { db, user, org } = ctx;
-      const userId = +user?.id;
-      const orgId = +org?.id;
+      const userId = user?.id;
+      const orgId = org?.id;
       const { groupPublicId, orgMemberPublicId } = input;
       const newPublicId = nanoId();
 
@@ -232,7 +232,7 @@ export const orgUserGroupsRouter = router({
           userProfileId: orgMember.userProfileId,
           role: 'member',
           notifications: 'active',
-          addedBy: +userId
+          addedBy: userId
         });
 
       if (!insertUserGroupMemberResult) {
