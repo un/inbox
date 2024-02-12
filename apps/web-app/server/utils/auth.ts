@@ -1,13 +1,17 @@
-import { DatabaseSession, DatabaseUser, Lucia } from 'lucia';
+import { DatabaseSession, DatabaseUser, Lucia, TimeSpan } from 'lucia';
 import { UnInboxDBAdapter } from './auth/luciaDbAdaptor';
 
 const adapter = new UnInboxDBAdapter();
+const config = useRuntimeConfig();
+const devMode = import.meta.dev;
 
 export const lucia = new Lucia(adapter, {
+  sessionExpiresIn: devMode ? new TimeSpan(1, 'd') : new TimeSpan(4, 'w'),
   sessionCookie: {
     name: 'unsession',
     attributes: {
-      secure: !import.meta.dev
+      secure: !import.meta.dev,
+      domain: config.primaryDomain
     }
   },
   getSessionAttributes: (attributes) => {
@@ -32,8 +36,8 @@ declare module 'lucia' {
   }
   interface DatabaseSessionAttributes {
     user: AuthUser;
-    browser: string;
     device: string;
+    os: string;
   }
   interface DatabaseUserAttributes {
     id: number;

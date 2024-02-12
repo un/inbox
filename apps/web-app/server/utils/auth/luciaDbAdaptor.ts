@@ -85,8 +85,8 @@ export class UnInboxDBAdapter implements Adapter {
       columns: {
         sessionToken: true,
         expiresAt: true,
-        browser: true,
-        device: true
+        device: true,
+        os: true
       },
       with: {
         user: {
@@ -108,8 +108,8 @@ export class UnInboxDBAdapter implements Adapter {
         userId: session.user.publicId,
         expiresAt: session.expiresAt,
         attributes: {
-          browser: session.browser,
           device: session.device,
+          os: session.os,
           user: {
             id: session.user.id,
             publicId: session.user.publicId,
@@ -131,8 +131,8 @@ export class UnInboxDBAdapter implements Adapter {
       sessionToken: session.id,
       userPublicId: userPublicId,
       userId: userId,
-      browser: session.attributes.browser,
       device: session.attributes.device,
+      os: session.attributes.os,
       expiresAt: session.expiresAt
     });
 

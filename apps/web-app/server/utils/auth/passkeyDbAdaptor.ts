@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm';
 import { Base64Encoding } from 'oslo/encoding';
 import { db } from '@uninbox/database';
-import { authenticators } from '@uninbox/database/schema';
+import { accounts, authenticators } from '@uninbox/database/schema';
 
 //! Enable debug logging
 const debug = true;
@@ -151,11 +151,43 @@ async function listAuthenticatorsByAccountId(accountId: number) {
   );
   return decodedResults;
 }
+async function listAuthenticatorsByUserId(userId: number) {
+  log('passkey: listAuthenticatorsByAccountId', { userId });
+  const dbQuery = await db.query.accounts.findFirst({
+    where: eq(accounts.userId, userId),
+    columns: {
+      id: true
+    },
+    with: {
+      authenticators: {
+        columns: {
+          id: true,
+          accountId: true,
+          credentialID: true,
+          credentialPublicKey: true,
+          counter: true,
+          credentialDeviceType: true,
+          credentialBackedUp: true,
+          transports: true
+        }
+      }
+    }
+  });
+  if (!dbQuery || !dbQuery.authenticators) return [];
+  const decodedResults: Authenticator[] = await Promise.all(
+    dbQuery.authenticators.map(
+      async (authenticator) =>
+        await transformDbToAuthAuthenticator(authenticator)
+    )
+  );
+  return decodedResults;
+}
 
 export const usePasskeysDb = {
   createAuthenticator: createAuthenticator,
   updateAuthenticatorCounter: updateAuthenticatorCounter,
   getAuthenticator: getAuthenticator,
   deleteAuthenticator: deleteAuthenticator,
-  listAuthenticatorsByAccountId: listAuthenticatorsByAccountId
+  listAuthenticatorsByAccountId: listAuthenticatorsByAccountId,
+  listAuthenticatorsByUserId: listAuthenticatorsByUserId
 };

@@ -168,7 +168,7 @@ export const sessions = mysqlTable(
     userPublicId: nanoId('user_public_id').notNull(),
     sessionToken: varchar('session_token', { length: 255 }).notNull(),
     device: varchar('device', { length: 255 }).notNull(),
-    browser: varchar('browser', { length: 255 }).notNull(),
+    os: varchar('os', { length: 255 }).notNull(),
     expiresAt: timestamp('expires_at').notNull(),
     createdAt: timestamp('created_at')
       .default(sql`CURRENT_TIMESTAMP`)
