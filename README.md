@@ -27,7 +27,7 @@
 
 ## :construction: Current Status
 
-`UnInbox` is currently in under heavy development. The initial public release is expected in Jan 2024
+`UnInbox` is currently in under heavy development. The initial public release is expected in March 2024
 
 ---
 
