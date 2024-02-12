@@ -246,9 +246,9 @@
       content: 'Yes.'
     },
     {
-      label: 'Will you support encryption?',
+      label: 'Will you support / have encryption?',
       content:
-        'Yes, but not initially. Once we are out of Beta mode you can expect some encryption.'
+        "Yes, initially encryption won't be available, but it's a top priority for us. Once we're out of Beta mode, expect robust encryption measures. We're working to seamlessly implement encryption without disrupting any features / functioning, ensuring smooth data storage and sharing within the organization."
     },
     {
       label: 'Can I migrate my emails from Google or another provider?',
@@ -269,11 +269,6 @@
       label: 'Can I forward mail in from another service?',
       content:
         'Yes, you get a personal email address with UnInbox, and a dedicated forwarding address. Any emails sent to your forwarding address will appear in your UnInbox. You can also forward all emails for a custom domain to your UnInbox organization.'
-    },
-    {
-      label: 'Will you have Encryption?',
-      content:
-        'Yes, not initially but its high on our priority list. Due to the way data is stored and shared between users of the same organization, we need to implement encryption in a way that ensures no features are blocked from functioning.'
     },
     {
       label: 'Will you do what Skiff did and abandon us?',
