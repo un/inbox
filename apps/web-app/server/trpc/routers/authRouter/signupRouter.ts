@@ -10,6 +10,7 @@ import { UAParser } from 'ua-parser-js';
 import { blockedUsernames } from '~/server/utils/signup';
 import { TRPCError } from '@trpc/server';
 import { lucia } from '~/server/utils/auth';
+import { zodSchemas } from '@uninbox/utils';
 
 async function validateUsername(
   db: DBType,
@@ -53,7 +54,7 @@ export const signupRouter = router({
   checkUsernameAvailability: limitedProcedure
     .input(
       z.object({
-        username: z.string().min(5).max(32)
+        username: zodSchemas.username()
       })
     )
     .query(async ({ ctx, input }) => {
@@ -73,7 +74,7 @@ export const signupRouter = router({
   registerUser: limitedProcedure
     .input(
       z.object({
-        username: z.string().min(5).max(32),
+        username: zodSchemas.username(),
         email: z.string().email()
       })
     )
@@ -133,6 +134,8 @@ export const signupRouter = router({
       });
       const cookie = lucia.createSessionCookie(userSession.id);
       setCookie(ctx.event, cookie.name, cookie.value, cookie.attributes);
+
+      //! TODO: Send user email verification
 
       return {
         success: true
