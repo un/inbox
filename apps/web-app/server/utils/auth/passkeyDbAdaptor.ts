@@ -2,6 +2,7 @@ import { eq } from 'drizzle-orm';
 import { Base64Encoding } from 'oslo/encoding';
 import { db } from '@uninbox/database';
 import { accounts, authenticators } from '@uninbox/database/schema';
+import { AuthenticatorTransportFuture } from '@simplewebauthn/types';
 
 //! Enable debug logging
 const debug = true;
@@ -27,7 +28,7 @@ async function transformDbToAuthAuthenticator(
     counter: Number(dbQuery.counter),
     credentialDeviceType: dbQuery.credentialDeviceType as CredentialDeviceType,
     credentialBackedUp: dbQuery.credentialBackedUp,
-    transports: dbQuery.transports as AuthenticatorTransport[] | undefined
+    transports: dbQuery.transports as AuthenticatorTransportFuture[] | undefined
   };
 }
 
@@ -40,16 +41,20 @@ export interface Authenticator {
   counter: number;
   credentialDeviceType: CredentialDeviceType;
   credentialBackedUp: boolean;
-  transports?: AuthenticatorTransport[];
+  transports?: AuthenticatorTransportFuture[];
 }
 
-async function createAuthenticator(authenticator: Authenticator) {
+async function createAuthenticator(
+  authenticator: Authenticator,
+  nickname: string
+) {
   log('passkey: createAuthenticator', { authenticator });
   const b64ID = base64.encode(authenticator.credentialID);
   const b64PK = base64.encode(authenticator.credentialPublicKey);
 
   await db.insert(authenticators).values({
     accountId: authenticator.accountId,
+    nickname: nickname,
     credentialID: b64ID,
     credentialPublicKey: b64PK,
     counter: BigInt(authenticator.counter),
@@ -93,21 +98,22 @@ async function updateAuthenticatorCounter(
   return updatedAuthenticator;
 }
 
-async function getAuthenticator(credentialId: Uint8Array) {
+async function getAuthenticator(credentialId: string) {
   log('passkey: getAuthenticator', { credentialId });
-  const b64ID = asBase64(credentialId);
 
   const dbQuery = await db.query.authenticators.findFirst({
-    where: eq(authenticators.credentialID, b64ID),
+    where: eq(authenticators.credentialID, credentialId),
     columns: {
       id: true,
       accountId: true,
+      nickname: true,
       credentialID: true,
       credentialPublicKey: true,
       counter: true,
       credentialDeviceType: true,
       credentialBackedUp: true,
-      transports: true
+      transports: true,
+      createdAt: true
     }
   });
   if (!dbQuery) return null;
@@ -135,12 +141,14 @@ async function listAuthenticatorsByAccountId(accountId: number) {
     columns: {
       id: true,
       accountId: true,
+      nickname: true,
       credentialID: true,
       credentialPublicKey: true,
       counter: true,
       credentialDeviceType: true,
       credentialBackedUp: true,
-      transports: true
+      transports: true,
+      createdAt: true
     }
   });
   const decodedResults: Authenticator[] = await Promise.all(
@@ -163,12 +171,14 @@ async function listAuthenticatorsByUserId(userId: number) {
         columns: {
           id: true,
           accountId: true,
+          nickname: true,
           credentialID: true,
           credentialPublicKey: true,
           counter: true,
           credentialDeviceType: true,
           credentialBackedUp: true,
-          transports: true
+          transports: true,
+          createdAt: true
         }
       }
     }

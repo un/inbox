@@ -4,16 +4,29 @@ import {
   generateAuthenticationOptions as webAuthnGenerateAuthenticationOptions,
   verifyAuthenticationResponse as webAuthnVerifyAuthenticationResponse
 } from '@simplewebauthn/server';
+import {
+  RegistrationResponseJSON,
+  PublicKeyCredentialDescriptorFuture,
+  AuthenticationResponseJSON
+} from '@simplewebauthn/types';
 import { usePasskeysDb } from './passkeyDbAdaptor';
+import { TRPCError } from '@trpc/server';
 
 const runtimeConfig = useRuntimeConfig();
 
-async function generateRegistrationOptions(
-  userId: number,
-  userPublicId: string,
-  userName: string,
-  userDisplayName: string
-) {
+async function generateRegistrationOptions({
+  userId,
+  userPublicId,
+  userName,
+  userDisplayName,
+  authenticatorAttachment = 'platform'
+}: {
+  userId: number;
+  userPublicId: string;
+  userName: string;
+  userDisplayName: string;
+  authenticatorAttachment?: 'platform' | 'cross-platform';
+}) {
   const userAuthenticators: Authenticator[] =
     await usePasskeysDb.listAuthenticatorsByUserId(userId);
 
@@ -24,9 +37,8 @@ async function generateRegistrationOptions(
     userName: userName,
     userDisplayName: userDisplayName,
     timeout: 60000,
-    // Don't prompt users for additional information about the authenticator
-    // (Recommended for smoother UX)
-    attestationType: 'direct',
+
+    // attestationType: 'direct', // recomended to be removed by passkeys.dev
     excludeCredentials: userAuthenticators.map((authenticator) => ({
       id: authenticator.credentialID,
       type: 'public-key',
@@ -35,80 +47,107 @@ async function generateRegistrationOptions(
     authenticatorSelection: {
       residentKey: 'preferred',
       userVerification: 'preferred',
-      authenticatorAttachment: 'cross-platform'
+      authenticatorAttachment: authenticatorAttachment
     }
   });
 
   console.log('registrationOptions', { registrationOptions });
 
   const userChallenge = registrationOptions.challenge;
-  //! store the challenge with userId into the redis db
   const authStorage = useStorage('auth');
   authStorage.setItem(`passkeyChallenge: ${userId}`, userChallenge);
 
   return registrationOptions;
 }
 
-async function verifyRegistrationResponse(
-  registrationResponse: any,
-  userId: number
-) {
+async function verifyRegistrationResponse({
+  registrationResponse,
+  userId
+}: {
+  registrationResponse: RegistrationResponseJSON;
+  userId: number;
+}) {
   const authStorage = useStorage('auth');
   const expectedChallenge = await authStorage.getItem(
     `passkeyChallenge: ${userId}`
   );
   if (!expectedChallenge) {
-    throw new Error('No challenge found for user');
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      message: 'No challenge found for user'
+    });
   }
-  return await webAuthnVerifyRegistrationResponse({
-    response: registrationResponse,
-    expectedChallenge: expectedChallenge.toString(),
-    expectedOrigin: runtimeConfig.auth.passkeys.origin,
-    expectedRPID: runtimeConfig.auth.passkeys.rpID,
-    expectedType: 'public-key',
-    requireUserVerification: true,
-    supportedAlgorithmIDs: [-7, -257]
-  });
+
+  const verifiedRegistrationResponse = await webAuthnVerifyRegistrationResponse(
+    {
+      response: registrationResponse,
+      expectedChallenge: expectedChallenge.toString(),
+      expectedOrigin: runtimeConfig.auth.passkeys.origin,
+      expectedRPID: runtimeConfig.auth.passkeys.rpID
+    }
+  );
+  if (!verifiedRegistrationResponse.verified) {
+    await authStorage.removeItem(`passkeyChallenge: ${userId}`);
+    throw new Error('Registration verification failed');
+  }
+  await authStorage.removeItem(`passkeyChallenge: ${userId}`);
+  return verifiedRegistrationResponse;
 }
 
-async function generateAuthenticationOptions(credentials: any) {
-  return await webAuthnGenerateAuthenticationOptions({
-    extensions: {
-      appid: 'https://example.com',
-      credProps: true,
-      hmacCreateSecret: true
-    },
+async function generateAuthenticationOptions({
+  authChallengeId,
+  credentials = []
+}: {
+  authChallengeId: string;
+  credentials?: PublicKeyCredentialDescriptorFuture[];
+}) {
+  const authenticationOptions = await webAuthnGenerateAuthenticationOptions({
     rpID: runtimeConfig.auth.passkeys.rpID,
     userVerification: 'preferred',
     timeout: 60000,
-    allowCredentials: credentials,
-    challenge: '1234567890'
+    allowCredentials: credentials
   });
+
+  const userChallenge = authenticationOptions.challenge;
+  const authStorage = useStorage('auth');
+  await authStorage.setItem(`authChallenge: ${authChallengeId}`, userChallenge);
+
+  return authenticationOptions;
 }
 
-async function verifyAuthenticationResponse(
-  authenticationResponse: any,
-  expectedChallenge: string,
-  expectedAllowedCredentials: any
-) {
-  return await webAuthnVerifyAuthenticationResponse({
+async function verifyAuthenticationResponse({
+  authenticationResponse,
+  authChallengeId,
+  expectedAllowedCredentials
+}: {
+  authenticationResponse: AuthenticationResponseJSON;
+  authChallengeId: string;
+  expectedAllowedCredentials?: any;
+}) {
+  const authenticator = await usePasskeysDb.getAuthenticator(
+    authenticationResponse.id
+  );
+  if (!authenticator) {
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      message: 'Authenticator not found'
+    });
+  }
+  const authStorage = useStorage('auth');
+  const expectedChallenge = await authStorage.getItem(
+    `authChallenge: ${authChallengeId}`
+  );
+
+  const verificationResult = await webAuthnVerifyAuthenticationResponse({
     response: authenticationResponse,
-    expectedChallenge: expectedChallenge,
+    expectedChallenge: expectedChallenge as string,
     expectedOrigin: runtimeConfig.auth.passkeys.origin,
     expectedRPID: runtimeConfig.auth.passkeys.rpID,
     expectedType: 'public-key',
     requireUserVerification: true,
-    authenticator: {
-      counter: 0,
-      credentialID: 'credential-id',
-      credentialPublicKey: 'credential-public-key',
-      transports: ['usb', 'nfc', 'ble'],
-      credType: 'public-key',
-      fmt: 'packed'
-    },
-    expectedAllowedCredentials: expectedAllowedCredentials,
-    supportedAlgorithmIDs: [-7, -257]
+    authenticator: authenticator
   });
+  return { result: verificationResult, userAccount: authenticator.accountId };
 }
 
 export const usePasskeys = {
