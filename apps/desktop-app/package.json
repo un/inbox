@@ -1,0 +1,18 @@
+{
+  "name": "desktop-app",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "tauri": "tauri"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2.0.0-beta.0",
+    "@tauri-apps/plugin-shell": "^2.0.0-beta.0"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.0.0-beta.0"
+  }
+}

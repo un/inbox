@@ -120,10 +120,18 @@ export default defineNuxtConfig({
   },
   security: {
     headers: {
+      strictTransportSecurity: 
+      process.env.NODE_ENV === 'development' 
+      ? false 
+      : {
+        maxAge: 15552000,
+        includeSubdomains: true
+      },
       crossOriginEmbedderPolicy:
         process.env.NODE_ENV === 'development' ? 'unsafe-none' : 'require-corp',
       contentSecurityPolicy: {
-        'img-src': ["'self'", 'data:', process.env.WEBAPP_STORAGE_URL || '']
+        'img-src': ["'self'", 'data:', process.env.WEBAPP_STORAGE_URL || ''],
+        'upgrade-insecure-requests' : process.env.NODE_ENV === 'development' ? false : true
       }
     }
   }
