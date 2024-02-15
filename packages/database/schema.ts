@@ -137,7 +137,7 @@ export const authenticators = mysqlTable(
       length: 255
     }).notNull(), //Uint8Array
     counter: bigint('counter', { unsigned: true, mode: 'bigint' }).notNull(), //bigint
-    credentialDeviceType: varchar('credential_public_key', {
+    credentialDeviceType: varchar('credential_device_type', {
       length: 32
     }).notNull(),
     credentialBackedUp: boolean('credential_backed_up').notNull(),
