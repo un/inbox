@@ -1,40 +1,46 @@
 export default defineNuxtRouteMiddleware(async (to) => {
   if (process.client) {
-    const redirectCookie = useCookie('un-redirect').value;
+    const redirectCookie = useCookie('unredirect').value;
     if (redirectCookie) {
-      useCookie('un-redirect', { maxAge: 100 }).value = null;
+      useCookie('unredirect', { maxAge: 100 }).value = null;
       return navigateTo(redirectCookie);
     }
-    const status = 'unauthenticated';
+    const status = useState<'unauthenticated' | 'authenticated'>(
+      'auth',
+      () => 'unauthenticated'
+    );
+
     const toGuest = to.meta.guest;
-    const authedRedirect =
-      useRuntimeConfig()?.public?.authJs?.authenticatedRedirectTo ||
-      '/redirect';
-    const guestRedirect =
-      useRuntimeConfig()?.public?.authJs?.guestRedirectTo || '/';
+    const authedRedirect = '/redirect';
+
+    const guestRedirect = '/';
 
     if (to.path.startsWith('/join/invite/')) {
       return;
     }
 
-    if (status === 'authenticated') {
+    if (status.value === 'authenticated') {
       if (!toGuest) {
         return;
       }
       return navigateTo(authedRedirect);
     }
 
-    if (status === 'unauthenticated' || status === 'loading') {
+    if (status.value === 'unauthenticated') {
       const verifyAuthStatus = await $fetch('/api/auth/status', {
         method: 'GET'
       });
-      // status = verifyAuthStatus.authStatus || 'unauthenticated';
-      if (status === 'unauthenticated') {
+      status.value = verifyAuthStatus.authStatus || 'unauthenticated';
+      if (status.value === 'unauthenticated') {
         if (toGuest) {
           return;
         }
         return navigateTo(guestRedirect);
       }
+      if (!toGuest) {
+        return;
+      }
+      return navigateTo(authedRedirect);
     }
   }
 });

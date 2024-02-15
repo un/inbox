@@ -3,7 +3,7 @@ import type { UserContext } from '@uninbox/types';
 import { DatabaseSession } from 'lucia';
 
 export default defineEventHandler(async (event) => {
-  const sessionCookie = getCookie(event, 'un.session-token');
+  const sessionCookie = getCookie(event, 'unsession');
   if (!sessionCookie) {
     event.context.user = null;
     return;

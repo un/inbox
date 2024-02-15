@@ -1,7 +1,7 @@
 import { defineEventHandler } from 'h3';
 
 export default defineEventHandler(async (event) => {
-  const sessionCookie = getCookie(event, 'un.session-token');
+  const sessionCookie = getCookie(event, 'unsession');
   if (!sessionCookie) {
     event.context.user = null;
     return;
@@ -15,7 +15,7 @@ export default defineEventHandler(async (event) => {
   }
   const userContext = {
     //@ts-ignore
-    id: +sessionObject.userIdNumber,
+    id: +sessionObject.attributes.user.id,
     session: sessionObject
   };
   event.context.user = userContext;

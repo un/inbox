@@ -1,9 +1,9 @@
 type AuthStatusResponseType = {
-  authStatus: 'loading' | 'authenticated' | 'unauthenticated' | 'error';
+  authStatus: 'authenticated' | 'unauthenticated';
 };
 export default eventHandler((event): AuthStatusResponseType => {
-  if (event.context.user?.id) {
-    return { authStatus: 'authenticated' };
+  if (!event.context.user || !event.context.user.id) {
+    return { authStatus: 'unauthenticated' };
   }
-  return { authStatus: 'unauthenticated' };
+  return { authStatus: 'authenticated' };
 });
