@@ -1,8 +1,8 @@
 import { eq } from 'drizzle-orm';
-import { Base64Encoding } from 'oslo/encoding';
 import { db } from '@uninbox/database';
 import { accounts, authenticators } from '@uninbox/database/schema';
 import { AuthenticatorTransportFuture } from '@simplewebauthn/types';
+import { isoBase64URL } from '@simplewebauthn/server/helpers';
 
 //! Enable debug logging
 const debug = true;
@@ -13,9 +13,7 @@ const log = (...args: any[]) => {
 };
 
 //* Utils
-const base64 = new Base64Encoding(
-  'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
-);
+
 async function transformDbToAuthAuthenticator(
   dbQuery: NonNullable<
     Awaited<ReturnType<typeof db.query.authenticators.findFirst>>
@@ -23,8 +21,8 @@ async function transformDbToAuthAuthenticator(
 ): Promise<Authenticator> {
   return {
     accountId: dbQuery.accountId,
-    credentialID: base64.decode(dbQuery.credentialID),
-    credentialPublicKey: base64.decode(dbQuery.credentialPublicKey),
+    credentialID: isoBase64URL.toBuffer(dbQuery.credentialID),
+    credentialPublicKey: isoBase64URL.toBuffer(dbQuery.credentialPublicKey),
     counter: Number(dbQuery.counter),
     credentialDeviceType: dbQuery.credentialDeviceType as CredentialDeviceType,
     credentialBackedUp: dbQuery.credentialBackedUp,
@@ -49,8 +47,8 @@ async function createAuthenticator(
   nickname: string
 ) {
   log('passkey: createAuthenticator', { authenticator });
-  const b64ID = base64.encode(authenticator.credentialID);
-  const b64PK = base64.encode(authenticator.credentialPublicKey);
+  const b64ID = isoBase64URL.fromBuffer(authenticator.credentialID);
+  const b64PK = isoBase64URL.fromBuffer(authenticator.credentialPublicKey);
 
   await db.insert(authenticators).values({
     accountId: authenticator.accountId,
@@ -74,7 +72,7 @@ async function updateAuthenticatorCounter(
     authenticator,
     newCounter
   });
-  const b64ID = base64.encode(authenticator.credentialID);
+  const b64ID = isoBase64URL.fromBuffer(authenticator.credentialID);
 
   const authenticatorObject = await db.query.authenticators.findFirst({
     where: eq(authenticators.credentialID, b64ID),
@@ -100,7 +98,6 @@ async function updateAuthenticatorCounter(
 
 async function getAuthenticator(credentialId: string) {
   log('passkey: getAuthenticator', { credentialId });
-
   const dbQuery = await db.query.authenticators.findFirst({
     where: eq(authenticators.credentialID, credentialId),
     columns: {
@@ -125,7 +122,7 @@ async function getAuthenticator(credentialId: string) {
 
 async function deleteAuthenticator(credentialId: Uint8Array) {
   log('passkey: deleteAuthenticator', { credentialId });
-  const b64ID = base64.encode(credentialId);
+  const b64ID = isoBase64URL.fromBuffer(credentialId);
 
   const dbDeleteResult = await db
     .delete(authenticators)
