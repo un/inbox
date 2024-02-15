@@ -127,7 +127,7 @@ export const passkeyRouter = router({
     }),
 
   generatePasskeyChallenge: limitedProcedure
-    .input(z.object({}).strict())
+    .input(z.object({ turnstileToken: z.string() }).strict())
     .query(async ({ ctx }) => {
       const { event } = ctx;
 
@@ -150,6 +150,7 @@ export const passkeyRouter = router({
     .input(
       z
         .object({
+          turnstileToken: z.string(),
           verificationResponseRaw: z.any()
         })
         .strict()
