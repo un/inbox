@@ -390,6 +390,7 @@
               width="full"
               icon="i-ph-password"
               label="Password"
+              password
               placeholder=""
               :schema="
                 z
@@ -411,6 +412,7 @@
               width="full"
               icon="i-ph-password"
               label="Confirm"
+              password
               placeholder=""
               :schema="z.string()" />
           </div>
