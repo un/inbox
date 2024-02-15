@@ -127,6 +127,7 @@ async function verifyAuthenticationResponse({
   const authenticator = await usePasskeysDb.getAuthenticator(
     authenticationResponse.id
   );
+
   if (!authenticator) {
     throw new TRPCError({
       code: 'BAD_REQUEST',
@@ -143,7 +144,6 @@ async function verifyAuthenticationResponse({
     expectedChallenge: expectedChallenge as string,
     expectedOrigin: runtimeConfig.auth.passkeys.origin,
     expectedRPID: runtimeConfig.auth.passkeys.rpID,
-    expectedType: 'public-key',
     requireUserVerification: true,
     authenticator: authenticator
   });
