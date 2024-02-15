@@ -1,5 +1,6 @@
 <script setup lang="ts">
   import { startRegistration } from '@simplewebauthn/browser';
+  import type { RegistrationResponseJSON } from '@simplewebauthn/types';
   import { z } from 'zod';
   const { $trpc, $i18n } = useNuxtApp();
   definePageMeta({ guest: true });
@@ -13,7 +14,10 @@
 
   const userCreated = ref(false);
   const passkeyCreated = ref(false);
-  const passwordCreated = ref(null);
+  const passwordCreated = ref(false);
+  // check if the users device can directly support passkeys
+  const canUsePasskeyDirect =
+    await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
 
   const turnstileEnabled = useRuntimeConfig().public.turnstileEnabled;
   if (!turnstileEnabled) {
@@ -44,10 +48,6 @@
         passwordConfirmationValid.value === true
       );
     }
-  });
-
-  const computedEmail = computed(() => {
-    return `${username.value}:${emailValue.value}`;
   });
 
   // Password Form Fields
@@ -112,104 +112,120 @@
 
   const toast = useToast();
   async function createUserAccount() {
-    if (!formValid.value) {
-      toast.add({
-        title: 'Please enter a valid email address',
-        description: 'We only accept real email addresses',
-        color: 'red',
-        icon: 'i-ph-warning-circle',
-        timeout: 5000
-      });
-      return;
-    }
-
-    if (turnstileEnabled && turnstileToken.value === null) {
-      turnstileError.value = true;
-      await new Promise((resolve) => {
-        const unwatch = watch(turnstileToken, (newValue) => {
-          if (newValue !== null) {
-            resolve(newValue);
-            unwatch();
-            turnstileError.value = false;
-          }
+    if (!userCreated.value) {
+      if (!formValid.value) {
+        toast.add({
+          title: 'Please enter a valid email address',
+          description: 'We only accept real email addresses',
+          color: 'red',
+          icon: 'i-ph-warning-circle',
+          timeout: 5000
         });
+        return;
+      }
+
+      if (turnstileEnabled && turnstileToken.value === null) {
+        turnstileError.value = true;
+        await new Promise((resolve) => {
+          const unwatch = watch(turnstileToken, (newValue) => {
+            if (newValue !== null) {
+              resolve(newValue);
+              unwatch();
+              turnstileError.value = false;
+            }
+          });
+        });
+      }
+
+      buttonLoading.value = true;
+      buttonLabel.value = 'Creating your account';
+
+      // Create the user's account
+
+      const result = await $trpc.auth.signup.registerUser.mutate({
+        username: username.value,
+        email: emailValue.value,
+        turnstileToken: turnstileToken.value
       });
+
+      if (!result.success) {
+        pageError.value = true;
+        buttonLoading.value = false;
+        buttonLabel.value = 'Create my account';
+        return;
+      }
     }
-
-    buttonLoading.value = true;
-    buttonLabel.value = 'Creating your account';
-
-    //! Create the user's account
-    // const { data } = await useFetch('/api/auth/passkey-options', {
-    //   query: { email: emailValue.value, username: username.value },
-    //   transform: (value) => {
-    //     // @ts-ignore - not sure why this errors
-    //     return JSON.parse(value);
-    //   }
-    // });
-    // if (!data.value.options) {
-    //   toast.add({
-    //     title: 'Server error',
-    //     description:
-    //       'We couldnt generate a secure login for you, please check your internet connection.',
-    //     color: 'red',
-    //     timeout: 5000,
-    //     icon: 'i-ph-warning-circle'
-    //   });
-    //   return;
-    // }
-    // if (data.value.action !== 'register') {
-    //   buttonLoading.value = false;
-    //   buttonLabel.value = 'Create my passkey';
-    //   toast.add({
-    //     title: 'User already exists',
-    //     description:
-    //       'A user already exists with this email address, did you mean to login instead?',
-    //     color: 'orange',
-    //     timeout: 20000,
-    //     icon: 'i-ph-question',
-
-    //     actions: [
-    //       {
-    //         label: 'Login instead',
-    //         click: () => {
-    //           navigateTo('/');
-    //         }
-    //       }
-    //     ]
-    //   });
-    //   return;
-    // }
-
-    // const registerPasskeyOptions = data.value.options;
-    // registerPasskeyOptions.user.displayName = `UnInbox: ${username.value}`;
-    // registerPasskeyOptions.user.name = `UnInbox: ${username.value}`;
-
-    // const newPasskeyData = await startRegistration(registerPasskeyOptions);
-
-    // if (!newPasskeyData) {
-    //   toast.add({
-    //     title: 'Passkey error',
-    //     description:
-    //       'Something went wrong when generating your passkey, please try again.',
-    //     color: 'red',
-    //     timeout: 5000,
-    //     icon: 'i-ph-warning-circle'
-    //   });
-    //   return;
-    // }
-
-    // await useFetch('/api/auth/callback/passkey', {
-    //   method: 'post',
-    //   redirect: 'manual',
-    //   body: {
-    //     action: 'register',
-    //     data: newPasskeyData,
-    //     email: computedEmail.value
-    //   }
-    // });
 
     userCreated.value = true;
+
+    if (secureType.value === 'password') {
+      const setUserPassowrd = await $trpc.auth.password.setUserPassword.mutate({
+        password: passwordInput.value
+      });
+
+      if (!setUserPassowrd.success) {
+        toast.add({
+          id: 'password_error',
+          title: 'Password error',
+          description:
+            'Something went wrong when setting your password, please try again.',
+          color: 'red',
+          timeout: 5000,
+          icon: 'i-ph-warning-circle'
+        });
+        pageError.value = true;
+        buttonLoading.value = false;
+        buttonLabel.value = 'Retry';
+        return;
+      }
+      passwordCreated.value = true;
+    }
+
+    if (secureType.value === 'passkey') {
+      // get passkey options for new user
+      const passkeyOptions =
+        await $trpc.auth.passkey.generateNewPasskeyChallenge.query({
+          canUsePasskeyDirect: canUsePasskeyDirect
+        });
+      // start registration
+
+      let newPasskeyData: RegistrationResponseJSON;
+      try {
+        newPasskeyData = await startRegistration(passkeyOptions.options);
+      } catch (error) {
+        toast.add({
+          id: 'passkey_error',
+          title: 'Passkey error',
+          description:
+            'Something went wrong when creating your passkey, please try again or switch to password mode.',
+          color: 'red',
+          timeout: 5000,
+          icon: 'i-ph-warning-circle'
+        });
+        buttonLoading.value = false;
+        buttonLabel.value = 'Try Again!';
+        return;
+      }
+      const verifyNewPasskey = await $trpc.auth.passkey.addNewPasskey.mutate({
+        registrationResponseRaw: newPasskeyData,
+        nickname: 'Primary'
+      });
+      if (!verifyNewPasskey.success) {
+        toast.add({
+          id: 'passkey_error',
+          title: 'Passkey error',
+          description:
+            'Something went wrong when creating your passkey, please try again or switch to password mode.',
+          color: 'red',
+          timeout: 5000,
+          icon: 'i-ph-warning-circle'
+        });
+        buttonLoading.value = false;
+        buttonLabel.value = 'Try Again!';
+        return;
+      }
+      passkeyCreated.value = true;
+    }
 
     toast.add({
       title: 'Account created',
@@ -219,17 +235,9 @@
       timeout: 5000,
       icon: 'i-ph-check-circle'
     });
-  }
 
-  async function createPasskey() {
-    buttonLoading.value = false;
-    buttonLabel.value = 'All Done!';
-    buttonLoading.value = false;
-  }
-  async function createPassword() {
-    buttonLoading.value = false;
-    buttonLabel.value = 'All Done!';
-    buttonLoading.value = false;
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    navigateTo('/join/org');
   }
 
   watchDebounced(
@@ -345,17 +353,10 @@
         v-if="secureType === 'passkey'"
         class="w-full flex flex-col gap-4">
         <div>
-          <span class="font-bold">More Secure</span>
+          <span class="font-semibold">What are passkeys?</span>
           <p class="">
-            Passkeys are a next-generation account security flow that's making
-            the world more secure.
-          </p>
-        </div>
-        <div>
-          <span class="font-bold">Easier to use</span>
-          <p class="">
-            They allow easy and secure sign-ins using biometrics, PINs, or
-            patterns, eliminating the need to remember usernames or passwords.
+            Passkeys are the new replacement for passwords, designed to give you
+            access to an app in an easier and more secure way.
           </p>
         </div>
         <div class="grid w-full gap-2 lt-md:grid-rows-2 md:grid-cols-2">
@@ -412,7 +413,6 @@
               label="Confirm"
               placeholder=""
               :schema="z.string()" />
-            {{ passwordConfirmationValid }}
           </div>
           <div class="flex flex-col gap-2">
             <span class="text-sm"> Your password must be: </span>
@@ -530,7 +530,7 @@
           :loading="buttonLoading"
           :disabled="!formValid"
           block
-          @click="createAccount()" />
+          @click="createUserAccount()" />
       </div>
       <p
         v-if="pageError"
