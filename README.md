@@ -115,11 +115,14 @@ Here is what you need to be able to run UnInbox locally.
 
    - Duplicate `.env.local.example` to `.env.local`. This file is already pre-configured for use with the local docker containers
 
-      mac
+     **on macOS**
+
      ```sh
       cp .env.local.example .env.local
      ```
-     windows
+
+     **on Windows**
+
      ```sh
       copy .env.local.example .env.local
      ```
@@ -130,9 +133,9 @@ Here is what you need to be able to run UnInbox locally.
    pnpm run docker:up
    ```
    
-6. Sync the schema with the database:
+6. In another terminal window, sync the schema with the database:
 
-    ```sh 
+    ```sh
    pnpm run db:push
     ```
 
@@ -140,6 +143,12 @@ Here is what you need to be able to run UnInbox locally.
 
    ```sh
    pnpm run dev
+   ```
+
+   If you're working on the desktop app:
+
+   ```sh
+   cd apps/desktop-app && pnpm tauri dev
    ```
 
 ## Self Hosting
