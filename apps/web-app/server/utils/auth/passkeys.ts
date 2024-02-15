@@ -51,8 +51,6 @@ async function generateRegistrationOptions({
     }
   });
 
-  console.log('registrationOptions', { registrationOptions });
-
   const userChallenge = registrationOptions.challenge;
   const authStorage = useStorage('auth');
   authStorage.setItem(`passkeyChallenge: ${userId}`, userChallenge);
