@@ -223,6 +223,6 @@ export const passkeyRouter = router({
       const cookie = lucia.createSessionCookie(userSession.id);
       setCookie(ctx.event, cookie.name, cookie.value, cookie.attributes);
 
-      return {};
+      return { success: true };
     })
 });

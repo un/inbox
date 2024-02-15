@@ -44,6 +44,7 @@ export const passwordRouter = router({
     .input(
       z
         .object({
+          turnstileToken: z.string(),
           username: zodSchemas.username(2),
           password: z
             .string()
