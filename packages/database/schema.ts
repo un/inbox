@@ -125,11 +125,13 @@ export const accountsRelationships = relations(accounts, ({ one, many }) => ({
   authenticators: many(authenticators)
 }));
 
+// transports type comes from @simplewebauthn/types AuthenticatorTransportFuture
 export const authenticators = mysqlTable(
   'authenticators',
   {
     id: serial('id').primaryKey(),
     accountId: foreignKey('account_id').notNull(),
+    nickname: varchar('nickname', { length: 64 }).notNull(),
     credentialID: varchar('credential_id', { length: 255 }).notNull(), //Uint8Array
     credentialPublicKey: varchar('credential_public_key', {
       length: 255
@@ -141,8 +143,19 @@ export const authenticators = mysqlTable(
     credentialBackedUp: boolean('credential_backed_up').notNull(),
     transports:
       json('transports').$type<
-        ('ble' | 'hybrid' | 'internal' | 'nfc' | 'usb')[]
-      >()
+        (
+          | 'ble'
+          | 'cable'
+          | 'hybrid'
+          | 'internal'
+          | 'nfc'
+          | 'smart-card'
+          | 'usb'
+        )[]
+      >(),
+    createdAt: timestamp('created_at')
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull()
   },
   (table) => ({
     accountIdIndex: index('provider_account_id_idx').on(table.accountId),
