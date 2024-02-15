@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { startAuthentication } from '@simplewebauthn/browser';
-  import type { PublicKeyCredentialRequestOptionsJSON } from '@simplewebauthn/typescript-types';
+  const { $trpc, $i18n } = useNuxtApp();
   definePageMeta({ guest: true });
   const turnstileToken = ref();
   const errorMessage = ref(false);
@@ -40,20 +40,6 @@
       });
     }
 
-    // TODO: implement passkey location dialog correctly
-    // if (!immediatePasskeyPrompt.value) {
-    //   passkeyLocationDialogOpen.value = true;
-    //   if (timeoutId !== null) {
-    //     clearTimeout(timeoutId);
-    //   }
-
-    //   timeoutId = setTimeout(() => {
-    //     promptForPasskey();
-    //   }, 10000);
-    //   return;
-    // }
-    // immediatePasskeyPrompt.value && promptForPasskey();
-
     await promptForPasskey();
   }
 
@@ -64,13 +50,16 @@
       timeoutId = null;
     }
 
-    const data = await $fetch<{
-      options?: PublicKeyCredentialRequestOptionsJSON;
-    }>('/api/auth/passkey-options', {
-      parseResponse: JSON.parse
-    });
+    const passkeyOptions =
+      await $trpc.auth.passkey.generatePasskeyChallenge.query({
+        turnstileToken: turnstileToken.value
+      });
 
-    if (!data?.options) {
+    if (turnstileEnabled) {
+      turnstileToken.value.reset();
+    }
+
+    if (!passkeyOptions.options) {
       toast.add({
         title: 'Server error',
         description:
@@ -82,32 +71,17 @@
       return;
     }
     try {
-      const passkeyData = await startAuthentication(data.options);
+      const passkeyData = await startAuthentication(passkeyOptions.options);
 
       if (!passkeyData) {
         throw new Error('No passkey data returned');
       }
 
-      const formData = new FormData();
-      formData.append('action', 'authenticate');
-      formData.append('data', JSON.stringify(passkeyData));
-      const res = await fetch('/api/auth/callback/passkey', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          action: 'authenticate',
-          data: passkeyData
-        }),
-        redirect: 'manual'
+      console.log('passkeyData', { passkeyData });
+      const verifyPasskey = await $trpc.auth.passkey.verifyPasskey.mutate({
+        turnstileToken: turnstileToken.value,
+        verificationResponseRaw: passkeyData
       });
-
-      // we know that the passkey is correct if we get an opaque redirect
-      if (res.type !== 'opaqueredirect') {
-        throw new Error('Passkey error');
-      }
-
       window.location.assign('/redirect');
     } catch (e) {
       toast.add({
@@ -167,42 +141,5 @@
         v-model="turnstileToken"
         class="fixed bottom-5 mb-[-30px] scale-50 hover:(mb-0 scale-100)" />
     </div>
-    <!-- <UnUiModal v-model="passkeyLocationDialogOpen">
-      <template #header>
-        <div class="flex items-center justify-end">
-          <UnUiButton
-            color="gray"
-            variant="ghost"
-            icon="i-ph-x"
-            class="-my-1"
-            @click="passkeyLocationDialogOpen = false" />
-        </div>
-      </template>
-
-      <div class="w-full flex flex-col gap-4 p-4">
-        <p v-if="passkeyLocation">
-          Tip: You last saved a passkey in this browser called
-          <span class="text-primary-11 font-bold">{{ passkeyLocation }}</span>
-        </p>
-        <p v-if="!passkeyLocation">
-          It looks like you haven't used a passkey in this browser yet.<br />
-          Try using your phone to scan a QR code or check your password
-          manager.<br />
-        </p>
-      </div>
-      <template #footer>
-        <div class="w-full flex flex-col gap-4 md:flex-row">
-          <UnUiButton
-            label="Help me find my passkey"
-            variant="outline"
-            size="sm"
-            @click="navigateTo('/login/findmypasskey')" />
-          <UnUiButton
-            label="I'm ready now"
-            size="sm"
-            @click="promptForPasskey()" />
-        </div>
-      </template>
-    </UnUiModal> -->
   </div>
 </template>
