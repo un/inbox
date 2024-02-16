@@ -211,7 +211,7 @@
     {
       label: 'Can I use UnInbox for my personal email?',
       content:
-        'Yes, most of our features are designed for collaboration, but everything should work if its just you. '
+        "Yes, most of our features are designed for collaboration, but everything should work even if it's just you."
     },
     {
       label: 'Can I use custom domains?',
@@ -220,7 +220,7 @@
     {
       label: 'Why are custom domains not available on the free plan?',
       content:
-        'There is a high risk of spam and abuse with custom domains, and this could damage the all our sending infrastructure. We require a paid plan as verification and to cover the additional technical requirements of ensuring safe email sending across our platform.'
+        'There is a high risk of spam and abuse with custom domains, and this could damage our infrastructure. We require a paid plan as verification and to cover the additional technical requirements of ensuring safe email sending across our platform.'
     },
     {
       label: 'Do you offer technical support?',
@@ -234,7 +234,7 @@
     },
     {
       label: 'Will you have a calendar?',
-      content: "It's planned, but will come after the email app is stable."
+      content: "Our initial focus is ensuring the stability of the email app and a seamless user experience. We'll introduce new features, including the calendar, once the app is stable."
     },
     {
       label: 'Will you have an email aliasing feature?',
@@ -253,27 +253,27 @@
     {
       label: 'Can I migrate my emails from Google or another provider?',
       content:
-        'We want to make De-Googling and migrating from other providers super easy. Its not yet possible but its on our priorities list.'
+        "We aim to make De-Googling and migrating from other email service providers super easy. While it's not possible yet, it's on our list of priorities."
     },
     {
       label: 'Will your prices ever increase?',
       content:
-        'Yes, as time goes on things become more expensive. BUT, when you have an active subscription, the price is locked in till your subscription expires.'
+        'Yes, over time, prices may increase due to rising costs. However, if you have an active subscription, your price will be locked in until your subscription expires.'
     },
     {
       label: 'Can I use UnInbox with another email client?',
       content:
-        'No, we are built on very different technologies and theres simply no way to make them compatible. If you really need to use another email client, check for another service or use our forwarding feature.'
+        "No, we are built on very different technologies and there's simply no way to make them compatible. If you really need to use another email client, check for another service or use our forwarding feature."
     },
     {
-      label: 'Can I forward mail in from another service?',
+      label: 'Can I forward emails from another email service provider to UnInbox?',
       content:
         'Yes, you get a personal email address with UnInbox, and a dedicated forwarding address. Any emails sent to your forwarding address will appear in your UnInbox. You can also forward all emails for a custom domain to your UnInbox organization.'
     },
     {
       label: 'Will you do what Skiff did and abandon us?',
       content:
-        "No, we do not plan on getting acquired, that's not our end goal. If we were ever to shut down, our code will remain freely available for you to self-host and we will take some steps to ensure the online platform can remain active."
+        "No, we do not plan on getting acquired, that's not our end goal. If we were ever to shut down, our code will remain freely available for you to self-host and we will take some steps to ensure that the online platform will remain active."
     },
     {
       label: 'Do you plan on raising funds or taking investments?',
