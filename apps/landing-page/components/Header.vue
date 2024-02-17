@@ -6,7 +6,7 @@
   const links = computed(() => [
     {
       label: 'What',
-      to: '#way',
+      to: '/#way',
       icon: 'i-heroicons-cube-transparent',
       active:
         activeHeadings.value.includes('way') &&
@@ -14,7 +14,7 @@
     },
     {
       label: 'Features',
-      to: '#features',
+      to: '/#features',
       icon: 'i-heroicons-cube-transparent',
       active:
         activeHeadings.value.includes('features') &&
@@ -22,7 +22,7 @@
     },
     {
       label: 'Pricing',
-      to: '#pricing',
+      to: '/#pricing',
       icon: 'i-heroicons-credit-card',
       active:
         activeHeadings.value.includes('pricing') &&
@@ -36,7 +36,7 @@
     // },
     {
       label: 'FAQ',
-      to: '#faq',
+      to: '/#faq',
       icon: 'i-heroicons-question-mark-circle',
       active: activeHeadings.value.includes('faq')
     }
