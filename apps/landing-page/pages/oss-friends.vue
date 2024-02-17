@@ -11,7 +11,8 @@
     sub: 'Open Source Email + Chat communication platform'
   });
  
-  const { data:OSSFriends  } = await useFetch('https://formbricks.com/api/oss-friends');
+  const {data:OSSFriends} = await useFetch('https://formbricks.com/api/oss-friends');
+  const ossFriendsData = OSSFriends.value['data'] || [];
 
 </script>
 
@@ -26,7 +27,7 @@
         id="way"
         class="scroll-mt-[calc(var(--header-height)+140px+128px+96px)]">
         <ULandingCard
-          v-for="(item, index) in OSSFriends"
+          v-for="(item, index) in ossFriendsData"
           :key="index"
           :to="item.href"
           :title="item.name"
