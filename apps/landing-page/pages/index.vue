@@ -284,7 +284,11 @@
       label: 'What does "100% Open Source" mean?',
       content:
         '100% of the code for all the features and functionality needed to run your own instance of UnInbox are released under a permissive software license called AGPLv3. This allows anyone to copy the code and modify it however they want, so long as they also release the code publicly under the same license. A few features or modules in the app are not open source, but instead released under a commercial license and mostly publicly available. These features or modules are things that are only relevant to large enterprise companies such as SSO or OIDC - or related to the billing system of UnInbox.'
-    }
+    },
+    {
+      label: "Where will the data be stored?",
+      content: 
+        "UnInbox will be offering data storage in the US and the EU at launch.  You will be able to choose your region at account creation."
   ];
 </script>
 
