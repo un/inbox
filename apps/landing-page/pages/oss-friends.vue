@@ -111,27 +111,30 @@
 </script>
 
 <template>
-  <div>
-    <div
-      class="m-auto mb-16 flex flex-col items-center justify-center gap-8 container">
-      <h1 class="mt-16 text-7xl font-display">Our Open Source Friends</h1>
-      <p class="max-w-prose">
-        We believe in a better and more sustainable future powered by Open
+ <ULandingSection
+      title="Our Open Source Friends"
+      description="We believe in a better and more sustainable future powered by Open
         Source software. Below you can find a list of our friends who are just
-        as passionate about open source and the future as we are.
-      </p>
-
-      <div
-        class="grid grid-flow-row mt-16 gap-8 lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1">
-        <div
-          v-for="friend of OSSFriends"
-          :key="friend.name"
-          class="border-gray-600 bg-blue-500/10 hover:border-gray-400 flex flex-col cursor-pointer items-center gap-4 border-2 rounded-md p-8 transition-colors"
-          @click="navigateTo(friend.href, { external: true })">
-          <h3 class="text-2xl font-display">{{ friend.name }}</h3>
-          <p class="max-w-prose">{{ friend.description }}</p>
-        </div>
-      </div>
-    </div>
-  </div>
+        as passionate about open source and the future as we are."
+      :ui="{ title: 'font-display' }">
+      <UPageGrid
+        id="way"
+        class="scroll-mt-[calc(var(--header-height)+140px+128px+96px)]">
+        <ULandingCard
+          v-for="(item, index) in OSSFriends"
+          :key="index"
+          :to="item.href"
+          :title="item.name"
+          :description="item.description"
+          >
+          <UBadge
+            v-if="item"
+            variant="subtle"
+            size="sm"
+            class="absolute right-2 top-2">
+            {{ item.href }}
+          </UBadge>
+        </ULandingCard>
+      </UPageGrid>
+    </ULandingSection>
 </template>
