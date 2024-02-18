@@ -249,7 +249,7 @@
     {
       label: 'Will you support / have encryption?',
       content:
-        "Yes, initially encryption won't be available, but it's a top priority for us. Once we're out of Beta mode, expect robust encryption measures. We're working to seamlessly implement encryption without disrupting any features / functioning, ensuring smooth data storage and sharing within the organization."
+        "Yes. We encrypt data at rest and in transit. Emails will be encrypted via TLS when available. It's a top priority for us to add robust encryption measures for emails. We're working to seamlessly implement additional encryption (S/MIME, PGP) without disrupting any features / functioning, ensuring smooth email transfers and sharing within the organization."
     },
     {
       label: 'Can I migrate my emails from Google or another provider?',
