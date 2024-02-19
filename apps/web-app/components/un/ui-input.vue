@@ -19,6 +19,7 @@
     valid?: boolean | 'remote' | null;
     validationMessage?: string | null;
     remoteValidation?: boolean | null;
+    password?: boolean;
   };
 
   const props = withDefaults(defineProps<Props>(), {
@@ -31,7 +32,8 @@
     schema: null,
     valid: null,
     validationMessage: null,
-    remoteValidation: false
+    remoteValidation: false,
+    password: false
   });
 
   const inputClasses = useUtils().cva('', {
@@ -75,6 +77,9 @@
   // Computed properties
   const computedDisabled = computed(() => {
     return props.locked ? !editModeEnabled.value : props.disabled;
+  });
+  const computedType = computed(() => {
+    return props.password ? 'password' : 'text';
   });
 
   const computedBorderColor = computed(() => {
@@ -136,7 +141,7 @@
 
 <template>
   <div
-    class="flex flex-col gap-1 leading-4 text-primary-12"
+    class="flex flex-col gap-1 text-primary-12 leading-4"
     :class="inputClasses({ width: props.width })">
     <div>
       <label
@@ -159,6 +164,7 @@
       <input
         ref="inputField"
         v-model="data"
+        :type="computedType"
         :aria-labelledby="`input-label-${props.label}`"
         class="w-full bg-transparent outline-none"
         :class="

@@ -11,29 +11,26 @@ export default defineNitroPlugin(() => {
 
   const storage = useStorage();
 
-  function getCacheDb(base: string) {
+  const defaultTTL = import.meta.dev ? 60 * 60 * 24 : 60 * 60 * 24 * 28;
+
+  function getCacheDb(base: string, ttl: number = defaultTTL) {
     if (useUpstash) {
       return upstashDriver({
         envPrefix: 'DB_UPSTASH',
-        ttl:
-          process.env.NODE_ENV === 'development'
-            ? 60 * 60 * 12
-            : 60 * 60 * 24 * 30,
+        ttl: ttl,
         base: base
       });
     } else {
       return redisDriver({
         url: process.env.DB_REDIS_CONNECTION_STRING,
-        ttl:
-          process.env.NODE_ENV === 'development'
-            ? 60 * 60 * 12
-            : 60 * 60 * 24 * 30,
+        ttl: ttl,
         base: base
       });
     }
   }
 
   // Mount driver
+  storage.mount('auth', getCacheDb('auth', 60 * 5));
   storage.mount('sessions', getCacheDb('sessions'));
-  storage.mount('org-context', getCacheDb('org-context'));
+  storage.mount('org-context', getCacheDb('org-context', 60 * 60 * 12));
 });

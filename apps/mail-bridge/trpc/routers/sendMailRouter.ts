@@ -9,7 +9,7 @@ import {
   convoEntries,
   ConvoEntryMetadata
 } from '@uninbox/database/schema';
-import { nanoId, nanoIdLength, nanoIdSchema } from '@uninbox/utils';
+import { nanoId, nanoIdLength, zodSchemas } from '@uninbox/utils';
 import { postalPuppet } from '@uninbox/postal-puppet';
 import { and, eq } from '@uninbox/database/orm';
 import { convert } from 'html-to-text';
@@ -22,7 +22,7 @@ export const sendMailRouter = router({
         orgId: z.number(),
         convoId: z.number(),
         entryId: z.number(),
-        sendAsEmailIdentityPublicId: nanoIdSchema,
+        sendAsEmailIdentityPublicId: zodSchemas.nanoId,
         toEmail: z.string().email(),
         ccEmail: z.array(z.string().email()).optional(),
         subject: z.string(),

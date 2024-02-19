@@ -21,12 +21,7 @@ import {
   userProfilesToOrgs,
   users
 } from '@uninbox/database/schema';
-import {
-  nanoId,
-  nanoIdLength,
-  nanoIdToken,
-  nanoIdSchema
-} from '@uninbox/utils';
+import { nanoId, nanoIdToken, zodSchemas } from '@uninbox/utils';
 import { refreshOrgSlugCache } from '~/server/utils/orgSlug';
 import { isUserAdminOfOrg } from '~/server/utils/user';
 import { TRPCError } from '@trpc/server';
@@ -49,7 +44,7 @@ export const invitesRouter = router({
         email: z
           .object({
             emailUsername: z.string().min(1).max(64),
-            domainPublicId: nanoIdSchema,
+            domainPublicId: zodSchemas.nanoId,
             sendName: z.string().min(1).max(64)
           })
           .optional(),
@@ -446,7 +441,7 @@ export const invitesRouter = router({
   invalidateInvite: orgProcedure
     .input(
       z.object({
-        invitePublicId: nanoIdSchema
+        invitePublicId: zodSchemas.nanoId
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -481,7 +476,7 @@ export const invitesRouter = router({
   refreshInvite: orgProcedure
     .input(
       z.object({
-        invitePublicId: nanoIdSchema
+        invitePublicId: zodSchemas.nanoId
       })
     )
     .mutation(async ({ ctx, input }) => {

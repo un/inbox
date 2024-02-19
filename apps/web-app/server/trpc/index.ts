@@ -1,9 +1,11 @@
 export * from '@trpc/server';
 import { router } from './trpc';
 import { createContext } from './createContext';
-import { authRouter } from './routers/authRouter';
+import { emailRouter } from './routers/authRouter/emailRouter';
+import { passkeyRouter } from './routers/authRouter/passkeyRouter';
+import { passwordRouter } from './routers/authRouter/passwordRouter';
 import { testRouter } from './routers/testRouter';
-import { signupRouter } from './routers/signupRouter';
+import { signupRouter } from './routers/authRouter/signupRouter';
 import { profileRouter } from './routers/userRouter/profileRouter';
 import { crudRouter } from './routers/orgRouter/orgCrudRouter';
 import { invitesRouter } from './routers/orgRouter/users/invitesRouter';
@@ -16,10 +18,19 @@ import { orgUserGroupsRouter } from './routers/orgRouter/users/groupsRouter';
 import { emailIdentityRouter } from './routers/orgRouter/mail/emailIdentityRouter';
 import { billingRouter } from './routers/orgRouter/setup/billingRouter';
 import { addressRouter } from './routers/userRouter/addressRouter';
+import { defaultsRouter } from './routers/userRouter/defaultsRouter';
 
 export const trpcWebAppContext = createContext;
 
+const trpcWebAppAuthRouter = router({
+  signup: signupRouter,
+  email: emailRouter,
+  passkey: passkeyRouter,
+  password: passwordRouter
+});
+
 const trpcWebAppUserRouter = router({
+  defaults: defaultsRouter,
   profile: profileRouter,
   addresses: addressRouter
 });
@@ -47,8 +58,7 @@ const trpcWebAppOrgRouter = router({
 });
 
 export const trpcWebAppRouter = router({
-  signup: signupRouter,
-  auth: authRouter,
+  auth: trpcWebAppAuthRouter,
   user: trpcWebAppUserRouter,
   org: trpcWebAppOrgRouter,
   convos: convoRouter,

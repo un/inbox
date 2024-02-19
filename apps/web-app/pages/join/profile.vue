@@ -81,11 +81,11 @@
     formData.append('type', 'user');
     formData.append('publicId', userOrgProfile.value?.profile?.publicId || '');
     formData.append('avatarId', userOrgProfile.value?.profile?.avatarId || '');
-    const response =await $fetch(`${storageUrl}/api/avatar`, {
+    const response = (await $fetch(`${storageUrl}/api/avatar`, {
       method: 'post',
       body: formData,
       credentials: 'include'
-    }) as any;
+    })) as any;
     if (response.avatarId) {
       imageUrl.value = useUtils().generateAvatarUrl(
         'user',
@@ -177,7 +177,7 @@
           class="w-full">
           <div
             class="bg-primary-400 h-2 w-full rounded"
-            @click="navigateTo('/join/passkey')" />
+            @click="navigateTo('/join/secure')" />
         </UnUiTooltip>
         <UnUiTooltip
           text="Set up your organization"

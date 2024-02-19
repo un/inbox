@@ -18,7 +18,6 @@ import {
   customType
 } from 'drizzle-orm/mysql-core';
 import { relations, sql } from 'drizzle-orm';
-import type { AdapterAccount } from '@auth/core/adapters';
 import { nanoIdLength, nanoIdLongLength } from '@uninbox/utils';
 import { uiColors } from '@uninbox/types/ui';
 import {
@@ -67,27 +66,22 @@ export const users = mysqlTable(
     id: serial('id').primaryKey(),
     publicId: nanoId('public_id').notNull(),
     username: varchar('username', { length: 32 }).notNull(),
-    recoveryEmail: varchar('recovery_email', { length: 255 }),
     metadata: json('metadata').$type<Record<string, unknown>>(),
-    emailVerified: timestamp('emailVerified', {
-      mode: 'date',
-      fsp: 3
-    }).defaultNow(),
     createdAt: timestamp('created_at')
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull()
   },
   (table) => ({
     publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
-    usernameIndex: uniqueIndex('username_idx').on(table.username),
-    recoveryEmailIndex: uniqueIndex('recovery_email_idx').on(
-      table.recoveryEmail
-    )
+    usernameIndex: uniqueIndex('username_idx').on(table.username)
   })
 );
 
 export const usersRelations = relations(users, ({ one, many }) => ({
-  accounts: many(accounts),
+  account: one(accounts, {
+    fields: [users.id],
+    references: [accounts.userId]
+  }),
   sessions: many(sessions),
   orgMemberships: many(orgMembers),
   profiles: many(userProfiles),
@@ -104,26 +98,26 @@ export const accounts = mysqlTable(
   {
     id: serial('id').primaryKey(),
     userId: foreignKey('userId').notNull(),
-    type: varchar('type', { length: 255 })
-      .$type<AdapterAccount['type']>()
-      .notNull(),
-    provider: varchar('provider', { length: 255 }).notNull(),
-    providerAccountId: varchar('providerAccountId', { length: 255 }).notNull(),
-    expires_at: int('expires_at')
+    passwordEnabled: boolean('passwordEnabled').notNull().default(false),
+    passwordHash: varchar('password_hash', { length: 255 }),
+    recoveryEmailEnabled: boolean('recoveryEmailEnabled')
+      .notNull()
+      .default(false),
+    recoveryEmail: varchar('recovery_email', { length: 255 }),
+    emailVerified: timestamp('email_verified'),
+    passkeysEnabled: boolean('passkeys_enabled').notNull().default(false),
+    twoFactorEnabled: boolean('two_factor_enabled').notNull().default(false),
+    twoFactorSecret: varchar('two_factor_secret', { length: 255 })
   },
-  (account) => ({
-    providerIndex: index('provider_idx').on(account.provider),
-    providerAccountIdIndex: uniqueIndex('provider_account_id_idx').on(
-      account.providerAccountId
-    ),
-    userIdProviderIndex: uniqueIndex('user_id_provider_idx').on(
-      account.userId,
-      account.provider
+  (accounts) => ({
+    userIdIndex: index('user_id_idx').on(accounts.userId),
+    recoveryEmailIndex: uniqueIndex('recovery_email_idx').on(
+      accounts.recoveryEmail
     )
   })
 );
 
-export const accountRelationships = relations(accounts, ({ one, many }) => ({
+export const accountsRelationships = relations(accounts, ({ one, many }) => ({
   user: one(users, {
     fields: [accounts.userId],
     references: [users.id]
@@ -131,30 +125,40 @@ export const accountRelationships = relations(accounts, ({ one, many }) => ({
   authenticators: many(authenticators)
 }));
 
+// transports type comes from @simplewebauthn/types AuthenticatorTransportFuture
 export const authenticators = mysqlTable(
   'authenticators',
   {
     id: serial('id').primaryKey(),
-    providerAccountId: varchar('providerAccountId', { length: 255 }).notNull(),
-    credentialID: varchar('credentialID', { length: 255 }).notNull(),
-    credentialPublicKey: varchar('credentialPublicKey', {
+    accountId: foreignKey('account_id').notNull(),
+    nickname: varchar('nickname', { length: 64 }).notNull(),
+    credentialID: varchar('credential_id', { length: 255 }).notNull(), //Uint8Array
+    credentialPublicKey: varchar('credential_public_key', {
       length: 255
+    }).notNull(), //Uint8Array
+    counter: bigint('counter', { unsigned: true, mode: 'bigint' }).notNull(), //bigint
+    credentialDeviceType: varchar('credential_device_type', {
+      length: 32
     }).notNull(),
-    counter: int('counter').notNull(),
-    credentialDeviceType: mysqlEnum('credentialDeviceType', [
-      'singleDevice',
-      'multiDevice'
-    ]).notNull(),
-    credentialBackedUp: boolean('credentialBackedUp').notNull(),
+    credentialBackedUp: boolean('credential_backed_up').notNull(),
     transports:
       json('transports').$type<
-        ('ble' | 'hybrid' | 'internal' | 'nfc' | 'usb')[]
-      >()
+        (
+          | 'ble'
+          | 'cable'
+          | 'hybrid'
+          | 'internal'
+          | 'nfc'
+          | 'smart-card'
+          | 'usb'
+        )[]
+      >(),
+    createdAt: timestamp('created_at')
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull()
   },
   (table) => ({
-    providerAccountIdIndex: index('provider_account_id_idx').on(
-      table.providerAccountId
-    ),
+    accountIdIndex: index('provider_account_id_idx').on(table.accountId),
     credentialIDIndex: uniqueIndex('credential_id_idx').on(table.credentialID)
   })
 );
@@ -163,8 +167,8 @@ export const authenticatorRelationships = relations(
   authenticators,
   ({ one }) => ({
     account: one(accounts, {
-      fields: [authenticators.providerAccountId],
-      references: [accounts.providerAccountId]
+      fields: [authenticators.accountId],
+      references: [accounts.id]
     })
   })
 );
@@ -173,15 +177,20 @@ export const sessions = mysqlTable(
   'sessions',
   {
     id: serial('id').primaryKey(),
-    userId: varchar('userId', { length: 255 }).notNull(),
-    sessionToken: varchar('sessionToken', { length: 255 }).notNull(),
+    userId: foreignKey('user_id').notNull(),
+    userPublicId: nanoId('user_public_id').notNull(),
+    sessionToken: varchar('session_token', { length: 255 }).notNull(),
     device: varchar('device', { length: 255 }).notNull(),
-    browser: varchar('browser', { length: 255 }).notNull(),
-    expires: timestamp('expires', { mode: 'date' }).notNull()
+    os: varchar('os', { length: 255 }).notNull(),
+    expiresAt: timestamp('expires_at').notNull(),
+    createdAt: timestamp('created_at')
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull()
   },
   (table) => ({
     userIdIndex: index('user_id_idx').on(table.userId),
-    sessionTokenIndex: uniqueIndex('session_token_idx').on(table.sessionToken)
+    sessionTokenIndex: uniqueIndex('session_token_idx').on(table.sessionToken),
+    expiryIndex: index('expires_at_idx').on(table.expiresAt)
   })
 );
 export const sessionRelationships = relations(sessions, ({ one }) => ({
@@ -190,40 +199,6 @@ export const sessionRelationships = relations(sessions, ({ one }) => ({
     references: [users.id]
   })
 }));
-
-// // Identity table (user logins)
-// export const userAuthIdentities = mysqlTable(
-//   'user_identities',
-//   {
-//     id: serial('id').primaryKey(),
-//     userId: foreignKey('user_id').notNull(),
-//     provider: varchar('provider', { length: 32 }).notNull(),
-//     providerId: varchar('provider_id', { length: 64 }).notNull(),
-//     createdAt: timestamp('created_at')
-//       .default(sql`CURRENT_TIMESTAMP`)
-//       .notNull()
-//   },
-//   (table) => ({
-//     providerProviderIdIndex: uniqueIndex('provider_provider_id_idx').on(
-//       table.provider,
-//       table.providerId
-//     ),
-//     userIdProviderIndex: uniqueIndex('user_id_provider_idx').on(
-//       table.userId,
-//       table.provider
-//     ),
-//     providerIdIndex: index('provider_id_idx').on(table.providerId)
-//   })
-// );
-// export const userAuthIdentitiesRelations = relations(
-//   userAuthIdentities,
-//   ({ one }) => ({
-//     user: one(users, {
-//       fields: [userAuthIdentities.userId],
-//       references: [users.id]
-//     })
-//   })
-// );
 
 export const userProfiles = mysqlTable(
   'user_profiles',

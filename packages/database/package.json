@@ -17,7 +17,6 @@
     "db:clean:r": "infisical run --env=local -- esno dbClean.ts"
   },
   "dependencies": {
-    "@auth/core": "workspace:*",
     "@planetscale/database": "^1.14.0",
     "@uninbox/types": "workspace:*",
     "@uninbox/utils": "workspace:*",
