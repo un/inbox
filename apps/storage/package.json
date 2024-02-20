@@ -8,12 +8,12 @@
     "preview": "node .output/server/index.mjs"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.503.1",
-    "@aws-sdk/s3-request-presigner": "^3.503.1",
+    "@aws-sdk/client-s3": "^3.515.0",
+    "@aws-sdk/s3-request-presigner": "^3.515.0",
     "@uninbox/database": "workspace:*",
     "@uninbox/types": "workspace:*",
     "@uninbox/utils": "workspace:*",
-    "@upstash/redis": "1.28.2",
+    "@upstash/redis": "1.28.4",
     "nitropack": "latest",
     "sharp": "^0.33.2",
     "superjson": "^2.2.1"
