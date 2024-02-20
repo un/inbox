@@ -28,5 +28,10 @@ export default defineNuxtConfig({
     public: {
       siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'https://uninbox.com'
     }
+  },
+  routeRules: {
+    '/oss-friends': {
+      isr: 86400
+    }
   }
 });

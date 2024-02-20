@@ -108,6 +108,14 @@
         icon="i-heroicons-rocket-launch"
         class="hidden lg:flex"
         @click="$emit('openWaitlistModal')" />
+
+        <UButton
+        label="Our OSS Friends"
+        color="black"
+        variant="ghost"
+        icon="i-heroicons-globe-alt"
+        class="hidden lg:flex"
+        to="/oss-friends" />
     </template>
   </UFooter>
 </template>
