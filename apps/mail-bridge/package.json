@@ -2,6 +2,10 @@
   "name": "@uninbox/mail-bridge",
   "private": true,
   "types": "types.ts",
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=8"
+  },
   "scripts": {
     "dev": "PORT=3100 npx nitropack dev",
     "build": "npx nitropack build",

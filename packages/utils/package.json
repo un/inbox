@@ -8,6 +8,10 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=8"
+  },
   "dependencies": {
     "nanoid": "^5.0.6",
     "zod": "^3.22.4"

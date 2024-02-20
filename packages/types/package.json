@@ -5,6 +5,10 @@
     "description": "",
     "main": "index.ts",
     "types": "index.ts",
+    "engines": {
+        "node": ">=20",
+        "pnpm": ">=8"
+    },
     "devDependencies": {
         "typescript": "^5.3.3"
     }

@@ -3,6 +3,10 @@
   "license": "COMMERCIAL",
   "private": true,
   "types": "types.ts",
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=8"
+  },
   "scripts": {
     "ee:dev": "PORT=3800 npx nitropack dev",
     "ee:build": "npx nitropack build",

@@ -78,6 +78,7 @@ Instead, we're detaching from its legacy underpinnings, to build something moder
 _p.s. Things will change over time!_
 
 ## Running Locally
+
 To get a local copy up and running, follow these simple steps.
 
 ### Prerequisites
@@ -85,6 +86,7 @@ To get a local copy up and running, follow these simple steps.
 Here is what you need to be able to run UnInbox locally.
 
 - Node.js (Version: >=20.x)
+- NVM (Node Version Manager) (see https://github.com/nvm-sh/nvm)
 - Docker
 - pnpm (see https://pnpm.io/installation)
 
@@ -105,38 +107,47 @@ Here is what you need to be able to run UnInbox locally.
    cd UnInbox
    ```
 
-3. Install packages with pnpm
+3. Check and install the correct node/pnpm versions
+
+   ```sh
+   nvm install
+   ```
+
+4. Install packages with pnpm
 
    ```sh
    pnpm i
    ```
 
-4. Set up your `.env.local` file
+5. Set up your `.env.local` file
 
    - Duplicate `.env.local.example` to `.env.local`. This file is already pre-configured for use with the local docker containers
 
-      mac
+     mac
+
      ```sh
       cp .env.local.example .env.local
      ```
+
      windows
+
      ```sh
       copy .env.local.example .env.local
      ```
 
-5. Start the docker containers
+6. Start the docker containers
 
    ```sh
    pnpm run docker:up
    ```
-   
-6. Sync the schema with the database:
 
-    ```sh 
+7. Sync the schema with the database:
+
+   ```sh
    pnpm run db:push
-    ```
+   ```
 
-7. In another terminal window, start the app and all services
+8. In another terminal window, start the app and all services
 
    ```sh
    pnpm run dev

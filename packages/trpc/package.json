@@ -4,6 +4,10 @@
     "private": true,
     "description": "",
     "main": "index.js",
+    "engines": {
+        "node": ">=20",
+        "pnpm": ">=8"
+    },
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1"
     },
