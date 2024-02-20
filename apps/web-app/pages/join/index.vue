@@ -22,7 +22,7 @@
   //functions
   async function goToNextStep() {
     useCookie('un-join-username', { maxAge: 3600 }).value = usernameValue.value;
-    navigateTo('/join/passkey');
+    navigateTo('/join/secure');
   }
 
   watchDebounced(
@@ -30,7 +30,7 @@
     async () => {
       if (usernameValid.value === 'remote') {
         const { available, error } =
-          await $trpc.signup.checkUsernameAvailability.query({
+          await $trpc.auth.signup.checkUsernameAvailability.query({
             turnstileToken: turnstileToken.value,
             username: usernameValue.value
           });

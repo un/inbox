@@ -58,7 +58,7 @@ export default eventHandler({
         setResponseStatus(event, 400);
         return send(event, 'Invalid user profile ');
       }
-      if (profileResponse.userId !== userId) {
+      if (+profileResponse.userId !== userId) {
         setResponseStatus(event, 401);
         return send(event, 'Unauthorized');
       }

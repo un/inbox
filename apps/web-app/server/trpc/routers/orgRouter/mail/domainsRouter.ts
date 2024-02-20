@@ -2,12 +2,7 @@ import { z } from 'zod';
 import { router, orgProcedure, limitedProcedure } from '../../../trpc';
 import { and, eq, or } from '@uninbox/database/orm';
 import { orgs, orgMembers, domains } from '@uninbox/database/schema';
-import {
-  nanoId,
-  nanoIdLength,
-  nanoIdToken,
-  nanoIdSchema
-} from '@uninbox/utils';
+import { nanoId, zodSchemas } from '@uninbox/utils';
 import dns from 'node:dns';
 import { verifyDns } from '~/server/utils/verifyDns';
 import { isUserInOrg } from '~/server/utils/dbQueries';
@@ -120,7 +115,7 @@ export const domainsRouter = router({
   getDomain: orgProcedure
     .input(
       z.object({
-        domainPublicId: nanoIdSchema,
+        domainPublicId: zodSchemas.nanoId,
         newDomain: z.boolean().optional()
       })
     )
@@ -171,7 +166,7 @@ export const domainsRouter = router({
   getDomainDns: orgProcedure
     .input(
       z.object({
-        domainPublicId: nanoIdSchema,
+        domainPublicId: zodSchemas.nanoId,
         newDomain: z.boolean().optional()
       })
     )

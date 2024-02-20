@@ -23,12 +23,7 @@ import {
   emailIdentitiesAuthorizedUsers,
   userGroupMembers
 } from '@uninbox/database/schema';
-import {
-  nanoId,
-  nanoIdLength,
-  nanoIdSchema,
-  nanoIdToken
-} from '@uninbox/utils';
+import { nanoId, nanoIdLength, zodSchemas } from '@uninbox/utils';
 import { TRPCError } from '@trpc/server';
 import type { JSONContent } from '@tiptap/vue-3';
 import { generateText } from '@tiptap/core';
@@ -643,7 +638,7 @@ export const convoRouter = router({
   getConvo: orgProcedure
     .input(
       z.object({
-        convoPublicId: nanoIdSchema
+        convoPublicId: zodSchemas.nanoId
       })
     )
     .query(async ({ ctx, input }) => {
@@ -849,7 +844,7 @@ export const convoRouter = router({
   getConvoEntries: orgProcedure
     .input(
       z.object({
-        convoPublicId: nanoIdSchema,
+        convoPublicId: zodSchemas.nanoId,
         cursorLastUpdatedAt: z.date().optional(),
         cursorLastPublicId: z.string().min(3).max(nanoIdLength).optional()
       })

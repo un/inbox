@@ -229,7 +229,11 @@
     if (process.server) {
       return null;
     }
-    await useAuth().signOut();
+    await $fetch('/api/auth/logout', {
+      method: 'POST'
+    });
+    useState('auth').value = 'unauthenticated';
+    navigateTo(`/`);
     toast.add({
       title: 'Logged out',
       description: 'You have been logged out',

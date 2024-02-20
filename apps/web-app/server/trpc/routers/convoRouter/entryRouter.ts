@@ -2,21 +2,16 @@ import { z } from 'zod';
 import { router, orgProcedure, limitedProcedure } from '../../trpc';
 import { and, desc, eq, inArray, lt, or } from '@uninbox/database/orm';
 import { convos, convoEntries } from '@uninbox/database/schema';
-import {
-  nanoId,
-  nanoIdLength,
-  nanoIdToken,
-  nanoIdSchema
-} from '@uninbox/utils';
+import { zodSchemas } from '@uninbox/utils';
 import { TRPCError } from '@trpc/server';
 
 export const convoEntryRouter = router({
   getConvoEntries: orgProcedure
     .input(
       z.object({
-        convoPublicId: nanoIdSchema,
+        convoPublicId: zodSchemas.nanoId,
         cursorLastCreatedAt: z.date().optional(),
-        cursorLastPublicId: nanoIdSchema.optional()
+        cursorLastPublicId: zodSchemas.nanoId.optional()
       })
     )
     .query(async ({ ctx, input }) => {

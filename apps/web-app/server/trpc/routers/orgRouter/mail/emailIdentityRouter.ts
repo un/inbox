@@ -17,12 +17,7 @@ import {
   emailIdentities,
   userGroupMembers
 } from '@uninbox/database/schema';
-import {
-  nanoId,
-  nanoIdLength,
-  nanoIdToken,
-  nanoIdSchema
-} from '@uninbox/utils';
+import { nanoId, zodSchemas } from '@uninbox/utils';
 import dns from 'dns';
 import { verifyDns } from '~/server/utils/verifyDns';
 import { isUserInOrg } from '~/server/utils/dbQueries';
@@ -34,7 +29,7 @@ export const emailIdentityRouter = router({
     .input(
       z.object({
         emailUsername: z.string().min(1).max(255),
-        domainPublicId: nanoIdSchema
+        domainPublicId: zodSchemas.nanoId
       })
     )
     .query(async ({ ctx, input }) => {
@@ -92,11 +87,11 @@ export const emailIdentityRouter = router({
     .input(
       z.object({
         emailUsername: z.string().min(1).max(255),
-        domainPublicId: nanoIdSchema,
+        domainPublicId: zodSchemas.nanoId,
         sendName: z.string().min(3).max(255),
         catchAll: z.boolean().optional().default(false),
-        routeToUsersOrgMemberPublicIds: z.array(nanoIdSchema).optional(),
-        routeToGroupsPublicIds: z.array(nanoIdSchema).optional()
+        routeToUsersOrgMemberPublicIds: z.array(zodSchemas.nanoId).optional(),
+        routeToGroupsPublicIds: z.array(zodSchemas.nanoId).optional()
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -262,7 +257,7 @@ export const emailIdentityRouter = router({
   getEmailIdentity: orgProcedure
     .input(
       z.object({
-        emailIdentityPublicId: nanoIdSchema,
+        emailIdentityPublicId: zodSchemas.nanoId,
         newEmailIdentity: z.boolean().optional()
       })
     )

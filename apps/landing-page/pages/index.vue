@@ -234,7 +234,8 @@
     },
     {
       label: 'Will you have a calendar?',
-      content: "Our initial focus is ensuring the stability of the email app and a seamless user experience. We'll introduce new features, including the calendar, once the app is stable."
+      content:
+        "Our initial focus is ensuring the stability of the email app and a seamless user experience. We'll introduce new features, including the calendar, once the app is stable."
     },
     {
       label: 'Will you have an email aliasing feature?',
@@ -248,7 +249,7 @@
     {
       label: 'Will you support / have encryption?',
       content:
-        "Yes, initially encryption won't be available, but it's a top priority for us. Once we're out of Beta mode, expect robust encryption measures. We're working to seamlessly implement encryption without disrupting any features / functioning, ensuring smooth data storage and sharing within the organization."
+        "Yes. We encrypt data at rest and in transit. Emails will be encrypted via TLS when available. It's a top priority for us to add robust encryption measures for emails. We're working to seamlessly implement additional encryption (S/MIME, PGP) without disrupting any features / functioning, ensuring smooth email transfers and sharing within the organization."
     },
     {
       label: 'Can I migrate my emails from Google or another provider?',
@@ -266,7 +267,8 @@
         "No, we are built on very different technologies and there's simply no way to make them compatible. If you really need to use another email client, check for another service or use our forwarding feature."
     },
     {
-      label: 'Can I forward emails from another email service provider to UnInbox?',
+      label:
+        'Can I forward emails from another email service provider to UnInbox?',
       content:
         'Yes, you get a personal email address with UnInbox, and a dedicated forwarding address. Any emails sent to your forwarding address will appear in your UnInbox. You can also forward all emails for a custom domain to your UnInbox organization.'
     },
@@ -284,6 +286,11 @@
       label: 'What does "100% Open Source" mean?',
       content:
         '100% of the code for all the features and functionality needed to run your own instance of UnInbox are released under a permissive software license called AGPLv3. This allows anyone to copy the code and modify it however they want, so long as they also release the code publicly under the same license. A few features or modules in the app are not open source, but instead released under a commercial license and mostly publicly available. These features or modules are things that are only relevant to large enterprise companies such as SSO or OIDC - or related to the billing system of UnInbox.'
+    },
+    {
+      label: 'Where will the data be stored?',
+      content:
+        'UnInbox will be offering data storage in the US with global replication or an EU only hosting at launch.  You will be able to choose your region at account creation.'
     }
   ];
 </script>
