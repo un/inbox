@@ -29,6 +29,10 @@
   "files": [
     "dist"
   ],
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=8"
+  },
   "scripts": {
     "build:puppet": "unbuild",
     "dev:puppet": "unbuild --stub",

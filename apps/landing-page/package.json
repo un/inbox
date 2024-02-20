@@ -2,6 +2,10 @@
   "name": "@uninbox/landing",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=8"
+  },
   "scripts": {
     "build": "nuxt build",
     "dev": "PORT=3500 nuxt dev",
