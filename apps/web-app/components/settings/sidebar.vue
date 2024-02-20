@@ -14,10 +14,15 @@
       icon: 'i-ph-user-circle-gear'
     },
     {
+      label: 'Security Settings',
+      to: `/${orgSlug}/settings/user/security`,
+      icon: 'i-ph-user'
+    },
+    {
       label: 'Personal Addresses',
       to: `/${orgSlug}/settings/user/addresses`,
       icon: 'i-ph-envelope-open'
-    }
+    }    
   ];
   const orgSetupLinks = computed(() => [
     {
@@ -83,21 +88,21 @@
         <div class="flex flex-col gap-2">
           <div class="flex flex-col gap-2 pb-2 pl-2">
             <span
-              class="border-b-1 border-base-3 pb-1 text-xs font-semibold uppercase text-base-11">
+              class="border-b-1 border-base-3 pb-1 text-xs text-base-11 font-semibold uppercase">
               Setup
             </span>
             <UnUiVerticalNavigation :links="orgSetupLinks" />
           </div>
           <div class="flex flex-col gap-2 pb-2 pl-2">
             <span
-              class="border-b-1 border-base-3 pb-1 text-xs font-semibold uppercase text-base-11">
+              class="border-b-1 border-base-3 pb-1 text-xs text-base-11 font-semibold uppercase">
               Users
             </span>
             <UnUiVerticalNavigation :links="orgUsersLinks" />
           </div>
           <div class="flex flex-col gap-2 pb-2 pl-2">
             <span
-              class="border-b-1 border-base-3 pb-1 text-xs font-semibold uppercase text-base-11">
+              class="border-b-1 border-base-3 pb-1 text-xs text-base-11 font-semibold uppercase">
               Mail
             </span>
             <UnUiVerticalNavigation :links="orgMailLinks" />

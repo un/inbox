@@ -4,6 +4,7 @@ import { createContext } from './createContext';
 import { emailRouter } from './routers/authRouter/emailRouter';
 import { passkeyRouter } from './routers/authRouter/passkeyRouter';
 import { passwordRouter } from './routers/authRouter/passwordRouter';
+import { securityRouter } from './routers/authRouter/securityRouter';
 import { testRouter } from './routers/testRouter';
 import { signupRouter } from './routers/authRouter/signupRouter';
 import { profileRouter } from './routers/userRouter/profileRouter';
@@ -26,7 +27,8 @@ const trpcWebAppAuthRouter = router({
   signup: signupRouter,
   email: emailRouter,
   passkey: passkeyRouter,
-  password: passwordRouter
+  password: passwordRouter,
+  security: securityRouter
 });
 
 const trpcWebAppUserRouter = router({
