@@ -29,7 +29,9 @@ export default defineNuxtConfig({
       siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'https://uninbox.com'
     }
   },
-  routeRules:{
-  '/oss-friends': { swr: 86400 },//ttl is set to 1day - 60*60*24
+  routeRules: {
+    '/oss-friends': {
+      isr: 86400
+    }
   }
 });
