@@ -48,7 +48,7 @@ async function validateUsername(
   };
 }
 
-async function validateEmailAddress(email: string): Promise<{
+export async function validateEmailAddress(email: string): Promise<{
   validEmail: boolean;
 }> {
   const fakeEmail = isFakeEmail(email);

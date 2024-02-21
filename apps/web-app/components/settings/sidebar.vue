@@ -16,7 +16,7 @@
     {
       label: 'Security Settings',
       to: `/${orgSlug}/settings/user/security`,
-      icon: 'i-ph-user'
+      icon: 'i-ph-lock'
     },
     {
       label: 'Personal Addresses',

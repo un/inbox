@@ -7,14 +7,17 @@
   const buttonLabel = ref('Save Changes');
   const verifybuttonLabel = ref('Verify');
   const pageError = ref(false);
-  const fNameValid = ref<boolean | 'remote' | null>(null);
-  const fNameValue = ref('');
-  const fNameValidationMessage = ref('');
-  const lNameValid = ref<boolean | 'remote' | null>(null);
-  const lNameValue = ref('');
-  const lNameValidationMessage = ref('');
+  const rEmailValid = ref<boolean | 'remote' | null>(null);
+  const rEmailValue = ref('');
+  const isPassword = ref();
+  const isPasskey = ref();
+  const cpasswordValid = ref<boolean | 'remote' | null>(null);
+  const cpasswordValue = ref('');
+  const cpasswordMatch = ref();
+  const npasswordValid = ref<boolean | 'remote' | null>(null);
+  const npasswordValue = ref('');
 
-  const orgSlug = useRoute().params.orgSlug as string;
+  // const orgSlug = useRoute().params.orgSlug as string;
 
   // const { data: initialUserProfile, pending } =
   //   await $trpc.user.profile.getUserOrgProfile.useLazyQuery(
@@ -34,20 +37,23 @@
     // { immediate: true }
   // );
   const { data: initialUserProfile, pending } =
-    await $trpc.auth.security.getUserOrgProfile.useLazyQuery();
+    await $trpc.auth.security.getCredentials.useLazyQuery();
 
     watch(
     initialUserProfile,
     (newVal) => {
       if (newVal && newVal.profile) {
-        fNameValue.value = newVal.profile.recoveryEmail || '';
+        rEmailValue.value = newVal.profile.recoveryEmail || '',
+        isPassword.value = newVal.profile.passwordEnabled,
+        isPasskey.value=newVal.profile.passkeysEnabled;
+        // passwordValue.value = newVal.profile.passwordHash;
       }
     }
     // ,
     // { immediate: true }
   );
 
-  async function saveProfile() {
+  async function save() {
     const toast = useToast();
     buttonLoading.value = true;
     buttonLabel.value = 'Saving...';
@@ -63,6 +69,7 @@
     // await updateUserProfileTrpc.mutate();
 
     if (updateUserProfileTrpc.status.value === 'error') {
+      cpasswordMatch.value = false;
       pageError.value = true;
       buttonLoading.value = false;
       buttonLabel.value = 'Save profile';
@@ -76,7 +83,7 @@
       });
       return;
     }
-
+    
     buttonLoading.value = false;
     buttonLabel.value = 'All done!';
     refreshNuxtData('getUserSingleProfileNav');
@@ -89,27 +96,30 @@
     });
   }
 
-  async function verify() {
+  async function verifyEmail(){
+    console.log("here");
+  }
+
+  async function savePassword() {
+    console.log("here");
     const toast = useToast();
     buttonLoading.value = true;
     buttonLabel.value = 'Saving...';
 
-    if (!initialUserProfile.value?.profile?.publicId) {
-      pageError.value = true;
-      buttonLoading.value = false;
-      buttonLabel.value = 'Save profile';
-      return;
-    }
-    const updateUserProfileTrpc =
-      $trpc.user.profile.updateUserProfile.useMutation();
-    // await updateUserProfileTrpc.mutate({
-    //   profilePublicId: initialUserProfile.value.profile.publicId,
-    //   fName: fNameValue.value,
-    //   lName: lNameValue.value,
-    //   handle: initialUserProfile.value.profile.handle || ''
-    // });
+    // if (!initialUserProfile.value?.profile?.publicId) {
+    //   pageError.value = true;
+    //   buttonLoading.value = false;
+    //   buttonLabel.value = 'Save profile';
+    //   return;
+    // }
+    const checkPassword =
+      $trpc.auth.security.checkPassword.useMutation();
+    await checkPassword.mutate({
+      password: cpasswordValue.value
+    });
 
-    if (updateUserProfileTrpc.status.value === 'error') {
+    if (checkPassword.status.value === 'error') {
+      cpasswordMatch.value = false;
       pageError.value = true;
       buttonLoading.value = false;
       buttonLabel.value = 'Save profile';
@@ -124,6 +134,13 @@
       return;
     }
 
+    const setPassword =
+      $trpc.auth.security.setPassword.useMutation();
+    await setPassword.mutate({
+      password: npasswordValue.value
+    });
+
+    cpasswordMatch.value =true;
     buttonLoading.value = false;
     buttonLabel.value = 'All done!';
     refreshNuxtData('getUserSingleProfileNav');
@@ -150,17 +167,22 @@
         size="24" />
       <span>Loading your profiles</span>
     </div>
+    
     <div
       v-if="!pending"
-      class="w-full flex flex-col items-start justify-center gap-8 pb-14">
-      
-      <div class="flex flex-row flex-wrap gap-4">
+      class="w-full flex flex-col gap-14">
+      <hr class="line dark:border-gray-600 border-gray-300 border-t">
+      <div class="flex flex-row">
+        <div class="text-1xl basis-1/2 font-display">
+          Change Recovery Email
+        </div>
+        <div class="flex basis-1/2 flex-col gap-4">
           <UnUiInput
-          v-model:value="fNameValue"
-          v-model:valid="fNameValid"
-          
+          v-model:value="rEmailValue"
+          v-model:valid="rEmailValid"
           width="full"
           icon="ph:envelope"
+          class="w-1/2 text-sm font-display"
           label="Recovery email address"
           helper="This email will only be used if you ever lose all your passkeys and need to recover your account or for important account notices."
           placeholder=""
@@ -172,23 +194,148 @@
           icon="i-ph-key"
           :loading="buttonLoading"
           block
-          @click="verify()" />
+          class="w-1/6"
+          @click="verifyEmail()"
+           />
+           <UnUiButton
+          label="Save"
+          icon="i-ph-floppy-disk"
+          :loading="buttonLoading"
+          block
+          class="w-1/6"
+          @click="verifyEmail()"
+           />
+        </div>    
       </div>
-
+      <hr class="line dark:border-gray-600 border-gray-300 border-t">
       
-      <div class="flex flex-row flex-wrap gap-4">
+      <div class="flex">
+        <div class="text-1xl basis-1/2 font-display">
+          Change Password
+        </div>
+        <div class="flex basis-1/2 flex-col gap-4">
           <UnUiInput
-          v-model:value="fNameValue"
-          v-model:valid="fNameValid"
-          label="Password"
-          :schema="z.string().trim()"
-          placeholder="" />
+              v-model:value="cpasswordValue"
+              v-model:valid="cpasswordValid"
+              
+              icon="i-ph-password"
+              class="text-sm font-display"
+              label="Current Password"
+              password
+              placeholder=""
+              :schema="
+                z
+                  .string()
+                  .min(8, { message: 'Minimum 8 characters' })
+                  .max(64)
+                  .regex(
+                    /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*\W)(?!.*\s).{8,}$/,
+                    {
+                      message:
+                        'At least one digit, one lowercase letter, one uppercase letter, one special character, no whitespace allowed, minimum eight characters in length'
+                    }
+                  )
+              " />
+       <UnUiInput
+              v-model:value="npasswordValue"
+              v-model:valid="npasswordValid"
+              class="text-sm font-display"
+              icon="i-ph-password"
+              label="New Password"
+              password
+              placeholder=""
+              :schema="
+                z
+                  .string()
+                  .min(8, { message: 'Minimum 8 characters' })
+                  .max(64)
+                  .regex(
+                    /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*\W)(?!.*\s).{8,}$/,
+                    {
+                      message:
+                        'At least one digit, one lowercase letter, one uppercase letter, one special character, no whitespace allowed, minimum eight characters in length'
+                    }
+                  )
+              " />
+        
+          <UnUiButton
+            :label="buttonLabel"
+            icon="i-ph-floppy-disk"
+            block
+            class="w-1/4"
+            @click="savePassword()"
+           />
+
+            <div class="gap-4 text-sm font-sans">
+              <p class="text-sm font-display">
+                Turn Off Password
+              </p>
+              <div class="flex gap-4"> 
+        <span>
+            Can Only be done if Passkeys are on
+        </span>
+        
+          <UnUiToggle
+         v-model="isPassword"
+         :disabled="isPassword"
+         />
+        
+        
+        </div>
+            </div>
+        </div>
+        
       </div>
+      <hr class="line dark:border-gray-600 border-gray-300 border-t">
+      <div class="flex">
+        <div class="text-1xl basis-1/2 font-display">
+          Authentication  
+        </div>
+        <div class="flex basis-1/2 flex-col gap-4">
+          <span class="basis-1/2 text-sm font-display">Two Factor Authentication</span>
+          <!-- <UnUiButton
+            label="Change My Password"
+            icon="i-ph-password"
+            block
+            size="lg"
+            block
+          class="w-1/6"
+            @click="passwordButton()" /> -->
+            <div class="gap-4 text-sm font-sans">
+              <p class="text-sm font-display">
+                Passkeys
+              </p>
+              <div class="flex gap-4"> 
+                <span>
+                  Setup a More Secure Way of Authentication
+                </span>
+              </div>
+              
+            </div>
+            <UnUiButton
+                label="Add a Passkey"
+                icon="i-ph-key"
+                block
+                class="w-1/4"
+                :loading="buttonLoading"
+                @click="savePassword()" />
+              <!-- loop over the sessions -->
+            <hr class="line dark:border-gray-600 border-gray-300 border-t">
+            <span class="text-sm font-sans">
+                  Passkey-1
+                </span>
+            <hr class="line dark:border-gray-600 border-gray-300 border-t">
+        </div>
+        
+      </div>
+      
       <UnUiButton
         :label="buttonLabel"
         icon="i-ph-floppy-disk"
         :loading="buttonLoading"
-        @click="saveProfile()" />
+        block
+        class="w-1/4"
+        @click="savePassword()" />
       <p
         v-if="pageError"
         class="w-full rounded bg-red-9 p-4 text-center">
