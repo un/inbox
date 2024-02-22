@@ -1,4 +1,4 @@
 Contact: security@uninbox.com
 Preferred-Languages: en
 Canonical: https://app.uninbox.com/.well-known/security.txt
-Policy: https://github.com/uninbox/UnInbox/security/policy
+Policy: https://github.com/un/inbox/security/policy

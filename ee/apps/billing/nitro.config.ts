@@ -19,7 +19,7 @@ async function validateLicenseKey(key: string, appUrl: string) {
 
   if (!response.valid) {
     throw new Error(
-      '🚨 You are attempting to run software that requires a paid license but have not provided a valid license key. Please check https://github.com/uninbox/uninbox/tree/main/ee for more information about the license'
+      '🚨 You are attempting to run software that requires a paid license but have not provided a valid license key. Please check https://github.com/un/inbox/tree/main/ee for more information about the license'
     );
   }
   return true;
@@ -29,12 +29,12 @@ if (eeLicenseKey && appUrl) {
   validateLicenseKey(eeLicenseKey, appUrl).catch((error) => {
     console.error(error);
     throw new Error(
-      '🚨 Something went wrong when trying to validate the license key. Please check https://github.com/uninbox/uninbox/tree/main/ee for more information about the license'
+      '🚨 Something went wrong when trying to validate the license key. Please check https://github.com/un/inbox/tree/main/ee for more information about the license'
     );
   });
 } else {
   throw new Error(
-    '🚨 You are attempting to run software that requires a paid license but have not provided a valid license key or app url. Please check https://github.com/uninbox/uninbox/tree/main/ee for more information about the license'
+    '🚨 You are attempting to run software that requires a paid license but have not provided a valid license key or app url. Please check https://github.com/un/inbox/tree/main/ee for more information about the license'
   );
 }
 
