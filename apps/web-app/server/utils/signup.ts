@@ -643,6 +643,8 @@ export const blockedUsernames = [
   'report_bot',
   'bot',
   'creator',
+  'anonymous',
+  'spam',
   'visitor',
   'whore',
   'retard',
