@@ -126,7 +126,7 @@ export const securityRouter = router({
         columns: {
           passwordEnabled: true,
           recoveryEmail: true,
-          emailVerified: true,
+          // emailVerified: true,
           passkeysEnabled: true
         }
       });
@@ -145,35 +145,25 @@ export const securityRouter = router({
   updateCredentials: userProcedure
     .input(
       z.object({
-        profilePublicId: zodSchemas.nanoId,
-        fName: z.string(),
-        lName: z.string(),
-        title: z.string(),
-        blurb: z.string(),
-        imageId: z.string().uuid().optional().nullable(),
-        handle: z.string().min(2).max(20),
-        defaultProfile: z.boolean().optional().default(false)
+        passwordEnabled: z.boolean(),
+        recoveryEmail: z.string(),
+        // emailVerified: z.date(),
+        passkeysEnabled: z.boolean(),
       })
     )
     .mutation(async ({ ctx, input }) => {
       const { db, user } = ctx;
       const userId = user.id;
 
-      // await db
-      //   .update(accounts)
-      //   .set({
-      //     firstName: input.fName,
-      //     lastName: input.lName,
-      //     title: input.title,
-      //     blurb: input.blurb,
-      //     handle: input.handle
-      //   })
-      //   .where(
-      //     and(
-      //       eq(userProfiles.publicId, input.profilePublicId),
-      //       eq(userProfiles.userId, userId)
-      //     )
-      //   );
+      await db
+        .update(accounts)
+        .set({
+        passwordEnabled: input.passwordEnabled,
+        recoveryEmail: input.recoveryEmail,
+        // emailVerified: input.emailVerified,
+        passkeysEnabled: input.passkeysEnabled,
+        })
+        .where(eq(accounts.userId, userId));
 
       return {
         success: true

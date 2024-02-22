@@ -10,6 +10,7 @@
   const rEmailValid = ref<boolean | 'remote' | null>(null);
   const rEmailValue = ref('');
   const isPassword = ref();
+  // const isEmailVerified = ref();
   const isPasskey = ref();
   const cpasswordValid = ref<boolean | 'remote' | null>(null);
   const cpasswordValue = ref('');
@@ -17,25 +18,6 @@
   const npasswordValid = ref<boolean | 'remote' | null>(null);
   const npasswordValue = ref('');
 
-  // const orgSlug = useRoute().params.orgSlug as string;
-
-  // const { data: initialUserProfile, pending } =
-  //   await $trpc.user.profile.getUserOrgProfile.useLazyQuery(
-  //     { orgSlug: orgSlug },
-  //     { server: false }
-  //   );
-
-  // watch(
-  //   initialUserProfile,
-  //   (newVal) => {
-  //     if (newVal && newVal.profile) {
-  //       fNameValue.value = newVal.profile.firstName || '';
-  //       lNameValue.value = newVal.profile.lastName || '';
-  //     }
-  //   }
-    // ,
-    // { immediate: true }
-  // );
   const { data: initialUserProfile, pending } =
     await $trpc.auth.security.getCredentials.useLazyQuery();
 
@@ -43,14 +25,13 @@
     initialUserProfile,
     (newVal) => {
       if (newVal && newVal.profile) {
-        rEmailValue.value = newVal.profile.recoveryEmail || '',
+        rEmailValue.value = newVal.profile.recoveryEmail,
         isPassword.value = newVal.profile.passwordEnabled,
         isPasskey.value=newVal.profile.passkeysEnabled;
-        // passwordValue.value = newVal.profile.passwordHash;
+        // isEmailVerified.value=newVal.profile.emailVerified;
+
       }
     }
-    // ,
-    // { immediate: true }
   );
 
   async function save() {
@@ -58,17 +39,16 @@
     buttonLoading.value = true;
     buttonLabel.value = 'Saving...';
 
-    if (!initialUserProfile.value?.profile?.publicId) {
-      pageError.value = true;
-      buttonLoading.value = false;
-      buttonLabel.value = 'Save profile';
-      return;
-    }
-    const updateUserProfileTrpc =
-      $trpc.auth.signup.registerUser.useMutation();
-    // await updateUserProfileTrpc.mutate();
+    const updateAccount =
+      $trpc.auth.security.updateCredentials.useMutation();
+    await updateAccount.mutate({
+        passwordEnabled: isPassword.value,
+        recoveryEmail: rEmailValue.value,
+        // emailVerified: isEmailVerified.value,
+        passkeysEnabled: isPasskey.value,
+    });
 
-    if (updateUserProfileTrpc.status.value === 'error') {
+    if (updateAccount.status.value === 'error') {
       cpasswordMatch.value = false;
       pageError.value = true;
       buttonLoading.value = false;
@@ -143,7 +123,7 @@
     cpasswordMatch.value =true;
     buttonLoading.value = false;
     buttonLabel.value = 'All done!';
-    refreshNuxtData('getUserSingleProfileNav');
+    // refreshNuxtData('getUserSingleProfileNav');
     toast.add({
       id: 'profile_saved',
       title: 'Profile Saved',
@@ -186,8 +166,8 @@
           label="Recovery email address"
           helper="This email will only be used if you ever lose all your passkeys and need to recover your account or for important account notices."
           placeholder=""
-          :remote-validation="true"
           :schema="z.string().trim().email()" />
+          <!-- add :remote-validation:true -->
 
           <UnUiButton
           :label="verifybuttonLabel"
@@ -203,7 +183,7 @@
           :loading="buttonLoading"
           block
           class="w-1/6"
-          @click="verifyEmail()"
+          @click="save()"
            />
         </div>    
       </div>
