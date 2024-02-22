@@ -83,7 +83,7 @@
         color="black"
         icon="i-simple-icons-github"
         class="hidden lg:flex"
-        to="https://github.com/uninbox/UnInbox"
+        to="https://github.com/un/inbox"
         variant="ghost"
         :target="'_blank'" />
       <UButton
@@ -109,7 +109,7 @@
         class="hidden lg:flex"
         @click="$emit('openWaitlistModal')" />
 
-        <UButton
+      <UButton
         label="Our OSS Friends"
         color="black"
         variant="ghost"

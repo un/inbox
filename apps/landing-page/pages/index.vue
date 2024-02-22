@@ -33,7 +33,7 @@
       color: 'gray',
       size: 'xl',
 
-      click: () => window.open('https://github.com/uninbox/UnInbox', '_blank')
+      click: () => window.open('https://github.com/un/inbox', '_blank')
     }
   ];
 
