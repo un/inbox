@@ -760,5 +760,5 @@ export const reservedUsernames = [
   'webflow',
   'windows',
   'wordpress',
-  'youtube',
-]
+  'youtube'
+];

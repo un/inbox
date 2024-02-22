@@ -7,7 +7,7 @@ import { accounts, users } from '@uninbox/database/schema';
 import { nanoId } from '@uninbox/utils';
 import { isFakeEmail } from 'fakefilter';
 import { UAParser } from 'ua-parser-js';
-import { blockedUsernames } from '~/server/utils/signup';
+import { blockedUsernames, reservedUsernames } from '~/server/utils/signup';
 import { TRPCError } from '@trpc/server';
 import { lucia } from '~/server/utils/auth';
 import { zodSchemas } from '@uninbox/utils';
@@ -33,6 +33,13 @@ async function validateUsername(
     return {
       available: false,
       error: 'Username not allowed'
+    };
+  }
+  if (reservedUsernames.includes(username.toLowerCase())) {
+    return {
+      available: false,
+      error:
+        'This username is currently reserved. If you own this trademark, please Contact Support'
     };
   }
   return {
