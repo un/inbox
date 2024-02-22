@@ -24,7 +24,7 @@ Fixes # (issue)
 <!-- We're starting to get more and more contributions. Please help us making this efficient for all of us and go through this checklist. Please tick off what you did  -->
 
 ### Required
-- [ ] Read [Contributing Guide](./CONTRIBUTING.md)
+- [ ] Read [Contributing Guide](https://github.com/un/inbox/blob/main/CONTRIBUTING.md)
 - [ ] Self-reviewed my own code
 - [ ] Tested my code in a local environment
 - [ ] Commented on my code in hard-to-understand areas
