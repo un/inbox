@@ -43,6 +43,13 @@ async function validateOrgSlug(
       error: 'Org slug not allowed'
     };
   }
+  if (reservedUsernames.includes(slug.toLowerCase())) {
+    return {
+      available: false,
+      error:
+        'This organization name is currently reserved. If you own this trademark, please Contact Support'
+    };
+  }
   return {
     available: true,
     error: null

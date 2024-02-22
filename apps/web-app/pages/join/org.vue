@@ -50,7 +50,7 @@
           });
         if (!available) {
           orgSlugValid.value = false;
-          orgSlugValidationMessage.value = 'Not available';
+          orgSlugValidationMessage.value = error || "Not available";
         }
         available && (orgSlugValid.value = true);
       }
