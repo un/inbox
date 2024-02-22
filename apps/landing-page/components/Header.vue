@@ -68,7 +68,7 @@
         color="black"
         icon="i-simple-icons-github"
         class="hidden lg:flex"
-        to="https://github.com/uninbox/UnInbox"
+        to="https://github.com/un/inbox"
         :target="'_blank'" />
       <UButton
         color="black"
@@ -100,7 +100,7 @@
         color="black"
         icon="i-simple-icons-github"
         class="hidden lg:flex"
-        to="https://github.com/uninbox/UnInbox"
+        to="https://github.com/un/inbox"
         :target="'_blank'" />
       <UButton
         color="black"

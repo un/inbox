@@ -1,9 +1,9 @@
 <p align="center">
    <a href="https://discord.gg/QMV9p9sgza"><img src="https://img.shields.io/badge/Discord-uninbox.com-informational?logo=discord&style=for-the-badge" alt="Join The UnInbox Discord Community"></a> 
-   <a href="https://github.com/uninbox/UnInbox/stargazers"><img src="https://img.shields.io/github/stars/uninbox/UnInbox?logo=github&style=for-the-badge&color=yellow" alt="Github Stars"></a>
+   <a href="https://github.com/un/inbox/stargazers"><img src="https://img.shields.io/github/stars/un/inbox?logo=github&style=for-the-badge&color=yellow" alt="Github Stars"></a>
 </p>
 <p align="center">
-   <a href="https://github.com/uninbox/UnInbox/pulse"><img src="https://img.shields.io/github/commit-activity/m/uninbox/UnInbox?style=for-the-badge&color=green" alt="Commits-per-month"></a>
+   <a href="https://github.com/un/inbox/pulse"><img src="https://img.shields.io/github/commit-activity/m/un/inbox?style=for-the-badge&color=green" alt="Commits-per-month"></a>
 </p>
 <p align="center" style="margin-top: 12px">
   <a href="https://uninbox.com">
@@ -92,13 +92,13 @@ Here is what you need to be able to run UnInbox locally.
 
 ### Setup
 
-1. Clone the repo into a public GitHub repository (or fork https://github.com/uninbox/UnInbox/fork). If you plan to distribute the code, keep the source code public to comply with [AGPLv3](https://github.com/uninbox/UnInbox/blob/main/LICENSE). To clone in a private repository, contact us to acquire a commercial license
+1. Clone the repo into a public GitHub repository (or fork https://github.com/un/inbox/fork). If you plan to distribute the code, keep the source code public to comply with [AGPLv3](https://github.com/un/inbox/blob/main/LICENSE). To clone in a private repository, contact us to acquire a commercial license
 
    ```sh
-   git clone https://github.com/uninbox/UnInbox.git
+   git clone https://github.com/un/inbox.git
    ```
 
-   > If you are on Windows, run the following command on `gitbash` with admin privileges: <br> > `git clone -c core.symlinks=true https://github.com/uninbox/UnInbox.git` <br>
+   > If you are on Windows, run the following command on `gitbash` with admin privileges: <br> > `git clone -c core.symlinks=true https://github.com/un/inbox.git` <br>
    > See [docs](https://cal.com/docs/how-to-guides/how-to-troubleshoot-symbolic-link-issues-on-windows#enable-symbolic-links) for more details.
 
 2. Go to the project folder

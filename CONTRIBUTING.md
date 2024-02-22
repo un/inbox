@@ -4,21 +4,27 @@ _Pull requests, bug reports, and all other forms of contribution are welcomed an
 
 ### Contents
 
-- [Asking Questions](#bulb-asking-questions)
-- [Opening an Issue](#inbox_tray-opening-an-issue)
-- [Feature Requests](#love_letter-feature-requests)
-- [Triaging Issues](#mag-triaging-issues)
-- [Submitting Pull Requests](#repeat-submitting-pull-requests)
-- [Writing Commit Messages](#memo-writing-commit-messages)
-- [Code Review](#white_check_mark-code-review)
-- [Coding Style](#nail_care-coding-style)
-- [Certificate of Origin](#medal_sports-certificate-of-origin)
+- [Contributing Guidelines](#contributing-guidelines)
+  - [Contents](#contents)
+  - [:bulb: Asking Questions](#bulb-asking-questions)
+  - [:inbox_tray: Opening an Issue](#inbox_tray-opening-an-issue)
+    - [:lock: Reporting Security Issues](#lock-reporting-security-issues)
+    - [:beetle: Bug Reports and Other Issues](#beetle-bug-reports-and-other-issues)
+  - [:love_letter: Feature Requests](#love_letter-feature-requests)
+  - [:mag: Triaging Issues](#mag-triaging-issues)
+  - [:repeat: Submitting Pull Requests](#repeat-submitting-pull-requests)
+  - [:memo: Writing Commit Messages](#memo-writing-commit-messages)
+  - [:white_check_mark: Code Review](#white_check_mark-code-review)
+  - [:nail_care: Coding Style](#nail_care-coding-style)
+  - [:medal_sports: Certificate of Origin](#medal_sports-certificate-of-origin)
+  - [No Brown M\&M's](#no-brown-mms)
+  - [Credits](#credits)
 
 > **This guide serves to set clear expectations for everyone involved with the project so that we can improve it together while also creating a welcoming space for everyone to participate. Following these guidelines will help ensure a positive experience for contributors and maintainers.**
 
 ## :bulb: Asking Questions
 
-See our [Support Guide](https://github.com/uninbox/UnInbox/blob/main/SUPPORT.md). In short, GitHub issues are not the appropriate place to debug your specific project, but should be reserved for filing bugs and feature requests.
+See our [Support Guide](https://github.com/un/inbox/blob/main/SUPPORT.md). In short, GitHub issues are not the appropriate place to debug your specific project, but should be reserved for filing bugs and feature requests.
 
 ## :inbox_tray: Opening an Issue
 
@@ -26,7 +32,7 @@ Before [creating an issue](https://help.github.com/en/github/managing-your-work-
 
 ### :lock: Reporting Security Issues
 
-Review our [Security Policy](https://github.com/uninbox/UnInbox/blob/main/SECURITY.md). **Do not** file a public issue for security vulnerabilities.
+Review our [Security Policy](https://github.com/un/inbox/blob/main/SECURITY.md). **Do not** file a public issue for security vulnerabilities.
 
 ### :beetle: Bug Reports and Other Issues
 
@@ -34,7 +40,7 @@ A great way to contribute to the project is to send a detailed issue when you en
 
 In short, since you are most likely a developer, **provide a ticket that you would like to receive**.
 
-- **Review the documentation and [Support Guide](https://github.com/uninbox/UnInbox/blob/main/SUPPORT.md)** before opening a new issue.
+- **Review the documentation and [Support Guide](https://github.com/un/inbox/blob/main/SUPPORT.md)** before opening a new issue.
 
 - **Do not open a duplicate issue!** Search through existing issues to see if your issue has previously been reported. If your issue exists, comment with any additional information you have. You may simply note "I have this problem too", which helps prioritize the most common problems and requests.
 
