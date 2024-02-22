@@ -405,9 +405,7 @@
             <UnUiInput
               v-model:value="newEmailIdentitySendNameValue"
               v-model:valid="newEmailIdentitySendNameValid"
-              v-model:validationMessage="
-                newEmailIdentitySendNameValidationMessage
-              "
+              v-model:validationMessage="newEmailIdentitySendNameValidationMessage"
               label="Send Name"
               :schema="z.string().trim().min(2).max(64)"
               :helper="`The name that will appear in the 'From' field of emails sent from this address`" />
