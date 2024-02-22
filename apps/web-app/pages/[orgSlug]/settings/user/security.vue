@@ -1,6 +1,8 @@
 <script setup lang="ts">
   import { z } from 'zod';
   import { useFileDialog } from '@vueuse/core';
+  import type { RegistrationResponseJSON } from '@simplewebauthn/types';
+  import { startRegistration } from '@simplewebauthn/browser';
   const { $trpc, $i18n } = useNuxtApp();
   const uploadLoading = ref(false);
   const buttonLoading = ref(false);
@@ -17,6 +19,8 @@
   const cpasswordMatch = ref();
   const npasswordValid = ref<boolean | 'remote' | null>(null);
   const npasswordValue = ref('');
+  const canUsePasskeyDirect =
+    await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
 
   const { data: initialUserProfile, pending } =
     await $trpc.auth.security.getCredentials.useLazyQuery();
@@ -78,6 +82,50 @@
 
   async function verifyEmail(){
     console.log("here");
+  }
+
+  async function addPasskey(){
+    const toast = useToast();
+    const passkeyOptions =
+      await $trpc.auth.passkey.generateNewPasskeyChallenge.query({
+        canUsePasskeyDirect: canUsePasskeyDirect
+      });
+      let newPasskeyData: RegistrationResponseJSON;
+    try {
+      newPasskeyData = await startRegistration(passkeyOptions.options);
+    } catch (error) {
+      toast.add({
+        id: 'passkey_error',
+        title: 'Passkey error',
+        description:
+          'Something went wrong when creating your passkey, please try again or switch to password mode.',
+        color: 'red',
+        timeout: 5000,
+        icon: 'i-ph-warning-circle'
+      });
+      buttonLoading.value = false;
+      buttonLabel.value = 'Try Again!';
+      return;
+    }
+    const verifyNewPasskey = await $trpc.auth.passkey.addNewPasskey.mutate({
+        registrationResponseRaw: newPasskeyData,
+        nickname: 'Primary'
+      });
+      if (!verifyNewPasskey.success) {
+        toast.add({
+          id: 'passkey_error',
+          title: 'Passkey error',
+          description:
+            'Something went wrong when creating your passkey, please try again or switch to password mode.',
+          color: 'red',
+          timeout: 5000,
+          icon: 'i-ph-warning-circle'
+        });
+        buttonLoading.value = false;
+        buttonLabel.value = 'Try Again!';
+        return;
+      }
+      isPasskey.value = true;
   }
 
   async function savePassword() {
@@ -298,7 +346,7 @@
                 block
                 class="w-1/4"
                 :loading="buttonLoading"
-                @click="savePassword()" />
+                @click="addPasskey()" />
               <!-- loop over the sessions -->
             <hr class="line dark:border-gray-600 border-gray-300 border-t">
             <span class="text-sm font-sans">
