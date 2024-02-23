@@ -16,7 +16,7 @@
   const newEmailIdentityUsernameValidationMessage = ref('');
   const newEmailIdentitySendNameValue = ref('');
   const newEmailIdentitySendNameValid = ref<boolean | null>(null);
-  const newEmailIdentitySendNameValidationMessage = ref('');
+  const newEmailSendNameValidationMessage = ref('');
   const newEmailIdentitySendNameTempValue = ref('');
   const newDomainNameValid = ref<boolean | 'remote' | null>(null);
 
@@ -405,7 +405,7 @@
             <UnUiInput
               v-model:value="newEmailIdentitySendNameValue"
               v-model:valid="newEmailIdentitySendNameValid"
-              v-model:validationMessage="newEmailIdentitySendNameValidationMessage"
+              v-model:validationMessage="newEmailSendNameValidationMessage"
               label="Send Name"
               :schema="z.string().trim().min(2).max(64)"
               :helper="`The name that will appear in the 'From' field of emails sent from this address`" />
