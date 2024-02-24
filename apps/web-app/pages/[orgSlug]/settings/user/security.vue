@@ -7,18 +7,19 @@
   const uploadLoading = ref(false);
   const buttonLoading = ref(false);
   const buttonLabel = ref('Save Changes');
-  const verifybuttonLabel = ref('Verify');
+  // const verifybuttonLabel = ref('Verify');
   const pageError = ref(false);
   const rEmailValid = ref<boolean | 'remote' | null>(null);
   const rEmailValue = ref('');
   const isPassword = ref();
-  // const isEmailVerified = ref();
+  const isrEmailVerified = ref();
   const isPasskey = ref();
   const cpasswordValid = ref<boolean | 'remote' | null>(null);
   const cpasswordValue = ref('');
   const cpasswordMatch = ref();
   const npasswordValid = ref<boolean | 'remote' | null>(null);
   const npasswordValue = ref('');
+  const passkeysData = ref([]);
   const canUsePasskeyDirect =
     await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
 
@@ -33,6 +34,20 @@
         isPassword.value = newVal.profile.passwordEnabled,
         isPasskey.value=newVal.profile.passkeysEnabled;
         // isEmailVerified.value=newVal.profile.emailVerified;
+
+      }
+    }
+  );
+
+  const {data :passkeysArray} =
+    await $trpc.auth.passkey.getPasskeyInfo.useLazyQuery();
+
+    watch(
+    passkeysArray,
+    (newVal) => {
+      // console.log(data);
+      if (newVal && newVal.data) {
+        passkeysData.value = newVal.data;
 
       }
     }
@@ -81,8 +96,8 @@
   }
 
   async function verifyEmail(){
-    console.log("here");
-  }
+    isrEmailVerified.value = !isrEmailVerified.value;
+    }
 
   async function addPasskey(){
     const toast = useToast();
@@ -218,11 +233,12 @@
           <!-- add :remote-validation:true -->
 
           <UnUiButton
-          :label="verifybuttonLabel"
+          :label="isrEmailVerified ? 'Verified' : 'Verify'"
           icon="i-ph-key"
           :loading="buttonLoading"
           block
           class="w-1/6"
+          :disabled="isrEmailVerified"
           @click="verifyEmail()"
            />
            <UnUiButton
@@ -291,6 +307,7 @@
             icon="i-ph-floppy-disk"
             block
             class="w-1/4"
+            :disabled="!cpasswordValue || !npasswordValue"
             @click="savePassword()"
            />
 
@@ -349,9 +366,12 @@
                 @click="addPasskey()" />
               <!-- loop over the sessions -->
             <hr class="line dark:border-gray-600 border-gray-300 border-t">
-            <span class="text-sm font-sans">
-                  Passkey-1
-                </span>
+            <span v-for="(passkey, index) in passkeysData" :key="index" class="text-sm font-sans">
+              <p>Name: {{ passkey.credentialID }}</p>
+              <p>CreatedAt: {{ passkey }}</p>
+      <p>Credential Device Type: {{ passkey.credentialDeviceType }}</p>
+      <hr class="line dark:border-gray-600 border-gray-300 border-t">
+    </span>
             <hr class="line dark:border-gray-600 border-gray-300 border-t">
         </div>
         

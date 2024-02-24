@@ -125,6 +125,54 @@ export const passkeyRouter = router({
 
       return { success: true };
     }),
+    getPasskeyInfo: userProcedure
+    
+    .query(async ({ ctx, input }) => {
+      const { db, user } = ctx;
+      const userId = user.id;
+      
+
+      const userAccount = await db.query.accounts.findFirst({
+        where: eq(accounts.userId, userId),
+        columns: {
+          id: true
+        }
+      });
+
+      if (!userAccount || !userAccount.id) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'User account not found'
+        });
+      }
+
+      // const insertPasskey = await usePasskeysDb.createAuthenticator(
+      //   {
+      //     accountId: userAccount.id,
+      //     credentialID: passkeyVerification.registrationInfo.credentialID,
+      //     credentialPublicKey:
+      //       passkeyVerification.registrationInfo.credentialPublicKey,
+      //     credentialDeviceType:
+      //       passkeyVerification.registrationInfo.credentialDeviceType,
+      //     credentialBackedUp:
+      //       passkeyVerification.registrationInfo.credentialBackedUp,
+      //     transports: registrationResponse.response.transports,
+      //     counter: passkeyVerification.registrationInfo.counter
+      //   },
+      //   input.nickname
+      // );
+      const userAuthenticators: Authenticator[] =
+    await usePasskeysDb.listAuthenticatorsByUserId(userId);
+
+      // if (!insertPasskey.credentialID) {
+      //   throw new TRPCError({
+      //     code: 'INTERNAL_SERVER_ERROR',
+      //     message: 'Something went wrong adding your passkey, please try again'
+      //   });
+      // }
+
+      return {data: userAuthenticators};
+    }),
 
   generatePasskeyChallenge: limitedProcedure
     .input(z.object({ turnstileToken: z.string() }).strict())
