@@ -21,12 +21,14 @@ async function transformDbToAuthAuthenticator(
 ): Promise<Authenticator> {
   return {
     accountId: dbQuery.accountId,
+    nickname: dbQuery.nickname,
     credentialID: isoBase64URL.toBuffer(dbQuery.credentialID),
     credentialPublicKey: isoBase64URL.toBuffer(dbQuery.credentialPublicKey),
     counter: Number(dbQuery.counter),
     credentialDeviceType: dbQuery.credentialDeviceType as CredentialDeviceType,
     credentialBackedUp: dbQuery.credentialBackedUp,
-    transports: dbQuery.transports as AuthenticatorTransportFuture[] | undefined
+    transports: dbQuery.transports as AuthenticatorTransportFuture[] | undefined,
+    createdAt: dbQuery.createdAt
   };
 }
 
@@ -34,12 +36,14 @@ async function transformDbToAuthAuthenticator(
 export type CredentialDeviceType = 'singleDevice' | 'multiDevice';
 export interface Authenticator {
   accountId: number;
+  nickname: string;
   credentialID: Uint8Array;
   credentialPublicKey: Uint8Array;
   counter: number;
   credentialDeviceType: CredentialDeviceType;
   credentialBackedUp: boolean;
   transports?: AuthenticatorTransportFuture[];
+  createdAt: Date;
 }
 
 async function createAuthenticator(

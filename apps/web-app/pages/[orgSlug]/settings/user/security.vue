@@ -22,10 +22,19 @@
   const passkeysData = ref([]);
   const canUsePasskeyDirect =
     await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+    const editModalOpen = ref(false);
+  const closeEditModal = () => {
+    editModalOpen.value = false;
+    refresh();
+  };
+  const removeModalOpen = ref(false);
+  const closeRemoveModal = () => {
+    removeModalOpen.value = false;
+    refresh();
+  };
 
   const { data: initialUserProfile, pending } =
     await $trpc.auth.security.getCredentials.useLazyQuery();
-
     watch(
     initialUserProfile,
     (newVal) => {
@@ -39,7 +48,7 @@
     }
   );
 
-  const {data :passkeysArray} =
+  const {data :passkeysArray,refresh} =
     await $trpc.auth.passkey.getPasskeyInfo.useLazyQuery();
 
     watch(
@@ -82,7 +91,7 @@
       });
       return;
     }
-    
+
     buttonLoading.value = false;
     buttonLabel.value = 'All done!';
     refreshNuxtData('getUserSingleProfileNav');
@@ -126,6 +135,9 @@
         registrationResponseRaw: newPasskeyData,
         nickname: 'Primary'
       });
+      isPasskey.value = true;
+      refresh();
+      //must save changes , for it to reflect the next time user comes on this page
       if (!verifyNewPasskey.success) {
         toast.add({
           id: 'passkey_error',
@@ -140,11 +152,10 @@
         buttonLabel.value = 'Try Again!';
         return;
       }
-      isPasskey.value = true;
+
   }
 
   async function savePassword() {
-    console.log("here");
     const toast = useToast();
     buttonLoading.value = true;
     buttonLabel.value = 'Saving...';
@@ -195,6 +206,10 @@
       timeout: 5000
     });
   }
+  function formatDate(dateString) {
+  const date = new Date(dateString);
+  return date.toDateString();
+}
 </script>
 
 <template>
@@ -210,7 +225,7 @@
         size="24" />
       <span>Loading your profiles</span>
     </div>
-    
+
     <div
       v-if="!pending"
       class="w-full flex flex-col gap-14">
@@ -249,10 +264,10 @@
           class="w-1/6"
           @click="save()"
            />
-        </div>    
+        </div>
       </div>
       <hr class="line dark:border-gray-600 border-gray-300 border-t">
-      
+
       <div class="flex">
         <div class="text-1xl basis-1/2 font-display">
           Change Password
@@ -261,7 +276,7 @@
           <UnUiInput
               v-model:value="cpasswordValue"
               v-model:valid="cpasswordValid"
-              
+
               icon="i-ph-password"
               class="text-sm font-display"
               label="Current Password"
@@ -301,7 +316,7 @@
                     }
                   )
               " />
-        
+
           <UnUiButton
             :label="buttonLabel"
             icon="i-ph-floppy-disk"
@@ -315,26 +330,26 @@
               <p class="text-sm font-display">
                 Turn Off Password
               </p>
-              <div class="flex gap-4"> 
+              <div class="flex gap-4">
         <span>
             Can Only be done if Passkeys are on
         </span>
-        
+
           <UnUiToggle
          v-model="isPassword"
-         :disabled="isPassword"
+         :disabled="!isPasskey"
          />
-        
-        
+
+
         </div>
             </div>
         </div>
-        
+
       </div>
       <hr class="line dark:border-gray-600 border-gray-300 border-t">
       <div class="flex">
         <div class="text-1xl basis-1/2 font-display">
-          Authentication  
+          Authentication
         </div>
         <div class="flex basis-1/2 flex-col gap-4">
           <span class="basis-1/2 text-sm font-display">Two Factor Authentication</span>
@@ -350,12 +365,12 @@
               <p class="text-sm font-display">
                 Passkeys
               </p>
-              <div class="flex gap-4"> 
+              <div class="flex gap-4">
                 <span>
                   Setup a More Secure Way of Authentication
                 </span>
               </div>
-              
+
             </div>
             <UnUiButton
                 label="Add a Passkey"
@@ -366,17 +381,43 @@
                 @click="addPasskey()" />
               <!-- loop over the sessions -->
             <hr class="line dark:border-gray-600 border-gray-300 border-t">
-            <span v-for="(passkey, index) in passkeysData" :key="index" class="text-sm font-sans">
-              <p>Name: {{ passkey.credentialID }}</p>
-              <p>CreatedAt: {{ passkey }}</p>
-      <p>Credential Device Type: {{ passkey.credentialDeviceType }}</p>
-      <hr class="line dark:border-gray-600 border-gray-300 border-t">
-    </span>
+            <div class="flex flex-row gap-2 text-sm font-sans" >
+              <span v-for="(passkey, index) in passkeysData" :key="index" class="basis-1/2" >
+                <p> {{ passkey.nickname }}</p>
+                <p>{{ formatDate(passkey.createdAt) }}</p>
+              </span>
+              <div class="flex flex-row items-center gap-4">
+        <UnUiButton
+          label="Edit"
+          @click="editModalOpen = true" />
+        <UnUiModal v-model="editModalOpen">
+          <template #header>
+            <span class="">Edit</span>
+          </template>
+          <SettingsAddNewGroup
+            lazy
+            @close="closeEditModal()" />
+        </UnUiModal>
+      </div>
+      <div class="flex flex-row items-center gap-4">
+        <UnUiButton
+          label="Remove"
+          @click="removeModalOpen = true" />
+        <UnUiModal v-model="removeModalOpen">
+          <template #header>
+            <span class="">Are You Sure, You want to remove it </span>
+          </template>
+          <SettingsAddNewGroup
+            lazy
+            @close="closeRemoveModal()" />
+        </UnUiModal>
+      </div>
+            </div>
             <hr class="line dark:border-gray-600 border-gray-300 border-t">
         </div>
-        
+
       </div>
-      
+
       <UnUiButton
         :label="buttonLabel"
         icon="i-ph-floppy-disk"
