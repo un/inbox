@@ -19,7 +19,9 @@
   const cpasswordMatch = ref();
   const npasswordValid = ref<boolean | 'remote' | null>(null);
   const npasswordValue = ref('');
-  const passkeysData = ref([]);
+  const nickName = ref('');
+  const nickNameValid = ref<boolean | 'remote' | null>(null);
+   const passkeysData = ref([]);
   const canUsePasskeyDirect =
     await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
     const editModalOpen = ref(false);
@@ -107,6 +109,14 @@
   async function verifyEmail(){
     isrEmailVerified.value = !isrEmailVerified.value;
     }
+
+  async function saveNickname(){
+  console.log("passkey's nickname changed");
+  }
+
+  async function removePasskey(){
+  console.log("passkey removed");
+  }
 
   async function addPasskey(){
     const toast = useToast();
@@ -206,7 +216,7 @@
       timeout: 5000
     });
   }
-  function formatDate(dateString) {
+  function formatDate(dateString:string) {
   const date = new Date(dateString);
   return date.toDateString();
 }
@@ -238,9 +248,8 @@
           <UnUiInput
           v-model:value="rEmailValue"
           v-model:valid="rEmailValid"
-          width="full"
           icon="ph:envelope"
-          class="w-1/2 text-sm font-display"
+          class="w-3/4 text-sm font-display"
           label="Recovery email address"
           helper="This email will only be used if you ever lose all your passkeys and need to recover your account or for important account notices."
           placeholder=""
@@ -380,9 +389,9 @@
                 :loading="buttonLoading"
                 @click="addPasskey()" />
               <!-- loop over the sessions -->
-            <hr class="line dark:border-gray-600 border-gray-300 border-t">
+            <hr class="line dark:border-gray-600 border-gray-300 w-3/4 border-t">
             <div class="flex flex-row gap-2 text-sm font-sans" >
-              <span v-for="(passkey, index) in passkeysData" :key="index" class="basis-1/2" >
+              <span v-for="(passkey, index) in passkeysData" :key="passkey.credentialId" class="basis-1/2" >
                 <p> {{ passkey.nickname }}</p>
                 <p>{{ formatDate(passkey.createdAt) }}</p>
               </span>
@@ -394,10 +403,27 @@
           <template #header>
             <span class="">Edit</span>
           </template>
-          <SettingsAddNewGroup
-            lazy
-            @close="closeEditModal()" />
-        </UnUiModal>
+          <UnUiInput
+            v-model:value="nickName"
+            v-model:valid="nickNameValid"
+           
+            :remote-validation="true"
+            label="Enter New Nickname"
+            :schema="
+              z
+                .string()
+                .min(1)
+                .max(16)
+                .regex(/^[a-zA-Z0-9]*$/, {
+                  message: 'Only letters and numbers'
+                })
+            "
+            width="full" />
+            <UnUiButton 
+            label="Save"
+            @click="saveNickname()"
+            />
+          </UnUiModal>
       </div>
       <div class="flex flex-row items-center gap-4">
         <UnUiButton
@@ -407,13 +433,15 @@
           <template #header>
             <span class="">Are You Sure, You want to remove it </span>
           </template>
-          <SettingsAddNewGroup
-            lazy
-            @close="closeRemoveModal()" />
+          Are you Sure You want to remove it? Type <span>{{  }}</span>
+          <UnUiButton
+          label="Remove"
+            @click="removePasskey()"
+          />
         </UnUiModal>
       </div>
             </div>
-            <hr class="line dark:border-gray-600 border-gray-300 border-t">
+            <hr class="line dark:border-gray-600 border-gray-300 w-3/4 border-t">
         </div>
 
       </div>
