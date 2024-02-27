@@ -1,6 +1,8 @@
 <script setup lang="ts">
-  import { z } from 'zod';
   import 'cal-sans';
+  import '@fontsource-variable/inter';
+
+  import { z } from 'zod';
 
   useHead({
     meta: [
@@ -82,7 +84,7 @@
 </script>
 
 <template>
-  <div class="h-full w-full">
+  <div class="h-full w-full font-sans">
     <Header @open-waitlist-modal="() => (showWaitlistModal = true)" />
     <UModal
       v-model="showWaitlistModal"
