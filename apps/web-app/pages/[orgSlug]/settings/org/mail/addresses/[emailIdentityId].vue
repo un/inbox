@@ -19,7 +19,7 @@
 
 <template>
   <div
-    class="h-full w-full flex flex-col items-start gap-8 overflow-y-scroll p-4">
+    class="h-full w-full flex flex-col items-start gap-8 overflow-y-auto p-4">
     <div class="w-full flex flex-row items-center justify-between">
       <div class="flex flex-row items-center gap-4">
         <UnUiTooltip text="Back to Email Address list">

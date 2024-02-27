@@ -259,7 +259,7 @@
 </script>
 
 <template>
-  <div class="h-full w-full flex flex-col items-start gap-4 overflow-y-scroll">
+  <div class="h-full w-full flex flex-col items-start gap-4 overflow-y-auto">
     <div class="w-full flex flex-col gap-2">
       <div
         class="grid grid-cols-1 grid-rows-2 gap-2 md:grid-cols-2 md:grid-rows-1 md:gap-4">

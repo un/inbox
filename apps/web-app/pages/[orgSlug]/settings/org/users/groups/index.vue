@@ -99,7 +99,7 @@
         </UnUiModal>
       </div>
     </div>
-    <div class="w-full flex flex-col gap-4 overflow-y-scroll">
+    <div class="w-full flex flex-col gap-4 overflow-y-auto">
       <NuxtUiTable
         :columns="tableColumns"
         :rows="tableRows"
