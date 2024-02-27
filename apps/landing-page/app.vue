@@ -1,5 +1,7 @@
 <script setup lang="ts">
   import { z } from 'zod';
+  import 'cal-sans';
+
   useHead({
     meta: [
       { name: 'viewport', content: 'width=device-width, initial-scale=1' }

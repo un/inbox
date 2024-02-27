@@ -8,8 +8,7 @@ export default <Partial<Config>>{
   theme: {
     extend: {
       fontFamily: {
-        body: ['Inter var', ...defaultTheme.fontFamily.sans],
-        display: ['CalSans', ...defaultTheme.fontFamily.sans]
+        display: ['Cal Sans', ...defaultTheme.fontFamily.sans]
       }
     }
   }
