@@ -160,7 +160,7 @@
         :label="domainStatus.toUpperCase()"
         size="lg" />
     </div>
-    <div class="w-full flex flex-col gap-8 overflow-y-scroll">
+    <div class="w-full flex flex-col gap-8 overflow-y-auto">
       <div
         v-if="domainPending"
         class="w-full flex flex-col gap-8">

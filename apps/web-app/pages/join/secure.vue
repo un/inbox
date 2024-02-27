@@ -270,7 +270,7 @@
 </script>
 
 <template>
-  <div class="h-screen w-screen flex flex-col items-center justify-between p-4">
+  <div class="h-screen w-full flex flex-col items-center justify-between p-4">
     <div
       class="max-w-72 w-full flex grow flex-col items-center justify-center gap-8 pb-14 md:max-w-xl">
       <h1 class="mb-4 text-center text-2xl font-display">

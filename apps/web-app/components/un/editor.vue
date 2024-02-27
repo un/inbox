@@ -40,6 +40,6 @@
     class="h-full max-h-full w-full border border-1 border-base-6 rounded-xl bg-base-1 px-2 py-1">
     <EditorContent
       :editor="editor"
-      class="h-full max-h-full overflow-y-scroll" />
+      class="h-full max-h-full overflow-y-auto" />
   </div>
 </template>

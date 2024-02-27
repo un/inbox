@@ -103,7 +103,7 @@
       <div
         v-if="userHasConvos"
         ref="infiniteContainer"
-        class="h-full max-h-full max-w-full w-full overflow-scroll">
+        class="h-full max-h-full max-w-full w-full overflow-auto">
         <DynamicScroller
           :items="convos"
           key-field="publicId"

@@ -3,7 +3,7 @@
 </script>
 <template>
   <div
-    class="h-full max-h-full flex flex-col gap-2 overflow-y-scroll border-r-1 border-base-6 pr-4">
+    class="h-full max-h-full flex flex-col gap-2 overflow-y-auto border-r-1 border-base-6 pr-4">
     <div class="flex grow flex-col gap-0 overflow-hidden">
       <convos-convo-list />
 

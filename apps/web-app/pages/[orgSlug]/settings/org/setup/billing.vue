@@ -68,7 +68,7 @@
       </div>
     </div>
 
-    <div class="w-full flex flex-col gap-8 overflow-y-scroll">
+    <div class="w-full flex flex-col gap-8 overflow-y-auto">
       <div
         v-if="pending"
         class="w-full flex flex-col gap-8">

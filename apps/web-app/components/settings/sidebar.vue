@@ -1,6 +1,4 @@
 <script setup lang="ts">
-  import type { VerticalNavigationLink } from '@nuxt/ui/dist/runtime/types/vertical-navigation';
-
   const { $trpc } = useNuxtApp();
 
   const orgSlug = useRoute().params.orgSlug as string;
@@ -68,9 +66,9 @@
   ]);
 </script>
 <template>
-  <div class="h-full max-h-full flex flex-col gap-2 overflow-y-scroll pr-4">
+  <div class="h-full max-h-full flex flex-col gap-2 overflow-y-auto pr-4">
     <div
-      class="h-full max-h-full flex grow flex-col gap-4 overflow-hidden overflow-y-scroll">
+      class="h-full max-h-full flex grow flex-col gap-4 overflow-hidden overflow-y-auto">
       <div class="w-full flex flex-col gap-2">
         <div>
           <span class="font-display">Personal</span>

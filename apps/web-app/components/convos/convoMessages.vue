@@ -37,7 +37,7 @@
 </script>
 <template>
   <div
-    class="h-full max-h-full max-w-full w-full flex flex-col-reverse overflow-y-scroll">
+    class="h-full max-h-full max-w-full w-full flex flex-col-reverse overflow-y-auto">
     <div
       class="mb-[24px] mt-[24px] w-full flex flex-col-reverse items-start gap-4">
       <div
