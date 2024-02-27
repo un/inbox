@@ -35,6 +35,47 @@
     refresh();
   };
 
+  const passwordModalOpen = ref(false);
+  const closepasswordModal = ()=>{
+    passwordModalOpen.value = false;
+    refresh();
+  };
+
+// password specific
+  const passwordInput = ref('');
+  const passwordValid = ref<boolean | null>(null);
+  const passwordValidationMessage = ref('');
+  const passwordConfirmationInput = ref('');
+  const passwordConfirmationValid = ref<boolean | null>(null);
+  const passwordConfirmationValidationMessage = ref('');
+
+  const passwordConditionLengthValid = computed(() => {
+    const schema = z.string().min(8);
+    return schema.safeParse(passwordInput.value).success;
+  });
+  const passwordConditionDigitValid = computed(() => {
+    const schema = z.string().regex(/(?=.*\d)/);
+    return schema.safeParse(passwordInput.value).success;
+  });
+  const passwordConditionLowercaseValid = computed(() => {
+    const schema = z.string().regex(/(?=.*[a-z])/);
+    return schema.safeParse(passwordInput.value).success;
+  });
+  const passwordConditionUppercaseValid = computed(() => {
+    const schema = z.string().regex(/(?=.*[A-Z])/);
+    return schema.safeParse(passwordInput.value).success;
+  });
+  const passwordConditionSpecialCharValid = computed(() => {
+    const schema = z
+      .string()
+      .regex(/(?=.*[ !"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])/);
+    return schema.safeParse(passwordInput.value).success;
+  });
+  const passwordConditionNoWhitespaceValid = computed(() => {
+    const schema = z.string().regex(/(?!.*\s)/);
+    return schema.safeParse(passwordInput.value).success;
+  });
+
   const { data: initialUserProfile, pending } =
     await $trpc.auth.security.getCredentials.useLazyQuery();
     watch(
@@ -197,8 +238,7 @@
         registrationResponseRaw: newPasskeyData,
         nickname: 'Primary'
       });
-      isPasskey.value = true;
-      refresh();
+      
       //must save changes , for it to reflect the next time user comes on this page
       if (!verifyNewPasskey.success) {
         toast.add({
@@ -214,6 +254,48 @@
         buttonLabel.value = 'Try Again!';
         return;
       }
+      toast.add({
+        id: 'passkey_saved',
+      title: 'Passkey Saved',
+      description: 'Passkey Saved',
+      icon: 'i-ph-thumbs-up',
+      timeout: 5000
+        });
+        isPasskey.value = true;
+      refresh();
+
+  }
+
+  async function addPassword(){
+    const toast = useToast();
+    const setUserPassowrd = await $trpc.auth.password.setUserPassword.mutate({
+        password: passwordInput.value
+      });
+
+      if (!setUserPassowrd.success) {
+        toast.add({
+          id: 'password_error',
+          title: 'Password error',
+          description:
+            'Something went wrong when setting your password, please try again.',
+          color: 'red',
+          timeout: 5000,
+          icon: 'i-ph-warning-circle'
+        });
+        pageError.value = true;
+        buttonLoading.value = false;
+        buttonLabel.value = 'Retry';
+        return;
+      }
+      toast.add({
+        id: 'password_saved',
+      title: 'Password Saved',
+      description: 'Password Saved',
+      icon: 'i-ph-thumbs-up',
+      timeout: 5000
+        });
+      isPassword.value = true;
+      refresh();
 
   }
 
@@ -221,13 +303,6 @@
     const toast = useToast();
     buttonLoading.value = true;
     buttonLabel.value = 'Saving...';
-
-    // if (!initialUserProfile.value?.profile?.publicId) {
-    //   pageError.value = true;
-    //   buttonLoading.value = false;
-    //   buttonLabel.value = 'Save profile';
-    //   return;
-    // }
     const checkPassword =
       $trpc.auth.security.checkPassword.useMutation();
     await checkPassword.mutate({
@@ -334,7 +409,8 @@
           Change Password
         </div>
         <div class="flex basis-1/2 flex-col gap-4">
-          <UnUiInput
+          <div v-if="isPassword">
+            <UnUiInput
               v-model:value="cpasswordValue"
               v-model:valid="cpasswordValid"
 
@@ -387,24 +463,162 @@
             @click="savePassword()"
            />
 
-            <div class="gap-4 text-sm font-sans">
+          </div>
+          
+           <div class="gap-4 text-sm font-sans">
               <p class="text-sm font-display">
-                Turn Off Password
+                Password
               </p>
-              <div class="flex gap-4">
-        <span>
+              <span>
             Can Only be done if Passkeys are on
         </span>
 
           <UnUiToggle
          v-model="isPassword"
-         :disabled="!isPasskey"
+     
          />
-
-
-        </div>
             </div>
+            <UnUiButton
+                label="Add Password"
+                icon="i-ph-key"
+                block
+                class="w-1/4"
+                :loading="buttonLoading"
+                @click="passwordModalOpen = true" />
+
+                <UnUiModal v-model="passwordModalOpen">
+                  <template #header>
+                    <span class="">Add Password</span>
+                  </template>
+                  <div class="grid grid-cols-2 gap-8">
+          <div class="flex flex-col gap-2">
+            <UnUiInput
+              v-model:value="passwordInput"
+              v-model:valid="passwordValid"
+              v-model:validationMessage="passwordValidationMessage"
+              width="full"
+              icon="i-ph-password"
+              label="Password"
+              password
+              placeholder=""
+              :schema="
+                z
+                  .string()
+                  .min(8, { message: 'Minimum 8 characters' })
+                  .max(64)
+                  .regex(
+                    /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*\W)(?!.*\s).{8,}$/,
+                    {
+                      message:
+                        'At least one digit, one lowercase letter, one uppercase letter, one special character, no whitespace allowed, minimum eight characters in length'
+                    }
+                  )
+              " />
+            <UnUiInput
+              v-model:value="passwordConfirmationInput"
+              v-model:valid="passwordConfirmationValid"
+              v-model:validationMessage="passwordConfirmationValidationMessage"
+              width="full"
+              icon="i-ph-password"
+              label="Confirm"
+              password
+              placeholder=""
+              :schema="z.string()" />
+          </div>
+          <div class="flex flex-col gap-2">
+            <span class="text-sm"> Your password must be: </span>
+            <div class="flex flex-row items-center gap-1">
+              <UnUiIcon
+                name="i-ph-check-circle-fill"
+                :class="
+                  passwordConditionLengthValid
+                    ? 'text-green-500'
+                    : 'text-red-500'
+                " />
+              <span
+                class="text-gray-800 dark:text-gray-200 text-sm leading-none">
+                at least 8 characters long
+              </span>
+            </div>
+            <div class="flex flex-row items-center gap-1">
+              <UnUiIcon
+                name="i-ph-check-circle-fill"
+                :class="
+                  passwordConditionDigitValid
+                    ? 'text-green-500'
+                    : 'text-red-500'
+                " />
+              <span
+                class="text-gray-800 dark:text-gray-200 text-sm leading-none">
+                include 1 number
+              </span>
+            </div>
+            <div class="flex flex-row items-center gap-1">
+              <UnUiIcon
+                name="i-ph-check-circle-fill"
+                :class="
+                  passwordConditionLowercaseValid
+                    ? 'text-green-500'
+                    : 'text-red-500'
+                " />
+              <span
+                class="text-gray-800 dark:text-gray-200 text-sm leading-none">
+                include 1 lowercase letter
+              </span>
+            </div>
+            <div class="flex flex-row items-center gap-1">
+              <UnUiIcon
+                name="i-ph-check-circle-fill"
+                :class="
+                  passwordConditionUppercaseValid
+                    ? 'text-green-500'
+                    : 'text-red-500'
+                " />
+              <span
+                class="text-gray-800 dark:text-gray-200 text-sm leading-none">
+                include 1 uppercase letter
+              </span>
+            </div>
+            <div class="flex flex-row items-center gap-1">
+              <UnUiIcon
+                name="i-ph-check-circle-fill"
+                :class="
+                  passwordConditionSpecialCharValid
+                    ? 'text-green-500'
+                    : 'text-red-500'
+                " />
+              <span
+                class="text-gray-800 dark:text-gray-200 text-sm leading-none">
+                include 1 special character
+              </span>
+            </div>
+            <div
+              v-if="!passwordConditionNoWhitespaceValid"
+              class="flex flex-row gap-2">
+              <UnUiIcon
+                name="i-ph-check-circle-fill"
+                :class="
+                  passwordConditionNoWhitespaceValid
+                    ? 'text-green-500'
+                    : 'text-red-500'
+                " />
+              <span
+                class="text-gray-800 dark:text-gray-200 text-sm leading-none">
+                include no whitespaces</span
+              >
+            </div>
+          
+          </div>
+          <UnUiButton
+                label="Add Password"
+                icon="i-ph-key"
+                block
+                :loading="buttonLoading"
+                @click="addPassword()" />
         </div>
+                 
+                  </UnUiModal>
+          </div>     
 
       </div>
       <hr class="line dark:border-gray-600 border-gray-300 border-t">
@@ -440,9 +654,8 @@
                 class="w-1/4"
                 :loading="buttonLoading"
                 @click="addPasskey()" />
-              <!-- loop over the sessions -->
+              <hr class="line dark:border-gray-600 border-gray-300 w-3/4 border-t">
               <div v-if="passkeysData">
-                <hr class="line dark:border-gray-600 border-gray-300 w-3/4 border-t">
             <div v-for="(passkey, index) in passkeysData"  :key="index"  class="flex flex-row gap-2 text-sm font-sans" >
               <span  class="basis-1/2" >
                 <p> {{ passkey.nickname }}</p>
@@ -498,12 +711,45 @@
                     </UnUiModal>
                   </div>
                         </div>
-                        <hr class="line dark:border-gray-600 border-gray-300 w-3/4 border-t">
+                        
                     </div>
+                    
 
               </div>
+              
                   </div>
-                
+                  <hr class="line dark:border-gray-600 border-gray-300 border-t">
+      <div class="flex flex-row">
+        <div class="text-1xl basis-1/2 font-display">
+          Sessions
+        </div>
+        <div class="flex basis-1/2 flex-col gap-4">
+          <div class="text-1xl basis-1/2 font-display">
+             <!-- for loop for all the sessions in session array -->
+          Current Sessions
+          <span>
+            <hr class="line dark:border-gray-600 w-3/4 border-gray-300 border-t">
+
+            
+          </span>
+        </div>
+        <span class="text-sm basis-1/2 font-display">Sign Out Everywhere
+          <br/>
+          <span class="text-sm text-red-600 dark:text-red-300 basis-1/2 font-display">Warning: This signs you out of you're account everywhere</span>
+        </span>
+       
+          <UnUiButton
+          label="Sign Out"
+          icon="i-ph-key"
+          :loading="buttonLoading"
+          block
+          class="w-1/6"
+          :disabled="isrEmailVerified"
+          @click="verifyEmail()"
+           />
+           
+        </div>
+      </div>
                   <UnUiButton
                     :label="buttonLabel"
                     icon="i-ph-floppy-disk"
@@ -518,5 +764,6 @@
                     persists
                   </p>
                 </div>
+                
   </div>
 </template>
