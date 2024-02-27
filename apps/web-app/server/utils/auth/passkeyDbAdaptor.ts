@@ -194,11 +194,40 @@ async function listAuthenticatorsByUserId(userId: number) {
   return decodedResults;
 }
 
+async function updateAuthenticatorNickname(
+  credentialId: Uint8Array,
+  nickname: string
+) {
+  log('passkey: updateAuthenticatorCounter', {
+    credentialId,
+    nickname
+  });
+  const b64ID = isoBase64URL.fromBuffer(credentialId);
+
+  const authenticatorObject = await db.query.authenticators.findFirst({
+    where: eq(authenticators.credentialID, b64ID),
+    columns: {
+      counter: true
+    }
+  });
+  if (!authenticatorObject) throw new Error('Authenticator not found');
+
+  await db
+    .update(authenticators)
+    .set({
+      nickname: nickname
+    })
+    .where(eq(authenticators.credentialID, b64ID));
+
+  return {success: true};
+}
+
 export const usePasskeysDb = {
   createAuthenticator: createAuthenticator,
   updateAuthenticatorCounter: updateAuthenticatorCounter,
   getAuthenticator: getAuthenticator,
   deleteAuthenticator: deleteAuthenticator,
   listAuthenticatorsByAccountId: listAuthenticatorsByAccountId,
-  listAuthenticatorsByUserId: listAuthenticatorsByUserId
+  listAuthenticatorsByUserId: listAuthenticatorsByUserId,
+  updateAuthenticatorNickname: updateAuthenticatorNickname
 };

@@ -110,12 +110,64 @@
     isrEmailVerified.value = !isrEmailVerified.value;
     }
 
-  async function saveNickname(){
-  console.log("passkey's nickname changed");
+  async function saveNickname(credentialId:Uint8Array){ 
+    const toast = useToast();
+    const isSuccess =
+      await $trpc.auth.passkey.renamePasskey.useLazyQuery({
+        cred: credentialId,
+        nickname: nickName.value
+      });
+      if(!isSuccess.data.value.success){
+        toast.add({
+        id: 'passkey_error',
+        title: 'Passkey error',
+        description:
+          'Something went wrong when creating your passkey, please try again or switch to password mode.',
+        color: 'red',
+        timeout: 5000,
+        icon: 'i-ph-warning-circle'
+      });
+      return;
+      }
+      closeEditModal();
+      toast.add({
+      id: 'profile_saved',
+      title: 'Profile Saved',
+      description: 'Profile has been updated successfully',
+      icon: 'i-ph-thumbs-up',
+      timeout: 5000
+    }); 
+    refresh();
   }
 
-  async function removePasskey(){
-  console.log("passkey removed");
+  async function removePasskey(credentialId:Uint8Array){
+    const toast = useToast();
+    const isSuccess =
+      await $trpc.auth.passkey.deletePasskey.useLazyQuery({
+        cred: credentialId
+      });
+      if(!isSuccess.data.value.success){
+        toast.add({
+        id: 'passkey_error',
+        title: 'Passkey error',
+        description:
+          'Something went wrong when creating your passkey, please try again or switch to password mode.',
+        color: 'red',
+        timeout: 5000,
+        icon: 'i-ph-warning-circle'
+      });
+      return;
+      }
+      closeRemoveModal();
+      toast.add({
+      id: 'profile_saved',
+      title: 'Profile Saved',
+      description: 'Profile has been updated successfully',
+      icon: 'i-ph-thumbs-up',
+      timeout: 5000
+    }); 
+    refresh();
+  
   }
 
   async function addPasskey(){
@@ -389,76 +441,82 @@
                 :loading="buttonLoading"
                 @click="addPasskey()" />
               <!-- loop over the sessions -->
-            <hr class="line dark:border-gray-600 border-gray-300 w-3/4 border-t">
-            <div class="flex flex-row gap-2 text-sm font-sans" >
-              <span v-for="(passkey, index) in passkeysData" :key="passkey.credentialId" class="basis-1/2" >
+              <div v-if="passkeysData">
+                <hr class="line dark:border-gray-600 border-gray-300 w-3/4 border-t">
+            <div v-for="(passkey, index) in passkeysData"  :key="index"  class="flex flex-row gap-2 text-sm font-sans" >
+              <span  class="basis-1/2" >
                 <p> {{ passkey.nickname }}</p>
                 <p>{{ formatDate(passkey.createdAt) }}</p>
               </span>
               <div class="flex flex-row items-center gap-4">
-        <UnUiButton
-          label="Edit"
-          @click="editModalOpen = true" />
-        <UnUiModal v-model="editModalOpen">
-          <template #header>
-            <span class="">Edit</span>
-          </template>
-          <UnUiInput
-            v-model:value="nickName"
-            v-model:valid="nickNameValid"
-           
-            :remote-validation="true"
-            label="Enter New Nickname"
-            :schema="
-              z
-                .string()
-                .min(1)
-                .max(16)
-                .regex(/^[a-zA-Z0-9]*$/, {
-                  message: 'Only letters and numbers'
-                })
-            "
-            width="full" />
-            <UnUiButton 
-            label="Save"
-            @click="saveNickname()"
-            />
-          </UnUiModal>
-      </div>
-      <div class="flex flex-row items-center gap-4">
-        <UnUiButton
-          label="Remove"
-          @click="removeModalOpen = true" />
-        <UnUiModal v-model="removeModalOpen">
-          <template #header>
-            <span class="">Are You Sure, You want to remove it </span>
-          </template>
-          Are you Sure You want to remove it? Type <span>{{  }}</span>
-          <UnUiButton
-          label="Remove"
-            @click="removePasskey()"
-          />
-        </UnUiModal>
-      </div>
-            </div>
-            <hr class="line dark:border-gray-600 border-gray-300 w-3/4 border-t">
-        </div>
+                <UnUiButton
+                  label="Edit"
+                  @click="editModalOpen = true" />
+                <UnUiModal v-model="editModalOpen">
+                  <template #header>
+                    <span class="">Edit</span>
+                  </template>
+                  <UnUiInput
+                    v-model:value="nickName"
+                    v-model:valid="nickNameValid"
+                    label="Enter New Nickname"
+                    :schema="
+                      z
+                        .string()
+                        .min(1)
+                        .max(16)
+                        .regex(/^[a-zA-Z0-9]*$/, {
+                          message: 'Only letters and numbers'
+                        })
+                    "
+                    width="full" />
+                    <UnUiButton 
+                    label="Save"
+                    @click="saveNickname(passkey.credentialID)"
+                    />
+                  </UnUiModal>
+                  </div>
+                  <div class="flex flex-row items-center gap-4">
+                    <UnUiButton
+                      label="Remove"
+                      @click="removeModalOpen = true" />
+                    <UnUiModal v-model="removeModalOpen">
+                      <template #header>
+                        <span class="">Are You Sure, You want to remove it </span>
+                      </template>
+                      <div class ="flex flex-col">
+                        <span class="p-2">
+                          Are you Sure You want to remove it? Type <span class="text-sm">"{{ passkey.nickname }}"</span>
+                        </span>
+                      <UnUiButton
+                      label="Remove"
+                      class="w-1/4 text-center"
+                        @click="removePasskey(passkey.credentialID)"
+                      />
+                      </div>
+                      
+                    </UnUiModal>
+                  </div>
+                        </div>
+                        <hr class="line dark:border-gray-600 border-gray-300 w-3/4 border-t">
+                    </div>
 
-      </div>
-
-      <UnUiButton
-        :label="buttonLabel"
-        icon="i-ph-floppy-disk"
-        :loading="buttonLoading"
-        block
-        class="w-1/4"
-        @click="savePassword()" />
-      <p
-        v-if="pageError"
-        class="w-full rounded bg-red-9 p-4 text-center">
-        Something went wrong, please try again or contact our support team if it
-        persists
-      </p>
-    </div>
+              </div>
+                  </div>
+                
+                  <UnUiButton
+                    :label="buttonLabel"
+                    icon="i-ph-floppy-disk"
+                    :loading="buttonLoading"
+                    block
+                    class="w-1/4"
+                    @click="savePassword()" />
+                  <p
+                    v-if="pageError"
+                    class="w-full rounded bg-red-9 p-4 text-center">
+                    Something went wrong, please try again or contact our support team if it
+                    persists
+                  </p>
+                </div>
   </div>
 </template>
