@@ -142,6 +142,10 @@ export const signupRouter = router({
       const cookie = lucia.createSessionCookie(userSession.id);
       setCookie(ctx.event, cookie.name, cookie.value, cookie.attributes);
 
+      await db.update(users)
+        .set({ lastLoginAt: new Date() })
+        .where(eq(users.id, userId));
+
       //! TODO: Send user email verification
 
       return {
