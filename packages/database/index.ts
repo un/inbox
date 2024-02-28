@@ -19,7 +19,7 @@ const client = new Client({
 });
 
 const connectionOptions = {
-  logger: process.env.NODE_ENV === 'development' ? true : false,
+  logger: false,
   schema
 };
 //@ts-expect-error - remove after merge of https://github.com/drizzle-team/drizzle-orm/pull/1801
