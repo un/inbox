@@ -28,6 +28,7 @@
     "cal-sans": "^1.0.1",
     "nuxt": "^3.10.2",
     "nuxt-og-image": "3.0.0-rc.38",
+    "tsconfig": "workspace:*",
     "zod": "^3.22.4"
   },
   "devDependencies": {

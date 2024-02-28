@@ -24,8 +24,9 @@
     "@planetscale/database": "^1.16.0",
     "@uninbox/types": "workspace:*",
     "@uninbox/utils": "workspace:*",
-    "drizzle-orm": "^0.29.4",
-    "mysql2": "^3.9.1"
+    "drizzle-orm": "^0.29.3",
+    "mysql2": "^3.9.1",
+    "tsconfig": "workspace:*"
   },
   "devDependencies": {
     "@faker-js/faker": "^8.4.1",

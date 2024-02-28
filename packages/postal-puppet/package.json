@@ -68,6 +68,7 @@
     "*": "eslint --fix"
   },
   "dependencies": {
-    "puppeteer": "21.6.1"
+    "puppeteer": "21.6.1",
+    "tsconfig": "workspace:*"
   }
 }

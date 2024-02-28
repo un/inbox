@@ -77,6 +77,9 @@ importers:
       nuxt-og-image:
         specifier: 3.0.0-rc.38
         version: 3.0.0-rc.38(@lezer/common@1.2.1)(@nuxt/devtools@1.0.8)(@vue/compiler-core@3.4.19)(nuxt@3.10.2)(postcss@8.4.35)(vite@5.1.3)(vue@3.4.19)(webpack@5.90.3)
+      tsconfig:
+        specifier: workspace:*
+        version: link:../../packages/tsconfig
       zod:
         specifier: ^3.22.4
         version: 3.22.4
@@ -123,6 +126,9 @@ importers:
       trpc-nuxt:
         specifier: ^0.10.19
         version: 0.10.19(@trpc/client@10.45.1)(@trpc/server@10.45.1)
+      tsconfig:
+        specifier: workspace:*
+        version: link:../../packages/tsconfig
       zod:
         specifier: ^3.22.4
         version: 3.22.4
@@ -199,6 +205,9 @@ importers:
       superjson:
         specifier: ^2.2.1
         version: 2.2.1
+      tsconfig:
+        specifier: workspace:*
+        version: link:../../packages/tsconfig
 
   apps/web-app:
     dependencies:
@@ -280,6 +289,9 @@ importers:
       trpc-nuxt:
         specifier: ^0.10.19
         version: 0.10.19(@trpc/client@10.45.1)(@trpc/server@10.45.1)
+      tsconfig:
+        specifier: workspace:*
+        version: link:../../packages/tsconfig
       ua-parser-js:
         specifier: 2.0.0-beta.2
         version: 2.0.0-beta.2
@@ -398,6 +410,9 @@ importers:
       mysql2:
         specifier: ^3.9.1
         version: 3.9.1
+      tsconfig:
+        specifier: workspace:*
+        version: link:../tsconfig
     devDependencies:
       '@faker-js/faker':
         specifier: ^8.4.1
@@ -416,6 +431,9 @@ importers:
       puppeteer:
         specifier: 21.6.1
         version: 21.6.1(typescript@5.3.3)
+      tsconfig:
+        specifier: workspace:*
+        version: link:../tsconfig
     devDependencies:
       '@antfu/eslint-config':
         specifier: 2.6.4
@@ -487,7 +505,13 @@ importers:
         specifier: workspace:*
         version: link:../../apps/mail-bridge
 
+  packages/tsconfig: {}
+
   packages/types:
+    dependencies:
+      tsconfig:
+        specifier: workspace:*
+        version: link:../tsconfig
     devDependencies:
       typescript:
         specifier: ^5.3.3

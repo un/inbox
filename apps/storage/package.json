@@ -20,6 +20,7 @@
     "@upstash/redis": "1.28.4",
     "nitropack": "latest",
     "sharp": "^0.33.2",
-    "superjson": "^2.2.1"
+    "superjson": "^2.2.1",
+    "tsconfig": "workspace:*"
   }
 }
