@@ -2,8 +2,7 @@ import { loggerLink, type TRPCLink } from '@trpc/client';
 import { observable } from '@trpc/server/observable';
 import { createTRPCNuxtClient, httpBatchLink } from 'trpc-nuxt/client';
 import superjson from 'superjson';
-import type { TrpcWebAppRouter } from '../server/trpc';
-import type { TrpcMailBridgeRouter } from '@uninbox/types/trpc';
+import type { TrpcWebAppRouter } from '@uninbox/backend/trpc';
 
 export const errorHandler: TRPCLink<TrpcWebAppRouter> = () => {
   return ({ next, op }) => {
@@ -55,13 +54,15 @@ export default defineNuxtPlugin(() => {
           (opts.direction === 'down' && opts.result instanceof Error)
       }),
       httpBatchLink({
-        url: '/api/trpc',
+        url: `${config.public.backendUrl}/trpc`,
         maxURLLength: 2083,
         headers() {
           return {
-            'org-slug': route.params.orgSlug as string
+            'org-slug': route.params.orgSlug || ''
           };
-        }
+        },
+        fetch: (input, init) =>
+          fetch(input, { credentials: 'include', ...init })
       })
     ]
   });

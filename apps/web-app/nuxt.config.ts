@@ -49,6 +49,7 @@ export default defineNuxtConfig({
       key: process.env.WEBAPP_STORAGE_KEY || ''
     },
     public: {
+      backendUrl: process.env.WEBAPP_BACKEND_URL || '',
       siteUrl: process.env.WEBAPP_URL || '',
       storageUrl: process.env.WEBAPP_STORAGE_URL || '',
       mailDomainPublic: [] as MailDomainEntries[],

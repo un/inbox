@@ -143,7 +143,7 @@
       // Create the user's account
 
       const result = await $trpc.auth.signup.registerUser.mutate({
-        username: username.value,
+        username: String(username.value),
         email: emailValue.value,
         turnstileToken: turnstileToken.value
       });
@@ -237,6 +237,8 @@
     });
 
     await new Promise((resolve) => setTimeout(resolve, 1000));
+    // Remove the username cookie
+    useCookie('un-join-username', { expires: new Date() }).value = '';
     navigateTo('/join/org');
   }
 

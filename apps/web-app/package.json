@@ -22,6 +22,7 @@
     "@pinia-plugin-persistedstate/nuxt": "^1.2.0",
     "@simplewebauthn/types": "^9.0.1",
     "@types/node": "^20.11.19",
+    "@uninbox/backend": "workspace:^",
     "nuxt": "^3.10.2",
     "nuxt-icon": "^0.6.8",
     "nuxt-prepare": "^1.1.0",
