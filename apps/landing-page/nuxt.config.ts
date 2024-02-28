@@ -2,10 +2,11 @@
 export default defineNuxtConfig({
   extends: ['@nuxt/ui-pro'],
   modules: ['@nuxt/content', '@nuxt/ui', 'nuxt-og-image', '@vueuse/nuxt'],
+  telemetry: false,
   ui: {
     icons: ['heroicons', 'simple-icons', 'ph']
   },
-  css: ['@/assets/css/main.css'],
+  // css: ['@/assets/css/main.css'],
   colorMode: {
     // classSuffix: '',
     preference: 'light', // default value of $colorMode.preference

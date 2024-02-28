@@ -3,11 +3,7 @@
     title: 'UnInbox - OSS Friends',
     description: 'Our amazing open source friends'
   });
-  defineOgImageStatic({
-    component: 'LandingOG',
-    description: 'Our amazing open source friends',
-    sub: 'Open Source Email + Chat communication platform'
-  });
+  defineOgImageComponent('Landing');
 
   const { data: OSSFriends } = await useFetch('/api/oss');
   const ossFriendsData = computed(() => {
