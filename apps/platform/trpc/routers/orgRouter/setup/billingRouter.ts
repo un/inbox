@@ -125,20 +125,21 @@ export const billingRouter = router({
         });
       }
 
-      const activeOrgMembersCount = await db
+      const activeOrgMembersCountResponse = await db
         .select({ count: sql<number>`count(*)` })
         .from(orgMembers)
         .where(
           and(eq(orgMembers.orgId, orgId), eq(orgMembers.status, 'active'))
         );
 
+      const activeOrgMembersCount = +activeOrgMembersCountResponse[0].count;
       const orgSubLink =
         await billingTrpcClient.stripe.links.createSubscriptionPaymentLink.mutate(
           {
             orgId: orgId,
             plan: plan,
             period: period,
-            totalOrgUsers: activeOrgMembersCount[0].count
+            totalOrgUsers: activeOrgMembersCount
           }
         );
 
