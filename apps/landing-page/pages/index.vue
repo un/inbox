@@ -1,8 +1,4 @@
 <script setup lang="ts">
-  const { data: page } = await useAsyncData('index', () =>
-    queryContent('/').findOne()
-  );
-
   const emit = defineEmits(['openWaitlistModal']);
 
   useSeoMeta({
@@ -14,8 +10,7 @@
     twitterCard: 'summary_large_image'
   });
 
-  defineOgImage({
-    component: 'Landing',
+  defineOgImageComponent('Landing', {
     title: 'UnInbox',
     description: 'Modern email for teams and professionals. 100% Open Source.'
   });
