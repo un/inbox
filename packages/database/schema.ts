@@ -69,7 +69,8 @@ export const users = mysqlTable(
     metadata: json('metadata').$type<Record<string, unknown>>(),
     createdAt: timestamp('created_at')
       .default(sql`CURRENT_TIMESTAMP`)
-      .notNull()
+      .notNull(),
+    lastLoginAt: timestamp('last_login_at')
   },
   (table) => ({
     publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),

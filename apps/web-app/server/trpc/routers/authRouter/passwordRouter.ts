@@ -124,6 +124,10 @@ export const passwordRouter = router({
       const cookie = lucia.createSessionCookie(userSession.id);
       setCookie(ctx.event, cookie.name, cookie.value, cookie.attributes);
 
+      await db.update(users)
+        .set({ lastLoginAt: new Date() })
+        .where(eq(users.id, userResponse.id));
+
       return { success: true };
     })
 });
