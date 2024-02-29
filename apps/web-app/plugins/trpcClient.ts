@@ -2,9 +2,9 @@ import { loggerLink, type TRPCLink } from '@trpc/client';
 import { observable } from '@trpc/server/observable';
 import { createTRPCNuxtClient, httpBatchLink } from 'trpc-nuxt/client';
 import superjson from 'superjson';
-import type { TrpcWebAppRouter } from '@uninbox/platform/trpc';
+import type { TrpcPlatformRouter } from '@uninbox/platform/trpc';
 
-export const errorHandler: TRPCLink<TrpcWebAppRouter> = () => {
+export const errorHandler: TRPCLink<TrpcPlatformRouter> = () => {
   return ({ next, op }) => {
     return observable((observer) => {
       const unsubscribe = next(op).subscribe({
@@ -44,7 +44,7 @@ export const errorHandler: TRPCLink<TrpcWebAppRouter> = () => {
 export default defineNuxtPlugin(() => {
   const config = useRuntimeConfig();
   const route = useRoute();
-  const trpcWebAppClient = createTRPCNuxtClient<TrpcWebAppRouter>({
+  const trpcPlatformClient = createTRPCNuxtClient<TrpcPlatformRouter>({
     transformer: superjson,
     links: [
       errorHandler,
@@ -88,7 +88,7 @@ export default defineNuxtPlugin(() => {
 
   return {
     provide: {
-      trpc: trpcWebAppClient
+      trpc: trpcPlatformClient
       // mailBridge: trpcMailBridgeClient
     }
   };

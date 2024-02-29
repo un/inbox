@@ -20,49 +20,49 @@ import { billingRouter } from './routers/orgRouter/setup/billingRouter';
 import { addressRouter } from './routers/userRouter/addressRouter';
 import { defaultsRouter } from './routers/userRouter/defaultsRouter';
 
-export const trpcWebAppContext = createContext;
+export const trpcPlatformContext = createContext;
 
-const trpcWebAppAuthRouter = router({
+const trpcPlatformAuthRouter = router({
   signup: signupRouter,
   email: emailRouter,
   passkey: passkeyRouter,
   password: passwordRouter
 });
 
-const trpcWebAppUserRouter = router({
+const trpcPlatformUserRouter = router({
   defaults: defaultsRouter,
   profile: profileRouter,
   addresses: addressRouter
 });
 
-const trpcWebAppOrgSetupRouter = router({
+const trpcPlatformOrgSetupRouter = router({
   profile: orgProfileRouter,
   billing: billingRouter
 });
-const trpcWebAppOrgUsersRouter = router({
+const trpcPlatformOrgUsersRouter = router({
   invites: invitesRouter,
   members: orgMembersRouter,
   userGroups: orgUserGroupsRouter
 });
-const trpcWebAppOrgMailRouter = router({
+const trpcPlatformOrgMailRouter = router({
   domains: domainsRouter,
   emailIdentities: emailIdentityRouter
 });
 
-const trpcWebAppOrgRouter = router({
+const trpcPlatformOrgRouter = router({
   crud: crudRouter,
   contacts: contactsRouter,
-  setup: trpcWebAppOrgSetupRouter,
-  users: trpcWebAppOrgUsersRouter,
-  mail: trpcWebAppOrgMailRouter
+  setup: trpcPlatformOrgSetupRouter,
+  users: trpcPlatformOrgUsersRouter,
+  mail: trpcPlatformOrgMailRouter
 });
 
-export const trpcWebAppRouter = router({
-  auth: trpcWebAppAuthRouter,
-  user: trpcWebAppUserRouter,
-  org: trpcWebAppOrgRouter,
+export const trpcPlatformRouter = router({
+  auth: trpcPlatformAuthRouter,
+  user: trpcPlatformUserRouter,
+  org: trpcPlatformOrgRouter,
   convos: convoRouter,
   test: testRouter
 });
 
-export type TrpcWebAppRouter = typeof trpcWebAppRouter;
+export type TrpcPlatformRouter = typeof trpcPlatformRouter;
