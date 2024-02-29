@@ -46,20 +46,19 @@ export default defineNuxtPrepareHandler(async () => {
 
   const turnstileKey = process.env.WEBAPP_TURNSTILE_SECRET_KEY || null;
 
-  const unBackendUrl = process.env.WEBAPP_BACKEND_URL;
-  if (!unBackendUrl) {
+  const unPlatformUrl = process.env.PLATFORM_URL;
+  if (!unPlatformUrl) {
     throw new Error(
       'WEBAPP_BACKEND_URL is not set, you must add the URL to your ENV variables'
     );
   } else {
-    console.log('✅ Backend Url is set to', unBackendUrl);
+    console.log('✅ Platform URL is set to', unPlatformUrl);
   }
 
   return {
     runtimeConfig: {
       billing: billingConfig,
       public: {
-        backendUrl: unBackendUrl,
         mailDomainPublic: JSON.parse(
           mailDomainPublicEnv
         ) as MailDomainEntries[],

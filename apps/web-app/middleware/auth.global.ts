@@ -28,7 +28,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
 
     if (status.value === 'unauthenticated') {
       const verifyAuthStatus = await fetch(
-        `${useRuntimeConfig().public.backendUrl}/auth/status`,
+        `${useRuntimeConfig().public.platformUrl}/auth/status`,
         {
           method: 'GET',
           credentials: 'include'

@@ -229,7 +229,7 @@
     if (process.server) {
       return null;
     }
-    await fetch(`${useRuntimeConfig().public.backendUrl}/auth/logout`, {
+    await fetch(`${useRuntimeConfig().public.platformUrl}/auth/logout`, {
       method: 'POST',
       credentials: 'include'
     });

@@ -54,7 +54,7 @@ export default defineNuxtPlugin(() => {
           (opts.direction === 'down' && opts.result instanceof Error)
       }),
       httpBatchLink({
-        url: `${config.public.backendUrl}/trpc`,
+        url: `${config.public.platformUrl}/trpc`,
         maxURLLength: 2083,
         headers() {
           return {
