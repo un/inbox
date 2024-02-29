@@ -277,7 +277,6 @@ export const domainsRouter = router({
           dnsResult.returnPath.valid ||
           dnsResult.mx.valid;
 
-        console.log({ anyValidRecords });
         !validSendingRecords
           ? (domainSendingMode = 'disabled')
           : (domainSendingMode = 'native');
@@ -330,14 +329,6 @@ export const domainsRouter = router({
         });
       }
 
-      console.log({
-        dns: dnsResult,
-        domainStatus: domainStatus,
-        domainSendingMode: domainSendingMode,
-        domainReceivingMode: domainReceivingMode,
-        forwardingAddress: domainResponse.forwardingAddress,
-        checked: new Date()
-      });
       return {
         dns: dnsResult,
         domainStatus: domainStatus,
