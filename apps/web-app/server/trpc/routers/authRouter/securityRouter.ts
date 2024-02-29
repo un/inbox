@@ -4,16 +4,12 @@ import { router, userProcedure, limitedProcedure } from '../../trpc';
 import type { DBType } from '@uninbox/database';
 import { and, eq, or } from '@uninbox/database/orm';
 import { Argon2id } from 'oslo/password';
-import {
-  accounts,
-  users
-} from '@uninbox/database/schema';
+import { accounts, users } from '@uninbox/database/schema';
 import { nanoId, zodSchemas } from '@uninbox/utils';
 import { TRPCError } from '@trpc/server';
 import { validateEmailAddress } from './signupRouter';
 
 export const securityRouter = router({
-
   validateEmailAddress: limitedProcedure
     .input(
       z.object({
@@ -24,7 +20,7 @@ export const securityRouter = router({
       return await validateEmailAddress(input.email);
     }),
 
-    checkPassword: userProcedure
+  checkPassword: userProcedure
     .input(
       z
         .object({
@@ -49,7 +45,7 @@ export const securityRouter = router({
         where: eq(accounts.userId, userId),
         columns: {
           passwordEnabled: true,
-          passwordHash: true,
+          passwordHash: true
         }
       });
 
@@ -60,10 +56,7 @@ export const securityRouter = router({
         });
       }
 
-      if (
-        !userResponse.passwordEnabled ||
-        !userResponse.passwordHash
-      ) {
+      if (!userResponse.passwordEnabled || !userResponse.passwordHash) {
         throw new TRPCError({
           code: 'METHOD_NOT_SUPPORTED',
           message: 'Password signin is not enabled'
@@ -83,7 +76,7 @@ export const securityRouter = router({
       return { success: true };
     }),
 
-    setPassword: userProcedure
+  setPassword: userProcedure
     .input(
       z
         .object({
@@ -114,41 +107,39 @@ export const securityRouter = router({
 
       return { success: true };
     }),
- 
-  getCredentials: userProcedure
-    .query(async ({ ctx, input }) => {
-      const { db, user } = ctx;
-      const userId = user.id;
 
+  getCredentials: userProcedure.query(async ({ ctx, input }) => {
+    const { db, user } = ctx;
+    const userId = user.id;
 
-      const credentialsQuery = await db.query.accounts.findFirst({
-        where: eq(accounts.userId, userId),
-        columns: {
-          passwordEnabled: true,
-          recoveryEmail: true,
-          // emailVerified: true,
-          passkeysEnabled: true
-        }
-      });
-
-      if (!credentialsQuery || !credentialsQuery) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'We couldnt find your profile, please contact support.'
-        });
+    const credentialsQuery = await db.query.accounts.findFirst({
+      where: eq(accounts.userId, userId),
+      columns: {
+        passwordEnabled: true,
+        recoveryEmail: true,
+        // emailVerified: true,
+        passkeysEnabled: true
       }
-      return {
-        profile: credentialsQuery
-      };
-    }),
-    
+    });
+
+    if (!credentialsQuery || !credentialsQuery) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'We couldnt find your profile, please contact support.'
+      });
+    }
+    return {
+      profile: credentialsQuery
+    };
+  }),
+
   updateCredentials: userProcedure
     .input(
       z.object({
         passwordEnabled: z.boolean(),
         recoveryEmail: z.string(),
         // emailVerified: z.date(),
-        passkeysEnabled: z.boolean(),
+        passkeysEnabled: z.boolean()
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -158,10 +149,10 @@ export const securityRouter = router({
       await db
         .update(accounts)
         .set({
-        passwordEnabled: input.passwordEnabled,
-        recoveryEmail: input.recoveryEmail,
-        // emailVerified: input.emailVerified,
-        passkeysEnabled: input.passkeysEnabled,
+          passwordEnabled: input.passwordEnabled,
+          recoveryEmail: input.recoveryEmail,
+          // emailVerified: input.emailVerified,
+          passkeysEnabled: input.passkeysEnabled
         })
         .where(eq(accounts.userId, userId));
 
@@ -170,4 +161,3 @@ export const securityRouter = router({
       };
     })
 });
-

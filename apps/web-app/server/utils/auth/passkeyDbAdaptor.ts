@@ -27,7 +27,9 @@ async function transformDbToAuthAuthenticator(
     counter: Number(dbQuery.counter),
     credentialDeviceType: dbQuery.credentialDeviceType as CredentialDeviceType,
     credentialBackedUp: dbQuery.credentialBackedUp,
-    transports: dbQuery.transports as AuthenticatorTransportFuture[] | undefined,
+    transports: dbQuery.transports as
+      | AuthenticatorTransportFuture[]
+      | undefined,
     createdAt: dbQuery.createdAt
   };
 }
@@ -219,7 +221,7 @@ async function updateAuthenticatorNickname(
     })
     .where(eq(authenticators.credentialID, b64ID));
 
-  return {success: true};
+  return { success: true };
 }
 
 export const usePasskeysDb = {

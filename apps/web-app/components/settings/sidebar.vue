@@ -22,7 +22,7 @@
       label: 'Personal Addresses',
       to: `/${orgSlug}/settings/user/addresses`,
       icon: 'i-ph-envelope-open'
-    }    
+    }
   ];
   const orgSetupLinks = computed(() => [
     {
