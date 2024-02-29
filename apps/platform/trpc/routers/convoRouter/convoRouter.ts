@@ -25,15 +25,10 @@ import {
 } from '@uninbox/database/schema';
 import { nanoId, nanoIdLength, zodSchemas } from '@uninbox/utils';
 import { TRPCError } from '@trpc/server';
-import type { AnyExtension, JSONContent } from '@tiptap/vue-3';
-import { generateText } from '@tiptap/core';
-import { generateHTML } from '@tiptap/html';
-import StarterKit from '@tiptap/starter-kit';
+import { tipTapExtensions } from '@uninbox/tiptap/extensions';
+import { tiptapCore, tiptapHtml, type tiptapVue3 } from '@uninbox/tiptap';
 import { convoEntryRouter } from './entryRouter';
 import { mailBridgeTrpcClient } from '../../../utils/tRPCServerClients';
-
-//@ts-expect-error, Version mismatch, can be ignored
-const tipTapExtensions: AnyExtension[] = [StarterKit];
 
 export const convoRouter = router({
   entries: convoEntryRouter,
@@ -99,7 +94,7 @@ export const convoRouter = router({
         to: convoMessageTo
       } = input;
 
-      const message: JSONContent = parse(messageString);
+      const message: tiptapVue3.JSONContent = parse(messageString);
 
       console.log({
         sendAsEmailIdentityPublicId,
@@ -463,7 +458,7 @@ export const convoRouter = router({
       // create convoEntry
 
       const newConvoBody = message;
-      const newConvoBodyPlainText = generateText(
+      const newConvoBodyPlainText = tiptapCore.generateText(
         newConvoBody,
         tipTapExtensions
       );
@@ -490,7 +485,10 @@ export const convoRouter = router({
       }[] = [];
 
       if (convoHasEmailParticipants) {
-        const newConvoBodyHTML = generateHTML(newConvoBody, tipTapExtensions);
+        const newConvoBodyHTML = tiptapHtml.generateHTML(
+          newConvoBody,
+          tipTapExtensions
+        );
         const ccEmailAddresses: string[] = [];
 
         // get the email addresses for all contacts

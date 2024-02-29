@@ -4,7 +4,6 @@
     "yzhang.markdown-all-in-one", // Markdown support
     "dbaeumer.vscode-eslint", // eslint plugin
     "lokalise.i18n-ally", // i18n plugin
-    "antfu.unocss", // unocss plugin
     "vue.volar", // Vue 3 language support
     "streetsidesoftware.code-spell-checker", // Spell checker with custom dict
     "esbenp.prettier-vscode" // Prettier plugin

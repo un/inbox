@@ -1,11 +1,13 @@
 <script setup lang="ts">
-  import type { JSONContent } from '@tiptap/vue-3';
+  import type { tiptapVue3 } from '@uninbox/tiptap';
   import type { UiColor } from '@uninbox/types/ui';
   import { useTimeAgo } from '@vueuse/core';
   import { stringify } from 'superjson';
   import { z } from 'zod';
   const { $trpc } = useNuxtApp();
   const orgSlug = useRoute().params.orgSlug as string;
+
+  type JSONContent = tiptapVue3.JSONContent;
 
   // TODO: handle if the domain is not valid/enabled. display the email address in the list but show it as disabled and show a tooltip on hover that says "this domain is not enabled for sending"
   interface OrgEmailIdentities {
