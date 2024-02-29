@@ -116,10 +116,12 @@ async function generateAuthenticationOptions({
 
 async function verifyAuthenticationResponse({
   authenticationResponse,
+  expectedAllowedCredentials,
   authChallengeId
 }: {
   authenticationResponse: AuthenticationResponseJSON;
   authChallengeId: string;
+  expectedAllowedCredentials?: any;
 }) {
   const authenticator = await usePasskeysDb.getAuthenticator(
     authenticationResponse.id
