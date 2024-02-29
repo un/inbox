@@ -15,20 +15,20 @@
     <div>
       <span class="">{{ props.text }}</span>
     </div>
-    <div class="flex flex-row flex-wrap gap-4">
+    <div class="flex flex-row flex-wrap gap-4 w-full max-w-full">
       <div
         v-for="block of props.blocks"
         :key="block.value">
-        <div class="flex flex-col gap-1">
-          <span class="overflow-hidden text-xs text-base-11 uppercase">
+        <div class="flex flex-col w-full max-w-full gap-1">
+          <span class="overflow-hidden text-xs uppercase">
             {{ block.title }}
           </span>
-          <div class="flex flex-row items-center gap-2">
+          <div class="flex flex-row items-center gap-2 w-full max-w-full">
             <div
-              class="min-w-[50px] w-fit flex flex-col items-center rounded-lg bg-base-3 p-4">
+              class="max-w-full min-w-[50px] flex flex-col items-center rounded-lg bg-gray-100 p-4">
               <span
-                class="w-fit break-anywhere text-left text-sm font-mono"
-                :class="block.title === 'Type' ? 'uppercase' : 'lowercase'">
+                class="w-full break-all text-left text-sm font-mono"
+                :class="block.title === 'Type' ? 'uppercase' : ''">
                 {{ block.value }}
               </span>
             </div>

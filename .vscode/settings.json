@@ -95,6 +95,7 @@
     "db",
     "authjs",
     "local-docker",
-    "postal-puppet"
+    "postal-puppet",
+    "platform"
   ]
 }
