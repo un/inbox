@@ -49,7 +49,7 @@ export default defineNuxtPrepareHandler(async () => {
   const unPlatformUrl = process.env.PLATFORM_URL;
   if (!unPlatformUrl) {
     throw new Error(
-      'WEBAPP_BACKEND_URL is not set, you must add the URL to your ENV variables'
+      'PLATFORM_URL is not set, you must add the URL to your ENV variables'
     );
   } else {
     console.log('✅ Platform URL is set to', unPlatformUrl);
