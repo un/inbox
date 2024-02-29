@@ -1,5 +1,5 @@
 {
-  "name": "@uninbox/backend",
+  "name": "@uninbox/platform",
   "scripts": {
     "dev": "PORT=3300 nitropack dev",
     "build": "nitropack build",
