@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { date, z } from 'zod';
 import { limitedProcedure, router, userProcedure } from '../../trpc';
 import { eq } from '@uninbox/database/orm';
 import { accounts, authenticators, users } from '@uninbox/database/schema';
@@ -9,6 +9,12 @@ import {
 } from '@simplewebauthn/types';
 import { nanoId } from '@uninbox/utils';
 import { UAParser } from 'ua-parser-js';
+const CredentialIdInput = z.custom((value) => {
+  if (!(value instanceof Uint8Array)) {
+    throw new Error('Credential ID must be a Uint8Array');
+  }
+  return value;
+});
 
 export const passkeyRouter = router({
   generateNewPasskeyChallenge: userProcedure
@@ -111,7 +117,9 @@ export const passkeyRouter = router({
           credentialBackedUp:
             passkeyVerification.registrationInfo.credentialBackedUp,
           transports: registrationResponse.response.transports,
-          counter: passkeyVerification.registrationInfo.counter
+          counter: passkeyVerification.registrationInfo.counter,
+          nickname: input.nickname,
+          createdAt: new Date()
         },
         input.nickname
       );
@@ -122,6 +130,92 @@ export const passkeyRouter = router({
           message: 'Something went wrong adding your passkey, please try again'
         });
       }
+
+      return { success: true };
+    }),
+
+  getPasskeyInfo: userProcedure.query(async ({ ctx, input }) => {
+    const { db, user } = ctx;
+    const userId = user.id;
+
+    const userAccount = await db.query.accounts.findFirst({
+      where: eq(accounts.userId, userId),
+      columns: {
+        id: true
+      }
+    });
+
+    if (!userAccount || !userAccount.id) {
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: 'User account not found'
+      });
+    }
+
+    const userAuthenticators: Authenticator[] =
+      await usePasskeysDb.listAuthenticatorsByUserId(userId);
+
+    return { data: userAuthenticators };
+  }),
+
+  deletePasskey: userProcedure
+    .input(
+      z.object({
+        cred: z.instanceof(Uint8Array)
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const { db, user } = ctx;
+      const userId = user.id;
+      const credentialid = input.cred;
+
+      const userAccount = await db.query.accounts.findFirst({
+        where: eq(accounts.userId, userId),
+        columns: {
+          id: true
+        }
+      });
+
+      if (!userAccount || !userAccount.id) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'User account not found'
+        });
+      }
+
+      await usePasskeysDb.deleteAuthenticator(credentialid);
+
+      return { success: true };
+    }),
+
+  renamePasskey: userProcedure
+    .input(
+      z.object({
+        cred: z.instanceof(Uint8Array),
+        nickname: z.string()
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const { db, user } = ctx;
+      const userId = user.id;
+      const credentialid = input.cred;
+      const nickname = input.nickname;
+
+      const userAccount = await db.query.accounts.findFirst({
+        where: eq(accounts.userId, userId),
+        columns: {
+          id: true
+        }
+      });
+
+      if (!userAccount || !userAccount.id) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'User account not found'
+        });
+      }
+
+      await usePasskeysDb.updateAuthenticatorNickname(credentialid, nickname);
 
       return { success: true };
     }),

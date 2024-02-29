@@ -21,12 +21,16 @@ async function transformDbToAuthAuthenticator(
 ): Promise<Authenticator> {
   return {
     accountId: dbQuery.accountId,
+    nickname: dbQuery.nickname,
     credentialID: isoBase64URL.toBuffer(dbQuery.credentialID),
     credentialPublicKey: isoBase64URL.toBuffer(dbQuery.credentialPublicKey),
     counter: Number(dbQuery.counter),
     credentialDeviceType: dbQuery.credentialDeviceType as CredentialDeviceType,
     credentialBackedUp: dbQuery.credentialBackedUp,
-    transports: dbQuery.transports as AuthenticatorTransportFuture[] | undefined
+    transports: dbQuery.transports as
+      | AuthenticatorTransportFuture[]
+      | undefined,
+    createdAt: dbQuery.createdAt
   };
 }
 
@@ -34,12 +38,14 @@ async function transformDbToAuthAuthenticator(
 export type CredentialDeviceType = 'singleDevice' | 'multiDevice';
 export interface Authenticator {
   accountId: number;
+  nickname: string;
   credentialID: Uint8Array;
   credentialPublicKey: Uint8Array;
   counter: number;
   credentialDeviceType: CredentialDeviceType;
   credentialBackedUp: boolean;
   transports?: AuthenticatorTransportFuture[];
+  createdAt: Date;
 }
 
 async function createAuthenticator(
@@ -190,11 +196,40 @@ async function listAuthenticatorsByUserId(userId: number) {
   return decodedResults;
 }
 
+async function updateAuthenticatorNickname(
+  credentialId: Uint8Array,
+  nickname: string
+) {
+  log('passkey: updateAuthenticatorCounter', {
+    credentialId,
+    nickname
+  });
+  const b64ID = isoBase64URL.fromBuffer(credentialId);
+
+  const authenticatorObject = await db.query.authenticators.findFirst({
+    where: eq(authenticators.credentialID, b64ID),
+    columns: {
+      counter: true
+    }
+  });
+  if (!authenticatorObject) throw new Error('Authenticator not found');
+
+  await db
+    .update(authenticators)
+    .set({
+      nickname: nickname
+    })
+    .where(eq(authenticators.credentialID, b64ID));
+
+  return { success: true };
+}
+
 export const usePasskeysDb = {
   createAuthenticator: createAuthenticator,
   updateAuthenticatorCounter: updateAuthenticatorCounter,
   getAuthenticator: getAuthenticator,
   deleteAuthenticator: deleteAuthenticator,
   listAuthenticatorsByAccountId: listAuthenticatorsByAccountId,
-  listAuthenticatorsByUserId: listAuthenticatorsByUserId
+  listAuthenticatorsByUserId: listAuthenticatorsByUserId,
+  updateAuthenticatorNickname: updateAuthenticatorNickname
 };
