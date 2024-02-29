@@ -2,10 +2,9 @@ import { loggerLink, type TRPCLink } from '@trpc/client';
 import { observable } from '@trpc/server/observable';
 import { createTRPCNuxtClient, httpBatchLink } from 'trpc-nuxt/client';
 import superjson from 'superjson';
-import type { TrpcWebAppRouter } from '../server/trpc';
-import type { TrpcMailBridgeRouter } from '@uninbox/types/trpc';
+import type { TrpcPlatformRouter } from '@uninbox/platform/trpc';
 
-export const errorHandler: TRPCLink<TrpcWebAppRouter> = () => {
+export const errorHandler: TRPCLink<TrpcPlatformRouter> = () => {
   return ({ next, op }) => {
     return observable((observer) => {
       const unsubscribe = next(op).subscribe({
@@ -45,7 +44,7 @@ export const errorHandler: TRPCLink<TrpcWebAppRouter> = () => {
 export default defineNuxtPlugin(() => {
   const config = useRuntimeConfig();
   const route = useRoute();
-  const trpcWebAppClient = createTRPCNuxtClient<TrpcWebAppRouter>({
+  const trpcPlatformClient = createTRPCNuxtClient<TrpcPlatformRouter>({
     transformer: superjson,
     links: [
       errorHandler,
@@ -55,40 +54,22 @@ export default defineNuxtPlugin(() => {
           (opts.direction === 'down' && opts.result instanceof Error)
       }),
       httpBatchLink({
-        url: '/api/trpc',
+        url: `${config.public.platformUrl}/trpc`,
         maxURLLength: 2083,
         headers() {
           return {
-            'org-slug': route.params.orgSlug as string
+            'org-slug': route.params.orgSlug || ''
           };
-        }
+        },
+        fetch: (input, init) =>
+          fetch(input, { credentials: 'include', ...init })
       })
     ]
   });
-  // const trpcMailBridgeClient = createTRPCNuxtClient<TrpcMailBridgeRouter>({
-  //   transformer: superjson,
-  //   links: [
-  //     loggerLink({
-  //       enabled: (opts) =>
-  //         process.env.NODE_ENV === 'development' ||
-  //         (opts.direction === 'down' && opts.result instanceof Error)
-  //     }),
-  //     httpBatchLink({
-  //       url: `${config.mailBridge.url}/trpc`,
-  //       maxURLLength: 2083,
-  //       headers() {
-  //         return {
-  //           Authorization: config.mailBridge.key as string
-  //         };
-  //       }
-  //     })
-  //   ]
-  // });
 
   return {
     provide: {
-      trpc: trpcWebAppClient
-      // mailBridge: trpcMailBridgeClient
+      trpc: trpcPlatformClient
     }
   };
 });

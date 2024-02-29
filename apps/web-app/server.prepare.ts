@@ -45,6 +45,16 @@ export default defineNuxtPrepareHandler(async () => {
   }
 
   const turnstileKey = process.env.WEBAPP_TURNSTILE_SECRET_KEY || null;
+
+  const unPlatformUrl = process.env.PLATFORM_URL;
+  if (!unPlatformUrl) {
+    throw new Error(
+      'PLATFORM_URL is not set, you must add the URL to your ENV variables'
+    );
+  } else {
+    console.log('✅ Platform URL is set to', unPlatformUrl);
+  }
+
   return {
     runtimeConfig: {
       billing: billingConfig,

@@ -93,7 +93,7 @@
       });
 
     if (turnstileEnabled) {
-      turnstileToken.value.reset();
+      turnstileToken.value?.reset?.();
     }
 
     if (!passkeyOptions.options) {
@@ -234,10 +234,11 @@
           color="orange"
           variant="solid" />
       </div>
+      <!-- TODO: Make it look good -->
       <NuxtTurnstile
         v-if="pageReady && turnstileEnabled"
         v-model="turnstileToken"
-        class="fixed bottom-5 mb-[-30px] scale-50 hover:(mb-0 scale-100)" />
+        class="fixed bottom-5 mb-[-30px] scale-50 hover:mb-0 hover:scale-100" />
     </div>
   </div>
 </template>

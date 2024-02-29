@@ -229,8 +229,9 @@
     if (process.server) {
       return null;
     }
-    await $fetch('/api/auth/logout', {
-      method: 'POST'
+    await fetch(`${useRuntimeConfig().public.platformUrl}/auth/logout`, {
+      method: 'POST',
+      credentials: 'include'
     });
     useState('auth').value = 'unauthenticated';
     navigateTo(`/`);
