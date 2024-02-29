@@ -1,7 +1,7 @@
 <script setup lang="ts">
   import { useTimeAgo } from '@vueuse/core';
-  import { generateHTML } from '@tiptap/html';
-  import { tipTapExtensions } from '../../shared/editorConfig';
+  import { tiptapHtml } from '@uninbox/tiptap';
+  import { tipTapExtensions } from '@uninbox/tiptap/extensions';
   const { $trpc } = useNuxtApp();
 
   type ConvoEntryDataType = Awaited<
@@ -21,7 +21,7 @@
 
   const convoEntryBody = computed(() => {
     if (props.entry.body) {
-      return generateHTML(props.entry.body, tipTapExtensions);
+      return tiptapHtml.generateHTML(props.entry.body, tipTapExtensions);
     }
     return '';
   });
@@ -58,9 +58,9 @@
 </script>
 <template>
   <div
-    class="w-full flex flex-col gap-2"
+    class="flex w-full flex-col gap-2"
     :class="containerClasses">
-    <div class="w-full flex flex-row items-start gap-2">
+    <div class="flex w-full flex-row items-start gap-2">
       <div
         v-if="author"
         class="flex flex-row items-center gap-1">
@@ -73,21 +73,21 @@
           size="lg"
           class="rounded-full" />
       </div>
-      <div class="w-full flex flex-col gap-2 p-0">
-        <div class="w-full flex flex-row items-end gap-2 pl-2">
+      <div class="flex w-full flex-col gap-2 p-0">
+        <div class="flex w-full flex-row items-end gap-2 pl-2">
           <span
             v-if="author"
             class="text-sm leading-none">
             {{ author.name }}
           </span>
           <UnUiTooltip :text="props.entry.createdAt.toLocaleString()">
-            <span class="text-gray-500 text-xs leading-none">
+            <span class="text-xs leading-none text-gray-500">
               {{ timeAgo }}
             </span>
           </UnUiTooltip>
         </div>
         <div
-          class="bg-gray-100 dark:bg-gray-900 w-full overflow-hidden rounded-bl-xl rounded-br-xl p-2"
+          class="w-full overflow-hidden rounded-bl-xl rounded-br-xl bg-gray-100 p-2 dark:bg-gray-900"
           :class="convoBubbleClasses"
           v-html="convoEntryBody"></div>
       </div>

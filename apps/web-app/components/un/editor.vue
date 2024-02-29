@@ -1,18 +1,18 @@
 <script setup lang="ts">
-  import { EditorContent, useEditor, type JSONContent } from '@tiptap/vue-3';
-  import { tipTapExtensions } from '../../shared/editorConfig';
+  import { tiptapVue3 } from '@uninbox/tiptap';
+  import { tipTapExtensions } from '@uninbox/tiptap/extensions';
 
   const props = defineProps<{
-    modelValue: JSONContent;
+    modelValue: tiptapVue3.JSONContent;
   }>();
 
   const emit = defineEmits<{
-    (e: 'update:modelValue', value?: JSONContent): void;
+    (e: 'update:modelValue', value?: tiptapVue3.JSONContent): void;
   }>();
 
   const content = useVModel(props, 'modelValue', emit);
 
-  const editor = useEditor({
+  const editor = tiptapVue3.useEditor({
     content: content.value,
     extensions: tipTapExtensions,
     autofocus: true,
@@ -37,8 +37,8 @@
 
 <template>
   <div
-    class="h-full max-h-full w-full border border-1 border-base-6 rounded-xl bg-base-1 px-2 py-1">
-    <EditorContent
+    class="border-1 border-base-6 bg-base-1 h-full max-h-full w-full rounded-xl border px-2 py-1">
+    <tiptapVue3.EditorContent
       :editor="editor"
       class="h-full max-h-full overflow-y-auto" />
   </div>
