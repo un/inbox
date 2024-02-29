@@ -1,0 +1,28 @@
+{
+  "name": "@uninbox/platform",
+  "scripts": {
+    "dev": "PORT=3300 nitropack dev",
+    "build": "nitropack build",
+    "preview": "PORT=3300 node .output/server/index.mjs"
+  },
+  "dependencies": {
+    "@simplewebauthn/server": "^9.0.3",
+    "@tiptap/core": "^2.2.4",
+    "@tiptap/html": "^2.2.4",
+    "@tiptap/starter-kit": "^2.2.4",
+    "@tiptap/vue-3": "^2.2.4",
+    "@trpc/client": "^10.45.1",
+    "@trpc/server": "^10.45.1",
+    "@uninbox/database": "workspace:^",
+    "@uninbox/utils": "workspace:^",
+    "drizzle-orm": "^0.29.4",
+    "h3": "^1.11.1",
+    "lucia": "^3.0.1",
+    "nitropack": "latest"
+  },
+  "devDependencies": {
+    "@simplewebauthn/types": "^9.0.1",
+    "@uninbox-ee/types": "workspace:^",
+    "@uninbox/types": "workspace:^"
+  }
+}

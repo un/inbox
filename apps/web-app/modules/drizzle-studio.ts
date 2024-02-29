@@ -12,7 +12,7 @@ export default defineNuxtModule({
       icon: 'simple-icons:drizzle',
       view: {
         type: 'iframe',
-        src: 'https://local.drizzle.studio'
+        src: 'https://local.drizzle.studio?port=3333'
       }
     });
   }

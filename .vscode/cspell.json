@@ -1,8 +1,6 @@
 {
   "version": "0.2",
-  "ignorePaths": [
-    "package.json"
-  ],
+  "ignorePaths": ["package.json"],
   "dictionaryDefinitions": [],
   "dictionaries": [],
   "words": [
@@ -32,8 +30,6 @@
     "vueuse",
     "waitlist"
   ],
-  "ignoreWords": [
-    "ABCDEFGHJKMNPQRSTVWXYZ"
-  ],
+  "ignoreWords": ["ABCDEFGHJKMNPQRSTVWXYZ"],
   "import": []
 }

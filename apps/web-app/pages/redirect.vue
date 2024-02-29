@@ -3,8 +3,9 @@
 
   onMounted(async () => {
     const { slug } = await $trpc.user.defaults.getDefaultOrgSlug.query({});
+    console.log(slug);
     if (!slug) {
-      return navigateTo(`/`);
+      return navigateTo(`/join/org`);
     }
     setTimeout(() => {
       navigateTo(`/${slug}`);
