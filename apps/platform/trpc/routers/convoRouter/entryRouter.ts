@@ -142,10 +142,7 @@ export const convoEntryRouter = router({
             columns: {
               publicId: true,
               fileName: true,
-              type: true,
-              //! FIXME: Check schema and resolve this issue
-              //@ts-expect-error, Awaiting Fix
-              storageId: true
+              type: true
             }
           },
           author: {

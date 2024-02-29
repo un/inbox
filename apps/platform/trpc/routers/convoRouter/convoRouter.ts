@@ -789,10 +789,7 @@ export const convoRouter = router({
             columns: {
               publicId: true,
               fileName: true,
-              type: true,
-              //! FIXME: Check schema and resolve this issue
-              //@ts-expect-error, Awaiting Fix
-              storageId: true
+              type: true
             }
           }
         }
@@ -810,8 +807,6 @@ export const convoRouter = router({
       // Check if the user's orgMemberId is in the conversation participants
       convoDetails?.participants.forEach((participant) => {
         if (participant.orgMember?.id === userOrgMemberId) {
-          //! FIXME: Check schema and resolve this issue
-          //@ts-expect-error, Awaiting Fix
           participantPublicId = participant.publicId;
         }
       });
@@ -821,8 +816,6 @@ export const convoRouter = router({
         convoDetails?.participants.forEach((participant) => {
           participant.userGroup?.members.forEach((groupMember) => {
             if (groupMember.orgMemberId === userOrgMemberId) {
-              //! FIXME: Check schema and resolve this issue
-              //@ts-expect-error, Awaiting Fix
               participantPublicId = participant.publicId;
             }
           });
@@ -878,7 +871,6 @@ export const convoRouter = router({
         ? new Date(cursorLastUpdatedAt)
         : new Date();
 
-      console.log('🔥', { inputLastUpdatedAt });
       const inputLastPublicId = cursorLastPublicId || '';
 
       const convoQuery = await db.query.convos.findMany({
