@@ -12,17 +12,17 @@
     "preview": "node .output/server/index.mjs"
   },
   "dependencies": {
-    "@trpc/client": "^10.45.1",
-    "@trpc/server": "^10.45.1",
+    "@uninbox/tsconfig": "workspace:*",
     "@uninbox/database": "workspace:*",
     "@uninbox/postal-puppet": "workspace:*",
     "@uninbox/types": "workspace:*",
     "@uninbox/utils": "workspace:*",
+    "@trpc/client": "^10.45.1",
+    "@trpc/server": "^10.45.1",
     "html-to-text": "^9.0.5",
     "nitropack": "^2.8.1",
     "superjson": "^2.2.1",
     "trpc-nuxt": "^0.10.19",
-    "tsconfig": "workspace:*",
     "zod": "^3.22.4"
   }
 }

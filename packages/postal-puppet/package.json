@@ -68,7 +68,7 @@
     "*": "eslint --fix"
   },
   "dependencies": {
-    "puppeteer": "21.6.1",
-    "tsconfig": "workspace:*"
+    "@uninbox/tsconfig": "workspace:*",
+    "puppeteer": "21.6.1"
   }
 }

@@ -1,4 +1,4 @@
 {
   // https://nuxt.com/docs/guide/concepts/typescript
-  "extends": ["./.nuxt/tsconfig.json", "tsconfig/base.json"]
+  "extends": ["./.nuxt/tsconfig.json", "@uninbox/tsconfig"]
 }

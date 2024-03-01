@@ -10,7 +10,7 @@
     "pnpm": ">=8"
   },
   "dependencies": {
-    "tsconfig": "workspace:*"
+    "@uninbox/tsconfig": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.3.3"

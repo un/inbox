@@ -1,5 +1,5 @@
 {
-  "extends": "tsconfig/base.json",
+  "extends": "@uninbox/tsconfig",
   "include": ["."],
   "exclude": ["dist", "build", "node_modules"]
 }

@@ -1,5 +1,5 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "@uninbox/tsconfig",
   "compilerOptions": {
     "target": "ESNext",
     "moduleResolution": "node" /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */,

@@ -1,5 +1,5 @@
 {
-  "extends": "tsconfig/base.json",
+  "extends": "@uninbox/tsconfig",
   "compilerOptions": {
     "target": "es2018",
     "module": "esnext",

@@ -33,18 +33,19 @@
     "windy-radix-palette": "2.0.0-beta.7"
   },
   "dependencies": {
-    "@nuxt/ui": "^2.13.0",
-    "@pinia/nuxt": "^0.5.1",
-    "@simplewebauthn/browser": "^9.0.1",
-    "@simplewebauthn/server": "^9.0.3",
-    "@trpc/client": "^10.45.1",
-    "@trpc/server": "^10.45.1",
+    "@uninbox/tsconfig": "workspace:*",
     "@uninbox-ee/types": "workspace:*",
     "@uninbox/database": "workspace:*",
     "@uninbox/tiptap": "workspace:^",
     "@uninbox/trpc": "workspace:*",
     "@uninbox/types": "workspace:*",
     "@uninbox/utils": "workspace:*",
+    "@nuxt/ui": "^2.13.0",
+    "@pinia/nuxt": "^0.5.1",
+    "@simplewebauthn/browser": "^9.0.1",
+    "@simplewebauthn/server": "^9.0.3",
+    "@trpc/client": "^10.45.1",
+    "@trpc/server": "^10.45.1",
     "@upstash/redis": "1.28.4",
     "@vue-email/nuxt": "^0.8.15",
     "@vueuse/nuxt": "^10.8.0",
@@ -61,7 +62,6 @@
     "trpc-nuxt": "^0.10.19",
     "ua-parser-js": "2.0.0-beta.2",
     "vue-virtual-scroller": "2.0.0-beta.8",
-    "tsconfig": "workspace:*",
     "zod": "^3.22.4"
   },
   "packageManager": "pnpm@8.5.1"

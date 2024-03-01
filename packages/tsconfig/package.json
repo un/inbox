@@ -1,3 +1,7 @@
 {
-  "name": "tsconfig"
+  "name": "@uninbox/tsconfig",
+  "exports": {
+    ".": "./base.json",
+    "./base.json": "./base.json"
+  }
 }
