@@ -41,7 +41,8 @@
     "release": "bumpp && npm publish",
     "start": "esno src/index.ts",
     "test": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "postinstall": "puppeteer browsers install chrome"
   },
   "devDependencies": {
     "@antfu/eslint-config": "2.6.4",
@@ -69,6 +70,6 @@
   },
   "dependencies": {
     "@uninbox/tsconfig": "workspace:*",
-    "puppeteer": "21.6.1"
+    "puppeteer": "22.3.0"
   }
 }
