@@ -1216,11 +1216,12 @@ export const convoAttachmentsRelations = relations(
 );
 
 export type ConvoEntryMetadataEmail = {
-  postalMessageId: string;
+  messageId: string;
   postalMessages: {
     recipient: string;
     id: number;
     token: string;
+    postalMessageId: string | null;
   }[];
   emailHeaders?: string;
 };
@@ -1228,6 +1229,11 @@ export type ConvoEntryMetadata = {
   email?: ConvoEntryMetadataEmail;
 };
 
+const messageIdCustomType = customType<{ data: string }>({
+  dataType() {
+    return "VARCHAR(255) AS (JSON_UNQUOTE(metadata-> '$.email.messageId')) STORED";
+  }
+});
 export const convoEntries = mysqlTable(
   'convo_entries',
   {
@@ -1242,6 +1248,7 @@ export const convoEntries = mysqlTable(
     body: json('body').notNull(),
     bodyPlainText: text('body_plain_text').notNull(),
     metadata: json('metadata').$type<ConvoEntryMetadata>().default({}),
+    emailMessageId: messageIdCustomType('email_message_id'),
     visibility: mysqlEnum('visibility', [
       'private',
       'internal_participants',
