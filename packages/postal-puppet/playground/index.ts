@@ -1,18 +1,4 @@
-import {
-  addDomain,
-  addMailServer,
-  closePuppet,
-  createOrg,
-  initPuppet,
-  setMailServerApiKey,
-  setMailServerSmtpKey,
-  setMailServerConfig,
-  setMailServerEventWebhooks,
-  setOrgIpPools,
-  setMailServerRoutingHttpEndpoint,
-  setMailServerRoute,
-  setMailServerRouteForDomain
-} from '../src';
+import { postalPuppet } from '../src';
 import { useRuntimeConfig } from './config';
 
 const config = useRuntimeConfig();
@@ -27,17 +13,16 @@ const tempVars = {
 };
 
 console.time('⏱️ Time to run');
-const { puppetInstance, error } = await initPuppet(
-  config.postalControlPanel,
-  config.postalUrl,
-  config.postalUser,
-  config.postalPass
-);
-if (error || !puppetInstance)
-  throw new Error(`Failed to initialize puppet: ${error}`);
+const { puppetInstance } = await postalPuppet.initPuppet({
+  postalControlPanel: config.postalControlPanel,
+  postalUrl: config.postalUrl,
+  postalUser: config.postalUser,
+  postalPass: config.postalPass
+});
+if (!puppetInstance) throw new Error(`Failed to initialize puppet:`);
 
 //* Create Org
-// const org = await createOrg(
+// const org = await postalPuppet.createOrg(
 //   puppetInstance,
 //   tempVars.orgId,
 //   tempVars.orgPublicId
@@ -45,7 +30,7 @@ if (error || !puppetInstance)
 // console.log(org);
 
 //* Set OrgIP Pools
-// const ipPools = await setOrgIpPools(
+// const ipPools = await postalPuppet.setOrgIpPools(
 //   puppetInstance,
 //   tempVars.orgId,
 //   tempVars.orgPublicId,
@@ -54,7 +39,7 @@ if (error || !puppetInstance)
 // console.log(ipPools);
 
 //* Add Domain
-// const domain = await addDomain(
+// const domain = await postalPuppet.addDomain(
 //   puppetInstance,
 //   tempVars.orgId,
 //   tempVars.orgPublicId,
@@ -63,7 +48,7 @@ if (error || !puppetInstance)
 // console.log(domain);
 
 // //* Add Mail Server
-// const mailServer = await addMailServer(
+// const mailServer = await postalPuppet.addMailServer(
 //   puppetInstance,
 //   tempVars.orgId,
 //   tempVars.orgPublicId,
@@ -73,7 +58,7 @@ if (error || !puppetInstance)
 // console.log(mailServer);
 
 //* Set mail server config
-// const mailServerConfig = await setMailServerConfig(
+// const mailServerConfig = await postalPuppet.setMailServerConfig(
 //   puppetInstance,
 //   tempVars.orgId,
 //   tempVars.orgPublicId,
@@ -87,7 +72,7 @@ if (error || !puppetInstance)
 // console.log(mailServerConfig);
 
 //* Set Mailserver event Webhook
-// const mailServerEventWebhooks = await setMailServerEventWebhooks(
+// const mailServerEventWebhooks = await postalPuppet.setMailServerEventWebhooks(
 //   puppetInstance,
 //   tempVars.orgId,
 //   tempVars.orgPublicId,
@@ -97,7 +82,7 @@ if (error || !puppetInstance)
 // console.log(mailServerEventWebhooks);
 
 //* Set mail server API key
-// const mailServerApiKey = await setMailServerApiKey(
+// const mailServerApiKey = await postalPuppet.setMailServerApiKey(
 //   puppetInstance,
 //   tempVars.orgId,
 //   tempVars.orgPublicId,
@@ -106,7 +91,7 @@ if (error || !puppetInstance)
 // console.log(mailServerApiKey);
 
 //* Set mail server SMTP key
-// const mailServerSmtpKey = await setMailServerSmtpKey(
+// const mailServerSmtpKey = await postalPuppet.setMailServerSmtpKey(
 //   puppetInstance,
 //   tempVars.orgId,
 //   tempVars.orgPublicId,
@@ -115,7 +100,7 @@ if (error || !puppetInstance)
 // console.log(mailServerSmtpKey);
 
 //* Set the servers httpEndpoint to mailbridge
-// const mailServerRoutingHttpEndpoint = await setMailServerRoutingHttpEndpoint(
+// const mailServerRoutingHttpEndpoint = await postalPuppet.setMailServerRoutingHttpEndpoint(
 //   puppetInstance,
 //   tempVars.orgId,
 //   tempVars.orgPublicId,
@@ -125,7 +110,7 @@ if (error || !puppetInstance)
 // console.log(mailServerRoutingHttpEndpoint);
 
 //! * Set the mail server routes
-// const mailServerRoute = await setMailServerRoute(
+// const mailServerRoute = await postalPuppet.setMailServerRoute(
 //   puppetInstance,
 //   tempVars.orgId,
 //   tempVars.orgPublicId,
@@ -135,15 +120,15 @@ if (error || !puppetInstance)
 // console.log(mailServerRoute);
 
 //* Set the mail server route for domain
-const mailServerRoute = await setMailServerRouteForDomain(
-  puppetInstance,
-  tempVars.orgId,
-  tempVars.orgPublicId,
-  tempVars.mailServerId,
-  tempVars.domainName
-);
-console.log(mailServerRoute);
+// const mailServerRoute = await postalPuppet.setMailServerRouteForDomain(
+//   puppetInstance,
+//   tempVars.orgId,
+//   tempVars.orgPublicId,
+//   tempVars.mailServerId,
+//   tempVars.domainName
+// );
+// console.log(mailServerRoute);
 
-await closePuppet(puppetInstance);
+await postalPuppet.closePuppet(puppetInstance);
 
 console.timeEnd('⏱️ Time to run');

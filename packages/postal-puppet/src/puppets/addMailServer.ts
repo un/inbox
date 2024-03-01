@@ -21,7 +21,7 @@ export async function addMailServer(options: {
       .fill(options.serverId);
     await options.puppetInstance.page.select(
       'select[id="server_ip_pool_id"]',
-      options.defaultIpPoolId.split('_')[2]
+      options.defaultIpPoolId.split('_')[2] || ''
     );
     await options.puppetInstance.page.click('[name="commit"]');
     await options.puppetInstance.page.waitForNetworkIdle();
