@@ -1,0 +1,166 @@
+Delivered-To: hello@soreine.dev
+Received: by 2002:a67:cb08:0:0:0:0:0 with SMTP id b8csp2275501vsl;
+        Thu, 9 Jan 2020 09:16:52 -0800 (PST)
+X-Google-Smtp-Source: APXvYqzsjCB/SRGubYJkV//QQcPDzLhHmNOAiNosAgOivFxAgc/GWEH0OCgqre6DqtCbBwaBfAmK
+X-Received: by 2002:a1c:f20c:: with SMTP id s12mr6261492wmc.173.1578590212449;
+        Thu, 09 Jan 2020 09:16:52 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1578590212; cv=none;
+        d=google.com; s=arc-20160816;
+        b=qlotwcuPCdLvW5FV2DbEVvLY4An/l/mZymVf+ki39NgTdGJ+nK+t3v64ToGzgmtxST
+         q/HAHz98mfkPUR9KWW572PbYzxgIaebb2gv8Z+QZ6Nka1+2KRIOnnbwWUP7S64KkL2UE
+         QabXotbmTkBtyvzIZZQ/WhCNEOVYomcUL8CXG4jpRcJULH3LFU8btsKXI3lVMP4d8k/E
+         cOVP38WNMOCrJuD7Q8Dn3thvtSVpLfdUcLNhB4zA7MnSZzjFQ7NAk8JbmzQnO7vDjKPE
+         JBQVCQq1jRxy/GGXoT3vUAgcKYtUbCGtX5CEkLrCbbfJ1a98VqlQHiXkOU/VVyWbdRag
+         +urw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20160816;
+        h=mime-version:date:list-unsubscribe:message-id:subject:to:from
+         :dkim-signature;
+        bh=rkF3oQo+O7T5MlShxMzGVXq8shPc1pQc+SDBamqsENE=;
+        b=xnKY7BFD2+IQtK38g/jpNHebbDiiCmZkBzkUAQDx6l+F+SXx0Efqux9F8IPVY+NPz+
+         s4ezdM0WMzk2U54OyD7gGr+/nfD067tLlL8Bn8rBmG1QmXFTZk7c4gvNGkpXh9/GIeLt
+         F9S+oiMoj6MiotXgvjYQ5YwhKRcRBV4YddVI6Z7llyA25BOvQtckyD9VrdSiTF6shtgH
+         pPx7AMwcVBPjqe8baPzhcCE1Qh05zKCq0dyUvlD+sCAJy4yuDRgc/xY5HH45kWsujVjA
+         UEuQLw6GHdzgSk+VtQo6kMrd86RmoS+KTpi3e8pDdXasxaqkNX+BxXh3WOEMKINH85q3
+         4v+Q==
+ARC-Authentication-Results: i=1; mx.google.com;
+       dkim=pass header.i=@emailprivacytester.com header.s=ned1 header.b=VkB5PFt7;
+       spf=pass (google.com: domain of noreply@emailprivacytester.com designates 51.91.158.226 as permitted sender) smtp.mailfrom=noreply@emailprivacytester.com;
+       dmarc=pass (p=REJECT sp=REJECT dis=NONE) header.from=emailprivacytester.com
+Return-Path: <noreply@emailprivacytester.com>
+Received: from ned.grepular.com (ned.grepular.com. [51.91.158.226])
+        by mx.google.com with ESMTPS id g10si5877504wrx.163.2020.01.09.09.16.52
+        for <hello@soreine.dev>
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 09 Jan 2020 09:16:52 -0800 (PST)
+Received-SPF: pass (google.com: domain of noreply@emailprivacytester.com designates 51.91.158.226 as permitted sender) client-ip=51.91.158.226;
+Authentication-Results: mx.google.com;
+       dkim=pass header.i=@emailprivacytester.com header.s=ned1 header.b=VkB5PFt7;
+       spf=pass (google.com: domain of noreply@emailprivacytester.com designates 51.91.158.226 as permitted sender) smtp.mailfrom=noreply@emailprivacytester.com;
+       dmarc=pass (p=REJECT sp=REJECT dis=NONE) header.from=emailprivacytester.com
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=emailprivacytester.com; s=ned1; h=MIME-Version:Date:List-Unsubscribe: Message-ID:Subject:To:From:Content-Type:Sender:Cc:Content-Transfer-Encoding: Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender: Resent-To:Resent-Cc:Resent-Message-ID:In-Reply-To:References:List-Id: List-Help:List-Subscribe:List-Post:List-Owner:List-Archive:Reply-To; bh=rkF3oQo+O7T5MlShxMzGVXq8shPc1pQc+SDBamqsENE=; b=VkB5PFt7UNM20L7pAdeyQh+n0y TT45oTPjpy5NarC6M8h/1Wys64Isp9F/Y2wPc+02xU8VjVh/QTAYm8siW9TUF/jHnAYe5b3ZenW7t ISKB1KKsiFMXATLRUG7Hy6Uy4ea6N+mu1UX1HYFt7Cl3kpjxdDG1SnDj4UffSUbECuw0=;
+Received: from [172.26.0.1] (port=46340 helo=ned.grepular.com) by ned.grepular.com with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256) (Exim 4.92) (envelope-from <noreply@emailprivacytester.com>) id 1ipbQS-0006O7-37 for hello@soreine.dev; Thu, 09 Jan 2020 17:16:52 +0000
+Received: from [172.21.0.4] (helo=[127.0.0.1]) by ned.grepular.com with esmtp (Exim 4.92) (envelope-from <noreply@emailprivacytester.com>) id 1ipbQP-0003nO-Ua for hello@soreine.dev; Thu, 09 Jan 2020 17:16:50 +0000
+Content-Type: multipart/related; type="text/html"; boundary="----sinikael-?=_1-15785902099420.9555825560775772"
+From: "Email Privacy Tester <img src=x onerror='alert(unescape(/%58%53%53%28%33%29%20%66%6f%75%6e%64%2e%20%50%6c%65%61%73%65%20%72%65%70%6f%72%74%20%74%6f%20%78%73%73%40%65%6d%61%69%6c%70%72%69%76%61%63%79%74%65%73%74%65%72%2e%63%6f%6d/.source))'>" <noreply@emailprivacytester.com>
+To: hello@soreine.dev
+Subject: EPT - Your Test Email - https://www.emailprivacytester.com/test?code=5e175f8d8af4d70022fc5832
+Message-ID: <ad7e2d62-cc2a-693f-1815-d4360cd52597@emailprivacytester.com>
+X-Mailer: nodemailer (2.7.0; +https://nodemailer.com/; SMTP/2.7.2[client:2.12.0])
+List-Unsubscribe: <https://www.emailprivacytester.com/optout?code=5e175f8d8af4d70022fc5832> (Opt out from further emails from https://www.emailprivacytester.com)
+Date: Thu, 09 Jan 2020 17:16:49 +0000
+MIME-Version: 1.0
+
+------sinikael-?=_1-15785902099420.9555825560775772
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+<html lang=3D"en-GB" manifest=3D"https://api.emailprivacytester.com/callbac=
+k?code=3D5e175f8d8af4d70022fc5832&amp;test=3Dmanifest"><head><meta name=3D"=
+author" content=3D"Mike Cardwell. &lt;https://grepular.com/&gt;"/><meta nam=
+e=3D"copyright" content=3D"Copyright =C2=A92016 Mike Cardwell. All rights r=
+eserved."/><meta name=3D"description" content=3D"Email Privacy Tester"/><ti=
+tle>Email Privacy Tester</title><link rel=3D"alternate" type=3D"application=
+/rss+xml" href=3D"https://api.emailprivacytester.com/callback?code=3D5e175f=
+8d8af4d70022fc5832&amp;test=3Drss"/><link rel=3D"alternate" type=3D"applica=
+tion/atom+xml" href=3D"https://api.emailprivacytester.com/callback?code=3D5=
+e175f8d8af4d70022fc5832&amp;test=3Datom"/><script type=3D"text/javascript" =
+src=3D"https://api.emailprivacytester.com/callback?code=3D5e175f8d8af4d7002=
+2fc5832&amp;test=3Djs"></script><link rel=3D"stylesheet" type=3D"text/css" =
+href=3D"https://api.emailprivacytester.com/callback?code=3D5e175f8d8af4d700=
+22fc5832&amp;test=3Dcss"/><link rel=3D"stylesheet" type=3D"text/css" href=
+=3D"cid:5e175f8d8af4d70022fc5832.css@www.emailprivacytester.com"/><link rel=
+=3D"search" type=3D"application/opensearchdescription+xml" href=3D"https://=
+api.emailprivacytester.com/callback?code=3D5e175f8d8af4d70022fc5832&amp;tes=
+t=3Dopensearch"/><meta content=3D"1; URL=3Dhttps://api.emailprivacytester.c=
+om/callback?code=3D5e175f8d8af4d70022fc5832&amp;test=3DmetaRefresh"/></head=
+><body><p style=3D"border-bottom:1px solid #000;padding-bottom:1em;"><span =
+style=3D"font-size:1.4em;border-bottom:1px solid #333;">Email Privacy Teste=
+r</span><br/><br/>This is your test email from the Email Privacy Tester. Pl=
+ease ignore everything after this line. Clicking on anything will skew the =
+results.</p><p style=3D"background-image:url(&#x27;https://api.emailprivacy=
+tester.com/callback?code=3D5e175f8d8af4d70022fc5832&amp;test=3DbackgroundIm=
+age&#x27;);"></p><p style=3D"content:url(&#x27;https://api.emailprivacytest=
+er.com/callback?code=3D5e175f8d8af4d70022fc5832&amp;test=3DcssContent&#x27;=
+);"></p><p style=3D"behavior:url(&#x27;https://api.emailprivacytester.com/c=
+allback?code=3D5e175f8d8af4d70022fc5832&amp;test=3DcssBehavior&#x27;) url(&=
+#x27;https://api.emailprivacytester.com/callback?code=3D5e175f8d8af4d70022f=
+c5832&amp;test=3DcssBehavior&#x27;);"></p><style type=3D"text/css"></style>=
+<style type=3D"text/css"></style><div id=3D"cssEscape"></div><style type=3D=
+"text/css"></style><object type=3D"image/svg+xml" data=3D"cid:5e175f8d8af4d=
+70022fc5832.svg@www.emailprivacytester.com"><embed type=3D"image/svg+xml" s=
+rc=3D"cid:5e175f8d8af4d70022fc5832.svg@www.emailprivacytester.com"/></objec=
+t><iframe src=3D"cid:5e175f8d8af4d70022fc5832.svg@www.emailprivacytester.co=
+m" width=3D"1" height=3D"1"></iframe><span></span><img width=3D"16" height=
+=3D"16" src=3D"https://api.emailprivacytester.com/callback?code=3D5e175f8d8=
+af4d70022fc5832&amp;test=3Dimg"/><img src=3D"#" width=3D"16" height=3D"16"/=
+><input type=3D"image" src=3D"https://api.emailprivacytester.com/callback?c=
+ode=3D5e175f8d8af4d70022fc5832&amp;test=3DimageSubmit"/><a href=3D"http://5=
+e175f8d8af4d70022fc5832.anchor-test.ept.emailprivacytester.com"></a><link r=
+el=3D"dns-prefetch" href=3D"http://5e175f8d8af4d70022fc5832.link-test.ept.e=
+mailprivacytester.com"/><link rel=3D"prefetch" href=3D"https://api.emailpri=
+vacytester.com/callback?code=3D5e175f8d8af4d70022fc5832&amp;test=3DlinkPref=
+etch"/><video src=3D"https://api.emailprivacytester.com/callback?code=3D5e1=
+75f8d8af4d70022fc5832&amp;test=3Dvideo" width=3D"1" height=3D"1"></video><v=
+ideo poster=3D"https://api.emailprivacytester.com/callback?code=3D5e175f8d8=
+af4d70022fc5832&amp;test=3DvideoPoster" width=3D"1" height=3D"1"><source sr=
+c=3D"https://api.emailprivacytester.com/callback?code=3D5e175f8d8af4d70022f=
+c5832&amp;test=3DvideoMp4" type=3D"video/mp4; codecs=3D&quot;avc1.4D401E, m=
+p4a.40.2&quot;"/><source src=3D"https://api.emailprivacytester.com/callback=
+?code=3D5e175f8d8af4d70022fc5832&amp;test=3DvideoWebm" type=3D"video/webm; =
+codecs=3D&quot;vp8.0, vorbis&quot;"/><source src=3D"https://api.emailprivac=
+ytester.com/callback?code=3D5e175f8d8af4d70022fc5832&amp;test=3DvideoOgg" t=
+ype=3D"video/ogg; codecs=3D&quot;theora, vorbis&quot;"/></video><audio src=
+=3D"https://api.emailprivacytester.com/callback?code=3D5e175f8d8af4d70022fc=
+5832&amp;test=3Daudio" preload=3D"metadata" width=3D"1" height=3D"1"></audi=
+o><span></span><object width=3D"16" height=3D"16" data=3D"https://api.email=
+privacytester.com/callback?code=3D5e175f8d8af4d70022fc5832&amp;test=3Dobjec=
+tData" type=3D"image/png"></object><iframe src=3D"https://api.emailprivacyt=
+ester.com/callback?code=3D5e175f8d8af4d70022fc5832&amp;test=3Diframe" width=
+=3D"1" height=3D"1"></iframe><span></span><p style=3D"background-color:expr=
+ession((document.createElement(&#x27;img&#x27;))[&#x27;src&#x27;]=3Dhttps:/=
+/api.emailprivacytester.com/callback?code=3D5e175f8d8af4d70022fc5832&amp;te=
+st=3DcssExpression);"></p><object width=3D"1" height=3D"1"><param name=3D"m=
+ovie" value=3D"flash.swf"/><embed src=3D"https://api.emailprivacytester.com=
+/callback?code=3D5e175f8d8af4d70022fc5832&amp;test=3Dflash" width=3D"1" hei=
+ght=3D"1"/></object><iframe width=3D"1" height=3D"1" src=3D"view-source:htt=
+ps://api.emailprivacytester.com/callback?code=3D5e175f8d8af4d70022fc5832&am=
+p;test=3D/viewSource"></iframe><iframe width=3D"1" height=3D"1" src=3D"data=
+:text/html;charset=3Dutf-8,&amp;lt;html&amp;gt;&amp;lt;head&amp;gt;&amp;lt;=
+meta http-equiv=3D&amp;quot;Refresh&amp;quot; content=3D&amp;quot;1; URLhtt=
+ps://api.emailprivacytester.com/callback?code=3D5e175f8d8af4d70022fc5832&am=
+p;test=3DiframeRefresh&amp;quot;&amp;gt;&amp;lt;/head&amp;gt;&amp;lt;body&a=
+mp;gt;&amp;lt;/body&amp;gt;&amp;lt;/html&amp;gt;"></iframe><iframe width=3D=
+"1" height=3D"1" src=3D"data:text/html;charset=3Dutf-8,&amp;lt;html&amp;gt;=
+&amp;lt;head&amp;gt;&amp;lt;/head&amp;gt;&amp;lt;body&amp;gt;&amp;lt;img sr=
+c=3D&amp;quothttps://api.emailprivacytester.com/callback?code=3D5e175f8d8af=
+4d70022fc5832&amp;test=3DiframeImg&amp;quot;&amp;gt;&amp;lt;/body&amp;gt;&a=
+mp;lt;/html&amp;gt;"></iframe><span></span></body></html>
+------sinikael-?=_1-15785902099420.9555825560775772
+Content-Type: text/css; name=5e175f8d8af4d70022fc5832.css
+Content-ID: <5e175f8d8af4d70022fc5832.css@www.emailprivacytester.com>
+Content-Disposition: inline; filename=5e175f8d8af4d70022fc5832.css
+Content-Transfer-Encoding: quoted-printable
+
+* { background-image: url('https://api.emailprivacytester.com/callback?code=
+=3D5e175f8d8af4d70022fc5832&test=3DcssAttachment'); }
+------sinikael-?=_1-15785902099420.9555825560775772
+Content-Type: image/svg+xml; name=5e175f8d8af4d70022fc5832.svg
+Content-ID: <5e175f8d8af4d70022fc5832.svg@www.emailprivacytester.com>
+Content-Disposition: inline; filename=5e175f8d8af4d70022fc5832.svg
+Content-Transfer-Encoding: base64
+
+
+------sinikael-?=_1-15785902099420.9555825560775772
+Content-Type: image/svg+xml; name=5e175f8d8af4d70022fc5832-2.svg
+Content-ID: <5e175f8d8af4d70022fc5832.svg2@www.emailprivacytester.com>
+Content-Disposition: inline; filename=5e175f8d8af4d70022fc5832-2.svg
+Content-Transfer-Encoding: base64
+
+
+------sinikael-?=_1-15785902099420.9555825560775772
+Content-Type: image/png; name=<script>alert(unescape(/%58%53%53%28%32%29%20%66%6f%75%6e%64%2e%20%50%6c%65%61%73%65%20%72%65%70%6f%72%74%20%74%6f%20%78%73%73%40%65%6d%61%69%6c%70%72%69%76%61%63%79%74%65%73%74%65%72%2e%63%6f%6d/.source))</script>.5e175f8d8af4d70022fc5832.png
+Content-ID: <5e175f8d8af4d70022fc5832.js@www.emailprivacytester.com>
+Content-Disposition: inline; filename="<script>alert(unescape(/XSS(2) f%6fund. Please repo%72t to xss@emailprivacytester.com/.source))</script>.5e175f8d8af4d70022fc5832.png"
+
+
+------sinikael-?=_1-15785902099420.9555825560775772--
