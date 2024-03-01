@@ -160,8 +160,11 @@ export const sendMailRouter = router({
 
         const entryMetadata: ConvoEntryMetadata = {
           email: {
-            postalMessageId: sendMailPostalResponse.data.message_id,
-            postalMessages: transformedMessages
+            messageId: sendMailPostalResponse.data.message_id,
+            postalMessages: transformedMessages.map((message) => ({
+              ...message,
+              postalMessageId: sendMailPostalResponse.data.message_id
+            }))
           }
         };
 
