@@ -21,10 +21,11 @@
     "db:clean:r": "infisical run --env=local -- esno dbClean.ts"
   },
   "dependencies": {
-    "@planetscale/database": "^1.16.0",
+    "@uninbox/tsconfig": "workspace:*",
     "@uninbox/types": "workspace:*",
     "@uninbox/utils": "workspace:*",
-    "drizzle-orm": "^0.29.4",
+    "@planetscale/database": "^1.16.0",
+    "drizzle-orm": "^0.29.3",
     "mysql2": "^3.9.1"
   },
   "devDependencies": {

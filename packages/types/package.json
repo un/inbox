@@ -1,15 +1,18 @@
 {
-    "name": "@uninbox/types",
-    "private": true,
-    "version": "1.0.0",
-    "description": "",
-    "main": "index.ts",
-    "types": "index.ts",
-    "engines": {
-        "node": ">=20",
-        "pnpm": ">=8"
-    },
-    "devDependencies": {
-        "typescript": "^5.3.3"
-    }
+  "name": "@uninbox/types",
+  "private": true,
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.ts",
+  "types": "index.ts",
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=8"
+  },
+  "dependencies": {
+    "@uninbox/tsconfig": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  }
 }

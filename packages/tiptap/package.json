@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@uninbox/tsconfig": "workspace:*",
     "@tiptap/core": "^2.2.4",
     "@tiptap/html": "^2.2.4",
     "@tiptap/starter-kit": "^2.2.4",
