@@ -1,8 +1,8 @@
-import { isImage, toArray, isEmptyLike } from "./cheerio-utils";
-import { isText } from "domhandler";
-import findQuoteString from "./findQuoteString";
-import type { CheerioAPI } from "cheerio";
-import type { AnyNode, Element } from "domhandler";
+import { isImage, toArray, isEmptyLike } from './cheerio-utils';
+import { isText } from 'domhandler';
+import findQuoteString from './findQuoteString';
+import type { CheerioAPI } from 'cheerio';
+import type { AnyNode, Element } from 'domhandler';
 
 /**
  * Remove quotations (replied messages) and signatures from the HTML
@@ -30,20 +30,24 @@ function removeQuotations($: CheerioAPI): { didFindQuotation: boolean } {
 function findAllQuotes($: CheerioAPI) {
   const quoteElements = $(
     [
-      ".gmail_quote",
-      "blockquote",
+      '.gmail_quote',
+      'blockquote',
+      '[class*="quote"]', // quote partial match for class names
+      '[id*="quote"]', // quote partial match for id names
       // Signatures.
-      ".gmail_signature",
-      "signature",
+      '.gmail_signature',
+      'signature',
+      '[class*="sig"]', // sig partial match for class names
+      '[id*="sig"]' // sig partial match for id names
       // ENHANCEMENT: Add findQuotesAfterMessageHeaderBlock
       // ENHANCEMENT: Add findQuotesAfter__OriginalMessage__
-    ].join(", "),
+    ].join(', ')
   );
   // console.log(quoteElements.html());
   // Ignore inline quotes. Quotes that are followed by non-quote blocks.
   const quoteElementsSet = new Set(toArray(quoteElements));
   const withoutInlineQuotes = quoteElements.filter(
-    (i, el) => !isInlineQuote(el as Element, quoteElementsSet as Set<Element>),
+    (i, el) => !isInlineQuote(el as Element, quoteElementsSet as Set<Element>)
   );
 
   return withoutInlineQuotes;
