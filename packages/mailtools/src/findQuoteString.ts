@@ -1,56 +1,54 @@
-import { isDocument, isEmpty, getTopLevelElement } from "./cheerio-utils";
-import { isText, type Node } from "domhandler";
-import walkBackwards from "./walkBackwards";
-import type { CheerioAPI } from "cheerio";
+import { isDocument, isEmpty, getTopLevelElement } from './cheerio-utils';
+import { isText, type Node } from 'domhandler';
+import walkBackwards from './walkBackwards';
+import type { CheerioAPI } from 'cheerio';
+import { decode } from 'html-entities';
 
 // https://github.com/quentez/talonjs/blob/26de2941d9ea739e12853534717a820c72a6f8e9/src/Regexp.ts#L9:L9
 const ON_REGEXP = new RegExp(
-  `^\s*(${
+  `^\\s*(${
     // Beginning of the line.
     [
-      "On", // English,
-      "Le", // French
-      "W dniu", // Polish
-      "Op", // Dutch
-      "Am", // German
-      "På", // Norwegian
-      "Den", // Swedish, Danish,
-      "Em", // Portuguese
-      "El", // Spanish
-    ].join("|")
-  })
-  \s`,
-  "i",
+      'On', // English,
+      'Le', // French
+      'W dniu', // Polish
+      'Op', // Dutch
+      'Am', // German
+      'På', // Norwegian
+      'Den', // Swedish, Danish,
+      'Em', // Portuguese
+      'El' // Spanish
+    ].join('|')
+  })\\s`,
+  'i'
 );
 
 const WROTE_REGEXP = new RegExp(
-  `\s(${
+  `\\s(${
     // Ending of the line.
     [
-      "wrote",
-      "sent", // English
-      "a écrit", // French
-      "napisał", // Polish
-      "schreef",
-      "verzond",
-      "geschreven", // Dutch
-      "schrieb", // German
-      "skrev", // Norwegian, Swedish
-      "escreveu", // Portuguese
-      "escribió", // Spanish
-    ].join("|")
-  })
-  \s?:?\s*$
-`,
-  "i",
+      'wrote',
+      'sent', // English
+      'a écrit', // French
+      'napisał', // Polish
+      'schreef',
+      'verzond',
+      'geschreven', // Dutch
+      'schrieb', // German
+      'skrev', // Norwegian, Swedish
+      'escreveu', // Portuguese
+      'escribió' // Spanish
+    ].join('|')
+  })\\s?:?\\s*$`,
+  'i'
 );
 
 function isQuoteHeaderStart(el: Node): boolean {
-  return isText(el) && ON_REGEXP.test(el.data);
+  return isText(el) && ON_REGEXP.test(decode(el.data));
 }
 
 function isQuoteHeaderEnd(el: Node): boolean {
-  return isText(el) && WROTE_REGEXP.test(el.data);
+  return isText(el) && WROTE_REGEXP.test(decode(el.data));
 }
 
 /**
