@@ -443,6 +443,9 @@ importers:
       email-validator:
         specifier: ^2.0.4
         version: 2.0.4
+      html-entities:
+        specifier: ^2.4.0
+        version: 2.4.0
       htmlparser2:
         specifier: ^9.1.0
         version: 9.1.0
@@ -11153,6 +11156,10 @@ packages:
     engines: {node: '>=18'}
     dependencies:
       whatwg-encoding: 3.1.1
+    dev: false
+
+  /html-entities@2.4.0:
+    resolution: {integrity: sha512-igBTJcNNNhvZFRtm8uA6xMY6xYleeDwn3PeBCkDz7tHttv4F2hsDI2aPgNERWzvRcNYHNT3ymRaQzllmXj4YsQ==}
     dev: false
 
   /html-tags@3.3.1:
