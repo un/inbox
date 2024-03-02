@@ -1,15 +1,14 @@
-import fs from "fs";
-import path from "path";
-import prettier from "prettier";
-import sanitizeHtml from "sanitize-html";
+import fs from 'fs';
+import path from 'path';
+import prettier from 'prettier';
 
 async function formatHtml(html: string) {
-  return await prettier.format(html, {
-    parser: "html",
-    endOfLine: "lf",
-    printWidth: 150,
-    __embeddedInHtml: true,
+  const x = await prettier.format(html, {
+    parser: 'html',
+    endOfLine: 'lf',
+    printWidth: 150
   });
+  return x;
 }
 
 /**

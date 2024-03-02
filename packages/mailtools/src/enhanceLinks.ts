@@ -1,6 +1,6 @@
-import type { CheerioAPI } from "cheerio";
-import { validate as isValidEmail } from "email-validator";
-import isValidDomain from "is-valid-domain";
+import type { CheerioAPI } from 'cheerio';
+import { validate as isValidEmail } from 'email-validator';
+import isValidDomain from 'is-valid-domain';
 
 export const hasProtocol = (link: string) => {
   const lowerCaseLink = link.toLowerCase();
@@ -12,11 +12,11 @@ export const hasProtocol = (link: string) => {
  * with a protocol and adds one automatically.
  */
 const addHttpsToRelativeLinks = ($: CheerioAPI) => {
-  $("a").each((_, link) => {
+  $('a').each((_, link) => {
     const href = link.attribs.href;
 
     if (href && !hasProtocol(href)) {
-      if (isValidDomain(href.split("/")[0])) {
+      if (isValidDomain(href.split('/')[0] || '')) {
         // Valid domains are prepended with https://
         link.attribs.href = `https://${href}`;
       } else if (isValidEmail(href)) {
@@ -28,11 +28,11 @@ const addHttpsToRelativeLinks = ($: CheerioAPI) => {
 };
 
 const addTitlesToLinks = ($: CheerioAPI) => {
-  $("a").each((_, link) => {
+  $('a').each((_, link) => {
     if (link.attribs.title) {
       link.attribs.title += ` (${link.attribs.href})`;
     } else {
-      link.attribs.title = link.attribs.href;
+      link.attribs.title = link.attribs.href || '';
     }
   });
 };

@@ -1,4 +1,4 @@
-import type { PrepareMessageOptions } from "../../prepareMessage";
+import type { PrepareMessageOptions } from '../../prepareMessage';
 
 const testOptions: PrepareMessageOptions = {
   noQuotations: true,
@@ -6,7 +6,7 @@ const testOptions: PrepareMessageOptions = {
   enhanceLinks: true,
   noRemoteContent: true,
   forceViewport: '<meta name="viewport" content="width=device-width" />',
-  includeStyle: ".customStyle { background: red; }",
+  includeStyle: '.customStyle { background: red; }'
 };
 
 export default testOptions;
