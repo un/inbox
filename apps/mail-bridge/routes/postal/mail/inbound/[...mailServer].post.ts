@@ -18,7 +18,6 @@ export default eventHandler(async (event) => {
 
   // read and parse the body
   const body: postalEmailPayload = await readBody(event);
-  console.log('🔥', body);
   if (typeof body.message !== 'string') {
     console.error('Error: body.message is undefined or not a string.');
     // Handle the error appropriately, e.g., send a response indicating the bad request
@@ -31,6 +30,7 @@ export default eventHandler(async (event) => {
 
   //! verify email auth (DKIM, SPF, etc.)
 
+  // console.log('🔥', { originalMessage: message });
   let {
     inReplyTo,
     subject,
@@ -39,6 +39,7 @@ export default eventHandler(async (event) => {
     html: messageBodyHtml,
     text: messageBodyPlainText
   } = await simpleParser(message);
+
   inReplyTo = inReplyTo ? inReplyTo.replace(/^<|>$/g, '') : '';
   subject = subject ? subject.replace(/^(RE:|FW:)\s*/i, '').trim() : '';
   messageId = messageId ? messageId.replace(/^<|>$/g, '') : '';
@@ -47,10 +48,10 @@ export default eventHandler(async (event) => {
   messageBodyHtml = messageBodyHtml ? messageBodyHtml.replace(/\n/g, '') : '';
 
   //console.log('🔥', { inReplyTo, subject, messageId, date, messageBodyHtml });
-  console.log('🔥', { messageBodyPlainText });
 
   const preapredMessage = prepareMessage(messageBodyHtml, {
-    noQuotations: true
+    noQuotations: true,
+    cleanStyles: true
     // autolink = false,
     // enhanceLinks = false,
     // forceViewport = false,
@@ -59,7 +60,9 @@ export default eventHandler(async (event) => {
     // remoteContentReplacements = {}
   });
 
-  // console.log('🔥', { preapredMessage });
+  console.log('🔥', { cleanedMessage: preapredMessage.messageHtml });
+
+  console.log('🔥', { preapredMessage });
 
   // // find the message in the DB
   // const existingMessage = await db.query.convoEntries.findFirst({
