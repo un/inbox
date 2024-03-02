@@ -1,74 +1,80 @@
+import { db } from '@uninbox/database';
+import { simpleParser } from 'mailparser';
+import { and, eq } from '@uninbox/database/orm';
+import { convoEntries } from '@uninbox/database/schema';
+import prepareMessage from '@uninbox/mailtools';
 import type { postalEmailPayload } from '../../../../types';
 /**
  * used for all incoming mail from Postal
  */
-function getType(value: any): string {
-  if (Array.isArray(value)) return 'array';
-  if (value === null) return 'null';
-  return typeof value;
-}
-
-function checkPayloadAgainstType(payload: any): string[] {
-  const expectedTypes: { [key: string]: string } = {
-    id: 'number',
-    rcpt_to: 'string',
-    mail_from: 'string',
-    token: 'string',
-    subject: 'string',
-    message_id: 'string',
-    timestamp: 'number',
-    size: 'string',
-    spam_status: 'string', // 'Spam' | 'NotSpam'
-    bounce: 'boolean',
-    received_with_ssl: 'boolean,null',
-    to: 'string',
-    cc: 'string,null',
-    from: 'string',
-    date: 'string', // Date is an object in JavaScript
-    in_reply_to: 'string,null',
-    references: 'string,null',
-    plain_body: 'string',
-    html_body: 'string',
-    auto_submitted: 'string,null', // 'no' | 'auto-generated' | 'auto-replied' | 'auto-notified'
-    attachment_quantity: 'number',
-    attachments: 'array',
-    replies_from_plain_body: 'string,null'
-  };
-
-  const missingKeys: string[] = [];
-  const incorrectTypeKeys: string[] = [];
-
-  Object.entries(expectedTypes).forEach(([key, expectedType]) => {
-    const value = payload[key];
-    const actualType = getType(value);
-    const exists = key in payload;
-    const typeMatches = expectedType.split(',').includes(actualType);
-
-    console.log(
-      `Key: ${key}, Exists: ${exists}, Expected Type: ${expectedType}, Actual Type: ${actualType}, Type Matches: ${typeMatches}`
-    );
-
-    if (!exists) {
-      missingKeys.push(key);
-    } else if (!typeMatches) {
-      incorrectTypeKeys.push(key);
-    }
-  });
-
-  console.log('Incorrect Type Keys:', incorrectTypeKeys);
-  return missingKeys;
-}
 
 export default eventHandler(async (event) => {
-  const [orgId, mailserverId] = event.context.params.mailServer.split('/');
+  sendNoContent(event, 200);
+  // console.log('🔥 new event');
+  const [orgIdStr, mailserverId] = event.context.params.mailServer.split('/');
+  const orgId = Number(orgIdStr);
 
-  const body = await readBody(event);
+  //! Verify org/mailserver
 
-  const missingKeys = checkPayloadAgainstType(body);
-  if (missingKeys.length > 0) {
-    console.log('Missing keys:', missingKeys);
-    // Handle the case where some keys are missing
+  // read and parse the body
+  const body: postalEmailPayload = await readBody(event);
+  console.log('🔥', body);
+  if (typeof body.message !== 'string') {
+    console.error('Error: body.message is undefined or not a string.');
+    // Handle the error appropriately, e.g., send a response indicating the bad request
+    // or log more information for debugging purposes.
+    return;
   }
 
-  return { status: "I'm Alive 🏝️" };
+  const message = Buffer.from(body.message, 'base64').toString('utf-8');
+  const { id: postalId, rcpt_to: mailTo, mail_from: mailFrom } = body;
+
+  //! verify email auth (DKIM, SPF, etc.)
+
+  let {
+    inReplyTo,
+    subject,
+    messageId,
+    date,
+    html: messageBodyHtml,
+    text: messageBodyPlainText
+  } = await simpleParser(message);
+  inReplyTo = inReplyTo ? inReplyTo.replace(/^<|>$/g, '') : '';
+  subject = subject ? subject.replace(/^(RE:|FW:)\s*/i, '').trim() : '';
+  messageId = messageId ? messageId.replace(/^<|>$/g, '') : '';
+  date = new Date(date);
+
+  messageBodyHtml = messageBodyHtml ? messageBodyHtml.replace(/\n/g, '') : '';
+
+  //console.log('🔥', { inReplyTo, subject, messageId, date, messageBodyHtml });
+  console.log('🔥', { messageBodyPlainText });
+
+  const preapredMessage = prepareMessage(messageBodyHtml, {
+    noQuotations: true
+    // autolink = false,
+    // enhanceLinks = false,
+    // forceViewport = false,
+    // noRemoteContent = false,
+    // includeStyle: false,
+    // remoteContentReplacements = {}
+  });
+
+  // console.log('🔥', { preapredMessage });
+
+  // // find the message in the DB
+  // const existingMessage = await db.query.convoEntries.findFirst({
+  //   where: and(
+  //     eq(convoEntries.orgId, orgId),
+  //     eq(convoEntries.emailMessageId, inReplyTo)
+  //   ),
+  //   columns: {
+  //     id: true,
+  //     convoId: true,
+  //     bodyPlainText: true
+  //   }
+  // });
+  // console.log('inReplyTo', inReplyTo);
+  // console.log({ existingMessage });
+
+  // return { status: "I'm Alive 🏝️" };
 });

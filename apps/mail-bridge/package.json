@@ -12,6 +12,7 @@
     "preview": "node .output/server/index.mjs"
   },
   "dependencies": {
+    "@u22n/mailtools": "^0.0.1",
     "@u22n/tsconfig": "^0.0.1",
     "@u22n/database": "workspace:*",
     "@u22n/postal-puppet": "workspace:*",
@@ -19,7 +20,9 @@
     "@u22n/utils": "workspace:*",
     "@trpc/client": "^10.45.1",
     "@trpc/server": "^10.45.1",
+    "@types/mailparser": "^3.4.4",
     "html-to-text": "^9.0.5",
+    "mailparser": "^3.6.9",
     "nitropack": "^2.8.1",
     "superjson": "^2.2.1",
     "trpc-nuxt": "^0.10.19",
