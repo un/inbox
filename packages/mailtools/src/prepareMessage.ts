@@ -29,7 +29,7 @@ export interface PrepareMessageOptions {
   /** Append the given style to the HTML <head> */
   includeStyle?: string;
   /** Remove specific styles that could affect the rendering of the html */
-  cleanStyles?: string;
+  cleanStyles?: boolean;
 }
 
 /**
