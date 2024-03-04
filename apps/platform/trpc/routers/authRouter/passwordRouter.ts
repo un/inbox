@@ -90,10 +90,11 @@ export const passwordRouter = router({
         .where(eq(accounts.userId, userId));
 
       // Invalidate all sessions
-      await lucia.invalidateUserSessions(user.session.userId);
+      if (input.invalidateAllSessions) {
+        await lucia.invalidateUserSessions(user.session.userId);
+      }
 
       // Set session for current device
-
       const { device, os } = UAParser(getHeader(ctx.event, 'User-Agent'));
       const userDevice =
         device.type === 'mobile' ? device.toString() : device.vendor;
