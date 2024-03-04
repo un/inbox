@@ -2,18 +2,21 @@
   const { $trpc } = useNuxtApp();
 
   onMounted(async () => {
-    const { slug } = await $trpc.user.defaults.getDefaultOrgSlug.query({});
-    console.log(slug);
-    if (!slug) {
+    const { defaultOrgSlug } = await $trpc.user.defaults.redirectionData.query(
+      {}
+    );
+
+    if (!defaultOrgSlug) {
       return navigateTo(`/join/org`);
     }
+
     setTimeout(() => {
-      navigateTo(`/${slug}`);
+      navigateTo(`/${defaultOrgSlug}/convo`);
     }, 500);
   });
 </script>
 <template>
-  <div class="h-full w-full flex items-center justify-center">
-    <span class="text-3xl font-display">Redirecting...</span>
+  <div class="flex h-full w-full items-center justify-center">
+    <span class="font-display text-3xl">Redirecting...</span>
   </div>
 </template>

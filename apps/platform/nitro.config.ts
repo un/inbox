@@ -58,7 +58,10 @@ export default defineNitroConfig({
         origin: process.env.WEBAPP_URL || 'http://localhost:3000'
       }
     },
-    authJs: {},
+    timeTillOrphanedUser:
+      process.env.NODE_ENV === 'dev'
+        ? 1 * 60 * 1000 // 1 minute
+        : 30 * 60 * 1000, // 30 minutes
     realtime: {
       url: process.env.WEBAPP_REALTIME_URL || '',
       key: process.env.WEBAPP_REALTIME_KEY || ''

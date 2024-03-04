@@ -24,7 +24,8 @@ export const lucia = new Lucia(adapter, {
     return {
       id: user.id,
       publicId: user.publicId,
-      username: user.username
+      username: user.username,
+      twoFactorEnabled: user.twoFactorSecret !== null
     };
   }
 });
@@ -44,6 +45,7 @@ declare module 'lucia' {
     id: number;
     publicId: string;
     username: string;
+    twoFactorSecret: string | null;
   }
 }
 

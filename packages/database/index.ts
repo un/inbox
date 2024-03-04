@@ -22,6 +22,6 @@ const connectionOptions = {
   logger: false,
   schema
 };
-//@ts-expect-error - remove after merge of https://github.com/drizzle-team/drizzle-orm/pull/1801
+
 export const db = drizzle(client, connectionOptions);
 export type DBType = typeof db;

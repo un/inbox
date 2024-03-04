@@ -29,16 +29,84 @@ export const passwordRouter = router({
       const { db, user } = ctx;
       const userId = user.id;
 
+      const userData = await db.query.users.findFirst({
+        where: eq(users.id, userId),
+        columns: {
+          id: true,
+          publicId: true,
+          username: true,
+          createdAt: true
+        },
+        with: {
+          account: {
+            columns: {
+              passwordHash: true
+            },
+            with: {
+              authenticators: {
+                columns: {
+                  nickname: true
+                }
+              }
+            }
+          }
+        }
+      });
+
+      if (!userData) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'User not found'
+        });
+      }
+
+      // Check if password or passkey is not set and timeTillOrphaned is passed
+      if (
+        !(
+          userData.account.passwordHash ||
+          userData.account.authenticators.length > 0
+        ) &&
+        new Date().getTime() >=
+          userData.createdAt.getTime() + useRuntimeConfig().timeTillOrphanedUser
+      ) {
+        // remove orphaned user before returning
+        await db.delete(users).where(eq(users.id, userData.id));
+
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'User not found'
+        });
+      }
+
       const hashedPassword = await new Argon2id().hash(input.password);
 
       await db
         .update(accounts)
         .set({
-          passwordEnabled: true,
           passwordHash: hashedPassword
         })
         .where(eq(accounts.userId, userId));
 
+      // Invalidate all sessions
+      await lucia.invalidateUserSessions(user.session.userId);
+
+      // Set session for current device
+
+      const { device, os } = UAParser(getHeader(ctx.event, 'User-Agent'));
+      const userDevice =
+        device.type === 'mobile' ? device.toString() : device.vendor;
+
+      const userSession = await lucia.createSession(userData.publicId, {
+        user: {
+          id: userData.id,
+          username: userData.username,
+          publicId: userData.publicId
+        },
+        device: userDevice || 'Unknown',
+        os: os.name || 'Unknown'
+      });
+      const cookie = lucia.createSessionCookie(userSession.id);
+      setCookie(ctx.event, cookie.name, cookie.value, cookie.attributes);
       return { success: true };
     }),
 
@@ -75,8 +143,7 @@ export const passwordRouter = router({
           account: {
             columns: {
               id: true,
-              passwordHash: true,
-              passwordEnabled: true
+              passwordHash: true
             }
           }
         }
@@ -89,13 +156,10 @@ export const passwordRouter = router({
         });
       }
 
-      if (
-        !userResponse.account.passwordEnabled ||
-        !userResponse.account.passwordHash
-      ) {
+      if (!userResponse.account.passwordHash) {
         throw new TRPCError({
           code: 'METHOD_NOT_SUPPORTED',
-          message: 'Password signin is not enabled'
+          message: 'Password sign-in is not enabled'
         });
       }
 
@@ -126,7 +190,8 @@ export const passwordRouter = router({
       const cookie = lucia.createSessionCookie(userSession.id);
       setCookie(ctx.event, cookie.name, cookie.value, cookie.attributes);
 
-      await db.update(users)
+      await db
+        .update(users)
         .set({ lastLoginAt: new Date() })
         .where(eq(users.id, userResponse.id));
 

@@ -4,7 +4,7 @@ import { eq } from '@uninbox/database/orm';
 import { users } from '@uninbox/database/schema';
 
 export const defaultsRouter = router({
-  getDefaultOrgSlug: userProcedure
+  redirectionData: userProcedure
     .input(z.object({}).strict())
     .query(async ({ ctx }) => {
       const { db, user } = ctx;
@@ -25,6 +25,8 @@ export const defaultsRouter = router({
         }
       });
 
-      return { slug: userDefaultOrgSlug?.orgMemberships[0]?.org?.slug || "" };
+      return {
+        defaultOrgSlug: userDefaultOrgSlug?.orgMemberships[0]?.org?.slug || ''
+      };
     })
 });

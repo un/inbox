@@ -4,13 +4,12 @@ import type { DBType } from '@uninbox/database';
 import { eq } from '@uninbox/database/orm';
 import { accounts, users } from '@uninbox/database/schema';
 import { nanoId } from '@uninbox/utils';
-import { isFakeEmail } from 'fakefilter';
 import { UAParser } from 'ua-parser-js';
 import { blockedUsernames, reservedUsernames } from '../../../utils/signup';
 import { TRPCError } from '@trpc/server';
 import { lucia } from '../../../utils/auth';
 import { zodSchemas } from '@uninbox/utils';
-import { getHeader, setCookie } from '#imports';
+import { getHeader, setCookie, useRuntimeConfig } from '#imports';
 
 async function validateUsername(
   db: DBType,
@@ -19,15 +18,57 @@ async function validateUsername(
   available: boolean;
   error: string | null;
 }> {
-  const userId = await db
-    .select({ id: users.id })
-    .from(users)
-    .where(eq(users.username, username));
-  if (userId.length !== 0) {
-    return {
-      available: false,
-      error: 'Already taken'
-    };
+  // Find user by username with constrains
+  // If username is already taken but there is no password or passkey set, then it's available if the time since created is more than 30 minutes
+  //! TODO: We also need a corn job that will delete these users from time to time
+
+  const registeredUser = await db.query.users.findFirst({
+    where: eq(users.username, username),
+    columns: {
+      id: true,
+      createdAt: true
+    },
+    with: {
+      account: {
+        columns: {
+          passwordHash: true
+        },
+        with: {
+          authenticators: {
+            columns: {
+              nickname: true
+            }
+          }
+        }
+      }
+    }
+  });
+
+  if (registeredUser) {
+    if (
+      registeredUser.account.passwordHash ||
+      registeredUser.account.authenticators.length > 0
+    ) {
+      return {
+        available: false,
+        error: 'Already taken'
+      };
+    }
+
+    // If orphaned user, then it's available if the time since created is more than 30 minutes
+    if (
+      new Date().getTime() >=
+      registeredUser.createdAt.getTime() +
+        useRuntimeConfig().timeTillOrphanedUser
+    ) {
+      // remove orphaned user before returning
+      await db.delete(users).where(eq(users.id, registeredUser.id));
+
+      return {
+        available: true,
+        error: null
+      };
+    }
   }
   if (blockedUsernames.includes(username.toLowerCase())) {
     return {
@@ -48,15 +89,6 @@ async function validateUsername(
   };
 }
 
-async function validateEmailAddress(email: string): Promise<{
-  validEmail: boolean;
-}> {
-  const fakeEmail = isFakeEmail(email);
-  return {
-    validEmail: !fakeEmail
-  };
-}
-
 export const signupRouter = router({
   checkUsernameAvailability: limitedProcedure
     .input(
@@ -68,21 +100,10 @@ export const signupRouter = router({
       return await validateUsername(ctx.db, input.username);
     }),
 
-  validateEmailAddress: limitedProcedure
-    .input(
-      z.object({
-        email: z.string().email()
-      })
-    )
-    .query(async ({ input }) => {
-      return await validateEmailAddress(input.email);
-    }),
-
   registerUser: limitedProcedure
     .input(
       z.object({
-        username: zodSchemas.username(),
-        email: z.string().email()
+        username: zodSchemas.username()
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -93,17 +114,11 @@ export const signupRouter = router({
         ctx.db,
         input.username
       );
-      const { validEmail } = await validateEmailAddress(input.email);
+
       if (!validName) {
         throw new TRPCError({
           code: 'FORBIDDEN',
           message: 'Username is not available to register'
-        });
-      }
-      if (!validEmail) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'Email is not valid'
         });
       }
 
@@ -121,9 +136,7 @@ export const signupRouter = router({
 
       const userId = +insertUserResponse.insertId;
       await db.insert(accounts).values({
-        userId: userId,
-        recoveryEmail: input.email,
-        recoveryEmailEnabled: true
+        userId
       });
 
       const { device, os } = UAParser(getHeader(ctx.event, 'User-Agent'));
@@ -140,16 +153,17 @@ export const signupRouter = router({
         os: os.name || 'Unknown'
       });
       const cookie = lucia.createSessionCookie(userSession.id);
+      // Set cookie expiry to 30 min, so that user have to add password/passkey to continue
+      cookie.attributes.expires = new Date(
+        Date.now() + useRuntimeConfig().timeTillOrphanedUser
+      );
       setCookie(ctx.event, cookie.name, cookie.value, cookie.attributes);
 
-      await db.update(users)
+      await db
+        .update(users)
         .set({ lastLoginAt: new Date() })
         .where(eq(users.id, userId));
 
-      //! TODO: Send user email verification
-
-      return {
-        success: true
-      };
+      return {};
     })
 });

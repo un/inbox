@@ -1,6 +1,8 @@
 {
   "version": "0.2",
-  "ignorePaths": ["package.json"],
+  "ignorePaths": [
+    "package.json"
+  ],
   "dictionaryDefinitions": [],
   "dictionaries": [],
   "words": [
@@ -21,6 +23,7 @@
     "superjson",
     "tinyint",
     "tiptap",
+    "totp",
     "trpc",
     "Typesafe",
     "uninbox",
@@ -31,6 +34,8 @@
     "vueuse",
     "waitlist"
   ],
-  "ignoreWords": ["ABCDEFGHJKMNPQRSTVWXYZ"],
+  "ignoreWords": [
+    "ABCDEFGHJKMNPQRSTVWXYZ"
+  ],
   "import": []
 }
