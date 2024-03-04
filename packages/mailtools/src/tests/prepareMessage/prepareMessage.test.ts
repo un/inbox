@@ -1,5 +1,5 @@
 import { formatHtml } from '../utils';
-import prepareMessage from '../../prepareMessage';
+import { parseMessage } from '../../parseMessage';
 import { listFixtures, Fixture } from './fixtures';
 import testOptions from './prepareMessageTestOptions';
 
@@ -7,8 +7,8 @@ import testOptions from './prepareMessageTestOptions';
  * Run tests for a fixture
  */
 function checkFixture(fixture: Fixture) {
-  describe(fixture.name, () => {
-    const result = prepareMessage(fixture.input, testOptions);
+  describe(fixture.name, async () => {
+    const result = await parseMessage(fixture.input, testOptions);
 
     if (fixture.hasOutputComplete()) {
       it('completeHtml', async () => {
@@ -21,7 +21,7 @@ function checkFixture(fixture: Fixture) {
     if (fixture.hasOutputMessage()) {
       // console.log(result.messageHtml);
       it('messageHtml', async () => {
-        expect(await formatHtml(result.messageHtml)).toBe(
+        expect(await formatHtml(result.parsedMessageHtml)).toBe(
           await formatHtml(fixture.outputMessage)
         );
       });

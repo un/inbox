@@ -12,28 +12,31 @@ import appendStyle from './appendStyle';
 import fixBrokenHtml from './fixBrokenHtml';
 import { enhanceLinks as _enhanceLinks } from './enhanceLinks';
 import removeStyles from './removeStyles';
+import removeSignatures from './removeSignatures';
 
-export interface PrepareMessageOptions {
-  /** Remove quotations and signatures. Only affects the result messageHtml */
-  noQuotations?: boolean;
+export interface ParseMessageOptions {
+  /** Remove quotations. Only affects the result messageHtml */
+  cleanQuotations?: boolean;
+  /** Remove and return signatures. Only affects the result messageHtml */
+  cleanSignatures?: boolean;
   /** Automatically convert text links to anchor tags */
   autolink?: boolean;
   /** Fix broken links and add the href to the title tag */
   enhanceLinks?: boolean;
   /** Specific viewport to enforce. For example "<meta name="viewport" content="width=device-width">" */
-  forceViewport?: string;
+  forceViewport?: false | string;
   /** Replace remote images with a transparent image, and replace other remote URLs with '#' */
   noRemoteContent?: boolean;
   /** Replace remote content with custom URLs */
   remoteContentReplacements?: ReplacementOptions;
   /** Append the given style to the HTML <head> */
-  includeStyle?: string;
+  includeStyle?: false | string;
   /** Remove specific styles that could affect the rendering of the html */
-  cleanStyles?: boolean;
+  cleanStyles?: boolean | string[];
 }
 
 /**
- * Parse an HTML email and make transformation needed before displaying it to the user.
+ * Parse an HTML email and make transformation needed before returning it.
  * Returns the extracted body of the message, and the complete message for reference.
  *
  * Beside the optional, this always:
@@ -42,19 +45,26 @@ export interface PrepareMessageOptions {
  * - Remove tracking pixels
  * - Remove trailing whitespace
  */
-function prepareMessage(
+export async function parseMessage(
   emailHtml: string,
-  options: PrepareMessageOptions = {}
-): {
-  /** The complete message. */
+  options: ParseMessageOptions = {}
+): Promise<{
+  /** The original complete message. */
   completeHtml: string;
   /** The body of the message, stripped from secondary information */
-  messageHtml: string;
+  parsedMessageHtml: string;
   /** True if a quote or signature was found and stripped */
-  didFindQuotation: boolean;
-} {
+  didFindQuotation: boolean | null;
+  /** True if a signature was found and stripped */
+  didFindSignature: boolean | null;
+  /** The signature in plain text */
+  foundSignaturePlainText: string | null;
+  /** The signature in HTML */
+  foundSignatureHtml: string | null;
+}> {
   const {
-    noQuotations = false,
+    cleanQuotations = false,
+    cleanSignatures = false,
     autolink = false,
     enhanceLinks = false,
     forceViewport = false,
@@ -65,17 +75,20 @@ function prepareMessage(
   } = options;
 
   const result = {
-    messageHtml: emailHtml,
     completeHtml: emailHtml,
-    didFindQuotation: false
+    parsedMessageHtml: emailHtml,
+    didFindQuotation: null as boolean | null,
+    didFindSignature: null as boolean | null,
+    foundSignaturePlainText: null as string | null,
+    foundSignatureHtml: null as string | null
   };
 
   result.completeHtml = fixBrokenHtml(result.completeHtml);
-  result.messageHtml = result.completeHtml;
+  result.parsedMessageHtml = result.completeHtml;
 
   if (autolink) {
     result.completeHtml = linkify(result.completeHtml);
-    result.messageHtml = result.completeHtml;
+    result.parsedMessageHtml = result.completeHtml;
   }
 
   const $ = load(result.completeHtml);
@@ -101,15 +114,18 @@ function prepareMessage(
     appendStyle($, includeStyle);
   }
   if (cleanStyles) {
+    if (typeof cleanStyles !== 'boolean') {
+      removeStyles($, cleanStyles);
+    }
     removeStyles($);
   }
 
   removeTrailingWhitespace($);
   result.completeHtml = $.html();
-  result.messageHtml = result.completeHtml;
+  result.parsedMessageHtml = result.completeHtml;
 
   // Remove quotations
-  if (noQuotations) {
+  if (cleanQuotations) {
     const { didFindQuotation } = removeQuotations($);
 
     // if the actions above have resulted in an empty body,
@@ -120,7 +136,25 @@ function prepareMessage(
       result.didFindQuotation = didFindQuotation;
 
       removeTrailingWhitespace($);
-      result.messageHtml = $.html();
+      result.parsedMessageHtml = $.html();
+    }
+  }
+
+  // extract and return the signatures
+  if (cleanSignatures) {
+    const { didFindSignature, foundSignatureHtml, foundSignaturePlainText } =
+      removeSignatures($, cleanQuotations);
+
+    result.didFindSignature = didFindSignature;
+    result.foundSignatureHtml = foundSignatureHtml;
+    result.foundSignaturePlainText = foundSignaturePlainText;
+    // if the actions above have resulted in an empty body,
+    // then we should not remove quotations
+    if (containsEmptyText(getTopLevelElement($))) {
+      // Don't remove anything.
+    } else {
+      removeTrailingWhitespace($);
+      result.parsedMessageHtml = $.html();
     }
   }
 
@@ -135,6 +169,8 @@ function removeTrackers($: CheerioAPI): void {
     'img[height="0"]',
     'img[height="1"]',
     'img[src*="http://mailstat.us"]'
+    // add more known tracker ULRs here - potential lists for enhancement https://github.com/Foundry376/Mailspring/blob/e7daf5abf255aedfceadb33ef7209dc9101074a0/app/internal_packages/remove-tracking-pixels/lib/main.ts#L42, https://github.com/leavemealone-app/email-trackers/blob/master/trackers.txt,
+    // 'img[src*="http://mailstat.us"]'
   ];
 
   const query = TRACKERS_SELECTORS.join(', ');
@@ -159,5 +195,3 @@ function removeComments($: CheerioAPI): void {
       }
     });
 }
-
-export default prepareMessage;

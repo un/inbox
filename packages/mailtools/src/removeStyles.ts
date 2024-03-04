@@ -4,9 +4,8 @@ import type { CheerioAPI } from 'cheerio';
  * Remove specific style attributes from all dom elements.
  * Returns true once completed
  */
-function removeStyles($: CheerioAPI): boolean {
-  const cssAttributesToRemove = [
-    'color',
+function removeStyles($: CheerioAPI, styles?: string[]): boolean {
+  const cssAttributesToRemove = styles || [
     'background-color',
     'font-family',
     'font-size'
@@ -18,7 +17,11 @@ function removeStyles($: CheerioAPI): boolean {
     } else if (style) {
       const styles = style.split(';');
       const filteredStyles = styles.filter((style) => {
-        const propertyName = style.split(':')[0].trim();
+        const splitStyles = style.split(':');
+        if (!splitStyles[0]) {
+          return false;
+        }
+        const propertyName = splitStyles[0].trim() || '';
         return !cssAttributesToRemove.includes(propertyName);
       });
       if (

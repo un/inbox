@@ -1,7 +1,8 @@
-import type { PrepareMessageOptions } from '../../prepareMessage';
+import type { ParseMessageOptions } from '../../parseMessage';
 
-const testOptions: PrepareMessageOptions = {
-  noQuotations: true,
+const testOptions: ParseMessageOptions = {
+  cleanQuotations: true,
+  cleanSignatures: true,
   autolink: true,
   enhanceLinks: true,
   noRemoteContent: true,
