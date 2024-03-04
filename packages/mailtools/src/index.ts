@@ -1,6 +1,8 @@
-import linkify from "./linkify";
-import prepareMessage from "./prepareMessage";
-import { blockRemoteContent } from "./blockRemoteContent";
+import linkify from './linkify';
+import { parseMessage } from './parseMessage';
+import { blockRemoteContent } from './blockRemoteContent';
+import type { ReplacementOptions } from './blockRemoteContent';
+import type { ParseMessageOptions } from './parseMessage';
 
-export default prepareMessage;
-export { linkify, blockRemoteContent };
+export { parseMessage, linkify, blockRemoteContent };
+export type { ParseMessageOptions, ReplacementOptions };
