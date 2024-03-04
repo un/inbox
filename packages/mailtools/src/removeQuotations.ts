@@ -33,12 +33,7 @@ function findAllQuotes($: CheerioAPI) {
       '.gmail_quote',
       'blockquote',
       '[class*="quote"]', // quote partial match for class names
-      '[id*="quote"]', // quote partial match for id names
-      // Signatures.
-      '.gmail_signature',
-      'signature',
-      '[class*="sig"]', // sig partial match for class names
-      '[id*="sig"]' // sig partial match for id names
+      '[id*="quote"]' // quote partial match for id names
       // ENHANCEMENT: Add findQuotesAfterMessageHeaderBlock
       // ENHANCEMENT: Add findQuotesAfter__OriginalMessage__
     ].join(', ')
