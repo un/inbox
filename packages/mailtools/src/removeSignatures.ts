@@ -81,8 +81,8 @@ function findAllSignatures($: CheerioAPI) {
       // Signatures.
       '.gmail_signature',
       'signature',
-      '[class*="sig"]', // sig partial match for class names
-      '[id*="sig"]' // sig partial match for id names
+      '[class*="signature"]', // sig partial match for class names
+      '[id*="signature"]' // sig partial match for id names
     ].join(', ')
   );
 
