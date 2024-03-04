@@ -21,7 +21,8 @@ export const passwordRouter = router({
             .regex(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*\W)(?!.*\s).{8,}$/, {
               message:
                 'At least one digit, one lowercase letter, one uppercase letter, one special character, no whitespace allowed, minimum eight characters in length'
-            })
+            }),
+          invalidateAllSessions: z.boolean().default(false)
         })
         .strict()
     )
@@ -74,7 +75,8 @@ export const passwordRouter = router({
 
         throw new TRPCError({
           code: 'NOT_FOUND',
-          message: 'User not found'
+          message:
+            'Your account has been deleted due to not setting a password or passkey in required time, You can still create a new account with the same username if it has not been claimed'
         });
       }
 

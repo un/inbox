@@ -21,11 +21,21 @@ export const lucia = new Lucia(adapter, {
     };
   },
   getUserAttributes: (user) => {
+    const {
+      id,
+      publicId,
+      username,
+      passkeyEnabled,
+      passwordEnabled,
+      totpEnabled
+    } = user;
     return {
-      id: user.id,
-      publicId: user.publicId,
-      username: user.username,
-      twoFactorEnabled: user.twoFactorSecret !== null
+      id,
+      publicId,
+      username,
+      passwordEnabled,
+      totpEnabled,
+      passkeyEnabled
     };
   }
 });
@@ -45,7 +55,9 @@ declare module 'lucia' {
     id: number;
     publicId: string;
     username: string;
-    twoFactorSecret: string | null;
+    passwordEnabled: boolean;
+    totpEnabled: boolean;
+    passkeyEnabled: boolean;
   }
 }
 

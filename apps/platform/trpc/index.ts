@@ -1,7 +1,6 @@
 export * from '@trpc/server';
 import { router } from './trpc';
 import { createContext } from './createContext';
-import { emailRouter } from './routers/authRouter/emailRouter';
 import { passkeyRouter } from './routers/authRouter/passkeyRouter';
 import { passwordRouter } from './routers/authRouter/passwordRouter';
 import { testRouter } from './routers/testRouter';
@@ -24,7 +23,6 @@ export const trpcPlatformContext = createContext;
 
 const trpcPlatformAuthRouter = router({
   signup: signupRouter,
-  email: emailRouter,
   passkey: passkeyRouter,
   password: passwordRouter
 });
