@@ -9,9 +9,8 @@
     if (!defaultOrgSlug) {
       return navigateTo(`/join/org`);
     }
-
     setTimeout(() => {
-      navigateTo(`/${defaultOrgSlug}/convo`);
+      navigateTo(`/${defaultOrgSlug}`);
     }, 500);
   });
 </script>
