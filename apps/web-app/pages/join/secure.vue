@@ -457,7 +457,6 @@
           </div>
         </div>
       </div>
-      <hr class="border-top-1 border-1 w-full border-gray-200" />
       <div class="mt-3 w-full">
         <UnUiButton
           :label="buttonLabel"
