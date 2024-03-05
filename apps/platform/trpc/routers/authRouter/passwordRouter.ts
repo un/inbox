@@ -3,140 +3,86 @@ import { Argon2id } from 'oslo/password';
 import { limitedProcedure, router, userProcedure } from '../../trpc';
 import { eq } from '@uninbox/database/orm';
 import { accounts, users } from '@uninbox/database/schema';
-import { zodSchemas } from '@uninbox/utils';
+import { nanoId, zodSchemas } from '@uninbox/utils';
 import { TRPCError } from '@trpc/server';
-import { UAParser } from 'ua-parser-js';
-import { createError, getHeader, setCookie } from '#imports';
+import { createError, setCookie } from '#imports';
 import { lucia } from '../../../utils/auth';
+import { validateUsername } from './signupRouter';
+import { createLuciaSessionCookie } from '../../../utils/session';
 
 export const passwordRouter = router({
-  setUserPassword: userProcedure
+  signUpWithPassword: limitedProcedure
     .input(
-      z
-        .object({
-          password: z
-            .string()
-            .min(8, { message: 'Minimum 8 characters' })
-            .max(64)
-            .regex(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*\W)(?!.*\s).{8,}$/, {
-              message:
-                'At least one digit, one lowercase letter, one uppercase letter, one special character, no whitespace allowed, minimum eight characters in length'
-            }),
-          invalidateAllSessions: z.boolean().default(false)
-        })
-        .strict()
+      z.object({
+        username: zodSchemas.username(),
+        password: zodSchemas.password()
+      })
     )
     .mutation(async ({ ctx, input }) => {
-      const { db, user } = ctx;
-      const userId = user.id;
+      const { username, password } = input;
+      const { db } = ctx;
 
-      const userData = await db.query.users.findFirst({
-        where: eq(users.id, userId),
-        columns: {
-          id: true,
-          publicId: true,
-          username: true,
-          createdAt: true
-        },
-        with: {
-          account: {
-            columns: {
-              passwordHash: true
-            },
-            with: {
-              authenticators: {
-                columns: {
-                  nickname: true
-                }
-              }
-            }
-          }
-        }
+      // making sure someone doesn't bypass the client side validation
+      const { available, error } = await validateUsername(db, username);
+      if (!available) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: error
+        });
+      }
+
+      const passwordHash = await new Argon2id().hash(password);
+      const publicId = nanoId();
+
+      const userId = await db
+        .transaction(async (tx) => {
+          const newUser = await tx.insert(users).values({
+            username,
+            publicId
+          });
+          await tx.insert(accounts).values({
+            userId: Number(newUser.insertId),
+            passwordHash
+          });
+          return Number(newUser.insertId);
+        })
+        .catch((err) => {
+          console.error(err);
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Error creating user'
+          });
+        });
+
+      const cookie = await createLuciaSessionCookie(ctx.event, {
+        userId,
+        username,
+        publicId
       });
-
-      if (!userData) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'User not found'
-        });
-      }
-
-      // Check if password or passkey is not set and timeTillOrphaned is passed
-      if (
-        !(
-          userData.account.passwordHash ||
-          userData.account.authenticators.length > 0
-        ) &&
-        new Date().getTime() >=
-          userData.createdAt.getTime() + useRuntimeConfig().timeTillOrphanedUser
-      ) {
-        // remove orphaned user before returning
-        await db.delete(users).where(eq(users.id, userData.id));
-
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message:
-            'Your account has been deleted due to not setting a password or passkey in required time, You can still create a new account with the same username if it has not been claimed'
-        });
-      }
-
-      const hashedPassword = await new Argon2id().hash(input.password);
+      setCookie(ctx.event, cookie.name, cookie.value, cookie.attributes);
 
       await db
-        .update(accounts)
-        .set({
-          passwordHash: hashedPassword
-        })
-        .where(eq(accounts.userId, userId));
+        .update(users)
+        .set({ lastLoginAt: new Date() })
+        .where(eq(users.id, userId));
 
-      // Invalidate all sessions
-      if (input.invalidateAllSessions) {
-        await lucia.invalidateUserSessions(user.session.userId);
-      }
-
-      // Set session for current device
-      const { device, os } = UAParser(getHeader(ctx.event, 'User-Agent'));
-      const userDevice =
-        device.type === 'mobile' ? device.toString() : device.vendor;
-
-      const userSession = await lucia.createSession(userData.publicId, {
-        user: {
-          id: userData.id,
-          username: userData.username,
-          publicId: userData.publicId
-        },
-        device: userDevice || 'Unknown',
-        os: os.name || 'Unknown'
-      });
-      const cookie = lucia.createSessionCookie(userSession.id);
-      setCookie(ctx.event, cookie.name, cookie.value, cookie.attributes);
       return { success: true };
     }),
 
-  passwordSignIn: limitedProcedure
+  signInWithPassword: limitedProcedure
     .input(
-      z
-        .object({
-          turnstileToken: z.string(),
-          username: zodSchemas.username(2),
-          password: z
-            .string()
-            .min(8, { message: 'Minimum 8 characters' })
-            .max(64)
-            .regex(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*\W)(?!.*\s).{8,}$/, {
-              message:
-                'At least one digit, one lowercase letter, one uppercase letter, one special character, no whitespace allowed, minimum eight characters in length'
-            })
-        })
-        .strict()
+      z.object({
+        turnstileToken: z.string(),
+        // we allow min length of 2 for username if we plan to provide them in the future
+        username: zodSchemas.username(2),
+        password: zodSchemas.password()
+      })
     )
     .mutation(async ({ ctx, input }) => {
       const { db } = ctx;
 
-      const { username, password } = input;
-
       const userResponse = await db.query.users.findFirst({
-        where: eq(users.username, username),
+        where: eq(users.username, input.username),
         columns: {
           id: true,
           publicId: true,
@@ -145,7 +91,6 @@ export const passwordRouter = router({
         with: {
           account: {
             columns: {
-              id: true,
               passwordHash: true
             }
           }
@@ -168,7 +113,7 @@ export const passwordRouter = router({
 
       const validPassword = await new Argon2id().verify(
         userResponse.account.passwordHash,
-        password
+        input.password
       );
       if (!validPassword) {
         throw createError({
@@ -177,20 +122,12 @@ export const passwordRouter = router({
         });
       }
 
-      const { device, os } = UAParser(getHeader(ctx.event, 'User-Agent'));
-      const userDevice =
-        device.type === 'mobile' ? device.toString() : device.vendor;
-
-      const userSession = await lucia.createSession(userResponse.publicId, {
-        user: {
-          id: userResponse.id,
-          username: userResponse.username,
-          publicId: userResponse.publicId
-        },
-        device: userDevice || 'Unknown',
-        os: os.name || 'Unknown'
+      const { id: userId, username, publicId } = userResponse;
+      const cookie = await createLuciaSessionCookie(ctx.event, {
+        userId,
+        username,
+        publicId
       });
-      const cookie = lucia.createSessionCookie(userSession.id);
       setCookie(ctx.event, cookie.name, cookie.value, cookie.attributes);
 
       await db
@@ -198,6 +135,78 @@ export const passwordRouter = router({
         .set({ lastLoginAt: new Date() })
         .where(eq(users.id, userResponse.id));
 
+      return { success: true };
+    }),
+
+  updateUserPassword: userProcedure
+    .input(
+      z
+        .object({
+          oldPassword: zodSchemas.password(),
+          newPassword: zodSchemas.password(),
+          invalidateAllSessions: z.boolean().default(false)
+        })
+        .strict()
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { db, user } = ctx;
+      const userId = user.id;
+
+      const userData = await db.query.users.findFirst({
+        where: eq(users.id, userId),
+        columns: {
+          publicId: true,
+          username: true
+        },
+        with: {
+          account: {
+            columns: {
+              passwordHash: true
+            }
+          }
+        }
+      });
+
+      if (!userData) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'User not found'
+        });
+      }
+
+      const oldPasswordValid = await new Argon2id().verify(
+        userData.account.passwordHash,
+        input.oldPassword
+      );
+
+      if (!oldPasswordValid) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'Incorrect old password'
+        });
+      }
+
+      const passwordHash = await new Argon2id().hash(input.newPassword);
+
+      await db
+        .update(accounts)
+        .set({
+          passwordHash
+        })
+        .where(eq(accounts.userId, userId));
+
+      // Invalidate all sessions
+      if (input.invalidateAllSessions) {
+        await lucia.invalidateUserSessions(user.session.userId);
+      }
+
+      const cookie = await createLuciaSessionCookie(ctx.event, {
+        userId,
+        username: userData.username,
+        publicId: userData.publicId
+      });
+
+      setCookie(ctx.event, cookie.name, cookie.value, cookie.attributes);
       return { success: true };
     })
 });
