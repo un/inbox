@@ -7,58 +7,165 @@ import {
   RegistrationResponseJSON,
   AuthenticationResponseJSON
 } from '@simplewebauthn/types';
-import { nanoId } from '@uninbox/utils';
+import { nanoId, zodSchemas } from '@uninbox/utils';
 import { UAParser } from 'ua-parser-js';
 import { usePasskeys } from '../../../utils/auth/passkeys';
 import { usePasskeysDb } from '../../../utils/auth/passkeyDbAdaptor';
 import { setCookie, getCookie, getHeader } from '#imports';
 import { lucia } from '../../../utils/auth';
+import { validateUsername } from './signupRouter';
+import { createLuciaSessionCookie } from '../../../utils/session';
 
 export const passkeyRouter = router({
-  generateNewPasskeyChallenge: userProcedure
+  // generateNewPasskeyChallenge: userProcedure
+  //   .input(
+  //     z
+  //       .object({
+  //         authenticatorType: z.enum(['platform', 'cross-platform'])
+  //       })
+  //       .strict()
+  //   )
+  //   .query(async ({ ctx, input }) => {
+  //     const { db, user } = ctx;
+
+  //     const userId = user.id;
+  //     // Update to use read replicas when implemented - primary db
+  //     const userResponse = await db.query.users.findFirst({
+  //       where: eq(users.id, userId),
+  //       columns: {
+  //         id: true,
+  //         publicId: true,
+  //         username: true
+  //       }
+  //     });
+
+  //     if (!userResponse) {
+  //       throw new TRPCError({
+  //         code: 'BAD_REQUEST',
+  //         message: 'User not found'
+  //       });
+  //     }
+
+  //     const authenticatorAttachment = input.authenticatorType;
+
+  //     const passkeyOptions = await usePasskeys.generateRegistrationOptions({
+  //       userId: userId,
+  //       userPublicId: userResponse.publicId,
+  //       userName: userResponse.username,
+  //       userDisplayName: userResponse.username,
+  //       authenticatorAttachment: authenticatorAttachment
+  //     });
+
+  //     return { options: passkeyOptions };
+  //   }),
+
+  signUpWithPasskeyStart: limitedProcedure
     .input(
-      z
-        .object({
-          canUsePasskeyDirect: z.boolean()
-        })
-        .strict()
+      z.object({
+        username: zodSchemas.username(),
+        authenticatorType: z.enum(['platform', 'cross-platform'])
+      })
     )
-    .query(async ({ ctx, input }) => {
-      const { db, user } = ctx;
-
-      const userId = user.id;
-      // Update to use read replicas when implemented - primary db
-      const userResponse = await db.query.users.findFirst({
-        where: eq(users.id, userId),
-        columns: {
-          id: true,
-          publicId: true,
-          username: true
-        }
+    .query(async ({ input }) => {
+      const { username, authenticatorType } = input;
+      const publicId = nanoId();
+      const passkeyOptions = await usePasskeys.generateRegistrationOptions({
+        userDisplayName: username,
+        userName: username,
+        userPublicId: publicId,
+        authenticatorAttachment: authenticatorType
       });
-
-      if (!userResponse) {
+      return { publicId, options: passkeyOptions };
+    }),
+  signUpWithPasskeyFinish: limitedProcedure
+    .input(
+      z.object({
+        registrationResponseRaw: z.any(),
+        username: zodSchemas.username(),
+        publicId: z.string(),
+        nickname: z.string().min(3).max(32).default('Passkey')
+      })
+    )
+    .query(async ({ input, ctx }) => {
+      const { db } = ctx;
+      const registrationResponse =
+        input.registrationResponseRaw as RegistrationResponseJSON;
+      const passkeyVerification = await usePasskeys.verifyRegistrationResponse({
+        registrationResponse: registrationResponse,
+        publicId: input.publicId
+      });
+      if (
+        !passkeyVerification.verified ||
+        !passkeyVerification.registrationInfo
+      ) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
-          message: 'User not found'
+          message: 'Passkey verification failed'
         });
       }
 
-      const authenticatorAttachment = input.canUsePasskeyDirect
-        ? 'platform'
-        : 'cross-platform';
+      // making sure someone doesn't bypass the client side validation
+      const { available, error } = await validateUsername(db, input.username);
+      if (!available) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: error
+        });
+      }
 
-      const passkeyOptions = await usePasskeys.generateRegistrationOptions({
-        userId: userId,
-        userPublicId: userResponse.publicId,
-        userName: userResponse.username,
-        userDisplayName: userResponse.username,
-        authenticatorAttachment: authenticatorAttachment
+      const userId = await db
+        .transaction(async (tx) => {
+          const newUser = await tx.insert(users).values({
+            username: input.username,
+            publicId: input.publicId
+          });
+          await tx.insert(accounts).values({
+            userId: Number(newUser.insertId)
+          });
+          const insertPasskey = await usePasskeysDb.createAuthenticator(
+            {
+              accountId: Number(newUser.insertId),
+              credentialID: passkeyVerification.registrationInfo.credentialID,
+              credentialPublicKey:
+                passkeyVerification.registrationInfo.credentialPublicKey,
+              credentialDeviceType:
+                passkeyVerification.registrationInfo.credentialDeviceType,
+              credentialBackedUp:
+                passkeyVerification.registrationInfo.credentialBackedUp,
+              transports: registrationResponse.response.transports,
+              counter: passkeyVerification.registrationInfo.counter
+            },
+            input.nickname,
+            tx
+          );
+
+          if (!insertPasskey.credentialID) {
+            tx.rollback();
+            throw new TRPCError({
+              code: 'INTERNAL_SERVER_ERROR',
+              message:
+                'Something went wrong adding your passkey, please try again'
+            });
+          }
+          return Number(newUser.insertId);
+        })
+        .catch((err) => {
+          console.error(err);
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message:
+              'Something went wrong adding your passkey, please try again'
+          });
+        });
+
+      const cookie = await createLuciaSessionCookie(ctx.event, {
+        userId,
+        username: input.username,
+        publicId: input.publicId
       });
-
-      return { options: passkeyOptions };
+      setCookie(ctx.event, cookie.name, cookie.value, cookie.attributes);
+      return { success: true };
     }),
-
   addNewPasskey: userProcedure
     .input(
       z
@@ -71,13 +178,13 @@ export const passkeyRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { db, user } = ctx;
 
-      const userId = user.id;
+      const publicId = user.session.attributes.user.publicId;
       const registrationResponse =
         input.registrationResponseRaw as RegistrationResponseJSON;
 
       const passkeyVerification = await usePasskeys.verifyRegistrationResponse({
         registrationResponse: registrationResponse,
-        userId: userId
+        publicId: publicId
       });
 
       if (
@@ -91,7 +198,7 @@ export const passkeyRouter = router({
       }
 
       const userAccount = await db.query.accounts.findFirst({
-        where: eq(accounts.userId, userId),
+        where: eq(accounts.userId, user.id),
         columns: {
           id: true
         }
@@ -131,7 +238,7 @@ export const passkeyRouter = router({
     }),
 
   generatePasskeyChallenge: limitedProcedure
-    .input(z.object({ turnstileToken: z.string() }).strict())
+    .input(z.object({}))
     .query(async ({ ctx }) => {
       const { event } = ctx;
 
@@ -227,7 +334,8 @@ export const passkeyRouter = router({
       const cookie = lucia.createSessionCookie(userSession.id);
       setCookie(ctx.event, cookie.name, cookie.value, cookie.attributes);
 
-      await db.update(users)
+      await db
+        .update(users)
         .set({ lastLoginAt: new Date() })
         .where(eq(users.id, user.id));
 
