@@ -9,6 +9,8 @@ import { createError, setCookie } from '#imports';
 import { lucia } from '../../../utils/auth';
 import { validateUsername } from './signupRouter';
 import { createLuciaSessionCookie } from '../../../utils/session';
+import { decodeHex } from 'oslo/encoding';
+import { TOTPController } from 'oslo/otp';
 
 export const passwordRouter = router({
   signUpWithPassword: limitedProcedure
@@ -75,11 +77,25 @@ export const passwordRouter = router({
         turnstileToken: z.string(),
         // we allow min length of 2 for username if we plan to provide them in the future
         username: zodSchemas.username(2),
-        password: zodSchemas.password()
+        password: zodSchemas.password().optional(),
+        otp: zodSchemas.nanoIdToken(),
+        recoveryCode: z.string().optional()
       })
     )
     .mutation(async ({ ctx, input }) => {
       const { db } = ctx;
+
+      if (
+        !(input.password && input.otp) &&
+        !(input.password && input.recoveryCode) &&
+        !(input.otp && input.recoveryCode)
+      ) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message:
+            'You need to provide 2 of the following: Password, 2FA Code, Recovery Code'
+        });
+      }
 
       const userResponse = await db.query.users.findFirst({
         where: eq(users.username, input.username),
@@ -91,7 +107,9 @@ export const passwordRouter = router({
         with: {
           account: {
             columns: {
-              passwordHash: true
+              passwordHash: true,
+              totpSecret: true,
+              recoveryCodes: true
             }
           }
         }
@@ -104,38 +122,112 @@ export const passwordRouter = router({
         });
       }
 
-      if (!userResponse.account.passwordHash) {
-        throw new TRPCError({
-          code: 'METHOD_NOT_SUPPORTED',
-          message: 'Password sign-in is not enabled'
-        });
+      // verify password if provided
+      let validPassword: null | boolean;
+      if (input.password) {
+        if (!userResponse.account.passwordHash) {
+          throw new TRPCError({
+            code: 'METHOD_NOT_SUPPORTED',
+            message: 'Password sign-in is not enabled'
+          });
+        }
+
+        validPassword = await new Argon2id().verify(
+          userResponse.account.passwordHash,
+          input.password
+        );
+        if (!validPassword) {
+          throw createError({
+            message: 'Incorrect username or password',
+            statusCode: 400
+          });
+        }
       }
 
-      const validPassword = await new Argon2id().verify(
-        userResponse.account.passwordHash,
-        input.password
-      );
-      if (!validPassword) {
-        throw createError({
-          message: 'Incorrect username or password',
-          statusCode: 400
-        });
+      // verify otp if provided
+      let otpValid: null | boolean;
+      if (input.otp) {
+        if (!userResponse.account.totpSecret) {
+          throw new TRPCError({
+            code: 'METHOD_NOT_SUPPORTED',
+            message: '2FA sign-in is not enabled'
+          });
+        }
+        const secret = decodeHex(userResponse.account.totpSecret);
+        otpValid = await new TOTPController().verify(input.otp, secret);
+        if (!otpValid) {
+          throw new TRPCError({
+            code: 'UNAUTHORIZED',
+            message: 'Invalid 2FA code'
+          });
+        }
       }
 
-      const { id: userId, username, publicId } = userResponse;
-      const cookie = await createLuciaSessionCookie(ctx.event, {
-        userId,
-        username,
-        publicId
+      // verify recovery code if provided
+      let recoveryCodeValid: null | boolean;
+      if (input.recoveryCode) {
+        if (!userResponse.account.recoveryCodes) {
+          throw new TRPCError({
+            code: 'METHOD_NOT_SUPPORTED',
+            message: 'Recovery code sign-in is not enabled'
+          });
+        }
+
+        for (const codeHash of userResponse.account.recoveryCodes) {
+          const isRecoveryCodeValid = await new Argon2id().verify(
+            codeHash,
+            input.recoveryCode
+          );
+          if (isRecoveryCodeValid) {
+            // Remove the used recovery code from the database
+            const updatedRecoveryCodes =
+              userResponse.account.recoveryCodes.filter(
+                (code) => code !== codeHash
+              );
+            await db
+              .update(accounts)
+              .set({
+                recoveryCodes: updatedRecoveryCodes
+              })
+              .where(eq(accounts.userId, userResponse.id));
+            recoveryCodeValid = isRecoveryCodeValid;
+            break; // Exit the loop as we found a valid recovery code
+          }
+        }
+
+        if (!recoveryCodeValid) {
+          throw new TRPCError({
+            code: 'UNAUTHORIZED',
+            message: 'Invalid recovery code'
+          });
+        }
+      }
+
+      if (
+        (validPassword && otpValid) ||
+        (validPassword && recoveryCodeValid) ||
+        (otpValid && recoveryCodeValid)
+      ) {
+        const { id: userId, username, publicId } = userResponse;
+
+        const cookie = await createLuciaSessionCookie(ctx.event, {
+          userId,
+          username,
+          publicId
+        });
+        setCookie(ctx.event, cookie.name, cookie.value, cookie.attributes);
+
+        await db
+          .update(users)
+          .set({ lastLoginAt: new Date() })
+          .where(eq(users.id, userResponse.id));
+
+        return { success: true };
+      }
+      throw new TRPCError({
+        code: 'UNAUTHORIZED',
+        message: 'Something went wrong, please contact support'
       });
-      setCookie(ctx.event, cookie.name, cookie.value, cookie.attributes);
-
-      await db
-        .update(users)
-        .set({ lastLoginAt: new Date() })
-        .where(eq(users.id, userResponse.id));
-
-      return { success: true };
     }),
 
   updateUserPassword: userProcedure
@@ -144,6 +236,7 @@ export const passwordRouter = router({
         .object({
           oldPassword: zodSchemas.password(),
           newPassword: zodSchemas.password(),
+          otp: zodSchemas.nanoIdToken(),
           invalidateAllSessions: z.boolean().default(false)
         })
         .strict()
@@ -161,7 +254,8 @@ export const passwordRouter = router({
         with: {
           account: {
             columns: {
-              passwordHash: true
+              passwordHash: true,
+              totpSecret: true
             }
           }
         }
@@ -183,6 +277,21 @@ export const passwordRouter = router({
         throw new TRPCError({
           code: 'UNAUTHORIZED',
           message: 'Incorrect old password'
+        });
+      }
+
+      if (!userData.account.totpSecret) {
+        throw new TRPCError({
+          code: 'METHOD_NOT_SUPPORTED',
+          message: '2FA is not enabled on this account, contact support'
+        });
+      }
+      const secret = decodeHex(userData.account.totpSecret);
+      const otpValid = await new TOTPController().verify(input.otp, secret);
+      if (!otpValid) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'Invalid 2FA code'
         });
       }
 
