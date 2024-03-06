@@ -5,6 +5,8 @@ import { accounts, users } from '@uninbox/database/schema';
 import { decodeHex, encodeHex } from 'oslo/encoding';
 import { TOTPController, createTOTPKeyURI } from 'oslo/otp';
 import { TRPCError } from '@trpc/server';
+import { nanoIdToken } from '@uninbox/utils';
+import { Argon2id } from 'oslo/password';
 
 export const totpRouter = router({
   createTotpSecret: userProcedure
@@ -28,7 +30,7 @@ export const totpRouter = router({
       if (existingData.account.totpSecret) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
-          message: 'TOTP secret already exists'
+          message: '2FA is already set up for this account'
         });
       }
       const newSecret = crypto.getRandomValues(new Uint8Array(20));
@@ -64,7 +66,7 @@ export const totpRouter = router({
       if (!existingData.account.totpSecret) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
-          message: 'TOTP secret does not exist'
+          message: '2FA is not set up for this account'
         });
       }
       const secret = decodeHex(existingData.account.totpSecret);
@@ -72,10 +74,23 @@ export const totpRouter = router({
       if (!isValid) {
         throw new TRPCError({
           code: 'UNAUTHORIZED',
-          message: 'Invalid TOTP code'
+          message: 'Invalid 2FA code'
         });
       }
-      return {};
+
+      // generate and return the recovery codes
+      const recoveryCodes = Array.from({ length: 10 }, () => nanoIdToken());
+      const hashedRecoveryCodes = await Promise.all(
+        recoveryCodes.map(async (code) => {
+          return await new Argon2id().hash(code);
+        })
+      );
+      await db
+        .update(accounts)
+        .set({ recoveryCodes: hashedRecoveryCodes })
+        .where(eq(accounts.userId, userId));
+
+      return { recoveryCodes: recoveryCodes };
     }),
   disableTotp: userProcedure
     .input(z.object({}).strict())
