@@ -1,9 +1,10 @@
-import { load } from "cheerio";
-import { compareHTML, formatHtml } from "./utils";
-import removeQuotations from "../removeQuotations";
+import { load } from 'cheerio';
+import { formatHtml } from './utils';
+import removeQuotations from '../removeQuotations';
+import removeSignatures from '../removeSignatures';
 
-describe("removeQuotations", () => {
-  it("should remove quotation from basic email", async () => {
+describe('removeQuotations', () => {
+  it('should remove quotation from basic email', async () => {
     const email = `
 			<div dir="ltr">
 				<div dir="ltr">
@@ -48,6 +49,7 @@ describe("removeQuotations", () => {
 
     const $ = load(email);
     const result = removeQuotations($);
+    removeSignatures($);
     const actual = $.html();
 
     expect(await formatHtml(actual)).toBe(
@@ -75,16 +77,16 @@ describe("removeQuotations", () => {
 						</div>
 					</body>
 				</html>
-			`,
-      ),
+			`
+      )
     );
 
     expect(result).toMatchObject({
-      didFindQuotation: true,
+      didFindQuotation: true
     });
   });
 
-  it("should remove signature from basic email", async () => {
+  it('should remove signature from basic email', async () => {
     const email = `
 			<div dir="ltr">
 				<div dir="ltr">
@@ -106,7 +108,7 @@ describe("removeQuotations", () => {
 			`;
 
     const $ = load(email);
-    const result = removeQuotations($);
+    const result = removeSignatures($);
     const actual = $.html();
 
     expect(await formatHtml(actual)).toBe(
@@ -126,16 +128,14 @@ describe("removeQuotations", () => {
 						</div>
 					</body>
 				</html>
-			`,
-      ),
+			`
+      )
     );
 
-    expect(result).toMatchObject({
-      didFindQuotation: true,
-    });
+    expect(result.didFindSignature).toBe(true);
   });
 
-  it("should remove both signature and quotations from basic email", async () => {
+  it('should remove both signature and quotations from basic email', async () => {
     const email = `
 		<html>
 		<head></head>
@@ -183,7 +183,8 @@ describe("removeQuotations", () => {
 		`;
 
     const $ = load(email);
-    const result = removeQuotations($);
+    const signature = removeSignatures($);
+    const quote = removeQuotations($);
     const actual = $.html();
 
     expect(await formatHtml(actual)).toBe(
@@ -205,16 +206,15 @@ describe("removeQuotations", () => {
 						</div>
 					</body>
 				</html>
-			`,
-      ),
+			`
+      )
     );
 
-    expect(result).toMatchObject({
-      didFindQuotation: true,
-    });
+    expect(quote.didFindQuotation).toBe(true);
+    expect(signature.didFindSignature).toBe(true);
   });
 
-  it("should not wrap body in body", async () => {
+  it('should not wrap body in body', async () => {
     const email = `
 			<html>
 				<!-- This comment would make talonjs either fail, or wrap in an extra body -->
@@ -244,16 +244,16 @@ describe("removeQuotations", () => {
 						Hello
 					</body>
 				</html>
-			`,
-      ),
+			`
+      )
     );
 
     expect(result).toMatchObject({
-      didFindQuotation: false,
+      didFindQuotation: false
     });
   });
 
-  it("should preserve inline quotes", async () => {
+  it('should preserve inline quotes', async () => {
     const email = `
 			<div dir="ltr">
 				<p>
@@ -296,7 +296,8 @@ describe("removeQuotations", () => {
 		`;
 
     const $ = load(email);
-    const result = removeQuotations($);
+    const signature = removeSignatures($);
+    const quote = removeQuotations($);
     const actual = $.html();
 
     expect(await formatHtml(actual)).toBe(
@@ -318,13 +319,12 @@ describe("removeQuotations", () => {
 						</div>
 					</body>
 				</html>
-			`,
-      ),
+			`
+      )
     );
 
-    expect(result).toMatchObject({
-      didFindQuotation: true,
-    });
+    expect(quote.didFindQuotation).toBe(true);
+    expect(signature.didFindSignature).toBe(true);
   });
 
   it('should remove "On... wrote:" in different languages', async () => {
@@ -363,12 +363,12 @@ describe("removeQuotations", () => {
 						<div dir="ltr"><br /></div>
 					</body>
 				</html>
-			`,
-      ),
+			`
+      )
     );
 
     expect(result).toMatchObject({
-      didFindQuotation: true,
+      didFindQuotation: true
     });
   });
 
@@ -419,12 +419,12 @@ describe("removeQuotations", () => {
 						</div>
 					</body>
 				</html>
-			`,
-      ),
+			`
+      )
     );
 
     expect(result).toMatchObject({
-      didFindQuotation: true,
+      didFindQuotation: true
     });
   });
 });

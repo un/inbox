@@ -1,4 +1,4 @@
-import * as htmlparser2 from "htmlparser2";
+import * as htmlparser2 from 'htmlparser2';
 
 /**
  * Fix various problems in input HTML before it can be parsed by cheerio.
@@ -18,15 +18,15 @@ function fixBrokenHead(inputHtml: string): string {
 
   const parserDetect = new htmlparser2.Parser({
     onopentag(name) {
-      if (name === "head") {
+      if (name === 'head') {
         headStartIndex = parserDetect.startIndex;
       }
 
       encounteredTags.add(name);
 
-      const htmlTag = encounteredTags.has("html");
-      const headTag = encounteredTags.has("head");
-      const blockquoteTag = encounteredTags.has("blockquote");
+      const htmlTag = encounteredTags.has('html');
+      const headTag = encounteredTags.has('head');
+      const blockquoteTag = encounteredTags.has('blockquote');
 
       // If there's a blockquote before the head tag, this is likely a quoted message
       if (!htmlTag && headTag && !blockquoteTag) {
@@ -36,7 +36,7 @@ function fixBrokenHead(inputHtml: string): string {
         isBroken = false;
         parserDetect.reset(); // abort parsing
       }
-    },
+    }
   });
 
   parserDetect.write(inputHtml);

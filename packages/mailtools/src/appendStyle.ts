@@ -1,4 +1,4 @@
-import type { CheerioAPI } from "cheerio";
+import type { CheerioAPI } from 'cheerio';
 
 /**
  * Add CSS style to the page
@@ -6,10 +6,10 @@ import type { CheerioAPI } from "cheerio";
 function appendStyle(
   $: CheerioAPI,
   // Example: `.title { color: red; }`
-  css: string,
+  css: string
 ) {
   const styleElement = $(`<style>${css}</style>`);
-  const head = $("head"); // Cheerio already makes sure head is present
+  const head = $('head'); // Cheerio already makes sure head is present
   head.append(styleElement);
 }
 

@@ -1,18 +1,18 @@
-import { load } from "cheerio";
-import walkBackwards from "../walkBackwards";
-import { getTopLevelElement } from "../cheerio-utils";
-import type { AnyNode } from "domhandler";
+import { load } from 'cheerio';
+import walkBackwards from '../walkBackwards';
+import { getTopLevelElement } from '../cheerio-utils';
+import type { AnyNode } from 'domhandler';
 
 export function printEl(el: AnyNode): string {
-  if (el.type === "text") {
+  if (el.type === 'text') {
     return el.data.trim();
   } else {
     return (el as any).tagName;
   }
 }
 
-describe("walkBackwards", () => {
-  it("should walk depth-first, in reverse order", () => {
+describe('walkBackwards', () => {
+  it('should walk depth-first, in reverse order', () => {
     const $ = load(`
 			<html>
 				<head></head>
@@ -42,24 +42,24 @@ describe("walkBackwards", () => {
     }
 
     expect(order).toEqual([
-      "",
-      "text-a",
-      "text-b",
-      "text-c",
-      "d",
-      "text-e",
-      "text-f",
-      "g",
-      "text-h",
-      "i",
-      "text-j",
-      "k",
-      "",
-      "body",
+      '',
+      'text-a',
+      'text-b',
+      'text-c',
+      'd',
+      'text-e',
+      'text-f',
+      'g',
+      'text-h',
+      'i',
+      'text-j',
+      'k',
+      '',
+      'body'
     ]);
   });
 
-  it("should be breakable", () => {
+  it('should be breakable', () => {
     const $ = load(`
 			<k>
 				text-j
@@ -80,24 +80,24 @@ describe("walkBackwards", () => {
 
     const order = [];
     for (const el of walkBackwards(getTopLevelElement($))) {
-      if (printEl(el) === "text-a") {
+      if (printEl(el) === 'text-a') {
         continue;
       }
 
       order.push(printEl(el));
 
-      if (printEl(el) === "text-e") {
+      if (printEl(el) === 'text-e') {
         break;
       }
     }
 
     expect(order).toEqual([
-      "",
+      '',
       // 'text-a',
-      "text-b",
-      "text-c",
-      "d",
-      "text-e",
+      'text-b',
+      'text-c',
+      'd',
+      'text-e'
       // 'text-f',
       // 'g',
       // 'text-h',

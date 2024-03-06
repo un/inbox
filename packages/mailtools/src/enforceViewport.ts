@@ -1,4 +1,4 @@
-import type { CheerioAPI } from "cheerio";
+import type { CheerioAPI } from 'cheerio';
 
 /**
  * Removes ALL existing viewport-tags from the email and
@@ -10,7 +10,7 @@ import type { CheerioAPI } from "cheerio";
  */
 function enforceViewport(
   $: CheerioAPI,
-  desiredViewport = '<meta name="viewport" content="width=device-width">',
+  desiredViewport = '<meta name="viewport" content="width=device-width">'
 ) {
   const viewports = $('meta[name="viewport"]');
   const hasViewport = viewports.length > 0;
@@ -25,7 +25,7 @@ function enforceViewport(
   }
 
   // Insert a viewport
-  const head = $("head"); // Cheerio already makes sure head is present
+  const head = $('head'); // Cheerio already makes sure head is present
   head.append(viewportElement);
 }
 

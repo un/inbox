@@ -1,10 +1,13 @@
-import { compareHTML, formatHtml, readFile } from "../utils";
-import { blockRemoteContent } from "../../blockRemoteContent";
+import { compareHTML, formatHtml, readFile } from '../utils';
+import { blockRemoteContent } from '../../blockRemoteContent';
 
-const EMAIL_PRIVACY_TESTER = readFile(import.meta.dirname, "email-privacy-tester.html");
+const EMAIL_PRIVACY_TESTER = readFile(
+  import.meta.dirname,
+  'email-privacy-tester.html'
+);
 
-describe("remote-content", () => {
-  it("should replace remote content URLs in all style declarations", async () => {
+describe('remote-content', () => {
+  it('should replace remote content URLs in all style declarations', async () => {
     const input = `
 			<html>
 				<head>
@@ -73,12 +76,12 @@ describe("remote-content", () => {
 			</html>
 		`;
 
-    const actual = blockRemoteContent(input, { image: "REPLACED_IMAGE" });
+    const actual = blockRemoteContent(input, { image: 'REPLACED_IMAGE' });
 
     expect(await formatHtml(actual)).toBe(await formatHtml(expected));
   });
 
-  it("should not replace embedded image (data:)", async () => {
+  it('should not replace embedded image (data:)', async () => {
     const input = `
 			<html>
 				<head></head>
@@ -97,11 +100,11 @@ describe("remote-content", () => {
 
     const expected = input;
 
-    const actual = blockRemoteContent(input, { image: "REPLACED_IMAGE" });
+    const actual = blockRemoteContent(input, { image: 'REPLACED_IMAGE' });
 
     assert(await compareHTML(actual, expected));
   });
-  it("should not replace image attachment (cid:) URLs", async () => {
+  it('should not replace image attachment (cid:) URLs', async () => {
     const input = `
 			<html>
 				<head></head>
@@ -120,17 +123,17 @@ describe("remote-content", () => {
 
     const expected = input;
 
-    const actual = blockRemoteContent(input, { image: "REPLACED_IMAGE" });
+    const actual = blockRemoteContent(input, { image: 'REPLACED_IMAGE' });
 
     expect(await formatHtml(actual)).toBe(await formatHtml(expected));
   });
 
-  it("should replace remote content URLs in the email privacy tester", async () => {
+  it('should replace remote content URLs in the email privacy tester', async () => {
     const input = EMAIL_PRIVACY_TESTER;
     // console.log(input);
     const actual = blockRemoteContent(input, {
-      image: "REPLACED_IMAGE",
-      other: "REPLACED_URL",
+      image: 'REPLACED_IMAGE',
+      other: 'REPLACED_URL'
     });
     // console.log(actual);
 
