@@ -258,7 +258,7 @@ export const invitesRouter = router({
   validateInvite: limitedProcedure
     .input(
       z.object({
-        inviteToken: z.string().min(3).max(32)
+        inviteToken: zodSchemas.nanoIdToken()
       })
     )
     .query(async ({ ctx, input }) => {
@@ -320,7 +320,7 @@ export const invitesRouter = router({
   redeemInvite: userProcedure
     .input(
       z.object({
-        inviteToken: z.string().min(3).max(32)
+        inviteToken: zodSchemas.nanoIdToken()
       })
     )
     .mutation(async ({ ctx, input }) => {
