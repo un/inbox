@@ -31,12 +31,9 @@ export const defaultsRouter = router({
         }
       });
 
-      const twoFactorEnabledCorrectly = () => {
-        if (userResponse.account.passwordHash) {
-          return !!userResponse?.account?.twoFactorSecret;
-        }
-        return true;
-      };
+      const twoFactorEnabledCorrectly = userResponse.account.passwordHash
+        ? !!userResponse?.account?.twoFactorSecret
+        : true;
 
       return {
         defaultOrgSlug: userResponse?.orgMemberships[0]?.org?.slug || '',
