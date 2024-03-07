@@ -265,15 +265,14 @@
       <div
         v-if="new2FAVerified"
         class="flex flex-col items-center gap-4">
-        <span class="text-lg">Step 3</span>
-        <span class="">
-          Save your recovery code. Keep it in a safe and secure place. If you
-          lose it, you will not be able to recover your your account. This code
-          can be used to gain access to your account, so take care to keep it
-          safe.
+        <span class="text-2xl font-bold">Step 3</span>
+        <span class="w-fit text-balance text-center font-medium">
+          Save your recovery code. Keep it in a safe and secure place as It can
+          be used to gain access to your account. If you lose it, you will not
+          be able to recover your your account.
         </span>
         <div
-          class="bg-gray-3 mb-2 mt-2 flex items-center justify-center gap-2 rounded-md p-2">
+          class="mb-2 mt-2 flex items-center justify-center gap-2 rounded-md bg-gray-200 p-2 dark:bg-gray-800">
           <span class="select-all px-2 font-mono">{{ recoveryCode }}</span>
           <span>
             <UnUiButton
