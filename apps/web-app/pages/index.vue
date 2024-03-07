@@ -17,9 +17,14 @@
   const passwordInput = ref('');
   const passwordValid = ref<boolean | null>(null);
   const passwordValidationMessage = ref('');
+  const otpInput = ref('');
 
   const formValid = computed(() => {
-    return usernameValid.value === true && passwordValid.value === true;
+    return (
+      usernameValid.value === true &&
+      passwordValid.value === true &&
+      otpInput.value.length === 6
+    );
   });
 
   const disablePasswordButton = computed(() => {
@@ -60,7 +65,8 @@
       await $trpc.auth.password.signInWithPassword.mutate({
         turnstileToken: turnstileToken.value,
         username: usernameValue.value,
-        password: passwordInput.value
+        password: passwordInput.value,
+        otp: otpInput.value
       });
     if (passwordVerification.success) {
       navigateTo('/redirect');
@@ -203,6 +209,12 @@
                     }
                   )
               " />
+            <div class="flex flex-col gap-2">
+              <span class="text-sm"
+                >Enter the 6-digit code from your 2FA app</span
+              >
+              <UnOtp v-model="otpInput" />
+            </div>
           </div>
           <UnUiButton
             label="Login with my password"
@@ -221,10 +233,10 @@
         size="lg"
         @click="navigateTo('/join')" />
       <UnUiButton
-        label="I lost my passkey"
+        label="Recover my account"
         variant="ghost"
         block
-        @click="navigateTo('/login/findmypasskey')" />
+        @click="navigateTo('/login/recovery')" />
       <div class="h-0 max-h-0 w-full max-w-full">
         <UnUiAlert
           v-show="errorMessage"

@@ -216,7 +216,7 @@
     await new Promise((resolve) => setTimeout(resolve, 1000));
     // Remove the username cookie
     useCookie('un-join-username', { expires: new Date() }).value = '';
-    navigateTo('/join/org');
+    navigateTo(secureType.value === 'passkey' ? '/join/org' : '/join/2fa');
   }
 
   const pageReady: Ref<boolean> = ref(false);
@@ -451,8 +451,8 @@
                 " />
               <span
                 class="text-sm leading-none text-gray-800 dark:text-gray-200">
-                include no whitespaces</span
-              >
+                include no whitespaces
+              </span>
             </div>
           </div>
         </div>
