@@ -9,6 +9,14 @@
 
   const emit = defineEmits(['complete', 'cancel']);
 
+  const username = ref('');
+  if (process.client) {
+    const usernameCookie = useCookie('un-join-username').value;
+    !usernameCookie
+      ? navigateTo('/join')
+      : (username.value = usernameCookie || '');
+  }
+
   const loadingData = ref(true);
   const alreadySetUpError = ref(false);
   const showResetTotpModal = ref(false);
@@ -108,6 +116,19 @@
     twoFactorCode.value = '';
     alreadySetUpError.value = false;
   }
+
+  function download() {
+    const element = document.createElement('a');
+    element.setAttribute(
+      'href',
+      'data:text/plain;charset=utf-8,' + encodeURIComponent(recoveryCode.value)
+    );
+    element.setAttribute('download', `${username.value}-recovery-code.txt`);
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+  }
+
   onMounted(async () => {
     await getNew2FA({});
   });
@@ -253,13 +274,17 @@
         </div>
         <div class="flex flex-row gap-2">
           <UnUiButton
+            label="Download Recovery Code File"
+            variant="ghost"
+            @click="download()" />
+          <UnUiButton
             label="Copy Recovery Code"
             variant="outline"
             @click="copy(recoveryCode)" />
-          <UnUiButton
-            label="I've copied my recovery code"
-            @click="showConfirmCopiedModal = true" />
         </div>
+        <UnUiButton
+          label="I've copied my recovery code"
+          @click="showConfirmCopiedModal = true" />
       </div>
     </div>
   </div>

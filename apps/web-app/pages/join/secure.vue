@@ -214,8 +214,6 @@
     });
 
     await new Promise((resolve) => setTimeout(resolve, 1000));
-    // Remove the username cookie
-    useCookie('un-join-username', { expires: new Date() }).value = '';
     navigateTo(secureType.value === 'passkey' ? '/join/org' : '/join/2fa');
   }
 
