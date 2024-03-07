@@ -23,11 +23,11 @@
   const manualCode = ref('');
 
   // verification Step
-  const otpInput = ref('');
+  const twoFactorCode = ref('');
   const recoveryCodes = ref<string[]>([]);
 
-  const otpInputValid = computed(() => {
-    return otpInput.value.length === 6;
+  const twoFactorCodeValid = computed(() => {
+    return twoFactorCode.value.length === 6;
   });
 
   const {
@@ -35,7 +35,7 @@
     status: newTotpStatus,
     error: newTotpError,
     mutate: getNewTotp
-  } = $trpc.auth.totp.createTotpSecret.useMutation();
+  } = $trpc.auth.twoFactorAuthentication.createTwoFactorSecret.useMutation();
 
   watch(newTotpStatus, (status) => {
     if (status === 'error') {
@@ -57,8 +57,9 @@
   });
 
   async function verifyTotp() {
-    const verifyTotp = $trpc.auth.totp.verifyTotp.useMutation();
-    await verifyTotp.mutate({ otp: otpInput.value });
+    const verifyTotp =
+      $trpc.auth.twoFactorAuthentication.verifyTwoFactor.useMutation();
+    await verifyTotp.mutate({ twoFactorCode: twoFactorCode.value });
     if (verifyTotp.error.value) {
       toast.add({
         id: 'totp_error',
@@ -83,13 +84,14 @@
   }
 
   function showResetTotp() {
-    otpInputValid ? (showResetTotpModal.value = true) : null;
+    twoFactorCodeValid ? (showResetTotpModal.value = true) : null;
   }
 
   async function resetTotp() {
     disable2FALoading.value = true;
-    const reset2FAMutation = $trpc.auth.totp.disableTotp.useMutation();
-    await reset2FAMutation.mutate({ otp: otpInput.value });
+    const reset2FAMutation =
+      $trpc.auth.twoFactorAuthentication.disableTwoFactor.useMutation();
+    await reset2FAMutation.mutate({ twoFactorCode: twoFactorCode.value });
     if (reset2FAMutation.error.value) {
       disable2FALoading.value = false;
       return;
@@ -104,7 +106,7 @@
     });
     await getNewTotp({});
     showResetTotpModal.value = false;
-    otpInput.value = '';
+    twoFactorCode.value = '';
     alreadySetUpError.value = false;
   }
   onMounted(async () => {
@@ -191,12 +193,12 @@
         </div>
       </div>
       <UnOtp
-        v-model="otpInput"
+        v-model="twoFactorCode"
         class="" />
       <UnUiButton
         label="Disable 2FA"
         color="red"
-        :disabled="!otpInputValid"
+        :disabled="!twoFactorCodeValid"
         @click="showResetTotp()" />
     </div>
     <div
@@ -232,7 +234,7 @@
             codes
           </span>
           <div class="flex grow flex-col items-center justify-center gap-4">
-            <UnOtp v-model="otpInput" />
+            <UnOtp v-model="twoFactorCode" />
             <UnUiButton
               label="Verify Code"
               @click="verifyTotp()" />

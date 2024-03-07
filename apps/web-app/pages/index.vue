@@ -17,13 +17,13 @@
   const passwordInput = ref('');
   const passwordValid = ref<boolean | null>(null);
   const passwordValidationMessage = ref('');
-  const otpInput = ref('');
+  const twoFactorCode = ref('');
 
   const formValid = computed(() => {
     return (
       usernameValid.value === true &&
       passwordValid.value === true &&
-      otpInput.value.length === 6
+      twoFactorCode.value.length === 6
     );
   });
 
@@ -66,7 +66,7 @@
         turnstileToken: turnstileToken.value,
         username: usernameValue.value,
         password: passwordInput.value,
-        otp: otpInput.value
+        twoFactorCode: twoFactorCode.value
       });
     if (passwordVerification.success) {
       navigateTo('/redirect');
@@ -213,7 +213,7 @@
               <span class="text-sm"
                 >Enter the 6-digit code from your 2FA app</span
               >
-              <UnOtp v-model="otpInput" />
+              <UnOtp v-model="twoFactorCode" />
             </div>
           </div>
           <UnUiButton

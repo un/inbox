@@ -98,7 +98,7 @@ export const accounts = mysqlTable(
     id: serial('id').primaryKey(),
     userId: foreignKey('userId').notNull(),
     passwordHash: varchar('password_hash', { length: 255 }),
-    totpSecret: varchar('totp_secret', { length: 255 }),
+    twoFactorSecret: varchar('two_factor_secret', { length: 255 }),
     recoveryCodes: json('recovery_codes').$type<string[]>()
   },
   (accounts) => ({

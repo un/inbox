@@ -78,7 +78,7 @@ export const passwordRouter = router({
         // we allow min length of 2 for username if we plan to provide them in the future
         username: zodSchemas.username(2),
         password: zodSchemas.password().optional(),
-        otp: zodSchemas.nanoIdToken(),
+        twoFactorCode: zodSchemas.nanoIdToken(),
         recoveryCode: z.string().optional()
       })
     )
@@ -86,9 +86,9 @@ export const passwordRouter = router({
       const { db } = ctx;
 
       if (
-        !(input.password && input.otp) &&
+        !(input.password && input.twoFactorCode) &&
         !(input.password && input.recoveryCode) &&
-        !(input.otp && input.recoveryCode)
+        !(input.twoFactorCode && input.recoveryCode)
       ) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
@@ -108,7 +108,7 @@ export const passwordRouter = router({
           account: {
             columns: {
               passwordHash: true,
-              totpSecret: true,
+              twoFactorSecret: true,
               recoveryCodes: true
             }
           }
@@ -146,15 +146,18 @@ export const passwordRouter = router({
 
       // verify otp if provided
       let otpValid: null | boolean;
-      if (input.otp) {
-        if (!userResponse.account.totpSecret) {
+      if (input.twoFactorCode) {
+        if (!userResponse.account.twoFactorSecret) {
           throw new TRPCError({
             code: 'METHOD_NOT_SUPPORTED',
             message: '2FA sign-in is not enabled'
           });
         }
-        const secret = decodeHex(userResponse.account.totpSecret);
-        otpValid = await new TOTPController().verify(input.otp, secret);
+        const secret = decodeHex(userResponse.account.twoFactorSecret);
+        otpValid = await new TOTPController().verify(
+          input.twoFactorCode,
+          secret
+        );
         if (!otpValid) {
           throw new TRPCError({
             code: 'UNAUTHORIZED',
@@ -255,7 +258,7 @@ export const passwordRouter = router({
           account: {
             columns: {
               passwordHash: true,
-              totpSecret: true
+              twoFactorSecret: true
             }
           }
         }
@@ -280,13 +283,13 @@ export const passwordRouter = router({
         });
       }
 
-      if (!userData.account.totpSecret) {
+      if (!userData.account.twoFactorSecret) {
         throw new TRPCError({
           code: 'METHOD_NOT_SUPPORTED',
           message: '2FA is not enabled on this account, contact support'
         });
       }
-      const secret = decodeHex(userData.account.totpSecret);
+      const secret = decodeHex(userData.account.twoFactorSecret);
       const otpValid = await new TOTPController().verify(input.otp, secret);
       if (!otpValid) {
         throw new TRPCError({
