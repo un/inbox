@@ -99,7 +99,7 @@ export const accounts = mysqlTable(
     userId: foreignKey('userId').notNull(),
     passwordHash: varchar('password_hash', { length: 255 }),
     twoFactorSecret: varchar('two_factor_secret', { length: 255 }),
-    recoveryCodes: json('recovery_codes').$type<string[]>()
+    recoveryCode: varchar('recovery_code', { length: 256 })
   },
   (accounts) => ({
     userIdIndex: index('user_id_idx').on(accounts.userId)

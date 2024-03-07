@@ -64,7 +64,7 @@ export const twoFactorRouter = router({
           account: {
             columns: {
               twoFactorSecret: true,
-              recoveryCodes: true
+              recoveryCode: true
             }
           }
         }
@@ -76,7 +76,7 @@ export const twoFactorRouter = router({
             'Two Factor Authentication (2FA) is not set up for this account'
         });
       }
-      if (existingData.account.recoveryCodes?.length > 0) {
+      if (existingData.account.recoveryCode) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message:
@@ -97,18 +97,15 @@ export const twoFactorRouter = router({
       }
 
       // generate and return the recovery codes
-      const recoveryCodes = Array.from({ length: 10 }, () => nanoIdToken());
-      const hashedRecoveryCodes = await Promise.all(
-        recoveryCodes.map(async (code) => {
-          return await new Argon2id().hash(code);
-        })
-      );
+      const recoveryCode = nanoIdToken();
+      const hashedRecoveryCode = await new Argon2id().hash(recoveryCode);
+
       await db
         .update(accounts)
-        .set({ recoveryCodes: hashedRecoveryCodes })
+        .set({ recoveryCode: hashedRecoveryCode })
         .where(eq(accounts.userId, userId));
 
-      return { recoveryCodes: recoveryCodes };
+      return { recoveryCode: recoveryCode };
     }),
   disableTwoFactor: userProcedure
     .input(z.object({ twoFactorCode: z.string() }).strict())
@@ -122,7 +119,7 @@ export const twoFactorRouter = router({
           account: {
             columns: {
               twoFactorSecret: true,
-              recoveryCodes: true
+              recoveryCode: true
             }
           }
         }
@@ -148,7 +145,7 @@ export const twoFactorRouter = router({
       // No need to check if twoFactorSecret exists
       await db
         .update(accounts)
-        .set({ twoFactorSecret: null, recoveryCodes: [] })
+        .set({ twoFactorSecret: null, recoveryCode: null })
         .where(eq(accounts.userId, userId));
       return {};
     })

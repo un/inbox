@@ -24,7 +24,7 @@
 
   // verification Step
   const twoFactorCode = ref('');
-  const recoveryCodes = ref<string[]>([]);
+  const recoveryCode = ref('');
 
   const twoFactorCodeValid = computed(() => {
     return twoFactorCode.value.length === 6;
@@ -71,7 +71,7 @@
       new2FAVerified.value = false;
       return;
     }
-    recoveryCodes.value = verifyTotp.data?.value?.recoveryCodes || [];
+    recoveryCode.value = verifyTotp.data?.value?.recoveryCode || '';
     new2FAVerified.value = true;
     toast.add({
       id: '2fa_verification_success',
@@ -245,24 +245,19 @@
         class="flex flex-col items-center gap-4">
         <span class="text-lg">Step 3</span>
         <span class="">
-          Save your recovery codes. Keep them in a safe and secure place. If you
-          lose them, you will not be able to log back into your account.
+          Save your recovery code. Keep it in a safe and secure place. If you
+          lose it, you will not be able to log back into your account.
         </span>
-        <div
-          class="mb-2 mt-2 grid grid-cols-2 items-center justify-center gap-4">
-          <template
-            v-for="(code, idx) in recoveryCodes"
-            :key="idx">
-            <span class="font-mono text-sm">{{ code }}</span>
-          </template>
+        <div class="mb-2 mt-2 items-center justify-center gap-4">
+          <span class="font-mono">{{ recoveryCode }}</span>
         </div>
         <div class="flex flex-row gap-2">
           <UnUiButton
-            label="Copy Recovery Codes"
+            label="Copy Recovery Code"
             variant="outline"
-            @click="copy(recoveryCodes.join('\n'))" />
+            @click="copy(recoveryCode)" />
           <UnUiButton
-            label="I've copied my recovery codes"
+            label="I've copied my recovery code"
             @click="showConfirmCopiedModal = true" />
         </div>
       </div>
