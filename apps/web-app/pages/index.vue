@@ -213,7 +213,7 @@
               <span class="text-sm"
                 >Enter the 6-digit code from your 2FA app</span
               >
-              <UnOtp v-model="twoFactorCode" />
+              <Un2FAInput v-model="twoFactorCode" />
             </div>
           </div>
           <UnUiButton

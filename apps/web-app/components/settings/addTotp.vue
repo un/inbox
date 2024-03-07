@@ -192,7 +192,7 @@
           </span>
         </div>
       </div>
-      <UnOtp
+      <Un2FAInput
         v-model="twoFactorCode"
         class="" />
       <UnUiButton
@@ -234,7 +234,7 @@
             codes
           </span>
           <div class="flex grow flex-col items-center justify-center gap-4">
-            <UnOtp v-model="twoFactorCode" />
+            <Un2FAInput v-model="twoFactorCode" />
             <UnUiButton
               label="Verify Code"
               @click="verifyTotp()" />
