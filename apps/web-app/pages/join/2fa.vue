@@ -1,15 +1,3 @@
-<script setup lang="ts">
-  import { startRegistration } from '@simplewebauthn/browser';
-  import type { RegistrationResponseJSON } from '@simplewebauthn/types';
-  import { z } from 'zod';
-  const { $trpc, $i18n } = useNuxtApp();
-
-  const pageReady: Ref<boolean> = ref(false);
-  onNuxtReady(() => {
-    pageReady.value = true;
-  });
-</script>
-
 <template>
   <div class="flex h-screen w-full flex-col items-center justify-between p-4">
     <div

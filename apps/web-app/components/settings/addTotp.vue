@@ -1,10 +1,9 @@
 <script setup lang="ts">
-  import { z } from 'zod';
   import { useClipboard } from '@vueuse/core';
   import { useQRCode } from '@vueuse/integrations/useQRCode';
 
   const { copy, copied, text } = useClipboard();
-  const { $trpc, $i18n } = useNuxtApp();
+  const { $trpc } = useNuxtApp();
   const toast = useToast();
 
   const emit = defineEmits(['complete', 'cancel']);
@@ -23,6 +22,7 @@
   const disable2FALoading = ref(false);
   const new2FAVerified = ref(false);
   const showConfirmCopiedModal = ref(false);
+  const savedRecoveryCode = ref(false);
 
   // creation step
   const qrUri = ref('');
@@ -146,7 +146,7 @@
           This will disable two factor authentication on your account.
         </span>
         <span class="">
-          If you dont immediately re-configure two factor authentication, you
+          If you don't immediately re-configure two factor authentication, you
           wont be able to log back in to your account.
         </span>
         <span class=""> Are you sure you want to do this? </span>
@@ -268,26 +268,45 @@
         <span class="text-lg">Step 3</span>
         <span class="">
           Save your recovery code. Keep it in a safe and secure place. If you
-          lose it, you will not be able to log back into your account.
+          lose it, you will not be able to recover your your account. This code
+          can be used to gain access to your account, so take care to keep it
+          safe.
         </span>
-        <div class="mb-2 mt-2 items-center justify-center gap-4">
-          <span class="font-mono">{{ recoveryCode }}</span>
+        <div
+          class="bg-gray-3 mb-2 mt-2 flex items-center justify-center gap-2 rounded-md p-2">
+          <span class="select-all px-2 font-mono">{{ recoveryCode }}</span>
+          <span>
+            <UnUiButton
+              size="xs"
+              variant="ghost"
+              class="h-10 w-10"
+              :icon="
+                copied && text === recoveryCode ? 'i-ph-check' : 'i-ph-copy'
+              "
+              @click="
+                () => {
+                  copy(recoveryCode);
+                  savedRecoveryCode = true;
+                }
+              " />
+          </span>
         </div>
         <div class="flex flex-row gap-2">
           <UnUiButton
             label="Download Recovery Code File"
             variant="ghost"
             icon="i-ph-download"
-            @click="download()" />
+            @click="
+              () => {
+                download();
+                savedRecoveryCode = true;
+              }
+            " />
           <UnUiButton
-            label="Copy Recovery Code"
-            :variant="copied && text === recoveryCode ? 'solid' : 'outline'"
-            :color="copied && text === recoveryCode ? 'teal' : 'primary'"
-            @click="copy(recoveryCode)" />
+            label="I've saved my recovery code"
+            :disabled="!savedRecoveryCode"
+            @click="showConfirmCopiedModal = true" />
         </div>
-        <UnUiButton
-          label="I've saved my recovery code"
-          @click="showConfirmCopiedModal = true" />
       </div>
     </div>
   </div>
