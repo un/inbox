@@ -241,9 +241,10 @@
                 class="rounded-lg p-2 shadow-xl" />
             </div>
             <UnUiButton
-              variant="outline"
               label="Or copy the code for manual entry"
               size="xs"
+              :variant="copied && text === manualCode ? 'solid' : 'outline'"
+              :color="copied && text === manualCode ? 'teal' : 'primary'"
               @click="copy(manualCode)" />
           </div>
         </div>
@@ -276,14 +277,16 @@
           <UnUiButton
             label="Download Recovery Code File"
             variant="ghost"
+            icon="i-ph-download"
             @click="download()" />
           <UnUiButton
             label="Copy Recovery Code"
-            variant="outline"
+            :variant="copied && text === recoveryCode ? 'solid' : 'outline'"
+            :color="copied && text === recoveryCode ? 'teal' : 'primary'"
             @click="copy(recoveryCode)" />
         </div>
         <UnUiButton
-          label="I've copied my recovery code"
+          label="I've saved my recovery code"
           @click="showConfirmCopiedModal = true" />
       </div>
     </div>

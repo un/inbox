@@ -150,6 +150,14 @@
         return;
       }
       passwordCreated.value = true;
+      toast.add({
+        title: 'Account created',
+        description:
+          'Your account has been created, welcome to UnInbox!<br />You will now be redirected to set up Two Factor Authentication.',
+        color: 'green',
+        timeout: 5000,
+        icon: 'i-ph-check-circle'
+      });
     }
 
     if (secureType.value === 'passkey') {
@@ -202,16 +210,15 @@
         return;
       }
       passkeyCreated.value = true;
+      toast.add({
+        title: 'Account created',
+        description:
+          'Your account has been created, welcome to UnInbox!<br />You will now be redirected to your organization setup.',
+        color: 'green',
+        timeout: 5000,
+        icon: 'i-ph-check-circle'
+      });
     }
-
-    toast.add({
-      title: 'Account created',
-      description:
-        'Your account has been created, welcome to UnInbox!<br />You will now be redirected to your organization setup.',
-      color: 'green',
-      timeout: 5000,
-      icon: 'i-ph-check-circle'
-    });
 
     await new Promise((resolve) => setTimeout(resolve, 1000));
     navigateTo(secureType.value === 'passkey' ? '/join/org' : '/join/2fa');
