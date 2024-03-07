@@ -31,38 +31,37 @@
   });
 
   const {
-    data: newTotpData,
-    status: newTotpStatus,
-    error: newTotpError,
-    mutate: getNewTotp
+    data: new2FAData,
+    status: new2FAStatus,
+    error: new2FAError,
+    mutate: getNew2FA
   } = $trpc.auth.twoFactorAuthentication.createTwoFactorSecret.useMutation();
 
-  watch(newTotpStatus, (status) => {
+  watch(new2FAStatus, (status) => {
     if (status === 'error') {
       loadingData.value = false;
-      console.log({ newTotpError });
       if (
-        newTotpError?.value?.message ===
-        '2FA is already set up for this account'
+        new2FAError?.value?.message ===
+        'Two Factor Authentication (2FA) is already set up for this account'
       ) {
         alreadySetUpError.value = true;
       }
     }
     if (status === 'success') {
       loadingData.value = false;
-      qrUri.value = newTotpData?.value?.uri || '';
+      qrUri.value = new2FAData?.value?.uri || '';
       const secretMatch = qrUri.value.match(/secret=([^&]+)/);
       manualCode.value = secretMatch && secretMatch[1] ? secretMatch[1] : '';
     }
   });
 
-  async function verifyTotp() {
+  async function verify2FA() {
     const verifyTotp =
       $trpc.auth.twoFactorAuthentication.verifyTwoFactor.useMutation();
     await verifyTotp.mutate({ twoFactorCode: twoFactorCode.value });
     if (verifyTotp.error.value) {
       toast.add({
-        id: 'totp_error',
+        id: '2fa_error',
         title: 'Something went wrong',
         description: `Please re-enter your 6 digit code`,
         icon: 'i-ph-warning-octagon',
@@ -75,19 +74,19 @@
     recoveryCodes.value = verifyTotp.data?.value?.recoveryCodes || [];
     new2FAVerified.value = true;
     toast.add({
-      id: 'totp_verification_success',
+      id: '2fa_verification_success',
       title: 'Success',
-      description: `Your TOTP has been verified successfully.`,
+      description: `Your Two Factor Authentication (2FA) code has been verified successfully.`,
       icon: 'i-ph-thumbs-up',
       timeout: 5000
     });
   }
 
-  function showResetTotp() {
+  function showReset2FA() {
     twoFactorCodeValid ? (showResetTotpModal.value = true) : null;
   }
 
-  async function resetTotp() {
+  async function reset2FA() {
     disable2FALoading.value = true;
     const reset2FAMutation =
       $trpc.auth.twoFactorAuthentication.disableTwoFactor.useMutation();
@@ -97,20 +96,20 @@
       return;
     }
     toast.add({
-      id: 'totp_disabled',
-      title: '2FA has been disabled',
-      description: `Please reconfigure your 2FA immediately.`,
+      id: '2fa_disabled',
+      title: 'Two Factor Authentication (2FA) has been disabled',
+      description: `Please reconfigure your Two Factor Authentication (2FA) immediately.`,
       icon: 'i-ph-warning-octagon',
       color: 'orange',
       timeout: 5000
     });
-    await getNewTotp({});
+    await getNew2FA({});
     showResetTotpModal.value = false;
     twoFactorCode.value = '';
     alreadySetUpError.value = false;
   }
   onMounted(async () => {
-    await getNewTotp({});
+    await getNew2FA({});
   });
 </script>
 
@@ -139,7 +138,7 @@
             color="red"
             :loading="disable2FALoading"
             :disabled="disable2FALoading"
-            @click="resetTotp()" />
+            @click="reset2FA()" />
           <UnUiButton
             label="Cancel"
             variant="outline"
@@ -199,7 +198,7 @@
         label="Disable 2FA"
         color="red"
         :disabled="!twoFactorCodeValid"
-        @click="showResetTotp()" />
+        @click="showReset2FA()" />
     </div>
     <div
       v-if="!alreadySetUpError && !loadingData"
@@ -209,9 +208,9 @@
         class="grid grid-cols-2 gap-4">
         <div class="flex flex-col items-center gap-2">
           <span class="text-lg">Step 1</span>
-          <div v-if="newTotpStatus === 'pending'">Loading new TOTP</div>
+          <div v-if="new2FAStatus === 'pending'">Loading new TOTP</div>
           <div
-            v-if="newTotpStatus === 'success'"
+            v-if="new2FAStatus === 'success'"
             class="flex flex-col items-center gap-4">
             <span>Scan the QR code below with your 2FA app</span>
             <div class="mb-4">
@@ -237,7 +236,7 @@
             <Un2FAInput v-model="twoFactorCode" />
             <UnUiButton
               label="Verify Code"
-              @click="verifyTotp()" />
+              @click="verify2FA()" />
           </div>
         </div>
       </div>
