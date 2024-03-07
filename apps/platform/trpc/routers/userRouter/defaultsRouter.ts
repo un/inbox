@@ -10,7 +10,7 @@ export const defaultsRouter = router({
       const { db, user } = ctx;
       const userId = user.id;
 
-      const userDefaultOrgSlug = await db.query.users.findFirst({
+      const userResponse = await db.query.users.findFirst({
         where: eq(users.id, userId),
         with: {
           orgMemberships: {
@@ -21,12 +21,26 @@ export const defaultsRouter = router({
                 }
               }
             }
+          },
+          account: {
+            columns: {
+              twoFactorSecret: true,
+              passwordHash: true
+            }
           }
         }
       });
 
+      const twoFactorEnabledCorrectly = () => {
+        if (userResponse.account.passwordHash) {
+          return !!userResponse?.account?.twoFactorSecret;
+        }
+        return true;
+      };
+
       return {
-        defaultOrgSlug: userDefaultOrgSlug?.orgMemberships[0]?.org?.slug || ''
+        defaultOrgSlug: userResponse?.orgMemberships[0]?.org?.slug || '',
+        twoFactorEnabledCorrectly: twoFactorEnabledCorrectly
       };
     })
 });

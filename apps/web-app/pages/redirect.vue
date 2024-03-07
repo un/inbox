@@ -2,9 +2,12 @@
   const { $trpc } = useNuxtApp();
 
   onMounted(async () => {
-    const { defaultOrgSlug } = await $trpc.user.defaults.redirectionData.query(
-      {}
-    );
+    const { defaultOrgSlug, twoFactorEnabledCorrectly } =
+      await $trpc.user.defaults.redirectionData.query({});
+
+    if (!twoFactorEnabledCorrectly) {
+      return navigateTo(`/login/2fa`);
+    }
 
     if (!defaultOrgSlug) {
       return navigateTo(`/join/org`);
