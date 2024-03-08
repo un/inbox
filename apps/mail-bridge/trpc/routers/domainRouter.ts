@@ -1,14 +1,14 @@
 import { z } from 'zod';
 import { parse, stringify } from 'superjson';
 import { router, protectedProcedure } from '../trpc';
-import { and, eq } from '@uninbox/database/orm';
+import { and, eq } from '@u22n/database/orm';
 import {
   postalServers,
   orgPostalConfigs,
   domains
-} from '@uninbox/database/schema';
-import { nanoId, nanoIdLength, zodSchemas } from '@uninbox/utils';
-import { postalPuppet } from '@uninbox/postal-puppet';
+} from '@u22n/database/schema';
+import { nanoId, nanoIdLength, zodSchemas } from '@u22n/utils';
+import { postalPuppet } from '@u22n/postal-puppet';
 
 export const domainRouter = router({
   createDomain: protectedProcedure

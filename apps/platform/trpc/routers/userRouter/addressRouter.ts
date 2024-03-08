@@ -1,7 +1,7 @@
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { orgProcedure, router, userProcedure } from '../../trpc';
-import { eq } from '@uninbox/database/orm';
+import { eq } from '@u22n/database/orm';
 import {
   postalServers,
   emailIdentities,
@@ -11,10 +11,10 @@ import {
   orgPostalConfigs,
   emailIdentitiesAuthorizedUsers,
   emailRoutingRulesDestinations
-} from '@uninbox/database/schema';
-import { nanoId } from '@uninbox/utils';
-import { MailDomainEntries } from '@uninbox/types';
-import { orgMembers } from '@uninbox/database/schema';
+} from '@u22n/database/schema';
+import { nanoId } from '@u22n/utils';
+import { MailDomainEntries } from '@u22n/types';
+import { orgMembers } from '@u22n/database/schema';
 import { mailBridgeTrpcClient, useRuntimeConfig } from '#imports';
 
 export const addressRouter = router({

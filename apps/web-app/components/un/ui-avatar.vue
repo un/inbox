@@ -1,7 +1,7 @@
 <script setup lang="ts">
   import type { DefineComponent } from 'vue';
   import { NuxtUiAvatar } from '#components';
-  import { uiColors } from '@uninbox/types/ui';
+  import { uiColors } from '@u22n/types/ui';
 
   type UiColors = (typeof uiColors)[number] | null;
 

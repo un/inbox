@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import type { UiColor } from '@uninbox/types/ui';
+  import type { UiColor } from '@u22n/types/ui';
   import { z } from 'zod';
   const { $trpc, $i18n } = useNuxtApp();
 
@@ -239,11 +239,11 @@
 </script>
 
 <template>
-  <div class="h-full w-full flex flex-col items-start gap-8 overflow-y-auto">
-    <div class="w-full flex flex-col gap-8">
-      <div class="w-full flex flex-col gap-4">
-        <div class="w-full border-b-1 border-base-6">
-          <span class="text-sm text-base-11 font-medium uppercase">
+  <div class="flex h-full w-full flex-col items-start gap-8 overflow-y-auto">
+    <div class="flex w-full flex-col gap-8">
+      <div class="flex w-full flex-col gap-4">
+        <div class="border-b-1 border-base-6 w-full">
+          <span class="text-base-11 text-sm font-medium uppercase">
             Email Address
           </span>
         </div>
@@ -267,7 +267,7 @@
             "
             width="full" />
           <div class="flex flex-col gap-1">
-            <span class="text-sm text-base-12 font-medium">Domain</span>
+            <span class="text-base-12 text-sm font-medium">Domain</span>
             <span v-if="orgDomainsPending">
               <UnUiIcon name="i-svg-spinners:3-dots-fade" /> Loading Domains
             </span>
@@ -300,9 +300,9 @@
         </div>
 
         <div class="flex flex-col gap-1">
-          <span class="text-sm text-base-12 font-medium">CatchAll</span>
+          <span class="text-base-12 text-sm font-medium">CatchAll</span>
           <div class="flex flex-row justify-between">
-            <span class="dark:text-gray-200 text-gray-700 text- text-sm">
+            <span class="text- text-sm text-gray-700 dark:text-gray-200">
               Emails sent to unknown addresses will be delivered here
             </span>
             <UnUiTooltip
@@ -327,8 +327,8 @@
       </div>
       <NuxtUiDivider />
       <div class="flex flex-col gap-4">
-        <div class="w-full border-b-1 border-base-6">
-          <span class="text-sm text-base-11 font-medium uppercase">
+        <div class="border-b-1 border-base-6 w-full">
+          <span class="text-base-11 text-sm font-medium uppercase">
             Deliver messages to
           </span>
         </div>
@@ -454,7 +454,7 @@
       </div>
       <span
         v-if="!isPro && multipleDestinationsSelected"
-        class="rounded bg-red-9 p-2 text-sm text-white font-bold">
+        class="bg-red-9 rounded p-2 text-sm font-bold text-white">
         You can only deliver messages to one single destination on your current
         plan
       </span>

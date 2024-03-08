@@ -1,5 +1,5 @@
 {
-  "name": "@uninbox/postal-puppet",
+  "name": "@u22n/postal-puppet",
   "type": "module",
   "version": "0.0.1",
   "packageManager": "pnpm@8.6.12",
@@ -69,7 +69,7 @@
     "*": "eslint --fix"
   },
   "dependencies": {
-    "@uninbox/tsconfig": "workspace:*",
+    "@u22n/tsconfig": "workspace:*",
     "puppeteer": "22.3.0"
   }
 }

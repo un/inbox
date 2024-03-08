@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { router, userProcedure } from '../../trpc';
-import type { DBType } from '@uninbox/database';
-import { eq, and } from '@uninbox/database/orm';
+import type { DBType } from '@u22n/database';
+import { eq, and } from '@u22n/database/orm';
 import {
   orgs,
   orgMembers,
@@ -9,8 +9,8 @@ import {
   users,
   postalServers,
   orgPostalConfigs
-} from '@uninbox/database/schema';
-import { nanoId } from '@uninbox/utils';
+} from '@u22n/database/schema';
+import { nanoId } from '@u22n/utils';
 import { mailBridgeTrpcClient } from '../../../utils/tRPCServerClients';
 import { TRPCError } from '@trpc/server';
 import { blockedUsernames, reservedUsernames } from '../../../utils/signup';

@@ -65,7 +65,7 @@ importers:
       '@planetscale/database':
         specifier: ^1.16.0
         version: 1.16.0
-      '@uninbox/tsconfig':
+      '@u22n/tsconfig':
         specifier: workspace:*
         version: link:../../packages/tsconfig
       '@vueuse/nuxt':
@@ -102,19 +102,19 @@ importers:
       '@trpc/server':
         specifier: ^10.45.1
         version: 10.45.1
-      '@uninbox/database':
+      '@u22n/database':
         specifier: workspace:*
         version: link:../../packages/database
-      '@uninbox/postal-puppet':
+      '@u22n/postal-puppet':
         specifier: workspace:*
         version: link:../../packages/postal-puppet
-      '@uninbox/tsconfig':
+      '@u22n/tsconfig':
         specifier: workspace:*
         version: link:../../packages/tsconfig
-      '@uninbox/types':
+      '@u22n/types':
         specifier: workspace:*
         version: link:../../packages/types
-      '@uninbox/utils':
+      '@u22n/utils':
         specifier: workspace:*
         version: link:../../packages/utils
       html-to-text:
@@ -144,16 +144,16 @@ importers:
       '@trpc/server':
         specifier: ^10.45.1
         version: 10.45.1
-      '@uninbox/database':
+      '@u22n/database':
         specifier: workspace:^
         version: link:../../packages/database
-      '@uninbox/tiptap':
+      '@u22n/tiptap':
         specifier: workspace:^
         version: link:../../packages/tiptap
-      '@uninbox/tsconfig':
+      '@u22n/tsconfig':
         specifier: workspace:^
         version: link:../../packages/tsconfig
-      '@uninbox/utils':
+      '@u22n/utils':
         specifier: workspace:^
         version: link:../../packages/utils
       drizzle-orm:
@@ -175,12 +175,12 @@ importers:
       '@simplewebauthn/types':
         specifier: ^9.0.1
         version: 9.0.1
+      '@u22n/types':
+        specifier: workspace:^
+        version: link:../../packages/types
       '@uninbox-ee/types':
         specifier: workspace:^
         version: link:../../ee/packages/types
-      '@uninbox/types':
-        specifier: workspace:^
-        version: link:../../packages/types
 
   apps/storage:
     dependencies:
@@ -190,16 +190,16 @@ importers:
       '@aws-sdk/s3-request-presigner':
         specifier: ^3.515.0
         version: 3.515.0
-      '@uninbox/database':
+      '@u22n/database':
         specifier: workspace:*
         version: link:../../packages/database
-      '@uninbox/tsconfig':
+      '@u22n/tsconfig':
         specifier: workspace:*
         version: link:../../packages/tsconfig
-      '@uninbox/types':
+      '@u22n/types':
         specifier: workspace:*
         version: link:../../packages/types
-      '@uninbox/utils':
+      '@u22n/utils':
         specifier: workspace:*
         version: link:../../packages/utils
       '@upstash/redis':
@@ -235,27 +235,27 @@ importers:
       '@trpc/server':
         specifier: ^10.45.1
         version: 10.45.1
+      '@u22n/database':
+        specifier: workspace:*
+        version: link:../../packages/database
+      '@u22n/tiptap':
+        specifier: workspace:^
+        version: link:../../packages/tiptap
+      '@u22n/trpc':
+        specifier: workspace:*
+        version: link:../../packages/trpc
+      '@u22n/tsconfig':
+        specifier: workspace:*
+        version: link:../../packages/tsconfig
+      '@u22n/types':
+        specifier: workspace:*
+        version: link:../../packages/types
+      '@u22n/utils':
+        specifier: workspace:*
+        version: link:../../packages/utils
       '@uninbox-ee/types':
         specifier: workspace:*
         version: link:../../ee/packages/types
-      '@uninbox/database':
-        specifier: workspace:*
-        version: link:../../packages/database
-      '@uninbox/tiptap':
-        specifier: workspace:^
-        version: link:../../packages/tiptap
-      '@uninbox/trpc':
-        specifier: workspace:*
-        version: link:../../packages/trpc
-      '@uninbox/tsconfig':
-        specifier: workspace:*
-        version: link:../../packages/tsconfig
-      '@uninbox/types':
-        specifier: workspace:*
-        version: link:../../packages/types
-      '@uninbox/utils':
-        specifier: workspace:*
-        version: link:../../packages/utils
       '@upstash/redis':
         specifier: 1.28.4
         version: 1.28.4
@@ -338,7 +338,7 @@ importers:
       '@types/node':
         specifier: ^20.11.19
         version: 20.11.24
-      '@uninbox/platform':
+      '@u22n/platform':
         specifier: workspace:^
         version: link:../platform
       nuxt:
@@ -371,10 +371,10 @@ importers:
       '@trpc/server':
         specifier: ^10.45.1
         version: 10.45.1
-      '@uninbox/database':
+      '@u22n/database':
         specifier: workspace:*
         version: link:../../../packages/database
-      '@uninbox/utils':
+      '@u22n/utils':
         specifier: workspace:*
         version: link:../../../packages/utils
       nitropack:
@@ -404,13 +404,13 @@ importers:
       '@planetscale/database':
         specifier: ^1.16.0
         version: 1.16.0
-      '@uninbox/tsconfig':
+      '@u22n/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
-      '@uninbox/types':
+      '@u22n/types':
         specifier: workspace:*
         version: link:../types
-      '@uninbox/utils':
+      '@u22n/utils':
         specifier: workspace:*
         version: link:../utils
       drizzle-orm:
@@ -434,7 +434,7 @@ importers:
 
   packages/mailtools:
     dependencies:
-      '@uninbox/tsconfig':
+      '@u22n/tsconfig':
         specifier: workspace:^
         version: link:../tsconfig
       autolinker:
@@ -483,7 +483,7 @@ importers:
 
   packages/postal-puppet:
     dependencies:
-      '@uninbox/tsconfig':
+      '@u22n/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
       puppeteer:
@@ -553,13 +553,13 @@ importers:
       '@tiptap/vue-3':
         specifier: ^2.2.4
         version: 2.2.4(@tiptap/core@2.2.4)(@tiptap/pm@2.2.4)(vue@3.4.21)
-      '@uninbox/tsconfig':
+      '@u22n/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
 
   packages/trpc:
     dependencies:
-      '@uninbox/mail-bridge':
+      '@u22n/mail-bridge':
         specifier: workspace:*
         version: link:../../apps/mail-bridge
 
@@ -567,7 +567,7 @@ importers:
 
   packages/types:
     dependencies:
-      '@uninbox/tsconfig':
+      '@u22n/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
     devDependencies:

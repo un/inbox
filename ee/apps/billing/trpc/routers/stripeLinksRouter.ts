@@ -3,8 +3,8 @@ import { parse, stringify } from 'superjson';
 import { router, protectedProcedure } from '../trpc';
 import { useStripe } from '../../utils/useStripe';
 import { stripeBillingPeriods, stripePlanNames } from '../../types';
-import { and, eq } from '@uninbox/database/orm';
-import { orgBilling, users } from '@uninbox/database/schema';
+import { and, eq } from '@u22n/database/orm';
+import { orgBilling, users } from '@u22n/database/schema';
 
 export const stripeLinksRouter = router({
   createSubscriptionPaymentLink: protectedProcedure

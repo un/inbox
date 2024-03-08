@@ -16,9 +16,9 @@
   },
   "DrizzleORM Ops": {
     "prefix": "orm",
-    "description": "Import the conditional operators from Drizzle ORM via @UnInbox/database",
+    "description": "Import the conditional operators from Drizzle ORM via @u22n/database",
     "scope": "",
-    "body": ["import { $1 } from '@uninbox/database/orm'"]
+    "body": ["import { $1 } from '@u22n/database/orm'"]
   }
   // Place your UnInbox workspace snippets here. Each snippet is defined under a snippet name and has a scope, prefix, body and
   // description. Add comma separated ids of the languages where the snippet is applicable in the scope field. If scope

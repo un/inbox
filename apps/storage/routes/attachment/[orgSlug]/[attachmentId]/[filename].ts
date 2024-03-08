@@ -1,9 +1,9 @@
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { GetObjectCommand } from '@aws-sdk/client-s3';
 import { s3Client } from '../../../../utils/s3';
-import { db } from '@uninbox/database';
-import { and, eq } from '@uninbox/database/orm';
-import { convoAttachments, orgMembers, orgs } from '@uninbox/database/schema';
+import { db } from '@u22n/database';
+import { and, eq } from '@u22n/database/orm';
+import { convoAttachments, orgMembers, orgs } from '@u22n/database/schema';
 
 /**
  * provides a proxy to attachments after verifying the user has access to the attachment

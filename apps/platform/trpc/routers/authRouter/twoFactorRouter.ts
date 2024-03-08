@@ -1,11 +1,11 @@
 import { z } from 'zod';
 import { router, userProcedure } from '../../trpc';
-import { eq } from '@uninbox/database/orm';
-import { accounts, users } from '@uninbox/database/schema';
+import { eq } from '@u22n/database/orm';
+import { accounts, users } from '@u22n/database/schema';
 import { decodeHex, encodeHex } from 'oslo/encoding';
 import { TOTPController, createTOTPKeyURI } from 'oslo/otp';
 import { TRPCError } from '@trpc/server';
-import { nanoIdToken } from '@uninbox/utils';
+import { nanoIdToken } from '@u22n/utils';
 import { Argon2id } from 'oslo/password';
 
 export const twoFactorRouter = router({

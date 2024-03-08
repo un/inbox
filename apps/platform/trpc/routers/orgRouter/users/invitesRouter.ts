@@ -5,7 +5,7 @@ import {
   limitedProcedure,
   userProcedure
 } from '../../../trpc';
-import { eq, inArray } from '@uninbox/database/orm';
+import { eq, inArray } from '@u22n/database/orm';
 import {
   domains,
   emailIdentities,
@@ -19,8 +19,8 @@ import {
   userProfiles,
   userProfilesToOrgs,
   users
-} from '@uninbox/database/schema';
-import { nanoId, nanoIdToken, zodSchemas } from '@uninbox/utils';
+} from '@u22n/database/schema';
+import { nanoId, nanoIdToken, zodSchemas } from '@u22n/utils';
 import { refreshOrgSlugCache } from '../../../../utils/orgSlug';
 import { isUserAdminOfOrg } from '../../../../utils/user';
 import { TRPCError } from '@trpc/server';

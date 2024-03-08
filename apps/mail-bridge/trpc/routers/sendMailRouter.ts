@@ -8,10 +8,10 @@ import {
   personalEmailIdentities,
   convoEntries,
   ConvoEntryMetadata
-} from '@uninbox/database/schema';
-import { nanoId, nanoIdLength, zodSchemas } from '@uninbox/utils';
-import { postalPuppet } from '@uninbox/postal-puppet';
-import { and, eq } from '@uninbox/database/orm';
+} from '@u22n/database/schema';
+import { nanoId, nanoIdLength, zodSchemas } from '@u22n/utils';
+import { postalPuppet } from '@u22n/postal-puppet';
+import { and, eq } from '@u22n/database/orm';
 import { convert } from 'html-to-text';
 
 export const sendMailRouter = router({

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-  import { tiptapVue3 } from '@uninbox/tiptap';
-  import { tipTapExtensions } from '@uninbox/tiptap/extensions';
+  import { tiptapVue3 } from '@u22n/tiptap';
+  import { tipTapExtensions } from '@u22n/tiptap/extensions';
 
   const props = defineProps<{
     modelValue: tiptapVue3.JSONContent;

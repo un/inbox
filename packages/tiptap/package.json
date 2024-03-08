@@ -1,5 +1,5 @@
 {
-  "name": "@uninbox/tiptap",
+  "name": "@u22n/tiptap",
   "version": "0.1.0",
   "description": "",
   "main": "index.js",
@@ -12,7 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@uninbox/tsconfig": "workspace:*",
+    "@u22n/tsconfig": "workspace:*",
     "@tiptap/core": "^2.2.4",
     "@tiptap/html": "^2.2.4",
     "@tiptap/starter-kit": "^2.2.4",

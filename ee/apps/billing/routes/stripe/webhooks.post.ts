@@ -1,8 +1,8 @@
 import { StripeBillingPeriod, StripePlanName } from './../../types';
-import { db } from '@uninbox/database';
-import { eq } from '@uninbox/database/orm';
-import { orgBilling } from '@uninbox/database/schema';
-import { nanoId } from '@uninbox/utils';
+import { db } from '@u22n/database';
+import { eq } from '@u22n/database/orm';
+import { orgBilling } from '@u22n/database/schema';
+import { nanoId } from '@u22n/utils';
 import Stripe from 'stripe';
 
 // const handleCheckoutSessionCompleted = async (stripeEvent: Stripe.Event) => {

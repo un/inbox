@@ -1,13 +1,13 @@
 import { z } from 'zod';
 import { limitedProcedure, router, userProcedure } from '../../trpc';
-import { eq } from '@uninbox/database/orm';
-import { accounts, users } from '@uninbox/database/schema';
+import { eq } from '@u22n/database/orm';
+import { accounts, users } from '@u22n/database/schema';
 import { TRPCError } from '@trpc/server';
 import {
   RegistrationResponseJSON,
   AuthenticationResponseJSON
 } from '@simplewebauthn/types';
-import { nanoId, zodSchemas } from '@uninbox/utils';
+import { nanoId, zodSchemas } from '@u22n/utils';
 import { UAParser } from 'ua-parser-js';
 import { usePasskeys } from '../../../utils/auth/passkeys';
 import { usePasskeysDb } from '../../../utils/auth/passkeyDbAdaptor';

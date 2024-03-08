@@ -1,7 +1,7 @@
 import type { inferAsyncReturnType } from '@trpc/server';
 import type { H3Event } from 'h3';
-import { db } from '@uninbox/database';
-import type { OrgContext, UserContext } from '@uninbox/types';
+import { db } from '@u22n/database';
+import type { OrgContext, UserContext } from '@u22n/types';
 
 //  * Creates context for an incoming request
 //  * @link https://trpc.io/docs/context

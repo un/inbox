@@ -9,7 +9,7 @@ import {
   desc,
   or,
   lt
-} from '@uninbox/database/orm';
+} from '@u22n/database/orm';
 import {
   convos,
   convoParticipants,
@@ -22,11 +22,11 @@ import {
   convoEntries,
   emailIdentitiesAuthorizedUsers,
   userGroupMembers
-} from '@uninbox/database/schema';
-import { nanoId, nanoIdLength, zodSchemas } from '@uninbox/utils';
+} from '@u22n/database/schema';
+import { nanoId, nanoIdLength, zodSchemas } from '@u22n/utils';
 import { TRPCError } from '@trpc/server';
-import { tipTapExtensions } from '@uninbox/tiptap/extensions';
-import { tiptapCore, tiptapHtml, type tiptapVue3 } from '@uninbox/tiptap';
+import { tipTapExtensions } from '@u22n/tiptap/extensions';
+import { tiptapCore, tiptapHtml, type tiptapVue3 } from '@u22n/tiptap';
 import { convoEntryRouter } from './entryRouter';
 import { mailBridgeTrpcClient } from '../../../utils/tRPCServerClients';
 

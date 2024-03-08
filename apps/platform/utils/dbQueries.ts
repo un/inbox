@@ -1,6 +1,6 @@
-import { db } from '@uninbox/database';
-import { and, eq } from '@uninbox/database/orm';
-import { orgMembers, orgs } from '@uninbox/database/schema';
+import { db } from '@u22n/database';
+import { and, eq } from '@u22n/database/orm';
+import { orgMembers, orgs } from '@u22n/database/schema';
 
 //! FIX: Check if this is still used and if so, update it to use the orgMembers Cache
 export async function isUserInOrg({

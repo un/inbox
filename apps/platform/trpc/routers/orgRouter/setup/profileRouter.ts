@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { router, orgProcedure } from '../../../trpc';
-import { eq } from '@uninbox/database/orm';
-import { orgs } from '@uninbox/database/schema';
-import { zodSchemas } from '@uninbox/utils';
+import { eq } from '@u22n/database/orm';
+import { orgs } from '@u22n/database/schema';
+import { zodSchemas } from '@u22n/utils';
 import { isUserAdminOfOrg } from '../../../../utils/user';
 import { TRPCError } from '@trpc/server';
 

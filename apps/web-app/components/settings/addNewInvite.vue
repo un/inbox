@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import type { UiColor } from '@uninbox/types/ui';
+  import type { UiColor } from '@u22n/types/ui';
   import { z } from 'zod';
   const { $trpc, $i18n } = useNuxtApp();
 
@@ -259,8 +259,8 @@
 </script>
 
 <template>
-  <div class="h-full w-full flex flex-col items-start gap-4 overflow-y-auto">
-    <div class="w-full flex flex-col gap-2">
+  <div class="flex h-full w-full flex-col items-start gap-4 overflow-y-auto">
+    <div class="flex w-full flex-col gap-2">
       <div
         class="grid grid-cols-1 grid-rows-2 gap-2 md:grid-cols-2 md:grid-rows-1 md:gap-4">
         <UnUiInput
@@ -279,7 +279,7 @@
       <div
         class="grid grid-cols-1 grid-rows-2 gap-2 md:grid-cols-2 md:grid-rows-1 md:gap-4">
         <div class="flex flex-col gap-1">
-          <span class="text-sm text-base-12 font-medium">Role</span>
+          <span class="text-base-12 text-sm font-medium">Role</span>
           <NuxtUiSelectMenu
             v-model="selectedMemberRole"
             :options="memberRoles"
@@ -314,19 +314,19 @@
       </div>
     </div>
     <NuxtUiDivider />
-    <div class="w-full flex flex-col gap-2">
-      <div class="items-top w-full flex flex-row justify-between gap-1">
+    <div class="flex w-full flex-col gap-2">
+      <div class="items-top flex w-full flex-row justify-between gap-1">
         <div>
-          <span class="text-sm text-base-12 font-medium"
+          <span class="text-base-12 text-sm font-medium"
             >Send invitation notification</span
           >
           <div
             v-if="!sendEmailNotification"
-            class="w-full flex flex-col justify-between gap-0">
-            <span class="dark:text-gray-200 text-gray-700 text- text-sm">
+            class="flex w-full flex-col justify-between gap-0">
+            <span class="text- text-sm text-gray-700 dark:text-gray-200">
               Send an invitation to join this organization via email
             </span>
-            <span class="dark:text-gray-200 text-gray-700 text- text-sm">
+            <span class="text- text-sm text-gray-700 dark:text-gray-200">
               Otherwise you can send the invite code manually
             </span>
           </div>
@@ -346,16 +346,16 @@
     </div>
 
     <NuxtUiDivider />
-    <div class="w-full flex flex-col gap-2">
-      <div class="items-top w-full flex flex-row justify-between gap-1">
+    <div class="flex w-full flex-col gap-2">
+      <div class="items-top flex w-full flex-row justify-between gap-1">
         <div>
-          <span class="text-sm text-base-12 font-medium"
+          <span class="text-base-12 text-sm font-medium"
             >Create email address</span
           >
-          <div class="w-full flex flex-row justify-between gap-8">
+          <div class="flex w-full flex-row justify-between gap-8">
             <span
               v-if="!createEmailIdentity"
-              class="dark:text-gray-200 text-gray-700 text- text-sm">
+              class="text- text-sm text-gray-700 dark:text-gray-200">
               Create an email identity for this user
             </span>
             <div class="flex flex-col gap-1"></div>
@@ -385,7 +385,7 @@
           "
           width="full" />
         <div class="flex flex-col gap-1">
-          <span class="text-sm text-base-12 font-medium">Domain</span>
+          <span class="text-base-12 text-sm font-medium">Domain</span>
           <span v-if="orgDomainsPending">
             <UnUiIcon name="i-svg-spinners:3-dots-fade" /> Loading Domains
           </span>
@@ -432,16 +432,16 @@
       </div>
     </div>
     <NuxtUiDivider />
-    <div class="w-full flex flex-col gap-2">
-      <div class="items-top w-full flex flex-row justify-between gap-1">
+    <div class="flex w-full flex-col gap-2">
+      <div class="items-top flex w-full flex-row justify-between gap-1">
         <div>
-          <span class="text-sm text-base-12 font-medium"
+          <span class="text-base-12 text-sm font-medium"
             >Add user to groups</span
           >
-          <div class="w-full flex flex-row justify-between gap-8">
+          <div class="flex w-full flex-row justify-between gap-8">
             <span
               v-if="!addUserToGroups"
-              class="dark:text-gray-200 text-gray-700 text- text-sm">
+              class="text- text-sm text-gray-700 dark:text-gray-200">
               Give them access to existing group conversations and email
               identities
             </span>

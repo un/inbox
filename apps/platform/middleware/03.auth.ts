@@ -1,5 +1,5 @@
 import { defineEventHandler } from 'h3';
-import type { UserContext } from '@uninbox/types';
+import type { UserContext } from '@u22n/types';
 import { DatabaseSession } from 'lucia';
 import { getCookie, useStorage } from '#imports';
 

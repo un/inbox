@@ -5,10 +5,10 @@ import {
   userGroupMembers,
   userGroups,
   contacts
-} from '@uninbox/database/schema';
-import { nanoIdLong } from '@uninbox/utils';
-import { eq } from '@uninbox/database/orm';
-import { db } from '@uninbox/database';
+} from '@u22n/database/schema';
+import { nanoIdLong } from '@u22n/utils';
+import { eq } from '@u22n/database/orm';
+import { db } from '@u22n/database';
 import sharp from 'sharp';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 
