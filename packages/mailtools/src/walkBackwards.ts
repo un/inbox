@@ -1,4 +1,4 @@
-import type { Element } from "domhandler";
+import type { Element } from 'domhandler';
 
 /**
  * Walk a CheerioElement hierarchy, depth-first and in reverse order.

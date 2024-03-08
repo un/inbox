@@ -1,12 +1,20 @@
-import type { CheerioAPI } from "cheerio";
-import { getTopLevelElement, isRootElement, isTextualElement, isEmptyLike } from "./cheerio-utils";
-import { isComment, isText, type Text, type Element } from "domhandler";
+import type { CheerioAPI } from 'cheerio';
+import {
+  getTopLevelElement,
+  isRootElement,
+  isTextualElement,
+  isEmptyLike
+} from './cheerio-utils';
+import { isComment, isText, type Text, type Element } from 'domhandler';
 
 /**
  * Remove trailing whitespace in given element, using given cheerio context.
  * Returns true if the element was empty and removed completely
  */
-function removeTrailingWhitespace($: CheerioAPI, el = getTopLevelElement($)): boolean {
+function removeTrailingWhitespace(
+  $: CheerioAPI,
+  el = getTopLevelElement($)
+): boolean {
   const hasChildren = el.childNodes && el.childNodes.length > 0;
   const isTextual = isTextualElement(el);
 

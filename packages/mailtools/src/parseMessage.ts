@@ -124,22 +124,6 @@ export async function parseMessage(
   result.completeHtml = $.html();
   result.parsedMessageHtml = result.completeHtml;
 
-  // Remove quotations
-  if (cleanQuotations) {
-    const { didFindQuotation } = removeQuotations($);
-
-    // if the actions above have resulted in an empty body,
-    // then we should not remove quotations
-    if (containsEmptyText(getTopLevelElement($))) {
-      // Don't remove anything.
-    } else {
-      result.didFindQuotation = didFindQuotation;
-
-      removeTrailingWhitespace($);
-      result.parsedMessageHtml = $.html();
-    }
-  }
-
   // extract and return the signatures
   if (cleanSignatures) {
     const { didFindSignature, foundSignatureHtml, foundSignaturePlainText } =
@@ -158,6 +142,22 @@ export async function parseMessage(
     }
   }
 
+  // Remove quotations
+  if (cleanQuotations) {
+    const { didFindQuotation } = removeQuotations($);
+
+    // if the actions above have resulted in an empty body,
+    // then we should not remove quotations
+    if (containsEmptyText(getTopLevelElement($))) {
+      // Don't remove anything.
+    } else {
+      result.didFindQuotation = didFindQuotation;
+
+      removeTrailingWhitespace($);
+      result.parsedMessageHtml = $.html();
+    }
+  }
+
   return result;
 }
 
@@ -167,12 +167,39 @@ function removeTrackers($: CheerioAPI): void {
     'img[width="0"]',
     'img[width="1"]',
     'img[height="0"]',
-    'img[height="1"]',
-    'img[src*="http://mailstat.us"]'
-    // add more known tracker ULRs here - potential lists for enhancement https://github.com/Foundry376/Mailspring/blob/e7daf5abf255aedfceadb33ef7209dc9101074a0/app/internal_packages/remove-tracking-pixels/lib/main.ts#L42, https://github.com/leavemealone-app/email-trackers/blob/master/trackers.txt,
-    // 'img[src*="http://mailstat.us"]'
+    'img[height="1"]'
   ];
 
+  // From Mailspring's list
+  const trackingUrls = [
+    'click.ngpvan.com',
+    't.signaux',
+    't.senal',
+    't.sidekickopen',
+    't.sigopn',
+    'bl-1.com',
+    'mailstat.us/tr',
+    'tracking.cirrusinsight.com',
+    'app.yesware.com',
+    't.yesware.com',
+    'mailfoogae.appspot.com',
+    'launchbit.com/taz-pixel',
+    'list-manage.com/track',
+    'cmail1.com/t',
+    'click.icptrack.com/icp/',
+    'infusionsoft.com/app/emailOpened',
+    'via.intercom.io/o',
+    'mandrillapp.com/track',
+    't.hsms06.com',
+    'app.relateiq.com/t.png',
+    'go.rjmetrics.com',
+    'api.mixpanel.com/track',
+    'web.frontapp.com/api',
+    'mailtrack.io/trace',
+    'sdr.salesloft.com/email_trackers'
+  ].map((url) => `img[src*="${url}"]`);
+
+  TRACKERS_SELECTORS.push(...trackingUrls);
   const query = TRACKERS_SELECTORS.join(', ');
 
   $(query).each((_, el) => {

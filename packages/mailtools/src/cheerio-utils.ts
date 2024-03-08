@@ -1,26 +1,26 @@
-import type { AnyNode, Cheerio, CheerioAPI } from "cheerio";
-import { isText, type Node, type Element } from "domhandler";
+import type { AnyNode, Cheerio, CheerioAPI } from 'cheerio';
+import { isText, type Node, type Element } from 'domhandler';
 
 const TEXTUAL = new Set([
-  "root",
-  "body",
+  'root',
+  'body',
 
   // Text content
-  "p",
-  "div",
+  'p',
+  'div',
 
   // Separators
-  "hr",
-  "br",
+  'hr',
+  'br',
 
   // Inline text
-  "span",
-  "b",
-  "a",
-  "em",
-  "i",
-  "s",
-  "strong",
+  'span',
+  'b',
+  'a',
+  'em',
+  'i',
+  's',
+  'strong'
 ]);
 
 function isTextualElement(el: Element): boolean {
@@ -28,19 +28,19 @@ function isTextualElement(el: Element): boolean {
 }
 
 function isDocument(el: Element): boolean {
-  return el.tagName === "html";
+  return el.tagName === 'html';
 }
 
 function isBody(el: Element): boolean {
-  return el.tagName === "body";
+  return el.tagName === 'body';
 }
 
 function isImage(el: Element): boolean {
-  return el.tagName === "img";
+  return el.tagName === 'img';
 }
 
 function isRootElement(el: Element): boolean {
-  return isBody(el) || isDocument(el) || el.tagName === "root";
+  return isBody(el) || isDocument(el) || el.tagName === 'root';
 }
 
 function hasChildren(el: Element): boolean {
@@ -50,7 +50,7 @@ function hasChildren(el: Element): boolean {
 const EMPTY_REGEX = /^\s*$/;
 function isEmpty(text: Node): boolean {
   if (isText(text)) {
-    return EMPTY_REGEX.test(text.data || "");
+    return EMPTY_REGEX.test(text.data || '');
   } else {
     return false;
   }
@@ -60,7 +60,7 @@ function isEmpty(text: Node): boolean {
 const EMPTY_LIKE_REGEX = /^\s*-*\s*$/;
 function isEmptyLike(text: Node): boolean {
   if (isText(text)) {
-    return EMPTY_LIKE_REGEX.test(text.data || "");
+    return EMPTY_LIKE_REGEX.test(text.data || '');
   } else {
     return false;
   }
@@ -80,7 +80,7 @@ function containsEmptyText(el: Element): boolean {
 }
 
 function getTopLevelElement($: CheerioAPI): Element {
-  const body = $("body");
+  const body = $('body');
   return body.length > 0 ? body.get(0)! : $.root().children().get(0)!;
 }
 
@@ -104,5 +104,5 @@ export {
   isEmptyLike,
   containsEmptyText,
   hasChildren,
-  toArray,
+  toArray
 };

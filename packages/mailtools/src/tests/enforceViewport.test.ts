@@ -3,20 +3,20 @@ import enforceViewport from '../enforceViewport';
 import { formatHtml } from './utils';
 
 describe('enforceViewport', () => {
-	it('should add missing viewport', async () => {
-		const email = `
+  it('should add missing viewport', async () => {
+    const email = `
 			<html>
 				<head></head>
 				<div>Hello</div>
 			</html>
 		`;
 
-		const $ = load(email);
-		enforceViewport($);
+    const $ = load(email);
+    enforceViewport($);
 
-		const actual = $.html();
+    const actual = $.html();
 
-		const expected = `
+    const expected = `
 			<html>
 				<head>
 					<meta
@@ -30,22 +30,22 @@ describe('enforceViewport', () => {
 			</html>
 		`;
 
-		expect(await formatHtml(actual)).toBe(await formatHtml(expected));
-	});
+    expect(await formatHtml(actual)).toBe(await formatHtml(expected));
+  });
 
-	it('should add missing head tag', async () => {
-		const email = `
+  it('should add missing head tag', async () => {
+    const email = `
 			<html>
 				<div>Hello</div>
 			</html>
 		`;
 
-		const $ = load(email);
-		enforceViewport($);
+    const $ = load(email);
+    enforceViewport($);
 
-		const actual = $.html();
+    const actual = $.html();
 
-		const expected = `
+    const expected = `
 			<html>
 				<head>
 					<meta
@@ -59,20 +59,20 @@ describe('enforceViewport', () => {
 			</html>
 		`;
 
-		expect(await formatHtml(actual)).toBe(await formatHtml(expected));
-	});
+    expect(await formatHtml(actual)).toBe(await formatHtml(expected));
+  });
 
-	it('should add missing html tag', async () => {
-		const email = `
+  it('should add missing html tag', async () => {
+    const email = `
 			<div>Hello</div>
 		`;
 
-		const $ = load(email);
-		enforceViewport($);
+    const $ = load(email);
+    enforceViewport($);
 
-		const actual = $.html();
+    const actual = $.html();
 
-		const expected = `
+    const expected = `
 			<html>
 				<head>
 					<meta
@@ -86,11 +86,11 @@ describe('enforceViewport', () => {
 			</html>
 		`;
 
-		expect(await formatHtml(actual)).toBe(await formatHtml(expected));
-	});
+    expect(await formatHtml(actual)).toBe(await formatHtml(expected));
+  });
 
-	it('should replace existing viewport', async () => {
-		const email = `
+  it('should replace existing viewport', async () => {
+    const email = `
 			<html>
 				<head>
 					<meta name="viewport" content="width=device-width" />
@@ -102,12 +102,12 @@ describe('enforceViewport', () => {
 							</html>
 		`;
 
-		const $ = load(email);
-		enforceViewport($);
+    const $ = load(email);
+    enforceViewport($);
 
-		const actual = $.html();
+    const actual = $.html();
 
-		const expected = `
+    const expected = `
 			<html>
 				<head>
 					<meta
@@ -121,23 +121,23 @@ describe('enforceViewport', () => {
 			</html>
 		`;
 
-		expect(await formatHtml(actual)).toBe(await formatHtml(expected));
-	});
+    expect(await formatHtml(actual)).toBe(await formatHtml(expected));
+  });
 
-	it('should handle invalid HTML', async () => {
-		const email = `
+  it('should handle invalid HTML', async () => {
+    const email = `
 		<div>
 			<meta name="viewport" content="width=device-width">
 			<p>Forwarding you a message</p>
 		</div>
 		`;
 
-		const $ = load(email);
-		enforceViewport($);
+    const $ = load(email);
+    enforceViewport($);
 
-		const actual = $.html();
+    const actual = $.html();
 
-		const expected = `
+    const expected = `
 			<html>
 				<head>
 					<meta
@@ -153,6 +153,6 @@ describe('enforceViewport', () => {
 			</html>
 		`;
 
-		expect(await formatHtml(actual)).toBe(await formatHtml(expected));
-	});
+    expect(await formatHtml(actual)).toBe(await formatHtml(expected));
+  });
 });

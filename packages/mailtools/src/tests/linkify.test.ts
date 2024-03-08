@@ -1,7 +1,7 @@
-import linkify from "../linkify";
+import linkify from '../linkify';
 
-describe("linkify", () => {
-  it("should linkify URL in paragraph", () => {
+describe('linkify', () => {
+  it('should linkify URL in paragraph', () => {
     const email = `<p>
 			Quis est tam dissimile
 			homini. Claudii libidini, qui tum erat summo ne imperio, dederetur.
@@ -15,7 +15,7 @@ describe("linkify", () => {
 		</p>`);
   });
 
-  it("should not linkify URLs in anchor tags", () => {
+  it('should not linkify URLs in anchor tags', () => {
     const email = `<p>
 			Quis est tam dissimile
 			homini. Claudii libidini, qui tum erat summo ne imperio, dederetur.
@@ -25,7 +25,7 @@ describe("linkify", () => {
     expect(linkify(email)).toBe(email);
   });
 
-  it("should linkify other kinds of URLs", () => {
+  it('should linkify other kinds of URLs', () => {
     const email = `<p>
 			hello@email.com
 			yourtempo.co
@@ -45,7 +45,7 @@ describe("linkify", () => {
 		</p>`);
   });
 
-  it("should ignore script tags, style tags, and head", () => {
+  it('should ignore script tags, style tags, and head', () => {
     const email = `
 		<html>
 			<head>
@@ -74,7 +74,7 @@ describe("linkify", () => {
     expect(linkify(email)).toBe(email);
   });
 
-  it("should work fine with DOCTYPE", () => {
+  it('should work fine with DOCTYPE', () => {
     const email = `
 		<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 		<html>
