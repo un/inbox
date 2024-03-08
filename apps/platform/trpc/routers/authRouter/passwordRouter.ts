@@ -3,69 +3,102 @@ import { Argon2id } from 'oslo/password';
 import { limitedProcedure, router, userProcedure } from '../../trpc';
 import { eq } from '@uninbox/database/orm';
 import { accounts, users } from '@uninbox/database/schema';
-import { zodSchemas } from '@uninbox/utils';
+import { nanoId, zodSchemas } from '@uninbox/utils';
 import { TRPCError } from '@trpc/server';
-import { UAParser } from 'ua-parser-js';
-import { createError, getHeader, setCookie } from '#imports';
+import { createError, setCookie } from '#imports';
 import { lucia } from '../../../utils/auth';
+import { validateUsername } from './signupRouter';
+import { createLuciaSessionCookie } from '../../../utils/session';
+import { decodeHex } from 'oslo/encoding';
+import { TOTPController } from 'oslo/otp';
 
 export const passwordRouter = router({
-  setUserPassword: userProcedure
+  signUpWithPassword: limitedProcedure
     .input(
-      z
-        .object({
-          password: z
-            .string()
-            .min(8, { message: 'Minimum 8 characters' })
-            .max(64)
-            .regex(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*\W)(?!.*\s).{8,}$/, {
-              message:
-                'At least one digit, one lowercase letter, one uppercase letter, one special character, no whitespace allowed, minimum eight characters in length'
-            })
-        })
-        .strict()
+      z.object({
+        username: zodSchemas.username(),
+        password: zodSchemas.password()
+      })
     )
     .mutation(async ({ ctx, input }) => {
-      const { db, user } = ctx;
-      const userId = user.id;
+      const { username, password } = input;
+      const { db } = ctx;
 
-      const hashedPassword = await new Argon2id().hash(input.password);
+      // making sure someone doesn't bypass the client side validation
+      const { available, error } = await validateUsername(db, username);
+      if (!available) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: error
+        });
+      }
+
+      const passwordHash = await new Argon2id().hash(password);
+      const publicId = nanoId();
+
+      const userId = await db
+        .transaction(async (tx) => {
+          const newUser = await tx.insert(users).values({
+            username,
+            publicId
+          });
+          await tx.insert(accounts).values({
+            userId: Number(newUser.insertId),
+            passwordHash
+          });
+          return Number(newUser.insertId);
+        })
+        .catch((err) => {
+          console.error(err);
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Error creating user'
+          });
+        });
+
+      const cookie = await createLuciaSessionCookie(ctx.event, {
+        userId,
+        username,
+        publicId
+      });
+      setCookie(ctx.event, cookie.name, cookie.value, cookie.attributes);
 
       await db
-        .update(accounts)
-        .set({
-          passwordEnabled: true,
-          passwordHash: hashedPassword
-        })
-        .where(eq(accounts.userId, userId));
+        .update(users)
+        .set({ lastLoginAt: new Date() })
+        .where(eq(users.id, userId));
 
       return { success: true };
     }),
 
-  passwordSignIn: limitedProcedure
+  signInWithPassword: limitedProcedure
     .input(
-      z
-        .object({
-          turnstileToken: z.string(),
-          username: zodSchemas.username(2),
-          password: z
-            .string()
-            .min(8, { message: 'Minimum 8 characters' })
-            .max(64)
-            .regex(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*\W)(?!.*\s).{8,}$/, {
-              message:
-                'At least one digit, one lowercase letter, one uppercase letter, one special character, no whitespace allowed, minimum eight characters in length'
-            })
-        })
-        .strict()
+      z.object({
+        turnstileToken: z.string(),
+        // we allow min length of 2 for username if we plan to provide them in the future
+        username: zodSchemas.username(2),
+        password: zodSchemas.password().optional(),
+        twoFactorCode: zodSchemas.nanoIdToken(),
+        recoveryCode: z.string().optional()
+      })
     )
     .mutation(async ({ ctx, input }) => {
       const { db } = ctx;
 
-      const { username, password } = input;
+      if (
+        !(input.password && input.twoFactorCode) &&
+        !(input.password && input.recoveryCode) &&
+        !(input.twoFactorCode && input.recoveryCode)
+      ) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message:
+            'You need to provide 2 of the following: Password, 2FA Code, Recovery Code'
+        });
+      }
 
       const userResponse = await db.query.users.findFirst({
-        where: eq(users.username, username),
+        where: eq(users.username, input.username),
         columns: {
           id: true,
           publicId: true,
@@ -74,9 +107,9 @@ export const passwordRouter = router({
         with: {
           account: {
             columns: {
-              id: true,
               passwordHash: true,
-              passwordEnabled: true
+              twoFactorSecret: true,
+              recoveryCodes: true
             }
           }
         }
@@ -89,47 +122,203 @@ export const passwordRouter = router({
         });
       }
 
+      // verify password if provided
+      let validPassword: null | boolean;
+      if (input.password) {
+        if (!userResponse.account.passwordHash) {
+          throw new TRPCError({
+            code: 'METHOD_NOT_SUPPORTED',
+            message: 'Password sign-in is not enabled'
+          });
+        }
+
+        validPassword = await new Argon2id().verify(
+          userResponse.account.passwordHash,
+          input.password
+        );
+        if (!validPassword) {
+          throw createError({
+            message: 'Incorrect username or password',
+            statusCode: 400
+          });
+        }
+      }
+
+      // verify otp if provided
+      let otpValid: null | boolean;
+      if (input.twoFactorCode) {
+        if (!userResponse.account.twoFactorSecret) {
+          throw new TRPCError({
+            code: 'METHOD_NOT_SUPPORTED',
+            message: '2FA sign-in is not enabled'
+          });
+        }
+        const secret = decodeHex(userResponse.account.twoFactorSecret);
+        otpValid = await new TOTPController().verify(
+          input.twoFactorCode,
+          secret
+        );
+        if (!otpValid) {
+          throw new TRPCError({
+            code: 'UNAUTHORIZED',
+            message: 'Invalid 2FA code'
+          });
+        }
+      }
+
+      // verify recovery code if provided
+      let recoveryCodeValid: null | boolean;
+      if (input.recoveryCode) {
+        if (!userResponse.account.recoveryCodes) {
+          throw new TRPCError({
+            code: 'METHOD_NOT_SUPPORTED',
+            message: 'Recovery code sign-in is not enabled'
+          });
+        }
+
+        for (const codeHash of userResponse.account.recoveryCodes) {
+          const isRecoveryCodeValid = await new Argon2id().verify(
+            codeHash,
+            input.recoveryCode
+          );
+          if (isRecoveryCodeValid) {
+            // Remove the used recovery code from the database
+            const updatedRecoveryCodes =
+              userResponse.account.recoveryCodes.filter(
+                (code) => code !== codeHash
+              );
+            await db
+              .update(accounts)
+              .set({
+                recoveryCodes: updatedRecoveryCodes
+              })
+              .where(eq(accounts.userId, userResponse.id));
+            recoveryCodeValid = isRecoveryCodeValid;
+            break; // Exit the loop as we found a valid recovery code
+          }
+        }
+
+        if (!recoveryCodeValid) {
+          throw new TRPCError({
+            code: 'UNAUTHORIZED',
+            message: 'Invalid recovery code'
+          });
+        }
+      }
+
       if (
-        !userResponse.account.passwordEnabled ||
-        !userResponse.account.passwordHash
+        (validPassword && otpValid) ||
+        (validPassword && recoveryCodeValid) ||
+        (otpValid && recoveryCodeValid)
       ) {
+        const { id: userId, username, publicId } = userResponse;
+
+        const cookie = await createLuciaSessionCookie(ctx.event, {
+          userId,
+          username,
+          publicId
+        });
+        setCookie(ctx.event, cookie.name, cookie.value, cookie.attributes);
+
+        await db
+          .update(users)
+          .set({ lastLoginAt: new Date() })
+          .where(eq(users.id, userResponse.id));
+
+        return { success: true };
+      }
+      throw new TRPCError({
+        code: 'UNAUTHORIZED',
+        message: 'Something went wrong, please contact support'
+      });
+    }),
+
+  updateUserPassword: userProcedure
+    .input(
+      z
+        .object({
+          oldPassword: zodSchemas.password(),
+          newPassword: zodSchemas.password(),
+          otp: zodSchemas.nanoIdToken(),
+          invalidateAllSessions: z.boolean().default(false)
+        })
+        .strict()
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { db, user } = ctx;
+      const userId = user.id;
+
+      const userData = await db.query.users.findFirst({
+        where: eq(users.id, userId),
+        columns: {
+          publicId: true,
+          username: true
+        },
+        with: {
+          account: {
+            columns: {
+              passwordHash: true,
+              twoFactorSecret: true
+            }
+          }
+        }
+      });
+
+      if (!userData) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'User not found'
+        });
+      }
+
+      const oldPasswordValid = await new Argon2id().verify(
+        userData.account.passwordHash,
+        input.oldPassword
+      );
+
+      if (!oldPasswordValid) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'Incorrect old password'
+        });
+      }
+
+      if (!userData.account.twoFactorSecret) {
         throw new TRPCError({
           code: 'METHOD_NOT_SUPPORTED',
-          message: 'Password signin is not enabled'
+          message: '2FA is not enabled on this account, contact support'
+        });
+      }
+      const secret = decodeHex(userData.account.twoFactorSecret);
+      const otpValid = await new TOTPController().verify(input.otp, secret);
+      if (!otpValid) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'Invalid 2FA code'
         });
       }
 
-      const validPassword = await new Argon2id().verify(
-        userResponse.account.passwordHash,
-        password
-      );
-      if (!validPassword) {
-        throw createError({
-          message: 'Incorrect username or password',
-          statusCode: 400
-        });
+      const passwordHash = await new Argon2id().hash(input.newPassword);
+
+      await db
+        .update(accounts)
+        .set({
+          passwordHash
+        })
+        .where(eq(accounts.userId, userId));
+
+      // Invalidate all sessions
+      if (input.invalidateAllSessions) {
+        await lucia.invalidateUserSessions(user.session.userId);
       }
 
-      const { device, os } = UAParser(getHeader(ctx.event, 'User-Agent'));
-      const userDevice =
-        device.type === 'mobile' ? device.toString() : device.vendor;
-
-      const userSession = await lucia.createSession(userResponse.publicId, {
-        user: {
-          id: userResponse.id,
-          username: userResponse.username,
-          publicId: userResponse.publicId
-        },
-        device: userDevice || 'Unknown',
-        os: os.name || 'Unknown'
+      const cookie = await createLuciaSessionCookie(ctx.event, {
+        userId,
+        username: userData.username,
+        publicId: userData.publicId
       });
-      const cookie = lucia.createSessionCookie(userSession.id);
+
       setCookie(ctx.event, cookie.name, cookie.value, cookie.attributes);
-
-      await db.update(users)
-        .set({ lastLoginAt: new Date() })
-        .where(eq(users.id, userResponse.id));
-
       return { success: true };
     })
 });

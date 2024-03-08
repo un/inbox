@@ -4,13 +4,13 @@ import { eq } from '@uninbox/database/orm';
 import { users } from '@uninbox/database/schema';
 
 export const defaultsRouter = router({
-  getDefaultOrgSlug: userProcedure
+  redirectionData: userProcedure
     .input(z.object({}).strict())
     .query(async ({ ctx }) => {
       const { db, user } = ctx;
       const userId = user.id;
 
-      const userDefaultOrgSlug = await db.query.users.findFirst({
+      const userResponse = await db.query.users.findFirst({
         where: eq(users.id, userId),
         with: {
           orgMemberships: {
@@ -21,10 +21,23 @@ export const defaultsRouter = router({
                 }
               }
             }
+          },
+          account: {
+            columns: {
+              twoFactorSecret: true,
+              passwordHash: true
+            }
           }
         }
       });
 
-      return { slug: userDefaultOrgSlug?.orgMemberships[0]?.org?.slug || "" };
+      const twoFactorEnabledCorrectly = userResponse.account.passwordHash
+        ? !!userResponse?.account?.twoFactorSecret
+        : true;
+
+      return {
+        defaultOrgSlug: userResponse?.orgMemberships[0]?.org?.slug || '',
+        twoFactorEnabledCorrectly: twoFactorEnabledCorrectly
+      };
     })
 });

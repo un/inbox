@@ -203,6 +203,21 @@ export class UnInboxDBAdapter implements Adapter {
             id: true,
             username: true,
             publicId: true
+          },
+          with: {
+            account: {
+              columns: {
+                totpSecret: true,
+                passwordHash: true
+              },
+              with: {
+                authenticators: {
+                  columns: {
+                    nickname: true
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -215,7 +230,10 @@ export class UnInboxDBAdapter implements Adapter {
       attributes: {
         id: userSessions.user.id,
         publicId: userSessions.user.publicId,
-        username: userSessions.user.username
+        username: userSessions.user.username,
+        passkeyEnabled: userSessions.user.account.authenticators.length > 0,
+        passwordEnabled: !!userSessions.user.account.passwordHash,
+        totpEnabled: !!userSessions.user.account.totpSecret
       }
     };
     return result;

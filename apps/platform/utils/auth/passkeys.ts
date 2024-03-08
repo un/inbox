@@ -15,31 +15,38 @@ import { useRuntimeConfig, useStorage } from '#imports';
 
 const runtimeConfig = useRuntimeConfig();
 
-async function generateRegistrationOptions({
-  userId,
-  userPublicId,
-  userName,
-  userDisplayName,
-  authenticatorAttachment = 'platform'
-}: {
-  userId: number;
+type RegistrationOptions = {
+  userId?: number;
   userPublicId: string;
   userName: string;
   userDisplayName: string;
   authenticatorAttachment?: 'platform' | 'cross-platform';
-}) {
+};
+
+async function generateRegistrationOptions(options: RegistrationOptions) {
+  const {
+    userPublicId,
+    userName,
+    userDisplayName,
+    authenticatorAttachment,
+    userId
+  } = options;
+
+  // We assume that the user is new if userId is undefined, and we don't have any authenticators for them
   const userAuthenticators: Authenticator[] =
-    await usePasskeysDb.listAuthenticatorsByUserId(userId);
+    typeof userId !== 'undefined'
+      ? []
+      : await usePasskeysDb.listAuthenticatorsByUserId(userId);
 
   const registrationOptions = await webAuthnGenerateRegistrationOptions({
     rpName: runtimeConfig.auth.passkeys.rpName,
     rpID: runtimeConfig.auth.passkeys.rpID,
     userID: userPublicId,
-    userName: userName,
-    userDisplayName: userDisplayName,
+    userName,
+    userDisplayName,
     timeout: 60000,
-
-    // attestationType: 'direct', // recomended to be removed by passkeys.dev
+    // As suggested by https://simplewebauthn.dev/docs/packages/server#1-generate-registration-options
+    attestationType: 'none',
     excludeCredentials: userAuthenticators.map((authenticator) => ({
       id: authenticator.credentialID,
       type: 'public-key',
@@ -48,32 +55,37 @@ async function generateRegistrationOptions({
     authenticatorSelection: {
       residentKey: 'preferred',
       userVerification: 'preferred',
-      authenticatorAttachment: authenticatorAttachment
+      authenticatorAttachment
     }
   });
 
-  const userChallenge = registrationOptions.challenge;
   const authStorage = useStorage('auth');
-  authStorage.setItem(`passkeyChallenge: ${userId}`, userChallenge);
+  authStorage.setItem(
+    `passkeyChallenge: ${userPublicId}`,
+    registrationOptions.challenge
+  );
 
   return registrationOptions;
 }
 
 async function verifyRegistrationResponse({
   registrationResponse,
-  userId
+  publicId
 }: {
   registrationResponse: RegistrationResponseJSON;
-  userId: number;
+  publicId: string;
 }) {
   const authStorage = useStorage('auth');
   const expectedChallenge = await authStorage.getItem(
-    `passkeyChallenge: ${userId}`
+    `passkeyChallenge: ${publicId}`
   );
+  console.log(registrationResponse);
+
   if (!expectedChallenge) {
     throw new TRPCError({
       code: 'BAD_REQUEST',
-      message: 'No challenge found for user'
+      message:
+        'No challenge found for user, It may have expired. Please try again.'
     });
   }
 
@@ -85,11 +97,10 @@ async function verifyRegistrationResponse({
       expectedRPID: runtimeConfig.auth.passkeys.rpID
     }
   );
+  await authStorage.removeItem(`passkeyChallenge: ${publicId}`);
   if (!verifiedRegistrationResponse.verified) {
-    await authStorage.removeItem(`passkeyChallenge: ${userId}`);
     throw new Error('Registration verification failed');
   }
-  await authStorage.removeItem(`passkeyChallenge: ${userId}`);
   return verifiedRegistrationResponse;
 }
 
@@ -150,8 +161,8 @@ async function verifyAuthenticationResponse({
 }
 
 export const usePasskeys = {
-  generateRegistrationOptions: generateRegistrationOptions,
-  verifyRegistrationResponse: verifyRegistrationResponse,
-  generateAuthenticationOptions: generateAuthenticationOptions,
-  verifyAuthenticationResponse: verifyAuthenticationResponse
+  generateRegistrationOptions,
+  verifyRegistrationResponse,
+  generateAuthenticationOptions,
+  verifyAuthenticationResponse
 };

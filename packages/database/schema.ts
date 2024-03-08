@@ -67,9 +67,7 @@ export const users = mysqlTable(
     publicId: nanoId('public_id').notNull(),
     username: varchar('username', { length: 32 }).notNull(),
     metadata: json('metadata').$type<Record<string, unknown>>(),
-    createdAt: timestamp('created_at')
-      .default(sql`CURRENT_TIMESTAMP`)
-      .notNull(),
+    createdAt: timestamp('created_at').defaultNow(),
     lastLoginAt: timestamp('last_login_at')
   },
   (table) => ({
@@ -99,22 +97,12 @@ export const accounts = mysqlTable(
   {
     id: serial('id').primaryKey(),
     userId: foreignKey('userId').notNull(),
-    passwordEnabled: boolean('passwordEnabled').notNull().default(false),
     passwordHash: varchar('password_hash', { length: 255 }),
-    recoveryEmailEnabled: boolean('recoveryEmailEnabled')
-      .notNull()
-      .default(false),
-    recoveryEmail: varchar('recovery_email', { length: 255 }),
-    emailVerified: timestamp('email_verified'),
-    passkeysEnabled: boolean('passkeys_enabled').notNull().default(false),
-    twoFactorEnabled: boolean('two_factor_enabled').notNull().default(false),
-    twoFactorSecret: varchar('two_factor_secret', { length: 255 })
+    twoFactorSecret: varchar('two_factor_secret', { length: 255 }),
+    recoveryCode: varchar('recovery_code', { length: 256 })
   },
   (accounts) => ({
-    userIdIndex: index('user_id_idx').on(accounts.userId),
-    recoveryEmailIndex: uniqueIndex('recovery_email_idx').on(
-      accounts.recoveryEmail
-    )
+    userIdIndex: index('user_id_idx').on(accounts.userId)
   })
 );
 

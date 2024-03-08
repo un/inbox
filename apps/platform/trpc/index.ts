@@ -1,7 +1,6 @@
 export * from '@trpc/server';
 import { router } from './trpc';
 import { createContext } from './createContext';
-import { emailRouter } from './routers/authRouter/emailRouter';
 import { passkeyRouter } from './routers/authRouter/passkeyRouter';
 import { passwordRouter } from './routers/authRouter/passwordRouter';
 import { testRouter } from './routers/testRouter';
@@ -19,14 +18,15 @@ import { emailIdentityRouter } from './routers/orgRouter/mail/emailIdentityRoute
 import { billingRouter } from './routers/orgRouter/setup/billingRouter';
 import { addressRouter } from './routers/userRouter/addressRouter';
 import { defaultsRouter } from './routers/userRouter/defaultsRouter';
+import { twoFactorRouter } from './routers/authRouter/twoFactorRouter';
 
 export const trpcPlatformContext = createContext;
 
 const trpcPlatformAuthRouter = router({
   signup: signupRouter,
-  email: emailRouter,
   passkey: passkeyRouter,
-  password: passwordRouter
+  password: passwordRouter,
+  twoFactorAuthentication: twoFactorRouter
 });
 
 const trpcPlatformUserRouter = router({

@@ -17,9 +17,14 @@
   const passwordInput = ref('');
   const passwordValid = ref<boolean | null>(null);
   const passwordValidationMessage = ref('');
+  const twoFactorCode = ref('');
 
   const formValid = computed(() => {
-    return usernameValid.value === true && passwordValid.value === true;
+    return (
+      usernameValid.value === true &&
+      passwordValid.value === true &&
+      twoFactorCode.value.length === 6
+    );
   });
 
   const disablePasswordButton = computed(() => {
@@ -57,10 +62,11 @@
 
   async function doPasswordLogin() {
     const passwordVerification =
-      await $trpc.auth.password.passwordSignIn.mutate({
+      await $trpc.auth.password.signInWithPassword.mutate({
         turnstileToken: turnstileToken.value,
         username: usernameValue.value,
-        password: passwordInput.value
+        password: passwordInput.value,
+        twoFactorCode: twoFactorCode.value
       });
     if (passwordVerification.success) {
       navigateTo('/redirect');
@@ -141,14 +147,14 @@
 
 <template>
   <div
-    class="h-screen w-screen flex flex-col items-center justify-between p-4 pb-14">
+    class="flex h-screen w-screen flex-col items-center justify-between p-4 pb-14">
     <div
-      class="max-w-48 w-full flex grow flex-col items-center justify-center gap-8 md:max-w-72">
-      <h1 class="mb-4 text-center text-2xl font-display">
+      class="flex w-full max-w-48 grow flex-col items-center justify-center gap-8 md:max-w-72">
+      <h1 class="font-display mb-4 text-center text-2xl">
         Login to your <br /><span class="text-5xl">UnInbox</span>
       </h1>
 
-      <div class="w-full flex flex-col gap-4">
+      <div class="flex w-full flex-col gap-4">
         <UnUiButton
           label="Login with my passkey"
           icon="i-ph-key-duotone"
@@ -157,9 +163,9 @@
           size="lg"
           @click="doPasskeyLogin()" />
         <UnUiDivider label="or" />
-        <div class="w-full flex flex-col gap-2 -mt-2">
+        <div class="-mt-2 flex w-full flex-col gap-2">
           <div
-            class="transition-[max-height] w-full flex flex-col gap-2 overflow-hidden duration-800 ease-in-out"
+            class="duration-800 flex w-full flex-col gap-2 overflow-hidden transition-[max-height] ease-in-out"
             :class="showPasswordFields ? 'max-h-96' : 'max-h-0'">
             <UnUiInput
               v-model:value="usernameValue"
@@ -203,6 +209,12 @@
                     }
                   )
               " />
+            <div class="flex flex-col gap-2">
+              <span class="text-sm"
+                >Enter the 6-digit code from your 2FA app</span
+              >
+              <Un2FAInput v-model="twoFactorCode" />
+            </div>
           </div>
           <UnUiButton
             label="Login with my password"
@@ -221,11 +233,11 @@
         size="lg"
         @click="navigateTo('/join')" />
       <UnUiButton
-        label="I lost my passkey"
+        label="Recover my account"
         variant="ghost"
         block
-        @click="navigateTo('/login/findmypasskey')" />
-      <div class="h-0 max-h-0 max-w-full w-full">
+        @click="navigateTo('/login/recovery')" />
+      <div class="h-0 max-h-0 w-full max-w-full">
         <UnUiAlert
           v-show="errorMessage"
           icon="i-ph-warning-circle"

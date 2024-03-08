@@ -23,6 +23,10 @@
   const orgSlugValidationMessage = ref('');
   const alsoCreatePersonalOrg = ref(false);
 
+  if (process.client) {
+    useCookie('un-join-username', { expires: new Date() }).value = '';
+  }
+
   watchDebounced(
     orgNameValue,
     async () => {
@@ -50,7 +54,7 @@
           });
         if (!available) {
           orgSlugValid.value = false;
-          orgSlugValidationMessage.value = error || "Not available";
+          orgSlugValidationMessage.value = error || 'Not available';
         }
         available && (orgSlugValid.value = true);
       }
@@ -164,16 +168,16 @@
 </script>
 
 <template>
-  <div class="h-screen w-screen flex flex-col items-center justify-between p-4">
+  <div class="flex h-screen w-screen flex-col items-center justify-between p-4">
     <div
-      class="max-w-72 w-full flex grow flex-col items-center justify-center gap-8 pb-14 md:max-w-xl">
-      <h1 class="mb-4 text-center text-2xl font-display">
+      class="flex w-full max-w-72 grow flex-col items-center justify-center gap-8 pb-14 md:max-w-xl">
+      <h1 class="font-display mb-4 text-center text-2xl">
         Let's make your <br /><span class="text-5xl">UnInbox</span>
       </h1>
       <h2 class="text-center text-xl font-semibold">
         Set up your organization
       </h2>
-      <div class="w-full flex flex-row justify-stretch gap-2">
+      <div class="flex w-full flex-row justify-stretch gap-2">
         <UnUiTooltip
           text="Choose your username"
           class="w-full">
@@ -234,7 +238,7 @@
 
       <div
         v-if="orgPath === 'new'"
-        class="w-full flex flex-col gap-4">
+        class="flex w-full flex-col gap-4">
         <UnUiInput
           v-model:value="orgNameValue"
           v-model:valid="orgNameValid"
@@ -272,7 +276,7 @@
       </div>
       <div
         v-if="orgPath === 'join'"
-        class="w-full flex flex-col gap-8">
+        class="flex w-full flex-col gap-8">
         <div class="flex flex-col gap-2">
           <UnUiInput
             v-model:value="inviteCodeValue"

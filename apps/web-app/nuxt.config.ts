@@ -10,8 +10,7 @@ export default defineNuxtConfig({
     '@nuxtjs/turnstile',
     '@pinia/nuxt',
     '@pinia-plugin-persistedstate/nuxt',
-    '@nuxt/ui',
-    '@vue-email/nuxt'
+    '@nuxt/ui'
   ],
   // ssr: false,
   routeRules: {
@@ -108,11 +107,6 @@ export default defineNuxtConfig({
     //   'acceptHMRUpdate',
     //   'storeToRefs'
     // ]
-  },
-
-  //* vue-email
-  vueEmail: {
-    baseUrl: process.env.WEBAPP_URL
   },
 
   //* Nuxt-Security

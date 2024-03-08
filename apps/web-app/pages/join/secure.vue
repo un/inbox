@@ -16,8 +16,10 @@
   const passkeyCreated = ref(false);
   const passwordCreated = ref(false);
   // check if the users device can directly support passkeys
-  const canUsePasskeyDirect =
-    await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+  const passkeyType =
+    (await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable())
+      ? 'platform'
+      : 'cross-platform';
 
   const turnstileEnabled = useRuntimeConfig().public.turnstileEnabled;
   if (!turnstileEnabled) {
@@ -32,20 +34,13 @@
       : (username.value = usernameCookie || '');
   }
 
-  //Form Fields
-  const emailValid = ref<boolean | 'remote' | null>(null);
-  const emailValue = ref('');
-  const emailValidationMessage = ref('');
-
   const formValid = computed(() => {
     if (secureType.value === 'passkey') {
-      return emailValid.value === true;
+      return true;
     }
     if (secureType.value === 'password') {
       return (
-        emailValid.value === true &&
-        passwordValid.value === true &&
-        passwordConfirmationValid.value === true
+        passwordValid.value === true && passwordConfirmationValid.value === true
       );
     }
   });
@@ -113,17 +108,6 @@
   const toast = useToast();
   async function createUserAccount() {
     if (!userCreated.value) {
-      if (!formValid.value) {
-        toast.add({
-          title: 'Please enter a valid email address',
-          description: 'We only accept real email addresses',
-          color: 'red',
-          icon: 'i-ph-warning-circle',
-          timeout: 5000
-        });
-        return;
-      }
-
       if (turnstileEnabled && turnstileToken.value === null) {
         turnstileError.value = true;
         await new Promise((resolve) => {
@@ -139,36 +123,23 @@
 
       buttonLoading.value = true;
       buttonLabel.value = 'Creating your account';
-
-      // Create the user's account
-
-      const result = await $trpc.auth.signup.registerUser.mutate({
-        username: String(username.value),
-        email: emailValue.value,
-        turnstileToken: turnstileToken.value
-      });
-
-      if (!result.success) {
-        pageError.value = true;
-        buttonLoading.value = false;
-        buttonLabel.value = 'Create my account';
-        return;
-      }
     }
 
     userCreated.value = true;
 
     if (secureType.value === 'password') {
-      const setUserPassowrd = await $trpc.auth.password.setUserPassword.mutate({
-        password: passwordInput.value
+      const signUp = await $trpc.auth.password.signUpWithPassword.mutate({
+        username: username.value,
+        password: passwordInput.value,
+        turnstileToken: turnstileToken.value
       });
 
-      if (!setUserPassowrd.success) {
+      if (!signUp.success) {
         toast.add({
-          id: 'password_error',
-          title: 'Password error',
+          id: 'sign_up_password_error',
+          title: 'Sign up Error',
           description:
-            'Something went wrong when setting your password, please try again.',
+            'Something went wrong when signing Up, please try again.',
           color: 'red',
           timeout: 5000,
           icon: 'i-ph-warning-circle'
@@ -179,19 +150,29 @@
         return;
       }
       passwordCreated.value = true;
+      toast.add({
+        title: 'Account created',
+        description:
+          'Your account has been created, welcome to UnInbox!<br />You will now be redirected to set up Two Factor Authentication.',
+        color: 'green',
+        timeout: 5000,
+        icon: 'i-ph-check-circle'
+      });
     }
 
     if (secureType.value === 'passkey') {
       // get passkey options for new user
-      const passkeyOptions =
-        await $trpc.auth.passkey.generateNewPasskeyChallenge.query({
-          canUsePasskeyDirect: canUsePasskeyDirect
+      const { options, publicId } =
+        await $trpc.auth.passkey.signUpWithPasskeyStart.query({
+          username: username.value,
+          turnstileToken: turnstileToken.value,
+          authenticatorType: passkeyType
         });
       // start registration
 
       let newPasskeyData: RegistrationResponseJSON;
       try {
-        newPasskeyData = await startRegistration(passkeyOptions.options);
+        newPasskeyData = await startRegistration(options);
       } catch (error) {
         toast.add({
           id: 'passkey_error',
@@ -206,16 +187,20 @@
         buttonLabel.value = 'Try Again!';
         return;
       }
-      const verifyNewPasskey = await $trpc.auth.passkey.addNewPasskey.mutate({
-        registrationResponseRaw: newPasskeyData,
-        nickname: 'Primary'
-      });
+      const verifyNewPasskey =
+        await $trpc.auth.passkey.signUpWithPasskeyFinish.query({
+          username: username.value,
+          turnstileToken: turnstileToken.value,
+          publicId,
+          registrationResponseRaw: newPasskeyData,
+          nickname: 'Primary'
+        });
       if (!verifyNewPasskey.success) {
         toast.add({
           id: 'passkey_error',
           title: 'Passkey error',
           description:
-            'Something went wrong when creating your passkey, please try again or switch to password mode.',
+            'Something went while Signing Up with Passkeys, please try again or switch to password mode.',
           color: 'red',
           timeout: 5000,
           icon: 'i-ph-warning-circle'
@@ -225,45 +210,19 @@
         return;
       }
       passkeyCreated.value = true;
+      toast.add({
+        title: 'Account created',
+        description:
+          'Your account has been created, welcome to UnInbox!<br />You will now be redirected to your organization setup.',
+        color: 'green',
+        timeout: 5000,
+        icon: 'i-ph-check-circle'
+      });
     }
-
-    toast.add({
-      title: 'Account created',
-      description:
-        'Your account has been created, welcome to UnInbox!<br />You will now be redirected to your organization setup.',
-      color: 'green',
-      timeout: 5000,
-      icon: 'i-ph-check-circle'
-    });
 
     await new Promise((resolve) => setTimeout(resolve, 1000));
-    // Remove the username cookie
-    useCookie('un-join-username', { expires: new Date() }).value = '';
-    navigateTo('/join/org');
+    navigateTo(secureType.value === 'passkey' ? '/join/org' : '/join/2fa');
   }
-
-  watchDebounced(
-    emailValue,
-    async () => {
-      if (emailValid.value === 'remote') {
-        const { validEmail } =
-          await $trpc.auth.signup.validateEmailAddress.query({
-            turnstileToken: turnstileToken.value,
-            email: emailValue.value
-          });
-
-        if (!validEmail) {
-          emailValid.value = false;
-          emailValidationMessage.value = 'Sorry, no temp email services';
-        }
-        validEmail && (emailValid.value = true);
-      }
-    },
-    {
-      debounce: 500,
-      maxWait: 5000
-    }
-  );
 
   const pageReady: Ref<boolean> = ref(false);
   onNuxtReady(() => {
@@ -272,16 +231,16 @@
 </script>
 
 <template>
-  <div class="h-screen w-full flex flex-col items-center justify-between p-4">
+  <div class="flex h-screen w-full flex-col items-center justify-between p-4">
     <div
-      class="max-w-72 w-full flex grow flex-col items-center justify-center gap-8 pb-14 md:max-w-xl">
-      <h1 class="mb-4 text-center text-2xl font-display">
+      class="flex w-full max-w-72 grow flex-col items-center justify-center gap-8 pb-14 md:max-w-xl">
+      <h1 class="font-display mb-4 text-center text-2xl">
         Let's make your <br /><span class="text-5xl">UnInbox</span>
       </h1>
       <h2 class="text-center text-xl font-semibold">
         Secure your account {{ username }}
       </h2>
-      <div class="w-full flex flex-row justify-stretch gap-2">
+      <div class="flex w-full flex-row justify-stretch gap-2">
         <UnUiTooltip
           text="Choose your username"
           class="w-full">
@@ -308,11 +267,11 @@
         </UnUiTooltip>
       </div>
 
-      <div class="w-full flex flex-col gap-4">
+      <div class="flex w-full flex-col gap-4">
         <p class="">How do you want to secure your account?</p>
-        <div class="grid grid-cols-9 w-full justify-items-center gap-8">
+        <div class="grid w-full grid-cols-9 justify-items-center gap-8">
           <button
-            class="bg-gray-50 dark:bg-gray-800 col-span-4 w-full flex flex-col cursor-pointer items-center justify-center gap-2 border border-2 rounded p-4"
+            class="col-span-4 flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded border-2 bg-gray-50 p-4 dark:bg-gray-800"
             :class="
               secureType === 'passkey'
                 ? 'border-green-500'
@@ -321,7 +280,7 @@
             @click="switchSecureType('passkey')">
             <UnUiIcon
               name="i-mdi-fingerprint"
-              class="text-gray-500 text-5xl" />
+              class="text-5xl text-gray-500" />
             <p class="font-medium">Passkey</p>
             <p class="text-sm">Fingerprint, Face ID, etc</p>
             <UnUiBadge
@@ -333,7 +292,7 @@
             orientation="vertical"
             class="w-fit" />
           <button
-            class="bg-gray-50 dark:bg-gray-800 col-span-4 w-full flex flex-col cursor-pointer items-center justify-center gap-2 border border-2 rounded p-4"
+            class="col-span-4 flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded border-2 bg-gray-50 p-4 dark:bg-gray-800"
             :class="
               secureType === 'password'
                 ? 'border-green-500'
@@ -342,7 +301,7 @@
             @click="switchSecureType('password')">
             <UnUiIcon
               name="i-ph-password-light"
-              class="text-gray-500 text-5xl" />
+              class="text-5xl text-gray-500" />
             <p class="font-medium">Password</p>
             <p class="text-sm">Alphanumeric!1</p>
             <UnUiBadge
@@ -353,7 +312,7 @@
       </div>
       <div
         v-if="secureType === 'passkey'"
-        class="w-full flex flex-col gap-4">
+        class="flex w-full flex-col gap-4">
         <div>
           <span class="font-semibold">What are passkeys?</span>
           <p class="">
@@ -361,7 +320,7 @@
             access to an app in an easier and more secure way.
           </p>
         </div>
-        <div class="grid w-full gap-2 lt-md:grid-rows-2 md:grid-cols-2">
+        <div class="lt-md:grid-rows-2 grid w-full gap-2 md:grid-cols-2">
           <UnUiButton
             label="How do they work"
             icon="i-mdi-information-variant"
@@ -429,7 +388,7 @@
                     : 'text-red-500'
                 " />
               <span
-                class="text-gray-800 dark:text-gray-200 text-sm leading-none">
+                class="text-sm leading-none text-gray-800 dark:text-gray-200">
                 at least 8 characters long
               </span>
             </div>
@@ -442,7 +401,7 @@
                     : 'text-red-500'
                 " />
               <span
-                class="text-gray-800 dark:text-gray-200 text-sm leading-none">
+                class="text-sm leading-none text-gray-800 dark:text-gray-200">
                 include 1 number
               </span>
             </div>
@@ -455,7 +414,7 @@
                     : 'text-red-500'
                 " />
               <span
-                class="text-gray-800 dark:text-gray-200 text-sm leading-none">
+                class="text-sm leading-none text-gray-800 dark:text-gray-200">
                 include 1 lowercase letter
               </span>
             </div>
@@ -468,7 +427,7 @@
                     : 'text-red-500'
                 " />
               <span
-                class="text-gray-800 dark:text-gray-200 text-sm leading-none">
+                class="text-sm leading-none text-gray-800 dark:text-gray-200">
                 include 1 uppercase letter
               </span>
             </div>
@@ -481,7 +440,7 @@
                     : 'text-red-500'
                 " />
               <span
-                class="text-gray-800 dark:text-gray-200 text-sm leading-none">
+                class="text-sm leading-none text-gray-800 dark:text-gray-200">
                 include 1 special character
               </span>
             </div>
@@ -496,37 +455,13 @@
                     : 'text-red-500'
                 " />
               <span
-                class="text-gray-800 dark:text-gray-200 text-sm leading-none">
-                include no whitespaces</span
-              >
+                class="text-sm leading-none text-gray-800 dark:text-gray-200">
+                include no whitespaces
+              </span>
             </div>
           </div>
         </div>
       </div>
-      <hr class="border-gray-200 border-top-1 w-full border-1" />
-      <div class="w-full flex flex-col gap-2">
-        <div class="w-full flex flex-col gap-0">
-          <p class="">
-            We also need an email address in case you ever get locked out
-          </p>
-          <p class="text-gray-400 text-xs">
-            We'll never send any spam emails or share your address with anyone
-            else
-          </p>
-        </div>
-        <UnUiInput
-          v-model:value="emailValue"
-          v-model:valid="emailValid"
-          v-model:validationMessage="emailValidationMessage"
-          width="full"
-          icon="ph:envelope"
-          label="Recovery email address"
-          helper="This email will only be used if you ever lose all your passkeys and need to recover your account or for important account notices."
-          placeholder=""
-          :remote-validation="true"
-          :schema="z.string().trim().email()" />
-      </div>
-
       <div class="mt-3 w-full">
         <UnUiButton
           :label="buttonLabel"
@@ -538,7 +473,7 @@
       </div>
       <p
         v-if="pageError"
-        class="w-full rounded bg-red-9 p-4 text-center">
+        class="bg-red-9 w-full rounded p-4 text-center">
         Something went wrong, please try again or contact our support team if it
         persists
       </p>
@@ -546,7 +481,7 @@
         tip: if you have any issues during this process, reach out to our
         support team
       </p>
-      <div class="h-0 max-h-0 max-w-full w-full">
+      <div class="h-0 max-h-0 w-full max-w-full">
         <UnUiAlert
           v-show="turnstileError"
           icon="i-ph-warning-circle"
@@ -559,7 +494,7 @@
       <NuxtTurnstile
         v-if="pageReady && turnstileEnabled"
         v-model="turnstileToken"
-        class="fixed bottom-5 mb-[-30px] scale-50 hover:(mb-0 scale-100)" />
+        class="hover:(mb-0 scale-100) fixed bottom-5 mb-[-30px] scale-50" />
     </div>
     <UnUiModal
       v-model="howToAddPasskeyDialogOpen"
@@ -569,7 +504,7 @@
           <p>How to add a passkey?</p>
         </div>
       </template>
-      <div class="w-full flex flex-col items-center gap-4">
+      <div class="flex w-full flex-col items-center gap-4">
         <p
           v-if="instructionSet === ''"
           class="text-center">
@@ -578,9 +513,9 @@
           Select your mobile system below to see the instructions.
         </p>
         <div
-          class="grid w-full justify-items-stretch gap-2 lt-md:grid-rows-2 md:grid-cols-2">
+          class="lt-md:grid-rows-2 grid w-full justify-items-stretch gap-2 md:grid-cols-2">
           <button
-            class="h-24 grow border border-primary-7 rounded px-4 text-xl hover:bg-primary-4"
+            class="border-primary-7 hover:bg-primary-4 h-24 grow rounded border px-4 text-xl"
             :class="instructionSet === 'ios' ? 'bg-primary-5' : 'bg-primary-2'"
             @click="instructionSet = 'ios'">
             <UnUiIcon
@@ -588,7 +523,7 @@
               class="mr-2 mt-[-6px]" />iOS
           </button>
           <button
-            class="h-24 border border-primary-7 rounded px-4 text-xl hover:bg-primary-4"
+            class="border-primary-7 hover:bg-primary-4 h-24 rounded border px-4 text-xl"
             :class="
               instructionSet === 'android' ? 'bg-primary-5' : 'bg-primary-2'
             "
@@ -602,13 +537,13 @@
           v-if="instructionSet === 'ios'"
           class="">
           <li>
-            Click the <span class="text-sm font-mono">"Create my passkey"</span>
+            Click the <span class="font-mono text-sm">"Create my passkey"</span>
             button below
           </li>
           <li>The browser will ask where to save the passkey</li>
           <li>
             Select
-            <span class="text-sm font-mono">"Use a phone or tablet"</span>
+            <span class="font-mono text-sm">"Use a phone or tablet"</span>
           </li>
           <li>
             Using the built-in iOS camera app to scan the QR barcode thats
@@ -616,7 +551,7 @@
           </li>
           <li>
             Tap the small
-            <span class="text-sm font-mono">"Save a passkey"</span> message that
+            <span class="font-mono text-sm">"Save a passkey"</span> message that
             appears on screen
           </li>
         </ol>

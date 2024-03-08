@@ -42,13 +42,15 @@ export interface Authenticator {
 
 async function createAuthenticator(
   authenticator: Authenticator,
-  nickname: string
+  nickname: string,
+  // We use a default value for the db if not provided, so that we can also pass transactions
+  passkeyDb = db
 ) {
   log('passkey: createAuthenticator', { authenticator });
   const b64ID = isoBase64URL.fromBuffer(authenticator.credentialID);
   const b64PK = isoBase64URL.fromBuffer(authenticator.credentialPublicKey);
 
-  await db.insert(authenticators).values({
+  await passkeyDb.insert(authenticators).values({
     accountId: authenticator.accountId,
     nickname: nickname,
     credentialID: b64ID,
@@ -189,10 +191,10 @@ async function listAuthenticatorsByUserId(userId: number) {
 }
 
 export const usePasskeysDb = {
-  createAuthenticator: createAuthenticator,
-  updateAuthenticatorCounter: updateAuthenticatorCounter,
-  getAuthenticator: getAuthenticator,
-  deleteAuthenticator: deleteAuthenticator,
-  listAuthenticatorsByAccountId: listAuthenticatorsByAccountId,
-  listAuthenticatorsByUserId: listAuthenticatorsByUserId
+  createAuthenticator,
+  updateAuthenticatorCounter,
+  getAuthenticator,
+  deleteAuthenticator,
+  listAuthenticatorsByAccountId,
+  listAuthenticatorsByUserId
 };
