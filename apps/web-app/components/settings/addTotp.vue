@@ -227,8 +227,8 @@
       <div
         v-if="!new2FAVerified"
         class="grid grid-cols-2 gap-4">
-        <div class="flex flex-col items-center gap-2">
-          <span class="text-lg">Step 1</span>
+        <div class="flex flex-col items-center gap-4">
+          <span class="text-xl font-medium">Step 1</span>
           <div v-if="new2FAStatus === 'pending'">Loading new TOTP</div>
           <div
             v-if="new2FAStatus === 'success'"
@@ -249,7 +249,7 @@
           </div>
         </div>
         <div class="flex flex-col items-center gap-4">
-          <span class="text-lgt">Step 2</span>
+          <span class="text-xl font-medium">Step 2</span>
           <span class="">
             Enter the 6-digit code from your 2FA app to generate your recovery
             codes
@@ -265,7 +265,7 @@
       <div
         v-if="new2FAVerified"
         class="flex flex-col items-center gap-4">
-        <span class="text-2xl font-bold">Step 3</span>
+        <span class="text-xl font-medium">Step 3</span>
         <span class="w-fit text-balance text-center font-medium">
           Save your recovery code. Keep it in a safe and secure place as It can
           be used to gain access to your account. If you lose it, you will not
