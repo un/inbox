@@ -7,7 +7,7 @@ module.exports = {
   },
   overrides: [
     {
-      files: ['*/server/**/*.ts'],
+      files: ['*'],
       rules: {
         'no-console': [
           'error',
