@@ -69,7 +69,7 @@
     "*": "eslint --fix"
   },
   "dependencies": {
-    "@u22n/tsconfig": "workspace:*",
+    "@u22n/tsconfig": "^0.0.1",
     "puppeteer": "22.3.0"
   }
 }
