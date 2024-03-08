@@ -12,7 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@u22n/tsconfig": "workspace:*",
+    "@u22n/tsconfig": "^0.0.1",
     "@tiptap/core": "^2.2.4",
     "@tiptap/html": "^2.2.4",
     "@tiptap/starter-kit": "^2.2.4",

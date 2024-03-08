@@ -66,8 +66,8 @@ importers:
         specifier: ^1.16.0
         version: 1.16.0
       '@u22n/tsconfig':
-        specifier: workspace:*
-        version: link:../../packages/tsconfig
+        specifier: ^0.0.1
+        version: 0.0.1
       '@vueuse/nuxt':
         specifier: ^10.8.0
         version: 10.8.0(nuxt@3.10.2)(vue@3.4.21)
@@ -109,8 +109,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/postal-puppet
       '@u22n/tsconfig':
-        specifier: workspace:*
-        version: link:../../packages/tsconfig
+        specifier: ^0.0.1
+        version: 0.0.1
       '@u22n/types':
         specifier: workspace:*
         version: link:../../packages/types
@@ -151,8 +151,8 @@ importers:
         specifier: workspace:^
         version: link:../../packages/tiptap
       '@u22n/tsconfig':
-        specifier: workspace:^
-        version: link:../../packages/tsconfig
+        specifier: ^0.0.1
+        version: 0.0.1
       '@u22n/utils':
         specifier: workspace:^
         version: link:../../packages/utils
@@ -194,8 +194,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/database
       '@u22n/tsconfig':
-        specifier: workspace:*
-        version: link:../../packages/tsconfig
+        specifier: ^0.0.1
+        version: 0.0.1
       '@u22n/types':
         specifier: workspace:*
         version: link:../../packages/types
@@ -245,8 +245,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/trpc
       '@u22n/tsconfig':
-        specifier: workspace:*
-        version: link:../../packages/tsconfig
+        specifier: ^0.0.1
+        version: 0.0.1
       '@u22n/types':
         specifier: workspace:*
         version: link:../../packages/types
@@ -405,8 +405,8 @@ importers:
         specifier: ^1.16.0
         version: 1.16.0
       '@u22n/tsconfig':
-        specifier: workspace:*
-        version: link:../tsconfig
+        specifier: ^0.0.1
+        version: 0.0.1
       '@u22n/types':
         specifier: workspace:*
         version: link:../types
@@ -435,8 +435,8 @@ importers:
   packages/mailtools:
     dependencies:
       '@u22n/tsconfig':
-        specifier: workspace:^
-        version: link:../tsconfig
+        specifier: ^0.0.1
+        version: 0.0.1
       autolinker:
         specifier: ^4.0.0
         version: 4.0.0
@@ -484,8 +484,8 @@ importers:
   packages/postal-puppet:
     dependencies:
       '@u22n/tsconfig':
-        specifier: workspace:*
-        version: link:../tsconfig
+        specifier: ^0.0.1
+        version: 0.0.1
       puppeteer:
         specifier: 22.3.0
         version: 22.3.0(typescript@5.3.3)
@@ -554,8 +554,8 @@ importers:
         specifier: ^2.2.4
         version: 2.2.4(@tiptap/core@2.2.4)(@tiptap/pm@2.2.4)(vue@3.4.21)
       '@u22n/tsconfig':
-        specifier: workspace:*
-        version: link:../tsconfig
+        specifier: ^0.0.1
+        version: 0.0.1
 
   packages/trpc:
     dependencies:
@@ -563,13 +563,11 @@ importers:
         specifier: workspace:*
         version: link:../../apps/mail-bridge
 
-  packages/tsconfig: {}
-
   packages/types:
     dependencies:
       '@u22n/tsconfig':
-        specifier: workspace:*
-        version: link:../tsconfig
+        specifier: ^0.0.1
+        version: 0.0.1
     devDependencies:
       typescript:
         specifier: ^5.3.3
@@ -6293,6 +6291,10 @@ packages:
       '@typescript-eslint/types': 6.21.0
       eslint-visitor-keys: 3.4.3
     dev: true
+
+  /@u22n/tsconfig@0.0.1:
+    resolution: {integrity: sha512-pn3tZ6ItSu+O3qtoSI+GYLzDnCKLAHMZRocGtq5N9MqEBeFjSUfLcc3ZsnLPCOi1GWhIj7oFCmCOq5/clUsjag==}
+    dev: false
 
   /@ungap/structured-clone@1.2.0:
     resolution: {integrity: sha512-zuVdFrMJiuCDQUMCzQaD6KL28MjnqqN8XnAqiEq9PNm/hCPTSGfrXCOfwj1ow4LFb/tNymJPwsNbVePc1xFqrQ==}

@@ -10,7 +10,7 @@
     "pnpm": ">=8"
   },
   "dependencies": {
-    "@u22n/tsconfig": "workspace:*"
+    "@u22n/tsconfig": "^0.0.1"
   },
   "devDependencies": {
     "typescript": "^5.3.3"
