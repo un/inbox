@@ -21,15 +21,6 @@
     "@trpc/client": "^10.45.1",
     "@trpc/server": "^10.45.1",
     "@types/mailparser": "^3.4.4",
-<<<<<<< HEAD
-=======
-    "@uninbox/database": "workspace:*",
-    "@uninbox/mailtools": "workspace:*",
-    "@uninbox/postal-puppet": "workspace:*",
-    "@uninbox/tsconfig": "workspace:*",
-    "@uninbox/types": "workspace:*",
-    "@uninbox/utils": "workspace:*",
->>>>>>> af2b5f84 (spf issue)
     "html-to-text": "^9.0.5",
     "mailauth": "^4.6.5",
     "mailparser": "^3.6.9",

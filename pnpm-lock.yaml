@@ -4,6 +4,10 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
 importers:
 
   .:
@@ -126,6 +130,12 @@ importers:
       html-to-text:
         specifier: ^9.0.5
         version: 9.0.5
+      mailauth:
+        specifier: ^4.6.5
+        version: 4.6.5
+      mailparser:
+        specifier: ^3.6.9
+        version: 3.6.9
       mailauth:
         specifier: ^4.6.5
         version: 4.6.5
@@ -500,6 +510,7 @@ importers:
         version: 5.1.3(@types/node@20.11.19)
       vitest:
         specifier: ^1.3.1
+        version: 1.3.1(@types/node@20.11.19)
         version: 1.3.1(@types/node@20.11.19)
 
   packages/tiptap:
@@ -2821,6 +2832,16 @@ packages:
       '@hapi/hoek': 9.3.0
     dev: false
 
+  /@hapi/hoek@9.3.0:
+    resolution: {integrity: sha512-/c6rf4UJlmHlC9b5BaNvzAcFv7HZ2QHaV0D4/HNlBdvFnvQq8RI4kYdhyPCl7Xj+oWvTWQ8ujhqS53LIgAe6KQ==}
+    dev: false
+
+  /@hapi/topo@5.1.0:
+    resolution: {integrity: sha512-foQZKJig7Ob0BMAYBfcJk8d77QtOe7Wo4ox7ff1lQYoNNAb6jwcY1ncdoy2e9wQZzvNy7ODZCYJkK8kzmcAnAg==}
+    dependencies:
+      '@hapi/hoek': 9.3.0
+    dev: false
+
   /@headlessui/tailwindcss@0.2.0(tailwindcss@3.4.1):
     resolution: {integrity: sha512-fpL830Fln1SykOCboExsWr3JIVeQKieLJ3XytLe/tt1A0XzqUthOftDmjcCYLW62w7mQI7wXcoPXr3tZ9QfGxw==}
     engines: {node: '>=10'}
@@ -4308,6 +4329,7 @@ packages:
       ufo: 1.4.0
       unctx: 2.3.1
       unimport: 3.7.1
+      unimport: 3.7.1
       untyped: 1.4.2
     transitivePeerDependencies:
       - rollup
@@ -5075,6 +5097,15 @@ packages:
       tslib: 2.6.2
     dev: false
 
+  /@peculiar/asn1-x509-logotype@2.3.8:
+    resolution: {integrity: sha512-8o3iLl/aQP/HEpaxmU9tGo/7iqSb6XQtSYbJIOd8cXg7Wy5xnBsO5JgCs/njl0pFg+nph37DHFiVqy/R4kmIGQ==}
+    dependencies:
+      '@peculiar/asn1-schema': 2.3.8
+      '@peculiar/asn1-x509': 2.3.8
+      asn1js: 3.0.5
+      tslib: 2.6.2
+    dev: false
+
   /@peculiar/asn1-x509@2.3.8:
     resolution: {integrity: sha512-voKxGfDU1c6r9mKiN5ZUsZWh3Dy1BABvTM3cimf0tztNwyMJPhiXY94eRTgsMQe6ViLfT6EoXxkWVzcm3mFAFw==}
     dependencies:
@@ -5532,6 +5563,7 @@ packages:
       magic-string: 0.30.8
       rollup: 3.29.4
     dev: true
+    dev: true
 
 <<<<<<< HEAD
   /@rollup/plugin-replace@5.0.5(rollup@4.12.1):
@@ -5825,6 +5857,20 @@ packages:
     dependencies:
       fflate: 0.7.4
       string.prototype.codepointat: 0.2.1
+    dev: false
+
+  /@sideway/address@4.1.5:
+    resolution: {integrity: sha512-IqO/DUQHUkPeixNQ8n0JA6102hT9CmaljNTPmQ1u8MEhBo/R4Q8eKLN/vGZxuebwOroDB4cbpjheD4+/sKFK4Q==}
+    dependencies:
+      '@hapi/hoek': 9.3.0
+    dev: false
+
+  /@sideway/formula@3.0.1:
+    resolution: {integrity: sha512-/poHZJJVjx3L+zVD6g9KgHfYnb443oi7wLu/XKojDviHy6HOEOA6z1Trk5aR1dGcmPenJEgb2sK2I80LeS3MIg==}
+    dev: false
+
+  /@sideway/pinpoint@2.0.0:
+    resolution: {integrity: sha512-RNiOoTPkptFtSVzQevY/yWtZwf/RxyVnPy/OcA9HBM3MlGDnBEYL5B41H0MTn0Uec8Hi+2qUtTfG2WWZBmMejQ==}
     dev: false
 
   /@sideway/address@4.1.5:
@@ -10598,6 +10644,11 @@ packages:
     engines: {node: '>=8.10.0'}
     dev: false
 
+  /encoding-japanese@2.0.0:
+    resolution: {integrity: sha512-++P0RhebUC8MJAwJOsT93dT+5oc5oPImp1HubZpAuCZ5kTLnhuuBhKHj2jJeO/Gj93idPBWmIuQ9QWMe5rX3pQ==}
+    engines: {node: '>=8.10.0'}
+    dev: false
+
   /encoding@0.1.13:
     resolution: {integrity: sha512-ETBauow1T35Y/WZMkio9jiM0Z5xjHHmJ4XmjZOq1l/dXz3lr2sRn87nJy20RupqSh1F2m3HHPSp8ShIPQJrJ3A==}
     requiresBuild: true
@@ -11431,6 +11482,7 @@ packages:
       '@typescript-eslint/eslint-plugin': 6.21.0(@typescript-eslint/parser@6.21.0)(eslint@8.56.0)(typescript@5.3.3)
       '@typescript-eslint/utils': 7.1.1(eslint@8.56.0)(typescript@5.3.3)
       eslint: 8.56.0
+      vitest: 1.3.1(@types/node@20.11.19)
       vitest: 1.3.1(@types/node@20.11.19)
     transitivePeerDependencies:
       - supports-color
@@ -13799,6 +13851,47 @@ packages:
       '@babel/parser': 7.24.0
       '@babel/types': 7.24.0
       source-map-js: 1.0.2
+
+  /mailauth@4.6.5:
+    resolution: {integrity: sha512-bQFgHrhcmks+LNwcEYTxqX3PZ2lA2LvAUatxSgmfZREbJfDBSwvZ9NX8Nc/l2t/DyUF6dmorPqn+gGdQZjfKCw==}
+    engines: {node: '>=16.0.0'}
+    hasBin: true
+    dependencies:
+      '@postalsys/vmc': 1.0.8
+      fast-xml-parser: 4.3.4
+      ipaddr.js: 2.1.0
+      joi: 17.12.1
+      libmime: 5.2.1
+      nodemailer: 6.9.9
+      psl: 1.9.0
+      punycode: 2.3.1
+      undici: 5.28.2
+      uuid: 9.0.1
+      yargs: 17.7.2
+    dev: false
+
+  /mailparser@3.6.9:
+    resolution: {integrity: sha512-1fIDZlgN1NnuzmTSEUxkaViquXYkw5NbQehVc+kz55QRy98QgLdTtRSKv289Jy4NrCiDchRx6zAijB4HrPsvkA==}
+    dependencies:
+      encoding-japanese: 2.0.0
+      he: 1.2.0
+      html-to-text: 9.0.5
+      iconv-lite: 0.6.3
+      libmime: 5.3.4
+      linkify-it: 5.0.0
+      mailsplit: 5.4.0
+      nodemailer: 6.9.11
+      punycode: 2.3.1
+      tlds: 1.250.0
+    dev: false
+
+  /mailsplit@5.4.0:
+    resolution: {integrity: sha512-wnYxX5D5qymGIPYLwnp6h8n1+6P6vz/MJn5AzGjZ8pwICWssL+CCQjWBIToOVHASmATot4ktvlLo6CyLfOXWYA==}
+    dependencies:
+      libbase64: 1.2.1
+      libmime: 5.2.0
+      libqp: 2.0.1
+    dev: false
 
   /mailauth@4.6.5:
     resolution: {integrity: sha512-bQFgHrhcmks+LNwcEYTxqX3PZ2lA2LvAUatxSgmfZREbJfDBSwvZ9NX8Nc/l2t/DyUF6dmorPqn+gGdQZjfKCw==}
@@ -18782,6 +18875,11 @@ packages:
     hasBin: true
     dev: false
 
+  /tlds@1.250.0:
+    resolution: {integrity: sha512-rWsBfFCWKrjM/o2Q1TTUeYQv6tHSd/umUutDjVs6taTuEgRDIreVYIBgWRWW4ot7jp6n0UVUuxhTLWBtUmPu/w==}
+    hasBin: true
+    dev: false
+
   /to-fast-properties@2.0.0:
     resolution: {integrity: sha512-/OaKK0xYrs3DmxRYqL/yDc+FxFUVYhDlXMhRmv3z915w2HF1tnN1omB354j8VUGO/hbRzyD6Y3sA7v7GS/ceog==}
     engines: {node: '>=4'}
@@ -19458,6 +19556,7 @@ packages:
       fast-glob: 3.3.2
       json5: 2.2.3
       local-pkg: 0.4.3
+      mlly: 1.6.1
       mlly: 1.6.1
       pathe: 1.1.2
       scule: 1.3.0
