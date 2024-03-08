@@ -1,4 +1,4 @@
-import type { MailDomainEntries } from '@uninbox/types';
+import type { MailDomainEntries } from '@u22n/types';
 
 export default defineNuxtConfig({
   telemetry: false,

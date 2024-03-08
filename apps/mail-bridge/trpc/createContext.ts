@@ -1,6 +1,6 @@
 import { inferAsyncReturnType } from '@trpc/server';
 import type { H3Event } from 'h3';
-import { db } from '@uninbox/database';
+import { db } from '@u22n/database';
 
 //  * Creates context for an incoming request
 //  * @link https://trpc.io/docs/context

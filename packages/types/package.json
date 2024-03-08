@@ -1,5 +1,5 @@
 {
-  "name": "@uninbox/types",
+  "name": "@u22n/types",
   "private": true,
   "version": "1.0.0",
   "description": "",
@@ -10,7 +10,7 @@
     "pnpm": ">=8"
   },
   "dependencies": {
-    "@uninbox/tsconfig": "workspace:*"
+    "@u22n/tsconfig": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.3.3"

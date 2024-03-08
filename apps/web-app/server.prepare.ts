@@ -1,4 +1,4 @@
-import type { MailDomainEntries } from '@uninbox/types';
+import type { MailDomainEntries } from '@u22n/types';
 import { defineNuxtPrepareHandler } from 'nuxt-prepare/config';
 
 export default defineNuxtPrepareHandler(async () => {

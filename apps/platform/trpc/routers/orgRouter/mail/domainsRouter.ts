@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { router, orgProcedure } from '../../../trpc';
-import { and, eq } from '@uninbox/database/orm';
-import { orgs, domains } from '@uninbox/database/schema';
-import { nanoId, zodSchemas } from '@uninbox/utils';
+import { and, eq } from '@u22n/database/orm';
+import { orgs, domains } from '@u22n/database/schema';
+import { nanoId, zodSchemas } from '@u22n/utils';
 import dns from 'node:dns';
 import { verifyDns } from '../../../../utils/verifyDns';
 import { TRPCError } from '@trpc/server';

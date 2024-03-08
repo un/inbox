@@ -1,13 +1,13 @@
 import { z } from 'zod';
 import { router, orgProcedure } from '../../../trpc';
-import { eq, and } from '@uninbox/database/orm';
+import { eq, and } from '@u22n/database/orm';
 import {
   orgMembers,
   userGroupMembers,
   userGroups
-} from '@uninbox/database/schema';
-import { nanoId, zodSchemas } from '@uninbox/utils';
-import { uiColors } from '@uninbox/types/ui';
+} from '@u22n/database/schema';
+import { nanoId, zodSchemas } from '@u22n/utils';
+import { uiColors } from '@u22n/types/ui';
 import { isUserAdminOfOrg } from '../../../../utils/user';
 import { TRPCError } from '@trpc/server';
 

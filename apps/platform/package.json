@@ -1,5 +1,5 @@
 {
-  "name": "@uninbox/platform",
+  "name": "@u22n/platform",
   "scripts": {
     "dev": "PORT=3300 nitropack dev",
     "build": "nitropack build",
@@ -9,10 +9,10 @@
     "@simplewebauthn/server": "^9.0.3",
     "@trpc/client": "^10.45.1",
     "@trpc/server": "^10.45.1",
-    "@uninbox/database": "workspace:^",
-    "@uninbox/tiptap": "workspace:^",
-    "@uninbox/tsconfig": "workspace:^",
-    "@uninbox/utils": "workspace:^",
+    "@u22n/database": "workspace:^",
+    "@u22n/tiptap": "workspace:^",
+    "@u22n/tsconfig": "workspace:^",
+    "@u22n/utils": "workspace:^",
     "drizzle-orm": "^0.29.4",
     "h3": "^1.11.1",
     "lucia": "^3.0.1",
@@ -22,6 +22,6 @@
   "devDependencies": {
     "@simplewebauthn/types": "^9.0.1",
     "@uninbox-ee/types": "workspace:^",
-    "@uninbox/types": "workspace:^"
+    "@u22n/types": "workspace:^"
   }
 }

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { router, userProcedure } from '../../trpc';
-import { eq } from '@uninbox/database/orm';
-import { users } from '@uninbox/database/schema';
+import { eq } from '@u22n/database/orm';
+import { users } from '@u22n/database/schema';
 
 export const defaultsRouter = router({
   redirectionData: userProcedure

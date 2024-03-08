@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { router, userProcedure } from '../../trpc';
-import { and, eq } from '@uninbox/database/orm';
-import { userProfiles, orgs, orgMembers } from '@uninbox/database/schema';
-import { nanoId, zodSchemas } from '@uninbox/utils';
+import { and, eq } from '@u22n/database/orm';
+import { userProfiles, orgs, orgMembers } from '@u22n/database/schema';
+import { nanoId, zodSchemas } from '@u22n/utils';
 import { TRPCError } from '@trpc/server';
 import { useRuntimeConfig } from '#imports';
 

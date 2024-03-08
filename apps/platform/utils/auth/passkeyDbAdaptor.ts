@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm';
-import { db } from '@uninbox/database';
-import { accounts, authenticators } from '@uninbox/database/schema';
+import { db } from '@u22n/database';
+import { accounts, authenticators } from '@u22n/database/schema';
 import { AuthenticatorTransportFuture } from '@simplewebauthn/types';
 import { isoBase64URL } from '@simplewebauthn/server/helpers';
 

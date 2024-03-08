@@ -1,10 +1,10 @@
 import { z } from 'zod';
 import { router, limitedProcedure } from '../../trpc';
-import type { DBType } from '@uninbox/database';
-import { eq } from '@uninbox/database/orm';
-import { users } from '@uninbox/database/schema';
+import type { DBType } from '@u22n/database';
+import { eq } from '@u22n/database/orm';
+import { users } from '@u22n/database/schema';
 import { blockedUsernames, reservedUsernames } from '../../../utils/signup';
-import { zodSchemas } from '@uninbox/utils';
+import { zodSchemas } from '@u22n/utils';
 
 export async function validateUsername(
   db: DBType,

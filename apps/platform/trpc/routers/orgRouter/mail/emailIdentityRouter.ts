@@ -6,7 +6,7 @@ import {
   inArray,
   or,
   type InferInsertModel
-} from '@uninbox/database/orm';
+} from '@u22n/database/orm';
 import {
   orgMembers,
   domains,
@@ -15,8 +15,8 @@ import {
   emailRoutingRulesDestinations,
   emailIdentities,
   userGroupMembers
-} from '@uninbox/database/schema';
-import { nanoId, zodSchemas } from '@uninbox/utils';
+} from '@u22n/database/schema';
+import { nanoId, zodSchemas } from '@u22n/utils';
 import { isUserAdminOfOrg } from '../../../../utils/user';
 import { TRPCError } from '@trpc/server';
 

@@ -1,13 +1,13 @@
 {
-    "name": "@uninbox/local-docker",
-    "version": "0.1.0",
-    "description": "Run required services for local development as docker containers",
-    "scripts": {
-        "docker:up": "docker compose up",
-        "docker:down": "docker compose down",
-        "docker:clean": "docker compose down -v"
-    },
-    "author": "",
-    "license": "MIT",
-    "packageManager": "pnpm@8.5.1"
+  "name": "@u22n/local-docker",
+  "version": "0.1.0",
+  "description": "Run required services for local development as docker containers",
+  "scripts": {
+    "docker:up": "docker compose up",
+    "docker:down": "docker compose down",
+    "docker:clean": "docker compose down -v"
+  },
+  "author": "",
+  "license": "MIT",
+  "packageManager": "pnpm@8.5.1"
 }

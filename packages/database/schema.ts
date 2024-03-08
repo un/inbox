@@ -18,8 +18,8 @@ import {
   customType
 } from 'drizzle-orm/mysql-core';
 import { relations, sql } from 'drizzle-orm';
-import { nanoIdLength, nanoIdLongLength } from '@uninbox/utils';
-import { uiColors } from '@uninbox/types/ui';
+import { nanoIdLength, nanoIdLongLength } from '@u22n/utils';
+import { uiColors } from '@u22n/types/ui';
 import {
   stripeBillingPeriods,
   stripePlanNames

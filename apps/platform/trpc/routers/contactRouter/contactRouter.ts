@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { router, orgProcedure } from '../../trpc';
-import { and, eq } from '@uninbox/database/orm';
-import { contacts } from '@uninbox/database/schema';
+import { and, eq } from '@u22n/database/orm';
+import { contacts } from '@u22n/database/schema';
 import { TRPCError } from '@trpc/server';
 
 export const contactsRouter = router({

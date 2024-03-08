@@ -1,6 +1,6 @@
 <script setup lang="ts">
-  import type { tiptapVue3 } from '@uninbox/tiptap';
-  import type { UiColor } from '@uninbox/types/ui';
+  import type { tiptapVue3 } from '@u22n/tiptap';
+  import type { UiColor } from '@u22n/types/ui';
   import { useTimeAgo } from '@vueuse/core';
   import { stringify } from 'superjson';
   import { z } from 'zod';
@@ -454,8 +454,8 @@
   }
 </script>
 <template>
-  <div class="h-full max-h-full max-w-full w-full flex flex-col gap-4">
-    <div class="z-20000 mb-[-24px] h-[24px] from-base-1 bg-gradient-to-b" />
+  <div class="flex h-full max-h-full w-full max-w-full flex-col gap-4">
+    <div class="z-20000 from-base-1 mb-[-24px] h-[24px] bg-gradient-to-b" />
     <UnUiAlert
       v-if="
         orgEmailIdentities.length === 0 &&
@@ -501,7 +501,7 @@
                     class="flex flex-row items-center gap-2 truncate">
                     <span
                       v-if="hasEmailParticipants && index === 0"
-                      class="text-gray-400 dark:text-gray-600 text-xs leading-0">
+                      class="leading-0 text-xs text-gray-400 dark:text-gray-600">
                       TO:
                     </span>
                     <div
@@ -558,7 +558,7 @@
                         index === 0 &&
                         selectedParticipants.length > 1
                       "
-                      class="text-gray-400 dark:text-gray-600 ml-2 border-l border-l-1 border-l-1 pl-2 text-xs leading-0">
+                      class="border-l-1 border-l-1 leading-0 ml-2 border-l pl-2 text-xs text-gray-400 dark:text-gray-600">
                       CC:
                     </span>
                   </div>
@@ -641,7 +641,7 @@
     <div
       v-show="hasEmailParticipants"
       class="flex flex-col gap-2 transition-all"
-      :class="hasEmailParticipants ? 'opacity-100' : 'opacity-0 h-0'">
+      :class="hasEmailParticipants ? 'opacity-100' : 'h-0 opacity-0'">
       <span class="text-sm font-medium"> Send External Email As </span>
       <div class="flex flex-col gap-4">
         <div class="flex flex-col gap-1">
@@ -695,7 +695,7 @@
         </div>
       </div>
     </div>
-    <div class="w-full flex flex-col gap-2">
+    <div class="flex w-full flex-col gap-2">
       <UnUiInput
         v-model:value="conversationTopicInput"
         v-model:valid="conversationSubjectInputValid"
@@ -705,7 +705,7 @@
     </div>
 
     <div
-      class="h-full max-h-full w-full flex flex-col justify-items-end gap-2 overflow-hidden">
+      class="flex h-full max-h-full w-full flex-col justify-items-end gap-2 overflow-hidden">
       <span class="text-sm font-medium">Message</span>
       <UnEditor
         v-model:modelValue="messageEditorData"

@@ -1,5 +1,5 @@
 {
-  "name": "@uninbox/database",
+  "name": "@u22n/database",
   "private": true,
   "types": "./index.ts",
   "main": "index.js",
@@ -21,9 +21,9 @@
     "db:clean:r": "infisical run --env=local -- esno dbClean.ts"
   },
   "dependencies": {
-    "@uninbox/tsconfig": "workspace:*",
-    "@uninbox/types": "workspace:*",
-    "@uninbox/utils": "workspace:*",
+    "@u22n/tsconfig": "workspace:*",
+    "@u22n/types": "workspace:*",
+    "@u22n/utils": "workspace:*",
     "@planetscale/database": "^1.16.0",
     "drizzle-orm": "^0.29.3",
     "mysql2": "^3.9.1"

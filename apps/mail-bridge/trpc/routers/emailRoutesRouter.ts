@@ -6,10 +6,10 @@ import {
   emailIdentitiesAuthorizedUsers,
   postalServers,
   personalEmailIdentities
-} from '@uninbox/database/schema';
-import { nanoId, nanoIdLength } from '@uninbox/utils';
-import { postalPuppet } from '@uninbox/postal-puppet';
-import { eq } from '@uninbox/database/orm';
+} from '@u22n/database/schema';
+import { nanoId, nanoIdLength } from '@u22n/utils';
+import { postalPuppet } from '@u22n/postal-puppet';
+import { eq } from '@u22n/database/orm';
 
 export const emailRoutesRouter = router({
   createRootEmailAddress: protectedProcedure

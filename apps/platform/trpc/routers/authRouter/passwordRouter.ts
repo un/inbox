@@ -1,9 +1,9 @@
 import { z } from 'zod';
 import { Argon2id } from 'oslo/password';
 import { limitedProcedure, router, userProcedure } from '../../trpc';
-import { eq } from '@uninbox/database/orm';
-import { accounts, users } from '@uninbox/database/schema';
-import { nanoId, zodSchemas } from '@uninbox/utils';
+import { eq } from '@u22n/database/orm';
+import { accounts, users } from '@u22n/database/schema';
+import { nanoId, zodSchemas } from '@u22n/utils';
 import { TRPCError } from '@trpc/server';
 import { createError, setCookie } from '#imports';
 import { lucia } from '../../../utils/auth';

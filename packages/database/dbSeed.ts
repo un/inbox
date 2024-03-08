@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import { nanoId, nanoIdLength, nanoIdToken } from '@uninbox/utils';
+import { nanoId, nanoIdLength, nanoIdToken } from '@u22n/utils';
 import { and, eq, or } from './orm';
 import {
   convos,

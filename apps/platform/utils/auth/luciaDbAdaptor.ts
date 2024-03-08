@@ -1,8 +1,8 @@
 import { eq, inArray, lte } from 'drizzle-orm';
 
 import type { Adapter, DatabaseSession, DatabaseUser } from 'lucia';
-import { db } from '@uninbox/database';
-import { sessions, users } from '@uninbox/database/schema';
+import { db } from '@u22n/database';
+import { sessions, users } from '@u22n/database/schema';
 import { useStorage } from '#imports';
 
 //! Enable debug logging

@@ -1,4 +1,4 @@
-import type { OrgContext } from '@uninbox/types';
+import type { OrgContext } from '@u22n/types';
 
 export async function isUserAdminOfOrg(orgContext: OrgContext) {
   if (!orgContext?.memberId) return false;

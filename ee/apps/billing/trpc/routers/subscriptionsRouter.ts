@@ -3,14 +3,14 @@ import { parse, stringify } from 'superjson';
 import { router, protectedProcedure } from '../trpc';
 import { useStripe } from '../../utils/useStripe';
 import { stripeBillingPeriods, stripePlanNames } from '../../types';
-import { and, eq, sql } from '@uninbox/database/orm';
-import { orgBilling, orgMembers, users } from '@uninbox/database/schema';
+import { and, eq, sql } from '@u22n/database/orm';
+import { orgBilling, orgMembers, users } from '@u22n/database/schema';
 // import {
 //   postalServers,
 //   orgPostalConfigs,
 //   domains
-// } from '@uninbox/database/schema';
-// import { nanoId, nanoIdLength } from '@uninbox/utils';
+// } from '@u22n/database/schema';
+// import { nanoId, nanoIdLength } from '@u22n/utils';
 
 export const subscriptionsRouter = router({
   updateOrgUserCount: protectedProcedure

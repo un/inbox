@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import type { UiColor } from '@uninbox/types/ui';
+  import type { UiColor } from '@u22n/types/ui';
   import type { ConvoParticipantEntry } from '~/composables/types';
 
   type Props = {
@@ -26,7 +26,7 @@
   });
 </script>
 <template>
-  <div class="h-fit flex flex-row items-end">
+  <div class="flex h-fit flex-row items-end">
     <UnUiAvatar
       :avatar-id="primaryAvatar.avatarPublicId"
       :public-id="primaryAvatar.participantPublicId"
@@ -40,7 +40,7 @@
       :popper="{ placement: 'right' }"
       mode="hover">
       <div
-        class="bg-gray-50 h-[32px] w-[32px] flex items-center justify-center rounded-2 text-sm font-display shadow backdrop-blur-2xl">
+        class="rounded-2 font-display flex h-[32px] w-[32px] items-center justify-center bg-gray-50 text-sm shadow backdrop-blur-2xl">
         + {{ props.avatars.length - props.limit + 1 }}
       </div>
 

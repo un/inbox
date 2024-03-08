@@ -1,4 +1,4 @@
-import { uiColors } from '@uninbox/types/ui';
+import { uiColors } from '@u22n/types/ui';
 
 const { $trpc } = useNuxtApp();
 type PromiseType<T> = T extends Promise<infer U> ? U : never;

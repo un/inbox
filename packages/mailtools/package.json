@@ -1,5 +1,5 @@
 {
-  "name": "@uninbox/mailtools",
+  "name": "@u22n/mailtools",
   "version": "0.0.0",
   "type": "module",
   "description": "Processes HTML email for display. Extracts quotations and more. Successor to tempo-email-parser.",
@@ -44,7 +44,7 @@
     "vitest": "^1.3.1"
   },
   "dependencies": {
-    "@uninbox/tsconfig": "workspace:^",
+    "@u22n/tsconfig": "workspace:^",
     "autolinker": "^4.0.0",
     "cheerio": "1.0.0-rc.12",
     "email-validator": "^2.0.4",

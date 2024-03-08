@@ -1,8 +1,8 @@
 import { H3Event, getHeader } from 'h3';
-import { db } from '@uninbox/database';
-import { eq } from '@uninbox/database/orm';
-import { orgs } from '@uninbox/database/schema';
-import type { OrgContext } from '@uninbox/types';
+import { db } from '@u22n/database';
+import { eq } from '@u22n/database/orm';
+import { orgs } from '@u22n/database/schema';
+import type { OrgContext } from '@u22n/types';
 import { useStorage } from '#imports';
 
 export const validateOrgSlug = async (

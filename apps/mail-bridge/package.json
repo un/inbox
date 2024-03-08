@@ -1,5 +1,5 @@
 {
-  "name": "@uninbox/mail-bridge",
+  "name": "@u22n/mail-bridge",
   "private": true,
   "types": "types.ts",
   "engines": {
@@ -12,11 +12,11 @@
     "preview": "node .output/server/index.mjs"
   },
   "dependencies": {
-    "@uninbox/tsconfig": "workspace:*",
-    "@uninbox/database": "workspace:*",
-    "@uninbox/postal-puppet": "workspace:*",
-    "@uninbox/types": "workspace:*",
-    "@uninbox/utils": "workspace:*",
+    "@u22n/tsconfig": "workspace:*",
+    "@u22n/database": "workspace:*",
+    "@u22n/postal-puppet": "workspace:*",
+    "@u22n/types": "workspace:*",
+    "@u22n/utils": "workspace:*",
     "@trpc/client": "^10.45.1",
     "@trpc/server": "^10.45.1",
     "html-to-text": "^9.0.5",

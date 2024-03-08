@@ -1,5 +1,5 @@
 {
-  "extends": "@uninbox/tsconfig",
+  "extends": "@u22n/tsconfig",
   "include": ["src"],
   "exclude": ["node_modules"],
   "compilerOptions": {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import type { UiColor } from '@uninbox/types/ui';
+  import type { UiColor } from '@u22n/types/ui';
 
   const { $trpc } = useNuxtApp();
 
@@ -19,8 +19,8 @@
 
 <template>
   <div
-    class="h-full w-full flex flex-col items-start gap-8 overflow-y-auto p-4">
-    <div class="w-full flex flex-row items-center justify-between">
+    class="flex h-full w-full flex-col items-start gap-8 overflow-y-auto p-4">
+    <div class="flex w-full flex-row items-center justify-between">
       <div class="flex flex-row items-center gap-4">
         <UnUiTooltip text="Back to Email Address list">
           <UnUiIcon
@@ -29,12 +29,12 @@
             @click="navigateTo('./')" />
         </UnUiTooltip>
         <div class="flex flex-col gap-1">
-          <span class="text-2xl font-display">Edit Email Address</span>
+          <span class="font-display text-2xl">Edit Email Address</span>
         </div>
       </div>
     </div>
 
-    <div class="w-full flex flex-col gap-8">
+    <div class="flex w-full flex-col gap-8">
       <span>
         Sorry editing is not yet implemented. If you made an error or something
         is not working as expected, please contact support
@@ -43,7 +43,7 @@
         v-if="!emailIdentityPending"
         class="flex flex-col gap-4">
         <div class="flex flex-col gap-2">
-          <span class="text-sm text-base-12 font-medium uppercase">
+          <span class="text-base-12 text-sm font-medium uppercase">
             Email Address
           </span>
           <span class="">
@@ -53,7 +53,7 @@
           </span>
         </div>
         <div class="flex flex-col gap-2">
-          <span class="text-sm text-base-12 font-medium uppercase">
+          <span class="text-base-12 text-sm font-medium uppercase">
             Send Name
           </span>
           <span class="">
@@ -61,7 +61,7 @@
           </span>
         </div>
         <div class="flex flex-col gap-2">
-          <span class="text-sm text-base-12 font-medium uppercase">
+          <span class="text-base-12 text-sm font-medium uppercase">
             Is Catch All
           </span>
           <span class="">
@@ -69,7 +69,7 @@
           </span>
         </div>
         <div class="flex flex-col gap-2">
-          <span class="text-sm text-base-12 font-medium uppercase">
+          <span class="text-base-12 text-sm font-medium uppercase">
             Desitnations (deliver to)
           </span>
           <div
@@ -78,7 +78,7 @@
             :key="destination.id">
             <div
               v-if="destination.groupId"
-              class="flex flex-row items-center gap-8 rounded-xl bg-base-2 p-2">
+              class="bg-base-2 flex flex-row items-center gap-8 rounded-xl p-2">
               <div class="flex flex-row items-center gap-4">
                 <UnUiAvatar
                   :public-id="destination.group?.publicId || ''"
@@ -101,7 +101,7 @@
 
             <div
               v-if="destination.orgMemberId"
-              class="flex flex-row items-center gap-8 rounded-xl bg-base-2 p-2">
+              class="bg-base-2 flex flex-row items-center gap-8 rounded-xl p-2">
               <div class="flex flex-row items-center gap-4">
                 <UnUiAvatar
                   :public-id="destination.orgMember?.profile?.publicId || ''"
@@ -114,7 +114,7 @@
                   "
                   size="xs" />
                 <div class="flex flex-col gap-1">
-                  <div class="h-[16px] flex flex-row items-center gap-1">
+                  <div class="flex h-[16px] flex-row items-center gap-1">
                     <span class="font-semibold leading-none">
                       {{
                         destination.orgMember?.profile?.firstName +

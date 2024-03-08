@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { router, orgProcedure } from '../../trpc';
-import { and, desc, eq, lt, or } from '@uninbox/database/orm';
-import { convos, convoEntries } from '@uninbox/database/schema';
-import { zodSchemas } from '@uninbox/utils';
+import { and, desc, eq, lt, or } from '@u22n/database/orm';
+import { convos, convoEntries } from '@u22n/database/schema';
+import { zodSchemas } from '@u22n/utils';
 import { TRPCError } from '@trpc/server';
 
 export const convoEntryRouter = router({

@@ -2,7 +2,7 @@ import { loggerLink, type TRPCLink } from '@trpc/client';
 import { observable } from '@trpc/server/observable';
 import { createTRPCNuxtClient, httpBatchLink } from 'trpc-nuxt/client';
 import superjson from 'superjson';
-import type { TrpcPlatformRouter } from '@uninbox/platform/trpc';
+import type { TrpcPlatformRouter } from '@u22n/platform/trpc';
 
 export const errorHandler: TRPCLink<TrpcPlatformRouter> = () => {
   return ({ next, op }) => {

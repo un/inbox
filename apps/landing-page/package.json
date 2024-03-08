@@ -1,5 +1,5 @@
 {
-  "name": "@uninbox/landing",
+  "name": "@u22n/landing",
   "private": true,
   "type": "module",
   "engines": {
@@ -16,7 +16,7 @@
     "typecheck": "nuxt typecheck"
   },
   "dependencies": {
-    "@uninbox/tsconfig": "workspace:*",
+    "@u22n/tsconfig": "workspace:*",
     "@fontsource-variable/inter": "^5.0.16",
     "@iconify-json/heroicons": "^1.1.20",
     "@iconify-json/ph": "^1.1.11",
