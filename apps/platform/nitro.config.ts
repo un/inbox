@@ -59,8 +59,11 @@ export default defineNitroConfig({
       }
     },
     realtime: {
-      url: process.env.WEBAPP_REALTIME_URL || '',
-      key: process.env.WEBAPP_REALTIME_KEY || ''
+      host: process.env.PLATFORM_REALTIME_HOST || '',
+      port: process.env.PLATFORM_REALTIME_PORT || '',
+      appId: process.env.PLATFORM_REALTIME_APP_ID || '',
+      appKey: process.env.PLATFORM_REALTIME_APP_KEY || '',
+      appSecret: process.env.PLATFORM_REALTIME_APP_SECRET || ''
     },
     mailBridge: {
       url: process.env.WEBAPP_MAILBRIDGE_URL || '',

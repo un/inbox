@@ -79,6 +79,26 @@ services:
       /usr/bin/mc anonymous set-json /tmp/policy.json myminio/avatars;
       exit 0;
       "
+  
+  # Soketi Pusher Server
+  soketi:
+    container_name: soketi-server
+    image: quay.io/soketi/soketi:1.4-16-debian
+    ports:
+      - '3904:6001'      
+    environment:
+      - SOKETI_DB_REDIS_HOST=redis
+      - SOKETI_DB_REDIS_PORT=6379
+      - SOKETI_DB_REDIS_DB=0
+      - SOKETI_DB_REDIS_KEY_PREFIX=soketi
+      - SOKETI_CACHE_DRIVER=redis
+      - SOKETI_DEFAULT_APP_ID=default
+      - SOKETI_DEFAULT_APP_KEY=secretsecretsecret
+      - SOKETI_DEFAULT_APP_SECRET=secretsecretsecret
+    depends_on:
+      - redis
+    links:
+      - redis
 
 volumes:
   ps-mysql:
