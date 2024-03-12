@@ -616,7 +616,8 @@ export const contacts = mysqlTable(
       'person',
       'product',
       'newsletter',
-      'marketing'
+      'marketing',
+      'unknown'
     ]).notNull(),
     screenerStatus: mysqlEnum('screener_status', [
       'pending',
