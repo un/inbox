@@ -43,7 +43,7 @@ export async function verifyDns({
       error: null
     },
     returnPath: {
-      value: `psrp.${domainName}`,
+      value: `unrp.${domainName}`,
       destination: `rp.${postalUrl}`,
       valid: false,
       error: null
@@ -135,7 +135,7 @@ export async function verifyDns({
         const existingRecordString = includedDomains
           .map((domain) => `include:${domain}`)
           .join(' ');
-        const newRecordString = `v=spf1 mx include:_spf.${postalRootUrl} ${existingRecordString} ~all`;
+        const newRecordString = `v=spf1 a mx include:_spf.${postalRootUrl} ${existingRecordString} ~all`;
         dnsRecords.spf.valid = false;
         dnsRecords.spf.value = newRecordString;
         dnsRecords.spf.error =
@@ -165,7 +165,7 @@ export async function verifyDns({
 
   // verify the Return-Path Record
   await dns.promises
-    .resolveCname(`psrp.${domainName}`)
+    .resolveCname(`unrp.${domainName}`)
     .then((returnPathDnsResponse) => {
       if (returnPathDnsResponse.length > 1) {
         dnsRecords.returnPath.valid = false;
