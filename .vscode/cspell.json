@@ -12,6 +12,7 @@
     "domainkey",
     "hanko",
     "Hanko",
+    "mailserver",
     "mediumint",
     "nitropack",
     "nuxt",
