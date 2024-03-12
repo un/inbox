@@ -6,10 +6,10 @@ import { sessions, users } from '@u22n/database/schema';
 import { useStorage } from '#imports';
 
 //! Enable debug logging
-const debug = true;
+const debug = false;
 const log = (...args: any[]) => {
   if (debug) {
-    console.log('🔐 Lucia Auth DB Adapter', ...args);
+    console.info('🔐 Lucia Auth DB Adapter', ...args);
   }
 };
 
@@ -207,7 +207,7 @@ export class UnInboxDBAdapter implements Adapter {
           with: {
             account: {
               columns: {
-                totpSecret: true,
+                twoFactorSecret: true,
                 passwordHash: true
               },
               with: {
@@ -233,7 +233,7 @@ export class UnInboxDBAdapter implements Adapter {
         username: userSessions.user.username,
         passkeyEnabled: userSessions.user.account.authenticators.length > 0,
         passwordEnabled: !!userSessions.user.account.passwordHash,
-        totpEnabled: !!userSessions.user.account.totpSecret
+        totpEnabled: !!userSessions.user.account.twoFactorSecret
       }
     };
     return result;
