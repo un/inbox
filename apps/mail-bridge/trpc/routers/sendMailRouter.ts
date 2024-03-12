@@ -129,6 +129,7 @@ export const sendMailRouter = router({
               message: string;
             };
           };
+
       const sendMailPostalResponse: PostalResponse = await fetch(
         postalServerHost,
         {
@@ -175,7 +176,7 @@ export const sendMailRouter = router({
           })
           .where(eq(convoEntries.id, entryId));
       } else {
-        console.log(
+        console.error(
           `🚨 attempted to send convoId: ${entryId} from convoId: ${convoId}, but got the following error`,
           sendMailPostalResponse.data.message
         );
