@@ -5,7 +5,7 @@ import {
   emailRoutingRules,
   emailIdentitiesAuthorizedUsers,
   postalServers,
-  personalEmailIdentities
+  emailIdentitiesPersonal
 } from '@u22n/database/schema';
 import { nanoId, nanoIdLength } from '@u22n/utils';
 import { postalPuppet } from '@u22n/postal-puppet';

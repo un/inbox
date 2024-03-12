@@ -59,7 +59,8 @@ const bigintUnsigned = customType<{ data: number }>({
   }
 });
 
-// User table
+//******************* */
+//* User tables
 export const users = mysqlTable(
   'users',
   {
@@ -91,7 +92,8 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   personalEmailIdentities: many(personalEmailIdentities)
 }));
 
-// Auth tables
+//******************* */
+//* Auth tables
 export const accounts = mysqlTable(
   'accounts',
   {
@@ -223,7 +225,8 @@ export const userProfileRelations = relations(
   })
 );
 
-// Organization table
+//******************* */
+//* Organization table
 export const orgs = mysqlTable(
   'orgs',
   {
@@ -430,7 +433,8 @@ export const orgPostalConfigsRelations = relations(
   })
 );
 
-// User groups
+//******************* */
+//* User groups
 export const userGroups = mysqlTable(
   'user_groups',
   {
@@ -504,7 +508,8 @@ export const userGroupMembersRelations = relations(
   })
 );
 
-// Domain table
+//******************* */
+//* Domains table
 export const domains = mysqlTable(
   'domains',
   {
@@ -566,14 +571,15 @@ export const domainsRelations = relations(domains, ({ one }) => ({
   })
 }));
 
-// Postal server table
+//******************* */
+//* Postal server table
+
 export const postalServers = mysqlTable(
   'postal_servers',
   {
     id: serial('id').primaryKey(),
     publicId: nanoId('public_id').notNull(),
     orgId: foreignKey('org_id').notNull(),
-    rootMailServer: boolean('root_mail_server').notNull().default(false),
     type: mysqlEnum('type', ['email', 'transactional', 'marketing']).notNull(),
     sendLimit: mediumint('send_limit').notNull(),
     apiKey: varchar('api_key', { length: 64 }).notNull(),
@@ -595,6 +601,7 @@ export const postalServersRelations = relations(postalServers, ({ one }) => ({
   })
 }));
 
+//******************* */
 //* Contacts
 
 // TODO: Add email generated column when supported in Drizzle-orm: https://github.com/drizzle-team/drizzle-orm/pull/1471
@@ -679,136 +686,8 @@ export const contactGlobalReputationsRelations = relations(
   })
 );
 
-//* Send As External Email Identities
-
-export const sendAsExternalEmailIdentities = mysqlTable(
-  'send_as_external_email_identities',
-  {
-    id: serial('id').primaryKey(),
-    publicId: nanoId('public_id').notNull(),
-    orgId: foreignKey('org_id').notNull(),
-    verified: boolean('verified').notNull().default(false),
-    username: varchar('username', { length: 32 }).notNull(),
-    domain: varchar('domain', { length: 128 }).notNull(),
-    sendName: varchar('send_name', { length: 128 }),
-    createdBy: foreignKey('created_by').notNull(),
-    smtpCredentialsId: foreignKey('smtp_credentials_id').notNull(),
-    createdAt: timestamp('created_at')
-      .default(sql`CURRENT_TIMESTAMP`)
-      .notNull()
-  },
-  (table) => ({
-    publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
-    orgIdIndex: index('org_id_idx').on(table.orgId),
-    emailIndex: uniqueIndex('email_idx').on(table.username, table.domain)
-  })
-);
-export const sendAsExternalEmailIdentitiesRelations = relations(
-  sendAsExternalEmailIdentities,
-  ({ one }) => ({
-    org: one(orgs, {
-      fields: [sendAsExternalEmailIdentities.orgId],
-      references: [orgs.id]
-    }),
-    verification: one(sendAsExternalEmailIdentitiesVerification, {
-      fields: [sendAsExternalEmailIdentities.id],
-      references: [sendAsExternalEmailIdentitiesVerification.identityId]
-    }),
-    credentials: one(sendAsExternalEmailIdentitiesSmtpCredentials, {
-      fields: [sendAsExternalEmailIdentities.smtpCredentialsId],
-      references: [sendAsExternalEmailIdentitiesSmtpCredentials.id]
-    })
-  })
-);
-
-export const sendAsExternalEmailIdentitiesVerification = mysqlTable(
-  'send_as_external_email_identities_verification',
-  {
-    id: serial('id').primaryKey(),
-    identityId: foreignKey('identity_id').notNull(),
-    verificationToken: varchar('verification_token', { length: 64 }).notNull(),
-    verifiedAt: timestamp('verified_at')
-  },
-  (table) => ({
-    identityIdIndex: uniqueIndex('identity_id_idx').on(table.identityId)
-  })
-);
-export const sendAsExternalEmailIdentitiesVerificationRelations = relations(
-  sendAsExternalEmailIdentitiesVerification,
-  ({ one }) => ({
-    identity: one(sendAsExternalEmailIdentities, {
-      fields: [sendAsExternalEmailIdentitiesVerification.identityId],
-      references: [sendAsExternalEmailIdentities.id]
-    })
-  })
-);
-
-export const sendAsExternalEmailIdentitiesSmtpCredentials = mysqlTable(
-  'send_as_external_email_identities_smtp_credentials',
-  {
-    id: serial('id').primaryKey(),
-    username: varchar('username', { length: 128 }).notNull(),
-    password: varchar('password', { length: 128 }).notNull(),
-    host: varchar('hostname', { length: 128 }).notNull(),
-    port: smallint('port').notNull(),
-    authMethod: mysqlEnum('auth_method', ['plain', 'login', 'cram_md5']),
-    encryption: mysqlEnum('encryption', ['ssl', 'tls', 'starttls', 'none']),
-    createdBy: foreignKey('created_by').notNull(),
-    createdAt: timestamp('created_at')
-      .default(sql`CURRENT_TIMESTAMP`)
-      .notNull()
-  },
-  (table) => ({})
-);
-export const sendAsExternalEmailIdentitiesSmtpCredentialsRelations = relations(
-  sendAsExternalEmailIdentitiesSmtpCredentials,
-  ({ many }) => ({
-    identities: many(sendAsExternalEmailIdentities)
-  })
-);
-
-export const sendAsExternalEmailIdentitiesAuthorizedUsers = mysqlTable(
-  'send_as_external_email_identities_authorized_users',
-  {
-    id: serial('id').primaryKey(),
-    identityId: foreignKey('identity_id').notNull(),
-    orgMemberId: foreignKey('org_member_id'),
-    userGroupId: foreignKey('user_group_id'),
-    addedBy: foreignKey('added_by').notNull(),
-    createdAt: timestamp('created_at')
-      .default(sql`CURRENT_TIMESTAMP`)
-      .notNull()
-  },
-  (table) => ({
-    //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit : userId//userGroupId
-    identityIdIndex: index('identity_id_idx').on(table.identityId),
-    orgMemberIdIndex: index('org_member_id_idx').on(table.orgMemberId),
-    userGroupIdIndex: index('user_group_id_idx').on(table.userGroupId),
-    orgMemberToIdentityIndex: uniqueIndex('org_member_to_identity_idx').on(
-      table.identityId,
-      table.orgMemberId
-    )
-  })
-);
-export const sendAsExternalEmailIdentitiesAuthorizedUsersRelations = relations(
-  sendAsExternalEmailIdentitiesAuthorizedUsers,
-  ({ one }) => ({
-    identity: one(sendAsExternalEmailIdentities, {
-      fields: [sendAsExternalEmailIdentitiesAuthorizedUsers.identityId],
-      references: [sendAsExternalEmailIdentities.id]
-    }),
-    orgMember: one(orgMembers, {
-      fields: [sendAsExternalEmailIdentitiesAuthorizedUsers.orgMemberId],
-      references: [orgMembers.id]
-    }),
-    userGroup: one(userGroups, {
-      fields: [sendAsExternalEmailIdentitiesAuthorizedUsers.userGroupId],
-      references: [userGroups.id]
-    })
-  })
-);
-
-//* native Email Identities
+//******************* */
+//* Email Identities
 
 export const emailRoutingRules = mysqlTable(
   'email_routing_rules',
@@ -897,7 +776,9 @@ export const emailIdentities = mysqlTable(
     sendName: varchar('send_name', { length: 128 }),
     createdBy: foreignKey('created_by').notNull(),
     isCatchAll: boolean('is_catch_all').notNull().default(false),
-    isPersonal: boolean('is_personal').notNull().default(false),
+    personalEmailIdentityId: foreignKey('personal_email_identity_id'),
+    externalCredentialsId: foreignKey('external_credentials_id'),
+    forwardingAddress: varchar('forwarding_address', { length: 128 }),
     createdAt: timestamp('created_at')
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull()
@@ -931,6 +812,10 @@ export const emailIdentitiesRelations = relations(
     routingRules: one(emailRoutingRules, {
       fields: [emailIdentities.routingRuleId],
       references: [emailRoutingRules.id]
+    }),
+    externalCredentials: one(emailIdentityExternalCredentials, {
+      fields: [emailIdentities.externalCredentialsId],
+      references: [emailIdentityExternalCredentials.id]
     })
   })
 );
@@ -986,16 +871,14 @@ export const emailIdentitiesAuthorizedUsersRelations = relations(
   })
 );
 
-export const personalEmailIdentities = mysqlTable(
-  'personal_email_identities',
+export const emailIdentitiesPersonal = mysqlTable(
+  'email_identities_personal',
   {
     id: serial('id').primaryKey(),
     publicId: nanoId('public_id').notNull(),
     userId: foreignKey('user_id').notNull(),
     orgId: foreignKey('org_id').notNull(),
     emailIdentityId: foreignKey('email_identity_id').notNull(),
-    postalServerId: foreignKey('postal_server_id').notNull(),
-    forwardingAddress: varchar('forwarding_address', { length: 128 }),
     createdAt: timestamp('created_at')
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull()
@@ -1010,29 +893,69 @@ export const personalEmailIdentities = mysqlTable(
   })
 );
 
-export const personalEmailIdentitiesRelations = relations(
-  personalEmailIdentities,
+export const emailIdentitiesPersonalRelations = relations(
+  emailIdentitiesPersonal,
   ({ one }) => ({
     user: one(users, {
-      fields: [personalEmailIdentities.userId],
+      fields: [emailIdentitiesPersonal.userId],
       references: [users.id]
     }),
     org: one(orgs, {
-      fields: [personalEmailIdentities.orgId],
+      fields: [emailIdentitiesPersonal.orgId],
       references: [orgs.id]
     }),
     emailIdentity: one(emailIdentities, {
-      fields: [personalEmailIdentities.emailIdentityId],
+      fields: [emailIdentitiesPersonal.emailIdentityId],
       references: [emailIdentities.id]
-    }),
-    postalServer: one(postalServers, {
-      fields: [personalEmailIdentities.postalServerId],
-      references: [postalServers.id]
     })
   })
 );
 
-//conversation tables
+export const emailIdentityExternalCredentials = mysqlTable(
+  'email_identity_credentials',
+  {
+    id: serial('id').primaryKey(),
+    publicId: nanoId('public_id').notNull(),
+    orgId: foreignKey('org_id').notNull(),
+    nickname: varchar('nickname', { length: 128 }).notNull(),
+    createdBy: foreignKey('created_by').notNull(),
+    username: varchar('username', {
+      length: 128
+    }).notNull(),
+    password: varchar('password', {
+      length: 128
+    }).notNull(),
+    host: varchar('hostname', { length: 128 }).notNull(),
+    port: smallint('port').notNull(),
+    authMethod: mysqlEnum('auth_method', ['plain', 'login', 'cram_md5']),
+    encryption: mysqlEnum('encryption', ['ssl', 'tls', 'starttls', 'none']),
+    createdAt: timestamp('created_at')
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull()
+  },
+  (table) => ({
+    publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
+    orgIdIndex: index('org_id_idx').on(table.orgId)
+  })
+);
+export const emailIdentityExternalCredentialsRelations = relations(
+  emailIdentityExternalCredentials,
+  ({ one, many }) => ({
+    org: one(orgs, {
+      fields: [emailIdentityExternalCredentials.orgId],
+      references: [orgs.id]
+    }),
+    createdBy: one(orgMembers, {
+      fields: [emailIdentityExternalCredentials.createdBy],
+      references: [orgMembers.id]
+    }),
+    emailIdentities: many(emailIdentities)
+  })
+);
+
+//******************* */
+//* conversation tables
+
 export const convos = mysqlTable(
   'convos',
   {

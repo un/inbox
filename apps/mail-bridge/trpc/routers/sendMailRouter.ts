@@ -5,7 +5,7 @@ import {
   emailRoutingRules,
   emailIdentitiesAuthorizedUsers,
   postalServers,
-  personalEmailIdentities,
+  emailIdentitiesPersonal,
   convoEntries,
   ConvoEntryMetadata
 } from '@u22n/database/schema';
@@ -60,30 +60,31 @@ export const sendMailRouter = router({
           username: true,
           domainName: true,
           sendName: true,
-          isPersonal: true
+          personalEmailIdentityId: true
         }
       });
       const sendEmailAddress = `${sendAsEmailIdentity.username}@${sendAsEmailIdentity.domainName}`;
       const sendName = `${sendAsEmailIdentity.sendName} <${sendEmailAddress}>`;
       let postalServerAPIKey: String;
 
-      if (sendAsEmailIdentity.isPersonal) {
-        const personalEmailIdentityResponse =
-          await db.query.personalEmailIdentities.findFirst({
-            where: eq(
-              personalEmailIdentities.emailIdentityId,
-              sendAsEmailIdentity.id
-            ),
-            columns: {},
-            with: {
-              postalServer: {
-                columns: {
-                  apiKey: true
-                }
-              }
-            }
-          });
-        postalServerAPIKey = personalEmailIdentityResponse.postalServer.apiKey;
+      if (sendAsEmailIdentity.personalEmailIdentityId) {
+        //! TODO: Handle sending from personal email identities
+        // const personalEmailIdentityResponse =
+        //   await db.query.emailIdentitiesPersonal.findFirst({
+        //     where: eq(
+        //       emailIdentitiesPersonal.emailIdentityId,
+        //       sendAsEmailIdentity.id
+        //     ),
+        //     columns: {},
+        //     with: {
+        //       // postalServer: {
+        //       //   columns: {
+        //       //     apiKey: true
+        //       //   }
+        //       // }
+        //     }
+        //   });
+        // postalServerAPIKey = personalEmailIdentityResponse.postalServer.apiKey;
       } else {
         const orgPostalServerResponse = await db.query.postalServers.findFirst({
           where: and(

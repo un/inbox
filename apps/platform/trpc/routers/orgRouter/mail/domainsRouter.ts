@@ -30,7 +30,6 @@ export const domainsRouter = router({
       const newPublicId = nanoId();
 
       const domainName = input.domainName.toLowerCase();
-      console.log({ domainName });
 
       const isAdmin = await isUserAdminOfOrg(org);
       if (!isAdmin) {
