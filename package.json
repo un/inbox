@@ -4,14 +4,13 @@
   "version": "0.0.1",
   "description": "email + chat communications platform",
   "scripts": {
-    "build:all": "dotenv -e .env.local -- turbo run build --filter=!@u22n/landing",
+    "build:all": "dotenv -e .env.local -- turbo run build",
     "build:web-app": "turbo run build",
     "build:mail-bridge": "turbo run build",
     "build:api": "turbo run build",
     "build:realtime": "turbo run build",
     "clean": "find . -name node_modules -o -name .nuxt -o -name .nitro -o -name .output -o -name .turbo -o -name dist -type d -prune | xargs rm -rf",
-    "dev": "dotenv -e .env.local -- turbo run dev --filter=!@u22n/landing",
-    "dev:landing": "dotenv -e .env.local -- turbo run dev --filter=@u22n/landing",
+    "dev": "dotenv -e .env.local -- turbo run dev",
     "docker:up": "pnpm --dir packages/local-docker docker:up",
     "docker:down": "pnpm --dir packages/local-docker docker:down",
     "docker:clean": "pnpm --dir packages/local-docker docker:clean",
@@ -43,7 +42,7 @@
     "eslint-plugin-prettier": "^5.1.3",
     "prettier": "^3.2.5",
     "prettier-plugin-tailwindcss": "^0.5.11",
-    "turbo": "^1.12.4",
+    "turbo": "^1.12.5",
     "typescript": "^5.3.3"
   },
   "packageManager": "pnpm@8.5.1"

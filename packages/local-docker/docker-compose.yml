@@ -24,6 +24,7 @@ services:
   planetscale-proxy:
     container_name: planetscale-simulator-proxy
     image: ghcr.io/mattrobenolt/ps-http-sim:v0.0.3
+    restart: always
     command:
       [
         '-mysql-no-pass',
@@ -42,9 +43,9 @@ services:
   redis:
     container_name: redis-cache-db
     image: redis:7.2-alpine
+    restart: always
     ports:
       - '3901:6379' # expose redis on port 3102 to not collide with redis from elswhere and match memostash 310X ports
-    restart: unless-stopped
     command: redis-server --save 20 1 --loglevel warning
     volumes:
       - redis-data:/data
@@ -53,6 +54,7 @@ services:
   minio:
     container_name: minio-storage
     image: 'bitnami/minio:latest'
+    restart: always
     ports:
       - '3902:3902'
       - '3903:3903'
@@ -64,6 +66,7 @@ services:
     volumes:
       - minio-data:/bitnami/minio/data
       - minio-certs:/certs
+
   createbuckets:
     container_name: minio-bucket-creation
     image: minio/mc
@@ -79,6 +82,27 @@ services:
       /usr/bin/mc anonymous set-json /tmp/policy.json myminio/avatars;
       exit 0;
       "
+
+  # Soketi Pusher Server
+  soketi:
+    container_name: soketi-server
+    image: quay.io/soketi/soketi:1.4-16-debian
+    restart: always
+    ports:
+      - '3904:6001'
+    environment:
+      - SOKETI_DB_REDIS_HOST=redis
+      - SOKETI_DB_REDIS_PORT=6379
+      - SOKETI_DB_REDIS_DB=0
+      - SOKETI_DB_REDIS_KEY_PREFIX=soketi
+      - SOKETI_CACHE_DRIVER=redis
+      - SOKETI_DEFAULT_APP_ID=default
+      - SOKETI_DEFAULT_APP_KEY=secretsecretsecret
+      - SOKETI_DEFAULT_APP_SECRET=secretsecretsecret
+    depends_on:
+      - redis
+    links:
+      - redis
 
 volumes:
   ps-mysql:
