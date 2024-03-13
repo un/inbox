@@ -25,16 +25,16 @@ const eeConfig = {
 
 const eeLicenseKey = process.env.EE_LICENSE_KEY || null;
 if (eeLicenseKey) {
-  console.log('✅ Enterprise Edition is enabled');
+  console.info('✅ Enterprise Edition is enabled');
   eeConfig.enabled = true;
 } else {
-  console.log('✅ Running in self hosting mode 💪');
+  console.info('✅ Running in self hosting mode 💪');
 }
 
 const billingUrl = process.env.BILLING_URL || null;
 const billingKey = process.env.BILLING_KEY || null;
 if (eeLicenseKey && billingUrl && billingKey) {
-  console.log('✅ EE Billing module is enabled');
+  console.info('✅ EE Billing module is enabled');
   eeConfig.modules.billing = true;
   billingConfig.enabled = true;
   billingConfig.url = billingUrl;

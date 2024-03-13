@@ -10,3 +10,16 @@ export interface postalEmailPayload {
   base64: boolean;
   size: number;
 }
+
+export interface MessageParseAddressPlatformObject {
+  id: number;
+  type: 'contact' | 'emailIdentity';
+  contactType:
+    | 'person'
+    | 'product'
+    | 'newsletter'
+    | 'marketing'
+    | 'unknown'
+    | null;
+  ref: 'to' | 'cc' | 'from';
+}
