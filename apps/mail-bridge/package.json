@@ -18,6 +18,7 @@
     "@u22n/postal-puppet": "workspace:*",
     "@u22n/types": "workspace:*",
     "@u22n/utils": "workspace:*",
+    "@u22n/tiptap": "workspace:^",
     "@trpc/client": "^10.45.1",
     "@trpc/server": "^10.45.1",
     "@types/mailparser": "^3.4.4",

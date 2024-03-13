@@ -1193,20 +1193,16 @@ export const convoAttachmentsRelations = relations(
   })
 );
 
+export type ConvoEntryMetadataEmailAddress = {
+  id: number;
+  type: 'contact' | 'emailIdentity';
+};
+
 export type ConvoEntryMetadataEmail = {
   messageId: string;
-  to: {
-    id: number;
-    type: 'contact' | 'emailIdentity';
-  }[];
-  from: {
-    id: number;
-    type: 'contact' | 'emailIdentity';
-  }[];
-  cc: {
-    id: number;
-    type: 'contact' | 'emailIdentity';
-  }[];
+  to: ConvoEntryMetadataEmailAddress[];
+  from: ConvoEntryMetadataEmailAddress[];
+  cc: ConvoEntryMetadataEmailAddress[];
   postalMessages: {
     recipient: string;
     id: number;
