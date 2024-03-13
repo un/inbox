@@ -50,45 +50,44 @@ export async function parseAddressIds(input: {
     }
 
     // check if address is an existing email identity or a catch-all identity
-    const emailIdentityQuery = await db
-      .select({ id: emailIdentities.id })
-      .from(emailIdentities)
-      .where(
-        and(
-          eq(emailIdentities.orgId, input.orgId),
-          eq(emailIdentities.domainName, emailDomain),
-          eq(emailIdentities.username, emailUsername)
-        )
-      )
-      .union(
-        db
-          .select({ id: emailIdentities.id })
-          .from(emailIdentities)
-          .where(
-            and(
+    const emailIdentityQuery = await db.query.emailIdentities.findFirst({
+      where: and(
+        eq(emailIdentities.orgId, input.orgId),
+        eq(emailIdentities.domainName, emailDomain),
+        eq(emailIdentities.username, emailUsername)
+      ),
+      columns: {
+        id: true
+      }
+    });
+
+    if (emailIdentityQuery && emailIdentityQuery.id !== null) {
+      parsedAddressIds.push({
+        id: emailIdentityQuery.id,
+        type: 'emailIdentity',
+        contactType: null,
+        ref: input.addressType
+      });
+      break;
+    }
+
+    const emailIdentityCatchAllQuery =
+      input.addressType === 'from'
+        ? null
+        : await db.query.emailIdentities.findFirst({
+            where: and(
               eq(emailIdentities.orgId, input.orgId),
               eq(emailIdentities.domainName, emailDomain),
-              eq(emailIdentities.isCatchAll, true),
-              notExists(
-                db
-                  .select({ id: emailIdentities.id })
-                  .from(emailIdentities)
-                  .where(
-                    and(
-                      eq(emailIdentities.orgId, input.orgId),
-                      eq(emailIdentities.domainName, emailDomain),
-                      eq(emailIdentities.username, emailUsername)
-                    )
-                  )
-              )
-            )
-          )
-      )
-      .limit(1);
+              eq(emailIdentities.isCatchAll, true)
+            ),
+            columns: {
+              id: true
+            }
+          });
 
-    if (emailIdentityQuery[0] && emailIdentityQuery[0].id !== null) {
+    if (emailIdentityCatchAllQuery && emailIdentityCatchAllQuery.id !== null) {
       parsedAddressIds.push({
-        id: emailIdentityQuery[0].id,
+        id: emailIdentityCatchAllQuery.id,
         type: 'emailIdentity',
         contactType: null,
         ref: input.addressType
