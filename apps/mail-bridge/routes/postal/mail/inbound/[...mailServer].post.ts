@@ -3,10 +3,12 @@ import { simpleParser } from 'mailparser';
 import { authenticate } from 'mailauth';
 import { spf } from 'mailauth/lib/spf';
 import { and, eq, inArray } from '@u22n/database/orm';
+import type { InferInsertModel } from '@u22n/database/orm';
 import {
   contactGlobalReputations,
   contacts,
   convoEntries,
+  convoParticipants,
   emailIdentities,
   emailRoutingRules,
   postalServers
@@ -131,6 +133,9 @@ export default eventHandler(async (event) => {
   const emailIdentityIds = messageAddressIds
     .filter((a) => a.type === 'emailIdentity')
     .map((a) => a.id);
+  const contactIds = messageAddressIds
+    .filter((a) => a.type === 'contact')
+    .map((a) => a.id);
 
   // if theres no email identity ids, then we assume that this email has no destination, so we need to send the bounce message
   if (!emailIdentityIds.length) {
@@ -168,10 +173,23 @@ export default eventHandler(async (event) => {
       }
     }
   });
+  emailIdentityResponse.forEach((emailIdentity) => {
+    emailIdentity.routingRules.destinations.forEach((destination) => {
+      if (destination.groupId) {
+        routingRuleUserGroupIds.push(destination.groupId);
+      } else if (destination.orgMemberId) {
+        routingRuleOrgMemberIds.push(destination.orgMemberId);
+      }
+    });
+  });
 
   console.log({ emailIdentityResponse });
   console.log({ routing: emailIdentityResponse[0].routingRules.destinations });
 
+  let convoId: number | null = null;
+  type ConvoParticipantInsertDbType = InferInsertModel<
+    typeof convoParticipants
+  >;
   // if the email has a reply to header, then we need to check if a message exists in the system with that reply to id
   // - if yes, then we append the message to that existing convo
   // - if no, then we assume this is a new convo and handle it at such
@@ -204,21 +222,81 @@ export default eventHandler(async (event) => {
     });
 
     if (existingMessage) {
+      convoId = existingMessage.convoId;
+      const newConvoParticipantsToAdd: ConvoParticipantInsertDbType[] = [];
       // check all the contacts in the incoming email are included in the convo participants
+      const existingConvoParticipantsContactIds =
+        existingMessage.convo.participants.map((p) => p.contactId);
+      const missingContacts = contactIds.filter(
+        (c) => !existingConvoParticipantsContactIds.includes(c)
+      );
+      const existingConvoParticipantsOrgMemberIds =
+        existingMessage.convo.participants.map((p) => p.orgMemberId);
+      const missingOrgMembers = routingRuleOrgMemberIds.filter(
+        (c) => !existingConvoParticipantsOrgMemberIds.includes(c)
+      );
+      const existingConvoParticipantsUserGroupIds =
+        existingMessage.convo.participants.map((p) => p.userGroupId);
+      const missingUserGroups = routingRuleUserGroupIds.filter(
+        (c) => !existingConvoParticipantsUserGroupIds.includes(c)
+      );
       // - if not, then add them to the convo participants
+      if (missingContacts.length) {
+        newConvoParticipantsToAdd.push(
+          ...missingContacts.map((contactId) => ({
+            convoId: convoId,
+            contactId: contactId,
+            orgId: orgId,
+            publicId: nanoId(),
+            role: 'contributor' as const
+          }))
+        );
+      }
+
+      // now we do the same for the internal users and groups within the email identities
+
+      if (missingOrgMembers.length) {
+        const convoParticipantsInserts = missingOrgMembers.map(
+          (orgMemberId) => ({
+            convoId: convoId,
+            orgMemberId: orgMemberId,
+            orgId: orgId,
+            publicId: nanoId(),
+            role: 'contributor' as const
+          })
+        );
+        await db.insert(convoParticipants).values(convoParticipantsInserts);
+      }
+      if (missingUserGroups.length) {
+        const convoParticipantsInserts = missingUserGroups.map(
+          (userGroupId) => ({
+            convoId: convoId,
+            userGroupId: userGroupId,
+            orgId: orgId,
+            publicId: nanoId(),
+            role: 'contributor' as const
+          })
+        );
+        await db.insert(convoParticipants).values(convoParticipantsInserts);
+      }
+
       // to do this, we need to get the routing rules for each of the email participants, build an array of users, and build an array of groups
       // then we should compare how everything looks together
 
       // append the message to the existing convo
       console.log('🔥 appending to existing convo', { existingMessage });
-    }
-
-    if (!existingMessage) {
+    } else {
       console.log('🔥 no existing message found', { inReplyToEmailId });
     }
 
     console.log({ existingMessage });
+  } else {
+    // If no reply to header, then we assume this is a new convo
   }
+
+  // add the message to the convo
+
+  // send alerts
 
   // return { status: "I'm Alive 🏝️" };
   console.timeEnd('⌛ Timer');

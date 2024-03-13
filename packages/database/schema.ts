@@ -1195,6 +1195,18 @@ export const convoAttachmentsRelations = relations(
 
 export type ConvoEntryMetadataEmail = {
   messageId: string;
+  to: {
+    id: number;
+    type: 'contact' | 'emailIdentity';
+  }[];
+  from: {
+    id: number;
+    type: 'contact' | 'emailIdentity';
+  }[];
+  cc: {
+    id: number;
+    type: 'contact' | 'emailIdentity';
+  }[];
   postalMessages: {
     recipient: string;
     id: number;
