@@ -35,9 +35,12 @@ export default eventHandler(async (event) => {
   console.time('⌛ Timer');
 
   //! let emailType: 'reply' | 'newConvo' | 'marketing' | 'newsletter' | 'other';
+  console.time('⌛ get mailserver from params');
   const [orgIdStr, mailserverId] = event.context.params.mailServer.split('/');
   const orgId = Number(orgIdStr);
+  console.timeEnd('⌛ get mailserver from params');
 
+  console.time('⌛ get mailserver from event');
   //verify the mailserver actually exists
   const mailServer = await db.query.postalServers.findFirst({
     where: eq(postalServers.publicId, mailserverId),
@@ -47,8 +50,10 @@ export default eventHandler(async (event) => {
       orgId: true
     }
   });
+  console.timeEnd('⌛ get mailserver from event');
 
   // read and decode the email payload
+  console.time('⌛ read body');
   const {
     id: payloadPostalEmailId,
     rcpt_to: payloadEmailTo,
@@ -61,8 +66,11 @@ export default eventHandler(async (event) => {
       mailserverId,
       payloadPostalEmailId
     });
+    console.timeEnd('⌛ read body');
+    console.timeEnd('⌛ Timer');
     return;
   }
+  console.timeEnd('⌛ read body');
 
   // prelimary checks
   if (!mailServer || +mailServer.orgId !== orgId) {
@@ -71,10 +79,12 @@ export default eventHandler(async (event) => {
       mailserverId,
       payloadPostalEmailId
     });
+    console.timeEnd('⌛ Timer');
     return;
   }
 
   //* parse the email payload
+  console.time('⌛ parse email payload');
   const payloadEmail = Buffer.from(payloadEmailB64, 'base64').toString('utf-8');
   const parsedEmail = await simpleParser(payloadEmail);
 
@@ -108,8 +118,10 @@ export default eventHandler(async (event) => {
   const messageId = parsedEmail.messageId.replace(/^<|>$/g, '') || '';
   const date = parsedEmail.date;
   const messageBodyHtml = (parsedEmail.html as string).replace(/\n/g, '') || '';
+  console.timeEnd('⌛ parse email payload');
 
   // Check if we have already processed this incoming email by checking the message ID + orgID
+  console.time('⌛ check if messageId Exists');
   const alreadyProcessedMessageWithThisId =
     await db.query.convoEntries.findFirst({
       where: and(
@@ -122,10 +134,14 @@ export default eventHandler(async (event) => {
     });
 
   if (alreadyProcessedMessageWithThisId) {
+    console.timeEnd('⌛ check if messageId Exists');
+    console.timeEnd('⌛ Timer');
     return;
   }
+  console.timeEnd('⌛ check if messageId Exists');
 
   // parse the email HTML content and clean it up
+  console.time('⌛ parse email contents');
   const parsedEmailMessage = await parseMessage(messageBodyHtml, {
     cleanQuotations: true,
     cleanSignatures: true,
@@ -134,8 +150,10 @@ export default eventHandler(async (event) => {
     noRemoteContent: true,
     cleanStyles: true
   });
+  console.timeEnd('⌛ parse email contents');
 
   //* get the contact and emailIdentityIds for the message
+  console.time('⌛ parse and create contacts if they dont exist');
   const [
     messageToPlatformObject,
     messageFromPlatformObject,
@@ -155,7 +173,9 @@ export default eventHandler(async (event) => {
       ? parseAddressIds({ addresses: messageCc, addressType: 'cc', orgId })
       : Promise.resolve([])
   ]);
+  console.timeEnd('⌛ parse and create contacts if they dont exist');
 
+  console.time('⌛ update contact signature');
   // check the from contact and update their signature if it is null
   if (messageFromPlatformObject[0].type === 'contact') {
     const contact = await db.query.contacts.findFirst({
@@ -178,6 +198,7 @@ export default eventHandler(async (event) => {
         .where(eq(contacts.id, contact.id));
     }
   }
+  console.timeEnd('⌛ update contact signature');
 
   const messageAddressIds = [
     ...(Array.isArray(messageToPlatformObject) ? messageToPlatformObject : []),
@@ -199,6 +220,7 @@ export default eventHandler(async (event) => {
   if (!emailIdentityIds.length) {
     //! SEND BOUNCE MESSAGE
     console.error('⛔ no email identity ids found', { messageAddressIds });
+    console.timeEnd('⌛ Timer');
     return;
   }
 
@@ -206,7 +228,7 @@ export default eventHandler(async (event) => {
 
   const routingRuleUserGroupIds: number[] = [];
   const routingRuleOrgMemberIds: number[] = [];
-
+  console.time('⌛ get email identities');
   const emailIdentityResponse = await db.query.emailIdentities.findMany({
     where: and(
       eq(emailIdentities.orgId, orgId),
@@ -240,7 +262,9 @@ export default eventHandler(async (event) => {
       }
     });
   });
+  console.timeEnd('⌛ get email identities');
 
+  console.time('⌛ Start to process convo');
   //* start to process the conversation
   let hasReplyToButIsNewConvo: boolean | null = null;
   let convoId: number | null = null;
@@ -261,6 +285,7 @@ export default eventHandler(async (event) => {
   // - if no, then we assume this is a new convo and handle it at such
   if (inReplyToEmailId) {
     console.log('🔥 reply to email id', inReplyToEmailId);
+    console.time('⌛ get existing message query');
     const existingMessage = await db.query.convoEntries.findFirst({
       where: and(
         eq(convoEntries.orgId, orgId),
@@ -375,6 +400,7 @@ export default eventHandler(async (event) => {
           }))
         );
       }
+      console.timeEnd('⌛ get existing message query');
     } else {
       // if there is a reply to header but we cant find the conversation, we handle this like its a new convo
       hasReplyToButIsNewConvo = true;
@@ -385,6 +411,7 @@ export default eventHandler(async (event) => {
 
   // create a new convo with new participants
   if (!inReplyToEmailId || hasReplyToButIsNewConvo) {
+    console.time('⌛ Handle new convo');
     console.log('🔥 is a new convo');
     const newConvoInsert = await db.insert(convos).values({
       orgId: orgId,
@@ -436,13 +463,17 @@ export default eventHandler(async (event) => {
       );
     }
   }
+  console.timeEnd('⌛ Handle new convo');
 
   //* start to handle creating the message in the convo
 
+  console.time('⌛ Insert convo participants');
   if (convoParticipantsToAdd.length) {
     await db.insert(convoParticipants).values(convoParticipantsToAdd);
   }
+  console.timeEnd('⌛ Insert convo participants');
 
+  console.time('⌛ Do from participant stuffs');
   if (!fromAddressParticipantId) {
     if (fromAddressPlatformObject.type === 'contact') {
       const contactParticipant = await db.query.convoParticipants.findFirst({
@@ -515,9 +546,10 @@ export default eventHandler(async (event) => {
       fromAddressParticipantId = convoParticipantFromAddressIdentity.id;
     }
   }
-
+  console.timeEnd('⌛ Do from participant stuffs');
   console.log({ fromAddressParticipantId });
 
+  console.time('⌛ Create convo data stuff for input');
   // append the message to the existing convo
   const convoEntryMetadata: ConvoEntryMetadata = {
     email: {
@@ -562,9 +594,9 @@ export default eventHandler(async (event) => {
     convoEntryBody,
     tipTapExtensions
   );
+  console.timeEnd('⌛ Create convo data stuff for input');
 
-  console.log({ tiptap: JSON.stringify(convoEntryBody) });
-
+  console.time('⌛ Insert new convo');
   const insertNewConvoEntry = await db.insert(convoEntries).values({
     orgId: orgId,
     publicId: nanoId(),
@@ -578,7 +610,9 @@ export default eventHandler(async (event) => {
     replyToId: replyToId,
     subjectId: subjectId
   });
+  console.timeEnd('⌛ Insert new convo');
   console.log({ insertNewConvoEntry });
+  console.timeEnd('⌛ Start to process convo');
 
   // send alerts
 
