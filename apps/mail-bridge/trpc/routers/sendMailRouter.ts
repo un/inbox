@@ -13,6 +13,7 @@ import { nanoId, nanoIdLength, zodSchemas } from '@u22n/utils';
 import { postalPuppet } from '@u22n/postal-puppet';
 import { and, eq } from '@u22n/database/orm';
 import { convert } from 'html-to-text';
+import { PostalConfig } from '../../types';
 
 export const sendMailRouter = router({
   sendNewEmail: protectedProcedure
@@ -65,26 +66,13 @@ export const sendMailRouter = router({
       });
       const sendEmailAddress = `${sendAsEmailIdentity.username}@${sendAsEmailIdentity.domainName}`;
       const sendName = `${sendAsEmailIdentity.sendName} <${sendEmailAddress}>`;
-      let postalServerAPIKey: String;
+      let postalServerUrl: string;
+      let postalServerAPIKey: string;
 
+      const postalConfig: PostalConfig = useRuntimeConfig().postal;
       if (sendAsEmailIdentity.personalEmailIdentityId) {
-        //! TODO: Handle sending from personal email identities
-        // const personalEmailIdentityResponse =
-        //   await db.query.emailIdentitiesPersonal.findFirst({
-        //     where: eq(
-        //       emailIdentitiesPersonal.emailIdentityId,
-        //       sendAsEmailIdentity.id
-        //     ),
-        //     columns: {},
-        //     with: {
-        //       // postalServer: {
-        //       //   columns: {
-        //       //     apiKey: true
-        //       //   }
-        //       // }
-        //     }
-        //   });
-        // postalServerAPIKey = personalEmailIdentityResponse.postalServer.apiKey;
+        postalServerUrl = postalConfig.personalServerCredentials.apiUrl;
+        postalServerAPIKey = postalConfig.personalServerCredentials.apiKey;
       } else {
         const orgPostalServerResponse = await db.query.postalServers.findFirst({
           where: and(
@@ -93,19 +81,22 @@ export const sendMailRouter = router({
           ),
           columns: {
             apiKey: true
+          },
+          with: {
+            orgPostalConfigs: {
+              columns: {
+                host: true
+              }
+            }
           }
         });
         postalServerAPIKey = orgPostalServerResponse.apiKey;
+        const postalServerConfigItem = postalConfig.servers.find(
+          (server) =>
+            server.url === orgPostalServerResponse.orgPostalConfigs.host
+        );
+        postalServerUrl = `${postalServerConfigItem.controlPanelSubDomain}.${postalServerConfigItem.url}`;
       }
-
-      const postalConfigResponse = await db.query.orgPostalConfigs.findFirst({
-        where: eq(postalServers.orgId, orgId),
-        columns: {
-          host: true
-        }
-      });
-
-      const postalServerHost = `https://cp.${postalConfigResponse.host}/api/v1/send/message`;
 
       type PostalResponse =
         | {
@@ -132,7 +123,7 @@ export const sendMailRouter = router({
           };
 
       const sendMailPostalResponse: PostalResponse = await fetch(
-        postalServerHost,
+        postalServerUrl,
         {
           method: 'POST',
           headers: {
@@ -141,7 +132,7 @@ export const sendMailRouter = router({
           },
           body: JSON.stringify({
             to: [`${toEmail}`],
-            ...(ccEmail.length > 0 ? { cc: ccEmail } : {}),
+            cc: ccEmail,
             from: sendName,
             sender: sendEmailAddress,
             subject: subject,
@@ -162,6 +153,9 @@ export const sendMailRouter = router({
 
         const entryMetadata: ConvoEntryMetadata = {
           email: {
+            to: null,
+            from: [{ id: +sendAsEmailIdentity.id, type: 'emailIdentity' }],
+            cc: null,
             messageId: sendMailPostalResponse.data.message_id,
             postalMessages: transformedMessages.map((message) => ({
               ...message,
@@ -169,13 +163,10 @@ export const sendMailRouter = router({
             }))
           }
         };
-
-        await db
-          .update(convoEntries)
-          .set({
-            metadata: entryMetadata
-          })
-          .where(eq(convoEntries.id, entryId));
+        return {
+          success: true,
+          metadata: entryMetadata
+        };
       } else {
         console.error(
           `🚨 attempted to send convoId: ${entryId} from convoId: ${convoId}, but got the following error`,
@@ -185,9 +176,5 @@ export const sendMailRouter = router({
           success: false
         };
       }
-
-      return {
-        success: true
-      };
     })
 });

@@ -598,6 +598,10 @@ export const postalServersRelations = relations(postalServers, ({ one }) => ({
   org: one(orgs, {
     fields: [postalServers.orgId],
     references: [orgs.id]
+  }),
+  orgPostalConfigs: one(orgPostalConfigs, {
+    fields: [postalServers.orgId],
+    references: [orgPostalConfigs.orgId]
   })
 }));
 

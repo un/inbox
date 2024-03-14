@@ -21,7 +21,8 @@ import {
   contactGlobalReputations,
   convoEntries,
   emailIdentitiesAuthorizedUsers,
-  userGroupMembers
+  userGroupMembers,
+  ConvoEntryMetadataEmailAddress
 } from '@u22n/database/schema';
 import { nanoId, nanoIdLength, zodSchemas } from '@u22n/utils';
 import { TRPCError } from '@trpc/server';
@@ -97,6 +98,8 @@ export const convoRouter = router({
       const message: tiptapVue3.JSONContent = parse(messageString);
 
       // early check if "to" value has a valid email address, if not, then return an error
+      let convoMetadataToAddress: ConvoEntryMetadataEmailAddress | undefined;
+      const convoMetadataCcAddresses: ConvoEntryMetadataEmailAddress[] = [];
 
       async function getConvoToAddress() {
         const convoMessageToType = convoMessageTo.type;
@@ -106,6 +109,7 @@ export const convoRouter = router({
           const contactResponse = await db.query.contacts.findFirst({
             where: eq(contacts.publicId, convoMessageTo.publicId),
             columns: {
+              id: true,
               emailUsername: true,
               emailDomain: true
             }
@@ -116,6 +120,7 @@ export const convoRouter = router({
               message: 'TO address contact not found'
             });
           }
+          convoMetadataToAddress = { id: +contactResponse.id, type: 'contact' };
           return `${contactResponse.emailUsername}@${contactResponse.emailDomain}`;
         } else if (convoMessageToType === 'group') {
           const groupResponse = await db.query.userGroups.findFirst({
@@ -158,6 +163,10 @@ export const convoRouter = router({
               message: `${groupResponse.name} Group does not have a default email identity set and cant be set as the TO address`
             });
           }
+          convoMetadataToAddress = {
+            id: +emailIdentitiesResponse.id,
+            type: 'emailIdentity'
+          };
           return `${emailIdentitiesResponse.identity.username}@${emailIdentitiesResponse.identity.domainName}`;
         } else if (convoMessageToType === 'user') {
           const orgMemberResponse = await db.query.orgMembers.findFirst({
@@ -207,6 +216,10 @@ export const convoRouter = router({
               message: `${orgMemberResponse.profile.firstName} ${orgMemberResponse.profile.lastName} User does not have a default email identity set and cant be set as the TO address`
             });
           }
+          convoMetadataToAddress = {
+            id: +emailIdentitiesResponse.id,
+            type: 'emailIdentity'
+          };
           return `${emailIdentitiesResponse.identity.username}@${emailIdentitiesResponse.identity.domainName}`;
         } else {
           throw new TRPCError({
@@ -307,6 +320,17 @@ export const convoRouter = router({
           });
 
           if (existingContact) {
+            if (newConvoToEmailAddress === email && !convoMetadataToAddress) {
+              convoMetadataToAddress = {
+                id: +existingContact.id,
+                type: 'contact'
+              };
+            } else {
+              convoMetadataCcAddresses.push({
+                id: +existingContact.id,
+                type: 'contact'
+              });
+            }
             orgContactIds.push(existingContact.id);
             orgContactReputationIds.push(existingContact.reputationId);
           } else {
@@ -331,6 +355,17 @@ export const convoRouter = router({
                   emailDomain: emailDomain,
                   screenerStatus: 'approve'
                 });
+              if (newConvoToEmailAddress === email && !convoMetadataToAddress) {
+                convoMetadataToAddress = {
+                  id: +newContactInsertResponse.insertId,
+                  type: 'contact'
+                };
+              } else {
+                convoMetadataCcAddresses.push({
+                  id: +existingContact.id,
+                  type: 'contact'
+                });
+              }
               orgContactIds.push(+newContactInsertResponse.insertId);
               orgContactReputationIds.push(existingContactGlobalReputations.id);
             } else {
@@ -353,6 +388,17 @@ export const convoRouter = router({
                   emailDomain: emailDomain,
                   screenerStatus: 'approve'
                 });
+              if (newConvoToEmailAddress === email && !convoMetadataToAddress) {
+                convoMetadataToAddress = {
+                  id: +newContactInsertResponse.insertId,
+                  type: 'contact'
+                };
+              } else {
+                convoMetadataCcAddresses.push({
+                  id: +existingContact.id,
+                  type: 'contact'
+                });
+              }
               orgContactIds.push(+newContactInsertResponse.insertId);
               orgContactReputationIds.push(
                 +newContactGlobalReputationInsertResponse.insertId
@@ -542,6 +588,10 @@ export const convoRouter = router({
               }
             }
             if (emailIdentityResponse) {
+              convoMetadataCcAddresses.push({
+                id: +emailIdentityResponse.id,
+                type: 'emailIdentity'
+              });
               ccEmailAddresses.push(
                 `${emailIdentityResponse.identity.username}@${emailIdentityResponse.identity.domainName}`
               );
@@ -589,6 +639,10 @@ export const convoRouter = router({
               }
             }
             if (emailIdentityResponse) {
+              convoMetadataCcAddresses.push({
+                id: +emailIdentityResponse.id,
+                type: 'emailIdentity'
+              });
               ccEmailAddresses.push(
                 `${emailIdentityResponse.identity.username}@${emailIdentityResponse.identity.domainName}`
               );
@@ -604,19 +658,41 @@ export const convoRouter = router({
         );
 
         // to, cc, subject, bodyPlain, bodyHTML, attachmentIds, sendAsEmailIdentityPublicId
+        // export type ConvoEntryMetadataEmailAddress = {
+        //   id: number;
+        //   type: 'contact' | 'emailIdentity';
+        // };
+        const mailBridgeSendMailResponse =
+          await mailBridgeTrpcClient.mail.send.sendNewEmail.mutate({
+            orgId: orgId,
+            convoId: +insertConvoResponse.insertId,
+            entryId: +insertConvoEntryResponse.insertId,
+            sendAsEmailIdentityPublicId: sendAsEmailIdentityPublicId || '',
+            toEmail: newConvoToEmailAddress,
+            ccEmail: ccEmailAddressesFiltered,
+            subject: topic,
+            bodyHtml: newConvoBodyHTML,
+            bodyPlainText: newConvoBodyPlainText
+          });
 
-        //! TO FIX: HANDLE SENDING FOR PERSONAL EMAIL DOMAINS
-        await mailBridgeTrpcClient.mail.send.sendNewEmail.mutate({
-          orgId: orgId,
-          convoId: +insertConvoResponse.insertId,
-          entryId: +insertConvoEntryResponse.insertId,
-          sendAsEmailIdentityPublicId: sendAsEmailIdentityPublicId || '',
-          toEmail: newConvoToEmailAddress,
-          ccEmail: ccEmailAddressesFiltered,
-          subject: topic,
-          bodyHtml: newConvoBodyHTML,
-          bodyPlainText: newConvoBodyPlainText
-        });
+        if (!mailBridgeSendMailResponse.success) {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message:
+              'Something went wrong when trying to send the message, please contact support'
+          });
+        }
+
+        const messageMetadata = mailBridgeSendMailResponse.metadata;
+        messageMetadata.email.to = [convoMetadataToAddress];
+        messageMetadata.email.cc = convoMetadataCcAddresses;
+
+        await db
+          .update(convoEntries)
+          .set({
+            metadata: messageMetadata
+          })
+          .where(eq(convoEntries.id, +insertConvoEntryResponse.insertId));
       }
 
       return {
