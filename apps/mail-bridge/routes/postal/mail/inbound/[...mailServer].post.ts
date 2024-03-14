@@ -581,5 +581,5 @@ export default eventHandler(async (event) => {
 
   // send alerts
 
-  // return { status: "I'm Alive 🏝️" };
+  return;
 });
