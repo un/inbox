@@ -4,9 +4,13 @@ import { defineNuxtPrepareHandler } from 'nuxt-prepare/config';
 export default defineNuxtPrepareHandler(async () => {
   // set the primary mail domains
 
-  const mailDomainPublicEnv = process.env.MAIL_DOMAIN_PUBLIC;
-  const mailDomainPremiumEnv = process.env.MAIL_DOMAIN_PREMIUM;
-  if (!mailDomainPublicEnv || !mailDomainPremiumEnv) {
+  interface MailDomains {
+    free: string[];
+    premium: string[];
+  }
+
+  const mailDomains: MailDomains = JSON.parse(process.env.MAIL_DOMAINS || '');
+  if (!mailDomains.free || !mailDomains.premium) {
     throw new Error(
       'MAIL_DOMAIN_PUBLIC or MAIL_DOMAIN_PREMIUM is not set, you must add the domains to your ENV variables'
     );
@@ -59,12 +63,7 @@ export default defineNuxtPrepareHandler(async () => {
     runtimeConfig: {
       billing: billingConfig,
       public: {
-        mailDomainPublic: JSON.parse(
-          mailDomainPublicEnv
-        ) as MailDomainEntries[],
-        mailDomainPremium: JSON.parse(
-          mailDomainPremiumEnv
-        ) as MailDomainEntries[],
+        mailDomains: mailDomains,
         ee: eeConfig,
         turnstileEnabled: !!turnstileKey
       }
