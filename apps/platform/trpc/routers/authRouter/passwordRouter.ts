@@ -109,7 +109,7 @@ export const passwordRouter = router({
             columns: {
               passwordHash: true,
               twoFactorSecret: true,
-              recoveryCodes: true
+              recoveryCode: true
             }
           }
         }
@@ -169,33 +169,26 @@ export const passwordRouter = router({
       // verify recovery code if provided
       let recoveryCodeValid: null | boolean;
       if (input.recoveryCode) {
-        if (!userResponse.account.recoveryCodes) {
+        if (!userResponse.account.recoveryCode) {
           throw new TRPCError({
             code: 'METHOD_NOT_SUPPORTED',
             message: 'Recovery code sign-in is not enabled'
           });
         }
 
-        for (const codeHash of userResponse.account.recoveryCodes) {
-          const isRecoveryCodeValid = await new Argon2id().verify(
-            codeHash,
-            input.recoveryCode
-          );
-          if (isRecoveryCodeValid) {
-            // Remove the used recovery code from the database
-            const updatedRecoveryCodes =
-              userResponse.account.recoveryCodes.filter(
-                (code) => code !== codeHash
-              );
-            await db
-              .update(accounts)
-              .set({
-                recoveryCodes: updatedRecoveryCodes
-              })
-              .where(eq(accounts.userId, userResponse.id));
-            recoveryCodeValid = isRecoveryCodeValid;
-            break; // Exit the loop as we found a valid recovery code
-          }
+        const isRecoveryCodeValid = await new Argon2id().verify(
+          userResponse.account.recoveryCode,
+          input.recoveryCode
+        );
+        if (isRecoveryCodeValid) {
+          // Remove the used recovery code from the database
+          await db
+            .update(accounts)
+            .set({
+              recoveryCode: null
+            })
+            .where(eq(accounts.userId, userResponse.id));
+          recoveryCodeValid = isRecoveryCodeValid;
         }
 
         if (!recoveryCodeValid) {
