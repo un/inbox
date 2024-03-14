@@ -8,6 +8,7 @@ import {
   ConvoEntryMetadata,
   contactGlobalReputations,
   contacts,
+  convoAttachments,
   convoEntries,
   convoEntryReplies,
   convoParticipants,
@@ -26,6 +27,7 @@ import type {
 import { nanoId } from '@u22n/utils';
 import { tiptapCore, tiptapHtml } from '@u22n/tiptap';
 import { tipTapExtensions } from '@u22n/tiptap/extensions';
+import { z } from 'zod';
 /**
  * used for all incoming mail from Postal
  */
@@ -42,6 +44,13 @@ export default eventHandler(async (event) => {
     columns: {
       id: true,
       orgId: true
+    },
+    with: {
+      org: {
+        columns: {
+          publicId: true
+        }
+      }
     }
   });
 
@@ -107,6 +116,7 @@ export default eventHandler(async (event) => {
   const messageId = parsedEmail.messageId.replace(/^<|>$/g, '') || '';
   const date = parsedEmail.date;
   const messageBodyHtml = (parsedEmail.html as string).replace(/\n/g, '') || '';
+  const attachments = parsedEmail.attachments || [];
 
   // Check if we have already processed this incoming email by checking the message ID + orgID
   const alreadyProcessedMessageWithThisId =
@@ -577,6 +587,84 @@ export default eventHandler(async (event) => {
       entryReplyId: +insertNewConvoEntry.insertId,
       orgId: orgId
     });
+  }
+
+  // handle attachments
+  interface UploadAndAttachAttachmentInput {
+    orgId: number;
+    fileName: string;
+    fileType: string;
+    fileContent: Buffer;
+    convoId: number;
+    convoEntryId: number;
+    convoParticipantId: number;
+  }
+  async function uploadAndAttachAttachment(
+    input: UploadAndAttachAttachmentInput
+  ) {
+    type PreSignedData = {
+      publicId: string;
+      signedUrl: string;
+    };
+    const preUpload: PreSignedData = await fetch(
+      `${useRuntimeConfig().storage.url}/api/attachments/internalPresign`,
+      {
+        method: 'post',
+
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: useRuntimeConfig().storage.key
+        },
+        body: JSON.stringify({
+          orgPublicId: mailServer.org.publicId,
+          filename: input.fileName
+        })
+      }
+    ).then((res) => res.json());
+    if (!preUpload || !preUpload.publicId || !preUpload.signedUrl) {
+      throw new Error('Missing attachmentPublicId or presignedUrl');
+    }
+    const attachmentPublicId = preUpload.publicId;
+    const presignedUrl = preUpload.signedUrl;
+
+    try {
+      await $fetch(presignedUrl, {
+        method: 'put',
+        body: input.fileContent,
+        headers: {
+          'Content-Type': input.fileType
+        }
+      });
+    } catch (error) {
+      console.error('Error uploading file to presigned URL:', error);
+      throw error; // Rethrow to handle it in the outer catch block
+    }
+
+    await db.insert(convoAttachments).values({
+      convoId: input.convoId,
+      convoEntryId: input.convoEntryId,
+      convoParticipantId: input.convoParticipantId,
+      orgId: input.orgId,
+      publicId: attachmentPublicId,
+      fileName: input.fileName,
+      type: input.fileType
+    });
+  }
+
+  if (attachments.length) {
+    await Promise.all(
+      attachments.map((attachment) => {
+        return uploadAndAttachAttachment({
+          orgId: orgId,
+          fileName: attachment.filename,
+          fileType: attachment.contentType,
+          fileContent: attachment.content,
+          convoId: convoId,
+          convoEntryId: +insertNewConvoEntry.insertId,
+          convoParticipantId: fromAddressParticipantId
+        });
+      })
+    );
   }
 
   // send alerts

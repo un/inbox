@@ -39,6 +39,10 @@ export default defineNitroConfig({
       limits: postalServerLimits,
       localMode: process.env.MAILBRIDGE_LOCAL_MODE || true
     },
+    storage: {
+      url: process.env.WEBAPP_STORAGE_URL || '',
+      key: process.env.WEBAPP_STORAGE_KEY || ''
+    },
     mailDomains: mailDomains
   }
 });

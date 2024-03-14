@@ -1,8 +1,5 @@
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { db } from '@u22n/database';
-import { and, eq } from '@u22n/database/orm';
-import { orgMembers, orgs } from '@u22n/database/schema';
 import { nanoId } from '@u22n/utils';
 import { z } from 'zod';
 
@@ -33,7 +30,6 @@ export default eventHandler({
     const signedUrl = await getSignedUrl(s3Client, command, {
       expiresIn: 3600
     });
-
     return { publicId: attachmentPublicId, signedUrl: signedUrl };
   }
 });
