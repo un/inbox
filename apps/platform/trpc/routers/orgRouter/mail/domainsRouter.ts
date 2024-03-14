@@ -180,8 +180,8 @@ export const domainsRouter = router({
       const { db, org } = ctx;
       const orgId = org?.id;
       const { domainPublicId } = input;
-      const postalRootUrl = useRuntimeConfig().mailBridge
-        .postalRootUrl as string;
+      const postalDnsRootUrl = useRuntimeConfig().mailBridge
+        .postalDnsRootUrl as string;
 
       // Handle when adding database replicas
       const dbReplica = db;
@@ -230,7 +230,7 @@ export const domainsRouter = router({
       const dnsResult = await verifyDns({
         domainName: domainResponse.domain,
         postalUrl: domainResponse.postalHost,
-        postalRootUrl: postalRootUrl,
+        postalDnsRootUrl: postalDnsRootUrl,
         dkimKey: domainResponse.dkimKey,
         dkimValue: domainResponse.dkimValue
       });

@@ -70,7 +70,7 @@ export default defineNitroConfig({
     mailBridge: {
       url: process.env.WEBAPP_MAILBRIDGE_URL || '',
       key: process.env.WEBAPP_MAILBRIDGE_KEY || '',
-      postalRootUrl: process.env.MAILBRIDGE_POSTAL_ROOT_URL || ''
+      postalDnsRootUrl: process.env.MAILBRIDGE_POSTAL_SERVERS_DNS_ROOT_URL || ''
     },
     storage: {
       url: process.env.WEBAPP_STORAGE_URL || '',
