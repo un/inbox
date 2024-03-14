@@ -32,16 +32,16 @@ export default defineNuxtPrepareHandler(async () => {
 
   const eeLicenseKey = process.env.EE_LICENSE_KEY || null;
   if (eeLicenseKey) {
-    console.log('✅ Enterprise Edition is enabled');
+    console.info('✅ Enterprise Edition is enabled');
     eeConfig.enabled = true;
   } else {
-    console.log('✅ Running in self hosting mode 💪');
+    console.info('✅ Running in self hosting mode 💪');
   }
 
   const billingUrl = process.env.BILLING_URL || null;
   const billingKey = process.env.BILLING_KEY || null;
   if (eeLicenseKey && billingUrl && billingKey) {
-    console.log('✅ EE Billing module is enabled');
+    console.info('✅ EE Billing module is enabled');
     eeConfig.modules.billing = true;
     billingConfig.enabled = true;
     billingConfig.url = billingUrl;
@@ -49,6 +49,7 @@ export default defineNuxtPrepareHandler(async () => {
   }
 
   const turnstileKey = process.env.WEBAPP_TURNSTILE_SECRET_KEY || null;
+  console.info('✅ Turnstile is', turnstileKey ? 'enabled' : 'disabled');
 
   const unPlatformUrl = process.env.PLATFORM_URL;
   if (!unPlatformUrl) {
@@ -56,7 +57,7 @@ export default defineNuxtPrepareHandler(async () => {
       'PLATFORM_URL is not set, you must add the URL to your ENV variables'
     );
   } else {
-    console.log('✅ Platform URL is set to', unPlatformUrl);
+    console.info('✅ Platform URL is set to', unPlatformUrl);
   }
 
   return {

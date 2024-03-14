@@ -5,10 +5,10 @@ import { AuthenticatorTransportFuture } from '@simplewebauthn/types';
 import { isoBase64URL } from '@simplewebauthn/server/helpers';
 
 //! Enable debug logging
-const debug = true;
+const debug = false;
 const log = (...args: any[]) => {
   if (debug) {
-    console.log('🔐 Passkey Auth DB Adapter', ...args);
+    console.info('🔐 Passkey Auth DB Adapter', ...args);
   }
 };
 

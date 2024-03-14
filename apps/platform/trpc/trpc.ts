@@ -70,7 +70,7 @@ const isEeEnabled = trpcContext.middleware(({ next }) => {
 const turnstileTokenValidation = experimental_standaloneMiddleware<{
   input: { turnstileToken?: string }; // defaults to 'unknown' if not defined
 }>().create(async (opts) => {
-  if (!useRuntimeConfig().public.turnstileEnabled) return opts.next();
+  if (!useRuntimeConfig().turnstile.secretKey) return opts.next();
   if (!opts.input.turnstileToken) {
     if (process.env.NODE_ENV === 'development') return opts.next();
     throw new TRPCError({
