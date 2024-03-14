@@ -9,6 +9,7 @@ import {
 } from '@u22n/database/schema';
 import { nanoId, nanoIdLength, zodSchemas } from '@u22n/utils';
 import { postalPuppet } from '@u22n/postal-puppet';
+import { PostalConfig } from '../../types';
 
 export const domainRouter = router({
   createDomain: protectedProcedure
@@ -24,6 +25,8 @@ export const domainRouter = router({
       const { orgId, orgPublicId, domainName } = input;
       const postalOrgId = orgPublicId;
 
+      const postalConfig: PostalConfig = config.postal;
+
       const localMode = config.localMode;
       if (localMode) {
         return {
@@ -38,10 +41,10 @@ export const domainRouter = router({
       }
 
       const { puppetInstance } = await postalPuppet.initPuppet({
-        postalControlPanel: config.postalControlPanel,
-        postalUrl: config.postalUrl,
-        postalUser: config.postalUser,
-        postalPass: config.postalPass
+        postalControlPanel: postalConfig.activeServers.controlPanelSubDomain,
+        postalUrl: postalConfig.activeServers.url,
+        postalUser: postalConfig.activeServers.cpUsername,
+        postalPass: postalConfig.activeServers.cpPassword
       });
 
       const puppetDomainResponse = await postalPuppet.addDomain({
@@ -81,7 +84,7 @@ export const domainRouter = router({
 
       return {
         orgId: orgId,
-        postalServerUrl: config.postalUrl as string,
+        postalServerUrl: postalConfig.activeServers.url as string,
         postalOrgId: postalOrgId,
         domainId: puppetDomainResponse.domainId,
         dkimKey: puppetDomainResponse.dkimKey,
@@ -109,11 +112,13 @@ export const domainRouter = router({
         };
       }
 
+      const postalConfig: PostalConfig = config.postal;
+
       const { puppetInstance } = await postalPuppet.initPuppet({
-        postalControlPanel: config.postalControlPanel,
-        postalUrl: config.postalUrl,
-        postalUser: config.postalUser,
-        postalPass: config.postalPass
+        postalControlPanel: postalConfig.activeServers.controlPanelSubDomain,
+        postalUrl: postalConfig.activeServers.url,
+        postalUser: postalConfig.activeServers.cpUsername,
+        postalPass: postalConfig.activeServers.cpPassword
       });
 
       await postalPuppet.refreshDomainDns({

@@ -173,36 +173,6 @@ export const crudRouter = router({
         userProfileId: userProfileId
       });
 
-      const createMailBridgeOrgResponse =
-        await mailBridgeTrpcClient.postal.org.createOrg.mutate({
-          orgId: orgId,
-          orgPublicId: newPublicId
-        });
-
-      await db.insert(postalServers).values({
-        orgId: orgId,
-        publicId: createMailBridgeOrgResponse.postalServer.serverPublicId,
-        type: 'email',
-        apiKey: createMailBridgeOrgResponse.postalServer.apiKey,
-        smtpKey: createMailBridgeOrgResponse.postalServer.smtpKey,
-        sendLimit: createMailBridgeOrgResponse.postalServer.sendLimit,
-        rootMailServer: createMailBridgeOrgResponse.postalServer.rootMailServer
-      });
-
-      const orgPostalConfigResponse = await db.query.orgPostalConfigs.findFirst(
-        {
-          where: eq(orgPostalConfigs.orgId, orgId)
-        }
-      );
-      if (!orgPostalConfigResponse) {
-        await db.insert(orgPostalConfigs).values({
-          orgId: orgId,
-          host: createMailBridgeOrgResponse.config.host,
-          ipPools: createMailBridgeOrgResponse.config.ipPools,
-          defaultIpPool: createMailBridgeOrgResponse.config.defaultIpPool
-        });
-      }
-
       return {
         orgId: newPublicId,
         orgName: input.orgName

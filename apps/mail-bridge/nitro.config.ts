@@ -1,4 +1,3 @@
-import { postalServers } from '@u22n/database/schema';
 import { defineNitroConfig } from 'nitropack/config';
 import type {
   EnvPostalServersObject,

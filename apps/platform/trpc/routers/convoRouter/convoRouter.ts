@@ -96,17 +96,6 @@ export const convoRouter = router({
 
       const message: tiptapVue3.JSONContent = parse(messageString);
 
-      console.log({
-        sendAsEmailIdentityPublicId,
-        participantsEmails,
-        participantsOrgMembersPublicIds,
-        participantsGroupsPublicIds,
-        participantsContactsPublicIds,
-        topic,
-        message,
-        convoMessageTo
-      });
-
       // early check if "to" value has a valid email address, if not, then return an error
 
       async function getConvoToAddress() {
@@ -616,6 +605,7 @@ export const convoRouter = router({
 
         // to, cc, subject, bodyPlain, bodyHTML, attachmentIds, sendAsEmailIdentityPublicId
 
+        //! TO FIX: HANDLE SENDING FOR PERSONAL EMAIL DOMAINS
         await mailBridgeTrpcClient.mail.send.sendNewEmail.mutate({
           orgId: orgId,
           convoId: +insertConvoResponse.insertId,
@@ -778,7 +768,8 @@ export const convoRouter = router({
                   emailUsername: true,
                   emailDomain: true,
                   setName: true,
-                  signature: true
+                  signaturePlainText: true,
+                  signatureHtml: true
                 }
               }
             }
@@ -947,7 +938,9 @@ export const convoRouter = router({
                   setName: true,
                   emailUsername: true,
                   emailDomain: true,
-                  type: true
+                  type: true,
+                  signaturePlainText: true,
+                  signatureHtml: true
                 }
               }
             }

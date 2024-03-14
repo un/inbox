@@ -197,44 +197,45 @@ export const addressRouter = router({
       const rootUserEmailAddress = `${username}@${emailIdentityDomain}`;
       const sendName = `${userProfile?.firstName} ${userProfile?.lastName}`;
 
-      const createMailBridgeOrgResponse =
-        await mailBridgeTrpcClient.postal.org.createOrg.mutate({
-          orgId: orgId,
-          orgPublicId: orgPublicId,
-          personalOrg: true
-        });
+      //! LEGACY - WE NO LONGER CREATE A POSTAL ORG FOR ROOT EMAIL IDENTITIES
+      // const createMailBridgeOrgResponse =
+      //   await mailBridgeTrpcClient.postal.org.createOrg.mutate({
+      //     orgId: orgId,
+      //     orgPublicId: orgPublicId,
+      //     personalOrg: true
+      //   });
 
-      const orgPostalConfigResponse = await db.query.orgPostalConfigs.findFirst(
-        {
-          where: eq(orgPostalConfigs.orgId, orgId),
-          columns: {
-            id: true
-          }
-        }
-      );
+      // const orgPostalConfigResponse = await db.query.orgPostalConfigs.findFirst(
+      //   {
+      //     where: eq(orgPostalConfigs.orgId, orgId),
+      //     columns: {
+      //       id: true
+      //     }
+      //   }
+      // );
 
-      if (!orgPostalConfigResponse) {
-        await db.insert(orgPostalConfigs).values({
-          orgId: orgId,
-          host: createMailBridgeOrgResponse.config.host,
-          ipPools: createMailBridgeOrgResponse.config.ipPools,
-          defaultIpPool: createMailBridgeOrgResponse.config.defaultIpPool
-        });
-      }
+      // if (!orgPostalConfigResponse) {
+      //   await db.insert(orgPostalConfigs).values({
+      //     orgId: orgId,
+      //     host: createMailBridgeOrgResponse.config.host,
+      //     ipPools: createMailBridgeOrgResponse.config.ipPools,
+      //     defaultIpPool: createMailBridgeOrgResponse.config.defaultIpPool
+      //   });
+      // }
 
-      // creates the new root email address
-      const createMailBridgeRootEmailResponse =
-        await mailBridgeTrpcClient.postal.emailRoutes.createRootEmailAddress.mutate(
-          {
-            orgId: orgId,
-            rootDomainName: emailIdentityDomain,
-            sendName: sendName,
-            serverPublicId:
-              createMailBridgeOrgResponse.postalServer.serverPublicId,
-            userId: userOrgMembership.id,
-            username: username.toLocaleLowerCase()
-          }
-        );
+      // // creates the new root email address
+      // const createMailBridgeRootEmailResponse =
+      //   await mailBridgeTrpcClient.postal.emailRoutes.createRootEmailAddress.mutate(
+      //     {
+      //       orgId: orgId,
+      //       rootDomainName: emailIdentityDomain,
+      //       sendName: sendName,
+      //       serverPublicId:
+      //         createMailBridgeOrgResponse.postalServer.serverPublicId,
+      //       userId: userOrgMembership.id,
+      //       username: username.toLocaleLowerCase()
+      //     }
+      //   );
 
       const newroutingRulePublicId = nanoId();
       const routingRuleInsertResponse = await db
