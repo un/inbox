@@ -28,7 +28,6 @@ const mailDomains: MailDomains = JSON.parse(process.env.MAIL_DOMAINS);
 export default defineNitroConfig({
   // Nitro options
   runtimeConfig: {
-    localMode: process.env.MAILBRIDGE_LOCAL_MODE || true,
     url: process.env.MAILBRIDGE_URL,
     key: process.env.MAILBRIDGE_KEY,
     postal: {
@@ -37,7 +36,8 @@ export default defineNitroConfig({
       personalServerCredentials: postalServerPersonalCredentials,
       dnsRootUrl: process.env.MAILBRIDGE_POSTAL_SERVERS_DNS_ROOT_URL,
       webhookDestinations: webhookDestinations,
-      limits: postalServerLimits
+      limits: postalServerLimits,
+      localMode: process.env.MAILBRIDGE_LOCAL_MODE || true
     },
     mailDomains: mailDomains
   }

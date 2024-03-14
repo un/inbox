@@ -34,8 +34,9 @@ export const sendMailRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const { config, db } = ctx;
-      const localMode = config.localMode;
-      if (localMode) {
+      const postalConfig: PostalConfig = config.postal;
+
+      if (postalConfig.localMode === true) {
         return {
           //! TO FIX RETURN WHEN IN LOCAL MODE
         };
@@ -69,7 +70,6 @@ export const sendMailRouter = router({
       let postalServerUrl: string;
       let postalServerAPIKey: string;
 
-      const postalConfig: PostalConfig = useRuntimeConfig().postal;
       if (sendAsEmailIdentity.personalEmailIdentityId) {
         postalServerUrl = postalConfig.personalServerCredentials.apiUrl;
         postalServerAPIKey = postalConfig.personalServerCredentials.apiKey;

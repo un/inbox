@@ -67,4 +67,5 @@ export type PostalConfig = {
   dnsRootUrl: string;
   webhookDestinations: EnvPostalWebhookDestinations;
   limits: EnvPostalServerLimits;
+  localMode: boolean;
 };

@@ -1,13 +1,8 @@
 import { z } from 'zod';
-import { parse, stringify } from 'superjson';
 import { router, protectedProcedure } from '../trpc';
 import { and, eq } from '@u22n/database/orm';
-import {
-  postalServers,
-  orgPostalConfigs,
-  domains
-} from '@u22n/database/schema';
-import { nanoId, nanoIdLength, zodSchemas } from '@u22n/utils';
+import { postalServers } from '@u22n/database/schema';
+import { nanoId, zodSchemas } from '@u22n/utils';
 import { postalPuppet } from '@u22n/postal-puppet';
 import { PostalConfig } from '../../types';
 
@@ -27,8 +22,7 @@ export const domainRouter = router({
 
       const postalConfig: PostalConfig = config.postal;
 
-      const localMode = config.localMode;
-      if (localMode) {
+      if (postalConfig.localMode === true) {
         return {
           orgId: orgId,
           postalServerUrl: 'localmode',
@@ -105,14 +99,12 @@ export const domainRouter = router({
       const { orgId, orgPublicId, postalDomainId } = input;
       const postalOrgId = orgPublicId;
 
-      const localMode = config.localMode;
-      if (localMode) {
+      const postalConfig: PostalConfig = config.postal;
+      if (postalConfig.localMode === true) {
         return {
           success: true
         };
       }
-
-      const postalConfig: PostalConfig = config.postal;
 
       const { puppetInstance } = await postalPuppet.initPuppet({
         postalControlPanel: postalConfig.activeServers.controlPanelSubDomain,

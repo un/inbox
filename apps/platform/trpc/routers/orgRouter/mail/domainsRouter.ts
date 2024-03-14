@@ -31,7 +31,8 @@ export const domainsRouter = router({
         });
       }
       const { db, org } = ctx;
-      const orgId = org?.id;
+      const orgId = org.id;
+      const orgPublicId = org.publicId;
       const newPublicId = nanoId();
 
       const domainName = input.domainName.toLowerCase();
@@ -41,19 +42,6 @@ export const domainsRouter = router({
         throw new TRPCError({
           code: 'UNAUTHORIZED',
           message: 'You are not an admin'
-        });
-      }
-
-      const orgResponse = await db.query.orgs.findFirst({
-        where: eq(orgs.id, orgId),
-        columns: {
-          publicId: true
-        }
-      });
-      if (!orgResponse) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Org not found'
         });
       }
 
@@ -89,14 +77,16 @@ export const domainsRouter = router({
         where: and(
           eq(postalServers.orgId, orgId),
           eq(postalServers.type, 'email')
-        )
+        ),
+        columns: {
+          id: true
+        }
       });
-
       if (!orgPostalServerQuery) {
         const createMailBridgeOrgResponse =
           await mailBridgeTrpcClient.postal.org.createPostalOrg.mutate({
             orgId: orgId,
-            orgPublicId: newPublicId
+            orgPublicId: orgPublicId
           });
         await db.insert(postalServers).values({
           orgId: orgId,
@@ -122,7 +112,7 @@ export const domainsRouter = router({
       const mailBridgeResponse =
         await mailBridgeTrpcClient.postal.domains.createDomain.mutate({
           orgId: orgId,
-          orgPublicId: orgResponse.publicId,
+          orgPublicId: orgPublicId,
           domainName: domainName
         });
 
