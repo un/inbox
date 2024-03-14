@@ -582,7 +582,6 @@ export const postalServers = mysqlTable(
     publicId: nanoId('public_id').notNull(),
     orgId: foreignKey('org_id').notNull(),
     type: mysqlEnum('type', ['email', 'transactional', 'marketing']).notNull(),
-    sendLimit: mediumint('send_limit').notNull(),
     apiKey: varchar('api_key', { length: 64 }).notNull(),
     smtpKey: varchar('smtp_key', { length: 64 }),
     rootForwardingAddress: varchar('root_forwarding_address', { length: 128 })

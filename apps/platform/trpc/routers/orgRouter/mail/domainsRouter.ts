@@ -1,7 +1,12 @@
 import { z } from 'zod';
 import { router, orgProcedure } from '../../../trpc';
 import { and, eq } from '@u22n/database/orm';
-import { orgs, domains } from '@u22n/database/schema';
+import {
+  orgs,
+  domains,
+  postalServers,
+  orgPostalConfigs
+} from '@u22n/database/schema';
 import { nanoId, zodSchemas } from '@u22n/utils';
 import dns from 'node:dns';
 import { verifyDns } from '../../../../utils/verifyDns';
@@ -52,37 +57,6 @@ export const domainsRouter = router({
         });
       }
 
-      //! FIX: if org dosnt have a postal server, create one
-      // const createMailBridgeOrgResponse =
-      //   await mailBridgeTrpcClient.postal.org.createOrg.mutate({
-      //     orgId: orgId,
-      //     orgPublicId: newPublicId
-      //   });
-
-      // await db.insert(postalServers).values({
-      //   orgId: orgId,
-      //   publicId: createMailBridgeOrgResponse.postalServer.serverPublicId,
-      //   type: 'email',
-      //   apiKey: createMailBridgeOrgResponse.postalServer.apiKey,
-      //   smtpKey: createMailBridgeOrgResponse.postalServer.smtpKey,
-      //   sendLimit: createMailBridgeOrgResponse.postalServer.sendLimit,
-      //   rootMailServer: createMailBridgeOrgResponse.postalServer.rootMailServer
-      // });
-
-      // const orgPostalConfigResponse = await db.query.orgPostalConfigs.findFirst(
-      //   {
-      //     where: eq(orgPostalConfigs.orgId, orgId)
-      //   }
-      // );
-      // if (!orgPostalConfigResponse) {
-      //   await db.insert(orgPostalConfigs).values({
-      //     orgId: orgId,
-      //     host: createMailBridgeOrgResponse.config.host,
-      //     ipPools: createMailBridgeOrgResponse.config.ipPools,
-      //     defaultIpPool: createMailBridgeOrgResponse.config.defaultIpPool
-      //   });
-      // }
-
       await dns.promises.setServers(['1.1.1.1', '1.0.0.1']);
       await dns.promises.resolveNs(domainName).catch(() => {
         throw new TRPCError({
@@ -108,6 +82,41 @@ export const domainsRouter = router({
           code: 'FORBIDDEN',
           message: 'Domain already in use'
         });
+      }
+
+      // check if org has a postal server, if not create one
+      const orgPostalServerQuery = await db.query.postalServers.findFirst({
+        where: and(
+          eq(postalServers.orgId, orgId),
+          eq(postalServers.type, 'email')
+        )
+      });
+
+      if (!orgPostalServerQuery) {
+        const createMailBridgeOrgResponse =
+          await mailBridgeTrpcClient.postal.org.createPostalOrg.mutate({
+            orgId: orgId,
+            orgPublicId: newPublicId
+          });
+        await db.insert(postalServers).values({
+          orgId: orgId,
+          publicId: createMailBridgeOrgResponse.postalServer.serverPublicId,
+          type: 'email',
+          apiKey: createMailBridgeOrgResponse.postalServer.apiKey,
+          smtpKey: createMailBridgeOrgResponse.postalServer.smtpKey
+        });
+        const orgPostalConfigResponse =
+          await db.query.orgPostalConfigs.findFirst({
+            where: eq(orgPostalConfigs.orgId, orgId)
+          });
+        if (!orgPostalConfigResponse) {
+          await db.insert(orgPostalConfigs).values({
+            orgId: orgId,
+            host: createMailBridgeOrgResponse.config.host,
+            ipPools: [createMailBridgeOrgResponse.config.ipPools],
+            defaultIpPool: createMailBridgeOrgResponse.config.defaultIpPool
+          });
+        }
       }
 
       const mailBridgeResponse =
