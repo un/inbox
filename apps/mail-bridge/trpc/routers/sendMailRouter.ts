@@ -71,7 +71,7 @@ export const sendMailRouter = router({
       let postalServerAPIKey: string;
 
       if (sendAsEmailIdentity.personalEmailIdentityId) {
-        postalServerUrl = postalConfig.personalServerCredentials.apiUrl;
+        postalServerUrl = `https://${postalConfig.personalServerCredentials.apiUrl}/api/v1/send/message`;
         postalServerAPIKey = postalConfig.personalServerCredentials.apiKey;
       } else {
         const orgPostalServerResponse = await db.query.postalServers.findFirst({
@@ -95,7 +95,7 @@ export const sendMailRouter = router({
           (server) =>
             server.url === orgPostalServerResponse.orgPostalConfigs.host
         );
-        postalServerUrl = `${postalServerConfigItem.controlPanelSubDomain}.${postalServerConfigItem.url}`;
+        postalServerUrl = `https://${postalServerConfigItem.controlPanelSubDomain}.${postalServerConfigItem.url}/api/v1/send/message`;
       }
 
       type PostalResponse =
@@ -140,7 +140,11 @@ export const sendMailRouter = router({
             html_body: bodyHtml
           })
         }
-      ).then((res) => res.json());
+      )
+        .then((res) => res.json())
+        .catch((e) => {
+          console.error('🚨 error sending email', e);
+        });
 
       if (sendMailPostalResponse.status === 'success') {
         const transformedMessages = Object.entries(
