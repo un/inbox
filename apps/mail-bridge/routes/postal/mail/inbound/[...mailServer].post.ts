@@ -40,13 +40,12 @@ export default eventHandler(async (event) => {
   const orgId = Number(orgIdStr);
   console.timeEnd('⌛ get mailserver from params');
 
-  console.time('⌛ get mailserver from event');
   //verify the mailserver actually exists
+  console.time('⌛ get mailserver from event');
   const mailServer = await db.query.postalServers.findFirst({
     where: eq(postalServers.publicId, mailserverId),
     columns: {
       id: true,
-      publicId: true,
       orgId: true
     }
   });
