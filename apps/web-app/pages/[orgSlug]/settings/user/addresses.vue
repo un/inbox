@@ -42,19 +42,17 @@
 
   watch(userAddresses, (newResults) => {
     const username = userAddresses.value?.username?.toLowerCase();
-    console.log({ identities: newResults?.identities });
     if (newResults?.identities.length) {
       hasAddresses.value = true;
       tableRows.value = [];
       newResults.identities.forEach((identity) => {
-        const truncatedForwarding =
-          identity.postalServer?.rootForwardingAddress?.slice(0, 10) || '';
+        const truncatedForwarding = 'forwardingaddress';
         tableRows.value.push({
-          address: `${username}@${identity.emailIdentity.domainName}`,
+          address: `${identity.emailIdentity.username}@${identity.emailIdentity.domainName}`,
           sendName: identity.emailIdentity.sendName,
           forwarding: {
             truncated: truncatedForwarding,
-            address: identity.postalServer.rootForwardingAddress
+            address: 'forwardingaddress'
           },
           org: identity.org,
           avatarId: identity.org.avatarId,
@@ -65,9 +63,9 @@
     if (!newResults?.identities.length) {
       hasAddresses.value = false;
     }
-    if (newResults?.available.public) {
+    if (newResults?.available.free) {
       publicAddressesAvailable.value = [];
-      newResults.available.public.forEach((domain) => {
+      newResults.available.free.forEach((domain) => {
         publicAddressesAvailable.value.push(`${username}@${domain}`);
       });
     }
@@ -85,7 +83,6 @@
   const editedSendNameValid = ref(false);
   async function preEdit(publicId: string, sendName: string) {
     emailIdentityPublicIdToEdit.value = publicId;
-    console.log({ sendName });
     editedSendName.value = sendName;
     editSendNameModalOpen.value = true;
     // open a modal
@@ -143,9 +140,9 @@
     toast.add({
       id: 'claiming_email',
       title: 'Setting up your new email address',
-      description: `This process could take up to 30 seconds, please dont leave this page.`,
+      description: `Hold on.`,
       icon: 'i-ph-clock-countdown',
-      timeout: 30000
+      timeout: 10000
     });
     const emailIdentity = emailIdentityToClaim.value;
     // check if the email identity is in either of the available lists
@@ -210,14 +207,14 @@
 </script>
 
 <template>
-  <div class="h-full w-full flex flex-col items-start gap-8 p-4">
-    <div class="w-full flex flex-row items-center justify-between">
-      <span class="text-2xl font-display"> Your Personal Addresses </span>
+  <div class="flex h-full w-full flex-col items-start gap-8 p-4">
+    <div class="flex w-full flex-row items-center justify-between">
+      <span class="font-display text-2xl"> Your Personal Addresses </span>
     </div>
     <UnUiModal v-model="preClaimModalOpen">
       <template #header>
         <div class="flex flex-row items-center gap-2">
-          <span class="text-red-500 text-2xl leading-none">
+          <span class="text-2xl leading-none text-red-500">
             <UnUiIcon
               name="i-ph-warning-octagon"
               size="xl" />
@@ -239,7 +236,7 @@
         <span class="">
           We suggest creating a separate organization for personal addresses.
           <nuxt-link
-            class="text-gray-500 text inline-flex flex-row items-center gap-1 text-sm leading-none"
+            class="text inline-flex flex-row items-center gap-1 text-sm leading-none text-gray-500"
             :to="`/${orgSlug}/settings/org/new`">
             <span>Create a new organization here</span>
             <UnUiIcon
@@ -293,7 +290,7 @@
     </UnUiModal>
     <div
       v-if="pending"
-      class="w-full flex flex-row justify-center gap-4 rounded-xl rounded-tl-2xl bg-base-3 p-8">
+      class="bg-base-3 flex w-full flex-row justify-center gap-4 rounded-xl rounded-tl-2xl p-8">
       <UnUiIcon
         name="i-svg-spinners:3-dots-fade"
         size="24" />
@@ -302,10 +299,10 @@
 
     <div
       v-if="!pending"
-      class="w-full flex flex-col items-start justify-center gap-8">
+      class="flex w-full flex-col items-start justify-center gap-8">
       <div
         v-if="!hasAddresses"
-        class="w-full flex flex-col items-start justify-center gap-8">
+        class="flex w-full flex-col items-start justify-center gap-8">
         You have no personal addresses configured, claim them below.
       </div>
       <div
@@ -313,14 +310,14 @@
           hasAddresses &&
           (publicAddressesAvailable.length || premiumAddressesAvailable.length)
         "
-        class="w-full flex flex-col items-start justify-center gap-8">
+        class="flex w-full flex-col items-start justify-center gap-8">
         You have unclaimed personal addresses, claim them below.
       </div>
       <div
         v-if="publicAddressesAvailable.length"
-        class="w-full flex flex-col items-start justify-center gap-8">
+        class="flex w-full flex-col items-start justify-center gap-8">
         <div class="flex flex-col gap-2">
-          <span class="text-sm text-base-11 font-medium uppercase">
+          <span class="text-base-11 text-sm font-medium uppercase">
             Available Free email address
           </span>
           <template
@@ -328,8 +325,8 @@
             :key="address">
             <div class="flex flex-row items-center gap-2">
               <div
-                class="min-w-[50px] w-fit flex flex-col items-center rounded-lg bg-base-3 px-3 py-2">
-                <span class="w-fit break-anywhere text-left text-sm font-mono">
+                class="bg-base-3 flex w-fit min-w-[50px] flex-col items-center rounded-lg px-3 py-2">
+                <span class="break-anywhere w-fit text-left font-mono text-sm">
                   {{ address }}
                 </span>
               </div>
@@ -343,9 +340,9 @@
       </div>
       <div
         v-if="premiumAddressesAvailable.length"
-        class="w-full flex flex-col items-start justify-center gap-8">
+        class="flex w-full flex-col items-start justify-center gap-8">
         <div class="flex flex-col gap-2">
-          <span class="text-sm text-base-11 font-medium uppercase">
+          <span class="text-base-11 text-sm font-medium uppercase">
             Available Premium email address
           </span>
           <template
@@ -354,9 +351,9 @@
             <div class="flex flex-col gap-2">
               <div class="flex flex-row items-center gap-2">
                 <div
-                  class="min-w-[50px] w-fit flex flex-col items-center rounded-lg bg-base-3 px-3 py-2">
+                  class="bg-base-3 flex w-fit min-w-[50px] flex-col items-center rounded-lg px-3 py-2">
                   <span
-                    class="w-fit break-anywhere text-left text-sm font-mono">
+                    class="break-anywhere w-fit text-left font-mono text-sm">
                     {{ address }}
                   </span>
                 </div>
@@ -378,9 +375,9 @@
       </div>
       <div
         v-if="hasAddresses"
-        class="w-full flex flex-col items-start justify-center gap-8">
-        <div class="w-full flex flex-col gap-4">
-          <span class="text-sm text-base-11 font-medium uppercase">
+        class="flex w-full flex-col items-start justify-center gap-8">
+        <div class="flex w-full flex-col gap-4">
+          <span class="text-base-11 text-sm font-medium uppercase">
             Personal email addresses
           </span>
           <span class="">
@@ -394,12 +391,14 @@
             :loading="pending"
             class="w-full overflow-x-scroll">
             <template #address-data="{ row }">
-              <UnUiCopy :text="row.address" />
+              <div class="flex flex-row items-center gap-2">
+                <UnUiCopy :text="row.address" /> <span>{{ row.address }}</span>
+              </div>
             </template>
             <template #sendName-data="{ row }">
               <UnUiTooltip text="Click to edit">
                 <button
-                  class="flex flex-row cursor-pointer items-center gap-2"
+                  class="flex cursor-pointer flex-row items-center gap-2"
                   @click="preEdit(row.publicId, row.sendName)">
                   <span class="truncate">{{ row.sendName }}</span>
                   <UnUiIcon
@@ -409,7 +408,10 @@
               </UnUiTooltip>
             </template>
             <template #forwarding-data="{ row }">
-              <UnUiCopy :text="row.forwarding.address" />
+              <div class="flex flex-row items-center gap-2">
+                <UnUiCopy :text="row.forwarding.address" />
+                <span>{{ row.forwarding.address }}</span>
+              </div>
             </template>
             <template #org-data="{ row }">
               <div class="flex flex-row items-center gap-2">

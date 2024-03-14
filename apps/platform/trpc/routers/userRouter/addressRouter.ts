@@ -58,20 +58,16 @@ export const addressRouter = router({
         });
 
       const mailDomains: MailDomains = useRuntimeConfig().mailDomains;
-
       const consumedDomains =
         usersEmailIdentitiesPersonal.map(
           (identity) => identity.emailIdentity.domainName
         ) || [];
-
       const availableFreeDomains = mailDomains.free
         .filter((domain) => !consumedDomains.includes(domain))
         .map((domain) => domain);
-
       const availablePremiumDomains = mailDomains.premium
         .filter((domain) => !consumedDomains.includes(domain))
         .map((domain) => domain);
-
       const userObject = await db.query.users.findFirst({
         where: eq(users.id, userId),
         columns: {
