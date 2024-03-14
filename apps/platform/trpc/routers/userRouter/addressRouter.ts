@@ -16,6 +16,7 @@ import { nanoId } from '@u22n/utils';
 import { MailDomainEntries } from '@u22n/types';
 import { orgMembers } from '@u22n/database/schema';
 import { mailBridgeTrpcClient, useRuntimeConfig } from '#imports';
+import { MailDomains } from '../../../types';
 
 export const addressRouter = router({
   getPersonalAddresses: userProcedure
@@ -56,23 +57,20 @@ export const addressRouter = router({
           }
         });
 
-      const mailDomainPublic = useRuntimeConfig().public
-        .mailDomainPublic as MailDomainEntries[];
-      const mailDomainPremium = useRuntimeConfig().public
-        .mailDomainPremium as MailDomainEntries[];
+      const mailDomains: MailDomains = useRuntimeConfig().mailDomains;
 
       const consumedDomains =
         usersEmailIdentitiesPersonal.map(
           (identity) => identity.emailIdentity.domainName
         ) || [];
 
-      const availablePublicDomains = mailDomainPublic
-        .filter((domain) => !consumedDomains.includes(domain.name))
-        .map((domain) => domain.name);
+      const availableFreeDomains = mailDomains.free
+        .filter((domain) => !consumedDomains.includes(domain))
+        .map((domain) => domain);
 
-      const availablePremiumDomains = mailDomainPremium
-        .filter((domain) => !consumedDomains.includes(domain.name))
-        .map((domain) => domain.name);
+      const availablePremiumDomains = mailDomains.premium
+        .filter((domain) => !consumedDomains.includes(domain))
+        .map((domain) => domain);
 
       const userObject = await db.query.users.findFirst({
         where: eq(users.id, userId),
@@ -84,7 +82,7 @@ export const addressRouter = router({
       return {
         identities: usersEmailIdentitiesPersonal,
         available: {
-          public: availablePublicDomains,
+          free: availableFreeDomains,
           premium: availablePremiumDomains
         },
         username: userObject?.username
@@ -113,10 +111,7 @@ export const addressRouter = router({
         });
       }
 
-      const mailDomainPublic = useRuntimeConfig().public
-        .mailDomainPublic as MailDomainEntries[];
-      const mailDomainPremium = useRuntimeConfig().public
-        .mailDomainPremium as MailDomainEntries[];
+      const mailDomains: MailDomains = useRuntimeConfig().mailDomains;
 
       // Check the users already claimed personal addresses
       const usersEmailIdentitiesPersonal =
@@ -149,13 +144,14 @@ export const addressRouter = router({
           (identity) => identity.emailIdentity.domainName
         ) || [];
 
-      const availablePublicDomains = mailDomainPublic
-        .filter((domain) => !consumedDomains.includes(domain.name))
-        .map((domain) => domain.name);
+      const availablePublicDomains = mailDomains.free
+        .filter((domain) => !consumedDomains.includes(domain))
+        .map((domain) => domain);
 
-      const availablePremiumDomains = mailDomainPremium
-        .filter((domain) => !consumedDomains.includes(domain.name))
-        .map((domain) => domain.name);
+      const availablePremiumDomains = mailDomains.premium
+        .filter((domain) => !consumedDomains.includes(domain))
+        .map((domain) => domain);
+
       const availableDomains = [
         ...availablePublicDomains,
         ...availablePremiumDomains

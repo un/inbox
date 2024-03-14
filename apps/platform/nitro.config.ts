@@ -1,10 +1,6 @@
 //https://nitro.unjs.io/config
 import { defineNitroConfig } from 'nitropack/config';
-
-interface MailDomains {
-  free: string[];
-  premium: string[];
-}
+import type { MailDomains } from './types';
 
 const mailDomains: MailDomains = JSON.parse(process.env.MAIL_DOMAINS);
 if (!mailDomains.free || !mailDomains.premium) {
@@ -51,6 +47,7 @@ export default defineNitroConfig({
   },
   runtimeConfig: {
     primaryDomain: process.env.PRIMARY_DOMAIN || 'localhost',
+    mailDomains: mailDomains,
     auth: {
       baseUrl: process.env.WEBAPP_URL || 'http://localhost:3000',
       secret: process.env.WEBAPP_AUTH_SECRET,
@@ -76,14 +73,6 @@ export default defineNitroConfig({
       url: process.env.WEBAPP_STORAGE_URL || '',
       key: process.env.WEBAPP_STORAGE_KEY || ''
     },
-    // public: {
-    //   siteUrl: process.env.WEBAPP_URL || '',
-    //   storageUrl: process.env.WEBAPP_STORAGE_URL || '',
-    //   mailDomainPublic: JSON.parse(mailDomainPublicEnv),
-    //   mailDomainPremium: JSON.parse(mailDomainPremiumEnv),
-    //   ee: eeConfig,
-    //   turnstileEnabled: !!turnstileKey
-    // },
     turnstile: {
       secretKey: process.env.WEBAPP_TURNSTILE_SECRET_KEY || ''
     },
