@@ -259,6 +259,71 @@ export const orgsRelations = relations(orgs, ({ one, many }) => ({
   userProfiles: many(userProfilesToOrgs)
 }));
 
+// changes to status and role must be reflected in types OrgContext
+export const orgMembers = mysqlTable(
+  'org_members',
+  {
+    id: serial('id').primaryKey(),
+    publicId: nanoId('public_id').notNull(),
+    userId: foreignKey('user_id'),
+    orgId: foreignKey('org_id').notNull(),
+    invitedByOrgMemberId: foreignKey('invited_by_org_member_id'),
+    status: mysqlEnum('status', ['invited', 'active', 'removed']).notNull(),
+    role: mysqlEnum('role', ['member', 'admin']).notNull(),
+    userProfileId: foreignKey('user_profile_id').notNull(),
+    addedAt: timestamp('added_at')
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    removedAt: timestamp('removed_at')
+  },
+  (table) => ({
+    publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
+    userIdIndex: index('user_id_idx').on(table.userId),
+    orgIdIndex: index('org_id_idx').on(table.orgId),
+    orgUserIndex: uniqueIndex('org_user_idx').on(table.orgId, table.userId)
+  })
+);
+export const orgMembersRelations = relations(orgMembers, ({ one, many }) => ({
+  user: one(users, {
+    fields: [orgMembers.userId],
+    references: [users.id]
+  }),
+  org: one(orgs, {
+    fields: [orgMembers.orgId],
+    references: [orgs.id]
+  }),
+  profile: one(userProfiles, {
+    fields: [orgMembers.userProfileId],
+    references: [userProfiles.id]
+  }),
+  routingRules: many(emailRoutingRulesDestinations)
+}));
+
+export const userProfilesToOrgs = mysqlTable(
+  'user_profiles_to_orgs',
+  {
+    userProfileId: foreignKey('user_profile_id').notNull(),
+    orgId: foreignKey('org_id').notNull()
+  },
+  (table) => ({
+    pk: primaryKey(table.userProfileId, table.orgId)
+  })
+);
+
+export const userProfilesToOrgsRelations = relations(
+  userProfilesToOrgs,
+  ({ one }) => ({
+    userProfile: one(userProfiles, {
+      fields: [userProfilesToOrgs.userProfileId],
+      references: [userProfiles.id]
+    }),
+    org: one(orgs, {
+      fields: [userProfilesToOrgs.orgId],
+      references: [orgs.id]
+    })
+  })
+);
+
 export const orgInvitations = mysqlTable(
   'org_invitations',
   {
