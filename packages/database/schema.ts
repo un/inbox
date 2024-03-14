@@ -1225,6 +1225,7 @@ export const convoEntryReplies = mysqlTable(
   'convo_entry_replies',
   {
     id: serial('id').primaryKey(),
+    orgId: foreignKey('org_id').notNull(),
     entrySourceId: foreignKey('convo_message_source_id').notNull(),
     entryReplyId: foreignKey('convo_message_reply_id'),
     createdAt: timestamp('created_at')
