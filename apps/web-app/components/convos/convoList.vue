@@ -33,7 +33,8 @@
   const {
     data: userConvosData,
     status: userConvosStatus,
-    execute: getUserConvos
+    execute: getUserConvos,
+    refresh: refreshUserConvos
   } = await $trpc.convos.getUserConvos.useLazyQuery(userConvoQueryParams, {
     server: false,
     queryKey: `userConvos-${orgSlug}`,
@@ -80,10 +81,10 @@
   });
 </script>
 <template>
-  <div class="h-full max-h-full max-w-full w-full overflow-hidden">
+  <div class="h-full max-h-full w-full max-w-full overflow-hidden">
     <div
       v-if="userConvoQueryPending"
-      class="w-full flex flex-row justify-center gap-4 rounded-xl rounded-tl-2xl bg-base-3 p-8">
+      class="bg-base-3 flex w-full flex-row justify-center gap-4 rounded-xl rounded-tl-2xl p-8">
       <UnUiIcon
         name="i-svg-spinners:3-dots-fade"
         size="24" />
@@ -91,10 +92,15 @@
     </div>
     <div
       v-if="!userConvoQueryPending"
-      class="mb-[48px] max-h-full flex flex-col items-start gap-4 overflow-hidden">
+      class="mb-[48px] flex max-h-full flex-col items-start gap-4 overflow-hidden">
+      <UnUiButton
+        label="Refresh"
+        icon="i-ph-arrow-clockwise"
+        :loading="userConvosStatus === 'pending'"
+        @click="refreshUserConvos()" />
       <div
         v-if="!userHasConvos"
-        class="w-full flex flex-row justify-center gap-4 rounded-xl rounded-tl-2xl bg-base-3 p-8">
+        class="bg-base-3 flex w-full flex-row justify-center gap-4 rounded-xl rounded-tl-2xl p-8">
         <UnUiIcon
           name="i-ph-chat-circle"
           size="24" />
@@ -103,7 +109,7 @@
       <div
         v-if="userHasConvos"
         ref="infiniteContainer"
-        class="h-full max-h-full max-w-full w-full overflow-auto">
+        class="h-full max-h-full w-full max-w-full overflow-auto">
         <DynamicScroller
           :items="convos"
           key-field="publicId"
@@ -122,7 +128,7 @@
         </DynamicScroller>
         <div
           v-if="userHasMoreConvos && pauseLoading"
-          class="w-full flex flex-row justify-center gap-4 rounded-xl rounded-tl-2xl bg-base-3 p-8">
+          class="bg-base-3 flex w-full flex-row justify-center gap-4 rounded-xl rounded-tl-2xl p-8">
           <UnUiIcon
             name="i-svg-spinners:3-dots-fade"
             size="24" />
