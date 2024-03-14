@@ -23,3 +23,48 @@ export interface MessageParseAddressPlatformObject {
     | null;
   ref: 'to' | 'cc' | 'from';
 }
+
+// Runtime Config Types
+export interface MailDomains {
+  free: string[];
+  premium: string[];
+}
+
+export interface EnvPostalServersObject {
+  url: string;
+  controlPanelSubDomain: string;
+  ipv4: string;
+  ipv6: string;
+  webhookPubKey: string;
+  cpUsername: string;
+  cpPassword: string;
+  dbConnectionString: string;
+  defaultNewPool: string;
+  active: boolean;
+}
+
+export interface EnvPostalServerPersonalCredentials {
+  apiUrl: string;
+  apiKey: string;
+}
+
+export interface EnvPostalServerLimits {
+  messageRetentionDays: number;
+  outboundSpamThreshold: number;
+  rawMessageRetentionDays: number;
+  rawMessageRetentionSize: number;
+}
+
+export interface EnvPostalWebhookDestinations {
+  events: string;
+  messages: string;
+}
+
+export type PostalConfig = {
+  servers: EnvPostalServersObject[];
+  activeServers: EnvPostalServersObject;
+  personalServerCredentials: EnvPostalServerPersonalCredentials;
+  dnsRootUrl: string;
+  webhookDestinations: EnvPostalWebhookDestinations;
+  limits: EnvPostalServerLimits;
+};

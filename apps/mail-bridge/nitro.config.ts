@@ -1,40 +1,12 @@
 import { postalServers } from '@u22n/database/schema';
 import { defineNitroConfig } from 'nitropack/config';
-
-interface MailDomains {
-  free: string[];
-  premium: string[];
-}
-
-interface EnvPostalServersObject {
-  url: string;
-  controlPanelSubDomain: string;
-  ipv4: string;
-  ipv6: string;
-  webhookPubKey: string;
-  cpUsername: string;
-  cpPassword: string;
-  dbConnectionString: string;
-  defaultNewPool: string;
-  active: boolean;
-}
-
-interface EnvPostalServerPersonalCredentials {
-  apiUrl: string;
-  apiKey: string;
-}
-
-interface EnvPostalServerLimits {
-  messageRetentionDays: number;
-  outboundSpamThreshold: number;
-  rawMessageRetentionDays: number;
-  rawMessageRetentionSize: number;
-}
-
-interface EnvPostalWebhookDestinations {
-  events: string;
-  messages: string;
-}
+import type {
+  EnvPostalServersObject,
+  EnvPostalServerPersonalCredentials,
+  EnvPostalServerLimits,
+  EnvPostalWebhookDestinations,
+  MailDomains
+} from './types';
 
 const postalServersArray: EnvPostalServersObject[] = JSON.parse(
   process.env.MAILBRIDGE_POSTAL_SERVERS
