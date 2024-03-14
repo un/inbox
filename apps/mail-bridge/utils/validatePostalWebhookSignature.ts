@@ -5,18 +5,25 @@ import crypto from 'crypto';
 export async function validatePostalWebhookSignature(
   body: string,
   postalSignature: string,
-  postalWebhookPK: string
+  postalWebhookPKs: string[]
 ): Promise<boolean> {
-  // convert postal public key to PEM (X.509) format
-  const publicKey =
-    '-----BEGIN PUBLIC KEY-----\r\n' +
-    (await chunkSplit(postalWebhookPK, 64, '\r\n')) +
-    '-----END PUBLIC KEY-----';
-  const verifier = crypto.createVerify('SHA1');
-  verifier.update(jsonToRubyString(body));
+  for (const postalWebhookPK of postalWebhookPKs) {
+    // convert postal public key to PEM (X.509) format
+    const publicKey =
+      '-----BEGIN PUBLIC KEY-----\r\n' +
+      (await chunkSplit(postalWebhookPK, 64, '\r\n')) +
+      '-----END PUBLIC KEY-----';
+    const verifier = crypto.createVerify('SHA1');
+    verifier.update(jsonToRubyString(body));
 
-  // return verify result (true or false)
-  return verifier.verify(publicKey, postalSignature, 'base64');
+    // if verification passes for any key, return true
+    if (verifier.verify(publicKey, postalSignature, 'base64')) {
+      return true;
+    }
+  }
+
+  // if none of the keys pass verification, return false
+  return false;
 }
 
 function chunkSplit(key: string, chunkSize: number, newLineReturn: string) {
