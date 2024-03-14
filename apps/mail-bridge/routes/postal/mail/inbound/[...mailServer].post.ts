@@ -10,6 +10,8 @@ import {
   contacts,
   convoEntries,
   convoParticipants,
+  convoSubjects,
+  convos,
   emailIdentities,
   emailRoutingRules,
   emailRoutingRulesDestinations,
@@ -45,9 +47,6 @@ export default eventHandler(async (event) => {
       orgId: true
     }
   });
-  if (!mailServer || +mailServer.orgId !== orgId) {
-    return;
-  }
 
   // read and decode the email payload
   const {
@@ -65,7 +64,17 @@ export default eventHandler(async (event) => {
     return;
   }
 
-  // parse the email payload
+  // prelimary checks
+  if (!mailServer || +mailServer.orgId !== orgId) {
+    console.error('⛔ mailserver not found or does not belong to this org', {
+      orgId,
+      mailserverId,
+      payloadPostalEmailId
+    });
+    return;
+  }
+
+  //* parse the email payload
   const payloadEmail = Buffer.from(payloadEmailB64, 'base64').toString('utf-8');
   const parsedEmail = await simpleParser(payloadEmail);
 
@@ -100,7 +109,23 @@ export default eventHandler(async (event) => {
   const date = parsedEmail.date;
   const messageBodyHtml = (parsedEmail.html as string).replace(/\n/g, '') || '';
 
-  // parse the email HTML and clean it up
+  // Check if we have already processed this incoming email by checking the message ID + orgID
+  const alreadyProcessedMessageWithThisId =
+    await db.query.convoEntries.findFirst({
+      where: and(
+        eq(convoEntries.orgId, orgId),
+        eq(convoEntries.emailMessageId, messageId)
+      ),
+      columns: {
+        id: true
+      }
+    });
+
+  if (alreadyProcessedMessageWithThisId) {
+    return;
+  }
+
+  // parse the email HTML content and clean it up
   const parsedEmailMessage = await parseMessage(messageBodyHtml, {
     cleanQuotations: true,
     cleanSignatures: true,
@@ -110,7 +135,7 @@ export default eventHandler(async (event) => {
     cleanStyles: true
   });
 
-  // get the contact and emailIdentityIds for the message
+  //* get the contact and emailIdentityIds for the message
   const [
     messageToPlatformObject,
     messageFromPlatformObject,
@@ -131,6 +156,29 @@ export default eventHandler(async (event) => {
       : Promise.resolve([])
   ]);
 
+  // check the from contact and update their signature if it is null
+  if (messageFromPlatformObject[0].type === 'contact') {
+    const contact = await db.query.contacts.findFirst({
+      where: and(
+        eq(contacts.orgId, orgId),
+        eq(contacts.id, messageFromPlatformObject[0].id)
+      ),
+      columns: {
+        id: true,
+        signaturePlainText: true
+      }
+    });
+    if (!contact.signaturePlainText) {
+      await db
+        .update(contacts)
+        .set({
+          signaturePlainText: parsedEmailMessage.foundSignaturePlainText,
+          signatureHtml: parsedEmailMessage.foundSignatureHtml
+        })
+        .where(eq(contacts.id, contact.id));
+    }
+  }
+
   const messageAddressIds = [
     ...(Array.isArray(messageToPlatformObject) ? messageToPlatformObject : []),
     ...(Array.isArray(messageFromPlatformObject)
@@ -138,7 +186,6 @@ export default eventHandler(async (event) => {
       : []),
     ...(Array.isArray(messageCcPlatformObject) ? messageCcPlatformObject : [])
   ];
-  console.log({ messageAddressIds });
 
   // extract the IDs of all the entries in messageAddressIds where the type = 'emailIdentity'
   const emailIdentityIds = messageAddressIds
@@ -194,13 +241,21 @@ export default eventHandler(async (event) => {
     });
   });
 
-  console.log({ emailIdentityResponse });
-  console.log({ routing: emailIdentityResponse[0].routingRules.destinations });
-
+  //* start to process the conversation
+  let hasReplyToButIsNewConvo: boolean | null = null;
   let convoId: number | null = null;
+  let replyToId: number | null = null;
+  let subjectId: number | null = null;
+
   type ConvoParticipantInsertDbType = InferInsertModel<
     typeof convoParticipants
   >;
+  let fromAddressParticipantId: number | null = null;
+  const fromAddressPlatformObject = messageFromPlatformObject.find(
+    (a) => a.ref === 'from'
+  );
+  const convoParticipantsToAdd: ConvoParticipantInsertDbType[] = [];
+
   // if the email has a reply to header, then we need to check if a message exists in the system with that reply to id
   // - if yes, then we append the message to that existing convo
   // - if no, then we assume this is a new convo and handle it at such
@@ -241,27 +296,33 @@ export default eventHandler(async (event) => {
       }
     });
 
-    let fromAddressParticipantId: number | null = null;
-    const fromAddressPlatformObject = messageFromPlatformObject.find(
-      (a) => a.ref === 'from'
-    );
-    if (fromAddressPlatformObject.type === 'contact') {
-      //check if the contact id is already in the convo participants
-      const contactAlreadyInConvo = existingMessage.convo.participants.find(
-        (p) => p.contactId === fromAddressPlatformObject.id
-      );
-      if (contactAlreadyInConvo) {
-        fromAddressParticipantId = contactAlreadyInConvo.id;
-      }
-      // if not in the convo, we'll set their id later
-    }
-
     if (existingMessage) {
+      hasReplyToButIsNewConvo = false;
       convoId = existingMessage.convoId;
+      replyToId = existingMessage.id;
 
-      // is the new message author already a participant in the convo?
-      // - if not, then add them to the convo participants separately and save their participant id
-      const newConvoParticipantsToAdd: ConvoParticipantInsertDbType[] = [];
+      // check if the subject is the same as existing, if not, add a new subject to the convo
+      if (subject !== existingMessage.subject.subject) {
+        const newSubject = await db.insert(convos).values({
+          orgId: orgId,
+          publicId: nanoId(),
+          lastUpdatedAt: new Date()
+        });
+        subjectId = +newSubject.insertId;
+      } else {
+        subjectId = existingMessage.subjectId;
+      }
+
+      //check if the contact id is already in the convo participants
+      if (fromAddressPlatformObject.type === 'contact') {
+        const contactAlreadyInConvo = existingMessage.convo.participants.find(
+          (p) => p.contactId === fromAddressPlatformObject.id
+        );
+        if (contactAlreadyInConvo) {
+          fromAddressParticipantId = contactAlreadyInConvo.id;
+        }
+        // if not in the convo, we'll set their id later
+      }
 
       // check all the contacts, users and groups in the incoming email are included in the convo participants
       const existingConvoParticipantsContactIds =
@@ -280,9 +341,9 @@ export default eventHandler(async (event) => {
         (c) => !existingConvoParticipantsUserGroupIds.includes(c)
       );
 
-      // - if not, then add them to the convo participants
+      // - if not, then add them to the convo participants to add array
       if (missingContacts.length) {
-        newConvoParticipantsToAdd.push(
+        convoParticipantsToAdd.push(
           ...missingContacts.map((contactId) => ({
             convoId: convoId,
             contactId: contactId,
@@ -293,7 +354,7 @@ export default eventHandler(async (event) => {
         );
       }
       if (missingOrgMembers.length) {
-        newConvoParticipantsToAdd.push(
+        convoParticipantsToAdd.push(
           ...missingOrgMembers.map((orgMemberId) => ({
             convoId: convoId,
             orgMemberId: orgMemberId,
@@ -304,7 +365,7 @@ export default eventHandler(async (event) => {
         );
       }
       if (missingUserGroups.length) {
-        newConvoParticipantsToAdd.push(
+        convoParticipantsToAdd.push(
           ...missingUserGroups.map((userGroupId) => ({
             convoId: convoId,
             userGroupId: userGroupId,
@@ -314,158 +375,210 @@ export default eventHandler(async (event) => {
           }))
         );
       }
-      if (newConvoParticipantsToAdd.length) {
-        await db.insert(convoParticipants).values(newConvoParticipantsToAdd);
-      }
+    } else {
+      // if there is a reply to header but we cant find the conversation, we handle this like its a new convo
+      hasReplyToButIsNewConvo = true;
+    }
 
-      if (!fromAddressParticipantId) {
-        if (fromAddressPlatformObject.type === 'contact') {
-          const contactParticipant = await db.query.convoParticipants.findFirst(
-            {
-              where: and(
-                eq(convoParticipants.orgId, orgId),
-                eq(convoParticipants.convoId, convoId),
-                eq(convoParticipants.contactId, fromAddressPlatformObject.id)
-              ),
-              columns: {
-                id: true
-              }
-            }
-          );
-          fromAddressParticipantId = contactParticipant.id;
-        } else if (fromAddressPlatformObject.type === 'emailIdentity') {
-          // we need to get the first person/group in the routing rule and add them to the convo
-          const emailIdentityParticipant =
-            await db.query.emailIdentities.findFirst({
-              where: and(
-                eq(emailIdentities.orgId, orgId),
-                eq(emailIdentities.id, fromAddressPlatformObject.id)
-              ),
+    //! END OF IF REPLYID BLOCK
+  }
+
+  // create a new convo with new participants
+  if (!inReplyToEmailId || hasReplyToButIsNewConvo) {
+    console.log('🔥 is a new convo');
+    const newConvoInsert = await db.insert(convos).values({
+      orgId: orgId,
+      publicId: nanoId(),
+      lastUpdatedAt: new Date()
+    });
+    const newConvoSubjectInsert = await db.insert(convoSubjects).values({
+      orgId: orgId,
+      convoId: +newConvoInsert.insertId,
+      publicId: nanoId(),
+      subject: subject
+    });
+
+    convoId = +newConvoInsert.insertId;
+    subjectId = +newConvoSubjectInsert.insertId;
+
+    // add the new participants to the convo
+    if (contactIds.length) {
+      convoParticipantsToAdd.push(
+        ...contactIds.map((contactId) => ({
+          convoId: convoId,
+          contactId: contactId,
+          orgId: orgId,
+          publicId: nanoId(),
+          role: 'contributor' as const
+        }))
+      );
+    }
+    if (routingRuleOrgMemberIds.length) {
+      convoParticipantsToAdd.push(
+        ...routingRuleOrgMemberIds.map((orgMemberId) => ({
+          convoId: convoId,
+          orgMemberId: orgMemberId,
+          orgId: orgId,
+          publicId: nanoId(),
+          role: 'contributor' as const
+        }))
+      );
+    }
+    if (routingRuleUserGroupIds.length) {
+      convoParticipantsToAdd.push(
+        ...routingRuleUserGroupIds.map((userGroupId) => ({
+          convoId: convoId,
+          userGroupId: userGroupId,
+          orgId: orgId,
+          publicId: nanoId(),
+          role: 'contributor' as const
+        }))
+      );
+    }
+  }
+
+  //* start to handle creating the message in the convo
+
+  if (convoParticipantsToAdd.length) {
+    await db.insert(convoParticipants).values(convoParticipantsToAdd);
+  }
+
+  if (!fromAddressParticipantId) {
+    if (fromAddressPlatformObject.type === 'contact') {
+      const contactParticipant = await db.query.convoParticipants.findFirst({
+        where: and(
+          eq(convoParticipants.orgId, orgId),
+          eq(convoParticipants.convoId, convoId),
+          eq(convoParticipants.contactId, fromAddressPlatformObject.id)
+        ),
+        columns: {
+          id: true
+        }
+      });
+      fromAddressParticipantId = contactParticipant.id;
+    } else if (fromAddressPlatformObject.type === 'emailIdentity') {
+      // we need to get the first person/group in the routing rule and add them to the convo
+      const emailIdentityParticipant = await db.query.emailIdentities.findFirst(
+        {
+          where: and(
+            eq(emailIdentities.orgId, orgId),
+            eq(emailIdentities.id, fromAddressPlatformObject.id)
+          ),
+          columns: {
+            id: true
+          },
+          with: {
+            routingRules: {
               columns: {
                 id: true
               },
               with: {
-                routingRules: {
+                destinations: {
                   columns: {
-                    id: true
-                  },
-                  with: {
-                    destinations: {
-                      columns: {
-                        groupId: true,
-                        orgMemberId: true
-                      }
-                    }
+                    groupId: true,
+                    orgMemberId: true
                   }
                 }
               }
-            });
-          const firstDestination =
-            emailIdentityParticipant.routingRules.destinations[0];
-          let convoParticipantFromAddressIdentity;
-          if (firstDestination.orgMemberId) {
-            convoParticipantFromAddressIdentity =
-              await db.query.convoParticipants.findFirst({
-                where: and(
-                  eq(convoParticipants.orgId, orgId),
-                  eq(convoParticipants.convoId, convoId),
-                  eq(
-                    convoParticipants.orgMemberId,
-                    firstDestination.orgMemberId
-                  )
-                ),
-                columns: {
-                  id: true
-                }
-              });
-          } else if (firstDestination.groupId) {
-            convoParticipantFromAddressIdentity =
-              await db.query.convoParticipants.findFirst({
-                where: and(
-                  eq(convoParticipants.orgId, orgId),
-                  eq(convoParticipants.convoId, convoId),
-                  eq(convoParticipants.userGroupId, firstDestination.groupId)
-                ),
-                columns: {
-                  id: true
-                }
-              });
+            }
           }
-          fromAddressParticipantId = convoParticipantFromAddressIdentity.id;
         }
+      );
+      const firstDestination =
+        emailIdentityParticipant.routingRules.destinations[0];
+      let convoParticipantFromAddressIdentity;
+      if (firstDestination.orgMemberId) {
+        convoParticipantFromAddressIdentity =
+          await db.query.convoParticipants.findFirst({
+            where: and(
+              eq(convoParticipants.orgId, orgId),
+              eq(convoParticipants.convoId, convoId),
+              eq(convoParticipants.orgMemberId, firstDestination.orgMemberId)
+            ),
+            columns: {
+              id: true
+            }
+          });
+      } else if (firstDestination.groupId) {
+        convoParticipantFromAddressIdentity =
+          await db.query.convoParticipants.findFirst({
+            where: and(
+              eq(convoParticipants.orgId, orgId),
+              eq(convoParticipants.convoId, convoId),
+              eq(convoParticipants.userGroupId, firstDestination.groupId)
+            ),
+            columns: {
+              id: true
+            }
+          });
       }
+      fromAddressParticipantId = convoParticipantFromAddressIdentity.id;
     }
-
-    console.log({ fromAddressParticipantId });
-
-    // append the message to the existing convo
-    const convoEntryMetadata: ConvoEntryMetadata = {
-      email: {
-        messageId: messageId,
-        to: messageToPlatformObject.map((a) => {
-          return {
-            id: a.id,
-            type: a.type
-          };
-        }),
-        from: messageFromPlatformObject.map((a) => {
-          return {
-            id: a.id,
-            type: a.type
-          };
-        }),
-        cc:
-          messageCcPlatformObject.map((a) => {
-            return {
-              id: a.id,
-              type: a.type
-            };
-          }) || [],
-        postalMessages: [
-          {
-            id: payloadPostalEmailId,
-            postalMessageId: messageId,
-            recipient: payloadEmailTo,
-            token: null
-          }
-        ],
-        emailHeaders: JSON.stringify(parsedEmail.headers)
-      }
-    };
-    console.log(
-      'parsing email for tiptap',
-      parsedEmailMessage.parsedMessageHtml
-    );
-    const convoEntryBody = tiptapHtml.generateJSON(
-      parsedEmailMessage.parsedMessageHtml,
-      tipTapExtensions
-    );
-    const convoEntryBodyPlainText = tiptapCore.generateText(
-      convoEntryBody,
-      tipTapExtensions
-    );
-    console.log({ tiptap: JSON.stringify(convoEntryBody) });
-    const insertNewConvoEntry = await db.insert(convoEntries).values({
-      orgId: orgId,
-      publicId: nanoId(),
-      convoId: convoId,
-      visibility: 'all_participants',
-      type: 'message',
-      metadata: convoEntryMetadata,
-      author: fromAddressParticipantId,
-      body: convoEntryBody,
-      bodyPlainText: convoEntryBodyPlainText,
-      replyToId: existingMessage.id,
-      subjectId: existingMessage.subjectId
-    });
-    console.log({ insertNewConvoEntry });
-    console.log('🔥 appended to existing convo', { existingMessage });
-
-    //! END IF REPLY TO
-  } else {
-    // If no reply to header, then we assume this is a new convo
-    console.log('🔥 is not a reply');
   }
+
+  console.log({ fromAddressParticipantId });
+
+  // append the message to the existing convo
+  const convoEntryMetadata: ConvoEntryMetadata = {
+    email: {
+      messageId: messageId,
+      to: messageToPlatformObject.map((a) => {
+        return {
+          id: a.id,
+          type: a.type
+        };
+      }),
+      from: messageFromPlatformObject.map((a) => {
+        return {
+          id: a.id,
+          type: a.type
+        };
+      }),
+      cc:
+        messageCcPlatformObject.map((a) => {
+          return {
+            id: a.id,
+            type: a.type
+          };
+        }) || [],
+      postalMessages: [
+        {
+          id: payloadPostalEmailId,
+          postalMessageId: messageId,
+          recipient: payloadEmailTo,
+          token: null
+        }
+      ],
+      emailHeaders: JSON.stringify(parsedEmail.headers)
+    }
+  };
+
+  console.log('parsing email for tiptap', parsedEmailMessage.parsedMessageHtml);
+  const convoEntryBody = tiptapHtml.generateJSON(
+    parsedEmailMessage.parsedMessageHtml,
+    tipTapExtensions
+  );
+  const convoEntryBodyPlainText = tiptapCore.generateText(
+    convoEntryBody,
+    tipTapExtensions
+  );
+
+  console.log({ tiptap: JSON.stringify(convoEntryBody) });
+
+  const insertNewConvoEntry = await db.insert(convoEntries).values({
+    orgId: orgId,
+    publicId: nanoId(),
+    convoId: convoId,
+    visibility: 'all_participants',
+    type: 'message',
+    metadata: convoEntryMetadata,
+    author: fromAddressParticipantId,
+    body: convoEntryBody,
+    bodyPlainText: convoEntryBodyPlainText,
+    replyToId: replyToId,
+    subjectId: subjectId
+  });
+  console.log({ insertNewConvoEntry });
 
   // send alerts
 

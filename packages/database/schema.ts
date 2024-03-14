@@ -684,7 +684,8 @@ export const contacts = mysqlTable(
     setName: varchar('set_name', { length: 128 }),
     emailUsername: varchar('email_username', { length: 128 }).notNull(),
     emailDomain: varchar('email_domain', { length: 128 }).notNull(),
-    signature: text('signature'),
+    signaturePlainText: text('signature'),
+    signatureHtml: text('signature_html'),
     type: mysqlEnum('type', [
       'person',
       'product',
