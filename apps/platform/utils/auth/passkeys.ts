@@ -9,7 +9,7 @@ import {
   PublicKeyCredentialDescriptorFuture,
   AuthenticationResponseJSON
 } from '@simplewebauthn/types';
-import { usePasskeysDb } from './passkeyDbAdaptor';
+import { Authenticator, usePasskeysDb } from './passkeyDbAdaptor';
 import { TRPCError } from '@trpc/server';
 import { useRuntimeConfig, useStorage } from '#imports';
 
@@ -79,7 +79,6 @@ async function verifyRegistrationResponse({
   const expectedChallenge = await authStorage.getItem(
     `passkeyChallenge: ${publicId}`
   );
-  console.log(registrationResponse);
 
   if (!expectedChallenge) {
     throw new TRPCError({
