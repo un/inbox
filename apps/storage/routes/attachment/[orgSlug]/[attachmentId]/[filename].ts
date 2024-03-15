@@ -4,6 +4,7 @@ import { s3Client } from '../../../../utils/s3';
 import { db } from '@u22n/database';
 import { and, eq } from '@u22n/database/orm';
 import { convoAttachments, orgMembers, orgs } from '@u22n/database/schema';
+import { S3Config } from '../../../../types';
 
 /**
  * provides a proxy to attachments after verifying the user has access to the attachment
@@ -65,10 +66,10 @@ export default eventHandler({
         return send(event, 'Unauthorized');
       }
     }
-
+    const s3Config: S3Config = useRuntimeConfig().s3;
     const orgPublicId = orgQueryResponse.publicId;
     const command = new GetObjectCommand({
-      Bucket: 'attachments',
+      Bucket: s3Config.bucketAttachments,
       Key: `${orgPublicId}/${attachmentPublicId}/${filename}`
     });
     const url = await getSignedUrl(s3Client, command, { expiresIn: 3600 });

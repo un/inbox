@@ -2,16 +2,20 @@
 export default defineNitroConfig({
   runtimeConfig: {
     storageKey: process.env.STORAGE_KEY,
-    s3Endpoint: process.env.STORAGE_S3_ENDPOINT,
-    s3Region: process.env.STORAGE_S3_REGION,
-    s3AccessKeyId: process.env.STORAGE_S3_ACCESS_KEY_ID,
-    s3SecretAccessKey: process.env.STORAGE_S3_SECRET_ACCESS_KEY
-    // lala: 'asd'
-    // runtime config
+    s3: {
+      endpoint: process.env.STORAGE_S3_ENDPOINT,
+      region: process.env.STORAGE_S3_REGION,
+      accessKeyId: process.env.STORAGE_S3_ACCESS_KEY_ID,
+      secretAccessKey: process.env.STORAGE_S3_SECRET_ACCESS_KEY,
+      bucketAttachments: process.env.STORAGE_S3_BUCKET_ATTACHMENTS,
+      bucketAvatars: process.env.STORAGE_S3_BUCKET_AVATARS
+    }
   },
   routeRules: {
     '/avatar/**': {
-      proxy: { to: `${process.env.STORAGE_S3_ENDPOINT}/avatars/**` }
+      proxy: {
+        to: `${process.env.STORAGE_S3_ENDPOINT}/${process.env.STORAGE_S3_BUCKET_AVATARS}/**`
+      }
     },
     '/api/**': {
       cors: true,

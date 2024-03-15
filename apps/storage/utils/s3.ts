@@ -1,11 +1,12 @@
 import { S3Client } from '@aws-sdk/client-s3';
-const config = useRuntimeConfig();
+import { S3Config } from '../types';
+const s3Config: S3Config = useRuntimeConfig().s3;
 export const s3Client = new S3Client({
-  region: config.s3Region,
-  endpoint: config.s3Endpoint,
+  region: s3Config.region,
+  endpoint: s3Config.endpoint,
   forcePathStyle: true,
   credentials: {
-    accessKeyId: config.s3AccessKeyId,
-    secretAccessKey: config.s3SecretAccessKey
+    accessKeyId: s3Config.accessKeyId,
+    secretAccessKey: s3Config.secretAccessKey
   }
 });

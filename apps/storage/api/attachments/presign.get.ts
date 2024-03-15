@@ -5,6 +5,7 @@ import { and, eq } from '@u22n/database/orm';
 import { orgMembers, orgs } from '@u22n/database/schema';
 import { nanoId } from '@u22n/utils';
 import { z } from 'zod';
+import { S3Config } from '../../types';
 
 const bodySchema = z.object({
   orgSlug: z.string(),
@@ -57,8 +58,9 @@ export default eventHandler({
     const attachmentPublicId = nanoId();
     const filename = data.filename;
 
+    const s3Config: S3Config = useRuntimeConfig().s3;
     const command = new PutObjectCommand({
-      Bucket: 'attachments',
+      Bucket: s3Config.bucketAttachments,
       Key: `${orgPublicId}/${attachmentPublicId}/${filename}`
     });
     const signedUrl = await getSignedUrl(s3Client, command, {
