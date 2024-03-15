@@ -130,22 +130,22 @@
 </script>
 <template>
   <div
-    class="h-full max-h-full max-w-full w-full flex flex-col gap-2 overflow-hidden">
+    class="flex h-full max-h-full w-full max-w-full flex-col gap-2 overflow-hidden">
     <div
-      class="max-w-full w-full flex flex-row items-center justify-between gap-2">
+      class="flex w-full max-w-full flex-row items-center justify-between gap-2">
       <div class="flex flex-row gap-2">
         <template
           v-for="subject of convoDetails?.data?.subjects"
           :key="subject.publicId">
           <span
-            class="bg-gray-100 dark:bg-gray-800 truncate rounded-xl px-4 py-2 text-lg">
+            class="truncate rounded-xl bg-gray-100 px-4 py-2 text-lg dark:bg-gray-800">
             {{ subject.subject }}
           </span>
         </template>
         <!-- <span>TAGS</span> -->
       </div>
 
-      <div class="h-fit flex flex-row gap-2 overflow-hidden">
+      <div class="flex h-fit flex-row gap-2 overflow-hidden">
         <UnUiButton
           icon="i-heroicons-pencil-square"
           size="sm"
@@ -169,21 +169,21 @@
       </div>
     </div>
     <div
-      class="h-full max-h-full max-w-full w-full flex flex-row gap-2 overflow-hidden">
+      class="flex h-full max-h-full w-full max-w-full flex-row gap-2 overflow-hidden">
       <div
-        class="h-full max-h-full min-w-[600px] w-[600px] flex flex-col gap-2">
-        <div class="h-full max-h-full flex grow flex-col gap-0 overflow-hidden">
+        class="flex h-full max-h-full w-[600px] min-w-[600px] flex-col gap-2">
+        <div class="flex h-full max-h-full grow flex-col gap-0 overflow-hidden">
           <div
-            class="from-gray-100 z-20000 mb-[-12px] h-[12px] bg-gradient-to-b" />
+            class="z-20000 mb-[-12px] h-[12px] bg-gradient-to-b from-gray-100" />
           <ConvosConvoMessages
             :convo-public-id="convoPublicId"
             :participant-public-id="convoDetails?.participantPublicId || ''" />
-          <div class="from-gray-100 mt-[-12px] h-[12px] bg-gradient-to-t" />
+          <div class="mt-[-12px] h-[12px] bg-gradient-to-t from-gray-100" />
         </div>
-        <div class="w-full flex flex-col justify-items-end gap-2">
+        <div class="flex w-full flex-col justify-items-end gap-2">
           replyingToBanner
           <UnEditor v-model:modelValue="editorData" />
-          <div class="min-w-fit flex flex-row justify-end gap-2">
+          <div class="flex min-w-fit flex-row justify-end gap-2">
             <UnUiButton
               label="Send"
               icon="ph-envelope"
@@ -197,14 +197,14 @@
         </div>
       </div>
       <div
-        class="border-gray-200 dark:border-gray-800 h-full max-w-full w-full flex flex-col justify-between gap-8 overflow-hidden border border-b-0 border-l-1 border-r-0 border-t-0 px-4 py-0">
-        <div class="max-w-full w-full flex flex-col gap-8 overflow-hidden">
-          <div class="max-w-full w-full flex flex-col gap-4 overflow-hidden">
+        class="border-l-1 flex h-full w-full max-w-full flex-col justify-between gap-8 overflow-hidden border border-b-0 border-r-0 border-t-0 border-gray-200 px-4 py-0 dark:border-gray-800">
+        <div class="flex w-full max-w-full flex-col gap-8 overflow-hidden">
+          <div class="flex w-full max-w-full flex-col gap-4 overflow-hidden">
             <div
-              class="max-w-full w-full flex flex-row items-center justify-between overflow-hidden"
+              class="flex w-full max-w-full flex-row items-center justify-between overflow-hidden"
               @click="convoParticiapntsCollapsed = !convoParticiapntsCollapsed">
               <span
-                class="text-gray-600 dark:text-gray-400 cursor-pointer text-sm font-medium">
+                class="cursor-pointer text-sm font-medium text-gray-600 dark:text-gray-400">
                 PARTICIPANTS
               </span>
               <UnUiButton
@@ -219,7 +219,7 @@
             </div>
             <div
               v-if="convoParticiapntsCollapsed"
-              class="max-w-full w-full flex flex-row gap-2 overflow-hidden"
+              class="flex w-full max-w-full flex-row gap-2 overflow-hidden"
               @click="convoParticiapntsCollapsed = !convoParticiapntsCollapsed">
               <NuxtUiAvatarGroup>
                 <template
@@ -254,21 +254,21 @@
             </div>
             <div
               v-if="!convoParticiapntsCollapsed"
-              class="h-fit max-w-full w-full flex flex-col gap-4 overflow-hidden"
+              class="flex h-fit w-full max-w-full flex-col gap-4 overflow-hidden"
               @click="convoParticiapntsCollapsed = !convoParticiapntsCollapsed">
               <div
                 v-if="participantsAssignedArray.length"
-                class="max-w-full w-full flex flex-col gap-2 overflow-hidden">
-                <span class="text-gray-600 dark:text-gray-400 text-xs">
+                class="flex w-full max-w-full flex-col gap-2 overflow-hidden">
+                <span class="text-xs text-gray-600 dark:text-gray-400">
                   ASSIGNED
                 </span>
                 <div
-                  class="max-w-full w-full flex flex-col gap-2 overflow-hidden">
+                  class="flex w-full max-w-full flex-col gap-2 overflow-hidden">
                   <template
                     v-for="participant of participantsAssignedArray"
                     :key="participant.participantPublicId">
                     <div
-                      class="max-w-full w-full flex flex-row items-center gap-2 overflow-hidden">
+                      class="flex w-full max-w-full flex-row items-center gap-2 overflow-hidden">
                       <ConvosConvoAvatar
                         :participant="participant"
                         size="md" />
@@ -279,13 +279,13 @@
               </div>
               <div
                 v-if="participantContributorsArray.length"
-                class="max-w-full w-full flex flex-col gap-2 overflow-hidden">
+                class="flex w-full max-w-full flex-col gap-2 overflow-hidden">
                 <span
-                  class="text-gray-600 dark:text-gray-400 max-w-full w-full overflow-hidden text-xs">
+                  class="w-full max-w-full overflow-hidden text-xs text-gray-600 dark:text-gray-400">
                   CONTRIBUTORS
                 </span>
                 <div
-                  class="max-w-full w-full flex flex-col gap-2 overflow-hidden">
+                  class="flex w-full max-w-full flex-col gap-2 overflow-hidden">
                   <template
                     v-for="participant of participantContributorsArray"
                     :key="participant.participantPublicId">
@@ -301,7 +301,7 @@
               <div
                 v-if="participantCommentersArray.length"
                 class="flex flex-col gap-2">
-                <span class="text-gray-600 dark:text-gray-400 text-xs">
+                <span class="text-xs text-gray-600 dark:text-gray-400">
                   COMMENTERS
                 </span>
                 <div class="flex flex-col gap-2">
@@ -320,7 +320,7 @@
               <div
                 v-if="participantWatchersArray.length"
                 class="flex flex-col gap-2">
-                <span class="text-gray-600 dark:text-gray-400 text-xs">
+                <span class="text-xs text-gray-600 dark:text-gray-400">
                   WATCHERS
                 </span>
                 <div class="flex flex-col gap-2">
@@ -339,7 +339,7 @@
               <div
                 v-if="participantGuestsArray.length"
                 class="flex flex-col gap-2">
-                <span class="text-gray-600 dark:text-gray-400 text-xs">
+                <span class="text-xs text-gray-600 dark:text-gray-400">
                   GUEST
                 </span>
                 <div class="flex flex-col gap-2">
@@ -357,12 +357,12 @@
               </div>
             </div>
           </div>
-          <div class="max-w-full w-full flex flex-col gap-4 overflow-hidden">
+          <div class="flex w-full max-w-full flex-col gap-4 overflow-hidden">
             <div
-              class="max-w-full w-full flex flex-row items-center justify-between overflow-hidden"
+              class="flex w-full max-w-full flex-row items-center justify-between overflow-hidden"
               @click="attachmentsCollapsed = !attachmentsCollapsed">
               <span
-                class="text-gray-600 dark:text-gray-400 cursor-pointer text-sm font-medium">
+                class="cursor-pointer text-sm font-medium text-gray-600 dark:text-gray-400">
                 ATTACHMENTS
               </span>
               <UnUiButton
@@ -377,12 +377,12 @@
             </div>
             <div
               v-if="attachments.length && attachmentsCollapsed"
-              class="max-w-full flex flex-row flex-wrap gap-2 overflow-hidden">
+              class="flex max-w-full flex-row flex-wrap gap-2 overflow-hidden">
               <div
                 v-for="attachment of attachments"
                 :key="attachment.publicId">
                 <div
-                  class="flex flex-row gap-1 border border-1 border-base-5 rounded bg-base-2 px-2 py-1">
+                  class="border-1 border-base-5 bg-base-2 flex flex-row gap-1 rounded border px-2 py-1">
                   <UnUiIcon
                     name="i-ph-paperclip"
                     size="16" />
@@ -392,12 +392,12 @@
             </div>
             <div
               v-if="attachments.length && !attachmentsCollapsed"
-              class="max-w-full flex flex-row flex-wrap gap-2 overflow-hidden">
+              class="flex max-w-full flex-row flex-wrap gap-2 overflow-hidden">
               <div
                 v-for="attachment of attachments"
                 :key="attachment.publicId">
                 <div
-                  class="flex flex-row gap-1 border border-1 border-base-5 rounded bg-base-2 px-2 py-1">
+                  class="border-1 border-base-5 bg-base-2 flex flex-row gap-1 rounded border px-2 py-1">
                   <UnUiIcon
                     name="i-ph-paperclip"
                     size="16" />
@@ -407,20 +407,20 @@
             </div>
             <div
               v-if="!attachments.length"
-              class="max-w-full flex flex-row flex-wrap gap-2 overflow-hidden">
-              <span class="text-gray-500 text-xs">No attachments</span>
+              class="flex max-w-full flex-row flex-wrap gap-2 overflow-hidden">
+              <span class="text-xs text-gray-500">No attachments</span>
             </div>
           </div>
         </div>
 
-        <div class="min-w-fit flex flex-col justify-self-end">
+        <div class="flex min-w-fit flex-col justify-self-end">
           <UnUiTooltip :text="createDate?.toLocaleString()">
-            <span class="text-xs text-base-11">
+            <span class="text-base-11 text-xs">
               Started: {{ createdAgo }}
             </span>
           </UnUiTooltip>
           <UnUiTooltip :text="updateDate?.toLocaleString()">
-            <span class="text-xs text-base-11">
+            <span class="text-base-11 text-xs">
               Updated: {{ updatedAgo }}
             </span>
           </UnUiTooltip>

@@ -25,8 +25,9 @@
   });
   const authorEntryName = computed(() => {
     return (
-      firstEntryAuthor.userGroup?.publicId ||
-      firstEntryAuthor.contact?.publicId ||
+      firstEntryAuthor.userGroup?.name ||
+      firstEntryAuthor.contact?.setName ||
+      firstEntryAuthor.contact?.name ||
       firstEntryAuthor.orgMember?.profile.firstName +
         ' ' +
         firstEntryAuthor.orgMember?.profile.lastName ||
@@ -62,19 +63,19 @@
 </script>
 <template>
   <button
-    class="bg-gray-50 hover:bg-gray-100 dark:bg-gray-900 dark:hover:bg-gray-800 max-w-full flex flex-col justify-between gap-0 rounded-lg">
-    <div class="h-fit w-full flex flex-row items-center gap-6">
+    class="flex max-w-full flex-col justify-between gap-0 rounded-lg bg-gray-50 hover:bg-gray-100 dark:bg-gray-900 dark:hover:bg-gray-800">
+    <div class="flex h-fit w-full flex-row items-center gap-6">
       <UnUiAvatarPlus
         :avatars="participantArray"
         :primary="author"
         size="lg" />
-      <div class="w-full flex flex-col gap-1 overflow-hidden">
+      <div class="flex w-full flex-col gap-1 overflow-hidden">
         <!-- <div class="text-base text-left w-full overflow-hidden text-sm">
           <span class="line-clamp-2 font-bold">{{ authorName }}</span>
         </div> -->
         <div class="w-full overflow-hidden text-left text-xs">
-          <span class="truncate text-xs font-italic">
-            Re: {{ props.convo.subjects[0].subject }}
+          <span class="font-italic truncate text-xs">
+            {{ props.convo.subjects[0].subject }}
           </span>
         </div>
         <div class="w-full overflow-hidden text-left text-base text-sm">
@@ -85,8 +86,8 @@
         </div>
       </div>
     </div>
-    <div class="w-full flex flex-row items-center justify-end gap-1">
-      <div class="min-w-fit overflow-hidden text-right text-xs text-base-11">
+    <div class="flex w-full flex-row items-center justify-end gap-1">
+      <div class="text-base-11 min-w-fit overflow-hidden text-right text-xs">
         <span class="">{{ timeAgo }}</span>
       </div>
     </div>

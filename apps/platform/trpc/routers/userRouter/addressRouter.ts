@@ -5,7 +5,7 @@ import { eq } from '@u22n/database/orm';
 import {
   postalServers,
   emailIdentities,
-  personalEmailIdentities,
+  emailIdentitiesPersonal,
   users,
   emailRoutingRules,
   orgPostalConfigs,
@@ -16,6 +16,7 @@ import { nanoId } from '@u22n/utils';
 import { MailDomainEntries } from '@u22n/types';
 import { orgMembers } from '@u22n/database/schema';
 import { mailBridgeTrpcClient, useRuntimeConfig } from '#imports';
+import { MailDomains } from '../../../types';
 
 export const addressRouter = router({
   getPersonalAddresses: userProcedure
@@ -30,9 +31,9 @@ export const addressRouter = router({
         });
       }
 
-      const usersPersonalEmailIdentities =
-        await db.query.personalEmailIdentities.findMany({
-          where: eq(personalEmailIdentities.userId, userId),
+      const usersEmailIdentitiesPersonal =
+        await db.query.emailIdentitiesPersonal.findMany({
+          where: eq(emailIdentitiesPersonal.userId, userId),
           columns: {
             publicId: true
           },
@@ -52,33 +53,21 @@ export const addressRouter = router({
                 username: true,
                 domainName: true
               }
-            },
-            postalServer: {
-              columns: {
-                rootForwardingAddress: true
-              }
             }
           }
         });
 
-      const mailDomainPublic = useRuntimeConfig().public
-        .mailDomainPublic as MailDomainEntries[];
-      const mailDomainPremium = useRuntimeConfig().public
-        .mailDomainPremium as MailDomainEntries[];
-
+      const mailDomains: MailDomains = useRuntimeConfig().mailDomains;
       const consumedDomains =
-        usersPersonalEmailIdentities.map(
+        usersEmailIdentitiesPersonal.map(
           (identity) => identity.emailIdentity.domainName
         ) || [];
-
-      const availablePublicDomains = mailDomainPublic
-        .filter((domain) => !consumedDomains.includes(domain.name))
-        .map((domain) => domain.name);
-
-      const availablePremiumDomains = mailDomainPremium
-        .filter((domain) => !consumedDomains.includes(domain.name))
-        .map((domain) => domain.name);
-
+      const availableFreeDomains = mailDomains.free
+        .filter((domain) => !consumedDomains.includes(domain))
+        .map((domain) => domain);
+      const availablePremiumDomains = mailDomains.premium
+        .filter((domain) => !consumedDomains.includes(domain))
+        .map((domain) => domain);
       const userObject = await db.query.users.findFirst({
         where: eq(users.id, userId),
         columns: {
@@ -87,9 +76,9 @@ export const addressRouter = router({
       });
 
       return {
-        identities: usersPersonalEmailIdentities,
+        identities: usersEmailIdentitiesPersonal,
         available: {
-          public: availablePublicDomains,
+          free: availableFreeDomains,
           premium: availablePremiumDomains
         },
         username: userObject?.username
@@ -118,15 +107,12 @@ export const addressRouter = router({
         });
       }
 
-      const mailDomainPublic = useRuntimeConfig().public
-        .mailDomainPublic as MailDomainEntries[];
-      const mailDomainPremium = useRuntimeConfig().public
-        .mailDomainPremium as MailDomainEntries[];
+      const mailDomains: MailDomains = useRuntimeConfig().mailDomains;
 
       // Check the users already claimed personal addresses
-      const usersPersonalEmailIdentities =
-        await db.query.personalEmailIdentities.findMany({
-          where: eq(personalEmailIdentities.userId, userId),
+      const usersEmailIdentitiesPersonal =
+        await db.query.emailIdentitiesPersonal.findMany({
+          where: eq(emailIdentitiesPersonal.userId, userId),
           columns: {
             publicId: true
           },
@@ -145,27 +131,23 @@ export const addressRouter = router({
                 username: true,
                 domainName: true
               }
-            },
-            postalServer: {
-              columns: {
-                rootForwardingAddress: true
-              }
             }
           }
         });
 
       const consumedDomains =
-        usersPersonalEmailIdentities.map(
+        usersEmailIdentitiesPersonal.map(
           (identity) => identity.emailIdentity.domainName
         ) || [];
 
-      const availablePublicDomains = mailDomainPublic
-        .filter((domain) => !consumedDomains.includes(domain.name))
-        .map((domain) => domain.name);
+      const availablePublicDomains = mailDomains.free
+        .filter((domain) => !consumedDomains.includes(domain))
+        .map((domain) => domain);
 
-      const availablePremiumDomains = mailDomainPremium
-        .filter((domain) => !consumedDomains.includes(domain.name))
-        .map((domain) => domain.name);
+      const availablePremiumDomains = mailDomains.premium
+        .filter((domain) => !consumedDomains.includes(domain))
+        .map((domain) => domain);
+
       const availableDomains = [
         ...availablePublicDomains,
         ...availablePremiumDomains
@@ -211,54 +193,45 @@ export const addressRouter = router({
       const rootUserEmailAddress = `${username}@${emailIdentityDomain}`;
       const sendName = `${userProfile?.firstName} ${userProfile?.lastName}`;
 
-      const createMailBridgeOrgResponse =
-        await mailBridgeTrpcClient.postal.org.createOrg.mutate({
-          orgId: orgId,
-          orgPublicId: orgPublicId,
-          personalOrg: true
-        });
+      //! LEGACY - WE NO LONGER CREATE A POSTAL ORG FOR ROOT EMAIL IDENTITIES
+      // const createMailBridgeOrgResponse =
+      //   await mailBridgeTrpcClient.postal.org.createOrg.mutate({
+      //     orgId: orgId,
+      //     orgPublicId: orgPublicId,
+      //     personalOrg: true
+      //   });
 
-      const postalServerInsertResponse = await db.insert(postalServers).values({
-        orgId: orgId,
-        publicId: createMailBridgeOrgResponse.postalServer.serverPublicId,
-        type: 'email',
-        apiKey: createMailBridgeOrgResponse.postalServer.apiKey,
-        smtpKey: createMailBridgeOrgResponse.postalServer.smtpKey,
-        sendLimit: createMailBridgeOrgResponse.postalServer.sendLimit,
-        rootMailServer: createMailBridgeOrgResponse.postalServer.rootMailServer
-      });
+      // const orgPostalConfigResponse = await db.query.orgPostalConfigs.findFirst(
+      //   {
+      //     where: eq(orgPostalConfigs.orgId, orgId),
+      //     columns: {
+      //       id: true
+      //     }
+      //   }
+      // );
 
-      const orgPostalConfigResponse = await db.query.orgPostalConfigs.findFirst(
-        {
-          where: eq(orgPostalConfigs.orgId, orgId),
-          columns: {
-            id: true
-          }
-        }
-      );
+      // if (!orgPostalConfigResponse) {
+      //   await db.insert(orgPostalConfigs).values({
+      //     orgId: orgId,
+      //     host: createMailBridgeOrgResponse.config.host,
+      //     ipPools: createMailBridgeOrgResponse.config.ipPools,
+      //     defaultIpPool: createMailBridgeOrgResponse.config.defaultIpPool
+      //   });
+      // }
 
-      if (!orgPostalConfigResponse) {
-        await db.insert(orgPostalConfigs).values({
-          orgId: orgId,
-          host: createMailBridgeOrgResponse.config.host,
-          ipPools: createMailBridgeOrgResponse.config.ipPools,
-          defaultIpPool: createMailBridgeOrgResponse.config.defaultIpPool
-        });
-      }
-
-      // creates the new root email address
-      const createMailBridgeRootEmailResponse =
-        await mailBridgeTrpcClient.postal.emailRoutes.createRootEmailAddress.mutate(
-          {
-            orgId: orgId,
-            rootDomainName: emailIdentityDomain,
-            sendName: sendName,
-            serverPublicId:
-              createMailBridgeOrgResponse.postalServer.serverPublicId,
-            userId: userOrgMembership.id,
-            username: username.toLocaleLowerCase()
-          }
-        );
+      // // creates the new root email address
+      // const createMailBridgeRootEmailResponse =
+      //   await mailBridgeTrpcClient.postal.emailRoutes.createRootEmailAddress.mutate(
+      //     {
+      //       orgId: orgId,
+      //       rootDomainName: emailIdentityDomain,
+      //       sendName: sendName,
+      //       serverPublicId:
+      //         createMailBridgeOrgResponse.postalServer.serverPublicId,
+      //       userId: userOrgMembership.id,
+      //       username: username.toLocaleLowerCase()
+      //     }
+      //   );
 
       const newroutingRulePublicId = nanoId();
       const routingRuleInsertResponse = await db
@@ -288,19 +261,26 @@ export const addressRouter = router({
           routingRuleId: +routingRuleInsertResponse.insertId,
           sendName: sendName,
           isCatchAll: false,
-          isPersonal: true,
+          personalEmailIdentityId: null,
           createdBy: userOrgMembership.id
         });
 
       const newPersonalEmailIdentityPublicId = nanoId();
-      await db.insert(personalEmailIdentities).values({
-        publicId: newPersonalEmailIdentityPublicId,
-        userId: userId,
-        orgId: orgId,
-        emailIdentityId: +insertEmailIdentityResponse.insertId,
-        postalServerId: +postalServerInsertResponse.insertId,
-        forwardingAddress: createMailBridgeRootEmailResponse.forwardingAddress
-      });
+      const newPersonalEmailIdentity = await db
+        .insert(emailIdentitiesPersonal)
+        .values({
+          publicId: newPersonalEmailIdentityPublicId,
+          userId: userId,
+          orgId: orgId,
+          emailIdentityId: +insertEmailIdentityResponse.insertId
+        });
+
+      await db
+        .update(emailIdentities)
+        .set({
+          personalEmailIdentityId: +newPersonalEmailIdentity.insertId
+        })
+        .where(eq(emailIdentities.id, +insertEmailIdentityResponse.insertId));
 
       await db.insert(emailIdentitiesAuthorizedUsers).values({
         orgId: orgId,
@@ -308,14 +288,6 @@ export const addressRouter = router({
         identityId: +insertEmailIdentityResponse.insertId,
         orgMemberId: userOrgMembership.id
       });
-
-      await db
-        .update(postalServers)
-        .set({
-          rootForwardingAddress:
-            createMailBridgeRootEmailResponse.forwardingAddress
-        })
-        .where(eq(postalServers.id, +postalServerInsertResponse.insertId));
 
       return {
         success: true,
@@ -381,7 +353,6 @@ export const addressRouter = router({
       }
       const authorizedUsersOrgMembersUserIds =
         emailIdentityResponse.authorizedUsers.map((user) => user.orgMember?.id);
-      console.log({ authorizedUsersOrgMembersUserIds });
       if (!authorizedUsersOrgMembersUserIds.includes(userId)) {
         throw new TRPCError({
           code: 'UNPROCESSABLE_CONTENT',

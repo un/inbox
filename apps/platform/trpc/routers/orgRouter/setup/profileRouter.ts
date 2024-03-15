@@ -64,9 +64,6 @@ export const orgProfileRouter = router({
       const { orgName } = input;
 
       const isAdmin = await isUserAdminOfOrg(org);
-      console.log('isAdmin', isAdmin);
-      console.log('org', org);
-      console.log('userId', userId);
       if (!isAdmin) {
         throw new TRPCError({
           code: 'UNAUTHORIZED',

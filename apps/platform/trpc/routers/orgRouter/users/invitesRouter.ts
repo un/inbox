@@ -264,7 +264,6 @@ export const invitesRouter = router({
     .query(async ({ ctx, input }) => {
       const db = ctx.db;
       const userLoggedIn = ctx.user?.id ? true : false;
-      console.log('userLoggedIn', userLoggedIn);
 
       const queryInvitesResponse = await db.query.orgInvitations.findFirst({
         where: eq(orgInvitations.inviteToken, input.inviteToken),

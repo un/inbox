@@ -1,14 +1,10 @@
 import { z } from 'zod';
-import { parse, stringify } from 'superjson';
 import { router, protectedProcedure } from '../trpc';
 import { and, eq } from '@u22n/database/orm';
-import {
-  postalServers,
-  orgPostalConfigs,
-  domains
-} from '@u22n/database/schema';
-import { nanoId, nanoIdLength, zodSchemas } from '@u22n/utils';
+import { postalServers } from '@u22n/database/schema';
+import { nanoId, zodSchemas } from '@u22n/utils';
 import { postalPuppet } from '@u22n/postal-puppet';
+import { PostalConfig } from '../../types';
 
 export const domainRouter = router({
   createDomain: protectedProcedure
@@ -24,8 +20,9 @@ export const domainRouter = router({
       const { orgId, orgPublicId, domainName } = input;
       const postalOrgId = orgPublicId;
 
-      const localMode = config.localMode;
-      if (localMode) {
+      const postalConfig: PostalConfig = config.postal;
+
+      if (postalConfig.localMode === true) {
         return {
           orgId: orgId,
           postalServerUrl: 'localmode',
@@ -38,10 +35,10 @@ export const domainRouter = router({
       }
 
       const { puppetInstance } = await postalPuppet.initPuppet({
-        postalControlPanel: config.postalControlPanel,
-        postalUrl: config.postalUrl,
-        postalUser: config.postalUser,
-        postalPass: config.postalPass
+        postalControlPanel: postalConfig.activeServers.controlPanelSubDomain,
+        postalUrl: postalConfig.activeServers.url,
+        postalUser: postalConfig.activeServers.cpUsername,
+        postalPass: postalConfig.activeServers.cpPassword
       });
 
       const puppetDomainResponse = await postalPuppet.addDomain({
@@ -81,7 +78,7 @@ export const domainRouter = router({
 
       return {
         orgId: orgId,
-        postalServerUrl: config.postalUrl as string,
+        postalServerUrl: postalConfig.activeServers.url as string,
         postalOrgId: postalOrgId,
         domainId: puppetDomainResponse.domainId,
         dkimKey: puppetDomainResponse.dkimKey,
@@ -102,18 +99,18 @@ export const domainRouter = router({
       const { orgId, orgPublicId, postalDomainId } = input;
       const postalOrgId = orgPublicId;
 
-      const localMode = config.localMode;
-      if (localMode) {
+      const postalConfig: PostalConfig = config.postal;
+      if (postalConfig.localMode === true) {
         return {
           success: true
         };
       }
 
       const { puppetInstance } = await postalPuppet.initPuppet({
-        postalControlPanel: config.postalControlPanel,
-        postalUrl: config.postalUrl,
-        postalUser: config.postalUser,
-        postalPass: config.postalPass
+        postalControlPanel: postalConfig.activeServers.controlPanelSubDomain,
+        postalUrl: postalConfig.activeServers.url,
+        postalUser: postalConfig.activeServers.cpUsername,
+        postalPass: postalConfig.activeServers.cpPassword
       });
 
       await postalPuppet.refreshDomainDns({

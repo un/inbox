@@ -1,7 +1,12 @@
 import { z } from 'zod';
 import { router, orgProcedure } from '../../../trpc';
 import { and, eq } from '@u22n/database/orm';
-import { orgs, domains } from '@u22n/database/schema';
+import {
+  orgs,
+  domains,
+  postalServers,
+  orgPostalConfigs
+} from '@u22n/database/schema';
 import { nanoId, zodSchemas } from '@u22n/utils';
 import dns from 'node:dns';
 import { verifyDns } from '../../../../utils/verifyDns';
@@ -26,30 +31,17 @@ export const domainsRouter = router({
         });
       }
       const { db, org } = ctx;
-      const orgId = org?.id;
+      const orgId = org.id;
+      const orgPublicId = org.publicId;
       const newPublicId = nanoId();
 
       const domainName = input.domainName.toLowerCase();
-      console.log({ domainName });
 
       const isAdmin = await isUserAdminOfOrg(org);
       if (!isAdmin) {
         throw new TRPCError({
           code: 'UNAUTHORIZED',
           message: 'You are not an admin'
-        });
-      }
-
-      const orgResponse = await db.query.orgs.findFirst({
-        where: eq(orgs.id, orgId),
-        columns: {
-          publicId: true
-        }
-      });
-      if (!orgResponse) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Org not found'
         });
       }
 
@@ -80,10 +72,47 @@ export const domainsRouter = router({
         });
       }
 
+      // check if org has a postal server, if not create one
+      const orgPostalServerQuery = await db.query.postalServers.findFirst({
+        where: and(
+          eq(postalServers.orgId, orgId),
+          eq(postalServers.type, 'email')
+        ),
+        columns: {
+          id: true
+        }
+      });
+      if (!orgPostalServerQuery) {
+        const createMailBridgeOrgResponse =
+          await mailBridgeTrpcClient.postal.org.createPostalOrg.mutate({
+            orgId: orgId,
+            orgPublicId: orgPublicId
+          });
+        await db.insert(postalServers).values({
+          orgId: orgId,
+          publicId: createMailBridgeOrgResponse.postalServer.serverPublicId,
+          type: 'email',
+          apiKey: createMailBridgeOrgResponse.postalServer.apiKey,
+          smtpKey: createMailBridgeOrgResponse.postalServer.smtpKey
+        });
+        const orgPostalConfigResponse =
+          await db.query.orgPostalConfigs.findFirst({
+            where: eq(orgPostalConfigs.orgId, orgId)
+          });
+        if (!orgPostalConfigResponse) {
+          await db.insert(orgPostalConfigs).values({
+            orgId: orgId,
+            host: createMailBridgeOrgResponse.config.host,
+            ipPools: [createMailBridgeOrgResponse.config.ipPools],
+            defaultIpPool: createMailBridgeOrgResponse.config.defaultIpPool
+          });
+        }
+      }
+
       const mailBridgeResponse =
         await mailBridgeTrpcClient.postal.domains.createDomain.mutate({
           orgId: orgId,
-          orgPublicId: orgResponse.publicId,
+          orgPublicId: orgPublicId,
           domainName: domainName
         });
 
@@ -181,8 +210,8 @@ export const domainsRouter = router({
       const { db, org } = ctx;
       const orgId = org?.id;
       const { domainPublicId } = input;
-      const postalRootUrl = useRuntimeConfig().mailBridge
-        .postalRootUrl as string;
+      const postalDnsRootUrl = useRuntimeConfig().mailBridge
+        .postalDnsRootUrl as string;
 
       // Handle when adding database replicas
       const dbReplica = db;
@@ -231,7 +260,7 @@ export const domainsRouter = router({
       const dnsResult = await verifyDns({
         domainName: domainResponse.domain,
         postalUrl: domainResponse.postalHost,
-        postalRootUrl: postalRootUrl,
+        postalDnsRootUrl: postalDnsRootUrl,
         dkimKey: domainResponse.dkimKey,
         dkimValue: domainResponse.dkimValue
       });
@@ -277,7 +306,6 @@ export const domainsRouter = router({
           dnsResult.returnPath.valid ||
           dnsResult.mx.valid;
 
-        console.log({ anyValidRecords });
         !validSendingRecords
           ? (domainSendingMode = 'disabled')
           : (domainSendingMode = 'native');
@@ -330,14 +358,6 @@ export const domainsRouter = router({
         });
       }
 
-      console.log({
-        dns: dnsResult,
-        domainStatus: domainStatus,
-        domainSendingMode: domainSendingMode,
-        domainReceivingMode: domainReceivingMode,
-        forwardingAddress: domainResponse.forwardingAddress,
-        checked: new Date()
-      });
       return {
         dns: dnsResult,
         domainStatus: domainStatus,

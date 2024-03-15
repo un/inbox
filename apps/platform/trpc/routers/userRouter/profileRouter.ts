@@ -7,58 +7,58 @@ import { TRPCError } from '@trpc/server';
 import { useRuntimeConfig } from '#imports';
 
 export const profileRouter = router({
-  generateAvatarUploadUrl: userProcedure.query(async ({ ctx }) => {
-    const { user } = ctx;
-    const userId = user.id;
-    const config = useRuntimeConfig();
+  // generateAvatarUploadUrl: userProcedure.query(async ({ ctx }) => {
+  //   const { user } = ctx;
+  //   const userId = user.id;
+  //   const config = useRuntimeConfig();
 
-    const formData = new FormData();
-    formData.append('metadata', JSON.stringify({ userId }));
+  //   const formData = new FormData();
+  //   formData.append('metadata', JSON.stringify({ userId }));
 
-    const uploadSignedURL: UploadSignedURLResponse = await fetch(
-      `https://api.cloudflare.com/client/v4/accounts/${config.cf.accountId}/images/v2/direct_upload`,
-      {
-        method: 'post',
-        headers: {
-          authorization: `Bearer ${config.cf.token}`
-        },
-        body: formData
-      }
-    ).then((res) => res.json());
-    return uploadSignedURL.result;
-  }),
+  //   const uploadSignedURL: UploadSignedURLResponse = await fetch(
+  //     `https://api.cloudflare.com/client/v4/accounts/${config.cf.accountId}/images/v2/direct_upload`,
+  //     {
+  //       method: 'post',
+  //       headers: {
+  //         authorization: `Bearer ${config.cf.token}`
+  //       },
+  //       body: formData
+  //     }
+  //   ).then((res) => res.json());
+  //   return uploadSignedURL.result;
+  // }),
 
-  awaitAvatarUpload: userProcedure
-    .input(
-      z.object({
-        uploadId: z.string().uuid()
-      })
-    )
-    .query(async ({ input }) => {
-      const config = useRuntimeConfig();
-      async function fetchUntilNotDraft() {
-        const imageUploadObject: ImageUploadObjectResponse = await fetch(
-          `https://api.cloudflare.com/client/v4/accounts/${config.cf.accountId}/images/v1/${input.uploadId}`,
-          {
-            method: 'get',
-            headers: {
-              authorization: `Bearer ${config.cf.token}`
-            }
-          }
-        ).then((res) => res.json());
-        if (imageUploadObject.result.draft) {
-          // Wait for 1 second and then retry
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-          return fetchUntilNotDraft();
-        } else {
-          return imageUploadObject;
-        }
-      }
+  // awaitAvatarUpload: userProcedure
+  //   .input(
+  //     z.object({
+  //       uploadId: z.string().uuid()
+  //     })
+  //   )
+  //   .query(async ({ input }) => {
+  //     const config = useRuntimeConfig();
+  //     async function fetchUntilNotDraft() {
+  //       const imageUploadObject: ImageUploadObjectResponse = await fetch(
+  //         `https://api.cloudflare.com/client/v4/accounts/${config.cf.accountId}/images/v1/${input.uploadId}`,
+  //         {
+  //           method: 'get',
+  //           headers: {
+  //             authorization: `Bearer ${config.cf.token}`
+  //           }
+  //         }
+  //       ).then((res) => res.json());
+  //       if (imageUploadObject.result.draft) {
+  //         // Wait for 1 second and then retry
+  //         await new Promise((resolve) => setTimeout(resolve, 1000));
+  //         return fetchUntilNotDraft();
+  //       } else {
+  //         return imageUploadObject;
+  //       }
+  //     }
 
-      const finalImageUploadObject = await fetchUntilNotDraft();
-      const imageId = finalImageUploadObject.result.id;
-      return imageId;
-    }),
+  //     const finalImageUploadObject = await fetchUntilNotDraft();
+  //     const imageId = finalImageUploadObject.result.id;
+  //     return imageId;
+  //   }),
 
   createProfile: userProcedure
     .input(
@@ -84,7 +84,6 @@ export const profileRouter = router({
       });
 
       if (!insertUserProfileResponse.insertId) {
-        console.log(insertUserProfileResponse);
         return {
           success: false,
           profileId: null,
@@ -208,30 +207,30 @@ export const profileRouter = router({
 });
 
 // Types
-interface ImageUploadObjectResponse {
-  result: {
-    id: string;
-    metadata: {
-      key: string;
-    };
-    uploaded: string;
-    requireSignedURLs: boolean;
-    variants: string[];
-    draft: boolean;
-  };
-  success: boolean;
-  errors: string[];
-  messages: string[];
-}
+// interface ImageUploadObjectResponse {
+//   result: {
+//     id: string;
+//     metadata: {
+//       key: string;
+//     };
+//     uploaded: string;
+//     requireSignedURLs: boolean;
+//     variants: string[];
+//     draft: boolean;
+//   };
+//   success: boolean;
+//   errors: string[];
+//   messages: string[];
+// }
 
-interface UploadSignedURLResponse {
-  result: Result;
-  success: boolean;
-  errors: string[];
-  messages: string[];
-}
+// interface UploadSignedURLResponse {
+//   result: Result;
+//   success: boolean;
+//   errors: string[];
+//   messages: string[];
+// }
 
-interface Result {
-  id: string;
-  uploadURL: string;
-}
+// interface Result {
+//   id: string;
+//   uploadURL: string;
+// }

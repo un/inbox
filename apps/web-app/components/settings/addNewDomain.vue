@@ -29,9 +29,8 @@
     toast.add({
       id: 'adding_domain',
       title: 'Adding Domain - Please wait',
-      description: `This could take up to 20 seconds.`,
-      icon: 'i-ph-thumbs-up',
-      timeout: 20000
+      description: `This could take up to 1 minute if it's the first domain you're adding.`,
+      icon: 'i-ph-thumbs-up'
     });
     buttonLoading.value = true;
     buttonLabel.value = 'Creating domain...';
@@ -45,6 +44,7 @@
       buttonLoading.value = false;
       buttonLabel.value = 'Add Domain';
       newDomainNameValid.value = false;
+      toast.remove('adding_domain');
       toast.add({
         id: 'domain_add_fail',
         title: 'Domain Creation Failed',
@@ -84,10 +84,10 @@
 </script>
 
 <template>
-  <div class="h-full w-full flex flex-col items-start">
+  <div class="flex h-full w-full flex-col items-start">
     <div
       v-if="isPro"
-      class="w-full flex flex-col gap-4">
+      class="flex w-full flex-col gap-4">
       <UnUiInput
         v-model:value="newDomainNameValue"
         v-model:valid="newDomainNameValid"
@@ -103,13 +103,13 @@
         @click="createNewDomain()" />
       <div
         v-if="newDomainResponseError"
-        class="w-fit rounded-lg bg-red-3 px-4 py-1">
+        class="bg-red-3 w-fit rounded-lg px-4 py-1">
         {{ newDomainResponseError }}
       </div>
     </div>
     <div
       v-if="!isPro"
-      class="w-full flex flex-col gap-4">
+      class="flex w-full flex-col gap-4">
       <span class="text-xl font-semibold">Add a new domain</span>
       <span>
         Sorry, your current billing plan does not support adding custom domains.

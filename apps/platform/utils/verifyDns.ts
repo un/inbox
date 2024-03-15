@@ -14,13 +14,13 @@ interface DnsRecords {
 export async function verifyDns({
   domainName,
   postalUrl,
-  postalRootUrl,
+  postalDnsRootUrl,
   dkimKey,
   dkimValue
 }: {
   domainName: string;
   postalUrl: string;
-  postalRootUrl: string;
+  postalDnsRootUrl: string;
   dkimKey: string;
   dkimValue: string;
 }): Promise<DnsRecords> {
@@ -43,7 +43,7 @@ export async function verifyDns({
       error: null
     },
     returnPath: {
-      value: `psrp.${domainName}`,
+      value: `unrp.${domainName}`,
       destination: `rp.${postalUrl}`,
       valid: false,
       error: null
@@ -119,7 +119,7 @@ export async function verifyDns({
 
       if (!spfRecord) {
         dnsRecords.spf.valid = false;
-        dnsRecords.spf.value = `v=spf1 mx include:_spf.${postalRootUrl} ~all`;
+        dnsRecords.spf.value = `v=spf1 mx include:_spf.${postalDnsRootUrl} ~all`;
         dnsRecords.spf.error = 'No SPF record found';
         return;
       }
@@ -130,12 +130,12 @@ export async function verifyDns({
         .filter((part) => part.startsWith('include:'))
         .map((part) => part.replace('include:', ''));
 
-      const recordExists = includedDomains.includes(`_spf.${postalRootUrl}`);
+      const recordExists = includedDomains.includes(`_spf.${postalDnsRootUrl}`);
       if (!recordExists) {
         const existingRecordString = includedDomains
           .map((domain) => `include:${domain}`)
           .join(' ');
-        const newRecordString = `v=spf1 mx include:_spf.${postalRootUrl} ${existingRecordString} ~all`;
+        const newRecordString = `v=spf1 a mx include:_spf.${postalDnsRootUrl} ${existingRecordString} ~all`;
         dnsRecords.spf.valid = false;
         dnsRecords.spf.value = newRecordString;
         dnsRecords.spf.error =
@@ -144,12 +144,12 @@ export async function verifyDns({
       }
 
       const otherIncludedSenders = includedDomains.filter(
-        (domain) => domain !== `_spf.${postalRootUrl}`
+        (domain) => domain !== `_spf.${postalDnsRootUrl}`
       );
       const existingRecordString = otherIncludedSenders
         .map((domain) => `include:${domain}`)
         .join(' ');
-      const newRecordString = `v=spf1 mx include:_spf.${postalRootUrl} ${existingRecordString} ~all`;
+      const newRecordString = `v=spf1 mx include:_spf.${postalDnsRootUrl} ${existingRecordString} ~all`;
 
       dnsRecords.spf.otherSenders = otherIncludedSenders;
       dnsRecords.spf.value = newRecordString;
@@ -158,14 +158,14 @@ export async function verifyDns({
       return;
     })
     .catch(() => {
-      dnsRecords.spf.value = `v=spf1 mx include:_spf.${postalRootUrl} ~all`;
+      dnsRecords.spf.value = `v=spf1 mx include:_spf.${postalDnsRootUrl} ~all`;
       dnsRecords.spf.valid = false;
       dnsRecords.spf.error = 'Error resolving SPF record';
     });
 
   // verify the Return-Path Record
   await dns.promises
-    .resolveCname(`psrp.${domainName}`)
+    .resolveCname(`unrp.${domainName}`)
     .then((returnPathDnsResponse) => {
       if (returnPathDnsResponse.length > 1) {
         dnsRecords.returnPath.valid = false;

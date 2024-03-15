@@ -11,6 +11,7 @@ import { eq } from '@u22n/database/orm';
 import { db } from '@u22n/database';
 import sharp from 'sharp';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
+import { S3Config } from '../types';
 
 //?  Avatar Path: /[type.value]/[userProfilePublicId]/[size]
 
@@ -156,12 +157,13 @@ export default eventHandler({
       { name: '5xl', value: 128 }
     ];
 
+    const s3Config: S3Config = useRuntimeConfig().s3;
     for (const size of sizes) {
       const resizedImage = await sharp(file.data)
         .resize(size.value, size.value)
         .toBuffer();
       const command = new PutObjectCommand({
-        Bucket: 'avatars',
+        Bucket: s3Config.bucketAvatars,
         Key: `${typeObject.value}_${avatarId}/${size.name}`,
         Body: resizedImage,
         ContentType: file.type
