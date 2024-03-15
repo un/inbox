@@ -1,12 +1,10 @@
 import { db } from '@u22n/database';
 import { simpleParser } from 'mailparser';
 import { authenticate } from 'mailauth';
-import { spf } from 'mailauth/lib/spf';
 import { and, eq, inArray } from '@u22n/database/orm';
 import type { InferInsertModel } from '@u22n/database/orm';
 import {
   ConvoEntryMetadata,
-  contactGlobalReputations,
   contacts,
   convoAttachments,
   convoEntries,
@@ -15,8 +13,6 @@ import {
   convoSubjects,
   convos,
   emailIdentities,
-  emailRoutingRules,
-  emailRoutingRulesDestinations,
   postalServers
 } from '@u22n/database/schema';
 import { parseMessage } from '@u22n/mailtools';
@@ -27,32 +23,13 @@ import type {
 import { nanoId } from '@u22n/utils';
 import { tiptapCore, tiptapHtml } from '@u22n/tiptap';
 import { tipTapExtensions } from '@u22n/tiptap/extensions';
-import { z } from 'zod';
+
 /**
  * used for all incoming mail from Postal
  */
 
 export default eventHandler(async (event) => {
   sendNoContent(event, 200);
-
-  const [orgIdStr, mailserverId] = event.context.params.mailServer.split('/');
-  const orgId = Number(orgIdStr);
-
-  //verify the mailserver actually exists
-  const mailServer = await db.query.postalServers.findFirst({
-    where: eq(postalServers.publicId, mailserverId),
-    columns: {
-      id: true,
-      orgId: true
-    },
-    with: {
-      org: {
-        columns: {
-          publicId: true
-        }
-      }
-    }
-  });
 
   // read and decode the email payload
   const {
@@ -63,30 +40,82 @@ export default eventHandler(async (event) => {
   }: postalEmailPayload = await readBody(event);
   if (typeof payloadEmailB64 !== 'string') {
     console.error('⛔ no email payload, skipping processing', {
-      orgId,
-      mailserverId,
       payloadPostalEmailId
     });
-
     return;
   }
 
-  // prelimary checks
-  if (!mailServer || +mailServer.orgId !== orgId) {
-    console.error('⛔ mailserver not found or does not belong to this org', {
-      orgId,
-      mailserverId,
-      payloadPostalEmailId
+  let orgId: number | null = null;
+  let orgPublicId: string | null = null;
+  const [orgIdStr, mailserverId] = event.context.params.mailServer.split('/');
+
+  if (orgIdStr === '0' || mailserverId === 'root') {
+    // handle for root emails
+    // get the email identity for the root email
+    const [rootEmailUsername, rootEmailDomain] = payloadEmailTo.split('@');
+    const rootEmailIdentity = await db.query.emailIdentities.findFirst({
+      where: and(
+        eq(emailIdentities.username, rootEmailUsername),
+        eq(emailIdentities.domainName, rootEmailDomain)
+      ),
+      columns: {
+        id: true,
+        orgId: true
+      },
+      with: {
+        org: {
+          columns: {
+            publicId: true
+          }
+        }
+      }
+    });
+    if (!rootEmailIdentity) {
+      console.error('⛔ no email identity found for root email', {
+        payloadPostalEmailId
+      });
+
+      return;
+    }
+    orgId = rootEmailIdentity.orgId;
+    orgPublicId = rootEmailIdentity.org.publicId;
+  } else {
+    // handle for org emails
+    //verify the mailserver actually exists
+    const mailServer = await db.query.postalServers.findFirst({
+      where: eq(postalServers.publicId, mailserverId),
+      columns: {
+        id: true,
+        orgId: true
+      },
+      with: {
+        org: {
+          columns: {
+            publicId: true
+          }
+        }
+      }
     });
 
-    return;
+    // prelimary checks
+    if (!mailServer || +mailServer.orgId !== orgId) {
+      console.error('⛔ mailserver not found or does not belong to this org', {
+        orgId,
+        mailserverId,
+        payloadPostalEmailId
+      });
+
+      return;
+    }
+    orgId = Number(mailServer.orgId);
+    orgPublicId = mailServer.org.publicId;
   }
 
   //* parse the email payload
   const payloadEmail = Buffer.from(payloadEmailB64, 'base64').toString('utf-8');
   const parsedEmail = await simpleParser(payloadEmail);
 
-  // verify email auth (DKIM, SPF, etc.) - unhandled right now
+  //! verify email auth (DKIM, SPF, etc.) - unhandled right now
   const auth = await authenticate(payloadEmail, {
     trustReceived: true
   });
@@ -114,7 +143,6 @@ export default eventHandler(async (event) => {
   const subject =
     parsedEmail.subject.replace(/^(RE:|FW:)\s*/i, '').trim() || '';
   const messageId = parsedEmail.messageId.replace(/^<|>$/g, '') || '';
-  const date = parsedEmail.date;
   const messageBodyHtml = (parsedEmail.html as string).replace(/\n/g, '') || '';
   const attachments = parsedEmail.attachments || [];
 
@@ -616,7 +644,7 @@ export default eventHandler(async (event) => {
           Authorization: useRuntimeConfig().storage.key
         },
         body: JSON.stringify({
-          orgPublicId: mailServer.org.publicId,
+          orgPublicId: orgPublicId,
           filename: input.fileName
         })
       }
