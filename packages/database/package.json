@@ -25,7 +25,7 @@
     "@u22n/types": "workspace:*",
     "@u22n/utils": "workspace:*",
     "@planetscale/database": "^1.16.0",
-    "drizzle-orm": "^0.29.3",
+    "drizzle-orm": "^0.30.2",
     "mysql2": "^3.9.1"
   },
   "devDependencies": {

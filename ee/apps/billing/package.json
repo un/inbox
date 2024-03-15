@@ -17,7 +17,7 @@
     "@trpc/server": "^10.45.1",
     "@u22n/database": "workspace:*",
     "@u22n/utils": "workspace:*",
-    "nitropack": "^2.8.1",
+    "nitropack": "^2.9.4",
     "stripe": "^14.17.0",
     "superjson": "^2.2.1",
     "trpc-nuxt": "^0.10.19",
