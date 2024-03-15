@@ -22,7 +22,9 @@ import {
   convoEntries,
   emailIdentitiesAuthorizedUsers,
   userGroupMembers,
-  ConvoEntryMetadataEmailAddress
+  ConvoEntryMetadataEmailAddress,
+  convoAttachments,
+  pendingAttachments
 } from '@u22n/database/schema';
 import { nanoId, nanoIdLength, zodSchemas } from '@u22n/utils';
 import { TRPCError } from '@trpc/server';
@@ -64,7 +66,15 @@ export const convoRouter = router({
           ),
         topic: z.string().min(1),
         message: z.string().min(1),
-        firstMessageType: z.enum(['message', 'draft', 'comment'])
+        firstMessageType: z.enum(['message', 'draft', 'comment']),
+        attachments: z.array(
+          z.object({
+            fileName: z.string(),
+            attachmentPublicId: zodSchemas.nanoId,
+            size: z.number(),
+            type: z.string()
+          })
+        )
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -511,6 +521,46 @@ export const convoRouter = router({
         bodyPlainText: newConvoBodyPlainText
       });
 
+      //* if convo has attachments, add them to the convo
+      const attachmentsToSend: {
+        orgPublicId: string;
+        attachmentPublicId: string;
+        fileName: string;
+        fileType: string;
+      }[] = [];
+      const pendingAttachmentsToRemoveFromPending: string[] = [];
+      if (input.attachments.length > 0) {
+        const convoAttachmentsDbInsertValuesArray: InferInsertModel<
+          typeof convoAttachments
+        >[] = [];
+        input.attachments.forEach((attachment) => {
+          convoAttachmentsDbInsertValuesArray.push({
+            orgId: orgId,
+            convoId: +insertConvoResponse.insertId,
+            convoEntryId: +insertConvoEntryResponse.insertId,
+            convoParticipantId: +insertAuthorConvoParticipantResponse.insertId,
+            publicId: attachment.attachmentPublicId,
+            fileName: attachment.fileName,
+            type: attachment.type,
+            size: attachment.size
+          });
+          attachmentsToSend.push({
+            orgPublicId: org.publicId,
+            attachmentPublicId: attachment.attachmentPublicId,
+            fileName: attachment.fileName,
+            fileType: attachment.type
+          });
+          pendingAttachmentsToRemoveFromPending.push(
+            attachment.attachmentPublicId
+          );
+        });
+        await db
+          .insert(convoAttachments)
+          .values(convoAttachmentsDbInsertValuesArray);
+
+        // insertedAttachmentIds = +insertAttachmentsResponse.insertId;
+      }
+
       //* if convo has contacts, send external email via mail bridge
       const convoHasEmailParticipants = orgContactIds.length > 0;
       const missingEmailIdentitiesWarnings: {
@@ -657,11 +707,6 @@ export const convoRouter = router({
           }
         );
 
-        // to, cc, subject, bodyPlain, bodyHTML, attachmentIds, sendAsEmailIdentityPublicId
-        // export type ConvoEntryMetadataEmailAddress = {
-        //   id: number;
-        //   type: 'contact' | 'emailIdentity';
-        // };
         const mailBridgeSendMailResponse =
           await mailBridgeTrpcClient.mail.send.sendNewEmail.mutate({
             orgId: orgId,
@@ -672,7 +717,8 @@ export const convoRouter = router({
             ccEmail: ccEmailAddressesFiltered,
             subject: topic,
             bodyHtml: newConvoBodyHTML,
-            bodyPlainText: newConvoBodyPlainText
+            bodyPlainText: newConvoBodyPlainText,
+            attachments: attachmentsToSend
           });
 
         if (!mailBridgeSendMailResponse.success) {
@@ -693,6 +739,23 @@ export const convoRouter = router({
             metadata: messageMetadata
           })
           .where(eq(convoEntries.id, +insertConvoEntryResponse.insertId));
+
+        if (
+          input.attachments.length > 0 &&
+          pendingAttachmentsToRemoveFromPending.length > 0
+        ) {
+          await db
+            .delete(pendingAttachments)
+            .where(
+              and(
+                eq(pendingAttachments.orgId, orgId),
+                inArray(
+                  pendingAttachments.publicId,
+                  pendingAttachmentsToRemoveFromPending
+                )
+              )
+            );
+        }
       }
 
       return {

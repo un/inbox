@@ -2,17 +2,11 @@ import { ZodLazy, z } from 'zod';
 import { router, protectedProcedure } from '../trpc';
 import {
   emailIdentities,
-  emailRoutingRules,
-  emailIdentitiesAuthorizedUsers,
   postalServers,
-  emailIdentitiesPersonal,
-  convoEntries,
   ConvoEntryMetadata
 } from '@u22n/database/schema';
-import { nanoId, nanoIdLength, zodSchemas } from '@u22n/utils';
-import { postalPuppet } from '@u22n/postal-puppet';
+import { zodSchemas } from '@u22n/utils';
 import { and, eq } from '@u22n/database/orm';
-import { convert } from 'html-to-text';
 import { PostalConfig } from '../../types';
 
 export const sendMailRouter = router({
@@ -29,7 +23,14 @@ export const sendMailRouter = router({
         subject: z.string(),
         bodyPlainText: z.string(),
         bodyHtml: z.string(),
-        attachmentIds: z.array(z.number()).optional()
+        attachments: z.array(
+          z.object({
+            orgPublicId: zodSchemas.nanoId,
+            attachmentPublicId: zodSchemas.nanoId,
+            fileName: z.string(),
+            fileType: z.string()
+          })
+        )
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -52,7 +53,7 @@ export const sendMailRouter = router({
         subject,
         bodyPlainText,
         bodyHtml,
-        attachmentIds
+        attachments
       } = input;
 
       const sendAsEmailIdentity = await db.query.emailIdentities.findFirst({
@@ -98,6 +99,75 @@ export const sendMailRouter = router({
         postalServerUrl = `https://${postalServerConfigItem.controlPanelSubDomain}.${postalServerConfigItem.url}/api/v1/send/message`;
       }
 
+      //* Attachments
+      // expected postal type: { name: attachment["name"], content_type: attachment["content_type"], data: attachment["data"], base64: true }
+      type PostalAttachmentType = {
+        name: string;
+        content_type: string;
+        data: string;
+        base64: boolean;
+      };
+      const postalAttachments: PostalAttachmentType[] = [];
+
+      async function getAttachment(input: {
+        orgPublicId: string;
+        attachmentPublicId: string;
+        fileName: string;
+      }) {
+        type GetUrlResponse = {
+          url: string;
+        };
+        const downloadUrl: GetUrlResponse = await fetch(
+          `${useRuntimeConfig().storage.url}/api/attachments/mailfetch`,
+          {
+            method: 'post',
+
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: useRuntimeConfig().storage.key
+            },
+            body: JSON.stringify({
+              orgPublicId: input.orgPublicId,
+              attachmentPublicId: input.attachmentPublicId,
+              filename: input.fileName
+            })
+          }
+        ).then((res) => res.json());
+        if (!downloadUrl || !downloadUrl.url) {
+          throw new Error('something went wrong getting the attachment URL');
+        }
+
+        try {
+          const response = await fetch(downloadUrl.url);
+          const buffer = await response.arrayBuffer();
+          const base64 = Buffer.from(buffer).toString('base64');
+          return base64;
+        } catch (error) {
+          console.error('Error downloading the presigned url file:', error);
+          throw error; // Rethrow to handle it in the outer catch block
+        }
+      }
+      if (attachments && attachments.length > 0) {
+        for (const attachment of attachments) {
+          try {
+            const base64 = await getAttachment({
+              orgPublicId: attachment.orgPublicId,
+              attachmentPublicId: attachment.attachmentPublicId,
+              fileName: attachment.fileName
+            });
+            postalAttachments.push({
+              name: attachment.fileName,
+              content_type: attachment.fileType,
+              data: base64,
+              base64: true
+            });
+          } catch (error) {
+            console.error('Error getting attachment:', error);
+          }
+        }
+      }
+
+      //* Send email
       type PostalResponse =
         | {
             status: 'success';
@@ -121,7 +191,6 @@ export const sendMailRouter = router({
               message: string;
             };
           };
-
       const sendMailPostalResponse: PostalResponse = await fetch(
         postalServerUrl,
         {
@@ -137,7 +206,8 @@ export const sendMailRouter = router({
             sender: sendEmailAddress,
             subject: subject,
             plain_body: bodyPlainText,
-            html_body: bodyHtml
+            html_body: bodyHtml,
+            attachments: postalAttachments
           })
         }
       )

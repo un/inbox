@@ -6,6 +6,12 @@
   import { z } from 'zod';
   const { $trpc } = useNuxtApp();
   const orgSlug = useRoute().params.orgSlug as string;
+  const attachmentUploads = ref<ConvoAttachmentUpload[]>([]);
+  const currentTotalUploadSize = computed(() => {
+    return attachmentUploads.value.reduce((acc, attachment) => {
+      return acc + attachment.size;
+    }, 0);
+  });
 
   type JSONContent = tiptapVue3.JSONContent;
 
@@ -339,22 +345,6 @@
   });
 
   const formValid = computed(() => {
-    console.log(
-      'formValid',
-      !hasEmailParticipantsNoEmailIdentitySelected.value &&
-        selectedParticipants.value.length > 0 &&
-        conversationTopicInput.value.length > 0 &&
-        isTextPresent.value,
-      {
-        hasEmailParticipantsNoEmailIdentitySelected:
-          !hasEmailParticipantsNoEmailIdentitySelected.value
-      },
-      {
-        selectedParticipantOptionsLength: selectedParticipants.value.length > 0
-      },
-      { conversationTopicInput: conversationTopicInput.value.length > 0 },
-      { istext: isTextPresent.value }
-    );
     return (
       !hasEmailParticipantsNoEmailIdentitySelected.value &&
       selectedParticipants.value.length > 0 &&
@@ -369,7 +359,10 @@
     const contentArray = messageEditorData.value?.content;
     if (!contentArray) return false;
     if (contentArray.length === 0) return false;
-    if (!contentArray[0].content || contentArray[0].content.length === 0)
+    if (
+      contentArray[0] &&
+      (!contentArray[0].content || contentArray[0].content.length === 0)
+    )
       return false;
     return true;
   });
@@ -383,7 +376,18 @@
   async function createNewConvo(type: 'draft' | 'comment' | 'message') {
     const toast = useToast();
     actionLoading.value = true;
-    console.log('🔥 create new convo function');
+    if (!selectedParticipants.value[0]) {
+      actionLoading.value = false;
+      toast.add({
+        id: 'create_new_convo_fail',
+        title: 'Conversation creation failed',
+        description: `Please select at least one participant.`,
+        color: 'red',
+        icon: 'i-ph-warning-circle',
+        timeout: 5000
+      });
+      return;
+    }
     const getPublicIdsByType = (
       type: string,
       property: string = 'publicId'
@@ -427,7 +431,8 @@
       participantsEmails: convoParticipantsEmailPublicIds,
       sendAsEmailIdentityPublicId: selectedOrgEmailIdentities.value?.publicId,
       topic: conversationTopicInput.value,
-      message: stringify(messageEditorData.value)
+      message: stringify(messageEditorData.value),
+      attachments: attachmentUploads.value
     });
 
     if (createNewConvoTrpc.status.value === 'error') {
@@ -711,7 +716,35 @@
         v-model:modelValue="messageEditorData"
         class="min-h-[150px] overflow-hidden" />
     </div>
-    <div class="flex grow flex-row justify-end gap-2">
+    <div
+      class="flex w-full max-w-full grow flex-row items-center justify-end gap-2">
+      <div
+        class="flex w-full max-w-full grow flex-row justify-end gap-2 overflow-hidden overflow-scroll">
+        <div
+          v-for="attachment in attachmentUploads"
+          :key="attachment.attachmentPublicId"
+          class="w-fit">
+          <UnUiTooltip text="click to remove">
+            <div
+              class="border-1 flex flex-row gap-1 rounded rounded-md border border-gray-500 px-2 py-1 text-gray-700 hover:border-red-500 hover:bg-red-50 hover:text-red-700">
+              <UnUiIcon name="i-ph-paperclip" />
+              <span class="truncate text-xs"> {{ attachment.fileName }}</span>
+            </div>
+          </UnUiTooltip>
+        </div>
+      </div>
+      <ConvosUpload
+        v-model:uploadedAttachments="attachmentUploads"
+        :max-size="15000000"
+        :current-size="currentTotalUploadSize"
+        :org-slug="orgSlug">
+        <template #default="{ openFileDialog, loading }">
+          <UnUiButton
+            :loading="loading"
+            label="upload"
+            @click="openFileDialog" />
+        </template>
+      </ConvosUpload>
       <UnUiButton
         label="Save Draft"
         color="orange"

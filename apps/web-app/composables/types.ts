@@ -7,8 +7,10 @@ export type UserConvosDataType = PromiseType<
 >['data'];
 
 export type ConvoAttachmentUpload = {
-  filename: string;
+  fileName: string;
   attachmentPublicId: string;
+  size: number;
+  type: string;
 };
 
 export type ConvoParticipantEntry = {

@@ -348,6 +348,7 @@ export const orgPostalConfigs = mysqlTable(
   {
     id: serial('id').primaryKey(),
     orgId: foreignKey('org_id').notNull(),
+
     host: varchar('host', { length: 32 }).notNull(),
     ipPools: json('ip_pools').notNull().$type<string[]>(),
     defaultIpPool: varchar('default_ip_pool', { length: 32 }).notNull()
@@ -1097,6 +1098,7 @@ export const convoAttachments = mysqlTable(
     convoEntryId: foreignKey('convo_entry_id'),
     fileName: varchar('fileName', { length: 256 }).notNull(),
     type: varchar('type', { length: 256 }).notNull(),
+    size: int('size', { unsigned: true }).notNull(),
     public: boolean('public').notNull().default(false),
     convoParticipantId: foreignKey('convo_participant_id').notNull(),
     createdAt: timestamp('created_at')
@@ -1131,6 +1133,35 @@ export const convoAttachmentsRelations = relations(
     })
   })
 );
+// Pending Attachments
+
+export const pendingAttachments = mysqlTable(
+  'pending_attachments',
+  {
+    id: serial('id').primaryKey(),
+    publicId: nanoId('public_id').notNull(),
+    orgId: foreignKey('org_id').notNull(),
+    orgPublicId: nanoId('org_public_id').notNull(),
+    filename: varchar('filename', { length: 256 }).notNull(),
+    createdAt: timestamp('created_at')
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull()
+  },
+  (table) => ({
+    publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
+    orgIdIndex: index('org_id_idx').on(table.orgId)
+  })
+);
+
+export const pendingAttachmentsRelations = relations(
+  pendingAttachments,
+  ({ one }) => ({
+    org: one(orgs, {
+      fields: [pendingAttachments.orgId],
+      references: [orgs.id]
+    })
+  })
+);
 
 export type ConvoEntryMetadataEmailAddress = {
   id: number;
@@ -1156,7 +1187,8 @@ export type ConvoEntryMetadata = {
 
 const messageIdCustomType = customType<{ data: string }>({
   dataType() {
-    return "VARCHAR(255) AS (JSON_UNQUOTE(metadata-> '$.email.messageId')) STORED";
+    //return "varchar(255) AS (JSON_UNQUOTE(metadata-> '$.email.messageId')) STORED";
+    return 'varchar(255)';
   }
 });
 export const convoEntries = mysqlTable(
