@@ -16,8 +16,14 @@
 
   type Props = {
     orgSlug: string;
+    maxSize: number;
+    currentSize: number;
   };
-  const props = defineProps<Props>();
+  const props = withDefaults(defineProps<Props>(), {
+    maxSize: 15000000, // 15MB
+    currentSize: 0
+  });
+  const toast = useToast();
 
   const loading = ref(false);
 
@@ -38,13 +44,34 @@
 
   selectedFilesOnChange(async (selectedFiles) => {
     if (!selectedFiles) return;
-    loading.value = true;
+
+    const totalSize = Array.from(selectedFiles).reduce((acc, file) => {
+      return acc + file.size;
+    }, 0);
+
+    if (
+      totalSize > props.maxSize ||
+      totalSize + props.currentSize > props.maxSize
+    ) {
+      console.error('Total file size exceeds 15MB');
+      toast.add({
+        title: 'Attachments too large',
+        description: 'Your attachments must be less than 15MB in total',
+        icon: 'i-ph-warning',
+        color: 'red',
+        timeout: 5000
+      });
+      return;
+    } else {
+      loading.value = true;
+    }
 
     const storageUrl = useRuntimeConfig().public.storageUrl;
 
     const uploadPromises = Array.from(selectedFiles).map(async (file: File) => {
-      const filename = file.name;
+      const fileName = file.name;
       const fileType = file.type;
+      const size = file.size;
 
       type PreSignedData = {
         publicId: string;
@@ -56,7 +83,7 @@
           method: 'get',
           params: {
             orgSlug: props.orgSlug,
-            filename: filename
+            filename: fileName
           },
           credentials: 'include'
         }
@@ -86,8 +113,10 @@
       }
 
       return {
-        filename,
-        attachmentPublicId
+        fileName,
+        attachmentPublicId,
+        size,
+        type: fileType
       };
     });
 
@@ -100,6 +129,7 @@
       resetSelectedFiles();
       loading.value = false;
     }
+    loading.value = false;
   });
 </script>
 <template>

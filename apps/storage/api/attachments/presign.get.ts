@@ -2,7 +2,7 @@ import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { db } from '@u22n/database';
 import { and, eq } from '@u22n/database/orm';
-import { orgMembers, orgs } from '@u22n/database/schema';
+import { orgMembers, orgs, pendingAttachments } from '@u22n/database/schema';
 import { nanoId } from '@u22n/utils';
 import { z } from 'zod';
 import { S3Config } from '../../types';
@@ -65,6 +65,13 @@ export default eventHandler({
     });
     const signedUrl = await getSignedUrl(s3Client, command, {
       expiresIn: 3600
+    });
+
+    await db.insert(pendingAttachments).values({
+      orgId: orgQueryResponse.id,
+      orgPublicId: orgPublicId,
+      publicId: attachmentPublicId,
+      filename: filename
     });
 
     return { publicId: attachmentPublicId, signedUrl: signedUrl };

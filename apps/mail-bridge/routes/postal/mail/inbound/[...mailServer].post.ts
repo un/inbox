@@ -623,6 +623,7 @@ export default eventHandler(async (event) => {
     fileName: string;
     fileType: string;
     fileContent: Buffer;
+    fileSize: number;
     convoId: number;
     convoEntryId: number;
     convoParticipantId: number;
@@ -675,7 +676,8 @@ export default eventHandler(async (event) => {
       orgId: input.orgId,
       publicId: attachmentPublicId,
       fileName: input.fileName,
-      type: input.fileType
+      type: input.fileType,
+      size: input.fileSize
     });
   }
 
@@ -689,7 +691,8 @@ export default eventHandler(async (event) => {
           fileContent: attachment.content,
           convoId: convoId,
           convoEntryId: +insertNewConvoEntry.insertId,
-          convoParticipantId: fromAddressParticipantId
+          convoParticipantId: fromAddressParticipantId,
+          fileSize: attachment.size
         });
       })
     );
