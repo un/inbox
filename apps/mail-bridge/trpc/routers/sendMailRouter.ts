@@ -1,4 +1,4 @@
-import { ZodLazy, z } from 'zod';
+import { z } from 'zod';
 import { router, protectedProcedure } from '../trpc';
 import {
   emailIdentities,
@@ -39,7 +39,23 @@ export const sendMailRouter = router({
 
       if (postalConfig.localMode === true) {
         return {
-          //! TO FIX RETURN WHEN IN LOCAL MODE
+          success: true,
+          metadata: {
+            email: {
+              to: null,
+              from: [{ id: 1, type: 'emailIdentity' }],
+              cc: null,
+              messageId: 'localModeMessageId',
+              postalMessages: [
+                {
+                  recipient: 'localModeRecipient',
+                  id: 1,
+                  token: 'localModeToken',
+                  postalMessageId: 'localModeMessageId'
+                }
+              ]
+            }
+          }
         };
       }
 
