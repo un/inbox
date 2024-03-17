@@ -26,7 +26,7 @@
   });
 </script>
 <template>
-  <div class="flex h-fit flex-row items-end">
+  <div class="z-20 flex h-fit flex-row items-end">
     <UnUiAvatar
       v-if="primaryAvatar"
       :avatar-id="primaryAvatar.avatarPublicId"
@@ -46,7 +46,7 @@
       </div>
 
       <template #panel>
-        <div class="flex flex-row gap-2 p-4">
+        <div class="z-50 flex flex-row gap-2 p-4">
           <div
             v-for="avatar in avatarArray"
             :key="avatar.participantPublicId">

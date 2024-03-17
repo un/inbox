@@ -14,6 +14,8 @@ export interface postalEmailPayload {
 export interface MessageParseAddressPlatformObject {
   id: number;
   type: 'contact' | 'emailIdentity';
+  publicId: string;
+  email: string;
   contactType:
     | 'person'
     | 'product'

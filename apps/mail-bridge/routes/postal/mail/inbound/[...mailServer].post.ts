@@ -1,6 +1,6 @@
 import { db } from '@u22n/database';
 import { simpleParser } from 'mailparser';
-// @ts-expect-error, No types yet
+// @ts-expect-error, not typed yet
 import { authenticate } from 'mailauth';
 import { and, eq, inArray } from '@u22n/database/orm';
 import type { InferInsertModel } from '@u22n/database/orm';
@@ -55,24 +55,26 @@ export default eventHandler(async (event) => {
     return;
   }
 
-  let orgId: number | null = null;
+  let orgId: number = 0;
   let orgPublicId: string | null = null;
-
-  if (!event.context.params?.mailServer) {
-    console.error('⛔ no mailserver found in the event context', {
+  const [orgIdStr, mailserverId] = event.context.params!.mailServer!.split('/');
+  if (!orgIdStr || !mailserverId) {
+    console.error('⛔ no orgId or mailserverId found', {
       payloadPostalEmailId
     });
     return;
   }
 
-  const [orgIdStr = '', mailserverId = ''] =
-    event.context.params.mailServer.split('/');
-
   if (orgIdStr === '0' || mailserverId === 'root') {
     // handle for root emails
     // get the email identity for the root email
-    const [rootEmailUsername = '', rootEmailDomain = ''] =
-      payloadEmailTo.split('@');
+    const [rootEmailUsername, rootEmailDomain] = payloadEmailTo.split('@');
+    if (!rootEmailUsername || !rootEmailDomain) {
+      console.error('⛔ invalid root email username or domain', {
+        payloadPostalEmailId
+      });
+      return;
+    }
     const rootEmailIdentity = await db.query.emailIdentities.findFirst({
       where: and(
         eq(emailIdentities.username, rootEmailUsername),
@@ -100,6 +102,8 @@ export default eventHandler(async (event) => {
     orgId = rootEmailIdentity.orgId;
     orgPublicId = rootEmailIdentity.org.publicId;
   } else {
+    orgId = Number(orgIdStr);
+
     // handle for org emails
     if (!validateTypeId('postalServers', mailserverId)) {
       console.error('⛔ invalid mailserver id', {
@@ -123,7 +127,6 @@ export default eventHandler(async (event) => {
         }
       }
     });
-
     // prelimary checks
     if (!mailServer || +mailServer.orgId !== orgId) {
       console.error('⛔ mailserver not found or does not belong to this org', {
@@ -136,6 +139,13 @@ export default eventHandler(async (event) => {
     }
     orgId = Number(mailServer.orgId);
     orgPublicId = mailServer.org.publicId;
+  }
+
+  if (orgId === 0 || !orgPublicId) {
+    console.error('⛔ orgId or orgPublicId not found', {
+      payloadPostalEmailId
+    });
+    return;
   }
 
   //* parse the email payload
@@ -163,6 +173,17 @@ export default eventHandler(async (event) => {
   }
 
   // Extract key email properties
+  if (
+    !parsedEmail.from ||
+    !parsedEmail.to ||
+    !parsedEmail.subject ||
+    !parsedEmail.messageId
+  ) {
+    console.error('⛔ missing email attributes', {
+      payloadPostalEmailId
+    });
+    return;
+  }
   if (parsedEmail.from.value.length > 1) {
     console.error(
       '⛔ multiple from addresses detected in a message, only using first email address',
@@ -239,6 +260,20 @@ export default eventHandler(async (event) => {
       : Promise.resolve([])
   ]);
 
+  if (
+    !messageToPlatformObject ||
+    !messageToPlatformObject[0] ||
+    !messageFromPlatformObject ||
+    !messageFromPlatformObject[0]
+  ) {
+    console.error(
+      '⛔ no messageToPlatformObject or messageFromPlatformObject found',
+      {
+        payloadPostalEmailId
+      }
+    );
+    return;
+  }
   // check the from contact and update their signature if it is null
   if (messageFromPlatformObject[0]?.type === 'contact') {
     const contact = await db.query.contacts.findFirst({
@@ -251,7 +286,13 @@ export default eventHandler(async (event) => {
         signaturePlainText: true
       }
     });
-    if (!contact?.signaturePlainText) {
+    if (!contact) {
+      console.error('⛔ no contact found for from address', {
+        payloadPostalEmailId
+      });
+      return;
+    }
+    if (!contact.signaturePlainText) {
       await db
         .update(contacts)
         .set({
@@ -280,7 +321,7 @@ export default eventHandler(async (event) => {
 
   // if theres no email identity ids, then we assume that this email has no destination, so we need to send the bounce message
   if (!emailIdentityIds.length) {
-    //! SEND BOUNCE MESSAGE
+    // !FIX SEND BOUNCE MESSAGE
     console.error('⛔ no email identity ids found', { messageAddressIds });
 
     return;
@@ -326,7 +367,7 @@ export default eventHandler(async (event) => {
 
   //* start to process the conversation
   let hasReplyToButIsNewConvo: boolean | null = null;
-  let convoId: number | null = null;
+  let convoId: number = 0;
   let replyToId: number | null = null;
   let subjectId: number | null = null;
 
@@ -337,6 +378,12 @@ export default eventHandler(async (event) => {
   const fromAddressPlatformObject = messageFromPlatformObject.find(
     (a) => a.ref === 'from'
   );
+  if (!fromAddressPlatformObject) {
+    console.error('⛔ no from address platform object found', {
+      payloadPostalEmailId
+    });
+    return;
+  }
   const convoParticipantsToAdd: ConvoParticipantInsertDbType[] = [];
 
   // if the email has a reply to header, then we need to check if a message exists in the system with that reply to id
@@ -383,6 +430,15 @@ export default eventHandler(async (event) => {
       convoId = existingMessage.convoId;
       replyToId = existingMessage.id;
 
+      if (!existingMessage.convoId || convoId === 0) {
+        console.error('⛔ no convoId found for existing message', {
+          payloadPostalEmailId
+        });
+        return;
+      }
+      if (!existingMessage.subject) {
+        existingMessage.subject = { id: 0, subject: 'No Subject' };
+      }
       // check if the subject is the same as existing, if not, add a new subject to the convo
       if (subject !== existingMessage.subject?.subject) {
         const newSubject = await db.insert(convos).values({
@@ -536,8 +592,9 @@ export default eventHandler(async (event) => {
           id: true
         }
       });
-      fromAddressParticipantId = contactParticipant?.id || null;
-    } else if (fromAddressPlatformObject?.type === 'emailIdentity') {
+      // @ts-expect-error we check and define earlier up
+      fromAddressParticipantId = contactParticipant.id;
+    } else if (fromAddressPlatformObject.type === 'emailIdentity') {
       // we need to get the first person/group in the routing rule and add them to the convo
       const emailIdentityParticipant = await db.query.emailIdentities.findFirst(
         {
@@ -566,21 +623,25 @@ export default eventHandler(async (event) => {
         }
       );
       const firstDestination =
-        emailIdentityParticipant?.routingRules.destinations[0];
+        // @ts-expect-error we check and define earlier up
+        emailIdentityParticipant.routingRules.destinations[0];
       let convoParticipantFromAddressIdentity;
-      if (firstDestination?.orgMemberId) {
+      // @ts-expect-error we check and define earlier up
+      if (firstDestination.orgMemberId) {
         convoParticipantFromAddressIdentity =
           await db.query.convoParticipants.findFirst({
             where: and(
               eq(convoParticipants.orgId, orgId),
-              eq(convoParticipants.convoId, convoId || 0),
+              eq(convoParticipants.convoId, convoId),
+              // @ts-expect-error we check and define earlier up
               eq(convoParticipants.orgMemberId, firstDestination.orgMemberId)
             ),
             columns: {
               id: true
             }
           });
-      } else if (firstDestination?.groupId) {
+        // @ts-expect-error we check and define earlier up
+      } else if (firstDestination.groupId) {
         convoParticipantFromAddressIdentity =
           await db.query.convoParticipants.findFirst({
             where: and(
@@ -593,8 +654,8 @@ export default eventHandler(async (event) => {
             }
           });
       }
-      fromAddressParticipantId =
-        convoParticipantFromAddressIdentity?.id || null;
+      // @ts-expect-error we check and define earlier up
+      fromAddressParticipantId = convoParticipantFromAddressIdentity.id;
     }
   }
 
@@ -605,20 +666,26 @@ export default eventHandler(async (event) => {
       to: messageToPlatformObject.map((a) => {
         return {
           id: a.id,
-          type: a.type
+          type: a.type,
+          publicId: a.publicId,
+          email: a.email
         };
       }),
       from: messageFromPlatformObject.map((a) => {
         return {
           id: a.id,
-          type: a.type
+          type: a.type,
+          publicId: a.publicId,
+          email: a.email
         };
       }),
       cc:
         messageCcPlatformObject.map((a) => {
           return {
             id: a.id,
-            type: a.type
+            type: a.type,
+            publicId: a.publicId,
+            email: a.email
           };
         }) || [],
       postalMessages: [
@@ -626,8 +693,7 @@ export default eventHandler(async (event) => {
           id: payloadPostalEmailId,
           postalMessageId: messageId,
           recipient: payloadEmailTo,
-          // @ts-expect-error, not sure about this yet
-          token: null
+          token: ''
         }
       ],
       emailHeaders: JSON.stringify(parsedEmail.headers)
@@ -642,7 +708,6 @@ export default eventHandler(async (event) => {
     convoEntryBody,
     tipTapExtensions
   );
-
   const insertNewConvoEntry = await db.insert(convoEntries).values({
     orgId: orgId,
     publicId: typeIdGenerator('convoEntries'),
@@ -683,7 +748,7 @@ export default eventHandler(async (event) => {
       publicId: string;
       signedUrl: string;
     };
-    const preUpload = (await fetch(
+    const preUpload: PreSignedData = await fetch(
       `${useRuntimeConfig().storage.url}/api/attachments/internalPresign`,
       {
         method: 'post',
@@ -697,7 +762,7 @@ export default eventHandler(async (event) => {
           filename: input.fileName
         })
       }
-    ).then((res) => res.json())) as PreSignedData;
+    ).then((res: Response) => res.json() as Promise<PreSignedData>);
     if (!preUpload || !preUpload.publicId || !preUpload.signedUrl) {
       throw new Error('Missing attachmentPublicId or presignedUrl');
     }
@@ -737,8 +802,8 @@ export default eventHandler(async (event) => {
     await Promise.all(
       attachments.map((attachment) => {
         return uploadAndAttachAttachment({
-          orgId: orgId || 0,
-          fileName: attachment.filename || '',
+          orgId: orgId,
+          fileName: attachment.filename || 'No Filename',
           fileType: attachment.contentType,
           fileContent: attachment.content,
           convoId: convoId || 0,

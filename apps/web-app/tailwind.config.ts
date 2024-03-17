@@ -18,7 +18,8 @@ export default <Partial<Config>>{
       },
       colors: {
         accent: colors.alias('bronze'),
-        base: colors.alias('sand')
+        base: colors.alias('sand'),
+        sand: colors.alias('sand')
       },
       keyframes: {
         'caret-blink': {

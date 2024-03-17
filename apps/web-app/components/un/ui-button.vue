@@ -4,8 +4,9 @@
 
   export default defineComponent<
     typeof NuxtUiButton extends DefineComponent<infer Props, any, any>
-      ? Props & { otherProp?: string }
-      : never
+      ? Props
+      : //  & { otherProp?: string }
+        never
   >({
     props: {
       ...NuxtUiButton.props

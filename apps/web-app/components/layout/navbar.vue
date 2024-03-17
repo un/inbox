@@ -258,7 +258,7 @@
 </script>
 <template>
   <div
-    class="bg-base-2 border-base-7 flex h-full max-h-full flex-col justify-between rounded-r-xl border-r-2 p-8 shadow-xl transition-all duration-300">
+    class="bg-base-1 border-base-7 flex h-full max-h-full flex-col justify-between rounded-r-xl border-r-2 p-8 shadow-xl transition-all duration-300">
     <UnUiModal v-model="showLogoutModal">
       <template #header>
         <span class="">Logout</span>

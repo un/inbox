@@ -15,6 +15,11 @@
 
   const props = defineProps<Props>();
 
+  const replyToMessagePublicId = defineModel('replyToMessagePublicId', {
+    type: String,
+    default: ''
+  });
+
   const {
     data: convoEntries,
     refresh: convoEntriesRefresh,
@@ -27,8 +32,10 @@
   );
 
   watch(convoEntries, () => {
-    if (convoEntries.value?.entries) {
+    if (convoEntries.value && convoEntries.value.entries) {
       entriesArray.value.push(...convoEntries.value.entries);
+      replyToMessagePublicId.value =
+        convoEntries.value.entries[0]?.publicId ?? '';
     }
   });
 
@@ -39,13 +46,17 @@
     },
     { distance: 300 }
   );
+
+  function setReplyToMessagePublicId(publicId: string) {
+    replyToMessagePublicId.value = publicId;
+  }
 </script>
 <template>
-  <UnUiButton
+  <!-- <UnUiButton
     label="Refresh"
     icon="i-ph-arrow-clockwise"
     :loading="convoEntriesStatus === 'pending'"
-    @click="convoEntriesRefresh()" />
+    @click="convoEntriesRefresh()" /> -->
   <div
     class="flex h-full max-h-full w-full max-w-full flex-col-reverse overflow-y-auto">
     <div
@@ -54,7 +65,10 @@
         v-for="entry of entriesArray"
         :key="entry.publicId"
         class="w-full max-w-full">
-        <convos-convo-message-item :entry="entry" />
+        <convos-convo-message-item
+          :entry="entry"
+          :is-reply-to="entry.publicId === replyToMessagePublicId"
+          @set-as-reply-to="setReplyToMessagePublicId(entry.publicId)" />
       </div>
     </div>
   </div>
