@@ -28,18 +28,21 @@ import { fileURLToPath } from 'node:url';
 import { readFile } from 'node:fs/promises';
 
 export type CreateOrgInput = {
-  orgId: number;
   orgPublicId: string;
+  ipPoolId: number;
 };
 
 export async function createOrg(input: CreateOrgInput) {
-  await postalDB.insert(organizations).values({
-    id: input.orgId,
+  const [{ insertId }] = await postalDB.insert(organizations).values({
     uuid: randomUUID(),
     name: input.orgPublicId,
     permalink: input.orgPublicId.toLowerCase(),
+    ipPoolId: input.ipPoolId,
     ownerId: 1 // There should be only one postal user, thus id should be 1
   });
+  return {
+    orgId: insertId
+  };
 }
 
 export type CreateDomainInput = {
@@ -370,7 +373,6 @@ export async function setMailServerConfig(input: SetMailServerConfigInput) {
 }
 
 export type SetMailServerEventWebhookInput = {
-  orgId: number;
   serverId: number;
   serverPublicId: string;
   mailBridgeUrl: string;
@@ -379,7 +381,7 @@ export type SetMailServerEventWebhookInput = {
 export async function setMailServerEventWebhook(
   input: SetMailServerEventWebhookInput
 ) {
-  const webhookUrl = `${input.mailBridgeUrl}/postal/events/${input.orgId}/${input.serverPublicId}`;
+  const webhookUrl = `${input.mailBridgeUrl}/postal/events/${input.serverPublicId}`;
   await postalDB.update(webhooks).set({
     url: webhookUrl,
     name: input.serverPublicId,
@@ -495,4 +497,9 @@ export async function addMailServer(input: AddMailServerInput) {
   await rawMySqlConnection.query(createMailServerQuery);
   await rawMySqlConnection.query(`USE \`postal\``);
   // End Vodo Magic
+
+  return {
+    serverId: insertId,
+    token
+  };
 }
