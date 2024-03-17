@@ -5,11 +5,10 @@ import { postalServers } from '@u22n/database/schema';
 import { nanoId, zodSchemas } from '@u22n/utils';
 import { PostalConfig } from '../../types';
 import { postalDB } from '../../db';
-import { organizations, servers } from '../../db/schema';
+import { httpEndpoints, organizations, servers } from '../../db/schema';
 import {
   createDomain,
   setMailServerRouteForDomain,
-  setMailServerRoutingHttpEndpoint,
   verifyDomainDNSRecords
 } from '../../db/functions';
 
@@ -84,11 +83,14 @@ export const domainRouter = router({
           }
         });
 
-      const { endpointId } = await setMailServerRoutingHttpEndpoint({
-        mailBridgeUrl: postalConfig.webhookDestinations.messages as string,
-        orgId: internalPostalOrgId,
-        serverId: internalPostalServerId,
-        serverPublicId: postalServerIdResponse.publicId
+      const { id: endpointId } = await postalDB.query.httpEndpoints.findFirst({
+        where: eq(
+          httpEndpoints.name,
+          `uninbox-mail-bridge-http-${postalOrgId}`
+        ),
+        columns: {
+          id: true
+        }
       });
 
       const { token } = await setMailServerRouteForDomain({
