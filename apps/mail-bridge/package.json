@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@u22n/mailtools": "^0.0.1",
-    "@u22n/tsconfig": "^0.0.1",
+    "@u22n/tsconfig": "^0.0.2",
     "@u22n/database": "workspace:*",
     "@u22n/postal-puppet": "workspace:*",
     "@u22n/types": "workspace:*",

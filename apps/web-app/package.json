@@ -42,7 +42,7 @@
     "@u22n/database": "workspace:*",
     "@u22n/tiptap": "workspace:^",
     "@u22n/trpc": "workspace:*",
-    "@u22n/tsconfig": "^0.0.1",
+    "@u22n/tsconfig": "^0.0.2",
     "@u22n/types": "workspace:*",
     "@u22n/utils": "workspace:*",
     "@upstash/redis": "1.28.4",

@@ -63,8 +63,8 @@ importers:
         specifier: workspace:^
         version: link:../../packages/tiptap
       '@u22n/tsconfig':
-        specifier: ^0.0.1
-        version: 0.0.1
+        specifier: ^0.0.2
+        version: 0.0.2
       '@u22n/types':
         specifier: workspace:*
         version: link:../../packages/types
@@ -82,7 +82,7 @@ importers:
         version: 3.6.9
       nitropack:
         specifier: ^2.8.1
-        version: 2.9.3(drizzle-orm@0.29.5)(ioredis@5.3.2)
+        version: 2.9.4(@upstash/redis@1.28.4)
       superjson:
         specifier: ^2.2.1
         version: 2.2.1
@@ -111,8 +111,8 @@ importers:
         specifier: workspace:^
         version: link:../../packages/tiptap
       '@u22n/tsconfig':
-        specifier: ^0.0.1
-        version: 0.0.1
+        specifier: ^0.0.2
+        version: 0.0.2
       '@u22n/utils':
         specifier: workspace:^
         version: link:../../packages/utils
@@ -130,7 +130,7 @@ importers:
         version: 3.1.1
       nitropack:
         specifier: latest
-        version: 2.9.3(drizzle-orm@0.29.5)(ioredis@5.3.2)
+        version: 2.9.4(drizzle-orm@0.29.5)
       oslo:
         specifier: ^1.1.2
         version: 1.1.3
@@ -157,8 +157,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/database
       '@u22n/tsconfig':
-        specifier: ^0.0.1
-        version: 0.0.1
+        specifier: ^0.0.2
+        version: 0.0.2
       '@u22n/types':
         specifier: workspace:*
         version: link:../../packages/types
@@ -173,7 +173,7 @@ importers:
         version: 5.3.2
       nitropack:
         specifier: latest
-        version: 2.9.3(@upstash/redis@1.28.4)(ioredis@5.3.2)
+        version: 2.9.4(@upstash/redis@1.28.4)
       sharp:
         specifier: ^0.33.2
         version: 0.33.2
@@ -211,8 +211,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/trpc
       '@u22n/tsconfig':
-        specifier: ^0.0.1
-        version: 0.0.1
+        specifier: ^0.0.2
+        version: 0.0.2
       '@u22n/types':
         specifier: workspace:*
         version: link:../../packages/types
@@ -345,7 +345,7 @@ importers:
         version: link:../../../packages/utils
       nitropack:
         specifier: ^2.8.1
-        version: 2.9.3(drizzle-orm@0.29.5)(ioredis@5.3.2)
+        version: 2.9.4(@upstash/redis@1.28.4)
       stripe:
         specifier: ^14.17.0
         version: 14.21.0
@@ -371,8 +371,8 @@ importers:
         specifier: ^1.16.0
         version: 1.16.0
       '@u22n/tsconfig':
-        specifier: ^0.0.1
-        version: 0.0.1
+        specifier: ^0.0.2
+        version: 0.0.2
       '@u22n/types':
         specifier: workspace:*
         version: link:../types
@@ -395,8 +395,6 @@ importers:
       esno:
         specifier: ^4.0.0
         version: 4.7.0
-
-  packages/local-docker: {}
 
   packages/postal-puppet:
     dependencies:
@@ -477,8 +475,8 @@ importers:
         specifier: ^2.2.4
         version: 2.2.4(@tiptap/core@2.2.4)(@tiptap/pm@2.2.4)(vue@3.4.21)
       '@u22n/tsconfig':
-        specifier: ^0.0.1
-        version: 0.0.1
+        specifier: ^0.0.2
+        version: 0.0.2
 
   packages/trpc:
     dependencies:
@@ -489,8 +487,8 @@ importers:
   packages/types:
     dependencies:
       '@u22n/tsconfig':
-        specifier: ^0.0.1
-        version: 0.0.1
+        specifier: ^0.0.2
+        version: 0.0.2
     devDependencies:
       typescript:
         specifier: ^5.3.3
@@ -504,6 +502,10 @@ importers:
       zod:
         specifier: ^3.22.4
         version: 3.22.4
+    devDependencies:
+      '@u22n/tsconfig':
+        specifier: ^0.0.2
+        version: 0.0.2
 
 packages:
 
@@ -3703,7 +3705,7 @@ packages:
       vue: ^3.3.4
     dependencies:
       '@nuxt/kit': 3.10.3
-      '@rollup/plugin-replace': 5.0.5(rollup@3.29.4)
+      '@rollup/plugin-replace': 5.0.5
       '@vitejs/plugin-vue': 5.0.4(vite@5.1.6)(vue@3.4.21)
       '@vitejs/plugin-vue-jsx': 3.1.0(vite@5.1.6)(vue@3.4.21)
       autoprefixer: 10.4.18(postcss@8.4.35)
@@ -4205,6 +4207,18 @@ packages:
       resolve: 1.22.8
       rollup: 4.13.0
 
+  /@rollup/plugin-replace@5.0.5:
+    resolution: {integrity: sha512-rYO4fOi8lMaTg/z5Jb+hKnrHHVn8j2lwkqwyS4kTRhKyWOLf2wST2sWXr4WzWiTcoHTp2sTjqUbqIj2E39slKQ==}
+    engines: {node: '>=14.0.0'}
+    peerDependencies:
+      rollup: ^1.20.0||^2.0.0||^3.0.0||^4.0.0
+    peerDependenciesMeta:
+      rollup:
+        optional: true
+    dependencies:
+      '@rollup/pluginutils': 5.1.0(rollup@3.29.4)
+      magic-string: 0.30.8
+
   /@rollup/plugin-replace@5.0.5(rollup@3.29.4):
     resolution: {integrity: sha512-rYO4fOi8lMaTg/z5Jb+hKnrHHVn8j2lwkqwyS4kTRhKyWOLf2wST2sWXr4WzWiTcoHTp2sTjqUbqIj2E39slKQ==}
     engines: {node: '>=14.0.0'}
@@ -4217,6 +4231,7 @@ packages:
       '@rollup/pluginutils': 5.1.0(rollup@3.29.4)
       magic-string: 0.30.8
       rollup: 3.29.4
+    dev: true
 
   /@rollup/plugin-replace@5.0.5(rollup@4.13.0):
     resolution: {integrity: sha512-rYO4fOi8lMaTg/z5Jb+hKnrHHVn8j2lwkqwyS4kTRhKyWOLf2wST2sWXr4WzWiTcoHTp2sTjqUbqIj2E39slKQ==}
@@ -5644,6 +5659,9 @@ packages:
   /@u22n/tsconfig@0.0.1:
     resolution: {integrity: sha512-pn3tZ6ItSu+O3qtoSI+GYLzDnCKLAHMZRocGtq5N9MqEBeFjSUfLcc3ZsnLPCOi1GWhIj7oFCmCOq5/clUsjag==}
     dev: false
+
+  /@u22n/tsconfig@0.0.2:
+    resolution: {integrity: sha512-eVeYfm60jijkEXPAZM0FaOAqYzs/7DHxutt1df45Euko8vwlKwXq2cTF+ydon3fs4doWpIFX5Hd721eGYR32/A==}
 
   /@ungap/structured-clone@1.2.0:
     resolution: {integrity: sha512-zuVdFrMJiuCDQUMCzQaD6KL28MjnqqN8XnAqiEq9PNm/hCPTSGfrXCOfwj1ow4LFb/tNymJPwsNbVePc1xFqrQ==}
@@ -9521,7 +9539,7 @@ packages:
       node-forge: 1.3.1
       pathe: 1.1.2
       std-env: 3.7.0
-      ufo: 1.4.0
+      ufo: 1.5.1
       untun: 0.1.3
       uqr: 0.1.2
     transitivePeerDependencies:
@@ -10040,7 +10058,7 @@ packages:
       acorn: 8.11.3
       pathe: 1.1.2
       pkg-types: 1.0.3
-      ufo: 1.4.0
+      ufo: 1.5.1
 
   /mri@1.2.0:
     resolution: {integrity: sha512-tzzskb3bG8LvYGFF/mDTpq3jpI6Q9wc3LEmBaghu+DdCssd1FakN7Bc0hVNmEyGq1bq3RgfkCb3cmQLpNPOroA==}
@@ -10124,8 +10142,8 @@ packages:
     resolution: {integrity: sha512-CXdUiJembsNjuToQvxayPZF9Vqht7hewsvy2sOWafLvi2awflj9mOC6bHIg50orX8IJvWKY9wYQ/zB2kogPslQ==}
     dev: true
 
-  /nitropack@2.9.3(@upstash/redis@1.28.4)(ioredis@5.3.2):
-    resolution: {integrity: sha512-k3wXlhxmTNkkFXnVyRYJ6CCdZmvlqjYJ4oaL8o9uTKIjg7A1udAle+3cVDxUWi2r9owwEysAP2+quNsAujZyTg==}
+  /nitropack@2.9.4(@upstash/redis@1.28.4):
+    resolution: {integrity: sha512-i/cbDW5qfZS6pQR4DrlQOFlNoNvQVBuiy7EEvMlrqkmMGXiIJY1WW7L7D4/6m9dF1cwitOu7k0lJWVn74gxfvw==}
     engines: {node: ^16.11.0 || >=17.0.0}
     hasBin: true
     peerDependencies:
@@ -10168,6 +10186,7 @@ packages:
       h3: 1.11.1
       hookable: 5.5.3
       httpxy: 0.1.5
+      ioredis: 5.3.2
       is-primitive: 3.0.1
       jiti: 1.21.0
       klona: 2.0.6
@@ -10193,7 +10212,7 @@ packages:
       serve-placeholder: 2.0.1
       serve-static: 1.15.0
       std-env: 3.7.0
-      ufo: 1.4.0
+      ufo: 1.5.1
       uncrypto: 0.1.3
       unctx: 2.3.1
       unenv: 1.9.0
@@ -10217,12 +10236,11 @@ packages:
       - drizzle-orm
       - encoding
       - idb-keyval
-      - ioredis
       - supports-color
       - uWebSockets.js
 
-  /nitropack@2.9.3(drizzle-orm@0.29.5)(ioredis@5.3.2):
-    resolution: {integrity: sha512-k3wXlhxmTNkkFXnVyRYJ6CCdZmvlqjYJ4oaL8o9uTKIjg7A1udAle+3cVDxUWi2r9owwEysAP2+quNsAujZyTg==}
+  /nitropack@2.9.4(drizzle-orm@0.29.5):
+    resolution: {integrity: sha512-i/cbDW5qfZS6pQR4DrlQOFlNoNvQVBuiy7EEvMlrqkmMGXiIJY1WW7L7D4/6m9dF1cwitOu7k0lJWVn74gxfvw==}
     engines: {node: ^16.11.0 || >=17.0.0}
     hasBin: true
     peerDependencies:
@@ -10265,6 +10283,7 @@ packages:
       h3: 1.11.1
       hookable: 5.5.3
       httpxy: 0.1.5
+      ioredis: 5.3.2
       is-primitive: 3.0.1
       jiti: 1.21.0
       klona: 2.0.6
@@ -10290,7 +10309,7 @@ packages:
       serve-placeholder: 2.0.1
       serve-static: 1.15.0
       std-env: 3.7.0
-      ufo: 1.4.0
+      ufo: 1.5.1
       uncrypto: 0.1.3
       unctx: 2.3.1
       unenv: 1.9.0
@@ -10314,7 +10333,6 @@ packages:
       - drizzle-orm
       - encoding
       - idb-keyval
-      - ioredis
       - supports-color
       - uWebSockets.js
     dev: false
@@ -10601,7 +10619,7 @@ packages:
       knitwork: 1.0.0
       magic-string: 0.30.8
       mlly: 1.6.1
-      nitropack: 2.9.3(@upstash/redis@1.28.4)(ioredis@5.3.2)
+      nitropack: 2.9.4(@upstash/redis@1.28.4)
       nuxi: 3.10.1
       nypm: 0.3.8
       ofetch: 1.3.3
@@ -10646,7 +10664,6 @@ packages:
       - encoding
       - eslint
       - idb-keyval
-      - ioredis
       - less
       - lightningcss
       - meow
@@ -10700,7 +10717,7 @@ packages:
     dependencies:
       destr: 2.0.3
       node-fetch-native: 1.6.2
-      ufo: 1.4.0
+      ufo: 1.5.1
 
   /ohash@1.1.3:
     resolution: {integrity: sha512-zuHHiGTYTA1sYJ/wZN+t5HKZaH23i4yI1HMwbuXm24Nid7Dv0KcuRlKoNKS9UNfAVSBlnGLcuQrnOKWOZoEGaw==}
@@ -13074,6 +13091,9 @@ packages:
   /ufo@1.4.0:
     resolution: {integrity: sha512-Hhy+BhRBleFjpJ2vchUNN40qgkh0366FWJGqVLYBHev0vpHTrXSA0ryT+74UiW6KWsldNurQMKGqCm1M2zBciQ==}
 
+  /ufo@1.5.1:
+    resolution: {integrity: sha512-HGyF79+/qZ4soRvM+nHERR2pJ3VXDZ/8sL1uLahdgEDf580NkgiWOxLk33FetExqOWp352JZRsgXbG/4MaGOSg==}
+
   /ultrahtml@1.5.3:
     resolution: {integrity: sha512-GykOvZwgDWZlTQMtp5jrD4BVL+gNn2NVlVafjcFUJ7taY20tqYdwdoWBFy6GBJsNTZe1GkGPkSl5knQAjtgceg==}
 
@@ -13339,7 +13359,7 @@ packages:
       mri: 1.2.0
       node-fetch-native: 1.6.2
       ofetch: 1.3.3
-      ufo: 1.4.0
+      ufo: 1.5.1
     transitivePeerDependencies:
       - uWebSockets.js
 

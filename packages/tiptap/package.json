@@ -18,6 +18,6 @@
     "@tiptap/html": "^2.2.4",
     "@tiptap/starter-kit": "^2.2.4",
     "@tiptap/vue-3": "^2.2.4",
-    "@u22n/tsconfig": "^0.0.1"
+    "@u22n/tsconfig": "^0.0.2"
   }
 }
