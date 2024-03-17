@@ -56,7 +56,7 @@ export const sendMailRouter = router({
                 }
               ]
             }
-          } as ConvoEntryMetadata
+          }
         };
       }
 
@@ -77,6 +77,7 @@ export const sendMailRouter = router({
         where: eq(emailIdentities.publicId, sendAsEmailIdentityPublicId),
         columns: {
           id: true,
+          publicId: true,
           username: true,
           domainName: true,
           sendName: true,
@@ -256,7 +257,17 @@ export const sendMailRouter = router({
         const entryMetadata: ConvoEntryMetadata = {
           email: {
             to: [],
-            from: [{ id: +sendAsEmailIdentity.id, type: 'emailIdentity' }],
+            from: [
+              {
+                id: +sendAsEmailIdentity.id,
+                type: 'emailIdentity',
+                publicId: sendAsEmailIdentity.publicId,
+                email:
+                  sendAsEmailIdentity.username +
+                  '@' +
+                  sendAsEmailIdentity.domainName
+              }
+            ],
             cc: [],
             messageId: sendMailPostalResponse.data.message_id,
             postalMessages: transformedMessages.map((message) => ({
@@ -267,7 +278,7 @@ export const sendMailRouter = router({
         };
         return {
           success: true,
-          metadata: entryMetadata
+          metadata: entryMetadata as ConvoEntryMetadata
         };
       } else {
         console.error(

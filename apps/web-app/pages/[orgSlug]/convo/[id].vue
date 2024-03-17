@@ -1,5 +1,6 @@
 <script setup lang="ts">
   import {
+    computed,
     navigateTo,
     provide,
     ref,
@@ -29,11 +30,21 @@
   const participantCommentersArray = ref<ConvoParticipantEntry[]>([]);
   const participantWatchersArray = ref<ConvoParticipantEntry[]>([]);
   const participantGuestsArray = ref<ConvoParticipantEntry[]>([]);
+  const participantsAll = computed(() => {
+    return [
+      ...participantsAssignedArray.value,
+      ...participantContributorsArray.value,
+      ...participantCommentersArray.value,
+      ...participantWatchersArray.value,
+      ...participantGuestsArray.value
+    ];
+  });
   const attachments = ref<AttachmentEntry[]>([]);
   const createDate = ref<Date | null>(null);
   const updateDate = ref<Date | null>(null);
   const createdAgo = ref('');
   const updatedAgo = ref('');
+  const replyToMessagePublicId = ref('');
 
   const orgSlug = useRoute().params.orgSlug as string;
   const convoPublicId = useRoute().params.id as string;
@@ -77,8 +88,10 @@
         avatarPublicId,
         participantName,
         participantType,
-        participantColor
-        // @ts-expect-error - fixed in separate PR
+        participantColor,
+        participantRole,
+        participantSignaturePlainText,
+        participantSignatureHtml
       } = useUtils().convos.useParticipantData(participant);
       const participantData: ConvoParticipantEntry = {
         participantPublicId: participantPublicId,
@@ -87,7 +100,9 @@
         name: participantName,
         type: participantType,
         role: participant.role,
-        color: participantColor
+        color: participantColor,
+        signaturePlainText: participantSignaturePlainText,
+        signatureHtml: participantSignatureHtml
       };
 
       participantArray.value.push(participantData);
@@ -127,6 +142,17 @@
   provide('convoParticipants', participantArray);
   provide('participantPublicId', participantPublicId);
 
+  const findParticipant = (participantPublicId: string) => {
+    return participantArray.value.find(
+      (participant) => participant.participantPublicId === participantPublicId
+    );
+  };
+
+  function setReplyToMessagePublicId(data: string) {
+    replyToMessagePublicId.value = data;
+  }
+
+  // // New Data
   const editorData = ref({});
 </script>
 <template>
@@ -173,15 +199,16 @@
       <div class="col-span-2 flex h-full max-h-full flex-col gap-2 pr-8">
         <div class="flex h-full max-h-full grow flex-col gap-0 overflow-hidden">
           <div
-            class="z-20000 from-base-1 mb-[-12px] h-[12px] bg-gradient-to-b" />
+            class="from-base-1 z-[20000] mb-[-12px] h-[12px] bg-gradient-to-b" />
           <ConvosConvoMessages
+            v-model:reply-to-message-public-id="replyToMessagePublicId"
             :convo-public-id="convoPublicId"
             :participant-public-id="convoDetails?.participantPublicId || ''" />
           <div
-            class="z-20000 from-base-1 mt-[-12px] h-[12px] bg-gradient-to-t" />
+            class="from-base-1 z-[20000] mt-[-12px] h-[12px] bg-gradient-to-t" />
         </div>
         <div class="flex w-full flex-col justify-items-end gap-2">
-          <!-- replyingToBanner -->
+          <span class="text-base-11 text-xs font-medium">REPLY</span>
           <UnEditor v-model:modelValue="editorData" />
           <div class="flex min-w-fit flex-row justify-end gap-2">
             <UnUiButton
@@ -221,39 +248,18 @@
               @click="convoParticipantsCollapsed = !convoParticipantsCollapsed">
               <NuxtUiAvatarGroup>
                 <template
-                  v-for="participant of participantsAssignedArray"
+                  v-for="participant of participantsAll"
                   :key="participant.participantPublicId">
                   <ConvosConvoAvatar
                     :participant="participant"
-                    size="sm" />
-                </template>
-                <template
-                  v-for="participant of participantContributorsArray"
-                  :key="participant.participantPublicId">
-                  <ConvosConvoAvatar
-                    :participant="participant"
-                    size="sm" />
-                </template>
-                <template
-                  v-for="participant of participantCommentersArray"
-                  :key="participant.participantPublicId">
-                  <ConvosConvoAvatar
-                    :participant="participant"
-                    size="sm" />
-                </template>
-                <template
-                  v-for="participant of participantGuestsArray"
-                  :key="participant.participantPublicId">
-                  <ConvosConvoAvatar
-                    :participant="participant"
-                    size="sm" />
+                    size="sm"
+                    :ring="true" />
                 </template>
               </NuxtUiAvatarGroup>
             </div>
             <div
               v-if="!convoParticipantsCollapsed"
-              class="flex h-fit w-full max-w-full flex-col gap-4 overflow-hidden"
-              @click="convoParticipantsCollapsed = !convoParticipantsCollapsed">
+              class="flex h-fit w-full max-w-full flex-col gap-4 overflow-hidden">
               <div
                 v-if="participantsAssignedArray.length"
                 class="flex w-full max-w-full flex-col gap-2 overflow-hidden">
@@ -285,7 +291,35 @@
                   <template
                     v-for="participant of participantContributorsArray"
                     :key="participant.participantPublicId">
-                    <div class="flex flex-row items-center gap-2">
+                    <NuxtUiPopover
+                      v-if="participant.signaturePlainText"
+                      mode="hover">
+                      <div class="flex flex-row items-center gap-2">
+                        <ConvosConvoAvatar
+                          :participant="participant"
+                          size="md" />
+                        <span class="truncate">{{ participant.name }}</span>
+                      </div>
+                      <template #panel>
+                        <div class="flex flex-col gap-2 p-4">
+                          <span class="text-base-11 text-sm"> SIGNATURE </span>
+                          <!-- <span class="text-base-11 text-xs"> PLAIN </span>
+                          <span class="whitespace-pre text-xs">
+                            {{
+                              participant.signaturePlainText.replace(
+                                /\\n/g,
+                                '\n'
+                              )
+                            }}
+                          </span> -->
+                          <!-- <span class="text-base-11 text-xs"> HTML </span> -->
+                          <div v-html="participant.signatureHtml" />
+                        </div>
+                      </template>
+                    </NuxtUiPopover>
+                    <div
+                      v-else
+                      class="flex flex-row items-center gap-2">
                       <ConvosConvoAvatar
                         :participant="participant"
                         size="md" />

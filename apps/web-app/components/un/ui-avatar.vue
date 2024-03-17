@@ -20,6 +20,7 @@
     showIcon?: boolean;
     tooltipIcon?: string;
     size?: AvatarSize;
+    ring?: boolean;
   };
 
   const props = defineProps<Props>();
@@ -31,42 +32,47 @@
   const colorClass = computed(() => {
     switch (props.color) {
       case 'red':
-        return 'bg-red-400 dark:bg-red-400';
+        return 'bg-red-9 dark:bg-red-9';
       case 'orange':
-        return 'bg-orange-400 dark:bg-orange-400';
+        return 'bg-orange-9 dark:bg-orange-9';
       case 'amber':
-        return 'bg-amber-400 dark:bg-amber-400';
+        return 'bg-amber-9 dark:bg-amber-9';
       case 'yellow':
-        return 'bg-yellow-400 dark:bg-yellow-400';
+        return 'bg-yellow-9 dark:bg-yellow-9';
       case 'lime':
-        return 'bg-lime-400 dark:bg-lime-400';
+        return 'bg-lime-9 dark:bg-lime-9';
       case 'green':
-        return 'bg-green-400 dark:bg-green-400';
+        return 'bg-green-9 dark:bg-green-9';
       case 'emerald':
-        return 'bg-emerald-400 dark:bg-emerald-400';
+        return 'bg-emerald-9 dark:bg-emerald-9';
       case 'teal':
-        return 'bg-teal-400 dark:bg-teal-400';
+        return 'bg-teal-9 dark:bg-teal-9';
       case 'cyan':
-        return 'bg-cyan-400 dark:bg-cyan-400';
+        return 'bg-cyan-9 dark:bg-cyan-9';
       case 'sky':
-        return 'bg-sky-400 dark:bg-sky-400';
+        return 'bg-sky-9 dark:bg-sky-9';
       case 'blue':
-        return 'bg-blue-400 dark:bg-blue-400';
+        return 'bg-blue-9 dark:bg-blue-9';
       case 'indigo':
-        return 'bg-indigo-400 dark:bg-indigo-400';
+        return 'bg-indigo-9 dark:bg-indigo-9';
       case 'violet':
-        return 'bg-violet-400 dark:bg-violet-400';
+        return 'bg-violet-9 dark:bg-violet-9';
       case 'purple':
-        return 'bg-purple-400 dark:bg-purple-400';
+        return 'bg-purple-9 dark:bg-purple-9';
       case 'fuchsia':
-        return 'bg-fuchsia-400 dark:bg-fuchsia-400';
+        return 'bg-fuchsia-9 dark:bg-fuchsia-9';
       case 'pink':
-        return 'bg-pink-400 dark:bg-pink-400';
+        return 'bg-pink-9 dark:bg-pink-9';
       case 'rose':
-        return 'bg-rose-400 dark:bg-rose-400';
+        return 'bg-rose-9 dark:bg-rose-9';
       default:
         return 'bg-base-9 dark:bg-base-9';
     }
+  });
+
+  const classes = computed(() => {
+    const ringClasses = props.ring ? 'ring-base-3 dark:ring-base-3 ring-2' : '';
+    return `${ringClasses} ${colorClass.value}`;
   });
 
   const altText = computed(() => {
@@ -120,6 +126,6 @@
         text: 'font-display text-white dark:text-white',
         placeholder: 'font-display text-white dark:text-white'
       }"
-      :class="colorClass" />
+      :class="classes" />
   </UnUiTooltip>
 </template>

@@ -3,6 +3,7 @@
   type Props = {
     participant: ConvoParticipantEntry;
     size?: 'xs' | 'sm' | 'md' | 'lg';
+    ring?: boolean;
   };
 
   const props = defineProps<Props>();
@@ -16,5 +17,6 @@
     :type="props.participant.type"
     :color="props.participant.color"
     :show-icon="true"
+    :ring="props.ring"
     :size="props.size ? props.size : 'sm'" />
 </template>

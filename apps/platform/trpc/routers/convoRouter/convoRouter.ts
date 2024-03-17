@@ -24,7 +24,8 @@ import {
   groupMembers,
   type ConvoEntryMetadataEmailAddress,
   convoAttachments,
-  pendingAttachments
+  pendingAttachments,
+  type ConvoEntryMetadata
 } from '@u22n/database/schema';
 import {
   typeIdValidator,
@@ -128,6 +129,7 @@ export const convoRouter = router({
             where: eq(contacts.publicId, convoMessageTo.publicId),
             columns: {
               id: true,
+              publicId: true,
               emailUsername: true,
               emailDomain: true
             }
@@ -138,7 +140,12 @@ export const convoRouter = router({
               message: 'TO address contact not found'
             });
           }
-          convoMetadataToAddress = { id: +contactResponse.id, type: 'contact' };
+          convoMetadataToAddress = {
+            id: Number(contactResponse.id),
+            type: 'contact',
+            publicId: contactResponse.publicId,
+            email: `${contactResponse.emailUsername}@${contactResponse.emailDomain}`
+          };
           return `${contactResponse.emailUsername}@${contactResponse.emailDomain}`;
         } else if (convoMessageToType === 'group') {
           if (!validateTypeId('groups', convoMessageTo.publicId)) {
@@ -177,6 +184,8 @@ export const convoRouter = router({
               with: {
                 identity: {
                   columns: {
+                    id: true,
+                    publicId: true,
                     username: true,
                     domainName: true
                   }
@@ -190,8 +199,10 @@ export const convoRouter = router({
             });
           }
           convoMetadataToAddress = {
-            id: +emailIdentitiesResponse.id,
-            type: 'emailIdentity'
+            id: Number(emailIdentitiesResponse.identity.id),
+            type: 'emailIdentity',
+            publicId: emailIdentitiesResponse.identity.publicId,
+            email: `${emailIdentitiesResponse.identity.username}@${emailIdentitiesResponse.identity.domainName}`
           };
           return `${emailIdentitiesResponse.identity.username}@${emailIdentitiesResponse.identity.domainName}`;
         } else if (convoMessageToType === 'orgMember') {
@@ -237,6 +248,8 @@ export const convoRouter = router({
               with: {
                 identity: {
                   columns: {
+                    id: true,
+                    publicId: true,
                     username: true,
                     domainName: true
                   }
@@ -250,8 +263,10 @@ export const convoRouter = router({
             });
           }
           convoMetadataToAddress = {
-            id: +emailIdentitiesResponse.id,
-            type: 'emailIdentity'
+            id: Number(emailIdentitiesResponse.identity.id),
+            type: 'emailIdentity',
+            publicId: emailIdentitiesResponse.identity.publicId,
+            email: `${emailIdentitiesResponse.identity.username}@${emailIdentitiesResponse.identity.domainName}`
           };
           return `${emailIdentitiesResponse.identity.username}@${emailIdentitiesResponse.identity.domainName}`;
         } else {
@@ -351,7 +366,10 @@ export const convoRouter = router({
             ),
             columns: {
               id: true,
-              reputationId: true
+              reputationId: true,
+              publicId: true,
+              emailUsername: true,
+              emailDomain: true
             }
           });
 
@@ -359,12 +377,16 @@ export const convoRouter = router({
             if (newConvoToEmailAddress === email && !convoMetadataToAddress) {
               convoMetadataToAddress = {
                 id: +existingContact.id,
-                type: 'contact'
+                type: 'contact',
+                publicId: existingContact.publicId,
+                email: `${existingContact.emailUsername}@${existingContact.emailDomain}`
               };
             } else {
               convoMetadataCcAddresses.push({
-                id: +existingContact.id,
-                type: 'contact'
+                id: Number(existingContact.id),
+                type: 'contact',
+                publicId: existingContact.publicId,
+                email: `${existingContact.emailUsername}@${existingContact.emailDomain}`
               });
             }
             orgContactIds.push(existingContact.id);
@@ -394,12 +416,16 @@ export const convoRouter = router({
               if (newConvoToEmailAddress === email && !convoMetadataToAddress) {
                 convoMetadataToAddress = {
                   id: +newContactInsertResponse.insertId,
-                  type: 'contact'
+                  type: 'contact',
+                  publicId: newContactPublicId,
+                  email: `${emailUsername}@${emailDomain}`
                 };
               } else {
                 convoMetadataCcAddresses.push({
                   id: +newContactInsertResponse.insertId,
-                  type: 'contact'
+                  type: 'contact',
+                  publicId: newContactPublicId,
+                  email: `${emailUsername}@${emailDomain}`
                 });
               }
               orgContactIds.push(+newContactInsertResponse.insertId);
@@ -427,12 +453,16 @@ export const convoRouter = router({
               if (newConvoToEmailAddress === email && !convoMetadataToAddress) {
                 convoMetadataToAddress = {
                   id: +newContactInsertResponse.insertId,
-                  type: 'contact'
+                  type: 'contact',
+                  publicId: newContactPublicId,
+                  email: `${emailUsername}@${emailDomain}`
                 };
               } else {
                 convoMetadataCcAddresses.push({
                   id: +newContactInsertResponse.insertId,
-                  type: 'contact'
+                  type: 'contact',
+                  publicId: newContactPublicId,
+                  email: `${emailUsername}@${emailDomain}`
                 });
               }
               orgContactIds.push(+newContactInsertResponse.insertId);
@@ -640,6 +670,8 @@ export const convoRouter = router({
                   with: {
                     identity: {
                       columns: {
+                        id: true,
+                        publicId: true,
                         username: true,
                         domainName: true
                       }
@@ -672,8 +704,10 @@ export const convoRouter = router({
               }
               if (emailIdentityResponse) {
                 convoMetadataCcAddresses.push({
-                  id: +emailIdentityResponse.id,
-                  type: 'emailIdentity'
+                  id: +emailIdentityResponse.identity.id,
+                  type: 'emailIdentity',
+                  publicId: emailIdentityResponse.identity.publicId,
+                  email: `${emailIdentityResponse.identity.username}@${emailIdentityResponse.identity.domainName}`
                 });
                 ccEmailAddresses.push(
                   `${emailIdentityResponse.identity.username}@${emailIdentityResponse.identity.domainName}`
@@ -699,6 +733,8 @@ export const convoRouter = router({
                   with: {
                     identity: {
                       columns: {
+                        id: true,
+                        publicId: true,
                         username: true,
                         domainName: true
                       }
@@ -726,7 +762,9 @@ export const convoRouter = router({
               if (emailIdentityResponse) {
                 convoMetadataCcAddresses.push({
                   id: +emailIdentityResponse.id,
-                  type: 'emailIdentity'
+                  type: 'emailIdentity',
+                  publicId: emailIdentityResponse.identity.publicId,
+                  email: `${emailIdentityResponse.identity.username}@${emailIdentityResponse.identity.domainName}`
                 });
                 ccEmailAddresses.push(
                   `${emailIdentityResponse.identity.username}@${emailIdentityResponse.identity.domainName}`
@@ -772,12 +810,13 @@ export const convoRouter = router({
         mailBridgeSendMailResponse.metadata.email.to = [
           convoMetadataToAddress!
         ];
-        mailBridgeSendMailResponse.metadata.email.cc = convoMetadataCcAddresses;
+        mailBridgeSendMailResponse.metadata.email.cc =
+          convoMetadataCcAddresses!;
 
         await db
           .update(convoEntries)
           .set({
-            metadata: mailBridgeSendMailResponse.metadata
+            metadata: mailBridgeSendMailResponse.metadata as ConvoEntryMetadata
           })
           .where(eq(convoEntries.id, +insertConvoEntryResponse.insertId));
 
@@ -949,7 +988,8 @@ export const convoRouter = router({
                   emailDomain: true,
                   setName: true,
                   signaturePlainText: true,
-                  signatureHtml: true
+                  signatureHtml: true,
+                  type: true
                 }
               }
             }
