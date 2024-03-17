@@ -1,20 +1,11 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalDotEnv": [
-    ".env.local"
-  ],
-  "globalDependencies": [
-    "**/.env.*local"
-  ],
+  "globalDotEnv": [".env.local"],
+  "globalDependencies": ["**/.env.*local"],
   "pipeline": {
     "build": {
-      "dependsOn": [
-        "^build"
-      ],
-      "outputs": [
-        ".output/**",
-        ".nuxt/**"
-      ]
+      "dependsOn": ["^build"],
+      "outputs": [".output/**", ".nuxt/**"]
     },
     "db:migrate": {
       "cache": false
@@ -34,25 +25,15 @@
     "lint": {
       "outputs": []
     },
-    "build:puppet": {
-      "cache": true
-    },
     "docker:up": {
       "cache": false
     },
     "dev": {
-      "dependsOn": [
-        "^build:puppet",
-        "^docker:up",
-        "db:studio"
-      ],
+      "dependsOn": ["^docker:up", "db:studio"],
       "cache": false
     },
     "dev:r": {
-      "dependsOn": [
-        "^build:puppet",
-        "db:studio:r"
-      ],
+      "dependsOn": ["db:studio:r"],
       "cache": false
     },
     "db:studio:r": {
