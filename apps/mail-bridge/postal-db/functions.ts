@@ -15,15 +15,15 @@ import {
   generatePublicKey,
   getUniqueDKIMSelector,
   randomAlphaNumeric
-} from '../utils/generators';
+} from '@u22n/utils/generators';
 import { and, eq, sql } from 'drizzle-orm/sql';
-import { lookupCNAME, lookupMX, lookupTXT } from '../utils/dns';
+import { lookupCNAME, lookupMX, lookupTXT } from '@u22n/utils/dns';
 import {
   buildDkimRecord,
   buildSpfRecord,
   parseDkim,
   parseSpfIncludes
-} from '../utils/dns/txtParsers';
+} from '@u22n/utils/dns/txtParsers';
 import { fileURLToPath } from 'node:url';
 import { readFile } from 'node:fs/promises';
 

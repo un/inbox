@@ -4,13 +4,13 @@ import { and, eq } from '@u22n/database/orm';
 import { postalServers } from '@u22n/database/schema';
 import { nanoId, zodSchemas } from '@u22n/utils';
 import { PostalConfig } from '../../types';
-import { postalDB } from '../../db';
-import { httpEndpoints, organizations, servers } from '../../db/schema';
+import { postalDB } from '../../postal-db';
+import { httpEndpoints, organizations, servers } from '../../postal-db/schema';
 import {
   createDomain,
   setMailServerRouteForDomain,
   verifyDomainDNSRecords
-} from '../../db/functions';
+} from '../../postal-db/functions';
 
 export const domainRouter = router({
   createDomain: protectedProcedure

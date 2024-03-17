@@ -353,7 +353,7 @@ importers:
         specifier: workspace:*
         version: link:../../../packages/utils
       nitropack:
-        specifier: ^2.9.4
+        specifier: ^2.8.1
         version: 2.9.4(@upstash/redis@1.28.4)
       stripe:
         specifier: ^14.17.0
