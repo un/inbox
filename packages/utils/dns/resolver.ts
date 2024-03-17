@@ -20,7 +20,8 @@ const dnsLookupSchema = z
         if (!Answer) {
           return {
             success: false,
-            error: 'DNS server returned no answer'
+            error: 'DNS server returned no answer',
+            code: Status
           };
         } else {
           return {
@@ -32,22 +33,26 @@ const dnsLookupSchema = z
       case 2:
         return {
           success: false,
-          error: 'DNS server had a Server Failure'
+          error: 'DNS server had a Server Failure',
+          code: Status
         };
       case 3:
         return {
           success: false,
-          error: 'The domain name does not exist'
+          error: 'The domain name does not exist',
+          code: Status
         };
       case 5:
         return {
           success: false,
-          error: 'DNS server refused the query'
+          error: 'DNS server refused the query',
+          code: Status
         };
       default:
         return {
           success: false,
-          error: 'Unhandled DNS server error'
+          error: 'Unhandled DNS server error',
+          code: Status
         };
     }
   });
@@ -56,7 +61,7 @@ const dnsLookupSchema = z
 const DNS_QUERY_SERVER = 'https://cloudflare-dns.com/dns-query';
 
 // For more types, lookup and extend the zod schema as required
-const allowedRecordTypes = ['A', 'AAAA', 'CNAME', 'MX', 'TXT'] as const;
+const allowedRecordTypes = ['A', 'AAAA', 'CNAME', 'MX', 'TXT', 'NS'] as const;
 
 export default async function lookup(
   domain: string,

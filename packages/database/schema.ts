@@ -53,12 +53,6 @@ const foreignKey = customType<{ data: number }>({
   }
 });
 
-const bigintUnsigned = customType<{ data: number }>({
-  dataType() {
-    return 'bigint unsigned';
-  }
-});
-
 //******************* */
 //* User tables
 export const users = mysqlTable(
@@ -1344,7 +1338,7 @@ export const orgBilling = mysqlTable(
   })
 );
 
-export const orgBillingRelations = relations(orgBilling, ({ one, many }) => ({
+export const orgBillingRelations = relations(orgBilling, ({ one }) => ({
   org: one(orgs, {
     fields: [orgBilling.orgId],
     references: [orgs.id]

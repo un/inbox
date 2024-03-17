@@ -1,7 +1,7 @@
 import lookup from './resolver';
 
 type SuccessType<T> =
-  | { success: false; error: string }
+  | { success: false; error: string; code: number }
   | {
       success: true;
       data: T;
@@ -54,4 +54,9 @@ export const lookupMX = async (domain: string) =>
 export const lookupTXT = async (domain: string) =>
   mapOverSuccess(await lookup(domain, 'TXT'), (data) =>
     data.map((d) => d.data.replace(/"/g, ''))
+  );
+
+export const lookupNS = async (domain: string) =>
+  mapOverSuccess(await lookup(domain, 'NS'), (data) =>
+    data.map((d) => d.data.replace(/\.$/, ''))
   );

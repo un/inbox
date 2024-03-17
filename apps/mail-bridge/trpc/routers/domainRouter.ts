@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { router, protectedProcedure } from '../trpc';
 import { and, eq } from '@u22n/database/orm';
 import { postalServers } from '@u22n/database/schema';
-import { nanoId, zodSchemas } from '@u22n/utils';
+import { zodSchemas } from '@u22n/utils';
 import { PostalConfig } from '../../types';
 import { postalDB } from '../../postal-db';
 import { httpEndpoints, organizations, servers } from '../../postal-db/schema';
@@ -33,7 +33,7 @@ export const domainRouter = router({
           orgId: orgId,
           postalServerUrl: 'localmode',
           postalOrgId: postalOrgId,
-          domainId: nanoId(),
+          domainId: crypto.randomUUID(),
           dkimKey: 'localmode dkimKey',
           dkimValue: 'localmode dkimValue',
           forwardingAddress: 'forwardingAddress@localmode.local'
@@ -114,7 +114,7 @@ export const domainRouter = router({
   refreshDomainDns: protectedProcedure
     .input(
       z.object({
-        postalDomainId: z.number()
+        postalDomainId: z.string()
       })
     )
     .query(async ({ ctx, input }) => {
