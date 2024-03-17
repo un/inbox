@@ -41,6 +41,7 @@ export interface EnvPostalServersObject {
   dbConnectionString: string;
   defaultNewPool: string;
   active: boolean;
+  routesDomain: string;
 }
 
 export interface EnvPostalServerPersonalCredentials {

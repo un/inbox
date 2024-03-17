@@ -26,6 +26,11 @@ const mailDomains: MailDomains = JSON.parse(process.env.MAIL_DOMAINS);
 
 // TODO: ensure limits are pulled from the billing module
 export default defineNitroConfig({
+  esbuild: {
+    options: {
+      target: 'EsNext'
+    }
+  },
   // Nitro options
   runtimeConfig: {
     url: process.env.MAILBRIDGE_URL,
