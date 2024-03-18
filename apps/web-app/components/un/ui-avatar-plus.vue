@@ -40,7 +40,7 @@
       :popper="{ placement: 'right' }"
       mode="hover">
       <div
-        class="rounded-2 font-display flex h-[32px] w-[32px] items-center justify-center bg-gray-50 text-sm shadow backdrop-blur-2xl">
+        class="rounded-2 font-display bg-base-3 flex h-[32px] w-[32px] items-center justify-center text-sm shadow backdrop-blur-2xl">
         + {{ props.avatars.length - props.limit + 1 }}
       </div>
 

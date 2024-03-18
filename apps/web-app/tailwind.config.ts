@@ -10,13 +10,14 @@ export default <Partial<Config>>{
   content: ['docs/content/**/*.md'],
   safeList: ['items-end', 'items-start', 'rounded-br-none', 'rounded-bl-none'],
   theme: {
+    // colors: {},
     extend: {
       fontFamily: {
         body: ['Inter var', ...defaultTheme.fontFamily.sans],
         display: ['CalSans', ...defaultTheme.fontFamily.sans]
       },
       colors: {
-        primary: colors.alias('lime'),
+        accent: colors.alias('bronze'),
         base: colors.alias('sand')
       },
       keyframes: {

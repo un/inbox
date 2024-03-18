@@ -4,12 +4,13 @@
   });
 </script>
 <template>
-  <div class="h-full max-h-full max-w-full w-full overflow-hidden">
+  <div class="h-full max-h-full w-full max-w-full overflow-hidden">
     <div
-      class="grid grid-cols-3 h-full max-h-full w-full justify-between overflow-hidden p-4">
-      <ConvosSidebar class="h-full max-h-full" />
+      class="grid h-full max-h-full w-full grid-cols-3 justify-between overflow-hidden">
+      <ConvosSidebar
+        class="border-base-6 bg-base-2 h-full max-h-full rounded-r-xl border-r-2 p-8 pl-12 shadow-md" />
       <div
-        class="border-gray-200 dark:border-gray-800 col-span-2 h-full max-h-full w-full flex flex-col items-center justify-center gap-2 overflow-hidden border border-b-0 border-l-1 border-r-0 border-t-0 pl-4">
+        class="col-span-2 flex h-full max-h-full w-full flex-col items-center justify-center gap-2 overflow-hidden pl-4">
         <NuxtPage class="h-full max-h-full w-full" />
       </div>
     </div>

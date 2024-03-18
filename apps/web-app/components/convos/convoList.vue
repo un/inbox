@@ -93,11 +93,11 @@
     <div
       v-if="!userConvoQueryPending"
       class="mb-[48px] flex max-h-full flex-col items-start gap-4 overflow-hidden">
-      <UnUiButton
+      <!-- <UnUiButton
         label="Refresh"
         icon="i-ph-arrow-clockwise"
         :loading="userConvosStatus === 'pending'"
-        @click="refreshUserConvos()" />
+        @click="refreshUserConvos()" /> -->
       <div
         v-if="!userHasConvos"
         class="bg-base-3 flex w-full flex-row justify-center gap-4 rounded-xl rounded-tl-2xl p-8">

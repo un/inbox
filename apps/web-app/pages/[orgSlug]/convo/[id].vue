@@ -130,81 +130,78 @@
 </script>
 <template>
   <div
-    class="flex h-full max-h-full w-full max-w-full flex-col gap-2 overflow-hidden">
+    class="flex h-full max-h-full w-full max-w-full flex-col gap-2 overflow-hidden p-4">
     <div
-      class="flex w-full max-w-full flex-row items-center justify-between gap-2">
+      class="border-base-6 flex w-full max-w-full flex-row items-center justify-between gap-2 border-b-2 pb-4">
       <div class="flex flex-row gap-2">
         <template
           v-for="subject of convoDetails?.data?.subjects"
           :key="subject.publicId">
-          <span
-            class="truncate rounded-xl bg-gray-100 px-4 py-2 text-lg dark:bg-gray-800">
+          <span class="bg-base-2 text-md truncate rounded-xl px-3 py-2">
             {{ subject.subject }}
           </span>
         </template>
         <!-- <span>TAGS</span> -->
       </div>
 
-      <div class="flex h-fit flex-row gap-2 overflow-hidden">
+      <div class="flex h-fit flex-row gap-4 overflow-hidden">
         <UnUiButton
           icon="i-heroicons-pencil-square"
           size="sm"
           square
-          variant="outline" />
+          variant="soft" />
         <UnUiButton
           icon="i-ph-bell-simple-slash"
           size="sm"
           square
-          variant="outline" />
+          variant="soft" />
         <UnUiButton
           icon="i-ph-alarm"
           size="sm"
           square
-          variant="outline" />
+          variant="soft" />
         <UnUiButton
           icon="i-ph-trash"
           size="sm"
           square
-          variant="outline" />
+          variant="soft" />
       </div>
     </div>
     <div
-      class="flex h-full max-h-full w-full max-w-full flex-row gap-2 overflow-hidden">
-      <div
-        class="flex h-full max-h-full w-[600px] min-w-[600px] flex-col gap-2">
+      class="grid h-full max-h-full w-full max-w-full grid-cols-3 gap-2 overflow-hidden pt-8">
+      <div class="col-span-2 flex h-full max-h-full flex-col gap-2 pr-8">
         <div class="flex h-full max-h-full grow flex-col gap-0 overflow-hidden">
           <div
-            class="z-20000 mb-[-12px] h-[12px] bg-gradient-to-b from-gray-100" />
+            class="z-20000 from-base-1 mb-[-12px] h-[12px] bg-gradient-to-b" />
           <ConvosConvoMessages
             :convo-public-id="convoPublicId"
             :participant-public-id="convoDetails?.participantPublicId || ''" />
-          <div class="mt-[-12px] h-[12px] bg-gradient-to-t from-gray-100" />
+          <div
+            class="z-20000 from-base-1 mt-[-12px] h-[12px] bg-gradient-to-t" />
         </div>
         <div class="flex w-full flex-col justify-items-end gap-2">
-          replyingToBanner
+          <!-- replyingToBanner -->
           <UnEditor v-model:modelValue="editorData" />
           <div class="flex min-w-fit flex-row justify-end gap-2">
             <UnUiButton
               label="Send"
-              icon="ph-envelope"
+              icon="i-ph-envelope"
               variant="outline" />
             <UnUiButton
               label="Note"
-              color="orange"
-              icon="ph-note"
+              icon="i-ph-note"
               variant="outline" />
           </div>
         </div>
       </div>
       <div
-        class="border-l-1 flex h-full w-full max-w-full flex-col justify-between gap-8 overflow-hidden border border-b-0 border-r-0 border-t-0 border-gray-200 px-4 py-0 dark:border-gray-800">
+        class="border-l-1 border-base-6 flex h-full w-full max-w-full flex-col justify-between gap-8 overflow-hidden border border-b-0 border-r-0 border-t-0 pl-8">
         <div class="flex w-full max-w-full flex-col gap-8 overflow-hidden">
           <div class="flex w-full max-w-full flex-col gap-4 overflow-hidden">
             <div
               class="flex w-full max-w-full flex-row items-center justify-between overflow-hidden"
               @click="convoParticiapntsCollapsed = !convoParticiapntsCollapsed">
-              <span
-                class="cursor-pointer text-sm font-medium text-gray-600 dark:text-gray-400">
+              <span class="text-base-11 cursor-pointer text-sm font-medium">
                 PARTICIPANTS
               </span>
               <UnUiButton
@@ -259,9 +256,7 @@
               <div
                 v-if="participantsAssignedArray.length"
                 class="flex w-full max-w-full flex-col gap-2 overflow-hidden">
-                <span class="text-xs text-gray-600 dark:text-gray-400">
-                  ASSIGNED
-                </span>
+                <span class="text-base-11 text-xs"> ASSIGNED </span>
                 <div
                   class="flex w-full max-w-full flex-col gap-2 overflow-hidden">
                   <template
@@ -281,7 +276,7 @@
                 v-if="participantContributorsArray.length"
                 class="flex w-full max-w-full flex-col gap-2 overflow-hidden">
                 <span
-                  class="w-full max-w-full overflow-hidden text-xs text-gray-600 dark:text-gray-400">
+                  class="text-base-11 w-full max-w-full overflow-hidden text-xs">
                   CONTRIBUTORS
                 </span>
                 <div
@@ -301,9 +296,7 @@
               <div
                 v-if="participantCommentersArray.length"
                 class="flex flex-col gap-2">
-                <span class="text-xs text-gray-600 dark:text-gray-400">
-                  COMMENTERS
-                </span>
+                <span class="text-base-11 text-xs"> COMMENTERS </span>
                 <div class="flex flex-col gap-2">
                   <template
                     v-for="participant of participantCommentersArray"
@@ -320,9 +313,7 @@
               <div
                 v-if="participantWatchersArray.length"
                 class="flex flex-col gap-2">
-                <span class="text-xs text-gray-600 dark:text-gray-400">
-                  WATCHERS
-                </span>
+                <span class="text-base-11 text-xs"> WATCHERS </span>
                 <div class="flex flex-col gap-2">
                   <template
                     v-for="participant of participantWatchersArray"
@@ -339,9 +330,7 @@
               <div
                 v-if="participantGuestsArray.length"
                 class="flex flex-col gap-2">
-                <span class="text-xs text-gray-600 dark:text-gray-400">
-                  GUEST
-                </span>
+                <span class="text-base-11 text-xs"> GUEST </span>
                 <div class="flex flex-col gap-2">
                   <template
                     v-for="participant of participantGuestsArray"
@@ -361,8 +350,7 @@
             <div
               class="flex w-full max-w-full flex-row items-center justify-between overflow-hidden"
               @click="attachmentsCollapsed = !attachmentsCollapsed">
-              <span
-                class="cursor-pointer text-sm font-medium text-gray-600 dark:text-gray-400">
+              <span class="text-base-11 cursor-pointer text-sm font-medium">
                 ATTACHMENTS
               </span>
               <UnUiButton

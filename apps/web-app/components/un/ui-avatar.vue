@@ -116,8 +116,8 @@
       :alt="altText"
       :src="avatarUrl"
       :ui="{
-        text: 'font-display text-white dark:text-gray-900',
-        placeholder: 'font-display text-white dark:text-gray-900'
+        text: 'font-display text-white dark:text-white',
+        placeholder: 'font-display text-white dark:text-white'
       }"
       :class="colorClass" />
   </UnUiTooltip>

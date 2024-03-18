@@ -159,7 +159,6 @@
           label="Login with my passkey"
           icon="i-ph-key-duotone"
           block
-          color="primary"
           size="lg"
           @click="doPasskeyLogin()" />
         <UnUiDivider label="or" />

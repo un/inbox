@@ -245,14 +245,14 @@
 </script>
 <template>
   <div
-    class="h-full max-h-full flex flex-col justify-between transition-all duration-300">
+    class="bg-base-2 border-base-7 flex h-full max-h-full flex-col justify-between rounded-r-xl border-r-2 p-8 shadow-xl transition-all duration-300">
     <UnUiModal v-model="showLogoutModal">
       <template #header>
         <span class="">Logout</span>
       </template>
-      <div class="w-full flex flex-col gap-8">
+      <div class="flex w-full flex-col gap-8">
         <p>Are you sure you want to logout?</p>
-        <div class="w-full flex flex-row justify-end gap-4">
+        <div class="flex w-full flex-row justify-end gap-4">
           <UnUiButton
             label="Cancel"
             size="xl"
@@ -271,7 +271,7 @@
           v-if="link.tooltip"
           :text="link.tooltip"
           :popper="{ placement: 'right-start' }">
-          <span class="truncate">{{ link.label }}</span>
+          <span class="text-base-12 truncate">{{ link.label }}</span>
         </UnUiTooltip>
       </template>
       <template #badge="{ link }">
@@ -279,7 +279,7 @@
           <UnUiBadge
             v-if="link.badge"
             size="xs"
-            variant="outline"
+            variant="soft"
             :label="link.badge" />
         </div>
       </template>
@@ -296,8 +296,8 @@
       }"
       :popper="{ placement: 'top-start' }">
       <div
-        class="max-w-[240px] w-full flex flex-row items-center justify-between gap-2 p-2">
-        <div class="w-full flex flex-row items-center gap-2 overflow-hidden">
+        class="flex w-full max-w-[240px] flex-row items-center justify-between gap-2 p-2">
+        <div class="flex w-full flex-row items-center gap-2 overflow-hidden">
           <UnUiAvatar
             :public-id="currentOrgProfile?.publicId || ''"
             :avatar-id="currentOrgProfile?.avatarId || ''"
@@ -311,7 +311,7 @@
       <template #account>
         <div class="flex flex-col gap-2 text-left">
           <p>Signed in as</p>
-          <div class="w-full flex flex-row items-center gap-2 overflow-hidden">
+          <div class="flex w-full flex-row items-center gap-2 overflow-hidden">
             <UnUiAvatar
               :public-id="userProfile?.profile?.publicId || ''"
               :avatar-id="userProfile?.profile?.avatarId || ''"
@@ -330,7 +330,7 @@
         </div>
       </template>
       <template #org="{ item }">
-        <div class="max-w-full flex flex-row items-center gap-2">
+        <div class="flex max-w-full flex-row items-center gap-2">
           <UnUiAvatar
             :public-id="item.publicId"
             :avatar-id="item.avatarId"
@@ -346,13 +346,13 @@
         <UnUiIcon
           v-if="item.slug === orgSlug"
           name="i-ph-check"
-          class="text-gray-400 dark:text-gray-500 ms-auto h-4 w-4 flex-shrink-0" />
+          class="ms-auto h-4 w-4 flex-shrink-0 text-gray-400 dark:text-gray-500" />
       </template>
       <template #darkmode>
         <span class="truncate">{{ colorModeLabel }}</span>
         <UnUiIcon
           :name="colorModeIcon"
-          class="text-gray-400 dark:text-gray-500 ms-auto h-4 w-4 flex-shrink-0" />
+          class="ms-auto h-4 w-4 flex-shrink-0 text-gray-400 dark:text-gray-500" />
       </template>
       <template #helpmenu="{ item }">
         <NuxtUiDropdown
@@ -361,25 +361,25 @@
           :ui="{ item: { disabled: 'cursor-text select-text' } }"
           :popper="{ offsetDistance: -5, placement: 'right-start' }"
           class="w-full">
-          <div class="w-full flex flex-row justify-between">
+          <div class="flex w-full flex-row justify-between">
             <span class="truncate">{{ item.label }}</span>
           </div>
           <template #item="{ item }">
             <span class="truncate">{{ item.label }}</span>
             <UnUiIcon
               :name="item.icon"
-              class="text-gray-400 dark:text-gray-500 ms-auto h-4 w-4 flex-shrink-0" />
+              class="ms-auto h-4 w-4 flex-shrink-0 text-gray-400 dark:text-gray-500" />
           </template>
         </NuxtUiDropdown>
         <UnUiIcon
           :name="item.icon"
-          class="text-gray-400 dark:text-gray-500 ms-auto h-4 w-4 flex-shrink-0" />
+          class="ms-auto h-4 w-4 flex-shrink-0 text-gray-400 dark:text-gray-500" />
       </template>
       <template #item="{ item }">
         <span class="truncate">{{ item.label }}</span>
         <UnUiIcon
           :name="item.icon"
-          class="text-gray-400 dark:text-gray-500 ms-auto h-4 w-4 flex-shrink-0" />
+          class="ms-auto h-4 w-4 flex-shrink-0 text-gray-400 dark:text-gray-500" />
       </template>
     </NuxtUiDropdown>
   </div>

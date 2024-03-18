@@ -20,6 +20,7 @@
     "@nuxtjs/color-mode": "^3.3.2",
     "@nuxtjs/turnstile": "^0.6.3",
     "@pinia-plugin-persistedstate/nuxt": "^1.2.0",
+    "@radix-ui/colors": "^3.0.0",
     "@simplewebauthn/types": "^9.0.1",
     "@types/node": "^20.11.19",
     "@u22n/platform": "workspace:^",
