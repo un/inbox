@@ -1,5 +1,3 @@
 {
-  "extends": "@u22n/tsconfig",
-  "include": ["."],
-  "exclude": ["dist", "build", "node_modules"]
+  "extends": "@u22n/tsconfig"
 }

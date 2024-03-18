@@ -21,7 +21,7 @@
     "db:clean:r": "infisical run --env=local -- esno dbClean.ts"
   },
   "dependencies": {
-    "@u22n/tsconfig": "^0.0.1",
+    "@u22n/tsconfig": "^0.0.2",
     "@u22n/types": "workspace:*",
     "@u22n/utils": "workspace:*",
     "@planetscale/database": "^1.16.0",

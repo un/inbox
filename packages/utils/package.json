@@ -2,9 +2,7 @@
   "name": "@u22n/utils",
   "version": "1.0.0",
   "description": "",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "scripts": {},
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -15,5 +13,8 @@
   "dependencies": {
     "nanoid": "^5.0.6",
     "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@u22n/tsconfig": "^0.0.2"
   }
 }
