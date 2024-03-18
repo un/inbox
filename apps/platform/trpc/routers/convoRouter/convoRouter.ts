@@ -575,129 +575,134 @@ export const convoRouter = router({
           tipTapExtensions
         );
         const ccEmailAddresses: string[] = [];
-
         // get the email addresses for all contacts
-        orgContactIds.forEach(async (contactId) => {
-          const contactResponse = await db.query.contacts.findFirst({
-            where: eq(contacts.id, contactId),
-            columns: {
-              emailUsername: true,
-              emailDomain: true
+        await Promise.all(
+          orgContactIds.map(async (contactId) => {
+            const contactResponse = await db.query.contacts.findFirst({
+              where: eq(contacts.id, contactId),
+              columns: {
+                emailUsername: true,
+                emailDomain: true
+              }
+            });
+            if (contactResponse) {
+              ccEmailAddresses.push(
+                `${contactResponse.emailUsername}@${contactResponse.emailDomain}`
+              );
             }
-          });
-          if (contactResponse) {
-            ccEmailAddresses.push(
-              `${contactResponse.emailUsername}@${contactResponse.emailDomain}`
-            );
-          }
-        });
+          })
+        );
 
         // get the default email addresses for all users
         if (orgMemberIds.length) {
-          orgMemberIds.forEach(async (orgMemberId) => {
-            const emailIdentityResponse =
-              await db.query.emailIdentitiesAuthorizedUsers.findFirst({
-                where: and(
-                  eq(emailIdentitiesAuthorizedUsers.orgMemberId, orgMemberId),
-                  eq(emailIdentitiesAuthorizedUsers.default, true)
-                ),
-                columns: {
-                  id: true
-                },
-                with: {
-                  identity: {
-                    columns: {
-                      username: true,
-                      domainName: true
+          await Promise.all(
+            orgMemberIds.map(async (orgMemberId) => {
+              const emailIdentityResponse =
+                await db.query.emailIdentitiesAuthorizedUsers.findFirst({
+                  where: and(
+                    eq(emailIdentitiesAuthorizedUsers.orgMemberId, orgMemberId),
+                    eq(emailIdentitiesAuthorizedUsers.default, true)
+                  ),
+                  columns: {
+                    id: true
+                  },
+                  with: {
+                    identity: {
+                      columns: {
+                        username: true,
+                        domainName: true
+                      }
                     }
                   }
-                }
-              });
-            if (!emailIdentityResponse) {
-              const memberProfile = await db.query.orgMembers.findFirst({
-                where: eq(orgMembers.id, orgMemberId),
-                columns: {
-                  publicId: true
-                },
-                with: {
-                  profile: {
-                    columns: {
-                      firstName: true,
-                      lastName: true
-                    }
-                  }
-                }
-              });
-              if (memberProfile) {
-                missingEmailIdentitiesWarnings.push({
-                  type: 'user',
-                  publicId: memberProfile.publicId,
-                  name: `${memberProfile.profile.firstName} ${memberProfile.profile.lastName}`
                 });
-                return;
+              if (!emailIdentityResponse) {
+                const memberProfile = await db.query.orgMembers.findFirst({
+                  where: eq(orgMembers.id, orgMemberId),
+                  columns: {
+                    publicId: true
+                  },
+                  with: {
+                    profile: {
+                      columns: {
+                        firstName: true,
+                        lastName: true
+                      }
+                    }
+                  }
+                });
+                if (memberProfile) {
+                  missingEmailIdentitiesWarnings.push({
+                    type: 'user',
+                    publicId: memberProfile.publicId,
+                    name: `${memberProfile.profile.firstName} ${memberProfile.profile.lastName}`
+                  });
+                  return;
+                }
               }
-            }
-            if (emailIdentityResponse) {
-              convoMetadataCcAddresses.push({
-                id: +emailIdentityResponse.id,
-                type: 'emailIdentity'
-              });
-              ccEmailAddresses.push(
-                `${emailIdentityResponse.identity.username}@${emailIdentityResponse.identity.domainName}`
-              );
-            }
-          });
+              if (emailIdentityResponse) {
+                convoMetadataCcAddresses.push({
+                  id: +emailIdentityResponse.id,
+                  type: 'emailIdentity'
+                });
+                ccEmailAddresses.push(
+                  `${emailIdentityResponse.identity.username}@${emailIdentityResponse.identity.domainName}`
+                );
+              }
+            })
+          );
         }
 
         // get the default email addresses for all groups
         if (orgGroupIds.length) {
-          orgGroupIds.forEach(async (orgGroupId) => {
-            const emailIdentityResponse =
-              await db.query.emailIdentitiesAuthorizedUsers.findFirst({
-                where: and(
-                  eq(emailIdentitiesAuthorizedUsers.userGroupId, orgGroupId),
-                  eq(emailIdentitiesAuthorizedUsers.default, true)
-                ),
-                columns: {
-                  id: true
-                },
-                with: {
-                  identity: {
-                    columns: {
-                      username: true,
-                      domainName: true
+          await Promise.all(
+            orgGroupIds.map(async (orgGroupId) => {
+              const emailIdentityResponse =
+                await db.query.emailIdentitiesAuthorizedUsers.findFirst({
+                  where: and(
+                    eq(emailIdentitiesAuthorizedUsers.userGroupId, orgGroupId),
+                    eq(emailIdentitiesAuthorizedUsers.default, true)
+                  ),
+                  columns: {
+                    id: true
+                  },
+                  with: {
+                    identity: {
+                      columns: {
+                        username: true,
+                        domainName: true
+                      }
                     }
                   }
-                }
-              });
-            if (!emailIdentityResponse) {
-              const orgGroupResponse = await db.query.userGroups.findFirst({
-                where: eq(userGroups.id, orgGroupId),
-                columns: {
-                  publicId: true,
-                  name: true
-                }
-              });
-
-              if (orgGroupResponse) {
-                missingEmailIdentitiesWarnings.push({
-                  type: 'group',
-                  publicId: orgGroupResponse.publicId,
-                  name: orgGroupResponse.name
                 });
-                return;
+              if (!emailIdentityResponse) {
+                const orgGroupResponse = await db.query.userGroups.findFirst({
+                  where: eq(userGroups.id, orgGroupId),
+                  columns: {
+                    publicId: true,
+                    name: true
+                  }
+                });
+
+                if (orgGroupResponse) {
+                  missingEmailIdentitiesWarnings.push({
+                    type: 'group',
+                    publicId: orgGroupResponse.publicId,
+                    name: orgGroupResponse.name
+                  });
+                  return;
+                }
               }
-            }
-            if (emailIdentityResponse) {
-              convoMetadataCcAddresses.push({
-                id: +emailIdentityResponse.id,
-                type: 'emailIdentity'
-              });
-              ccEmailAddresses.push(
-                `${emailIdentityResponse.identity.username}@${emailIdentityResponse.identity.domainName}`
-              );
-            }
-          });
+              if (emailIdentityResponse) {
+                convoMetadataCcAddresses.push({
+                  id: +emailIdentityResponse.id,
+                  type: 'emailIdentity'
+                });
+                ccEmailAddresses.push(
+                  `${emailIdentityResponse.identity.username}@${emailIdentityResponse.identity.domainName}`
+                );
+              }
+            })
+          );
         }
 
         // remove TO email address from CCs if it exists
