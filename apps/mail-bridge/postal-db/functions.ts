@@ -25,6 +25,9 @@ import {
   parseSpfIncludes
 } from '@u22n/utils/dns/txtParsers';
 import { useRuntimeConfig } from '#imports';
+import type { PostalConfig } from '../types';
+
+const postalConfig: PostalConfig = useRuntimeConfig().postal;
 
 export type CreateOrgInput = {
   orgPublicId: string;
@@ -73,7 +76,8 @@ export async function createDomain(input: CreateDomainInput) {
   return {
     dkimSelector,
     dkimPublicKey: publicKey,
-    domainId
+    domainId,
+    verificationToken
   };
 }
 
@@ -111,6 +115,7 @@ export type GetDomainDNSRecordsOutput =
 
 export async function getDomainDNSRecords(
   domainId: string,
+  postalServerUrl: string,
   forceReverify: boolean = false
 ): Promise<GetDomainDNSRecordsOutput> {
   const domainInfo = await postalDB.query.domains.findFirst({
@@ -153,14 +158,16 @@ export async function getDomainDNSRecords(
 
   const txtRecords = await lookupTXT(domainInfo.name);
 
-  if (txtRecords.success === false) {
+  if (txtRecords.success === false && txtRecords.code !== 0) {
     return {
       error: `${txtRecords.error} Please retry after sometime, if the problem persists contact Support`
     };
   }
 
-  const verificationRecord = `unplatform-verification ${domainInfo.verificationToken}`;
-  const verified = txtRecords.data.includes(verificationRecord);
+  const verificationRecord = `_unplatform-challenge ${domainInfo.verificationToken}`;
+  const verified = txtRecords.success
+    ? txtRecords.data.includes(verificationRecord)
+    : false;
 
   records.verification = {
     valid: verified,
@@ -177,15 +184,18 @@ export async function getDomainDNSRecords(
       .where(eq(domains.uuid, domainId));
   }
 
-  const spfDomains = parseSpfIncludes(
-    txtRecords.data.find((_) => _.startsWith('v=spf1')) || ''
-  );
+  const spfDomains = txtRecords.success
+    ? parseSpfIncludes(
+        txtRecords.data.find((_) => _.startsWith('v=spf1')) || ''
+      )
+    : null;
   records.spf.name = domainInfo.name;
   records.spf.extraSenders =
-    spfDomains &&
-    spfDomains.includes.filter(
-      (x) => x !== `_spf.${useRuntimeConfig().postal.dnsRootUrl}`
-    ).length > 0;
+    (spfDomains &&
+      spfDomains.includes.filter(
+        (x) => x !== `_spf.${useRuntimeConfig().postal.dnsRootUrl}`
+      ).length > 0) ||
+    false;
   records.spf.value = buildSpfRecord(
     [
       `_spf.${useRuntimeConfig().postal.dnsRootUrl}`,
@@ -195,10 +205,11 @@ export async function getDomainDNSRecords(
   );
 
   records.spf.valid =
-    spfDomains &&
-    spfDomains.includes.includes(
-      `_spf.${useRuntimeConfig().postal.dnsRootUrl}`
-    );
+    (spfDomains &&
+      spfDomains.includes.includes(
+        `_spf.${useRuntimeConfig().postal.dnsRootUrl}`
+      )) ||
+    false;
 
   if (!records.spf.valid || domainInfo.spfStatus !== 'OK' || forceReverify) {
     await postalDB
@@ -261,7 +272,7 @@ export async function getDomainDNSRecords(
   }
 
   records.returnPath.name = `unrp.${domainInfo.name}`;
-  records.returnPath.value = `rp.${useRuntimeConfig().postal.dnsRootUrl}`;
+  records.returnPath.value = `rp.${postalServerUrl}`;
   records.returnPath.valid = true;
 
   if (domainInfo.returnPathStatus !== 'OK' || forceReverify) {
@@ -293,7 +304,7 @@ export async function getDomainDNSRecords(
   }
   records.mx.name = domainInfo.name;
   records.mx.priority = 10;
-  records.mx.value = `mx.${useRuntimeConfig().postal.dnsRootUrl}`;
+  records.mx.value = `mx.${postalServerUrl}`;
   records.mx.valid = true;
 
   if (domainInfo.mxStatus !== 'OK' || forceReverify) {
@@ -424,17 +435,20 @@ export async function setMailServerEventWebhook(
   input: SetMailServerEventWebhookInput
 ) {
   const webhookUrl = `${input.mailBridgeUrl}/postal/events/${input.serverPublicId}`;
-  await postalDB.update(webhooks).set({
-    url: webhookUrl,
-    name: input.serverPublicId,
-    serverId: input.serverId,
-    uuid: randomUUID(),
-    allEvents: 1,
-    enabled: 1,
-    sign: 1,
-    createdAt: sql`CURRENT_TIMESTAMP`,
-    updatedAt: sql`CURRENT_TIMESTAMP`
-  });
+  await postalDB
+    .update(webhooks)
+    .set({
+      url: webhookUrl,
+      name: input.serverPublicId,
+      serverId: input.serverId,
+      uuid: randomUUID(),
+      allEvents: 1,
+      enabled: 1,
+      sign: 1,
+      createdAt: sql`CURRENT_TIMESTAMP`,
+      updatedAt: sql`CURRENT_TIMESTAMP`
+    })
+    .where(eq(webhooks.serverId, input.serverId));
   return { webhookUrl };
 }
 
@@ -478,14 +492,18 @@ export async function setMailServerRouteForDomain(
 ) {
   const uuid = randomUUID();
   const token = randomAlphaNumeric(8);
-  const { id } = await postalDB.query.domains.findFirst({
+  const domainQuery = await postalDB.query.domains.findFirst({
     where: eq(domains.uuid, input.domainId),
     columns: {
       id: true
     }
   });
+  if (!domainQuery || !domainQuery.id) {
+    throw new Error('Domain not found');
+  }
+  const domainId = domainQuery.id;
   await postalDB.insert(routes).values({
-    domainId: id,
+    domainId: domainId,
     serverId: input.serverId,
     name: input.username || '*',
     endpointId: input.endpointId,

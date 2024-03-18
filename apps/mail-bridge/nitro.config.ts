@@ -7,6 +7,16 @@ import type {
   MailDomains
 } from './types';
 
+if (
+  !process.env.MAILBRIDGE_POSTAL_SERVERS ||
+  !process.env.MAILBRIDGE_POSTAL_SERVER_PERSONAL_CREDENTIALS ||
+  !process.env.MAILBRIDGE_POSTAL_SERVER_LIMITS ||
+  !process.env.MAILBRIDGE_POSTAL_WEBHOOK_DESTINATIONS ||
+  !process.env.MAIL_DOMAINS
+) {
+  throw new Error('Missing required environment variables');
+}
+
 const postalServersArray: EnvPostalServersObject[] = JSON.parse(
   process.env.MAILBRIDGE_POSTAL_SERVERS
 );

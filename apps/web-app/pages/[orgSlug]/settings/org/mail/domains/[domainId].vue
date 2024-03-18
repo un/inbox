@@ -42,7 +42,7 @@
   } = await $trpc.org.mail.domains.getDomainDns.useLazyQuery(
     {
       domainPublicId: domainPublicId,
-      refresh: isNewDomain
+      isNewDomain: isNewDomain
     },
     { server: false }
   );
@@ -56,6 +56,7 @@
 
   watch(
     domainQuery,
+
     (data) => {
       if (!data) return;
       domainStatus.value = data.domainData?.domainStatus || 'pending';
@@ -117,6 +118,7 @@
     dnsRefreshLoading.value = true;
     await domainDnsRefresh();
     await domainRefresh();
+    console.log({ dn: domainDnsQuery.value });
     setTimeout(() => {
       dnsRefreshLoading.value = false;
       showDnsRefreshMessage.value = true;

@@ -87,6 +87,18 @@ export const domainsRouter = router({
             orgId: orgId,
             orgPublicId: orgPublicId
           });
+
+        if (
+          !createMailBridgeOrgResponse ||
+          !createMailBridgeOrgResponse.postalServer ||
+          !createMailBridgeOrgResponse.config
+        ) {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Error while creating the postal server, contact support'
+          });
+        }
+
         await db.insert(postalServers).values({
           orgId: orgId,
           publicId: createMailBridgeOrgResponse.postalServer.serverPublicId,
@@ -129,6 +141,7 @@ export const domainsRouter = router({
         postalHost: mailBridgeResponse.postalServerUrl || '',
         dkimKey: mailBridgeResponse.dkimKey,
         dkimValue: mailBridgeResponse.dkimValue,
+        verificationToken: mailBridgeResponse.verificationToken,
         postalId: mailBridgeResponse.domainId,
         forwardingAddress: mailBridgeResponse.forwardingAddress,
         receivingMode: 'disabled',
@@ -196,7 +209,7 @@ export const domainsRouter = router({
     .input(
       z.object({
         domainPublicId: z.string(),
-        refresh: z.boolean().optional()
+        isNewDomain: z.boolean().optional()
       })
     )
     .query(async ({ ctx, input }) => {
@@ -248,7 +261,11 @@ export const domainsRouter = router({
         };
       }
 
-      if (!domainResponse.dkimKey || !domainResponse.dkimValue) {
+      if (
+        !domainResponse.dkimKey ||
+        !domainResponse.dkimValue ||
+        !domainResponse.postalId
+      ) {
         return {
           error: 'Domain not ready'
         };
@@ -263,7 +280,8 @@ export const domainsRouter = router({
 
       const dnsRecords =
         await mailBridgeTrpcClient.postal.domains.refreshDomainDns.query({
-          postalDomainId: domainResponse.postalId
+          postalDomainId: domainResponse.postalId,
+          postalServerUrl: domainResponse.postalHost
         });
 
       if ('error' in dnsRecords) {
@@ -357,7 +375,8 @@ export const domainsRouter = router({
 
       if (domainResponse.postalId) {
         mailBridgeTrpcClient.postal.domains.refreshDomainDns.query({
-          postalDomainId: domainResponse.postalId
+          postalDomainId: domainResponse.postalId,
+          postalServerUrl: domainResponse.postalHost
         });
       }
 

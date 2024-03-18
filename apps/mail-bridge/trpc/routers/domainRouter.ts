@@ -1,9 +1,9 @@
 import { z } from 'zod';
 import { router, protectedProcedure } from '../trpc';
 import { and, eq } from '@u22n/database/orm';
-import { postalServers } from '@u22n/database/schema';
+import { orgPostalConfigs, postalServers } from '@u22n/database/schema';
 import { zodSchemas } from '@u22n/utils';
-import { PostalConfig } from '../../types';
+import type { PostalConfig } from '../../types';
 import { postalDB } from '../../postal-db';
 import { httpEndpoints, organizations, servers } from '../../postal-db/schema';
 import {
@@ -12,6 +12,8 @@ import {
   getDomainDNSRecords,
   type GetDomainDNSRecordsOutput
 } from '../../postal-db/functions';
+import { db } from '@u22n/database';
+import { TRPCError } from '@trpc/server';
 
 export const domainRouter = router({
   createDomain: protectedProcedure
@@ -55,10 +57,11 @@ export const domainRouter = router({
       }
       const internalPostalOrgId = postalDbOrgQuery.id;
 
-      const { domainId, dkimPublicKey, dkimSelector } = await createDomain({
-        domain: domainName,
-        orgId: internalPostalOrgId
-      });
+      const { domainId, dkimPublicKey, dkimSelector, verificationToken } =
+        await createDomain({
+          domain: domainName,
+          orgId: internalPostalOrgId
+        });
 
       const postalServerIdResponse = await db.query.postalServers.findFirst({
         where: and(
@@ -124,18 +127,20 @@ export const domainRouter = router({
         domainId: domainId,
         dkimKey: dkimSelector,
         dkimValue: dkimPublicKey,
+        verificationToken: verificationToken,
         forwardingAddress: `${token}@${postalConfig.activeServers.routesDomain}`
       };
     }),
   refreshDomainDns: protectedProcedure
     .input(
       z.object({
-        postalDomainId: z.string()
+        postalDomainId: z.string(),
+        postalServerUrl: z.string()
       })
     )
     .query(async ({ ctx, input }) => {
       const { config } = ctx;
-      const { postalDomainId } = input;
+      const { postalDomainId, postalServerUrl } = input;
 
       const postalConfig: PostalConfig = config.postal;
       if (postalConfig.localMode === true) {
@@ -170,7 +175,11 @@ export const domainRouter = router({
         } satisfies GetDomainDNSRecordsOutput;
       }
 
-      const records = await getDomainDNSRecords(postalDomainId, true);
+      const records = await getDomainDNSRecords(
+        postalDomainId,
+        postalServerUrl,
+        true
+      );
       return records;
     })
 });
