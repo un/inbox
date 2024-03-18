@@ -60,8 +60,8 @@ importers:
         specifier: workspace:^
         version: link:../../packages/tiptap
       '@u22n/tsconfig':
-        specifier: ^0.0.1
-        version: 0.0.1
+        specifier: ^0.0.2
+        version: 0.0.2
       '@u22n/types':
         specifier: workspace:*
         version: link:../../packages/types
