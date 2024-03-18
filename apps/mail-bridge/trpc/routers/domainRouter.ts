@@ -40,19 +40,19 @@ export const domainRouter = router({
         };
       }
 
-      const { id: internalPostalOrgId } =
-        await postalDB.query.organizations.findFirst({
-          where: eq(organizations.name, postalOrgId),
-          columns: {
-            id: true
-          }
-        });
+      const postalDbOrgQuery = await postalDB.query.organizations.findFirst({
+        where: eq(organizations.name, postalOrgId),
+        columns: {
+          id: true
+        }
+      });
 
-      if (!internalPostalOrgId) {
+      if (!postalDbOrgQuery || !postalDbOrgQuery.id) {
         return {
           error: 'Organization not found'
         };
       }
+      const internalPostalOrgId = postalDbOrgQuery.id;
 
       const { domainId, dkimPublicKey, dkimSelector } = await createDomain({
         domain: domainName,
@@ -75,23 +75,38 @@ export const domainRouter = router({
         };
       }
 
-      const { id: internalPostalServerId } =
-        await postalDB.query.servers.findFirst({
-          where: eq(servers.name, postalOrgId),
+      const postalServerQuery = await postalDB.query.servers.findFirst({
+        where: eq(servers.name, postalOrgId),
+        columns: {
+          id: true
+        }
+      });
+
+      if (!postalServerQuery || !postalServerQuery.id) {
+        return {
+          error: 'Server not found'
+        };
+      }
+      const internalPostalServerId = postalServerQuery.id;
+
+      const postalServerEndpointQuery =
+        await postalDB.query.httpEndpoints.findFirst({
+          where: eq(
+            httpEndpoints.name,
+            `uninbox-mail-bridge-http-${postalOrgId}`
+          ),
           columns: {
             id: true
           }
         });
 
-      const { id: endpointId } = await postalDB.query.httpEndpoints.findFirst({
-        where: eq(
-          httpEndpoints.name,
-          `uninbox-mail-bridge-http-${postalOrgId}`
-        ),
-        columns: {
-          id: true
-        }
-      });
+      if (!postalServerEndpointQuery || !postalServerEndpointQuery.id) {
+        return {
+          error: 'Endpoint not found'
+        };
+      }
+
+      const endpointId = postalServerEndpointQuery.id;
 
       const { token } = await setMailServerRouteForDomain({
         username: '*',

@@ -46,13 +46,19 @@ export const orgRouter = router({
         };
       }
 
-      const { id: internalPostalPoolId } =
-        await postalDB.query.ipPools.findFirst({
-          where: eq(ipPools.name, postalConfig.activeServers.defaultNewPool),
-          columns: {
-            id: true
-          }
-        });
+      const postalIpPoolQuery = await postalDB.query.ipPools.findFirst({
+        where: eq(ipPools.name, postalConfig.activeServers.defaultNewPool),
+        columns: {
+          id: true
+        }
+      });
+
+      if (!postalIpPoolQuery || !postalIpPoolQuery.id) {
+        return {
+          error: 'IP Pool not found'
+        };
+      }
+      const internalPostalPoolId = postalIpPoolQuery.id;
 
       const { orgId: internalPostalOrgId } = await createOrg({
         orgPublicId,
