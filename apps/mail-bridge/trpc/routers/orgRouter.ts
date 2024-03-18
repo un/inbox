@@ -9,7 +9,8 @@ import {
   setMailServerConfig,
   setMailServerEventWebhook,
   setMailServerKey,
-  setMailServerRoutingHttpEndpoint
+  setMailServerRoutingHttpEndpoint,
+  setOrgIpPools
 } from '../../postal-db/functions';
 import { postalDB } from '../../postal-db';
 import { ipPools } from '../../postal-db/schema';
@@ -58,11 +59,17 @@ export const orgRouter = router({
           error: 'IP Pool not found'
         };
       }
+
       const internalPostalPoolId = postalIpPoolQuery.id;
 
       const { orgId: internalPostalOrgId } = await createOrg({
         orgPublicId,
         ipPoolId: internalPostalPoolId
+      });
+
+      await setOrgIpPools({
+        orgId: internalPostalOrgId,
+        poolIds: [internalPostalPoolId]
       });
 
       const newServerPublicId = nanoId();

@@ -12,8 +12,6 @@ import { isUserAdminOfOrg } from '../../../../utils/user';
 import { mailBridgeTrpcClient } from '../../../../utils/tRPCServerClients';
 import { lookupNS } from '@u22n/utils/dns';
 
-// TODO: investigate DNS issues
-
 export const domainsRouter = router({
   createNewDomain: orgProcedure
     .input(
@@ -263,10 +261,29 @@ export const domainsRouter = router({
       let domainReceivingMode: 'native' | 'forwarding' | 'disabled' =
         domainResponse.receivingMode;
 
-      const dnsResult =
+      const dnsRecords =
         await mailBridgeTrpcClient.postal.domains.refreshDomainDns.query({
           postalDomainId: domainResponse.postalId
         });
+
+      if ('error' in dnsRecords) {
+        return {
+          error: dnsRecords.error
+        };
+      }
+
+      const dnsStatus = {
+        mxDnsValid: dnsRecords.mx.valid,
+        dkimDnsValid: dnsRecords.dkim.valid,
+        spfDnsValid: dnsRecords.spf.valid,
+        returnPathDnsValid: dnsRecords.returnPath.valid
+      };
+
+      // take all dns Records and count how many are valid, if all are valid then allOk
+      const allOk =
+        Object.entries(dnsStatus)
+          .map(([, _]) => _)
+          .filter((x) => x).length === Object.keys(dnsStatus).length;
 
       const threeDaysInMilliseconds = 3 * 24 * 60 * 60 * 1000; // 3 days in milliseconds
       const domainOlderThanThreeDays =
@@ -274,7 +291,7 @@ export const domainsRouter = router({
         threeDaysInMilliseconds;
 
       if (domainOlderThanThreeDays) {
-        if (dnsResult.success) {
+        if (allOk) {
           domainStatus = 'active';
         } else {
           domainStatus = 'disabled';
@@ -285,14 +302,17 @@ export const domainsRouter = router({
 
       if (domainStatus !== 'disabled') {
         const validSendingRecords =
-          dnsResult.errors.filter((r) => r.record !== 'MX').length === 0;
-        const validReceivingRecords =
-          dnsResult.errors.filter((r) => r.record === 'MX').length === 0;
+          dnsStatus.spfDnsValid &&
+          dnsStatus.dkimDnsValid &&
+          dnsStatus.returnPathDnsValid;
 
+        const validReceivingRecords = dnsStatus.mxDnsValid;
+
+        // if one of the record is valid
         const anyValidRecords =
-          dnsResult.errors.filter((r) =>
-            ['SPF', 'MX', 'RETURN_PATH', 'DKIM'].includes(r.record)
-          ).length > 3;
+          Object.entries(dnsStatus)
+            .map(([, _]) => _)
+            .filter((x) => x).length !== 0;
 
         !validSendingRecords
           ? (domainSendingMode = 'disabled')
@@ -313,15 +333,7 @@ export const domainsRouter = router({
         await db
           .update(domains)
           .set({
-            mxDnsValid:
-              dnsResult.errors.filter((r) => r.record === 'MX').length === 0,
-            dkimDnsValid:
-              dnsResult.errors.filter((r) => r.record === 'DKIM').length === 0,
-            spfDnsValid:
-              dnsResult.errors.filter((r) => r.record === 'SPF').length === 0,
-            returnPathDnsValid:
-              dnsResult.errors.filter((r) => r.record === 'RETURN_PATH')
-                .length === 0,
+            ...dnsStatus,
             receivingMode: domainReceivingMode,
             sendingMode: domainSendingMode,
             lastDnsCheckAt: new Date(),
@@ -350,7 +362,8 @@ export const domainsRouter = router({
       }
 
       return {
-        dns: dnsResult,
+        dnsStatus: dnsStatus,
+        dnsRecords: dnsRecords,
         domainStatus: domainStatus,
         domainSendingMode: domainSendingMode,
         domainReceivingMode: domainReceivingMode,

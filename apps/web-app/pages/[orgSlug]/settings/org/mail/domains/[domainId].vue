@@ -42,7 +42,7 @@
   } = await $trpc.org.mail.domains.getDomainDns.useLazyQuery(
     {
       domainPublicId: domainPublicId,
-      newDomain: isNewDomain
+      refresh: isNewDomain
     },
     { server: false }
   );
@@ -57,7 +57,7 @@
   watch(
     domainQuery,
     (data) => {
-      console.log(data.domainData);
+      if (!data) return;
       domainStatus.value = data.domainData?.domainStatus || 'pending';
       incomingForwardingModeEnabled.value =
         data.domainData?.receivingMode === 'forwarding' ||
@@ -93,22 +93,22 @@
       {
         label: 'MX-Records',
         slot: 'mx-records',
-        status: domainDnsQuery.value?.dns?.mx.valid || false
+        status: domainDnsQuery.value?.dnsStatus?.mxDnsValid || false
       },
       {
         label: 'DKIM-Record',
         slot: 'dkim-records',
-        status: domainDnsQuery.value?.dns?.dkim.valid || false
+        status: domainDnsQuery.value?.dnsStatus?.dkimDnsValid || false
       },
       {
         label: 'SPF-Record',
         slot: 'spf-record',
-        status: domainDnsQuery.value?.dns?.spf.valid || false
+        status: domainDnsQuery.value?.dnsStatus?.spfDnsValid || false
       },
       {
         label: 'Return Path',
         slot: 'return-path',
-        status: domainDnsQuery.value?.dns?.returnPath.valid || false
+        status: domainDnsQuery.value?.dnsStatus?.returnPathDnsValid || false
       }
     ];
   });
@@ -127,8 +127,8 @@
 </script>
 
 <template>
-  <div class="h-full w-full flex flex-col items-start gap-8 p-4">
-    <div class="w-full flex flex-row items-center justify-between">
+  <div class="flex h-full w-full flex-col items-start gap-8 p-4">
+    <div class="flex w-full flex-row items-center justify-between">
       <div class="flex flex-row items-center gap-4">
         <UnUiTooltip text="Back to domains">
           <UnUiIcon
@@ -139,12 +139,12 @@
         <div class="flex flex-col gap-1">
           <span
             v-if="!domainPending"
-            class="text-2xl font-mono">
+            class="font-mono text-2xl">
             {{ domainQuery?.domainData?.domain }}
           </span>
           <span
             v-if="domainPending"
-            class="text-2xl font-mono">
+            class="font-mono text-2xl">
             Loading...
           </span>
         </div>
@@ -160,23 +160,23 @@
         :label="domainStatus.toUpperCase()"
         size="lg" />
     </div>
-    <div class="w-full flex flex-col gap-8 overflow-y-auto">
+    <div class="flex w-full flex-col gap-8 overflow-y-auto">
       <div
         v-if="domainPending"
-        class="w-full flex flex-col gap-8">
+        class="flex w-full flex-col gap-8">
         <div class="flex flex-row items-center gap-4">
           <div class="flex flex-col gap-1">
-            <span class="text-2xl font-display">Loading...</span>
+            <span class="font-display text-2xl">Loading...</span>
             <span class="text-sm">Please wait while we load your domain</span>
           </div>
         </div>
       </div>
       <div
         v-if="!domainPending && !domainQuery?.domainData"
-        class="w-full flex flex-col gap-8">
+        class="flex w-full flex-col gap-8">
         <div class="flex flex-row items-center gap-4">
           <div class="flex flex-col gap-1">
-            <span class="text-2xl font-display">Domain not found</span>
+            <span class="font-display text-2xl">Domain not found</span>
             <span class="text-sm"></span>
           </div>
         </div>
@@ -184,10 +184,10 @@
 
       <div
         v-if="!domainPending && domainQuery?.domainData"
-        class="w-full flex flex-col gap-8">
+        class="flex w-full flex-col gap-8">
         <div class="flex flex-col gap-4">
-          <div class="w-full border-b-1 border-base-5 pb-2">
-            <span class="text-sm text-base-11 font-semibold uppercase">
+          <div class="border-b-1 border-base-5 w-full pb-2">
+            <span class="text-base-11 text-sm font-semibold uppercase">
               Status
             </span>
           </div>
@@ -233,8 +233,8 @@
           </div>
         </div>
         <div class="flex flex-col gap-4">
-          <div class="w-full border-b-1 border-base-5 pb-2">
-            <span class="text-sm text-base-11 font-semibold uppercase">
+          <div class="border-b-1 border-base-5 w-full pb-2">
+            <span class="text-base-11 text-sm font-semibold uppercase">
               Mail
             </span>
           </div>
@@ -251,7 +251,7 @@
                     : 'bg-gray-100 dark:bg-gray-900'
                 ">
                 <div
-                  class="mr-4 w-full flex flex-row items-center justify-between">
+                  class="mr-4 flex w-full flex-row items-center justify-between">
                   <span class="truncate">{{ item.label }}</span>
                   <UnUiBadge
                     :color="
@@ -273,7 +273,7 @@
             </template>
             <template #incoming>
               <div class="mr-10 flex flex-col gap-4">
-                <div class="h-fit w-full flex flex-col gap-4 p-3">
+                <div class="flex h-fit w-full flex-col gap-4 p-3">
                   <div class="flex flex-col justify-center gap-8">
                     <div v-if="incomingStatus === 'disabled'">
                       <span class=""
@@ -321,14 +321,14 @@
                       </span>
                       <div class="mt-[8px] flex flex-col gap-1">
                         <span
-                          class="overflow-hidden text-xs text-base-11 uppercase">
+                          class="text-base-11 overflow-hidden text-xs uppercase">
                           Forwarding Address
                         </span>
                         <div class="flex flex-row items-center gap-2">
                           <div
-                            class="min-w-[50px] w-fit flex flex-col items-center rounded-lg bg-base-3 p-4">
+                            class="bg-base-3 flex w-fit min-w-[50px] flex-col items-center rounded-lg p-4">
                             <span
-                              class="w-fit break-anywhere text-left text-sm font-mono">
+                              class="break-anywhere w-fit text-left font-mono text-sm">
                               {{ domainQuery?.domainData?.forwardingAddress }}
                             </span>
                           </div>
@@ -345,7 +345,7 @@
             </template>
 
             <template #outgoing>
-              <div class="h-fit w-full flex flex-col justify-center gap-4 p-3">
+              <div class="flex h-fit w-full flex-col justify-center gap-4 p-3">
                 <div class="mr-10 flex flex-col justify-center gap-8">
                   <div v-if="outgoingStatus === 'disabled'">
                     <span class="">
@@ -393,14 +393,14 @@
         </div>
         <div class="flex flex-col gap-4">
           <div
-            class="w-full flex flex-row justify-between border-b-1 border-base-5 pb-2">
+            class="border-b-1 border-base-5 flex w-full flex-row justify-between pb-2">
             <span class="text-md text-base-11 font-semibold uppercase">
               DNS Records
             </span>
           </div>
           <div class="flex flex-col gap-4">
             <div class="flex flex-row items-center justify-between">
-              <span class="text-xs text-base-11 font-semibold uppercase">
+              <span class="text-base-11 text-xs font-semibold uppercase">
                 Last check: {{ timeSinceLastDnsCheck }}
               </span>
               <UnUiButton
@@ -413,7 +413,7 @@
             </div>
             <span
               v-if="showDnsRefreshMessage"
-              class="w-full text-center text-sm text-base-11">
+              class="text-base-11 w-full text-center text-sm">
               DNS records have been rechecked. If the records are still invalid,
               please recheck your DNS settings.
             </span>
@@ -430,7 +430,7 @@
                       : 'bg-gray-100 dark:bg-gray-900'
                   ">
                   <div
-                    class="mr-4 w-full flex flex-row items-center justify-between">
+                    class="mr-4 flex w-full flex-row items-center justify-between">
                     <span class="truncate">{{ item.label }}</span>
                     <UnUiBadge
                       :color="item.status ? 'green' : 'red'"
@@ -452,15 +452,15 @@
                     },
                     {
                       title: 'Name',
-                      value: '@'
+                      value: domainDnsQuery?.dnsRecords?.mx.name || ''
                     },
                     {
                       title: 'Priority',
-                      value: '1'
+                      value: `${domainDnsQuery?.dnsRecords?.mx.priority}`
                     },
                     {
-                      title: 'Hostname/content',
-                      value: domainDnsQuery?.dns?.mx.value || '',
+                      title: 'Content',
+                      value: domainDnsQuery?.dnsRecords?.mx.value || '',
                       hasCopyButton: true
                     }
                   ]" />
@@ -475,12 +475,12 @@
                     },
                     {
                       title: 'Name',
-                      value: domainDnsQuery?.dns?.dkim.key || '',
+                      value: domainDnsQuery?.dnsRecords?.dkim.name || '',
                       hasCopyButton: true
                     },
                     {
                       title: 'Value/Content',
-                      value: domainDnsQuery?.dns?.dkim.value || '',
+                      value: domainDnsQuery?.dnsRecords?.dkim.value || '',
                       hasCopyButton: true
                     }
                   ]" />
@@ -488,8 +488,7 @@
               <template #spf-record>
                 <SettingsDomainDnsItem
                   :text="
-                    domainDnsQuery?.dns?.spf.otherSenders &&
-                    domainDnsQuery?.dns?.spf.otherSenders.length > 0
+                    domainDnsQuery?.dnsRecords?.spf.extraSenders
                       ? ' We have detected existing email senders for your domain, to ensure email sent via UnInbox is delivered properly, modify your TXT record to the following value. We have included existing senders to make your life easier. '
                       : 'To ensure email sent via UnInbox is delivered properly, add a TXT record with the following value. SPF records help receivers verify the email came from an authorized sender.'
                   "
@@ -500,11 +499,11 @@
                     },
                     {
                       title: 'Name',
-                      value: '@'
+                      value: domainDnsQuery?.dnsRecords?.spf.name || ''
                     },
                     {
-                      title: 'Value/Content',
-                      value: domainDnsQuery?.dns?.spf.value || '',
+                      title: 'Content',
+                      value: domainDnsQuery?.dnsRecords?.spf.value || '',
                       hasCopyButton: true
                     }
                   ]" />
@@ -519,12 +518,12 @@
                     },
                     {
                       title: 'Name',
-                      value: domainDnsQuery?.dns?.returnPath.value || '',
+                      value: domainDnsQuery?.dnsRecords?.returnPath.name || '',
                       hasCopyButton: true
                     },
                     {
                       title: 'Target',
-                      value: domainDnsQuery?.dns?.returnPath.destination || '',
+                      value: domainDnsQuery?.dnsRecords?.returnPath.value || '',
                       hasCopyButton: true
                     }
                   ]" />

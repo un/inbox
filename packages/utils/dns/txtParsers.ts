@@ -1,6 +1,6 @@
 export const parseSpfIncludes = (data: string) => {
   const spf = data.match(/v=spf1 (.*)/);
-  if (!spf) {
+  if (!spf || !spf[1]) {
     return null;
   }
   const includes = spf[1].match(/include:([^\s]+)/g);
@@ -23,7 +23,7 @@ export const buildSpfRecord = (includes: string[], all: string) =>
 
 export const parseDkim = (data: string) => {
   const dkim = data.replaceAll(' ', '').match(/v=DKIM1;(.*)/);
-  if (!dkim) {
+  if (!dkim || !dkim[1]) {
     return null;
   }
   const values: Record<string, string> = Object.fromEntries(
@@ -39,7 +39,7 @@ export const buildDkimRecord = (data: Record<string, string>) =>
 
 export const parseDmarc = (data: string) => {
   const dmarc = data.replaceAll(' ', '').match(/v=DMARC1;(.*)/);
-  if (!dmarc) {
+  if (!dmarc || !dmarc[1]) {
     return null;
   }
   const values: Record<string, string> = Object.fromEntries(

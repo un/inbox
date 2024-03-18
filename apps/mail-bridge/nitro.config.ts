@@ -42,7 +42,8 @@ export default defineNitroConfig({
       dnsRootUrl: process.env.MAILBRIDGE_POSTAL_SERVERS_DNS_ROOT_URL,
       webhookDestinations: webhookDestinations,
       limits: postalServerLimits,
-      localMode: process.env.MAILBRIDGE_LOCAL_MODE || true
+      // Assume local only if the env variable is set
+      localMode: !!process.env.MAILBRIDGE_LOCAL_MODE || false
     },
     storage: {
       url: process.env.WEBAPP_STORAGE_URL || '',

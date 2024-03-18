@@ -37,6 +37,9 @@ export async function createOrg(input: CreateOrgInput) {
     name: input.orgPublicId,
     permalink: input.orgPublicId.toLowerCase(),
     ipPoolId: input.ipPoolId,
+    timeZone: 'UTC',
+    createdAt: sql`CURRENT_TIMESTAMP`,
+    updatedAt: sql`CURRENT_TIMESTAMP`,
     ownerId: 1 // There should be only one postal user, thus id should be 1
   });
   return {
@@ -74,121 +77,161 @@ export async function createDomain(input: CreateDomainInput) {
   };
 }
 
-export type VerifyDomainDNSRecordsOutput = {
-  error: string;
-  fix: string;
-  record: 'VERIFICATION' | 'SPF' | 'DKIM' | 'RETURN_PATH' | 'MX' | 'OTHER';
-}[];
+export type GetDomainDNSRecordsOutput =
+  | {
+      verification: {
+        valid: boolean;
+        name: string;
+        value: string;
+      };
+      mx: {
+        valid: boolean;
+        priority: number;
+        name: string;
+        value: string;
+      };
+      spf: {
+        valid: boolean;
+        name: string;
+        value: string;
+        extraSenders: boolean;
+      };
+      dkim: {
+        valid: boolean;
+        name: string;
+        value: string;
+      };
+      returnPath: {
+        valid: boolean;
+        name: string;
+        value: string;
+      };
+    }
+  | { error: string };
 
-export async function verifyDomainDNSRecords(
+export async function getDomainDNSRecords(
   domainId: string,
   forceReverify: boolean = false
-): Promise<VerifyDomainDNSRecordsOutput> {
+): Promise<GetDomainDNSRecordsOutput> {
   const domainInfo = await postalDB.query.domains.findFirst({
     where: eq(domains.uuid, domainId)
   });
 
   if (!domainInfo) {
-    return [
-      { error: 'Domain not found', fix: 'Contact support', record: 'OTHER' }
-    ];
+    return { error: 'Domain not found, Contact Support' };
   }
+
+  const records: GetDomainDNSRecordsOutput = {
+    verification: {
+      valid: false,
+      name: '',
+      value: ''
+    },
+    mx: {
+      valid: false,
+      name: '',
+      priority: 0,
+      value: ''
+    },
+    spf: {
+      valid: false,
+      name: '',
+      value: '',
+      extraSenders: false
+    },
+    dkim: {
+      valid: false,
+      name: '',
+      value: ''
+    },
+    returnPath: {
+      valid: false,
+      name: '',
+      value: ''
+    }
+  };
 
   const txtRecords = await lookupTXT(domainInfo.name);
 
   if (txtRecords.success === false) {
-    return [
-      { error: txtRecords.error, fix: 'Contact support', record: 'OTHER' }
-    ];
+    return {
+      error: `${txtRecords.error} Please retry after sometime, if the problem persists contact Support`
+    };
   }
 
-  if (!domainInfo.verifiedAt || forceReverify) {
-    const record = `unplatform-verification ${domainInfo.verificationToken}`;
-    const verified = txtRecords.data.includes(record);
-    if (verified) {
-      await postalDB
-        .update(domains)
-        .set({
-          verifiedAt: sql`CURRENT_TIMESTAMP`
-        })
-        .where(eq(domains.uuid, domainId));
-    } else {
-      return [
-        {
-          error: 'Domain ownership not verified',
-          fix: `Add the following TXT record on root (@) of your domain: "${record}"`,
-          record: 'VERIFICATION'
-        }
-      ];
-    }
+  const verificationRecord = `unplatform-verification ${domainInfo.verificationToken}`;
+  const verified = txtRecords.data.includes(verificationRecord);
+
+  records.verification = {
+    valid: verified,
+    name: domainInfo.name,
+    value: verificationRecord
+  };
+
+  if (!verified || !domainInfo.verifiedAt || forceReverify) {
+    await postalDB
+      .update(domains)
+      .set({
+        verifiedAt: verified ? sql`CURRENT_TIMESTAMP` : sql`NULL`
+      })
+      .where(eq(domains.uuid, domainId));
   }
 
-  const errors: VerifyDomainDNSRecordsOutput = [];
+  const spfDomains = parseSpfIncludes(
+    txtRecords.data.find((_) => _.startsWith('v=spf1')) || ''
+  );
+  records.spf.name = domainInfo.name;
+  records.spf.extraSenders =
+    spfDomains &&
+    spfDomains.includes.filter(
+      (x) => x !== `_spf.${useRuntimeConfig().postal.dnsRootUrl}`
+    ).length > 0;
+  records.spf.value = buildSpfRecord(
+    [
+      `_spf.${useRuntimeConfig().postal.dnsRootUrl}`,
+      ...(records.spf.extraSenders ? spfDomains?.includes || [] : [])
+    ],
+    '~all'
+  );
 
-  if (domainInfo.spfStatus !== 'OK' || forceReverify) {
-    const spfDomains = parseSpfIncludes(
-      txtRecords.data.find((_) => _.startsWith('v=spf1')) || ''
+  records.spf.valid =
+    spfDomains &&
+    spfDomains.includes.includes(
+      `_spf.${useRuntimeConfig().postal.dnsRootUrl}`
     );
 
-    if (!spfDomains) {
-      errors.push({
-        error: 'SPF record not found',
-        fix: `Add the following TXT record on root (@) of your domain: ${buildSpfRecord(
-          [`_spf.${useRuntimeConfig().postalDnsRootUrl}`],
-          '~all'
-        )}`,
-        record: 'SPF'
-      });
-      await postalDB
-        .update(domains)
-        .set({ spfStatus: 'Missing', spfError: 'SPF record not found' })
-        .where(eq(domains.uuid, domainId));
-    } else if (
-      !spfDomains.includes.includes(
-        `_spf.${useRuntimeConfig().postalDnsRootUrl}`
+  if (!records.spf.valid || domainInfo.spfStatus !== 'OK' || forceReverify) {
+    await postalDB
+      .update(domains)
+      .set(
+        !spfDomains
+          ? { spfStatus: 'Missing', spfError: 'SPF record not found' }
+          : !spfDomains.includes.includes(
+                `_spf.${useRuntimeConfig().postal.dnsRootUrl}`
+              )
+            ? { spfStatus: 'Invalid', spfError: 'SPF record Invalid' }
+            : { spfStatus: 'OK', spfError: null }
       )
-    ) {
-      errors.push({
-        error: 'SPF record not found',
-        fix: `Add the following TXT record on root (@) of your domain: ${buildSpfRecord(
-          [
-            `_spf.${useRuntimeConfig().postalDnsRootUrl}`,
-            ...spfDomains.includes
-          ],
-          '~all'
-        )}`,
-        record: 'SPF'
-      });
-      await postalDB
-        .update(domains)
-        .set({ spfStatus: 'Invalid', spfError: 'SPF record Invalid' })
-        .where(eq(domains.uuid, domainId));
-    } else {
-      await postalDB
-        .update(domains)
-        .set({ spfStatus: 'OK', spfError: null })
-        .where(eq(domains.uuid, domainId));
-    }
+      .where(eq(domains.uuid, domainId));
   }
+
+  const publicKey = generatePublicKey(domainInfo.dkimPrivateKey);
+  records.dkim.name = `unplatform-${domainInfo.dkimIdentifierString}._domainkey.${domainInfo.name}`;
+  records.dkim.value = buildDkimRecord({
+    t: 's',
+    h: 'sha256',
+    p: publicKey
+  });
+  //  We assume these are valid already, if the db says they are not or forceReverify is used, valid gets updated
+  records.dkim.valid = true;
 
   if (domainInfo.dkimStatus !== 'OK' || forceReverify) {
     const domainKeyRecords = await lookupTXT(
       `unplatform-${domainInfo.dkimIdentifierString}._domainkey.${domainInfo.name}`
     );
-    const publicKey = generatePublicKey(domainInfo.dkimPrivateKey);
 
     if (!domainKeyRecords.success) {
-      errors.push({
-        error: 'DKIM record not found',
-        fix: `Add the following TXT record on postal-${
-          domainInfo.dkimIdentifierString
-        }._domainkey.${domainInfo.name} : ${buildDkimRecord({
-          t: 's',
-          h: 'sha256',
-          p: publicKey
-        })}`,
-        record: 'DKIM'
-      });
+      records.dkim.valid = false;
       await postalDB
         .update(domains)
         .set({ dkimStatus: 'Missing', dkimError: 'DKIM record not found' })
@@ -197,28 +240,18 @@ export async function verifyDomainDNSRecords(
       const domainKey = parseDkim(
         domainKeyRecords.data.find((_) => _.startsWith('v=DKIM1')) || ''
       );
-
       if (
         !domainKey ||
         domainKey['h'] !== 'sha256' ||
         domainKey['p'] !== publicKey
       ) {
-        errors.push({
-          error: 'DKIM record not found',
-          fix: `Add the following TXT record on postal-${
-            domainInfo.dkimIdentifierString
-          }._domainkey.${domainInfo.name} : ${buildDkimRecord({
-            t: 's',
-            h: 'sha256',
-            p: publicKey
-          })}`,
-          record: 'DKIM'
-        });
+        records.dkim.valid = false;
         await postalDB
           .update(domains)
           .set({ dkimStatus: 'Invalid', dkimError: 'DKIM record Invalid' })
           .where(eq(domains.uuid, domainId));
       } else {
+        records.dkim.valid = true;
         await postalDB
           .update(domains)
           .set({ dkimStatus: 'OK', dkimError: null })
@@ -227,14 +260,14 @@ export async function verifyDomainDNSRecords(
     }
   }
 
+  records.returnPath.name = `unrp.${domainInfo.name}`;
+  records.returnPath.value = `rp.${useRuntimeConfig().postal.dnsRootUrl}`;
+  records.returnPath.valid = true;
+
   if (domainInfo.returnPathStatus !== 'OK' || forceReverify) {
     const returnPathCname = await lookupCNAME(`unrp.${domainInfo.name}`);
     if (!returnPathCname.success) {
-      errors.push({
-        error: 'Return-Path CNAME record not found',
-        fix: `Add the following CNAME record on unrp.${domainInfo.name} : rp.${useRuntimeConfig().postalDnsRootUrl}`,
-        record: 'RETURN_PATH'
-      });
+      records.returnPath.valid = false;
       await postalDB
         .update(domains)
         .set({
@@ -242,14 +275,8 @@ export async function verifyDomainDNSRecords(
           returnPathError: 'Return-Path CNAME record not found'
         })
         .where(eq(domains.uuid, domainId));
-    } else if (
-      !returnPathCname.data.includes(process.env.SERVER_RETURN_PATH_DOMAIN!)
-    ) {
-      errors.push({
-        error: 'Return-Path CNAME record not found',
-        fix: `Add the following CNAME record on unrp.${domainInfo.name} : rp.${useRuntimeConfig().postalDnsRootUrl}`,
-        record: 'RETURN_PATH'
-      });
+    } else if (!returnPathCname.data.includes(records.returnPath.value)) {
+      records.returnPath.valid = false;
       await postalDB
         .update(domains)
         .set({
@@ -264,15 +291,15 @@ export async function verifyDomainDNSRecords(
         .where(eq(domains.uuid, domainId));
     }
   }
+  records.mx.name = domainInfo.name;
+  records.mx.priority = 10;
+  records.mx.value = `mx.${useRuntimeConfig().postal.dnsRootUrl}`;
+  records.mx.valid = true;
 
   if (domainInfo.mxStatus !== 'OK' || forceReverify) {
     const mxRecords = await lookupMX(domainInfo.name);
     if (!mxRecords.success) {
-      errors.push({
-        error: 'MX record not found',
-        fix: `Add the following MX record on root (@) of your domain with priority 10 : mx.${useRuntimeConfig().postalDnsRootUrl}`,
-        record: 'MX'
-      });
+      records.mx.valid = false;
       await postalDB
         .update(domains)
         .set({ mxStatus: 'Missing', mxError: 'MX record not found' })
@@ -280,16 +307,10 @@ export async function verifyDomainDNSRecords(
     } else if (
       mxRecords.data.length > 1 ||
       !mxRecords.data.find(
-        (x) =>
-          x.exchange === `mx.${useRuntimeConfig().postalDnsRootUrl}` &&
-          x.priority === 10
+        (x) => x.exchange === records.mx.value && x.priority === 10
       )
     ) {
-      errors.push({
-        error: 'Proper MX record not found',
-        fix: `Add the following MX record on root (@) of your domain with priority 10 : mx.${useRuntimeConfig().postalDnsRootUrl} and remove other MX records on that domain/subdomain`,
-        record: 'MX'
-      });
+      records.mx.valid = false;
       await postalDB
         .update(domains)
         .set({ mxStatus: 'Invalid', mxError: 'MX record Invalid' })
@@ -302,7 +323,7 @@ export async function verifyDomainDNSRecords(
     }
   }
 
-  return errors;
+  return records;
 }
 
 export type SetMailServerKeyInput = {
@@ -324,7 +345,7 @@ export async function setMailServerKey(input: SetMailServerKeyInput) {
     key,
     uuid,
     hold: 0,
-    name: input.serverPublicId + input.type === 'SMTP' ? '-smtp' : '-api'
+    name: input.serverPublicId + (input.type === 'SMTP' ? '-smtp' : '-api')
   });
 
   return {
@@ -410,6 +431,7 @@ export async function setMailServerEventWebhook(
     uuid: randomUUID(),
     allEvents: 1,
     enabled: 1,
+    sign: 1,
     createdAt: sql`CURRENT_TIMESTAMP`,
     updatedAt: sql`CURRENT_TIMESTAMP`
   });
@@ -434,6 +456,7 @@ export async function setMailServerRoutingHttpEndpoint(
     encoding: 'BodyAsJson',
     format: 'Hash',
     stripReplies: 1,
+    serverId: input.serverId,
     createdAt: sql`CURRENT_TIMESTAMP`,
     updatedAt: sql`CURRENT_TIMESTAMP`,
     includeAttachments: 1,
@@ -509,7 +532,7 @@ export async function addMailServer(input: AddMailServerInput) {
     spamFailureThreshold: '20'
   });
 
-  // Start Vodo Magic
+  // Start Magic
   await rawMySqlConnection.query(
     `CREATE DATABASE \`postal-server-${insertId}\``
   );
@@ -737,7 +760,7 @@ export async function addMailServer(input: AddMailServerInput) {
 
   await rawMySqlConnection.query(createMailServerQuery);
   await rawMySqlConnection.query(`USE \`postal\``);
-  // End Vodo Magic
+  // End Magic
 
   return {
     serverId: insertId,
