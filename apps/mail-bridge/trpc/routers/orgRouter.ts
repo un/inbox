@@ -2,8 +2,18 @@ import { z } from 'zod';
 import { router, protectedProcedure } from '../trpc';
 import { eq } from '@u22n/database/orm';
 import { nanoId, zodSchemas } from '@u22n/utils';
-import { postalPuppet } from '@u22n/postal-puppet';
 import { PostalConfig } from '../../types';
+import {
+  addMailServer,
+  createOrg,
+  setMailServerConfig,
+  setMailServerEventWebhook,
+  setMailServerKey,
+  setMailServerRoutingHttpEndpoint,
+  setOrgIpPools
+} from '../../postal-db/functions';
+import { postalDB } from '../../postal-db';
+import { ipPools } from '../../postal-db/schema';
 
 export const orgRouter = router({
   createPostalOrg: protectedProcedure
@@ -14,7 +24,7 @@ export const orgRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const { config, db } = ctx;
+      const { config } = ctx;
       const { orgId, orgPublicId } = input;
       const postalConfig: PostalConfig = config.postal;
       const limits = postalConfig.limits;
@@ -37,41 +47,41 @@ export const orgRouter = router({
         };
       }
 
-      const { puppetInstance } = await postalPuppet.initPuppet({
-        postalControlPanel: postalConfig.activeServers.controlPanelSubDomain,
-        postalUrl: postalConfig.activeServers.url,
-        postalUser: postalConfig.activeServers.cpUsername,
-        postalPass: postalConfig.activeServers.cpPassword
+      const postalIpPoolQuery = await postalDB.query.ipPools.findFirst({
+        where: eq(ipPools.name, postalConfig.activeServers.defaultNewPool),
+        columns: {
+          id: true
+        }
       });
 
-      await postalPuppet.createOrg({
-        puppetInstance: puppetInstance,
-        orgId: orgId,
-        orgPublicId: orgPublicId
-      });
+      if (!postalIpPoolQuery || !postalIpPoolQuery.id) {
+        return {
+          error: 'IP Pool not found'
+        };
+      }
 
-      await postalPuppet.setOrgIpPools({
-        puppetInstance,
-        orgId,
+      const internalPostalPoolId = postalIpPoolQuery.id;
+
+      const { orgId: internalPostalOrgId } = await createOrg({
         orgPublicId,
-        poolId: postalConfig.activeServers.defaultNewPool
+        ipPoolId: internalPostalPoolId
+      });
+
+      await setOrgIpPools({
+        orgId: internalPostalOrgId,
+        poolIds: [internalPostalPoolId]
       });
 
       const newServerPublicId = nanoId();
 
-      await postalPuppet.addMailServer({
-        puppetInstance: puppetInstance,
-        orgId: orgId,
-        orgPublicId: orgPublicId,
-        serverId: newServerPublicId,
-        defaultIpPoolId: postalConfig.activeServers.defaultNewPool
+      const { serverId: internalPostalMailserverId } = await addMailServer({
+        orgId: internalPostalOrgId,
+        serverPublicId: newServerPublicId,
+        defaultIpPoolId: internalPostalPoolId
       });
 
-      await postalPuppet.setMailServerConfig({
-        puppetInstance: puppetInstance,
-        orgId: orgId,
-        orgPublicId: orgPublicId,
-        serverId: newServerPublicId,
+      await setMailServerConfig({
+        serverId: internalPostalMailserverId,
         // New Account limits
         messageRetentionDays: limits.messageRetentionDays,
         outboundSpamThreshold: limits.outboundSpamThreshold,
@@ -79,39 +89,32 @@ export const orgRouter = router({
         rawMessageRetentionSize: limits.rawMessageRetentionSize
       });
 
-      await postalPuppet.setMailServerEventWebhooks({
-        puppetInstance: puppetInstance,
-        orgId: orgId,
-        orgPublicId: orgPublicId,
-        serverId: newServerPublicId,
-        mailBridgeUrl: `${postalConfig.webhookDestinations.messages}/postal/events/${newServerPublicId}`
+      await setMailServerEventWebhook({
+        serverId: internalPostalMailserverId,
+        serverPublicId: newServerPublicId,
+        mailBridgeUrl: postalConfig.webhookDestinations.messages
       });
 
-      const setMailServerApiKeyResult = await postalPuppet.setMailServerApiKey({
-        puppetInstance: puppetInstance,
-        orgId: orgId,
-        orgPublicId: orgPublicId,
-        serverId: newServerPublicId
+      const { key: apiKey } = await setMailServerKey({
+        publicOrgId: orgPublicId,
+        serverId: internalPostalMailserverId,
+        serverPublicId: newServerPublicId,
+        type: 'API'
       });
 
-      const setMailServerSmtpKeyResult =
-        await postalPuppet.setMailServerSmtpKey({
-          puppetInstance: puppetInstance,
-          orgId: orgId,
-          orgPublicId: orgPublicId,
-          serverId: newServerPublicId
-        });
-
-      const mailBridgeWebhookUrl = `${postalConfig.webhookDestinations.messages}/postal/mail/inbound/${newServerPublicId}`;
-      await postalPuppet.setMailServerRoutingHttpEndpoint({
-        puppetInstance: puppetInstance,
-        orgId: orgId,
-        orgPublicId: orgPublicId,
-        serverId: newServerPublicId,
-        mailBridgeUrl: mailBridgeWebhookUrl
+      const { key: smtpKey } = await setMailServerKey({
+        publicOrgId: orgPublicId,
+        serverId: internalPostalMailserverId,
+        serverPublicId: newServerPublicId,
+        type: 'SMTP'
       });
 
-      await postalPuppet.closePuppet(puppetInstance);
+      await setMailServerRoutingHttpEndpoint({
+        mailBridgeUrl: postalConfig.webhookDestinations.messages,
+        orgId: internalPostalOrgId,
+        serverId: internalPostalMailserverId,
+        serverPublicId: newServerPublicId
+      });
 
       return {
         success: true,
@@ -119,8 +122,8 @@ export const orgRouter = router({
         postalOrgId: orgPublicId,
         postalServer: {
           serverPublicId: newServerPublicId,
-          apiKey: setMailServerApiKeyResult.apiKey,
-          smtpKey: setMailServerSmtpKeyResult.smtpKey
+          apiKey: apiKey,
+          smtpKey: smtpKey
         },
         config: {
           host: postalConfig.activeServers.url,

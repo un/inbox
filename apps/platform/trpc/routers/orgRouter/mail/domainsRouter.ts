@@ -2,19 +2,15 @@ import { z } from 'zod';
 import { router, orgProcedure } from '../../../trpc';
 import { and, eq } from '@u22n/database/orm';
 import {
-  orgs,
   domains,
   postalServers,
   orgPostalConfigs
 } from '@u22n/database/schema';
 import { nanoId, zodSchemas } from '@u22n/utils';
-import dns from 'node:dns';
-import { verifyDns } from '../../../../utils/verifyDns';
 import { TRPCError } from '@trpc/server';
 import { isUserAdminOfOrg } from '../../../../utils/user';
-import { mailBridgeTrpcClient, useRuntimeConfig } from '#imports';
-
-// TODO: investigate DNS issues
+import { mailBridgeTrpcClient } from '../../../../utils/tRPCServerClients';
+import { lookupNS } from '@u22n/utils/dns';
 
 export const domainsRouter = router({
   createNewDomain: orgProcedure
@@ -45,13 +41,16 @@ export const domainsRouter = router({
         });
       }
 
-      await dns.promises.setServers(['1.1.1.1', '1.0.0.1']);
-      await dns.promises.resolveNs(domainName).catch(() => {
+      const dnsData = await lookupNS(domainName);
+      if (
+        dnsData.success === false &&
+        dnsData.code === 3 // 3 -> The domain name does not exist
+      ) {
         throw new TRPCError({
           code: 'FORBIDDEN',
           message: 'Domain does not exist or is not registered'
         });
-      });
+      }
 
       const existingDomains = await db.query.domains.findFirst({
         where: eq(domains.domain, domainName),
@@ -88,6 +87,18 @@ export const domainsRouter = router({
             orgId: orgId,
             orgPublicId: orgPublicId
           });
+
+        if (
+          !createMailBridgeOrgResponse ||
+          !createMailBridgeOrgResponse.postalServer ||
+          !createMailBridgeOrgResponse.config
+        ) {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Error while creating the postal server, contact support'
+          });
+        }
+
         await db.insert(postalServers).values({
           orgId: orgId,
           publicId: createMailBridgeOrgResponse.postalServer.serverPublicId,
@@ -130,6 +141,7 @@ export const domainsRouter = router({
         postalHost: mailBridgeResponse.postalServerUrl || '',
         dkimKey: mailBridgeResponse.dkimKey,
         dkimValue: mailBridgeResponse.dkimValue,
+        verificationToken: mailBridgeResponse.verificationToken,
         postalId: mailBridgeResponse.domainId,
         forwardingAddress: mailBridgeResponse.forwardingAddress,
         receivingMode: 'disabled',
@@ -196,8 +208,8 @@ export const domainsRouter = router({
   getDomainDns: orgProcedure
     .input(
       z.object({
-        domainPublicId: zodSchemas.nanoId,
-        newDomain: z.boolean().optional()
+        domainPublicId: z.string(),
+        isNewDomain: z.boolean().optional()
       })
     )
     .query(async ({ ctx, input }) => {
@@ -210,8 +222,6 @@ export const domainsRouter = router({
       const { db, org } = ctx;
       const orgId = org?.id;
       const { domainPublicId } = input;
-      const postalDnsRootUrl = useRuntimeConfig().mailBridge
-        .postalDnsRootUrl as string;
 
       // Handle when adding database replicas
       const dbReplica = db;
@@ -251,19 +261,15 @@ export const domainsRouter = router({
         };
       }
 
-      if (!domainResponse.dkimKey || !domainResponse.dkimValue) {
+      if (
+        !domainResponse.dkimKey ||
+        !domainResponse.dkimValue ||
+        !domainResponse.postalId
+      ) {
         return {
           error: 'Domain not ready'
         };
       }
-
-      const dnsResult = await verifyDns({
-        domainName: domainResponse.domain,
-        postalUrl: domainResponse.postalHost,
-        postalDnsRootUrl: postalDnsRootUrl,
-        dkimKey: domainResponse.dkimKey,
-        dkimValue: domainResponse.dkimValue
-      });
 
       let domainStatus: 'active' | 'pending' | 'disabled' =
         domainResponse.domainStatus;
@@ -272,18 +278,38 @@ export const domainsRouter = router({
       let domainReceivingMode: 'native' | 'forwarding' | 'disabled' =
         domainResponse.receivingMode;
 
+      const dnsRecords =
+        await mailBridgeTrpcClient.postal.domains.refreshDomainDns.query({
+          postalDomainId: domainResponse.postalId,
+          postalServerUrl: domainResponse.postalHost
+        });
+
+      if ('error' in dnsRecords) {
+        return {
+          error: dnsRecords.error
+        };
+      }
+
+      const dnsStatus = {
+        mxDnsValid: dnsRecords.mx.valid,
+        dkimDnsValid: dnsRecords.dkim.valid,
+        spfDnsValid: dnsRecords.spf.valid,
+        returnPathDnsValid: dnsRecords.returnPath.valid
+      };
+
+      // take all dns Records and count how many are valid, if all are valid then allOk
+      const allOk =
+        Object.entries(dnsStatus)
+          .map(([, _]) => _)
+          .filter((x) => x).length === Object.keys(dnsStatus).length;
+
       const threeDaysInMilliseconds = 3 * 24 * 60 * 60 * 1000; // 3 days in milliseconds
       const domainOlderThanThreeDays =
         new Date().getTime() - domainResponse.createdAt.getTime() >
         threeDaysInMilliseconds;
 
       if (domainOlderThanThreeDays) {
-        if (
-          dnsResult.dkim.valid ||
-          dnsResult.spf.valid ||
-          dnsResult.returnPath.valid ||
-          dnsResult.mx.valid
-        ) {
+        if (allOk) {
           domainStatus = 'active';
         } else {
           domainStatus = 'disabled';
@@ -294,17 +320,17 @@ export const domainsRouter = router({
 
       if (domainStatus !== 'disabled') {
         const validSendingRecords =
-          dnsResult.dkim.valid &&
-          dnsResult.spf.valid &&
-          dnsResult.returnPath.valid;
+          dnsStatus.spfDnsValid &&
+          dnsStatus.dkimDnsValid &&
+          dnsStatus.returnPathDnsValid;
 
-        const validReceivingRecords = dnsResult.mx.valid;
+        const validReceivingRecords = dnsStatus.mxDnsValid;
 
+        // if one of the record is valid
         const anyValidRecords =
-          dnsResult.dkim.valid ||
-          dnsResult.spf.valid ||
-          dnsResult.returnPath.valid ||
-          dnsResult.mx.valid;
+          Object.entries(dnsStatus)
+            .map(([, _]) => _)
+            .filter((x) => x).length !== 0;
 
         !validSendingRecords
           ? (domainSendingMode = 'disabled')
@@ -325,10 +351,7 @@ export const domainsRouter = router({
         await db
           .update(domains)
           .set({
-            mxDnsValid: dnsResult.mx.valid,
-            dkimDnsValid: dnsResult.dkim.valid,
-            spfDnsValid: dnsResult.spf.valid,
-            returnPathDnsValid: dnsResult.returnPath.valid,
+            ...dnsStatus,
             receivingMode: domainReceivingMode,
             sendingMode: domainSendingMode,
             lastDnsCheckAt: new Date(),
@@ -352,14 +375,14 @@ export const domainsRouter = router({
 
       if (domainResponse.postalId) {
         mailBridgeTrpcClient.postal.domains.refreshDomainDns.query({
-          orgId: orgId,
-          orgPublicId: org.publicId,
-          postalDomainId: domainResponse.postalId
+          postalDomainId: domainResponse.postalId,
+          postalServerUrl: domainResponse.postalHost
         });
       }
 
       return {
-        dns: dnsResult,
+        dnsStatus: dnsStatus,
+        dnsRecords: dnsRecords,
         domainStatus: domainStatus,
         domainSendingMode: domainSendingMode,
         domainReceivingMode: domainReceivingMode,

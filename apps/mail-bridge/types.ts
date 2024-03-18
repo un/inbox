@@ -36,11 +36,10 @@ export interface EnvPostalServersObject {
   ipv4: string;
   ipv6: string;
   webhookPubKey: string;
-  cpUsername: string;
-  cpPassword: string;
   dbConnectionString: string;
   defaultNewPool: string;
   active: boolean;
+  routesDomain: string;
 }
 
 export interface EnvPostalServerPersonalCredentials {

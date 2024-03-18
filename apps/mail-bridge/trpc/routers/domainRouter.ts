@@ -1,10 +1,19 @@
 import { z } from 'zod';
 import { router, protectedProcedure } from '../trpc';
 import { and, eq } from '@u22n/database/orm';
-import { postalServers } from '@u22n/database/schema';
-import { nanoId, zodSchemas } from '@u22n/utils';
-import { postalPuppet } from '@u22n/postal-puppet';
-import { PostalConfig } from '../../types';
+import { orgPostalConfigs, postalServers } from '@u22n/database/schema';
+import { zodSchemas } from '@u22n/utils';
+import type { PostalConfig } from '../../types';
+import { postalDB } from '../../postal-db';
+import { httpEndpoints, organizations, servers } from '../../postal-db/schema';
+import {
+  createDomain,
+  setMailServerRouteForDomain,
+  getDomainDNSRecords,
+  type GetDomainDNSRecordsOutput
+} from '../../postal-db/functions';
+import { db } from '@u22n/database';
+import { TRPCError } from '@trpc/server';
 
 export const domainRouter = router({
   createDomain: protectedProcedure
@@ -27,26 +36,32 @@ export const domainRouter = router({
           orgId: orgId,
           postalServerUrl: 'localmode',
           postalOrgId: postalOrgId,
-          domainId: nanoId(),
+          domainId: crypto.randomUUID(),
           dkimKey: 'localmode dkimKey',
           dkimValue: 'localmode dkimValue',
           forwardingAddress: 'forwardingAddress@localmode.local'
         };
       }
 
-      const { puppetInstance } = await postalPuppet.initPuppet({
-        postalControlPanel: postalConfig.activeServers.controlPanelSubDomain,
-        postalUrl: postalConfig.activeServers.url,
-        postalUser: postalConfig.activeServers.cpUsername,
-        postalPass: postalConfig.activeServers.cpPassword
+      const postalDbOrgQuery = await postalDB.query.organizations.findFirst({
+        where: eq(organizations.name, postalOrgId),
+        columns: {
+          id: true
+        }
       });
 
-      const puppetDomainResponse = await postalPuppet.addDomain({
-        puppetInstance: puppetInstance,
-        orgId: orgId,
-        orgPublicId: postalOrgId,
-        domainName: domainName
-      });
+      if (!postalDbOrgQuery || !postalDbOrgQuery.id) {
+        return {
+          error: 'Organization not found'
+        };
+      }
+      const internalPostalOrgId = postalDbOrgQuery.id;
+
+      const { domainId, dkimPublicKey, dkimSelector, verificationToken } =
+        await createDomain({
+          domain: domainName,
+          orgId: internalPostalOrgId
+        });
 
       const postalServerIdResponse = await db.query.postalServers.findFirst({
         where: and(
@@ -59,68 +74,112 @@ export const domainRouter = router({
       });
 
       if (!postalServerIdResponse) {
-        await postalPuppet.closePuppet(puppetInstance);
         return {
           error: 'No email server found'
         };
       }
-      const setMailServerRouteResult =
-        await postalPuppet.setMailServerRouteForDomain({
-          puppetInstance: puppetInstance,
-          orgId: orgId,
-          orgPublicId: postalOrgId,
-          serverId: postalServerIdResponse.publicId,
-          domainName: domainName,
-          username: '*'
+
+      const postalServerQuery = await postalDB.query.servers.findFirst({
+        where: eq(servers.name, postalServerIdResponse.publicId),
+        columns: {
+          id: true
+        }
+      });
+
+      if (!postalServerQuery || !postalServerQuery.id) {
+        return {
+          error: 'Server not found'
+        };
+      }
+
+      const internalPostalServerId = postalServerQuery.id;
+
+      const postalServerEndpointQuery =
+        await postalDB.query.httpEndpoints.findFirst({
+          where: eq(
+            httpEndpoints.name,
+            `uninbox-mail-bridge-http-${postalServerIdResponse.publicId}`
+          ),
+          columns: {
+            id: true
+          }
         });
 
-      await postalPuppet.closePuppet(puppetInstance);
+      if (!postalServerEndpointQuery || !postalServerEndpointQuery.id) {
+        return {
+          error: 'Endpoint not found'
+        };
+      }
+
+      const endpointId = postalServerEndpointQuery.id;
+      const { token } = await setMailServerRouteForDomain({
+        username: '*',
+        domainId: domainId,
+        endpointId: endpointId,
+        orgId: internalPostalOrgId,
+        serverId: internalPostalServerId
+      });
 
       return {
         orgId: orgId,
         postalServerUrl: postalConfig.activeServers.url as string,
         postalOrgId: postalOrgId,
-        domainId: puppetDomainResponse.domainId,
-        dkimKey: puppetDomainResponse.dkimKey,
-        dkimValue: puppetDomainResponse.dkimValue,
-        forwardingAddress: setMailServerRouteResult.forwardingAddress
+        domainId: domainId,
+        dkimKey: dkimSelector,
+        dkimValue: dkimPublicKey,
+        verificationToken: verificationToken,
+        forwardingAddress: `${token}@${postalConfig.activeServers.routesDomain}`
       };
     }),
   refreshDomainDns: protectedProcedure
     .input(
       z.object({
-        orgId: z.number().min(1),
-        orgPublicId: zodSchemas.nanoId,
-        postalDomainId: z.string().min(3).max(255)
+        postalDomainId: z.string(),
+        postalServerUrl: z.string()
       })
     )
     .query(async ({ ctx, input }) => {
-      const { config, db } = ctx;
-      const { orgId, orgPublicId, postalDomainId } = input;
-      const postalOrgId = orgPublicId;
+      const { config } = ctx;
+      const { postalDomainId, postalServerUrl } = input;
 
       const postalConfig: PostalConfig = config.postal;
       if (postalConfig.localMode === true) {
         return {
-          success: true
-        };
+          verification: {
+            valid: true,
+            name: 'localhost',
+            value: 'uninbox-verification local'
+          },
+          dkim: {
+            valid: true,
+            name: 'localhost',
+            value: ''
+          },
+          spf: {
+            valid: true,
+            name: 'localhost',
+            value: '',
+            extraSenders: false
+          },
+          mx: {
+            valid: true,
+            name: 'localhost',
+            priority: 10,
+            value: 'mx.localhost'
+          },
+          returnPath: {
+            valid: true,
+            name: 'localhost',
+            value: 'rp.localhost'
+          }
+        } satisfies GetDomainDNSRecordsOutput;
       }
 
-      const { puppetInstance } = await postalPuppet.initPuppet({
-        postalControlPanel: postalConfig.activeServers.controlPanelSubDomain,
-        postalUrl: postalConfig.activeServers.url,
-        postalUser: postalConfig.activeServers.cpUsername,
-        postalPass: postalConfig.activeServers.cpPassword
-      });
-
-      await postalPuppet.refreshDomainDns({
-        puppetInstance: puppetInstance,
-        orgId: orgId,
-        orgPublicId: postalOrgId,
-        domainId: postalDomainId
-      });
-      await postalPuppet.closePuppet(puppetInstance);
-
-      return;
+      const records = await getDomainDNSRecords(
+        postalDomainId,
+        postalServerUrl,
+        true
+      );
+      return records;
     })
 });

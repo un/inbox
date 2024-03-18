@@ -53,12 +53,6 @@ const foreignKey = customType<{ data: number }>({
   }
 });
 
-const bigintUnsigned = customType<{ data: number }>({
-  dataType() {
-    return 'bigint unsigned';
-  }
-});
-
 //******************* */
 //* User tables
 export const users = mysqlTable(
@@ -538,6 +532,7 @@ export const domains = mysqlTable(
     ]).notNull(),
     dkimKey: varchar('dkim_key', { length: 32 }),
     dkimValue: varchar('dkim_value', { length: 256 }),
+    verificationToken: varchar('verification_token', { length: 64 }),
     mxDnsValid: boolean('mx_dns_valid').notNull().default(false),
     dkimDnsValid: boolean('dkim_dns_valid').notNull().default(false),
     spfDnsValid: boolean('spf_dns_valid').notNull().default(false),
@@ -1344,7 +1339,7 @@ export const orgBilling = mysqlTable(
   })
 );
 
-export const orgBillingRelations = relations(orgBilling, ({ one, many }) => ({
+export const orgBillingRelations = relations(orgBilling, ({ one }) => ({
   org: one(orgs, {
     fields: [orgBilling.orgId],
     references: [orgs.id]
