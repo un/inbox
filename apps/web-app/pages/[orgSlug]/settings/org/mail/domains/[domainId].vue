@@ -135,7 +135,7 @@
         <UnUiTooltip text="Back to domains">
           <UnUiIcon
             name="i-ph-arrow-left"
-            class="text-2xl"
+            class="text-base-11 text-2xl"
             @click="navigateTo('./')" />
         </UnUiTooltip>
         <div class="flex flex-col gap-1">
@@ -195,7 +195,7 @@
           </div>
           <div
             v-if="domainStatus === 'pending'"
-            class="flex flex-col gap-0">
+            class="text-base-12 flex flex-col gap-0">
             <span class=""> Your domain is unverified. </span>
             <span class="">
               Create at least one DNS record below to verify your domain.
@@ -211,7 +211,7 @@
           </div>
           <div
             v-if="domainStatus === 'active'"
-            class="flex flex-col gap-0">
+            class="text-base-12 flex flex-col gap-0">
             <span class="">
               Your domain has been activated and can be used to send and receive
               as per the settings below.
@@ -219,7 +219,7 @@
           </div>
           <div
             v-if="domainStatus === 'disabled'"
-            class="flex flex-col gap-0">
+            class="text-base-12 flex flex-col gap-0">
             <span class="">
               Your domain has been disabled and can not be used to send or
               receive mail.
@@ -249,8 +249,8 @@
                 class="mb-1.5"
                 :class="
                   open
-                    ? 'bg-blue-50 dark:bg-blue-900'
-                    : 'bg-gray-100 dark:bg-gray-900'
+                    ? 'bg-accent-5 dark:bg-accent-5'
+                    : 'bg-accent-3 dark:bg-accent-3'
                 ">
                 <div
                   class="mr-4 flex w-full flex-row items-center justify-between">
@@ -276,7 +276,7 @@
             <template #incoming>
               <div class="mr-10 flex flex-col gap-4">
                 <div class="flex h-fit w-full flex-col gap-4 p-3">
-                  <div class="flex flex-col justify-center gap-8">
+                  <div class="text-base-11 flex flex-col justify-center gap-8">
                     <div v-if="incomingStatus === 'disabled'">
                       <span class=""
                         >Incoming mail is disabled for this domain. Please
@@ -324,13 +324,18 @@
                       <div class="mt-[8px] flex flex-col gap-1">
                         <span
                           class="text-base-11 overflow-hidden text-xs uppercase">
-                          Forwarding Address
+                          class="text-base-11 overflow-hidden text-xs
+                          uppercase"> Forwarding Address
                         </span>
                         <div class="flex flex-row items-center gap-2">
                           <div
                             class="bg-base-3 flex w-fit min-w-[50px] flex-col items-center rounded-lg p-4">
+                            class="bg-base-3 flex w-fit min-w-[50px] flex-col
+                            items-center rounded-lg p-4">
                             <span
                               class="break-anywhere w-fit text-left font-mono text-sm">
+                              class="break-anywhere w-fit text-left font-mono
+                              text-sm">
                               {{ domainQuery?.domainData?.forwardingAddress }}
                             </span>
                           </div>
@@ -348,7 +353,8 @@
 
             <template #outgoing>
               <div class="flex h-fit w-full flex-col justify-center gap-4 p-3">
-                <div class="mr-10 flex flex-col justify-center gap-8">
+                <div
+                  class="text-base-11 mr-10 flex flex-col justify-center gap-8">
                   <div v-if="outgoingStatus === 'disabled'">
                     <span class="">
                       Outgoing mail is disabled for this domain. Please add the
@@ -428,12 +434,12 @@
                   class="mb-1.5"
                   :class="
                     open
-                      ? 'bg-blue-50 dark:bg-blue-900'
-                      : 'bg-gray-100 dark:bg-gray-900'
+                      ? 'bg-base-5 dark:bg-base-5'
+                      : 'bg-base-3 dark:bg-base-3'
                   ">
                   <div
                     class="mr-4 flex w-full flex-row items-center justify-between">
-                    <span class="truncate">{{ item.label }}</span>
+                    <span class="text-base-12 truncate">{{ item.label }}</span>
                     <UnUiBadge
                       :color="item.status ? 'green' : 'red'"
                       :label="item.status ? 'VALID' : 'INVALID'" />

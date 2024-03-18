@@ -63,8 +63,8 @@
 </script>
 <template>
   <button
-    class="flex max-w-full flex-col justify-between gap-0 rounded-lg bg-gray-50 hover:bg-gray-100 dark:bg-gray-900 dark:hover:bg-gray-800">
-    <div class="flex h-fit w-full flex-row items-center gap-6">
+    class="flex w-full max-w-full flex-col justify-between gap-0 rounded-lg">
+    <div class="flex h-fit w-full flex-row items-center gap-4">
       <UnUiAvatarPlus
         :avatars="participantArray"
         :primary="author"
@@ -73,12 +73,13 @@
         <!-- <div class="text-base text-left w-full overflow-hidden text-sm">
           <span class="line-clamp-2 font-bold">{{ authorName }}</span>
         </div> -->
-        <div class="w-full overflow-hidden text-left text-xs">
+        <div class="text-base-11 w-full overflow-hidden pl-2 text-left text-xs">
           <span class="font-italic truncate text-xs">
             {{ props.convo.subjects[0].subject }}
           </span>
         </div>
-        <div class="w-full overflow-hidden text-left text-base text-sm">
+        <div
+          class="bg-base-3 hover:bg-base-4 text-base-12 w-full overflow-hidden rounded-lg p-2 text-left text-sm">
           <span class="line-clamp-2">
             <span class="font-bold">{{ authorEntryName }} </span>
             : {{ props.convo.entries[0].bodyPlainText }}

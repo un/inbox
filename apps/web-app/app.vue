@@ -3,7 +3,7 @@
 </script>
 
 <template>
-  <div class="h-screen max-h-screen">
+  <div class="bg-base-1 dark:bg-base-1 h-screen max-h-screen">
     <NuxtLayout class="h-screen max-h-screen">
       <NuxtPage />
     </NuxtLayout>

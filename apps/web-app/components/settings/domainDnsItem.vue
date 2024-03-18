@@ -11,23 +11,23 @@
   });
 </script>
 <template>
-  <div class="mr-10 h-fit w-full flex flex-col justify-center gap-4 p-3.5">
+  <div class="mr-10 flex h-fit w-full flex-col justify-center gap-4 p-3.5">
     <div>
-      <span class="">{{ props.text }}</span>
+      <span class="text-base-11">{{ props.text }}</span>
     </div>
-    <div class="flex flex-row flex-wrap gap-4 w-full max-w-full">
+    <div class="flex w-full max-w-full flex-row flex-wrap gap-4">
       <div
         v-for="block of props.blocks"
         :key="block.value">
-        <div class="flex flex-col w-full max-w-full gap-1">
+        <div class="flex w-full max-w-full flex-col gap-1">
           <span class="overflow-hidden text-xs uppercase">
             {{ block.title }}
           </span>
-          <div class="flex flex-row items-center gap-2 w-full max-w-full">
+          <div class="flex w-full max-w-full flex-row items-center gap-2">
             <div
-              class="max-w-full min-w-[50px] flex flex-col items-center rounded-lg bg-gray-100 p-4">
+              class="bg-base-3 flex min-w-[50px] max-w-full flex-col items-center rounded-lg p-4">
               <span
-                class="w-full break-all text-left text-sm font-mono"
+                class="text-base-12 w-full break-all text-left font-mono text-sm"
                 :class="block.title === 'Type' ? 'uppercase' : ''">
                 {{ block.value }}
               </span>
