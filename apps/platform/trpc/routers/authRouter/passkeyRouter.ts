@@ -3,7 +3,7 @@ import { limitedProcedure, router, userProcedure } from '../../trpc';
 import { eq } from '@u22n/database/orm';
 import { accounts, users } from '@u22n/database/schema';
 import { TRPCError } from '@trpc/server';
-import {
+import type {
   RegistrationResponseJSON,
   AuthenticationResponseJSON
 } from '@simplewebauthn/types';
@@ -109,7 +109,7 @@ export const passkeyRouter = router({
       if (!available) {
         throw new TRPCError({
           code: 'FORBIDDEN',
-          message: error
+          message: error || "Username isn't available"
         });
       }
 
@@ -122,6 +122,14 @@ export const passkeyRouter = router({
           await tx.insert(accounts).values({
             userId: Number(newUser.insertId)
           });
+
+          if (!passkeyVerification.registrationInfo) {
+            throw new TRPCError({
+              code: 'BAD_REQUEST',
+              message: 'Passkey verification failed'
+            });
+          }
+
           const insertPasskey = await usePasskeysDb.createAuthenticator(
             {
               accountId: Number(newUser.insertId),

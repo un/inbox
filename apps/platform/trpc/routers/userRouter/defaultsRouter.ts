@@ -31,6 +31,10 @@ export const defaultsRouter = router({
         }
       });
 
+      if (!userResponse) {
+        throw new Error('User not found');
+      }
+
       const twoFactorEnabledCorrectly = userResponse.account.passwordHash
         ? !!userResponse?.account?.twoFactorSecret
         : true;

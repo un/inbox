@@ -475,7 +475,7 @@ export const emailIdentityRouter = router({
         });
       const emailIdentities = routingRulesDestinationsQuery
         .map((routingRulesDestination) => {
-          const emailIdentity = routingRulesDestination.rule.mailIdentities[0];
+          const emailIdentity = routingRulesDestination.rule.mailIdentities[0]!;
           return {
             publicId: emailIdentity.publicId,
             username: emailIdentity.username,

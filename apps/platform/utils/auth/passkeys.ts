@@ -4,12 +4,12 @@ import {
   generateAuthenticationOptions as webAuthnGenerateAuthenticationOptions,
   verifyAuthenticationResponse as webAuthnVerifyAuthenticationResponse
 } from '@simplewebauthn/server';
-import {
+import type {
   RegistrationResponseJSON,
   PublicKeyCredentialDescriptorFuture,
   AuthenticationResponseJSON
 } from '@simplewebauthn/types';
-import { Authenticator, usePasskeysDb } from './passkeyDbAdaptor';
+import { type Authenticator, usePasskeysDb } from './passkeyDbAdaptor';
 import { TRPCError } from '@trpc/server';
 import { useRuntimeConfig, useStorage } from '#imports';
 
@@ -34,7 +34,7 @@ async function generateRegistrationOptions(options: RegistrationOptions) {
 
   // We assume that the user is new if userId is undefined, and we don't have any authenticators for them
   const userAuthenticators: Authenticator[] =
-    typeof userId !== 'undefined'
+    typeof userId === 'undefined'
       ? []
       : await usePasskeysDb.listAuthenticatorsByUserId(userId);
 

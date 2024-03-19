@@ -3,20 +3,18 @@ import { z } from 'zod';
 import { orgProcedure, router, userProcedure } from '../../trpc';
 import { eq } from '@u22n/database/orm';
 import {
-  postalServers,
   emailIdentities,
   emailIdentitiesPersonal,
   users,
   emailRoutingRules,
-  orgPostalConfigs,
   emailIdentitiesAuthorizedUsers,
   emailRoutingRulesDestinations
 } from '@u22n/database/schema';
 import { nanoId } from '@u22n/utils';
-import { MailDomainEntries } from '@u22n/types';
+
 import { orgMembers } from '@u22n/database/schema';
-import { mailBridgeTrpcClient, useRuntimeConfig } from '#imports';
-import { MailDomains } from '../../../types';
+import { useRuntimeConfig } from '#imports';
+import type { MailDomains } from '../../../types';
 
 export const addressRouter = router({
   getPersonalAddresses: userProcedure
@@ -96,7 +94,7 @@ export const addressRouter = router({
       }
       const userId = user?.id;
       const orgId = org.id;
-      const orgPublicId = org.publicId;
+
       const userOrgMembership = org.members.find(
         (member) => member.userId === userId
       );
@@ -153,7 +151,7 @@ export const addressRouter = router({
         ...availablePremiumDomains
       ];
 
-      const emailIdentityDomain = input.emailIdentity.split('@')[1];
+      const emailIdentityDomain = input.emailIdentity.split('@')[1] || '';
 
       if (!availableDomains.includes(emailIdentityDomain)) {
         throw new TRPCError({

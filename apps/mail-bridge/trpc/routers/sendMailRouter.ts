@@ -43,9 +43,9 @@ export const sendMailRouter = router({
           success: true,
           metadata: {
             email: {
-              to: null,
+              to: [{ id: 0, type: 'emailIdentity' }],
               from: [{ id: 1, type: 'emailIdentity' }],
-              cc: null,
+              cc: [],
               messageId: 'localModeMessageId',
               postalMessages: [
                 {
@@ -56,7 +56,7 @@ export const sendMailRouter = router({
                 }
               ]
             }
-          }
+          } as ConvoEntryMetadata
         };
       }
 

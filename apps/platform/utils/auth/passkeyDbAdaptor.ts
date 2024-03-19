@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm';
 import { db } from '@u22n/database';
 import { accounts, authenticators } from '@u22n/database/schema';
-import { AuthenticatorTransportFuture } from '@simplewebauthn/types';
+import type { AuthenticatorTransportFuture } from '@simplewebauthn/types';
 import { isoBase64URL } from '@simplewebauthn/server/helpers';
 
 //! Enable debug logging
