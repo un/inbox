@@ -3,11 +3,11 @@
 </script>
 <template>
   <div
-    class="h-full max-h-full flex flex-col gap-2 overflow-y-auto border-r-1 border-base-6 pr-4">
+    class="border-r-1 border-base-6 flex h-full max-h-full flex-col gap-2 overflow-y-auto pr-4">
     <div class="flex grow flex-col gap-0 overflow-hidden">
       <convos-convo-list />
 
-      <div class="mt-[-48px] h-[48px] from-base-1 bg-gradient-to-t" />
+      <div class="from-base-1 mt-[-48px] h-[48px] bg-gradient-to-t" />
     </div>
     <div class="flex flex-row gap-2">
       <UnUiButton

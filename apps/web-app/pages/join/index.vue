@@ -56,14 +56,14 @@
 
 <template>
   <div
-    class="h-screen w-screen flex flex-col items-center justify-between p-4 pb-14">
+    class="flex h-screen w-screen flex-col items-center justify-between p-4 pb-14">
     <div
-      class="max-w-72 w-full flex grow flex-col items-center justify-center gap-8 pb-4 md:max-w-xl">
-      <h1 class="mb-4 text-center text-2xl font-display">
+      class="flex w-full max-w-72 grow flex-col items-center justify-center gap-8 pb-4 md:max-w-xl">
+      <h1 class="font-display mb-4 text-center text-2xl">
         Let's make your <br /><span class="text-5xl">UnInbox</span>
       </h1>
       <h2 class="text-center text-xl font-semibold">Choose your username</h2>
-      <div class="w-full flex flex-row justify-stretch gap-2">
+      <div class="flex w-full flex-row justify-stretch gap-2">
         <UnUiTooltip
           text="Choose your username"
           class="w-full">
@@ -115,7 +115,7 @@
             })
         " />
 
-      <div class="mt-3 w-full flex flex-col gap-2">
+      <div class="mt-3 flex w-full flex-col gap-2">
         <UnUiButton
           label="I like it"
           icon="i-ph-check"

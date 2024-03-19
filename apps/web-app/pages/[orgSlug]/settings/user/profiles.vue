@@ -152,13 +152,13 @@
 </script>
 
 <template>
-  <div class="h-full w-full flex flex-col items-start gap-8 p-4">
-    <div class="w-full flex flex-row items-center justify-between">
-      <span class="text-2xl font-display">Your Profile</span>
+  <div class="flex h-full w-full flex-col items-start gap-8 p-4">
+    <div class="flex w-full flex-row items-center justify-between">
+      <span class="font-display text-2xl">Your Profile</span>
     </div>
     <div
       v-if="pending"
-      class="w-full flex flex-row justify-center gap-4 rounded-xl rounded-tl-2xl bg-base-3 p-8">
+      class="bg-base-3 flex w-full flex-row justify-center gap-4 rounded-xl rounded-tl-2xl p-8">
       <UnUiIcon
         name="i-svg-spinners:3-dots-fade"
         size="24" />
@@ -166,16 +166,16 @@
     </div>
     <div
       v-if="!pending"
-      class="w-full flex flex-col items-start justify-center gap-8 pb-14">
+      class="flex w-full flex-col items-start justify-center gap-8 pb-14">
       <div class="flex flex-col gap-2">
         <button
           type="button"
-          class="h-[80px] w-[80px] cursor-pointer border-1 border-base-7 rounded-lg bg-base-3 bg-base-4 bg-cover bg-center md:h-[128px] md:w-[128px] hover:border-base-8"
+          class="border-1 border-base-7 bg-base-3 bg-base-4 hover:border-base-8 h-[80px] w-[80px] cursor-pointer rounded-lg bg-cover bg-center md:h-[128px] md:w-[128px]"
           :style="imageUrl ? `background-image: url(${imageUrl})` : ''"
           @click="selectAvatar()">
           <div
             v-if="!imageUrl"
-            class="h-full w-full flex flex-col items-center justify-center gap-2 p-4">
+            class="flex h-full w-full flex-col items-center justify-center gap-2 p-4">
             <div class="h-[32px] w-[32px]">
               <UnUiIcon
                 :name="
@@ -185,7 +185,7 @@
                 "
                 size="100%" />
             </div>
-            <p class="text-center text-sm lt-md:text-xs">Upload image</p>
+            <p class="lt-md:text-xs text-center text-sm">Upload image</p>
           </div>
         </button>
         <UnUiButton
@@ -230,7 +230,7 @@
         @click="saveProfile()" />
       <p
         v-if="pageError"
-        class="w-full rounded bg-red-9 p-4 text-center">
+        class="bg-red-9 w-full rounded p-4 text-center">
         Something went wrong, please try again or contact our support team if it
         persists
       </p>

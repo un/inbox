@@ -4,7 +4,7 @@
 
 Fixes # (issue)
 
-*If there is not an issue for this, please create one first. This is used to tracking purposes and also helps use understand why this PR exists*
+_If there is not an issue for this, please create one first. This is used to tracking purposes and also helps use understand why this PR exists_
 
 <!-- If there isn't an issue for this PR, please re-review our Contributing Guide and create an issue -->
 
@@ -24,6 +24,7 @@ Fixes # (issue)
 <!-- We're starting to get more and more contributions. Please help us making this efficient for all of us and go through this checklist. Please tick off what you did  -->
 
 ### Required
+
 - [ ] Read [Contributing Guide](https://github.com/un/inbox/blob/main/CONTRIBUTING.md)
 - [ ] Self-reviewed my own code
 - [ ] Tested my code in a local environment
