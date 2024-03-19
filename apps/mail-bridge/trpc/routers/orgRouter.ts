@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { router, protectedProcedure } from '../trpc';
 import { eq } from '@u22n/database/orm';
 import { nanoId, zodSchemas } from '@u22n/utils';
-import { PostalConfig } from '../../types';
+import type { PostalConfig } from '../../types';
 import {
   addMailServer,
   createOrg,

@@ -10,7 +10,8 @@
   "scripts": {
     "dev": "PORT=3100 npx nitropack dev",
     "build": "npx nitropack build",
-    "preview": "node .output/server/index.mjs"
+    "preview": "node .output/server/index.mjs",
+    "check": "tsc --noEmit"
   },
   "dependencies": {
     "@trpc/client": "^10.45.2",

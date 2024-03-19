@@ -1,10 +1,11 @@
 import { db } from '@u22n/database';
 import { simpleParser } from 'mailparser';
+// @ts-expect-error, No types yet
 import { authenticate } from 'mailauth';
 import { and, eq, inArray } from '@u22n/database/orm';
 import type { InferInsertModel } from '@u22n/database/orm';
 import {
-  ConvoEntryMetadata,
+  type ConvoEntryMetadata,
   contacts,
   convoAttachments,
   convoEntries,
@@ -23,6 +24,15 @@ import type {
 import { nanoId } from '@u22n/utils';
 import { tiptapCore, tiptapHtml } from '@u22n/tiptap';
 import { tipTapExtensions } from '@u22n/tiptap/extensions';
+import {
+  eventHandler,
+  sendNoContent,
+  readBody,
+  parseAddressIds,
+  useRuntimeConfig
+} from '#imports';
+
+// TODO!: remove all `|| <default>` and `<nullish>?.` shortcuts in favour of proper error handling
 
 /**
  * used for all incoming mail from Postal
@@ -47,12 +57,22 @@ export default eventHandler(async (event) => {
 
   let orgId: number | null = null;
   let orgPublicId: string | null = null;
-  const [orgIdStr, mailserverId] = event.context.params.mailServer.split('/');
+
+  if (!event.context.params?.mailServer) {
+    console.error('⛔ no mailserver found in the event context', {
+      payloadPostalEmailId
+    });
+    return;
+  }
+
+  const [orgIdStr = '', mailserverId = ''] =
+    event.context.params.mailServer.split('/');
 
   if (orgIdStr === '0' || mailserverId === 'root') {
     // handle for root emails
     // get the email identity for the root email
-    const [rootEmailUsername, rootEmailDomain] = payloadEmailTo.split('@');
+    const [rootEmailUsername = '', rootEmailDomain = ''] =
+      payloadEmailTo.split('@');
     const rootEmailIdentity = await db.query.emailIdentities.findFirst({
       where: and(
         eq(emailIdentities.username, rootEmailUsername),
@@ -120,6 +140,20 @@ export default eventHandler(async (event) => {
     trustReceived: true
   });
 
+  if (!parsedEmail.from) {
+    console.error('⛔ no from address found in the email', {
+      payloadPostalEmailId
+    });
+    return;
+  }
+
+  if (!parsedEmail.to) {
+    console.error('⛔ no to address found in the email', {
+      payloadPostalEmailId
+    });
+    return;
+  }
+
   // Extract key email properties
   if (parsedEmail.from.value.length > 1) {
     console.error(
@@ -141,8 +175,8 @@ export default eventHandler(async (event) => {
     ? parsedEmail.inReplyTo.replace(/^<|>$/g, '')
     : null;
   const subject =
-    parsedEmail.subject.replace(/^(RE:|FW:)\s*/i, '').trim() || '';
-  const messageId = parsedEmail.messageId.replace(/^<|>$/g, '') || '';
+    parsedEmail.subject?.replace(/^(RE:|FW:)\s*/i, '').trim() || '';
+  const messageId = parsedEmail.messageId?.replace(/^<|>$/g, '') || '';
   const messageBodyHtml = (parsedEmail.html as string).replace(/\n/g, '') || '';
   const attachments = parsedEmail.attachments || [];
 
@@ -182,11 +216,15 @@ export default eventHandler(async (event) => {
     MessageParseAddressPlatformObject[],
     MessageParseAddressPlatformObject[] | []
   ] = await Promise.all([
-    parseAddressIds({ addresses: messageTo, addressType: 'to', orgId: orgId }),
+    parseAddressIds({
+      addresses: messageTo,
+      addressType: 'to',
+      orgId: orgId || 0
+    }),
     parseAddressIds({
       addresses: messageFrom,
       addressType: 'from',
-      orgId: orgId
+      orgId: orgId || 0
     }),
     messageCc
       ? parseAddressIds({ addresses: messageCc, addressType: 'cc', orgId })
@@ -194,25 +232,25 @@ export default eventHandler(async (event) => {
   ]);
 
   // check the from contact and update their signature if it is null
-  if (messageFromPlatformObject[0].type === 'contact') {
+  if (messageFromPlatformObject[0]?.type === 'contact') {
     const contact = await db.query.contacts.findFirst({
       where: and(
         eq(contacts.orgId, orgId),
-        eq(contacts.id, messageFromPlatformObject[0].id)
+        eq(contacts.id, messageFromPlatformObject[0]?.id || 0)
       ),
       columns: {
         id: true,
         signaturePlainText: true
       }
     });
-    if (!contact.signaturePlainText) {
+    if (!contact?.signaturePlainText) {
       await db
         .update(contacts)
         .set({
           signaturePlainText: parsedEmailMessage.foundSignaturePlainText,
           signatureHtml: parsedEmailMessage.foundSignatureHtml
         })
-        .where(eq(contacts.id, contact.id));
+        .where(eq(contacts.id, contact?.id || 0));
     }
   }
 
@@ -338,7 +376,7 @@ export default eventHandler(async (event) => {
       replyToId = existingMessage.id;
 
       // check if the subject is the same as existing, if not, add a new subject to the convo
-      if (subject !== existingMessage.subject.subject) {
+      if (subject !== existingMessage.subject?.subject) {
         const newSubject = await db.insert(convos).values({
           orgId: orgId,
           publicId: nanoId(),
@@ -350,7 +388,7 @@ export default eventHandler(async (event) => {
       }
 
       //check if the contact id is already in the convo participants
-      if (fromAddressPlatformObject.type === 'contact') {
+      if (fromAddressPlatformObject?.type === 'contact') {
         const contactAlreadyInConvo = existingMessage.convo.participants.find(
           (p) => p.contactId === fromAddressPlatformObject.id
         );
@@ -381,9 +419,9 @@ export default eventHandler(async (event) => {
       if (missingContacts.length) {
         convoParticipantsToAdd.push(
           ...missingContacts.map((contactId) => ({
-            convoId: convoId,
-            contactId: contactId,
-            orgId: orgId,
+            convoId: convoId || 0,
+            contactId: contactId || 0,
+            orgId: orgId || 0,
             publicId: nanoId(),
             role: 'contributor' as const
           }))
@@ -392,9 +430,9 @@ export default eventHandler(async (event) => {
       if (missingOrgMembers.length) {
         convoParticipantsToAdd.push(
           ...missingOrgMembers.map((orgMemberId) => ({
-            convoId: convoId,
-            orgMemberId: orgMemberId,
-            orgId: orgId,
+            convoId: convoId || 0,
+            orgMemberId: orgMemberId || 0,
+            orgId: orgId || 0,
             publicId: nanoId(),
             role: 'contributor' as const
           }))
@@ -403,9 +441,9 @@ export default eventHandler(async (event) => {
       if (missingUserGroups.length) {
         convoParticipantsToAdd.push(
           ...missingUserGroups.map((userGroupId) => ({
-            convoId: convoId,
-            userGroupId: userGroupId,
-            orgId: orgId,
+            convoId: convoId || 0,
+            userGroupId: userGroupId || 0,
+            orgId: orgId || 0,
             publicId: nanoId(),
             role: 'contributor' as const
           }))
@@ -440,9 +478,9 @@ export default eventHandler(async (event) => {
     if (contactIds.length) {
       convoParticipantsToAdd.push(
         ...contactIds.map((contactId) => ({
-          convoId: convoId,
-          contactId: contactId,
-          orgId: orgId,
+          convoId: convoId || 0,
+          contactId: contactId || 0,
+          orgId: orgId || 0,
           publicId: nanoId(),
           role: 'contributor' as const
         }))
@@ -451,9 +489,9 @@ export default eventHandler(async (event) => {
     if (routingRuleOrgMemberIds.length) {
       convoParticipantsToAdd.push(
         ...routingRuleOrgMemberIds.map((orgMemberId) => ({
-          convoId: convoId,
-          orgMemberId: orgMemberId,
-          orgId: orgId,
+          convoId: convoId || 0,
+          orgMemberId: orgMemberId || 0,
+          orgId: orgId || 0,
           publicId: nanoId(),
           role: 'contributor' as const
         }))
@@ -462,9 +500,9 @@ export default eventHandler(async (event) => {
     if (routingRuleUserGroupIds.length) {
       convoParticipantsToAdd.push(
         ...routingRuleUserGroupIds.map((userGroupId) => ({
-          convoId: convoId,
-          userGroupId: userGroupId,
-          orgId: orgId,
+          convoId: convoId || 0,
+          userGroupId: userGroupId || 0,
+          orgId: orgId || 0,
           publicId: nanoId(),
           role: 'contributor' as const
         }))
@@ -479,25 +517,25 @@ export default eventHandler(async (event) => {
   }
 
   if (!fromAddressParticipantId) {
-    if (fromAddressPlatformObject.type === 'contact') {
+    if (fromAddressPlatformObject?.type === 'contact') {
       const contactParticipant = await db.query.convoParticipants.findFirst({
         where: and(
           eq(convoParticipants.orgId, orgId),
-          eq(convoParticipants.convoId, convoId),
-          eq(convoParticipants.contactId, fromAddressPlatformObject.id)
+          eq(convoParticipants.convoId, convoId || 0),
+          eq(convoParticipants.contactId, fromAddressPlatformObject?.id)
         ),
         columns: {
           id: true
         }
       });
-      fromAddressParticipantId = contactParticipant.id;
-    } else if (fromAddressPlatformObject.type === 'emailIdentity') {
+      fromAddressParticipantId = contactParticipant?.id || null;
+    } else if (fromAddressPlatformObject?.type === 'emailIdentity') {
       // we need to get the first person/group in the routing rule and add them to the convo
       const emailIdentityParticipant = await db.query.emailIdentities.findFirst(
         {
           where: and(
             eq(emailIdentities.orgId, orgId),
-            eq(emailIdentities.id, fromAddressPlatformObject.id)
+            eq(emailIdentities.id, fromAddressPlatformObject?.id)
           ),
           columns: {
             id: true
@@ -520,26 +558,26 @@ export default eventHandler(async (event) => {
         }
       );
       const firstDestination =
-        emailIdentityParticipant.routingRules.destinations[0];
+        emailIdentityParticipant?.routingRules.destinations[0];
       let convoParticipantFromAddressIdentity;
-      if (firstDestination.orgMemberId) {
+      if (firstDestination?.orgMemberId) {
         convoParticipantFromAddressIdentity =
           await db.query.convoParticipants.findFirst({
             where: and(
               eq(convoParticipants.orgId, orgId),
-              eq(convoParticipants.convoId, convoId),
+              eq(convoParticipants.convoId, convoId || 0),
               eq(convoParticipants.orgMemberId, firstDestination.orgMemberId)
             ),
             columns: {
               id: true
             }
           });
-      } else if (firstDestination.groupId) {
+      } else if (firstDestination?.groupId) {
         convoParticipantFromAddressIdentity =
           await db.query.convoParticipants.findFirst({
             where: and(
               eq(convoParticipants.orgId, orgId),
-              eq(convoParticipants.convoId, convoId),
+              eq(convoParticipants.convoId, convoId || 0),
               eq(convoParticipants.userGroupId, firstDestination.groupId)
             ),
             columns: {
@@ -547,7 +585,8 @@ export default eventHandler(async (event) => {
             }
           });
       }
-      fromAddressParticipantId = convoParticipantFromAddressIdentity.id;
+      fromAddressParticipantId =
+        convoParticipantFromAddressIdentity?.id || null;
     }
   }
 
@@ -579,6 +618,7 @@ export default eventHandler(async (event) => {
           id: payloadPostalEmailId,
           postalMessageId: messageId,
           recipient: payloadEmailTo,
+          // @ts-expect-error, not sure about this yet
           token: null
         }
       ],
@@ -596,6 +636,7 @@ export default eventHandler(async (event) => {
   );
 
   const insertNewConvoEntry = await db.insert(convoEntries).values({
+    // @ts-expect-error, no clue about what is the typeerror here
     orgId: orgId,
     publicId: nanoId(),
     convoId: convoId,
@@ -635,7 +676,7 @@ export default eventHandler(async (event) => {
       publicId: string;
       signedUrl: string;
     };
-    const preUpload: PreSignedData = await fetch(
+    const preUpload = (await fetch(
       `${useRuntimeConfig().storage.url}/api/attachments/internalPresign`,
       {
         method: 'post',
@@ -649,7 +690,7 @@ export default eventHandler(async (event) => {
           filename: input.fileName
         })
       }
-    ).then((res) => res.json());
+    ).then((res) => res.json())) as PreSignedData;
     if (!preUpload || !preUpload.publicId || !preUpload.signedUrl) {
       throw new Error('Missing attachmentPublicId or presignedUrl');
     }
@@ -685,13 +726,13 @@ export default eventHandler(async (event) => {
     await Promise.all(
       attachments.map((attachment) => {
         return uploadAndAttachAttachment({
-          orgId: orgId,
-          fileName: attachment.filename,
+          orgId: orgId || 0,
+          fileName: attachment.filename || '',
           fileType: attachment.contentType,
           fileContent: attachment.content,
-          convoId: convoId,
+          convoId: convoId || 0,
           convoEntryId: +insertNewConvoEntry.insertId,
-          convoParticipantId: fromAddressParticipantId,
+          convoParticipantId: fromAddressParticipantId || 0,
           fileSize: attachment.size
         });
       })

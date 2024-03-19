@@ -3,8 +3,10 @@
  *
  */
 
+import { eventHandler, readBody } from '#imports';
+
 export default eventHandler((event) => {
-  const mailBody = readBody(event);
+  const _mailBody = readBody(event);
 
   //! Verify the source of webhook call
   //! extract the username from to email address of the mail body

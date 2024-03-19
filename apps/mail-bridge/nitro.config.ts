@@ -41,6 +41,9 @@ export default defineNitroConfig({
       target: 'EsNext'
     }
   },
+  imports: {
+    autoImport: false
+  },
   // Nitro options
   runtimeConfig: {
     url: process.env.MAILBRIDGE_URL,
