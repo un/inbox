@@ -8,6 +8,7 @@
     "pnpm": ">=8"
   },
   "scripts": {
+    "check": "tsc --noEmit",
     "db:generate": "drizzle-kit generate:mysql --config=drizzle.config.ts",
     "db:push": "drizzle-kit push:mysql --config=drizzle.config.ts",
     "db:push:r": "infisical run --env=local -- drizzle-kit push:mysql --config=drizzle.config.ts",
@@ -17,8 +18,8 @@
     "db:drop:r": "infisical run --env=local -- drizzle-kit drop --config=drizzle.config.ts",
     "db:studio": "pnpm drizzle-kit studio --port 3333  --config=drizzle.config.ts",
     "db:studio:r": "infisical run --env=local -- drizzle-kit studio --port 3333  --config=drizzle.config.ts",
-    "db:seed:r": "infisical run --env=local -- esno dbSeed.ts",
-    "db:clean:r": "infisical run --env=local -- esno dbClean.ts"
+    "db:seed:r": "infisical run --env=local -- tsx dbSeed.ts",
+    "db:clean:r": "infisical run --env=local -- tsx dbClean.ts"
   },
   "dependencies": {
     "@planetscale/database": "^1.16.0",
@@ -31,6 +32,6 @@
   "devDependencies": {
     "@faker-js/faker": "^8.4.1",
     "drizzle-kit": "^0.20.14",
-    "esno": "^4.7.0"
+    "tsx": "^4.7.1"
   }
 }

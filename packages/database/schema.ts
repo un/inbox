@@ -1262,7 +1262,7 @@ export const convoEntryReplies = mysqlTable(
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull()
   },
-  (table) => ({
+  () => ({
     //TODO: Add indexes
   })
 );
@@ -1323,7 +1323,7 @@ export const orgBilling = mysqlTable(
     stripeSubscriptionId: varchar('stripe_subscription_id', { length: 128 }),
     plan: mysqlEnum('plan', [...stripePlanNames])
       .notNull()
-      .default('free'),
+      .default('starter'),
     period: mysqlEnum('period', [...stripeBillingPeriods])
       .notNull()
       .default('monthly')

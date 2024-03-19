@@ -395,9 +395,9 @@ importers:
       drizzle-kit:
         specifier: ^0.20.14
         version: 0.20.14
-      esno:
-        specifier: ^4.7.0
-        version: 4.7.0
+      tsx:
+        specifier: ^4.7.1
+        version: 4.7.1
 
   packages/tiptap:
     dependencies:
@@ -7034,13 +7034,6 @@ packages:
       event-emitter: 0.3.5
       type: 2.7.2
 
-  /esno@4.7.0:
-    resolution: {integrity: sha512-81owrjxIxOwqcABt20U09Wn8lpBo9K6ttqbGvQcB3VYNLJyaV1fvKkDtpZd3Rj5BX3WXiGiJCjUevKQGNICzJg==}
-    hasBin: true
-    dependencies:
-      tsx: 4.7.1
-    dev: true
-
   /espree@9.6.1:
     resolution: {integrity: sha512-oruZaFkjorTpF32kDSI5/75ViwGeZginGGy2NoOSg3Q9bnwlnmDm4HLnkl0RE3n+njDXR037aY1+x58Z/zFdwQ==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
@@ -8362,7 +8355,7 @@ packages:
       nodemailer: 6.9.9
       psl: 1.9.0
       punycode: 2.3.1
-      undici: 5.28.3
+      undici: 5.28.2
       uuid: 9.0.1
       yargs: 17.7.2
     dev: false
@@ -11300,6 +11293,13 @@ packages:
 
   /undici-types@5.26.5:
     resolution: {integrity: sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA==}
+
+  /undici@5.28.2:
+    resolution: {integrity: sha512-wh1pHJHnUeQV5Xa8/kyQhO7WFa8M34l026L5P/+2TYiakvGy5Rdc8jWZVyG7ieht/0WgJLEd3kcU5gKx+6GC8w==}
+    engines: {node: '>=14.0'}
+    dependencies:
+      '@fastify/busboy': 2.1.1
+    dev: false
 
   /undici@5.28.3:
     resolution: {integrity: sha512-3ItfzbrhDlINjaP0duwnNsKpDQk3acHI3gVJ1z4fmwMK31k5G9OVIAMLSIaP6w4FaGkaAkN6zaQO9LUvZ1t7VA==}
