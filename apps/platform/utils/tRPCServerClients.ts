@@ -1,7 +1,7 @@
 import { loggerLink } from '@trpc/client';
 import { createTRPCProxyClient, httpBatchLink } from '@trpc/client';
 import superjson from 'superjson';
-import type { TrpcMailBridgeRouter } from '@u22n/types/trpc';
+import type { TrpcMailBridgeRouter } from '@u22n/types';
 import type { TrpcBillingRouter } from '@uninbox-ee/types/trpc';
 import { useRuntimeConfig } from '#imports';
 
