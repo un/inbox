@@ -15,6 +15,7 @@
   "dependencies": {
     "@trpc/client": "^10.45.1",
     "@trpc/server": "^10.45.1",
+    "@u22n/tsconfig": "^0.0.2",
     "@u22n/database": "workspace:*",
     "@u22n/utils": "workspace:*",
     "nitropack": "^2.8.1",

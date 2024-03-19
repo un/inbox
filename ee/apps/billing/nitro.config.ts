@@ -1,6 +1,5 @@
 import { defineNitroConfig } from 'nitropack/config';
-import fetch from 'node-fetch'; // or import axios from 'axios';
-import { StripeData } from './types';
+import type { StripeData } from './types';
 
 const eeLicenseKey = process.env.EE_LICENSE_KEY;
 const appUrl = process.env.WEBAPP_URL;
@@ -10,7 +9,7 @@ async function validateLicenseKey(key: string, appUrl: string) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ key, appUrl })
-  }).then((response) => {
+  }).then((response: any) => {
     if (!response.ok) {
       throw new Error('Network response was not ok');
     }
@@ -39,19 +38,18 @@ if (eeLicenseKey && appUrl) {
 }
 
 const stripeData: StripeData = {
-  //@ts-expect-error - free plan does not have any ids
   plans: {
     starter: {
-      monthly: process.env.BILLING_STRIPE_PLAN_STARTER_MONTHLY_ID,
-      yearly: process.env.BILLING_STRIPE_PLAN_STARTER_YEARLY_ID
+      monthly: process.env.BILLING_STRIPE_PLAN_STARTER_MONTHLY_ID || '',
+      yearly: process.env.BILLING_STRIPE_PLAN_STARTER_YEARLY_ID || ''
     },
     pro: {
-      monthly: process.env.BILLING_STRIPE_PLAN_PRO_MONTHLY_ID,
-      yearly: process.env.BILLING_STRIPE_PLAN_PRO_YEARLY_ID
+      monthly: process.env.BILLING_STRIPE_PLAN_PRO_MONTHLY_ID || '',
+      yearly: process.env.BILLING_STRIPE_PLAN_PRO_YEARLY_ID || ''
     }
   },
-  key: process.env.BILLING_STRIPE_KEY,
-  webhookKey: process.env.BILLING_STRIPE_WEBHOOK_KEY
+  key: process.env.BILLING_STRIPE_KEY || '',
+  webhookKey: process.env.BILLING_STRIPE_WEBHOOK_KEY || ''
 };
 
 export default defineNitroConfig({

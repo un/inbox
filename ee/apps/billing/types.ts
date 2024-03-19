@@ -1,7 +1,7 @@
 // exported types
 export type { TrpcBillingRouter } from './trpc';
 
-export const stripePlanNames = ['free', 'starter', 'pro'] as const;
+export const stripePlanNames = ['starter', 'pro'] as const;
 export const stripeBillingPeriods = ['monthly', 'yearly'] as const;
 
 export type StripePlanName = (typeof stripePlanNames)[number];

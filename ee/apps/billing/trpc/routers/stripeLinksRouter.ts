@@ -1,10 +1,9 @@
 import { z } from 'zod';
-import { parse, stringify } from 'superjson';
 import { router, protectedProcedure } from '../trpc';
 import { useStripe } from '../../utils/useStripe';
 import { stripeBillingPeriods, stripePlanNames } from '../../types';
-import { and, eq } from '@u22n/database/orm';
-import { orgBilling, users } from '@u22n/database/schema';
+import { eq } from '@u22n/database/orm';
+import { orgBilling } from '@u22n/database/schema';
 
 export const stripeLinksRouter = router({
   createSubscriptionPaymentLink: protectedProcedure
@@ -59,7 +58,7 @@ export const stripeLinksRouter = router({
     )
     .query(async ({ ctx, input }) => {
       //const { config, db } = ctx;
-      const { stripe, db } = ctx;
+      const { db } = ctx;
       const { orgId } = input;
 
       const orgBillingQuery = await db.query.orgBilling.findFirst({

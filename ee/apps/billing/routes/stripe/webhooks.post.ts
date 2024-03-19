@@ -1,4 +1,5 @@
-import { StripeBillingPeriod, StripePlanName } from './../../types';
+import { eventHandler, sendNoContent } from '#imports';
+import type { StripeBillingPeriod, StripePlanName } from './../../types';
 import { db } from '@u22n/database';
 import { eq } from '@u22n/database/orm';
 import { orgBilling } from '@u22n/database/schema';
@@ -46,9 +47,8 @@ const handleCustomerSubscriptionUpdated = async (stripeEvent: Stripe.Event) => {
   const status = data.status;
   const plan = data.metadata.plan as StripePlanName;
   const period = data.metadata.period as StripeBillingPeriod;
-  console.log({ status, plan });
   if (status !== 'active') {
-    console.log('❌', 'Subscription not active - manual check', {
+    console.error('❌', 'Subscription not active - manual check', {
       status,
       subId
     });
@@ -56,7 +56,7 @@ const handleCustomerSubscriptionUpdated = async (stripeEvent: Stripe.Event) => {
   }
 
   if (!orgsId || !subId || !customerId || !plan || !period) {
-    console.log('❌', 'Missing data', {
+    console.error('❌', 'Missing data', {
       orgsId,
       subId,
       customerId,
@@ -104,7 +104,9 @@ export default eventHandler(async (event) => {
       handleCustomerSubscriptionUpdated(stripeEvent);
       break;
     default:
-      console.log('❌', 'Unhandled stripe event', { event: stripeEvent.type });
+      console.error('❌', 'Unhandled stripe event', {
+        event: stripeEvent.type
+      });
       return;
   }
 });

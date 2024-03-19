@@ -14,8 +14,11 @@ export default defineEventHandler(async (event) => {
     const body = await readRawBody(event);
     const signature = await getHeader(event, 'stripe-signature');
     const webhookKey = useRuntimeConfig().stripe.webhookKey;
+    if (!body || !signature) {
+      return;
+    }
 
-    let stripeEvent: Stripe.Event;
+    let stripeEvent: Stripe.Event | undefined;
 
     try {
       stripeEvent = await useStripe().sdk.webhooks.constructEvent(
@@ -24,10 +27,10 @@ export default defineEventHandler(async (event) => {
         webhookKey
       );
     } catch (e) {
-      console.log(e);
+      console.error(e);
       sendNoContent(event, 401);
     }
 
-    event.context.stripeEvent = stripeEvent;
+    event.context.stripeEvent = stripeEvent!;
   }
 });
