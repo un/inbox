@@ -1,5 +1,6 @@
 import Stripe from 'stripe';
 import type { StripeData } from '../types';
+import { useRuntimeConfig } from '#imports';
 
 export const useStripe = () => {
   const stripeData: StripeData = useRuntimeConfig().stripe;

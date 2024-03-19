@@ -2,7 +2,7 @@ import type { inferAsyncReturnType } from '@trpc/server';
 import type { H3Event } from 'h3';
 import type { StripeData } from '../types';
 import { db } from '@u22n/database';
-
+import { getHeader, useRuntimeConfig } from '#imports';
 //  * Creates context for an incoming request
 //  * @link https://trpc.io/docs/context
 

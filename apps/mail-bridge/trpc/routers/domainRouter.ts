@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { router, protectedProcedure } from '../trpc';
 import { and, eq } from '@u22n/database/orm';
-import { orgPostalConfigs, postalServers } from '@u22n/database/schema';
+import { postalServers } from '@u22n/database/schema';
 import { zodSchemas } from '@u22n/utils';
 import type { PostalConfig } from '../../types';
 import { postalDB } from '../../postal-db';
@@ -12,8 +12,6 @@ import {
   getDomainDNSRecords,
   type GetDomainDNSRecordsOutput
 } from '../../postal-db/functions';
-import { db } from '@u22n/database';
-import { TRPCError } from '@trpc/server';
 
 export const domainRouter = router({
   createDomain: protectedProcedure

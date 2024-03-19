@@ -2,7 +2,7 @@
 import { defineNitroConfig } from 'nitropack/config';
 import type { MailDomains } from './types';
 
-const mailDomains: MailDomains = JSON.parse(process.env.MAIL_DOMAINS);
+const mailDomains: MailDomains = JSON.parse(process.env.MAIL_DOMAINS || '');
 if (!mailDomains.free || !mailDomains.premium) {
   throw new Error(
     'MAIL_DOMAIN_PUBLIC or MAIL_DOMAIN_PREMIUM is not set, you must add the domains to your ENV variables'

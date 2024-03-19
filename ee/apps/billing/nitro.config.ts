@@ -53,6 +53,9 @@ const stripeData: StripeData = {
 };
 
 export default defineNitroConfig({
+  imports: {
+    autoImport: false
+  },
   // Nitro options
   runtimeConfig: {
     url: process.env.BILLING_URL,
