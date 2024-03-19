@@ -4,8 +4,10 @@
   "version": "0.0.1",
   "description": "email + chat communications platform",
   "scripts": {
+    "format": "prettier . --write",
+    "check:format": "prettier . --check",
     "precheck": "dotenv -e .env.local -- pnpm -r precheck",
-    "check": "pnpm precheck && turbo run check",
+    "check": "pnpm check:format && pnpm precheck && turbo run check",
     "build:all": "dotenv -e .env.local -- turbo run build",
     "build:web-app": "turbo run build",
     "build:mail-bridge": "turbo run build",
