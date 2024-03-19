@@ -15,7 +15,7 @@ import {
   generatePublicKey,
   getUniqueDKIMSelector,
   randomAlphaNumeric
-} from '@u22n/utils/generators';
+} from './generators';
 import { and, eq, sql } from 'drizzle-orm/sql';
 import { lookupCNAME, lookupMX, lookupTXT } from '@u22n/utils/dns';
 import {
