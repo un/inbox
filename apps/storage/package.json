@@ -12,14 +12,13 @@
     "preview": "node .output/server/index.mjs"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.515.0",
-    "@aws-sdk/s3-request-presigner": "^3.515.0",
+    "@aws-sdk/client-s3": "^3.536.0",
+    "@aws-sdk/s3-request-presigner": "^3.536.0",
     "@u22n/database": "workspace:*",
     "@u22n/tsconfig": "^0.0.2",
     "@u22n/types": "workspace:*",
     "@u22n/utils": "workspace:*",
     "@upstash/redis": "1.28.4",
-    "ioredis": "^5.3.2",
     "nitropack": "2.9.4",
     "sharp": "^0.33.2",
     "superjson": "^2.2.1"
