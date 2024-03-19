@@ -4,7 +4,6 @@
   "globalDependencies": ["**/.env.*local"],
   "pipeline": {
     "check": {
-      "cache": false,
       "dependsOn": ["^check"]
     },
     "build": {

@@ -1,0 +1,54 @@
+name: check-and-build-pull-requests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types:
+      - opened
+      - synchronize
+
+concurrency:
+  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.event.pull_request.head.sha }}
+
+jobs:
+  check:
+    name: Check and Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout Code 🛎
+        uses: actions/checkout@v4
+
+      - name: Cache turbo build setup
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: ${{ runner.os }}-turbo-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-
+
+      - name: Setup pnpm 📦
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+
+      - name: Setup Node.js 🟩
+        uses: actions/setup-node@v4
+        with:
+          cache: 'pnpm'
+          node-version: '20'
+
+      - name: Install Dependencies 📦
+        run: pnpm install
+
+      - name: Copy Example Env 📝
+        run: cp .env.local.example .env.local
+
+      - name: Check 🚨
+        run: pnpm check
+
+      - name: Build 🏗
+        run: pnpm build:all
