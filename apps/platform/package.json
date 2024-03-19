@@ -3,7 +3,8 @@
   "scripts": {
     "dev": "PORT=3300 nitropack dev",
     "build": "nitropack build",
-    "preview": "PORT=3300 node .output/server/index.mjs"
+    "preview": "PORT=3300 node .output/server/index.mjs",
+    "check": "tsc --noEmit"
   },
   "dependencies": {
     "@simplewebauthn/server": "^9.0.3",
