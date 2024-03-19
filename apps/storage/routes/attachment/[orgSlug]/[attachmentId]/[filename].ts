@@ -4,7 +4,15 @@ import { s3Client } from '../../../../utils/s3';
 import { db } from '@u22n/database';
 import { and, eq } from '@u22n/database/orm';
 import { convoAttachments, orgMembers, orgs } from '@u22n/database/schema';
-import { S3Config } from '../../../../types';
+import type { S3Config } from '../../../../types';
+import {
+  eventHandler,
+  getRouterParam,
+  setResponseStatus,
+  send,
+  sendProxy,
+  useRuntimeConfig
+} from '#imports';
 
 /**
  * provides a proxy to attachments after verifying the user has access to the attachment
@@ -16,6 +24,9 @@ export default eventHandler({
     const attachmentPublicId = getRouterParam(event, 'attachmentId');
     const filename = getRouterParam(event, 'filename');
 
+    if (!orgSlug || !attachmentPublicId || !filename) {
+      return 'Missing required parameters';
+    }
     // attachment url: https://s3/attachments/[orgPublicId]/[attachmentId]/[filename].ext
 
     const attachmentQueryResponse = await db.query.convoAttachments.findFirst({

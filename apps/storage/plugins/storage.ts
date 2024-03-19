@@ -1,5 +1,6 @@
 import redisDriver from 'unstorage/drivers/redis';
 import upstashDriver from './upstashDriver';
+import { defineNitroPlugin, useStorage } from '#imports';
 
 export default defineNitroPlugin(() => {
   let useUpstash: boolean;
