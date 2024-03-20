@@ -20,6 +20,7 @@ import {
 import { relations, sql } from 'drizzle-orm';
 import { nanoIdLength, nanoIdLongLength } from '@u22n/utils';
 import { uiColors } from '@u22n/types/ui';
+import { typeIdDataType as publicId } from '@u22n/utils/typeId';
 
 // TODO: we need to make this separated from nuxt apps, imports from "#import" breaks everything
 
@@ -37,6 +38,7 @@ const nanoId = customType<{ data: string; notNull: true }>({
     return `varchar(${nanoIdLength})`;
   }
 });
+
 const nanoIdLong = customType<{ data: string; notNull: true }>({
   dataType() {
     return `varchar(${nanoIdLongLength})`;
@@ -61,7 +63,7 @@ export const users = mysqlTable(
   'users',
   {
     id: serial('id').primaryKey(),
-    publicId: nanoId('public_id').notNull(),
+    publicId: publicId('usr', 'public_id').notNull(),
     username: varchar('username', { length: 32 }).notNull(),
     metadata: json('metadata').$type<Record<string, unknown>>(),
     createdAt: timestamp('created_at').defaultNow(),
@@ -227,7 +229,7 @@ export const orgs = mysqlTable(
   'orgs',
   {
     id: serial('id').primaryKey(),
-    publicId: nanoId('public_id').notNull(),
+    publicId: publicId('org', 'public_id').notNull(),
     avatarId: avatarId('avatar_id'),
     slug: varchar('slug', { length: 64 }).notNull(),
     ownerId: foreignKey('owner_id').notNull(),

@@ -434,9 +434,15 @@ importers:
 
   packages/utils:
     dependencies:
+      drizzle-orm:
+        specifier: ^0.30.3
+        version: 0.30.3(@planetscale/database@1.16.0)(mysql2@3.9.2)
       nanoid:
         specifier: ^5.0.6
         version: 5.0.6
+      typeid-js:
+        specifier: ^0.5.0
+        version: 0.5.0
       zod:
         specifier: ^3.22.4
         version: 3.22.4
@@ -15404,6 +15410,15 @@ packages:
         integrity: sha512-dzlvlNlt6AXU7EBSfpAscydQ7gXB+pPGsPnfJnZpiNJBDj7IaJzQlBZYGdEi4R9HmPdBv2XmWJ6YUtoTa7lmCw==
       }
 
+  /typeid-js@0.5.0:
+    resolution:
+      {
+        integrity: sha512-wgEWd5Ejd2gvb68y+5wWcjZmrJqPFX4rMV6Fi6CN5luzD9Wjaf9v1g3qfpGzaWahXcmlnA0cCPDP4Kr0F630xA==
+      }
+    dependencies:
+      uuidv7: 0.6.3
+    dev: false
+
   /typescript@5.4.2:
     resolution:
       {
@@ -15779,6 +15794,14 @@ packages:
     resolution:
       {
         integrity: sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==
+      }
+    hasBin: true
+    dev: false
+
+  /uuidv7@0.6.3:
+    resolution:
+      {
+        integrity: sha512-zV3eW2NlXTsun/aJ7AixxZjH/byQcH/r3J99MI0dDEkU2cJIBJxhEWUHDTpOaLPRNhebPZoeHuykYREkI9HafA==
       }
     hasBin: true
     dev: false
