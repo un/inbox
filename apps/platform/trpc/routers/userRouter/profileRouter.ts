@@ -2,9 +2,8 @@ import { z } from 'zod';
 import { router, userProcedure } from '../../trpc';
 import { and, eq } from '@u22n/database/orm';
 import { userProfiles, orgs, orgMembers } from '@u22n/database/schema';
-import { nanoId, zodSchemas } from '@u22n/utils';
+import { typeIdGenerator, typeIdValidator } from '@u22n/utils';
 import { TRPCError } from '@trpc/server';
-import { useRuntimeConfig } from '#imports';
 
 export const profileRouter = router({
   // generateAvatarUploadUrl: userProcedure.query(async ({ ctx }) => {
@@ -73,7 +72,7 @@ export const profileRouter = router({
       const { db, user } = ctx;
       const userId = user.id;
 
-      const newPublicId = nanoId();
+      const newPublicId = typeIdGenerator('userProfile');
       const insertUserProfileResponse = await db.insert(userProfiles).values({
         userId: userId,
         publicId: newPublicId,
@@ -101,7 +100,7 @@ export const profileRouter = router({
     .input(
       z
         .object({
-          orgPublicId: zodSchemas.nanoId.optional(),
+          orgPublicId: typeIdValidator('org').optional(),
           orgSlug: z.string().min(1).max(32).optional()
         })
         .strict()
@@ -170,7 +169,7 @@ export const profileRouter = router({
   updateUserProfile: userProcedure
     .input(
       z.object({
-        profilePublicId: zodSchemas.nanoId,
+        profilePublicId: typeIdValidator('userProfile'),
         fName: z.string(),
         lName: z.string(),
         title: z.string(),

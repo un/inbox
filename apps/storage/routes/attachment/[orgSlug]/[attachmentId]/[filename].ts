@@ -13,6 +13,7 @@ import {
   sendProxy,
   useRuntimeConfig
 } from '#imports';
+import { validateTypeId } from '@u22n/utils';
 
 /**
  * provides a proxy to attachments after verifying the user has access to the attachment
@@ -26,6 +27,10 @@ export default eventHandler({
 
     if (!orgSlug || !attachmentPublicId || !filename) {
       return 'Missing required parameters';
+    }
+
+    if (!validateTypeId('convoAttachments', attachmentPublicId)) {
+      return `Invalid attachment id`;
     }
     // attachment url: https://s3/attachments/[orgPublicId]/[attachmentId]/[filename].ext
 

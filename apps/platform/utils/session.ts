@@ -2,11 +2,12 @@ import type { EventHandlerRequest, H3Event } from 'h3';
 import { UAParser } from 'ua-parser-js';
 import { getHeader } from '#imports';
 import { lucia } from './auth';
+import type { TypeId } from '@u22n/utils';
 
 type SessionInfo = {
   userId: number;
   username: string;
-  publicId: string;
+  publicId: TypeId<'user'>;
 };
 
 export const createLuciaSessionCookie = async (

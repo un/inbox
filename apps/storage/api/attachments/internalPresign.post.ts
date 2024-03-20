@@ -1,6 +1,5 @@
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { nanoId } from '@u22n/utils';
 import { z } from 'zod';
 import type { S3Config } from '../../types';
 import {
@@ -12,6 +11,7 @@ import {
   useRuntimeConfig,
   s3Client
 } from '#imports';
+import { typeIdGenerator } from '@u22n/utils';
 
 const bodySchema = z.object({
   orgPublicId: z.string(),
@@ -31,7 +31,7 @@ export default eventHandler({
       return send(event, 'Invalid input');
     }
     const { orgPublicId, filename } = inputValidation.data;
-    const attachmentPublicId = nanoId();
+    const attachmentPublicId = typeIdGenerator('pendingAttachments');
 
     const s3Config: S3Config = useRuntimeConfig().s3;
     const command = new PutObjectCommand({

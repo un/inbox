@@ -5,7 +5,7 @@ import {
   userGroups,
   contacts
 } from '@u22n/database/schema';
-import { nanoIdLong } from '@u22n/utils';
+import { nanoIdLong, validateTypeId } from '@u22n/utils';
 import { eq } from '@u22n/database/orm';
 import { db } from '@u22n/database';
 import sharp from 'sharp';
@@ -62,6 +62,9 @@ export default eventHandler({
     const userId = +event.context.user.id || null;
 
     if (typeObject.name === 'user') {
+      if (!validateTypeId('userProfile', publicId)) {
+        return send(event, 'Invalid user publicId');
+      }
       const profileResponse = await db.query.userProfiles.findFirst({
         where: eq(userProfiles.publicId, publicId),
         columns: {
@@ -79,6 +82,9 @@ export default eventHandler({
         return send(event, 'Unauthorized');
       }
     } else if (typeObject.name === 'org') {
+      if (!validateTypeId('org', publicId)) {
+        return send(event, 'Invalid org publicId');
+      }
       const orgResponse = await db.query.orgs.findFirst({
         where: eq(orgs.publicId, publicId),
         columns: {
@@ -111,8 +117,11 @@ export default eventHandler({
       setResponseStatus(event, 400);
       return send(event, 'Not implemented');
     } else if (typeObject.name === 'group') {
+      if (!validateTypeId('userGroups', publicId)) {
+        return send(event, 'Invalid userGroups publicId');
+      }
       const groupResponse = await db.query.userGroups.findFirst({
-        where: eq(orgs.publicId, publicId),
+        where: eq(userGroups.publicId, publicId),
         columns: {
           id: true,
           avatarId: true
@@ -187,6 +196,9 @@ export default eventHandler({
     }
 
     if (typeObject.name === 'user') {
+      if (!validateTypeId('userProfile', publicId)) {
+        return send(event, 'Invalid publicId');
+      }
       await db
         .update(userProfiles)
         .set({
@@ -194,6 +206,9 @@ export default eventHandler({
         })
         .where(eq(userProfiles.publicId, publicId));
     } else if (typeObject.name === 'org') {
+      if (!validateTypeId('org', publicId)) {
+        return send(event, 'Invalid publicId');
+      }
       await db
         .update(orgs)
         .set({
@@ -201,6 +216,9 @@ export default eventHandler({
         })
         .where(eq(orgs.publicId, publicId));
     } else if (typeObject.name === 'group') {
+      if (!validateTypeId('userGroups', publicId)) {
+        return send(event, 'Invalid publicId');
+      }
       await db
         .update(userGroups)
         .set({
@@ -208,6 +226,9 @@ export default eventHandler({
         })
         .where(eq(userGroups.publicId, publicId));
     } else if (typeObject.name === 'contact') {
+      if (!validateTypeId('contacts', publicId)) {
+        return send(event, 'Invalid publicId');
+      }
       await db
         .update(contacts)
         .set({

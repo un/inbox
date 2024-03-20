@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { router, orgProcedure } from '../../../trpc';
 import { eq } from '@u22n/database/orm';
 import { orgs } from '@u22n/database/schema';
-import { zodSchemas } from '@u22n/utils';
+import { typeIdValidator } from '@u22n/utils';
 import { isUserAdminOfOrg } from '../../../../utils/user';
 import { TRPCError } from '@trpc/server';
 
@@ -10,7 +10,7 @@ export const orgProfileRouter = router({
   getOrgProfile: orgProcedure
     .input(
       z.object({
-        orgPublicId: zodSchemas.nanoId.optional()
+        orgPublicId: typeIdValidator('org').optional()
       })
     )
     .query(async ({ ctx, input }) => {
@@ -58,8 +58,7 @@ export const orgProfileRouter = router({
           message: 'User or Organization is not defined'
         });
       }
-      const { db, user, org } = ctx;
-      const userId = user?.id;
+      const { db, org } = ctx;
       const orgId = org?.id;
       const { orgName } = input;
 

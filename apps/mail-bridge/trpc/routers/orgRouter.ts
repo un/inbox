@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { router, protectedProcedure } from '../trpc';
 import { eq } from '@u22n/database/orm';
-import { nanoId, zodSchemas } from '@u22n/utils';
+import { typeIdGenerator, typeIdValidator } from '@u22n/utils';
 import type { PostalConfig } from '../../types';
 import {
   addMailServer,
@@ -20,7 +20,7 @@ export const orgRouter = router({
     .input(
       z.object({
         orgId: z.number().min(1),
-        orgPublicId: zodSchemas.nanoId
+        orgPublicId: typeIdValidator('org')
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -33,9 +33,9 @@ export const orgRouter = router({
         return {
           success: true,
           orgId: orgId,
-          postalOrgId: nanoId(),
+          postalOrgId: typeIdGenerator('org'),
           postalServer: {
-            serverPublicId: nanoId(),
+            serverPublicId: typeIdGenerator('postalServers'),
             apiKey: 'localAPIKey',
             smtpKey: 'localSMTPKey'
           },
@@ -72,7 +72,7 @@ export const orgRouter = router({
         poolIds: [internalPostalPoolId]
       });
 
-      const newServerPublicId = nanoId();
+      const newServerPublicId = typeIdGenerator('postalServers');
 
       const { serverId: internalPostalMailserverId } = await addMailServer({
         orgId: internalPostalOrgId,

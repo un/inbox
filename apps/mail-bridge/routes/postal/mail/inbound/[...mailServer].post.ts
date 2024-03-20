@@ -21,7 +21,7 @@ import type {
   MessageParseAddressPlatformObject,
   postalEmailPayload
 } from '../../../../types';
-import { nanoId } from '@u22n/utils';
+import { typeIdGenerator, validateTypeId } from '@u22n/utils';
 import { tiptapCore, tiptapHtml } from '@u22n/tiptap';
 import { tipTapExtensions } from '@u22n/tiptap/extensions';
 import {
@@ -45,7 +45,7 @@ export default eventHandler(async (event) => {
   const {
     id: payloadPostalEmailId,
     rcpt_to: payloadEmailTo,
-    mail_from: payloadEmailFrom,
+    // mail_from: payloadEmailFrom,
     message: payloadEmailB64
   }: postalEmailPayload = await readBody(event);
   if (typeof payloadEmailB64 !== 'string') {
@@ -101,6 +101,13 @@ export default eventHandler(async (event) => {
     orgPublicId = rootEmailIdentity.org.publicId;
   } else {
     // handle for org emails
+    if (!validateTypeId('postalServers', mailserverId)) {
+      console.error('⛔ invalid mailserver id', {
+        mailserverId,
+        payloadPostalEmailId
+      });
+      return;
+    }
     //verify the mailserver actually exists
     const mailServer = await db.query.postalServers.findFirst({
       where: eq(postalServers.publicId, mailserverId),
@@ -379,7 +386,7 @@ export default eventHandler(async (event) => {
       if (subject !== existingMessage.subject?.subject) {
         const newSubject = await db.insert(convos).values({
           orgId: orgId,
-          publicId: nanoId(),
+          publicId: typeIdGenerator('convos'),
           lastUpdatedAt: new Date()
         });
         subjectId = +newSubject.insertId;
@@ -422,7 +429,7 @@ export default eventHandler(async (event) => {
             convoId: convoId || 0,
             contactId: contactId || 0,
             orgId: orgId || 0,
-            publicId: nanoId(),
+            publicId: typeIdGenerator('convoParticipants'),
             role: 'contributor' as const
           }))
         );
@@ -433,7 +440,7 @@ export default eventHandler(async (event) => {
             convoId: convoId || 0,
             orgMemberId: orgMemberId || 0,
             orgId: orgId || 0,
-            publicId: nanoId(),
+            publicId: typeIdGenerator('convoParticipants'),
             role: 'contributor' as const
           }))
         );
@@ -444,7 +451,7 @@ export default eventHandler(async (event) => {
             convoId: convoId || 0,
             userGroupId: userGroupId || 0,
             orgId: orgId || 0,
-            publicId: nanoId(),
+            publicId: typeIdGenerator('convoParticipants'),
             role: 'contributor' as const
           }))
         );
@@ -461,13 +468,13 @@ export default eventHandler(async (event) => {
   if (!inReplyToEmailId || hasReplyToButIsNewConvo) {
     const newConvoInsert = await db.insert(convos).values({
       orgId: orgId,
-      publicId: nanoId(),
+      publicId: typeIdGenerator('convos'),
       lastUpdatedAt: new Date()
     });
     const newConvoSubjectInsert = await db.insert(convoSubjects).values({
       orgId: orgId,
       convoId: +newConvoInsert.insertId,
-      publicId: nanoId(),
+      publicId: typeIdGenerator('convoSubjects'),
       subject: subject
     });
 
@@ -481,7 +488,7 @@ export default eventHandler(async (event) => {
           convoId: convoId || 0,
           contactId: contactId || 0,
           orgId: orgId || 0,
-          publicId: nanoId(),
+          publicId: typeIdGenerator('convoParticipants'),
           role: 'contributor' as const
         }))
       );
@@ -492,7 +499,7 @@ export default eventHandler(async (event) => {
           convoId: convoId || 0,
           orgMemberId: orgMemberId || 0,
           orgId: orgId || 0,
-          publicId: nanoId(),
+          publicId: typeIdGenerator('convoParticipants'),
           role: 'contributor' as const
         }))
       );
@@ -503,7 +510,7 @@ export default eventHandler(async (event) => {
           convoId: convoId || 0,
           userGroupId: userGroupId || 0,
           orgId: orgId || 0,
-          publicId: nanoId(),
+          publicId: typeIdGenerator('convoParticipants'),
           role: 'contributor' as const
         }))
       );
@@ -636,14 +643,13 @@ export default eventHandler(async (event) => {
   );
 
   const insertNewConvoEntry = await db.insert(convoEntries).values({
-    // @ts-expect-error, no clue about what is the typeerror here
     orgId: orgId,
-    publicId: nanoId(),
-    convoId: convoId,
+    publicId: typeIdGenerator('convoEntries'),
+    convoId: convoId!,
     visibility: 'all_participants',
     type: 'message',
     metadata: convoEntryMetadata,
-    author: fromAddressParticipantId,
+    author: fromAddressParticipantId!,
     body: convoEntryBody,
     bodyPlainText: convoEntryBodyPlainText,
     replyToId: replyToId,
@@ -696,6 +702,10 @@ export default eventHandler(async (event) => {
     }
     const attachmentPublicId = preUpload.publicId;
     const presignedUrl = preUpload.signedUrl;
+
+    if (!validateTypeId('convoAttachments', attachmentPublicId)) {
+      throw new Error('Invalid attachmentPublicId');
+    }
 
     try {
       await $fetch(presignedUrl, {

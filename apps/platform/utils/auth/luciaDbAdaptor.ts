@@ -1,9 +1,9 @@
-import { eq, inArray, lte } from 'drizzle-orm';
-
 import type { Adapter, DatabaseSession, DatabaseUser } from 'lucia';
 import { db } from '@u22n/database';
+import { eq, inArray, lte } from '@u22n/database/orm';
 import { sessions, users } from '@u22n/database/schema';
 import { useStorage } from '#imports';
+import type { TypeId } from '@u22n/utils';
 
 //! Enable debug logging
 const debug = false;
@@ -27,7 +27,7 @@ export class UnInboxDBAdapter implements Adapter {
     sessionStorage.removeItem(sessionId);
   }
 
-  public async deleteUserSessions(userId: string): Promise<void> {
+  public async deleteUserSessions(userId: TypeId<'user'>): Promise<void> {
     log('deleteUserSessions', { userId });
     const userPublicId = userId;
     const userOject = await db.query.users.findFirst({
@@ -77,7 +77,9 @@ export class UnInboxDBAdapter implements Adapter {
     return [databaseSession, databaseUser];
   }
 
-  public async getUserSessions(userId: string): Promise<DatabaseSession[]> {
+  public async getUserSessions(
+    userId: TypeId<'user'>
+  ): Promise<DatabaseSession[]> {
     log('getUserSessions', { userId });
     const userPublicId = userId;
 

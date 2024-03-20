@@ -2,13 +2,10 @@ import { customAlphabet } from 'nanoid';
 import { z } from 'zod';
 
 //! When changing the NanoID length, be sure to update the nanoId customType in the DB schema file to varchar(x)
-export const nanoIdLength = 16;
+
 export const nanoIdLongLength = 32;
 export const nanoIdTokenLength = 32;
-export const nanoId = customAlphabet(
-  '0123456789abcdefghjkmnpqrstvwxyz',
-  nanoIdLength
-);
+
 export const nanoIdLong = customAlphabet(
   '0123456789abcdefghjkmnpqrstvwxyz',
   nanoIdLongLength
@@ -19,7 +16,6 @@ export const nanoIdToken = customAlphabet(
 );
 
 export const zodSchemas = {
-  nanoId: z.string().min(3).max(nanoIdLength),
   nanoIdLong: z.string().min(3).max(nanoIdLongLength),
   nanoIdToken: () => z.string().min(3).max(nanoIdTokenLength),
   username: (minLength: number = 5) =>
@@ -44,3 +40,5 @@ export const zodSchemas = {
           'At least one digit, one lowercase letter, one uppercase letter, one special character, no whitespace allowed, minimum eight characters in length'
       })
 };
+
+export * from './typeId';

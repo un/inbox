@@ -6,6 +6,7 @@ import {
 } from 'lucia';
 import { UnInboxDBAdapter } from './auth/luciaDbAdaptor';
 import { useRuntimeConfig } from '#imports';
+import type { TypeId } from '@u22n/utils';
 
 const adapter = new UnInboxDBAdapter();
 const config = useRuntimeConfig();
@@ -50,6 +51,7 @@ declare module 'lucia' {
     Lucia: typeof lucia;
     DatabaseSessionAttributes: DatabaseSessionAttributes;
     DatabaseUserAttributes: DatabaseUserAttributes;
+    UserId: TypeId<'user'>;
   }
   interface DatabaseSessionAttributes {
     user: AuthUser;

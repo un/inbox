@@ -6,7 +6,7 @@ import {
   userGroupMembers,
   userGroups
 } from '@u22n/database/schema';
-import { nanoId, zodSchemas } from '@u22n/utils';
+import { typeIdGenerator, typeIdValidator } from '@u22n/utils';
 import { uiColors } from '@u22n/types/ui';
 import { isUserAdminOfOrg } from '../../../../utils/user';
 import { TRPCError } from '@trpc/server';
@@ -31,7 +31,7 @@ export const orgUserGroupsRouter = router({
 
       const orgId = org?.id;
       const { groupName, groupDescription, groupColor } = input;
-      const newPublicId = nanoId();
+      const newPublicId = typeIdGenerator('userGroups');
 
       const isAdmin = await isUserAdminOfOrg(org);
       if (!isAdmin) {
@@ -102,7 +102,7 @@ export const orgUserGroupsRouter = router({
   getUserGroup: orgProcedure
     .input(
       z.object({
-        userGroupPublicId: zodSchemas.nanoId,
+        userGroupPublicId: typeIdValidator('userGroups'),
         newUserGroup: z.boolean().optional()
       })
     )
@@ -166,8 +166,8 @@ export const orgUserGroupsRouter = router({
   addUserToGroup: orgProcedure
     .input(
       z.object({
-        groupPublicId: zodSchemas.nanoId,
-        orgMemberPublicId: zodSchemas.nanoId
+        groupPublicId: typeIdValidator('userGroups'),
+        orgMemberPublicId: typeIdValidator('orgMembers')
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -180,7 +180,7 @@ export const orgUserGroupsRouter = router({
       const { db, user, org } = ctx;
       const userId = user?.id;
       const { groupPublicId, orgMemberPublicId } = input;
-      const newPublicId = nanoId();
+      const newPublicId = typeIdGenerator('userGroupMembers');
 
       const isAdmin = await isUserAdminOfOrg(org);
       if (!isAdmin) {

@@ -2,16 +2,16 @@ import { z } from 'zod';
 import { router, orgProcedure } from '../../trpc';
 import { and, desc, eq, lt, or } from '@u22n/database/orm';
 import { convos, convoEntries } from '@u22n/database/schema';
-import { zodSchemas } from '@u22n/utils';
+import { typeIdValidator } from '@u22n/utils';
 import { TRPCError } from '@trpc/server';
 
 export const convoEntryRouter = router({
   getConvoEntries: orgProcedure
     .input(
       z.object({
-        convoPublicId: zodSchemas.nanoId,
+        convoPublicId: typeIdValidator('convos'),
         cursorLastCreatedAt: z.date().optional(),
-        cursorLastPublicId: zodSchemas.nanoId.optional()
+        cursorLastPublicId: typeIdValidator('convoEntries').optional()
       })
     )
     .query(async ({ ctx, input }) => {
@@ -37,7 +37,7 @@ export const convoEntryRouter = router({
       const inputLastCreatedAt = cursorLastCreatedAt
         ? new Date(cursorLastCreatedAt)
         : new Date();
-      const inputLastPublicId = cursorLastPublicId || '';
+      const inputLastPublicId = cursorLastPublicId || 'ce_';
 
       // check if the conversation belongs to the same org, early return if not before multiple db selects
       const convoResponse = await db.query.convos.findFirst({

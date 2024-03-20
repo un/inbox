@@ -2,16 +2,8 @@ import { z } from 'zod';
 import { router, userProcedure } from '../../trpc';
 import type { DBType } from '@u22n/database';
 import { eq, and } from '@u22n/database/orm';
-import {
-  orgs,
-  orgMembers,
-  userProfiles,
-  users,
-  postalServers,
-  orgPostalConfigs
-} from '@u22n/database/schema';
-import { nanoId } from '@u22n/utils';
-import { mailBridgeTrpcClient } from '../../../utils/tRPCServerClients';
+import { orgs, orgMembers, userProfiles, users } from '@u22n/database/schema';
+import { typeIdGenerator } from '@u22n/utils';
 import { TRPCError } from '@trpc/server';
 import { blockedUsernames, reservedUsernames } from '../../../utils/signup';
 
@@ -85,7 +77,7 @@ export const crudRouter = router({
       const { db, user } = ctx;
       const userId = user.id;
 
-      const newPublicId = nanoId();
+      const newPublicId = typeIdGenerator('org');
 
       const insertOrgResponse = await db.insert(orgs).values({
         ownerId: userId,
@@ -114,7 +106,7 @@ export const crudRouter = router({
           createdAt: true
         }
       });
-      const newProfilePublicId = nanoId();
+      const newProfilePublicId = typeIdGenerator('userProfile');
       let userProfileId: number;
       if (userProfile && userProfile.id) {
         const existingFields = {
@@ -163,7 +155,7 @@ export const crudRouter = router({
         userProfileId = +newProfile.insertId;
       }
 
-      const newPublicId2 = nanoId();
+      const newPublicId2 = typeIdGenerator('orgMembers');
       await db.insert(orgMembers).values({
         orgId: orgId,
         publicId: newPublicId2,

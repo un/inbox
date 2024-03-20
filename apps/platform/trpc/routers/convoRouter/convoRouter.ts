@@ -26,7 +26,12 @@ import {
   convoAttachments,
   pendingAttachments
 } from '@u22n/database/schema';
-import { nanoId, nanoIdLength, zodSchemas } from '@u22n/utils';
+import {
+  typeIdValidator,
+  validateTypeId,
+  type TypeId,
+  typeIdGenerator
+} from '@u22n/utils';
 import { TRPCError } from '@trpc/server';
 import { tipTapExtensions } from '@u22n/tiptap/extensions';
 import { tiptapCore, tiptapHtml, type tiptapVue3 } from '@u22n/tiptap';
@@ -38,25 +43,18 @@ export const convoRouter = router({
   createNewConvo: orgProcedure
     .input(
       z.object({
-        participantsOrgMembersPublicIds: z.array(
-          z.string().min(3).max(nanoIdLength)
-        ),
-        participantsGroupsPublicIds: z.array(
-          z.string().min(3).max(nanoIdLength)
-        ),
-        participantsContactsPublicIds: z.array(
-          z.string().min(3).max(nanoIdLength)
-        ),
+        participantsOrgMembersPublicIds: z.array(typeIdValidator('orgMembers')),
+        participantsGroupsPublicIds: z.array(typeIdValidator('userGroups')),
+        participantsContactsPublicIds: z.array(typeIdValidator('userProfile')),
         participantsEmails: z.array(z.string()),
-        sendAsEmailIdentityPublicId: z
-          .string()
-          .min(3)
-          .max(nanoIdLength)
-          .optional(),
+        sendAsEmailIdentityPublicId:
+          typeIdValidator('emailIdentities').optional(),
         to: z
           .object({
             type: z.enum(['user', 'group', 'contact']),
-            publicId: z.string().min(3).max(nanoIdLength)
+            publicId: typeIdValidator('orgMembers')
+              .or(typeIdValidator('userGroups'))
+              .or(typeIdValidator('contacts'))
           })
           .or(
             z.object({
@@ -70,7 +68,7 @@ export const convoRouter = router({
         attachments: z.array(
           z.object({
             fileName: z.string(),
-            attachmentPublicId: zodSchemas.nanoId,
+            attachmentPublicId: typeIdValidator('convoAttachments'),
             size: z.number(),
             type: z.string()
           })
@@ -116,6 +114,14 @@ export const convoRouter = router({
         if (convoMessageToType === 'email') {
           return convoMessageTo.emailAddress;
         } else if (convoMessageToType === 'contact') {
+          if (!validateTypeId('contacts', convoMessageTo.publicId)) {
+            throw new TRPCError({
+              code: 'INTERNAL_SERVER_ERROR',
+              message:
+                "You caught a bug that shouldn't exist, please contact support"
+            });
+          }
+
           const contactResponse = await db.query.contacts.findFirst({
             where: eq(contacts.publicId, convoMessageTo.publicId),
             columns: {
@@ -133,6 +139,14 @@ export const convoRouter = router({
           convoMetadataToAddress = { id: +contactResponse.id, type: 'contact' };
           return `${contactResponse.emailUsername}@${contactResponse.emailDomain}`;
         } else if (convoMessageToType === 'group') {
+          if (!validateTypeId('userGroups', convoMessageTo.publicId)) {
+            throw new TRPCError({
+              code: 'INTERNAL_SERVER_ERROR',
+              message:
+                "You caught a bug that shouldn't exist, please contact support"
+            });
+          }
+
           const groupResponse = await db.query.userGroups.findFirst({
             where: eq(userGroups.publicId, convoMessageTo.publicId),
             columns: {
@@ -179,6 +193,13 @@ export const convoRouter = router({
           };
           return `${emailIdentitiesResponse.identity.username}@${emailIdentitiesResponse.identity.domainName}`;
         } else if (convoMessageToType === 'user') {
+          if (!validateTypeId('orgMembers', convoMessageTo.publicId)) {
+            throw new TRPCError({
+              code: 'INTERNAL_SERVER_ERROR',
+              message:
+                "You caught a bug that shouldn't exist, please contact support"
+            });
+          }
           const orgMemberResponse = await db.query.orgMembers.findFirst({
             where: eq(orgMembers.publicId, convoMessageTo.publicId),
             columns: {
@@ -353,7 +374,7 @@ export const convoRouter = router({
               });
 
             if (existingContactGlobalReputations) {
-              const newContactPublicId = nanoId();
+              const newContactPublicId = typeIdGenerator('contacts');
               const newContactInsertResponse = await db
                 .insert(contacts)
                 .values({
@@ -385,7 +406,7 @@ export const convoRouter = router({
                   emailAddress: email
                 });
 
-              const newContactPublicId = nanoId();
+              const newContactPublicId = typeIdGenerator('contacts');
               const newContactInsertResponse = await db
                 .insert(contacts)
                 .values({
@@ -419,7 +440,7 @@ export const convoRouter = router({
       }
 
       // create the conversation get id
-      const newConvoPublicId = nanoId();
+      const newConvoPublicId = typeIdGenerator('convos');
       const insertConvoResponse = await db.insert(convos).values({
         publicId: newConvoPublicId,
         orgId: orgId,
@@ -427,7 +448,7 @@ export const convoRouter = router({
       });
 
       // create conversationSubject entry
-      const newConvoSubjectPublicId = nanoId();
+      const newConvoSubjectPublicId = typeIdGenerator('convoSubjects');
       const insertConvoSubjectResponse = await db.insert(convoSubjects).values({
         orgId: orgId,
         convoId: +insertConvoResponse.insertId,
@@ -441,7 +462,7 @@ export const convoRouter = router({
           typeof convoParticipants
         >[] = [];
         orgMemberIds.forEach((orgMemberId) => {
-          const convoMemberPublicId = nanoId();
+          const convoMemberPublicId = typeIdGenerator('convoParticipants');
           convoParticipantsDbInsertValuesArray.push({
             orgId: orgId,
             convoId: +insertConvoResponse.insertId,
@@ -459,7 +480,7 @@ export const convoRouter = router({
           typeof convoParticipants
         >[] = [];
         orgGroupIds.forEach((groupId) => {
-          const convoMemberPublicId = nanoId();
+          const convoMemberPublicId = typeIdGenerator('convoParticipants');
           convoParticipantsDbInsertValuesArray.push({
             orgId: orgId,
             convoId: +insertConvoResponse.insertId,
@@ -477,7 +498,7 @@ export const convoRouter = router({
           typeof convoParticipants
         >[] = [];
         orgContactIds.forEach((contactId) => {
-          const convoMemberPublicId = nanoId();
+          const convoMemberPublicId = typeIdGenerator('convoParticipants');
           convoParticipantsDbInsertValuesArray.push({
             orgId: orgId,
             convoId: +insertConvoResponse.insertId,
@@ -489,7 +510,8 @@ export const convoRouter = router({
           .insert(convoParticipants)
           .values(convoParticipantsDbInsertValuesArray);
       }
-      const authorConvoParticipantPublicId = nanoId();
+      const authorConvoParticipantPublicId =
+        typeIdGenerator('convoParticipants');
       const insertAuthorConvoParticipantResponse = await db
         .insert(convoParticipants)
         .values({
@@ -508,7 +530,7 @@ export const convoRouter = router({
         tipTapExtensions
       );
 
-      const newConvoEntryPublicId = nanoId();
+      const newConvoEntryPublicId = typeIdGenerator('convoEntries');
       const insertConvoEntryResponse = await db.insert(convoEntries).values({
         orgId: orgId,
         publicId: newConvoEntryPublicId,
@@ -528,7 +550,8 @@ export const convoRouter = router({
         fileName: string;
         fileType: string;
       }[] = [];
-      const pendingAttachmentsToRemoveFromPending: string[] = [];
+      const pendingAttachmentsToRemoveFromPending: TypeId<'pendingAttachments'>[] =
+        [];
       if (input.attachments.length > 0) {
         const convoAttachmentsDbInsertValuesArray: InferInsertModel<
           typeof convoAttachments
@@ -551,6 +574,7 @@ export const convoRouter = router({
             fileType: attachment.type
           });
           pendingAttachmentsToRemoveFromPending.push(
+            // @ts-expect-error, @McPizza0 please fix this and all other pendingAttachments related stuff
             attachment.attachmentPublicId
           );
         });
@@ -779,7 +803,7 @@ export const convoRouter = router({
   getConvo: orgProcedure
     .input(
       z.object({
-        convoPublicId: zodSchemas.nanoId
+        convoPublicId: typeIdValidator('convos')
       })
     )
     .query(async ({ ctx, input }) => {
@@ -985,9 +1009,9 @@ export const convoRouter = router({
   getConvoEntries: orgProcedure
     .input(
       z.object({
-        convoPublicId: zodSchemas.nanoId,
+        convoPublicId: typeIdValidator('convos'),
         cursorLastUpdatedAt: z.date().optional(),
-        cursorLastPublicId: z.string().min(3).max(nanoIdLength).optional()
+        cursorLastPublicId: typeIdValidator('convos').optional()
       })
     )
     .query(async () => {}),
@@ -996,7 +1020,7 @@ export const convoRouter = router({
     .input(
       z.object({
         cursorLastUpdatedAt: z.date().optional(),
-        cursorLastPublicId: z.string().min(3).max(nanoIdLength).optional()
+        cursorLastPublicId: typeIdValidator('convos').optional()
       })
     )
     .query(async ({ ctx, input }) => {
@@ -1009,7 +1033,7 @@ export const convoRouter = router({
         ? new Date(cursorLastUpdatedAt)
         : new Date();
 
-      const inputLastPublicId = cursorLastPublicId || '';
+      const inputLastPublicId = cursorLastPublicId || 'c_';
 
       const convoQuery = await db.query.convos.findMany({
         orderBy: [desc(convos.lastUpdatedAt), desc(convos.publicId)],
