@@ -2,7 +2,22 @@
   import { startRegistration } from '@simplewebauthn/browser';
   import type { RegistrationResponseJSON } from '@simplewebauthn/types';
   import { z } from 'zod';
-  const { $trpc, $i18n } = useNuxtApp();
+  import {
+    navigateTo,
+    definePageMeta,
+    useRuntimeConfig,
+    useNuxtApp,
+    useToast,
+    ref,
+    computed,
+    watch,
+    watchDebounced,
+    useCookie,
+    type Ref,
+    onNuxtReady
+  } from '#imports';
+
+  const { $trpc } = useNuxtApp();
   definePageMeta({ guest: true });
   const turnstileToken = ref();
   const buttonLoading = ref(false);
@@ -43,6 +58,7 @@
         passwordValid.value === true && passwordConfirmationValid.value === true
       );
     }
+    return null;
   });
 
   // Password Form Fields

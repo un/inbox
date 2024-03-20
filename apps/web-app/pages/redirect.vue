@@ -1,4 +1,6 @@
 <script setup lang="ts">
+  import { navigateTo, useNuxtApp, onMounted } from '#imports';
+
   const { $trpc } = useNuxtApp();
 
   onMounted(async () => {

@@ -1,5 +1,6 @@
 import { cva, type VariantProps } from 'class-variance-authority';
 import type { UserConvosDataType } from '~/composables/types';
+import { useRuntimeConfig } from '#imports';
 
 function generateAvatarUrl(
   type: 'user' | 'org' | 'group' | 'contact',

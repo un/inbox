@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import type { UiColor } from '@u22n/types/ui';
+  import { computed } from '#imports';
   import type { ConvoParticipantEntry } from '~/composables/types';
 
   type Props = {
@@ -28,6 +28,7 @@
 <template>
   <div class="flex h-fit flex-row items-end">
     <UnUiAvatar
+      v-if="primaryAvatar"
       :avatar-id="primaryAvatar.avatarPublicId"
       :public-id="primaryAvatar.participantPublicId"
       :alt="primaryAvatar.name"

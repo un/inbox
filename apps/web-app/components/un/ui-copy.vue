@@ -1,4 +1,6 @@
 <script setup lang="ts">
+  import { ref } from 'vue';
+  import { useClipboard } from '@vueuse/core';
   const { copy } = useClipboard();
   const props = defineProps({
     text: { type: String, required: true }

@@ -1,6 +1,16 @@
 <script setup lang="ts">
   import { z } from 'zod';
-  const { $trpc, $i18n } = useNuxtApp();
+  import {
+    navigateTo,
+    useNuxtApp,
+    useToast,
+    ref,
+    computed,
+    watchDebounced,
+    useCookie
+  } from '#imports';
+
+  const { $trpc } = useNuxtApp();
 
   const newButtonLoading = ref(false);
   const newButtonLabel = ref('Make my organization');
@@ -21,7 +31,6 @@
   const orgSlugValue = ref('');
   const orgSlugTempValue = ref('');
   const orgSlugValidationMessage = ref('');
-  const alsoCreatePersonalOrg = ref(false);
 
   if (process.client) {
     useCookie('un-join-username', { expires: new Date() }).value = '';
@@ -78,8 +87,10 @@
     if (
       orgPath.value === 'new' &&
       (orgNameValid.value && orgSlugValid.value) === true
-    )
+    ) {
       return true;
+    }
+    return false;
   });
 
   const toast = useToast();

@@ -1,20 +1,13 @@
 <script setup lang="ts">
-  import { z } from 'zod';
-  const { $trpc, $i18n } = useNuxtApp();
-  const uploadLoading = ref(false);
-  const buttonLoading = ref(false);
-  const buttonLabel = ref('Save profile');
-  const pageError = ref(false);
-  const orgNameValid = ref<boolean | 'remote' | null>(null);
-  const orgNameValue = ref('');
-  const orgNameValidationMessage = ref('');
+  import { navigateTo, ref, useNuxtApp, useRoute, watch } from '#imports';
+
+  const { $trpc } = useNuxtApp();
 
   const orgSlug = useRoute().params.orgSlug as string;
 
   const {
     data: orgEmailIdentities,
     pending,
-    error,
     refresh
   } = await $trpc.org.mail.emailIdentities.getOrgEmailIdentities.useLazyQuery(
     {},

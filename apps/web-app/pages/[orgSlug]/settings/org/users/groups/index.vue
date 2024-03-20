@@ -1,11 +1,12 @@
 <script setup lang="ts">
-  const { $trpc, $i18n } = useNuxtApp();
+  import { navigateTo, ref, useNuxtApp, useRoute, watch } from '#imports';
+
+  const { $trpc } = useNuxtApp();
   const orgSlug = useRoute().params.orgSlug as string;
 
   const {
     data: orgUserGroupsQuery,
     pending,
-    error,
     refresh
   } = await $trpc.org.users.userGroups.getOrgUserGroups.useLazyQuery(
     {},
@@ -52,7 +53,6 @@
     if (newResults?.groups) {
       tableRows.value = [];
       for (const group of newResults.groups) {
-        console.log({ members: group.members });
         tableRows.value.push({
           publicId: group.publicId,
           avatarId: group.avatarId || '',

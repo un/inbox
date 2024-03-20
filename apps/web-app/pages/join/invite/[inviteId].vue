@@ -1,6 +1,21 @@
 <script setup lang="ts">
+  import {
+    navigateTo,
+    definePageMeta,
+    useRuntimeConfig,
+    useNuxtApp,
+    useToast,
+    ref,
+    watch,
+    useRoute,
+    useCookie,
+    type Ref,
+    onNuxtReady
+  } from '#imports';
+
   definePageMeta({ guest: true });
-  const { $trpc, $i18n } = useNuxtApp();
+
+  const { $trpc } = useNuxtApp();
 
   const turnstile = ref();
   const turnstileToken = ref();

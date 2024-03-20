@@ -12,6 +12,8 @@
       </template>
     </ConvosUpload>
  */
+  import { ref, useRuntimeConfig, useToast } from '#imports';
+  import { type ConvoAttachmentUpload } from '~/composables/types';
   import { useFileDialog } from '@vueuse/core';
 
   type Props = {

@@ -1,6 +1,19 @@
 <script setup lang="ts">
   import { startAuthentication } from '@simplewebauthn/browser';
   import { z } from 'zod';
+  import {
+    navigateTo,
+    definePageMeta,
+    useRuntimeConfig,
+    useNuxtApp,
+    useToast,
+    ref,
+    computed,
+    watch,
+    type Ref,
+    onNuxtReady
+  } from '#imports';
+
   const { $trpc, $i18n } = useNuxtApp();
   definePageMeta({ guest: true });
   const turnstileToken = ref();

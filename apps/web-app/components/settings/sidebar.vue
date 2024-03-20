@@ -1,5 +1,6 @@
 <script setup lang="ts">
-  const { $trpc } = useNuxtApp();
+  import { computed, useRoute } from '#imports';
+  import { useEE } from '~/composables/EE';
 
   const orgSlug = useRoute().params.orgSlug as string;
 

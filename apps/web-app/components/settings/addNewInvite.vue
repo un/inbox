@@ -1,7 +1,16 @@
 <script setup lang="ts">
+  import {
+    computed,
+    ref,
+    useNuxtApp,
+    useToast,
+    watch,
+    watchDebounced
+  } from '#imports';
   import type { UiColor } from '@u22n/types/ui';
   import { z } from 'zod';
-  const { $trpc, $i18n } = useNuxtApp();
+
+  const { $trpc } = useNuxtApp();
 
   const newInviteUserFnameValue = ref('');
   const newInviteUserFnameValid = ref<boolean | 'remote' | null>(null);
@@ -142,7 +151,7 @@
   });
 
   // get list of groups
-  const { data: orgUserGroupsData, pending: orgUserGroupPending } =
+  const { data: orgUserGroupsData } =
     await $trpc.org.users.userGroups.getOrgUserGroups.useLazyQuery(
       {},
       { server: false }
@@ -194,13 +203,13 @@
       role: (selectedMemberRole.value?.value as 'admin' | 'member') || 'member'
     };
 
-    const sendNotification = sendEmailNotification
+    const sendNotification = sendEmailNotification.value
       ? {
           notificationEmailAddress: newInviteUserEmailAddressValue.value
         }
       : undefined;
 
-    const createEmail = createEmailIdentity
+    const createEmail = createEmailIdentity.value
       ? {
           emailUsername: newInviteEmailUsernameValue.value,
           domainPublicId: selectedDomain.value?.domainPublicId as string,
@@ -208,7 +217,7 @@
         }
       : undefined;
 
-    const addToGroups = addUserToGroups
+    const addToGroups = addUserToGroups.value
       ? {
           groupsPublicIds: selectedOrgGroups.value.map(
             (group) => group.publicId as string
@@ -481,7 +490,7 @@
                   :public-id="group.publicId?.toString()"
                   :avatar-id="group.avatarId?.toString()"
                   :type="'group'"
-                  :color="group.color?.toString()"
+                  :color="group.color as UiColor"
                   size="3xs" />
                 <span>{{ group.name }}</span>
               </div>

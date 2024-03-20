@@ -1,4 +1,6 @@
 <script setup lang="ts">
+  import { useRoute, reloadNuxtApp } from '#imports';
+
   const orgSlug = useRoute().params.orgSlug as string;
 
   // this page is only used as an interim redirect page due to this nuxt issue https://github.com/nuxt/nuxt/issues/25214

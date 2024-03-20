@@ -1,7 +1,18 @@
 <script setup lang="ts">
   import { z } from 'zod';
   import { useFileDialog } from '@vueuse/core';
-  const { $trpc, $i18n } = useNuxtApp();
+  import {
+    computed,
+    ref,
+    refreshNuxtData,
+    useNuxtApp,
+    useRuntimeConfig,
+    useToast,
+    watch
+  } from '#imports';
+  import { useUtils } from '~/composables/utils';
+
+  const { $trpc } = useNuxtApp();
   const uploadLoading = ref(false);
   const buttonLoading = ref(false);
   const buttonLabel = ref('Save profile');
@@ -32,6 +43,7 @@
   });
 
   const {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     files: selectedFiles,
     open: openFileDialog,
     reset: resetFiles,
@@ -47,6 +59,7 @@
     if (orgNameValue.value !== initialOrgProfile.value?.orgProfile?.name) {
       return orgNameValid.value === true;
     }
+    return false;
   });
 
   //functions

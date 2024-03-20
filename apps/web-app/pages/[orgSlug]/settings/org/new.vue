@@ -1,9 +1,16 @@
 <script setup lang="ts">
   import { z } from 'zod';
-  import { useClipboard } from '@vueuse/core';
+  import {
+    computed,
+    navigateTo,
+    ref,
+    refreshNuxtData,
+    useNuxtApp,
+    useToast,
+    watchDebounced
+  } from '#imports';
 
-  const { copy, copied, text } = useClipboard();
-  const { $trpc, $i18n } = useNuxtApp();
+  const { $trpc } = useNuxtApp();
 
   const newButtonLoading = ref(false);
   const newButtonLabel = ref('Make my organization');
@@ -42,10 +49,9 @@
     orgSlugValue,
     async () => {
       if (orgSlugValid.value === 'remote') {
-        const { available, error } =
-          await $trpc.org.crud.checkSlugAvailability.query({
-            slug: orgSlugValue.value
-          });
+        const { available } = await $trpc.org.crud.checkSlugAvailability.query({
+          slug: orgSlugValue.value
+        });
         if (!available) {
           orgSlugValid.value = false;
           orgSlugValidationMessage.value = 'Not available';

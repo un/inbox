@@ -1,4 +1,6 @@
 <script setup lang="ts">
+  import { useRoute } from '#imports';
+
   const orgSlug = useRoute().params.orgSlug as string;
 </script>
 <template>

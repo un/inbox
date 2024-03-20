@@ -1,26 +1,11 @@
 <script setup lang="ts">
-  import { z } from 'zod';
-  import { useClipboard } from '@vueuse/core';
+  import { ref, useNuxtApp, watch } from '#imports';
 
-  const { copy, copied, text } = useClipboard();
-  const { $trpc, $i18n } = useNuxtApp();
-
-  const showInviteModal = ref(false);
-  const buttonLoading = ref(false);
-  const buttonLabel = ref('Create invite');
-  const pageError = ref(false);
-  const inviteEmailValid = ref<boolean | 'remote' | null>(null);
-  const inviteEmailValue = ref('');
-  const inviteEmailValidationMessage = ref('');
-  const newInviteCode = ref('');
-  const formValid = computed(() => {
-    return inviteEmailValid.value === true;
-  });
+  const { $trpc } = useNuxtApp();
 
   const {
     data: orgInviteQuery,
     pending,
-    error,
     refresh
   } = await $trpc.org.users.invites.viewInvites.useLazyQuery(
     {},
@@ -58,11 +43,6 @@
       label: 'Admin',
       sortable: true
     },
-    // {
-    //   key: 'created',
-    //   label: 'Created On',
-    //   sortable: true
-    // },
     {
       key: 'expiry',
       label: 'Expiry',
@@ -71,66 +51,61 @@
   ];
 
   const tableRows = ref<{}[]>([]);
-  watch(
-    orgInviteQuery,
-    (newResults) => {
-      if (newResults) {
-        const newTableRows: {}[] = [];
-        for (const invite of newResults.invites) {
-          const dateNow = new Date();
-          const truncateEmail = (email: string) => {
-            const [localPart, domain] = email.split('@');
-            const truncatedLocalPart =
-              localPart.length > 4
-                ? `${localPart.substring(0, 4)}...`
-                : localPart;
-            const [domainName, tld] = domain.split('.');
-            const truncatedDomainName =
-              domainName.length > 6
-                ? `${domainName.substring(0, 4)}..`
-                : domainName;
-            return `${truncatedLocalPart}@${truncatedDomainName}.${tld}`;
-          };
-          newTableRows.push({
-            code: invite.inviteToken,
-            truncatedCode: invite.inviteToken
-              ? invite.inviteToken.substring(0, 8) + '...'
-              : '',
-            email: invite.email,
-            truncatedEmail: invite.email ? truncateEmail(invite.email) : '',
-            role: invite.role,
-            status: invite.expiresAt
-              ? invite.acceptedAt
-                ? 'used'
-                : invite.expiresAt < dateNow
-                  ? 'expired'
-                  : 'active'
-              : 'active',
-            createdBy:
-              invite.invitedByOrgMember.profile.firstName +
+  watch(orgInviteQuery, (newResults) => {
+    if (newResults) {
+      const newTableRows: {}[] = [];
+      for (const invite of newResults.invites) {
+        const dateNow = new Date();
+        const truncateEmail = (email: string) => {
+          const [localPart, domain] = email.split('@');
+          const truncatedLocalPart =
+            localPart?.length ?? 0 > 4
+              ? `${localPart?.substring(0, 4) ?? ''}...`
+              : localPart;
+          const [domainName, tld] = (domain ?? '').split('.');
+          const truncatedDomainName =
+            (domainName ?? '').length > 6
+              ? `${domainName?.substring(0, 4)}..`
+              : domainName;
+          return `${truncatedLocalPart}@${truncatedDomainName}.${tld}`;
+        };
+        newTableRows.push({
+          code: invite.inviteToken,
+          truncatedCode: invite.inviteToken
+            ? invite.inviteToken.substring(0, 8) + '...'
+            : '',
+          email: invite.email,
+          truncatedEmail: invite.email ? truncateEmail(invite.email) : '',
+          role: invite.role,
+          status: invite.expiresAt
+            ? invite.acceptedAt
+              ? 'used'
+              : invite.expiresAt < dateNow
+                ? 'expired'
+                : 'active'
+            : 'active',
+          createdBy:
+            invite.invitedByOrgMember.profile.firstName +
+            ' ' +
+            invite.invitedByOrgMember.profile.lastName,
+          createdByAvatarId: invite.invitedByOrgMember.profile
+            ? invite.invitedByOrgMember.profile.avatarId
+            : '',
+          created: invite.invitedAt,
+          userAvatarId: invite.orgMember?.profile
+            ? invite.orgMember?.profile.avatarId
+            : '',
+          usedBy: invite.orgMember?.profile
+            ? invite.orgMember?.profile.firstName +
               ' ' +
-              invite.invitedByOrgMember.profile.lastName,
-            createdByAvatarId: invite.invitedByOrgMember.profile
-              ? invite.invitedByOrgMember.profile.avatarId
-              : '',
-            created: invite.invitedAt,
-            userAvatarId: invite.orgMember?.profile
-              ? invite.orgMember?.profile.avatarId
-              : '',
-            usedBy: invite.orgMember?.profile
-              ? invite.orgMember?.profile.firstName +
-                ' ' +
-                invite.orgMember?.profile.lastName
-              : null,
-            expiry: invite.expiresAt
-          });
-        }
-        tableRows.value = newTableRows;
+              invite.orgMember?.profile.lastName
+            : null,
+          expiry: invite.expiresAt
+        });
       }
+      tableRows.value = newTableRows;
     }
-    // ,
-    // { immediate: true }
-  );
+  });
 
   const addNewModalOpen = ref(false);
   const closeModal = () => {

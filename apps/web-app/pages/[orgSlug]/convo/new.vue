@@ -1,9 +1,19 @@
 <script setup lang="ts">
+  import {
+    computed,
+    navigateTo,
+    ref,
+    useNuxtApp,
+    useRoute,
+    useToast,
+    watch
+  } from '#imports';
+  import { type ConvoAttachmentUpload } from '~/composables/types';
   import type { tiptapVue3 } from '@u22n/tiptap';
   import type { UiColor } from '@u22n/types/ui';
-  import { useTimeAgo } from '@vueuse/core';
   import { stringify } from 'superjson';
   import { z } from 'zod';
+
   const { $trpc } = useNuxtApp();
   const orgSlug = useRoute().params.orgSlug as string;
   const attachmentUploads = ref<ConvoAttachmentUpload[]>([]);
@@ -71,56 +81,40 @@
 
   //* Data Loading
   // Get email identities
-  const {
-    data: userEmailIdentitiesData,
-    pending: userEmailIdentitiesPending,
-    refresh: userEmailIdentitiesExecute,
-    status: userEmailIdentitiesStatus
-  } = await $trpc.org.mail.emailIdentities.getUserEmailIdentities.useLazyQuery(
-    {},
-    {
-      server: false
-    }
-  );
+  const { data: userEmailIdentitiesData, status: userEmailIdentitiesStatus } =
+    await $trpc.org.mail.emailIdentities.getUserEmailIdentities.useLazyQuery(
+      {},
+      {
+        server: false
+      }
+    );
 
   // get list of users
-  const {
-    data: orgMembersData,
-    pending: orgMembersPending,
-    execute: orgMembersExecute,
-    status: orgMembersStatus
-  } = await $trpc.org.users.members.getOrgMembersList.useLazyQuery(
-    {},
-    {
-      server: false
-    }
-  );
+  const { data: orgMembersData, status: orgMembersStatus } =
+    await $trpc.org.users.members.getOrgMembersList.useLazyQuery(
+      {},
+      {
+        server: false
+      }
+    );
 
   // get list of groups
-  const {
-    data: orgUserGroupsData,
-    pending: orgUserGroupsPending,
-    execute: orgUserGroupsExecute,
-    status: orgUserGroupsStatus
-  } = await $trpc.org.users.userGroups.getOrgUserGroups.useLazyQuery(
-    {},
-    {
-      server: false
-    }
-  );
+  const { data: orgUserGroupsData, status: orgUserGroupsStatus } =
+    await $trpc.org.users.userGroups.getOrgUserGroups.useLazyQuery(
+      {},
+      {
+        server: false
+      }
+    );
 
   // get list of org contacts
-  const {
-    data: orgContactsData,
-    pending: orgContactsPending,
-    execute: orgContactsExecute,
-    status: orgContactsStatus
-  } = await $trpc.org.contacts.getOrgContacts.useLazyQuery(
-    {},
-    {
-      server: false
-    }
-  );
+  const { data: orgContactsData } =
+    await $trpc.org.contacts.getOrgContacts.useLazyQuery(
+      {},
+      {
+        server: false
+      }
+    );
 
   //* List Data
   const orgEmailIdentities = ref<OrgEmailIdentities[]>([]);
@@ -137,11 +131,11 @@
     ];
   }
 
-  watch(userEmailIdentitiesData, (newuserEmailIdentitiesData) => {
+  watch(userEmailIdentitiesData, (newUserEmailIdentitiesData) => {
     orgEmailIdentities.value = [];
     selectedOrgEmailIdentities.value = undefined;
-    if (newuserEmailIdentitiesData?.emailIdentities) {
-      for (const orgObject of newuserEmailIdentitiesData.emailIdentities) {
+    if (newUserEmailIdentitiesData?.emailIdentities) {
+      for (const orgObject of newUserEmailIdentitiesData.emailIdentities) {
         orgEmailIdentities.value.push({
           publicId: orgObject.publicId,
           address: orgObject.username + '@' + orgObject.domainName,
@@ -719,14 +713,14 @@
     <div
       class="flex w-full max-w-full grow flex-row items-center justify-end gap-2">
       <div
-        class="flex w-full max-w-full grow flex-row justify-end gap-2 overflow-hidden overflow-scroll">
+        class="flex w-full max-w-full grow flex-row justify-end gap-2 overflow-scroll">
         <div
           v-for="attachment in attachmentUploads"
           :key="attachment.attachmentPublicId"
           class="w-fit">
           <UnUiTooltip text="click to remove">
             <div
-              class="border-1 flex flex-row gap-1 rounded rounded-md border border-gray-500 px-2 py-1 text-gray-700 hover:border-red-500 hover:bg-red-50 hover:text-red-700">
+              class="border-1 flex flex-row gap-1 rounded-md border border-gray-500 px-2 py-1 text-gray-700 hover:border-red-500 hover:bg-red-50 hover:text-red-700">
               <UnUiIcon name="i-ph-paperclip" />
               <span class="truncate text-xs"> {{ attachment.fileName }}</span>
             </div>

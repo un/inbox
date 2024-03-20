@@ -1,6 +1,7 @@
 <script setup lang="ts">
   import { OTPInput } from 'vue-input-otp';
   import Slot from '../settings/otpSlot.vue';
+  import { useVModel } from '@vueuse/core';
 
   const props = defineProps<{
     modelValue: string;

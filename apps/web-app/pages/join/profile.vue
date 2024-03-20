@@ -1,14 +1,25 @@
 <script setup lang="ts">
   import { z } from 'zod';
   import { useFileDialog } from '@vueuse/core';
-  const { $trpc, $i18n } = useNuxtApp();
+  import {
+    navigateTo,
+    definePageMeta,
+    useRuntimeConfig,
+    useNuxtApp,
+    useToast,
+    ref,
+    watch,
+    useCookie
+  } from '#imports';
+  import { useUtils } from '~/composables/utils';
+
+  const { $trpc } = useNuxtApp();
   definePageMeta({ auth: true });
   const uploadLoading = ref(false);
   const buttonLoading = ref(false);
   const buttonLabel = ref('Save profile');
   const pageError = ref(false);
   const imageUrl = ref<string | null>();
-  const imageId = ref<string | null>();
   const fNameValid = ref<boolean | 'remote' | null>(null);
   const fNameValue = ref('');
   const lNameValid = ref<boolean | 'remote' | null>(null);
@@ -55,6 +66,7 @@
   });
 
   const {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     files: selectedFiles,
     open: openFileDialog,
     reset: resetFiles,
@@ -73,7 +85,7 @@
   //@ts-ignore
   selectedFilesOnChange(async (selectedFiles) => {
     uploadLoading.value = true;
-    if (!selectedFiles) return;
+    if (!selectedFiles || !selectedFiles[0]) return;
     const formData = new FormData();
     // @ts-ignore
     const storageUrl = useRuntimeConfig().public.storageUrl;
@@ -218,7 +230,7 @@
         <div class="flex flex-col items-center gap-2">
           <button
             type="button"
-            class="border-1 border-base-7 bg-base-3 bg-base-4 hover:border-base-8 h-[80px] w-[80px] cursor-pointer rounded-lg bg-cover bg-center md:h-[128px] md:w-[128px]"
+            class="border-1 border-base-7 bg-base-3 hover:border-base-8 h-[80px] w-[80px] cursor-pointer rounded-lg bg-cover bg-center md:h-[128px] md:w-[128px]"
             :style="imageUrl ? `background-image: url(${imageUrl})` : ''"
             @click="selectAvatar()">
             <div

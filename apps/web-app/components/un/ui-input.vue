@@ -1,4 +1,7 @@
 <script setup lang="ts">
+  import { ref, computed, unref } from 'vue';
+  import { watch, watchDebounced } from '#imports';
+  import { useUtils } from '~/composables/utils';
   import type { ZodTypeAny } from 'zod';
   import { useVModel } from '@vueuse/core';
   import { useFocus } from '@vueuse/core';
@@ -25,6 +28,7 @@
   const props = withDefaults(defineProps<Props>(), {
     value: '',
     icon: null,
+    placeholder: '',
     disabled: false,
     width: 'fit',
     locked: false,
@@ -85,7 +89,9 @@
   const computedBorderColor = computed(() => {
     // If external/remote validation failed and message passed to component, always set to invalid
     if (validationMessage.value) {
-      valid.value = false;
+      watch(data, () => {
+        valid.value = false;
+      });
       return inputClasses({ color: 'invalid' });
     }
     // If no schema is passed, set to default
@@ -127,7 +133,7 @@
         const inputValidationResult = props.schema.safeParse(data.value);
         if (!inputValidationResult.success) {
           validationMessage.value =
-            inputValidationResult.error.issues[0].message;
+            inputValidationResult.error.issues[0]?.message ?? '';
           valid.value = false;
           return;
         }

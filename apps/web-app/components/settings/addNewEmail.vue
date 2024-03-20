@@ -1,7 +1,17 @@
 <script setup lang="ts">
   import type { UiColor } from '@u22n/types/ui';
   import { z } from 'zod';
-  const { $trpc, $i18n } = useNuxtApp();
+  import {
+    computed,
+    ref,
+    useNuxtApp,
+    useToast,
+    watch,
+    watchDebounced
+  } from '#imports';
+  import { useEE } from '~/composables/EE';
+
+  const { $trpc } = useNuxtApp();
 
   const newIdentityUsernameValue = ref('');
   const newIdentityUsernameValid = ref<boolean | 'remote' | null>(null);

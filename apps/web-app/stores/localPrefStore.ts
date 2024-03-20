@@ -1,3 +1,11 @@
+import {
+  defineStore,
+  useColorMode,
+  persistedState,
+  acceptHMRUpdate
+} from '#imports';
+import { useConvoStore } from './convoStore';
+
 export const useLocalPrefStore = defineStore(
   'localPref',
   () => {

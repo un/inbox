@@ -1,7 +1,19 @@
 <script setup lang="ts">
-  import { stringify } from 'superjson';
   import { z } from 'zod';
-  const { $trpc, $i18n } = useNuxtApp();
+  import {
+    navigateTo,
+    definePageMeta,
+    useRuntimeConfig,
+    useNuxtApp,
+    ref,
+    computed,
+    watchDebounced,
+    useCookie,
+    type Ref,
+    onNuxtReady
+  } from '#imports';
+
+  const { $trpc } = useNuxtApp();
   definePageMeta({ guest: true });
   const turnstileToken = ref();
   const buttonLoading = ref(false);

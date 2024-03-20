@@ -1,3 +1,7 @@
+<script setup lang="ts">
+  import { navigateTo } from '#imports';
+</script>
+
 <template>
   <div class="flex h-screen w-full flex-col items-center justify-between p-4">
     <div

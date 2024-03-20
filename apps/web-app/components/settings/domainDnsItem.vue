@@ -1,4 +1,5 @@
 <script setup lang="ts">
+  import { type PropType } from 'vue';
   type DnsItemBlockProps = {
     title: string;
     value: string;

@@ -6,7 +6,7 @@
       Oops, we cant find that conversation
     </div>
     <div class="flex flex-row gap-2 text-lg">
-      Either it dosn't exist, or you dont have access to it
+      Either it doesn't exist, or you don't have access to it
     </div>
   </div>
 </template>

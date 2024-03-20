@@ -2,6 +2,24 @@ import type { MailDomainEntries } from '@u22n/types';
 
 export default defineNuxtConfig({
   telemetry: false,
+  imports: {
+    autoImport: false
+  },
+  hooks: {
+    // remove the 'composables' and 'utils' from autoImports
+    'imports:dirs': (_dirs) => {
+      for (let i = 0; i < _dirs.length; i++) {
+        if (
+          (_dirs[i] ?? '').includes('composables') ||
+          (_dirs[i] ?? '').includes('utils')
+        ) {
+          _dirs.splice(i, 1);
+          i--;
+        }
+      }
+      return;
+    }
+  },
   modules: [
     '@nuxt/devtools',
     '@vueuse/nuxt',
@@ -79,34 +97,21 @@ export default defineNuxtConfig({
   },
 
   // Nitro/Build Configs
-  // alias: {
-  //     cookie: resolve(__dirname, "node_modules/cookie"),
-  //     "cross-fetch": resolve(__dirname, "node_modules/cross-fetch"),
-  //     "ipaddr.js": resolve(__dirname, "node_modules/ipaddr.js"),
-  //   },
+
   build: {
     transpile: ['trpc-nuxt']
   },
   typescript: {
     shim: false
   },
-  // import the Pinia stores
-  // imports: {
-  //   dirs: ['stores']
-  // },
-  // nitro: {
-  // },
+
   /**
    * * Module Configurations
    */
 
   //* Pinia
   pinia: {
-    // autoImports: [
-    //   ['defineStore', 'definePiniaStore'],
-    //   'acceptHMRUpdate',
-    //   'storeToRefs'
-    // ]
+    storesDirs: []
   },
 
   //* Nuxt-Security
