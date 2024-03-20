@@ -21,16 +21,16 @@
     "db:clean:r": "infisical run --env=local -- esno dbClean.ts"
   },
   "dependencies": {
+    "@planetscale/database": "^1.16.0",
     "@u22n/tsconfig": "^0.0.2",
     "@u22n/types": "workspace:*",
     "@u22n/utils": "workspace:*",
-    "@planetscale/database": "^1.16.0",
-    "drizzle-orm": "^0.30.2",
-    "mysql2": "^3.9.1"
+    "drizzle-orm": "^0.30.3",
+    "mysql2": "^3.9.2"
   },
   "devDependencies": {
     "@faker-js/faker": "^8.4.1",
     "drizzle-kit": "^0.20.14",
-    "esno": "^4.0.0"
+    "esno": "^4.7.0"
   }
 }
