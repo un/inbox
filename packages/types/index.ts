@@ -23,3 +23,4 @@ export interface MailDomainEntries {
   name: string;
   postalId: string;
 }
+export type { TrpcMailBridgeRouter } from '../../apps/mail-bridge';

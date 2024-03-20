@@ -1,6 +1,6 @@
 import { defineEventHandler } from 'h3';
 import type { UserContext } from '@u22n/types';
-import { DatabaseSession } from 'lucia';
+import type { DatabaseSession } from 'lucia';
 import { getCookie, useStorage } from '#imports';
 
 export default defineEventHandler(async (event) => {

@@ -1,7 +1,7 @@
 import type { EmailAddress } from 'mailparser';
-import { MessageParseAddressPlatformObject } from '../types';
+import type { MessageParseAddressPlatformObject } from '../types';
 import { db } from '@u22n/database';
-import { and, eq, notExists, or } from '@u22n/database/orm';
+import { and, eq } from '@u22n/database/orm';
 import {
   contactGlobalReputations,
   contacts,
@@ -16,7 +16,11 @@ export async function parseAddressIds(input: {
 }): Promise<MessageParseAddressPlatformObject[] | []> {
   const parsedAddressIds: MessageParseAddressPlatformObject[] = [];
   for (const addressObject of input.addresses) {
-    const [emailUsername, emailDomain] = addressObject.address.split('@');
+    if (!addressObject.address) {
+      continue;
+    }
+    const [emailUsername = '', emailDomain = ''] =
+      addressObject.address.split('@');
 
     // check if email is existing contact
     const contactQuery = await db.query.contacts.findFirst({
@@ -116,12 +120,14 @@ export async function parseAddressIds(input: {
           messageCount: 1,
           lastUpdated: new Date()
         });
-      contactGlobalReputationId = +contactGlobalReputationInsert.insertId;
+      contactGlobalReputationId = Number(
+        contactGlobalReputationInsert.insertId
+      );
     }
     const contactInsert = await db.insert(contacts).values({
       publicId: nanoId(),
       orgId: input.orgId,
-      reputationId: +contactGlobalReputationId,
+      reputationId: contactGlobalReputationId || 0,
       type: 'unknown',
       emailUsername: emailUsername,
       emailDomain: emailDomain,
@@ -129,7 +135,7 @@ export async function parseAddressIds(input: {
       screenerStatus: 'pending'
     });
     parsedAddressIds.push({
-      id: +contactInsert.insertId,
+      id: Number(contactInsert.insertId),
       type: 'contact',
       contactType: 'unknown',
       ref: input.addressType

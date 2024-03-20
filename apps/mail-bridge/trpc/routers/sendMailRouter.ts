@@ -3,11 +3,12 @@ import { router, protectedProcedure } from '../trpc';
 import {
   emailIdentities,
   postalServers,
-  ConvoEntryMetadata
+  type ConvoEntryMetadata
 } from '@u22n/database/schema';
 import { zodSchemas } from '@u22n/utils';
 import { and, eq } from '@u22n/database/orm';
-import { PostalConfig } from '../../types';
+import type { PostalConfig } from '../../types';
+import { useRuntimeConfig } from '#imports';
 
 export const sendMailRouter = router({
   sendNewEmail: protectedProcedure
@@ -42,9 +43,9 @@ export const sendMailRouter = router({
           success: true,
           metadata: {
             email: {
-              to: null,
+              to: [{ id: 0, type: 'emailIdentity' }],
               from: [{ id: 1, type: 'emailIdentity' }],
-              cc: null,
+              cc: [],
               messageId: 'localModeMessageId',
               postalMessages: [
                 {
@@ -55,7 +56,7 @@ export const sendMailRouter = router({
                 }
               ]
             }
-          }
+          } as ConvoEntryMetadata
         };
       }
 
@@ -82,6 +83,14 @@ export const sendMailRouter = router({
           personalEmailIdentityId: true
         }
       });
+
+      if (!sendAsEmailIdentity) {
+        console.error('🚨 sendAsEmailIdentity not found');
+        return {
+          success: false
+        };
+      }
+
       const sendEmailAddress = `${sendAsEmailIdentity.username}@${sendAsEmailIdentity.domainName}`;
       const sendName = `${sendAsEmailIdentity.sendName} <${sendEmailAddress}>`;
       let postalServerUrl: string;
@@ -107,12 +116,18 @@ export const sendMailRouter = router({
             }
           }
         });
+        if (!orgPostalServerResponse) {
+          console.error('🚨 orgPostalServerResponse not found');
+          return {
+            success: false
+          };
+        }
         postalServerAPIKey = orgPostalServerResponse.apiKey;
         const postalServerConfigItem = postalConfig.servers.find(
           (server) =>
             server.url === orgPostalServerResponse.orgPostalConfigs.host
         );
-        postalServerUrl = `https://${postalServerConfigItem.controlPanelSubDomain}.${postalServerConfigItem.url}/api/v1/send/message`;
+        postalServerUrl = `https://${postalServerConfigItem?.controlPanelSubDomain}.${postalServerConfigItem?.url}/api/v1/send/message`;
       }
 
       //* Attachments
@@ -133,7 +148,7 @@ export const sendMailRouter = router({
         type GetUrlResponse = {
           url: string;
         };
-        const downloadUrl: GetUrlResponse = await fetch(
+        const downloadUrl = (await fetch(
           `${useRuntimeConfig().storage.url}/api/attachments/mailfetch`,
           {
             method: 'post',
@@ -148,7 +163,7 @@ export const sendMailRouter = router({
               filename: input.fileName
             })
           }
-        ).then((res) => res.json());
+        ).then((res) => res.json())) as GetUrlResponse;
         if (!downloadUrl || !downloadUrl.url) {
           throw new Error('something went wrong getting the attachment URL');
         }
@@ -207,30 +222,27 @@ export const sendMailRouter = router({
               message: string;
             };
           };
-      const sendMailPostalResponse: PostalResponse = await fetch(
-        postalServerUrl,
-        {
-          method: 'POST',
-          headers: {
-            'X-Server-API-Key': `${postalServerAPIKey}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            to: [`${toEmail}`],
-            cc: ccEmail,
-            from: sendName,
-            sender: sendEmailAddress,
-            subject: subject,
-            plain_body: bodyPlainText,
-            html_body: bodyHtml,
-            attachments: postalAttachments
-          })
-        }
-      )
+      const sendMailPostalResponse = (await fetch(postalServerUrl, {
+        method: 'POST',
+        headers: {
+          'X-Server-API-Key': `${postalServerAPIKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          to: [`${toEmail}`],
+          cc: ccEmail,
+          from: sendName,
+          sender: sendEmailAddress,
+          subject: subject,
+          plain_body: bodyPlainText,
+          html_body: bodyHtml,
+          attachments: postalAttachments
+        })
+      })
         .then((res) => res.json())
         .catch((e) => {
           console.error('🚨 error sending email', e);
-        });
+        })) as PostalResponse;
 
       if (sendMailPostalResponse.status === 'success') {
         const transformedMessages = Object.entries(
@@ -243,9 +255,9 @@ export const sendMailRouter = router({
 
         const entryMetadata: ConvoEntryMetadata = {
           email: {
-            to: null,
+            to: [],
             from: [{ id: +sendAsEmailIdentity.id, type: 'emailIdentity' }],
-            cc: null,
+            cc: [],
             messageId: sendMailPostalResponse.data.message_id,
             postalMessages: transformedMessages.map((message) => ({
               ...message,

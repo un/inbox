@@ -20,10 +20,12 @@ import {
 import { relations, sql } from 'drizzle-orm';
 import { nanoIdLength, nanoIdLongLength } from '@u22n/utils';
 import { uiColors } from '@u22n/types/ui';
-import {
-  stripeBillingPeriods,
-  stripePlanNames
-} from '../../ee/apps/billing/types';
+
+// TODO: we need to make this separated from nuxt apps, imports from "#import" breaks everything
+
+// import { stripeBillingPeriods, stripePlanNames } from '../../ee/apps/billing';
+const stripeBillingPeriods = ['monthly', 'yearly'] as const;
+const stripePlanNames = ['starter', 'pro'] as const;
 
 //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit
 
@@ -1262,7 +1264,7 @@ export const convoEntryReplies = mysqlTable(
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull()
   },
-  (table) => ({
+  () => ({
     //TODO: Add indexes
   })
 );
@@ -1323,7 +1325,7 @@ export const orgBilling = mysqlTable(
     stripeSubscriptionId: varchar('stripe_subscription_id', { length: 128 }),
     plan: mysqlEnum('plan', [...stripePlanNames])
       .notNull()
-      .default('free'),
+      .default('starter'),
     period: mysqlEnum('period', [...stripeBillingPeriods])
       .notNull()
       .default('monthly')

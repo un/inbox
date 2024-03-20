@@ -29,7 +29,7 @@ export const passwordRouter = router({
       if (!available) {
         throw new TRPCError({
           code: 'FORBIDDEN',
-          message: error
+          message: error || 'Username is not available'
         });
       }
 
@@ -123,7 +123,7 @@ export const passwordRouter = router({
       }
 
       // verify password if provided
-      let validPassword: null | boolean;
+      let validPassword = false;
       if (input.password) {
         if (!userResponse.account.passwordHash) {
           throw new TRPCError({
@@ -145,7 +145,7 @@ export const passwordRouter = router({
       }
 
       // verify otp if provided
-      let otpValid: null | boolean;
+      let otpValid = false;
       if (input.twoFactorCode) {
         if (!userResponse.account.twoFactorSecret) {
           throw new TRPCError({
@@ -167,7 +167,8 @@ export const passwordRouter = router({
       }
 
       // verify recovery code if provided
-      let recoveryCodeValid: null | boolean;
+      let recoveryCodeValid = false;
+
       if (input.recoveryCode) {
         if (!userResponse.account.recoveryCode) {
           throw new TRPCError({
@@ -264,6 +265,13 @@ export const passwordRouter = router({
         });
       }
 
+      if (!userData.account.passwordHash) {
+        throw new TRPCError({
+          code: 'METHOD_NOT_SUPPORTED',
+          message: 'Password sign-in is not enabled'
+        });
+      }
+
       const oldPasswordValid = await new Argon2id().verify(
         userData.account.passwordHash,
         input.oldPassword
@@ -300,7 +308,7 @@ export const passwordRouter = router({
         })
         .where(eq(accounts.userId, userId));
 
-      // Invalidate all sessions
+      // Invalidate all sessions if requested
       if (input.invalidateAllSessions) {
         await lucia.invalidateUserSessions(user.session.userId);
       }

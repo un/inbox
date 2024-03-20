@@ -4,9 +4,9 @@ import {
 } from 'node:crypto';
 import { customAlphabet } from 'nanoid';
 import { promisify } from 'util';
-import { postalDB } from '../../apps/mail-bridge/postal-db';
+import { postalDB } from '.';
 import { eq } from 'drizzle-orm';
-import { domains } from '../../apps/mail-bridge/postal-db/schema';
+import { domains } from './schema';
 
 export const randomAlphaNumeric = customAlphabet(
   '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'

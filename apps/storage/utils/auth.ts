@@ -1,3 +1,11 @@
+import {
+  defineRequestMiddleware,
+  setResponseStatus,
+  send,
+  getHeader,
+  useRuntimeConfig
+} from '#imports';
+
 export const loggedIn = defineRequestMiddleware(async (event) => {
   if (!event.context.user) {
     setResponseStatus(event, 401);
@@ -5,7 +13,7 @@ export const loggedIn = defineRequestMiddleware(async (event) => {
   }
 });
 export const authorizedService = defineRequestMiddleware(async (event) => {
-  const authToken = await getHeader(event, 'Authorization');
+  const authToken = getHeader(event, 'Authorization');
   if (!authToken) {
     setResponseStatus(event, 401);
     return send(event, 'Unauthorized');

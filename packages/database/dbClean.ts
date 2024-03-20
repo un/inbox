@@ -10,7 +10,9 @@ import * as schema from './schema';
 
   for (const key in schema) {
     if (!key.includes('Relations')) {
-      const tableName = schema[key][Symbol.for('drizzle:Name')];
+      const tableName =
+        // @ts-expect-error, don't care about types here
+        schema[key][Symbol.for('drizzle:Name')];
       tableNames.push(tableName);
     }
   }

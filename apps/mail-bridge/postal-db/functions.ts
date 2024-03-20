@@ -15,7 +15,7 @@ import {
   generatePublicKey,
   getUniqueDKIMSelector,
   randomAlphaNumeric
-} from '@u22n/utils/generators';
+} from './generators';
 import { and, eq, sql } from 'drizzle-orm/sql';
 import { lookupCNAME, lookupMX, lookupTXT } from '@u22n/utils/dns';
 import {
@@ -25,9 +25,6 @@ import {
   parseSpfIncludes
 } from '@u22n/utils/dns/txtParsers';
 import { useRuntimeConfig } from '#imports';
-import type { PostalConfig } from '../types';
-
-const postalConfig: PostalConfig = useRuntimeConfig().postal;
 
 export type CreateOrgInput = {
   orgPublicId: string;

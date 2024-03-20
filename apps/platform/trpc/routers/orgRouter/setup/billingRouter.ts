@@ -46,7 +46,7 @@ export const billingRouter = router({
         );
 
       return {
-        totalUsers: activeOrgMembersCount[0].count,
+        totalUsers: activeOrgMembersCount[0]?.count,
         currentPlan: orgPlan,
         currentPeriod: orgPeriod
       };
@@ -132,7 +132,9 @@ export const billingRouter = router({
           and(eq(orgMembers.orgId, orgId), eq(orgMembers.status, 'active'))
         );
 
-      const activeOrgMembersCount = +activeOrgMembersCountResponse[0].count;
+      const activeOrgMembersCount = Number(
+        activeOrgMembersCountResponse[0]?.count || '0'
+      );
       const orgSubLink =
         await billingTrpcClient.stripe.links.createSubscriptionPaymentLink.mutate(
           {

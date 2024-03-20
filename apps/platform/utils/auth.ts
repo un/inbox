@@ -1,4 +1,9 @@
-import { DatabaseSession, DatabaseUser, Lucia, TimeSpan } from 'lucia';
+import {
+  type DatabaseSession,
+  type DatabaseUser,
+  Lucia,
+  TimeSpan
+} from 'lucia';
 import { UnInboxDBAdapter } from './auth/luciaDbAdaptor';
 import { useRuntimeConfig } from '#imports';
 

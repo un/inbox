@@ -1,4 +1,5 @@
 import { defineEventHandler } from 'h3';
+import { getCookie, useStorage } from '#imports';
 
 export default defineEventHandler(async (event) => {
   const sessionCookie = getCookie(event, 'unsession');
@@ -7,14 +8,13 @@ export default defineEventHandler(async (event) => {
     return;
   }
   const sessionStorage = useStorage('sessions');
-  const sessionObject: Object | null =
-    await sessionStorage.getItem(sessionCookie);
+  const sessionObject = await sessionStorage.getItem(sessionCookie);
   if (!sessionObject) {
     event.context.user = null;
     return;
   }
   const userContext = {
-    //@ts-ignore
+    // @ts-expect-error, not typed properly yet
     id: +sessionObject.attributes.user.id,
     session: sessionObject
   };

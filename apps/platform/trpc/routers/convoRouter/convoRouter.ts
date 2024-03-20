@@ -22,7 +22,7 @@ import {
   convoEntries,
   emailIdentitiesAuthorizedUsers,
   userGroupMembers,
-  ConvoEntryMetadataEmailAddress,
+  type ConvoEntryMetadataEmailAddress,
   convoAttachments,
   pendingAttachments
 } from '@u22n/database/schema';
@@ -316,7 +316,7 @@ export const convoRouter = router({
 
       if (participantsEmails && participantsEmails.length) {
         for (const email of participantsEmails) {
-          const [emailUsername, emailDomain] = email.split('@');
+          const [emailUsername = '', emailDomain = ''] = email.split('@');
           const existingContact = await db.query.contacts.findFirst({
             where: and(
               eq(contacts.emailUsername, emailUsername),
@@ -372,7 +372,7 @@ export const convoRouter = router({
                 };
               } else {
                 convoMetadataCcAddresses.push({
-                  id: +existingContact.id,
+                  id: +newContactInsertResponse.insertId,
                   type: 'contact'
                 });
               }
@@ -405,7 +405,7 @@ export const convoRouter = router({
                 };
               } else {
                 convoMetadataCcAddresses.push({
-                  id: +existingContact.id,
+                  id: +newContactInsertResponse.insertId,
                   type: 'contact'
                 });
               }
@@ -726,7 +726,11 @@ export const convoRouter = router({
             attachments: attachmentsToSend
           });
 
-        if (!mailBridgeSendMailResponse.success) {
+        if (
+          !mailBridgeSendMailResponse.success ||
+          !mailBridgeSendMailResponse.metadata ||
+          !mailBridgeSendMailResponse.metadata.email
+        ) {
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
             message:
@@ -734,14 +738,15 @@ export const convoRouter = router({
           });
         }
 
-        const messageMetadata = mailBridgeSendMailResponse.metadata;
-        messageMetadata.email.to = [convoMetadataToAddress];
-        messageMetadata.email.cc = convoMetadataCcAddresses;
+        mailBridgeSendMailResponse.metadata.email.to = [
+          convoMetadataToAddress!
+        ];
+        mailBridgeSendMailResponse.metadata.email.cc = convoMetadataCcAddresses;
 
         await db
           .update(convoEntries)
           .set({
-            metadata: messageMetadata
+            metadata: mailBridgeSendMailResponse.metadata
           })
           .where(eq(convoEntries.id, +insertConvoEntryResponse.insertId));
 
@@ -838,7 +843,7 @@ export const convoRouter = router({
         }
         throw new TRPCError({
           code: 'UNAUTHORIZED',
-          message: `Conversation is owned by ${convoOrgOwnerMembersIds[0].org.name} organization.`
+          message: `Conversation is not owned by your organization.`
         });
       }
 
@@ -1150,8 +1155,8 @@ export const convoRouter = router({
       }
 
       const newCursorLastUpdatedAt =
-        convoQuery[convoQuery.length - 1].lastUpdatedAt;
-      const newCursorLastPublicId = convoQuery[convoQuery.length - 1].publicId;
+        convoQuery[convoQuery.length - 1]!.lastUpdatedAt;
+      const newCursorLastPublicId = convoQuery[convoQuery.length - 1]!.publicId;
 
       return {
         data: convoQuery,

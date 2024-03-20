@@ -3,6 +3,10 @@
   "globalDotEnv": [".env.local"],
   "globalDependencies": ["**/.env.*local"],
   "pipeline": {
+    "check": {
+      "cache": false,
+      "dependsOn": ["^check"]
+    },
     "build": {
       "dependsOn": ["^build"],
       "outputs": [".output/**", ".nuxt/**"]

@@ -2,7 +2,9 @@
   "name": "@u22n/utils",
   "version": "1.0.0",
   "description": "",
-  "scripts": {},
+  "scripts": {
+    "check": "tsc --noEmit"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",

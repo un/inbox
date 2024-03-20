@@ -14,6 +14,7 @@ export const twoFactorRouter = router({
     .mutation(async ({ ctx }) => {
       const { user, db } = ctx;
       const userId = user.id;
+
       const existingData = await db.query.users.findFirst({
         where: eq(users.id, userId),
         columns: {
@@ -27,6 +28,14 @@ export const twoFactorRouter = router({
           }
         }
       });
+
+      if (!existingData) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'User not found'
+        });
+      }
+
       if (existingData.account.twoFactorSecret) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
@@ -69,6 +78,14 @@ export const twoFactorRouter = router({
           }
         }
       });
+
+      if (!existingData) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'User not found'
+        });
+      }
+
       if (!existingData.account.twoFactorSecret) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
@@ -124,6 +141,14 @@ export const twoFactorRouter = router({
           }
         }
       });
+
+      if (!existingData) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'User not found'
+        });
+      }
+
       if (!existingData.account.twoFactorSecret) {
         throw new TRPCError({
           code: 'BAD_REQUEST',

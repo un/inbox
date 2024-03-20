@@ -340,6 +340,9 @@ importers:
       '@u22n/database':
         specifier: workspace:*
         version: link:../../../packages/database
+      '@u22n/tsconfig':
+        specifier: ^0.0.2
+        version: 0.0.2
       '@u22n/utils':
         specifier: workspace:*
         version: link:../../../packages/utils
@@ -392,9 +395,9 @@ importers:
       drizzle-kit:
         specifier: ^0.20.14
         version: 0.20.14
-      esno:
-        specifier: ^4.7.0
-        version: 4.7.0
+      tsx:
+        specifier: ^4.7.1
+        version: 4.7.1
 
   packages/tiptap:
     dependencies:
@@ -7030,13 +7033,6 @@ packages:
       es5-ext: 0.10.64
       event-emitter: 0.3.5
       type: 2.7.2
-
-  /esno@4.7.0:
-    resolution: {integrity: sha512-81owrjxIxOwqcABt20U09Wn8lpBo9K6ttqbGvQcB3VYNLJyaV1fvKkDtpZd3Rj5BX3WXiGiJCjUevKQGNICzJg==}
-    hasBin: true
-    dependencies:
-      tsx: 4.7.1
-    dev: true
 
   /espree@9.6.1:
     resolution: {integrity: sha512-oruZaFkjorTpF32kDSI5/75ViwGeZginGGy2NoOSg3Q9bnwlnmDm4HLnkl0RE3n+njDXR037aY1+x58Z/zFdwQ==}

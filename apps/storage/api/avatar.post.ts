@@ -2,7 +2,6 @@ import {
   orgs,
   userProfiles,
   orgMembers,
-  userGroupMembers,
   userGroups,
   contacts
 } from '@u22n/database/schema';
@@ -11,7 +10,16 @@ import { eq } from '@u22n/database/orm';
 import { db } from '@u22n/database';
 import sharp from 'sharp';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
-import { S3Config } from '../types';
+import type { S3Config } from '../types';
+import {
+  eventHandler,
+  loggedIn,
+  readMultipartFormData,
+  setResponseStatus,
+  send,
+  useRuntimeConfig,
+  s3Client
+} from '#imports';
 
 //?  Avatar Path: /[type.value]/[userProfilePublicId]/[size]
 
@@ -24,13 +32,20 @@ export default eventHandler({
       { name: 'contact', value: 'c' },
       { name: 'group', value: 'g' }
     ];
+
     const formInputs = await readMultipartFormData(event);
 
     const avatarId = nanoIdLong();
 
-    const typeInput = formInputs
-      .find((input) => input.name === 'type')
-      .data.toString('utf8');
+    if (!formInputs) {
+      setResponseStatus(event, 400);
+      return send(event, 'Missing Form data');
+    }
+
+    const typeInput =
+      formInputs
+        .find((input) => input.name === 'type')
+        ?.data.toString('utf8') || '';
 
     const typeObject = types.find((t) => t.name === typeInput);
     if (!typeObject) {
@@ -55,7 +70,7 @@ export default eventHandler({
           avatarId: true
         }
       });
-      if (!profileResponse) {
+      if (!profileResponse || !profileResponse.userId) {
         setResponseStatus(event, 400);
         return send(event, 'Invalid user profile ');
       }
@@ -133,7 +148,7 @@ export default eventHandler({
     }
 
     const file = formInputs.find((input) => input.name === 'file');
-    if (!file) {
+    if (!file || !file.type) {
       setResponseStatus(event, 400);
       return send(event, 'Missing file attachment');
     }
