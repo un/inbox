@@ -5,8 +5,27 @@ import { z } from 'zod';
 export const typeIdLength = 26;
 
 export const idTypes = {
-  user: 'usr',
-  org: 'org'
+  user: 'u',
+  userProfile: 'up',
+  org: 'o',
+  orgInvitations: 'oi',
+  orgMembers: 'om',
+  userGroups: 'g',
+  userGroupMembers: 'gm',
+  domains: 'dom',
+  postalServers: 'ps',
+  contacts: 'cntc',
+  emailRoutingRules: 'rr',
+  emailIdentities: 'ei',
+  emailIdentitiesPersonal: 'eip',
+  emailIdentitiesExternal: 'eie',
+  convos: 'c',
+  convos2: 'c',
+  convoSubjects: 'cs',
+  convoParticipants: 'cp',
+  convoAttachments: 'ca',
+  pendingAttachments: 'cap',
+  convoEntries: 'ce'
 } as const;
 
 type IdType = typeof idTypes;
