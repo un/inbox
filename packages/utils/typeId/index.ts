@@ -20,7 +20,6 @@ export const idTypes = {
   emailIdentitiesPersonal: 'eip',
   emailIdentitiesExternal: 'eie',
   convos: 'c',
-  convos2: 'c',
   convoSubjects: 'cs',
   convoParticipants: 'cp',
   convoAttachments: 'ca',
