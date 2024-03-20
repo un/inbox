@@ -9,28 +9,35 @@ export const idTypes = {
   org: 'org'
 } as const;
 
-type IdTypePrefixes = (typeof idTypes)[keyof typeof idTypes];
+type IdType = typeof idTypes;
+type IdTypePrefixes = keyof typeof idTypes;
 
-export const typeIdValidator = <T extends IdTypePrefixes>(prefix: T) =>
+export const typeIdValidator = <const T extends IdTypePrefixes>(prefix: T) =>
   z
     .string()
-    .startsWith(`${prefix}_`)
-    .length(typeIdLength + prefix.length) // suffix length + prefix length
+    .startsWith(`${idTypes[prefix]}_`)
+    .length(typeIdLength + idTypes[prefix].length) // suffix length + prefix length
     .transform(
       (input) =>
-        TypeID.fromString(input).asType(prefix).toString() as `${T}_${string}`
+        TypeID.fromString(input)
+          .asType(idTypes[prefix])
+          .toString() as `${IdType[T]}_${string}`
     );
 
-export const typeIdGenerator = <T extends IdTypePrefixes>(prefix: T) =>
-  typeid(prefix);
+export const typeIdGenerator = <const T extends IdTypePrefixes>(prefix: T) =>
+  typeid(idTypes[prefix]);
 
-export const typeIdDataType = <T extends IdTypePrefixes>(
+export const typeIdDataType = <const T extends IdTypePrefixes>(
   prefix: T,
   column: string
 ) =>
-  customType<{ data: `${T}_${string}`; notNull: true; driverData: string }>({
-    dataType: () => `varchar(${typeIdLength + prefix.length})`,
+  customType<{
+    data: `${IdType[T]}_${string}`;
+    notNull: true;
+    driverData: string;
+  }>({
+    dataType: () => `varchar(${typeIdLength + idTypes[prefix].length})`,
     fromDriver: (input) =>
-      TypeID.fromString(input).toString() as `${T}_${string}`,
+      TypeID.fromString(input).toString() as `${IdType[T]}_${string}`,
     toDriver: (input) => input.toString()
   })(column);

@@ -63,7 +63,7 @@ export const users = mysqlTable(
   'users',
   {
     id: serial('id').primaryKey(),
-    publicId: publicId('usr', 'public_id').notNull(),
+    publicId: publicId('user', 'public_id').notNull(),
     username: varchar('username', { length: 32 }).notNull(),
     metadata: json('metadata').$type<Record<string, unknown>>(),
     createdAt: timestamp('created_at').defaultNow(),
