@@ -43,7 +43,7 @@ export const typeIdValidator = <const T extends IdTypePrefixes>(prefix: T) =>
     );
 
 export const typeIdGenerator = <const T extends IdTypePrefixes>(prefix: T) =>
-  typeid(idTypes[prefix]);
+  typeid(idTypes[prefix]).toString() as `${IdType[T]}_${string}`;
 
 export const typeIdDataType = <const T extends IdTypePrefixes>(
   prefix: T,
