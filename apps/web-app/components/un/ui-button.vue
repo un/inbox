@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { DefineComponent } from 'vue';
+  import { type DefineComponent, defineComponent } from 'vue';
   import { NuxtUiButton } from '#components';
 
   export default defineComponent<

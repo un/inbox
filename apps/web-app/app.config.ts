@@ -1,8 +1,5 @@
+import { defineAppConfig } from '#imports';
 export default defineAppConfig({
-  // nuxtIcon: {
-  //   size: '24px' // default <Icon> size applied
-  // }
-
   ui: {
     primary: 'bronze',
     gray: 'zinc',

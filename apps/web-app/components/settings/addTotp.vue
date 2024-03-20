@@ -1,4 +1,15 @@
 <script setup lang="ts">
+  import {
+    computed,
+    navigateTo,
+    onMounted,
+    ref,
+    useNuxtApp,
+    useCookie,
+    useToast,
+    watch
+  } from '#imports';
+
   import { useClipboard } from '@vueuse/core';
   import { useQRCode } from '@vueuse/integrations/useQRCode';
 
@@ -26,7 +37,7 @@
 
   // creation step
   const qrUri = ref('');
-  const qrcode = useQRCode(qrUri, { width: 200, height: 200 });
+  const qrCode = useQRCode(qrUri, { width: 200, height: 200 });
 
   const manualCode = ref('');
 
@@ -91,7 +102,7 @@
   }
 
   function showReset2FA() {
-    twoFactorCodeValid ? (showResetTotpModal.value = true) : null;
+    twoFactorCodeValid.value ? (showResetTotpModal.value = true) : null;
   }
 
   async function reset2FA() {
@@ -236,7 +247,7 @@
             <span>Scan the QR code below with your 2FA app</span>
             <div class="mb-4">
               <img
-                :src="qrcode"
+                :src="qrCode"
                 alt="QR Code"
                 class="rounded-lg p-2 shadow-xl" />
             </div>

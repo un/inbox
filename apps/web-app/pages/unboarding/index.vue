@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  const { $trpc, $i18n } = useNuxtApp();
+  import { navigateTo } from '#imports';
 </script>
 
 <template>

@@ -1,5 +1,15 @@
 <script setup lang="ts">
   import { useInfiniteScroll } from '@vueuse/core';
+  import {
+    computed,
+    navigateTo,
+    ref,
+    useNuxtApp,
+    watch,
+    useRoute,
+    onMounted
+  } from '#imports';
+
   const { $trpc } = useNuxtApp();
 
   const orgSlug = useRoute().params.orgSlug as string;
@@ -33,8 +43,7 @@
   const {
     data: userConvosData,
     status: userConvosStatus,
-    execute: getUserConvos,
-    refresh: refreshUserConvos
+    execute: getUserConvos
   } = await $trpc.convos.getUserConvos.useLazyQuery(userConvoQueryParams, {
     server: false,
     queryKey: `userConvos-${orgSlug}`,
@@ -118,7 +127,7 @@
             <DynamicScrollerItem
               :item="item"
               :active="active"
-              :size-dependacies="[item.data]"
+              :size-dependencies="[item.data]"
               :data-index="index"
               class="pb-4"
               @click="navigateTo(`/${orgSlug}/convo/${item.publicId}`)">

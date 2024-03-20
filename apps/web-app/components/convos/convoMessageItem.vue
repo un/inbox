@@ -2,6 +2,8 @@
   import { useTimeAgo } from '@vueuse/core';
   import { tiptapHtml } from '@u22n/tiptap';
   import { tipTapExtensions } from '@u22n/tiptap/extensions';
+  import { computed, inject, useNuxtApp } from '#imports';
+
   const { $trpc } = useNuxtApp();
 
   type ConvoEntryDataType = Awaited<

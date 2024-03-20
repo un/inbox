@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { DefineComponent } from 'vue';
+  import { type DefineComponent, defineComponent } from 'vue';
   import { NuxtUiBadge } from '#components';
 
   export default defineComponent<

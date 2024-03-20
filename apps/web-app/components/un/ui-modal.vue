@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { DefineComponent } from 'vue';
+  import { type DefineComponent, defineComponent } from 'vue';
   import { NuxtUiModal } from '#components';
 
   export default defineComponent<
@@ -23,7 +23,7 @@
 <template>
   <NuxtUiModal
     v-bind="$props"
-    @update:modelValue="$emit('update:modelValue', $event)">
+    @update:model-value="$emit('update:modelValue', $event)">
     <NuxtUiCard
       :ui="{
         ring: '',

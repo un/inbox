@@ -4,6 +4,8 @@
     ConvoParticipantEntry,
     UserConvosDataType
   } from '~/composables/types';
+  import { computed, ref } from '#imports';
+  import { useUtils } from '~/composables/utils';
 
   type Props = {
     convo: UserConvosDataType[number];
@@ -15,8 +17,9 @@
   const participantArray = ref<ConvoParticipantEntry[]>([]);
   const author = ref<ConvoParticipantEntry>();
   const firstEntryAuthor =
-    props.convo.entries[0].author || props.convo.participants[0];
+    props.convo.entries[0]?.author || props.convo.participants[0];
   const authorEntryPublicId = computed(() => {
+    if (!firstEntryAuthor) return null;
     return (
       firstEntryAuthor.orgMember?.publicId ||
       firstEntryAuthor.userGroup?.publicId ||
@@ -24,6 +27,7 @@
     );
   });
   const authorEntryName = computed(() => {
+    if (!firstEntryAuthor) return null;
     return (
       firstEntryAuthor.userGroup?.name ||
       firstEntryAuthor.contact?.setName ||
@@ -75,14 +79,14 @@
         </div> -->
         <div class="text-base-11 w-full overflow-hidden pl-2 text-left text-xs">
           <span class="font-italic truncate text-xs">
-            {{ props.convo.subjects[0].subject }}
+            {{ props.convo.subjects[0]?.subject }}
           </span>
         </div>
         <div
           class="bg-base-3 hover:bg-base-4 text-base-12 w-full overflow-hidden rounded-lg p-2 text-left text-sm">
           <span class="line-clamp-2">
             <span class="font-bold">{{ authorEntryName }} </span>
-            : {{ props.convo.entries[0].bodyPlainText }}
+            : {{ props.convo.entries[0]?.bodyPlainText ?? '' }}
           </span>
         </div>
       </div>

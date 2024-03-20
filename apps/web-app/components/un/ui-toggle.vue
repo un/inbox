@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { DefineComponent } from 'vue';
+  import { type DefineComponent, defineComponent } from 'vue';
   import { NuxtUiToggle } from '#components';
 
   export default defineComponent<
@@ -16,7 +16,7 @@
 <template>
   <NuxtUiToggle
     v-bind="$props"
-    @update:modelValue="$emit('update:modelValue', $event)">
+    @update:model-value="$emit('update:modelValue', $event)">
     <slot />
   </NuxtUiToggle>
 </template>

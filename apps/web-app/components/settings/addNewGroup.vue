@@ -1,7 +1,19 @@
 <script setup lang="ts">
   import type { UiColor } from '@u22n/types/ui';
   import { z } from 'zod';
-  const { $trpc, $i18n } = useNuxtApp();
+  import {
+    computed,
+    navigateTo,
+    ref,
+    useNuxtApp,
+    useRoute,
+    useToast,
+    watch,
+    watchDebounced
+  } from '#imports';
+  import { useEE } from '~/composables/EE';
+
+  const { $trpc } = useNuxtApp();
 
   const newGroupNameValue = ref('');
   const newGroupNameValidationMessage = ref('');
@@ -18,7 +30,6 @@
   const newEmailIdentitySendNameValid = ref<boolean | null>(null);
   const newEmailSendNameValidationMessage = ref('');
   const newEmailIdentitySendNameTempValue = ref('');
-  const newDomainNameValid = ref<boolean | 'remote' | null>(null);
 
   const buttonLabel = ref('Create New Group');
   const buttonLoading = ref(false);

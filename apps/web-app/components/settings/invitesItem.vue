@@ -1,6 +1,5 @@
 <script setup lang="ts">
-  import { useTimeAgo } from '@vueuse/core';
-  import { useClipboard } from '@vueuse/core';
+  import { computed, useNuxtApp } from '#imports';
 
   const { $trpc } = useNuxtApp();
 

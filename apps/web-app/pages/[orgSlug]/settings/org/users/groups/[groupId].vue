@@ -1,33 +1,32 @@
 <script setup lang="ts">
-  import { z } from 'zod';
-  import { useClipboard, useTimeAgo } from '@vueuse/core';
+  import {
+    navigateTo,
+    ref,
+    useNuxtApp,
+    useRoute,
+    useToast,
+    watch
+  } from '#imports';
+  import type { UiColor } from '@u22n/types/ui';
 
-  const { copy, copied, text } = useClipboard();
-  const { $trpc, $i18n } = useNuxtApp();
+  const { $trpc } = useNuxtApp();
   const route = useRoute();
-  const orgSlug = useRoute().params.orgSlug as string;
 
   const groupPublicId = route.params.groupId as string;
   const isNewGroup = route.query.new === 'true';
 
-  const addNewUserButtonLabel = ref('Add users to group');
-  const addNewUserButtonLoading = ref(false);
   const showAddNewUser = ref(false);
 
   const addingUserId = ref('');
 
-  const {
-    data: groupData,
-    pending: groupPending,
-    error,
-    refresh
-  } = await $trpc.org.users.userGroups.getUserGroup.useLazyQuery(
-    {
-      userGroupPublicId: groupPublicId,
-      newUserGroup: isNewGroup
-    },
-    { server: false }
-  );
+  const { data: groupData, pending: groupPending } =
+    await $trpc.org.users.userGroups.getUserGroup.useLazyQuery(
+      {
+        userGroupPublicId: groupPublicId,
+        newUserGroup: isNewGroup
+      },
+      { server: false }
+    );
 
   const tableColumns = [
     {
@@ -78,9 +77,7 @@
   const {
     data: orgMembersData,
     pending: orgMembersPending,
-    error: orgMembersError,
-    execute: getOrgMembersList,
-    refresh: orgMembersRefresh
+    execute: getOrgMembersList
   } = await $trpc.org.users.members.getOrgMembersList.useLazyQuery(
     {},
     { server: false, immediate: false }
@@ -181,7 +178,7 @@
             @click="navigateTo('./')" />
         </UnUiTooltip>
         <UnUiAvatar
-          :color="groupData?.group?.color || 'base'"
+          :color="groupData?.group?.color || ('base' as UiColor)"
           :name="groupData?.group?.name"
           :public-id="groupData?.group?.publicId || ''"
           :avatar-id="groupData?.group?.avatarId || ''"

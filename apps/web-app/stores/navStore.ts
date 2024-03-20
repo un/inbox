@@ -1,3 +1,6 @@
+import { ref, defineStore, acceptHMRUpdate } from '#imports';
+import { useConvoStore } from './convoStore';
+
 export const useNavStore = defineStore(
   'navStore',
   () => {

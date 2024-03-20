@@ -1,12 +1,16 @@
 <script setup lang="ts">
-  import { z } from 'zod';
-  import { useClipboard, useTimeAgo } from '@vueuse/core';
+  import {
+    computed,
+    navigateTo,
+    ref,
+    useNuxtApp,
+    useRoute,
+    watch
+  } from '#imports';
+  import { useTimeAgo } from '@vueuse/core';
 
-  const { copy, copied, text } = useClipboard();
-  const { $trpc, $i18n } = useNuxtApp();
-  const inviteEmailValid = ref<boolean | 'remote' | null>(null);
-  const dnsRecordsExpanded = ref(false);
-  const mailMethodsExpanded = ref(true);
+  const { $trpc } = useNuxtApp();
+
   const showDnsRefreshMessage = ref(false);
   const dnsRefreshLoading = ref(false);
 
@@ -25,7 +29,6 @@
   const {
     data: domainQuery,
     pending: domainPending,
-    error: domainError,
     refresh: domainRefresh
   } = await $trpc.org.mail.domains.getDomain.useLazyQuery(
     {
@@ -34,18 +37,14 @@
     },
     { server: false }
   );
-  const {
-    data: domainDnsQuery,
-    pending: domainDnsPending,
-    error: domainDnsError,
-    refresh: domainDnsRefresh
-  } = await $trpc.org.mail.domains.getDomainDns.useLazyQuery(
-    {
-      domainPublicId: domainPublicId,
-      isNewDomain: isNewDomain
-    },
-    { server: false }
-  );
+  const { data: domainDnsQuery, refresh: domainDnsRefresh } =
+    await $trpc.org.mail.domains.getDomainDns.useLazyQuery(
+      {
+        domainPublicId: domainPublicId,
+        isNewDomain: isNewDomain
+      },
+      { server: false }
+    );
 
   const domainStatus = ref('pending');
   const incomingForwardingModeEnabled = ref(false);
@@ -118,14 +117,13 @@
     dnsRefreshLoading.value = true;
     await domainDnsRefresh();
     await domainRefresh();
-    console.log({ dn: domainDnsQuery.value });
     setTimeout(() => {
       dnsRefreshLoading.value = false;
       showDnsRefreshMessage.value = true;
     }, 2000);
   }
 
-  // TODO: If Existing SPF, Add checkbox to SPF record: "Select which senders to include" + create dynamic string- suggestion by @KumoMTA. Current behavious injects UnInbox into the string.
+  // TODO: If Existing SPF, Add checkbox to SPF record: "Select which senders to include" + create dynamic string- suggestion by @KumoMTA. Current behaviors injects UnInbox into the string.
 </script>
 
 <template>
@@ -225,9 +223,9 @@
               receive mail.
             </span>
             <span class="">
-              This could have been set by an administor in your org, if you did
-              not verify the domain for more than 3 days, or if your domain was
-              reported for abuse or breaking our terms and conditions.
+              This could have been set by an administrator in your org, if you
+              did not verify the domain for more than 3 days, or if your domain
+              was reported for abuse or breaking our terms and conditions.
             </span>
             <span class="">
               To re-enable the domain, please contact our support team.

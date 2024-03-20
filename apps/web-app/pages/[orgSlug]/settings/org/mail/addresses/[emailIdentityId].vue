@@ -1,4 +1,5 @@
 <script setup lang="ts">
+  import { navigateTo, useNuxtApp, useRoute } from '#imports';
   import type { UiColor } from '@u22n/types/ui';
 
   const { $trpc } = useNuxtApp();
@@ -70,7 +71,7 @@
         </div>
         <div class="flex flex-col gap-2">
           <span class="text-base-12 text-sm font-medium uppercase">
-            Desitnations (deliver to)
+            Destinations (deliver to)
           </span>
           <div
             v-for="destination of emailIdentityData?.emailIdentityData

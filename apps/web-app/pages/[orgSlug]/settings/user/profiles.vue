@@ -1,25 +1,31 @@
 <script setup lang="ts">
   import { z } from 'zod';
   import { useFileDialog } from '@vueuse/core';
-  const { $trpc, $i18n } = useNuxtApp();
+  import {
+    useRuntimeConfig,
+    useNuxtApp,
+    useToast,
+    ref,
+    refreshNuxtData,
+    useRoute,
+    watch
+  } from '#imports';
+  import { useUtils } from '~/composables/utils';
+
+  const { $trpc } = useNuxtApp();
   const uploadLoading = ref(false);
   const buttonLoading = ref(false);
   const buttonLabel = ref('Save profile');
   const pageError = ref(false);
   const imageUrl = ref<string | null>();
-  const imageId = ref<string | null>();
   const fNameValid = ref<boolean | 'remote' | null>(null);
   const fNameValue = ref('');
-  const fNameValidationMessage = ref('');
   const lNameValid = ref<boolean | 'remote' | null>(null);
   const lNameValue = ref('');
-  const lNameValidationMessage = ref('');
   const titleValid = ref<boolean | 'remote' | null>(null);
   const titleValue = ref('');
-  const titleValidationMessage = ref('');
   const blurbValid = ref<boolean | 'remote' | null>(null);
   const blurbValue = ref('');
-  const blurbValidationMessage = ref('');
 
   const orgSlug = useRoute().params.orgSlug as string;
 
@@ -52,6 +58,7 @@
   );
 
   const {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     files: selectedFiles,
     open: openFileDialog,
     reset: resetFiles,
@@ -70,7 +77,7 @@
   //@ts-ignore
   selectedFilesOnChange(async (selectedFiles) => {
     uploadLoading.value = true;
-    if (!selectedFiles) return;
+    if (!selectedFiles || !selectedFiles[0]) return;
     const formData = new FormData();
     // @ts-ignore
     const storageUrl = useRuntimeConfig().public.storageUrl;
@@ -104,7 +111,6 @@
     const toast = useToast();
     buttonLoading.value = true;
     buttonLabel.value = 'Saving...';
-    const newOrgAvatarId = imageId.value ? imageId.value : null;
 
     if (!initialUserProfile.value?.profile?.publicId) {
       pageError.value = true;
@@ -170,7 +176,7 @@
       <div class="flex flex-col gap-2">
         <button
           type="button"
-          class="border-1 border-base-7 bg-base-3 bg-base-4 hover:border-base-8 h-[80px] w-[80px] cursor-pointer rounded-lg bg-cover bg-center md:h-[128px] md:w-[128px]"
+          class="border-1 border-base-7 bg-base-3 hover:border-base-8 h-[80px] w-[80px] cursor-pointer rounded-lg bg-cover bg-center md:h-[128px] md:w-[128px]"
           :style="imageUrl ? `background-image: url(${imageUrl})` : ''"
           @click="selectAvatar()">
           <div

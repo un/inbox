@@ -1,27 +1,22 @@
 <script setup lang="ts">
   import { z } from 'zod';
-  import { useClipboard } from '@vueuse/core';
+  import { computed, ref, useNuxtApp, useToast } from '#imports';
+  import { useEE } from '~/composables/EE';
 
-  const { copy, copied, text } = useClipboard();
-  const { $trpc, $i18n } = useNuxtApp();
+  const { $trpc } = useNuxtApp();
 
-  const showNewModal = ref(false);
   const buttonLoading = ref(false);
   const buttonLabel = ref('Add Domain');
-  const pageError = ref(false);
+  const dataPending = ref(true);
   const newDomainNameValid = ref<boolean | 'remote' | null>(null);
   const newDomainNameValue = ref('');
   const newDomainNameValidationMessage = ref('');
   const newDomainResponseError = ref('');
-  const newDomainPublicId = ref('');
   const formValid = computed(() => {
     return newDomainNameValid.value === true;
   });
 
   const emit = defineEmits(['close']);
-
-  const route = useRoute();
-  const orgSlug = route.params.orgSlug as string;
 
   async function createNewDomain() {
     const toast = useToast();
@@ -78,7 +73,9 @@
       await $trpc.org.setup.billing.isPro.useLazyQuery({}, { server: false });
 
     isPro.value = isProQuery.value?.isPro || false;
+    dataPending.value = false;
   } else {
+    dataPending.value = false;
     isPro.value = true;
   }
 </script>
@@ -86,7 +83,15 @@
 <template>
   <div class="flex h-full w-full flex-col items-start">
     <div
-      v-if="isPro"
+      v-if="dataPending"
+      class="bg-base-3 flex w-full flex-row justify-center gap-4 rounded-xl rounded-tl-2xl p-8">
+      <UnUiIcon
+        name="i-svg-spinners:3-dots-fade"
+        size="24" />
+      <span>Checking status</span>
+    </div>
+    <div
+      v-if="!dataPending && isPro"
       class="flex w-full flex-col gap-4">
       <UnUiInput
         v-model:value="newDomainNameValue"
@@ -108,7 +113,7 @@
       </div>
     </div>
     <div
-      v-if="!isPro"
+      v-if="!dataPending && !isPro"
       class="flex w-full flex-col gap-4">
       <span class="text-xl font-semibold">Add a new domain</span>
       <span>

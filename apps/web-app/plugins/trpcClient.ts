@@ -1,3 +1,10 @@
+import {
+  navigateTo,
+  defineNuxtPlugin,
+  useRuntimeConfig,
+  useRoute,
+  useToast
+} from '#imports';
 import { loggerLink, type TRPCLink } from '@trpc/client';
 import { observable } from '@trpc/server/observable';
 import { createTRPCNuxtClient, httpBatchLink } from 'trpc-nuxt/client';

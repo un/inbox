@@ -1,4 +1,13 @@
 <script setup lang="ts">
+  import {
+    navigateTo,
+    provide,
+    ref,
+    useNuxtApp,
+    useRoute,
+    watch
+  } from '#imports';
+  import { useUtils } from '~/composables/utils';
   import { useTimeAgo } from '@vueuse/core';
   import type { ConvoParticipantEntry } from '~/composables/types';
 
@@ -11,7 +20,7 @@
     url: string;
   };
 
-  const convoParticiapntsCollapsed = ref(true);
+  const convoParticipantsCollapsed = ref(true);
   const attachmentsCollapsed = ref(true);
   const participantPublicId = ref('');
   const participantArray = ref<ConvoParticipantEntry[]>([]);
@@ -21,7 +30,6 @@
   const participantWatchersArray = ref<ConvoParticipantEntry[]>([]);
   const participantGuestsArray = ref<ConvoParticipantEntry[]>([]);
   const attachments = ref<AttachmentEntry[]>([]);
-  const subjectsArray = ref<string[]>([]);
   const createDate = ref<Date | null>(null);
   const updateDate = ref<Date | null>(null);
   const createdAgo = ref('');
@@ -69,8 +77,8 @@
         avatarPublicId,
         participantName,
         participantType,
-        participantColor,
-        participantRole
+        participantColor
+        // @ts-expect-error - fixed in separate PR
       } = useUtils().convos.useParticipantData(participant);
       const participantData: ConvoParticipantEntry = {
         participantPublicId: participantPublicId,
@@ -103,14 +111,14 @@
       for (const attachment of convoDetails.value.data.attachments) {
         const splitFileName = attachment.fileName.split('.');
         const newFileName =
-          splitFileName[0].substring(0, 10) +
+          (splitFileName[0]?.substring(0, 10) ?? '') +
           '...' +
           splitFileName[splitFileName.length - 1];
         attachments.value.push({
           name: newFileName,
           publicId: attachment.publicId,
           type: attachment.type,
-          url: attachment.storageId
+          url: attachment.publicId
         });
       }
     }
@@ -119,13 +127,6 @@
   provide('convoParticipants', participantArray);
   provide('participantPublicId', participantPublicId);
 
-  const findParticipant = (participantPublicId: string) => {
-    return participantArray.value.find(
-      (participant) => participant.participantPublicId === participantPublicId
-    );
-  };
-
-  // // New Data
   const editorData = ref({});
 </script>
 <template>
@@ -200,13 +201,13 @@
           <div class="flex w-full max-w-full flex-col gap-4 overflow-hidden">
             <div
               class="flex w-full max-w-full flex-row items-center justify-between overflow-hidden"
-              @click="convoParticiapntsCollapsed = !convoParticiapntsCollapsed">
+              @click="convoParticipantsCollapsed = !convoParticipantsCollapsed">
               <span class="text-base-11 cursor-pointer text-sm font-medium">
                 PARTICIPANTS
               </span>
               <UnUiButton
                 :icon="
-                  convoParticiapntsCollapsed
+                  convoParticipantsCollapsed
                     ? 'i-heroicons-chevron-down'
                     : 'i-heroicons-chevron-up'
                 "
@@ -215,9 +216,9 @@
                 variant="ghost" />
             </div>
             <div
-              v-if="convoParticiapntsCollapsed"
+              v-if="convoParticipantsCollapsed"
               class="flex w-full max-w-full flex-row gap-2 overflow-hidden"
-              @click="convoParticiapntsCollapsed = !convoParticiapntsCollapsed">
+              @click="convoParticipantsCollapsed = !convoParticipantsCollapsed">
               <NuxtUiAvatarGroup>
                 <template
                   v-for="participant of participantsAssignedArray"
@@ -250,9 +251,9 @@
               </NuxtUiAvatarGroup>
             </div>
             <div
-              v-if="!convoParticiapntsCollapsed"
+              v-if="!convoParticipantsCollapsed"
               class="flex h-fit w-full max-w-full flex-col gap-4 overflow-hidden"
-              @click="convoParticiapntsCollapsed = !convoParticiapntsCollapsed">
+              @click="convoParticipantsCollapsed = !convoParticipantsCollapsed">
               <div
                 v-if="participantsAssignedArray.length"
                 class="flex w-full max-w-full flex-col gap-2 overflow-hidden">

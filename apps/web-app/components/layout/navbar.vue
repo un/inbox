@@ -1,4 +1,17 @@
 <script setup lang="ts">
+  import {
+    computed,
+    navigateTo,
+    ref,
+    useNuxtApp,
+    useRuntimeConfig,
+    useColorMode,
+    useToast,
+    useRouter,
+    watch,
+    useRoute,
+    useState
+  } from '#imports';
   const colorMode = useColorMode();
   const toggleColorMode = () => {
     colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark';
@@ -14,7 +27,7 @@
   const currentPath = ref(useRouter().currentRoute.value.path as string);
   const orgSlug = useRoute().params.orgSlug as string;
   const router = useRouter();
-  router.beforeEach((to, from) => {
+  router.beforeEach((to) => {
     currentPath.value = to.path;
   });
 
@@ -76,12 +89,7 @@
       { server: false, queryKey: 'getUserSingleProfileNav' }
     );
 
-  const {
-    data: userOrgs,
-    pending,
-    error,
-    refresh
-  } = await $trpc.org.crud.getUserOrgs.useLazyQuery(
+  const { data: userOrgs } = await $trpc.org.crud.getUserOrgs.useLazyQuery(
     {},
     { server: false, queryKey: 'getUserOrgsNav' }
   );

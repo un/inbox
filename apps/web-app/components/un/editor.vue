@@ -1,6 +1,8 @@
 <script setup lang="ts">
   import { tiptapVue3 } from '@u22n/tiptap';
   import { tipTapExtensions } from '@u22n/tiptap/extensions';
+  import { useVModel } from '@vueuse/core';
+  import { watch } from '#imports';
 
   const props = defineProps<{
     modelValue: tiptapVue3.JSONContent;

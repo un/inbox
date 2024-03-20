@@ -1,3 +1,11 @@
+import {
+  defineNuxtRouteMiddleware,
+  navigateTo,
+  useCookie,
+  useRuntimeConfig,
+  useState
+} from '#imports';
+
 export default defineNuxtRouteMiddleware(async (to) => {
   if (process.client) {
     const redirectCookie = useCookie('unredirect').value;

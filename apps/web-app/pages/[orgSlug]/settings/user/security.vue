@@ -5,4 +5,4 @@
   // TODO: add/edit recovery email
 </script>
 
-<template></template>
+<template><div></div></template>

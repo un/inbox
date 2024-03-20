@@ -1,21 +1,12 @@
 <script setup lang="ts">
-  import { z } from 'zod';
-  import { useClipboard } from '@vueuse/core';
+  import { navigateTo, ref, useNuxtApp, useRoute, watch } from '#imports';
+
+  const { $trpc } = useNuxtApp();
   const orgSlug = useRoute().params.orgSlug as string;
-
-  const { copy, copied, text } = useClipboard();
-  const { $trpc, $i18n } = useNuxtApp();
-
-  const showNewModal = ref(false);
-  const buttonLoading = ref(false);
-  const buttonLabel = ref('Add Domain');
-  const pageError = ref(false);
-  const newDomainNameValid = ref<boolean | 'remote' | null>(null);
 
   const {
     data: orgDomainsQuery,
     pending,
-    error,
     refresh
   } = await $trpc.org.mail.domains.getOrgDomains.useLazyQuery(
     {},
@@ -78,7 +69,6 @@
   function select(row: (typeof tableRows.value)[number]) {
     navigateTo(`/${orgSlug}/settings/org/mail/domains/${row.domainId}`);
   }
-  const selected = ref<typeof tableRows.value>([]);
 
   const addNewModalOpen = ref(false);
   const closeModal = () => {

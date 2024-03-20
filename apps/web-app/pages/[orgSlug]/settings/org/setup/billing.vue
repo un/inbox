@@ -1,12 +1,11 @@
 <script setup lang="ts">
+  import { definePageMeta, navigateTo, ref, useNuxtApp } from '#imports';
+
   definePageMeta({
     middleware: 'ee'
   });
-  import { z } from 'zod';
-  import { useClipboard } from '@vueuse/core';
 
-  const { copy, copied, text } = useClipboard();
-  const { $trpc, $i18n } = useNuxtApp();
+  const { $trpc } = useNuxtApp();
 
   const {
     data: orgBillingOverview,
@@ -26,7 +25,7 @@
   async function subscribeToPlan(plan: 'starter' | 'pro') {
     loadingButton.value = plan;
     const billingPeriod = pricingTableBillingPeriod.value;
-    const { data: linkData, pending: linkPending } =
+    const { data: linkData } =
       await $trpc.org.setup.billing.getOrgSubscriptionPaymentLink.useLazyQuery({
         plan: plan,
         period: billingPeriod
@@ -41,7 +40,7 @@
   const goToPortalButtonLoading = ref(false);
   async function goToBillingPortal() {
     goToPortalButtonLoading.value = true;
-    const { data: linkData, pending: linkPending } =
+    const { data: linkData } =
       await $trpc.org.setup.billing.getOrgStripePortalLink.useLazyQuery(
         {},
         {

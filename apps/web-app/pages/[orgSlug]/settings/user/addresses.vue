@@ -1,8 +1,9 @@
 <script setup lang="ts">
   import { z } from 'zod';
+  import { useNuxtApp, useToast, ref, watch, useRoute } from '#imports';
+  import { useEE } from '~/composables/EE';
 
-  const { $trpc, $i18n } = useNuxtApp();
-  const { copy, copied, text } = useClipboard();
+  const { $trpc } = useNuxtApp();
   const route = useRoute();
   const orgSlug = route.params.orgSlug as string;
   const hasAddresses = ref(false);
@@ -33,7 +34,6 @@
   const {
     data: userAddresses,
     pending,
-    error,
     refresh: refreshUserAddresses
   } = await $trpc.user.addresses.getPersonalAddresses.useLazyQuery(
     {},
@@ -46,13 +46,13 @@
       hasAddresses.value = true;
       tableRows.value = [];
       newResults.identities.forEach((identity) => {
-        const truncatedForwarding = 'forwardingaddress';
+        const truncatedForwarding = 'forwardingAddress';
         tableRows.value.push({
           address: `${identity.emailIdentity.username}@${identity.emailIdentity.domainName}`,
           sendName: identity.emailIdentity.sendName,
           forwarding: {
             truncated: truncatedForwarding,
-            address: 'forwardingaddress'
+            address: 'forwardingAddress'
           },
           org: identity.org,
           avatarId: identity.org.avatarId,
@@ -197,7 +197,7 @@
 
   const isPro = ref(false);
   if (useEE().config.modules.billing) {
-    const { data: isProQuery, pending } =
+    const { data: isProQuery } =
       await $trpc.org.setup.billing.isPro.useLazyQuery({}, { server: false });
 
     isPro.value = isProQuery.value?.isPro || false;
@@ -367,7 +367,7 @@
                 v-if="!isPro"
                 class="text-sm">
                 This email address is only available to claim when your
-                organisation is subscribed to a plan.
+                organization is subscribed to a plan.
               </span>
             </div>
           </template>
@@ -425,105 +425,6 @@
               </div>
             </template>
           </NuxtUiTable>
-
-          <!-- <div class="flex flex-col gap-4">
-            <template
-              v-for="identity of userAddresses?.identities"
-              :key="identity.publicId">
-              {{ identity.emailIdentity }}
-              <div
-                class="bg-gray-100 flex flex-col gap-4 rounded-md px-3 py-3 shadow-sm">
-                <div class="flex flex-row gap-4">
-                  <div class="flex flex-col gap-1">
-                    <span class="text-xs text-base-11 uppercase">
-                      Addresses
-                    </span>
-                    <div
-                      class="bg-gray-50 min-w-[50px] w-fit flex flex-row items-center gap-2 rounded-lg px-3 py-2">
-                      <span
-                        class="w-fit break-anywhere text-left text-sm font-mono">
-                        {{ identity.emailIdentity.username }}@{{
-                          identity.emailIdentity.domainName
-                        }}
-                      </span>
-                      <UnUiTooltip text="Copy to clipboard">
-                        <UnUiIcon
-                          name="i-ph-clipboard"
-                          size="20"
-                          @click="
-                            copy(
-                              `${identity.emailIdentity.username}@${identity.emailIdentity.domainName}`
-                            )
-                          " />
-                      </UnUiTooltip>
-                    </div>
-                  </div>
-                  <div class="flex flex-col gap-1">
-                    <span class="text-xs text-base-11 uppercase">
-                      Send Name
-                    </span>
-                    <div
-                      class="bg-gray-50 min-w-[50px] w-fit flex flex-row items-center gap-2 rounded-lg px-3 py-2">
-                      <span
-                        class="w-fit break-anywhere text-left text-sm font-mono">
-                        {{ identity.emailIdentity.sendName }}
-                      </span>
-                      <UnUiTooltip text="Copy to clipboard">
-                        <UnUiIcon
-                          name="i-ph-clipboard"
-                          size="20"
-                          @click="
-                            copy(
-                              `${identity.emailIdentity.username}@${identity.emailIdentity.domainName}`
-                            )
-                          " />
-                      </UnUiTooltip>
-                    </div>
-                  </div>
-                </div>
-                <div class="flex flex-row gap-4">
-                  <div class="flex flex-col gap-1">
-                    <span class="text-xs text-base-11 uppercase">
-                      Forwarding Address
-                    </span>
-                    <div
-                      class="bg-gray-50 min-w-[50px] w-fit flex flex-row items-center gap-2 rounded-lg px-3 py-2">
-                      <span
-                        class="w-fit break-anywhere text-left text-sm font-mono">
-                        {{ identity.postalServer.rootForwardingAddress }}
-                      </span>
-                      <UnUiTooltip text="Copy to clipboard">
-                        <UnUiIcon
-                          name="i-ph-clipboard"
-                          size="20"
-                          @click="
-                            copy(
-                              `${identity.postalServer.rootForwardingAddress}`
-                            )
-                          " />
-                      </UnUiTooltip>
-                    </div>
-                  </div>
-                  <div class="flex flex-col gap-1">
-                    <span class="text-xs text-base-11 uppercase">
-                      Assigned to Organization
-                    </span>
-                    <div class="flex flex-row items-center gap-2">
-                      <UnUiAvatar
-                        type="org"
-                        :public-id="identity.org.publicId"
-                        :alt="identity.org.name"
-                        size="sm" />
-                      <span
-                        class="w-fit break-anywhere text-left text-sm font-mono">
-                        {{ identity.org.name }}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </template>
-          </div> -->
         </div>
       </div>
     </div>

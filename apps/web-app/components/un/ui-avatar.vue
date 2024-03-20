@@ -1,5 +1,6 @@
 <script setup lang="ts">
-  import type { DefineComponent } from 'vue';
+  import { computed } from '#imports';
+  import { useUtils } from '~/composables/utils';
   import { NuxtUiAvatar } from '#components';
   import { uiColors } from '@u22n/types/ui';
 
