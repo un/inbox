@@ -103,15 +103,15 @@
 </script>
 
 <template>
-  <div class="h-full w-full flex flex-col items-start gap-8 p-4">
-    <div class="w-full flex flex-row items-center justify-between">
+  <div class="flex h-full w-full flex-col items-start gap-8 p-4">
+    <div class="flex w-full flex-row items-center justify-between">
       <div class="flex flex-row items-center gap-4">
         <div class="flex flex-col gap-1">
-          <span class="text-2xl font-display">Create a new organization</span>
+          <span class="font-display text-2xl">Create a new organization</span>
         </div>
       </div>
     </div>
-    <div class="w-full flex flex-col gap-4">
+    <div class="flex w-full flex-col gap-4">
       <UnUiInput
         v-model:value="orgNameValue"
         v-model:valid="orgNameValid"

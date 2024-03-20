@@ -141,7 +141,7 @@
 
 <template>
   <div
-    class="flex flex-col gap-1 text-primary-12 leading-4"
+    class="text-primary-12 flex flex-col gap-1 leading-4"
     :class="inputClasses({ width: props.width })">
     <div>
       <label
@@ -151,7 +151,7 @@
       >
     </div>
     <div
-      class="dark:bg-gray-900 text-gray-900 flex flex-row items-center gap-2 rounded bg-white px-2.5 py-1.5 text-sm shadow-sm ring-1 ring-inset dark:text-white focus:ring-2"
+      class="flex flex-row items-center gap-2 rounded bg-white px-2.5 py-1.5 text-sm text-gray-900 shadow-sm ring-1 ring-inset focus:ring-2 dark:bg-gray-900 dark:text-white"
       :class="[
         inputClasses({
           disabled: computedDisabled
@@ -176,7 +176,7 @@
         :placeholder="props.placeholder" />
       <button
         v-if="props.locked"
-        class="text-sm font-medium hover:text-primary-11"
+        class="hover:text-primary-11 text-sm font-medium"
         @click="toggleEditMode()">
         edit
       </button>
@@ -194,14 +194,14 @@
       <UnUiTooltip
         v-if="validationMessage"
         :text="validationMessage || ''"
-        class="max-w-full w-full">
-        <span class="truncate text-right text-xs text-red-11">{{
+        class="w-full max-w-full">
+        <span class="text-red-11 truncate text-right text-xs">{{
           validationMessage
         }}</span>
       </UnUiTooltip>
       <span
         v-if="valid === 'remote'"
-        class="w-full truncate text-right text-xs text-orange-11"
+        class="text-orange-11 w-full truncate text-right text-xs"
         >Verifying...</span
       >
     </div>

@@ -86,10 +86,10 @@
 
 <template>
   <div
-    class="h-screen w-screen flex flex-col items-center justify-between p-4 pb-14">
+    class="flex h-screen w-screen flex-col items-center justify-between p-4 pb-14">
     <div
-      class="max-w-72 w-full flex grow flex-col items-center justify-center gap-8 pb-4 md:max-w-xl">
-      <h1 class="mb-4 text-center text-2xl font-display">
+      class="flex w-full max-w-72 grow flex-col items-center justify-center gap-8 pb-4 md:max-w-xl">
+      <h1 class="font-display mb-4 text-center text-2xl">
         Welcome to <br /><span class="text-5xl">UnInbox</span>
       </h1>
       <div
@@ -110,7 +110,7 @@
       </div>
       <div
         v-if="status === 'error'"
-        class="w-full flex flex-col items-center gap-8">
+        class="flex w-full flex-col items-center gap-8">
         <UnUiAlert
           icon="i-ph-warning-octagon"
           class="w-full"
@@ -133,7 +133,7 @@
             :type="'org'"
             :alt="inviteQuery?.orgName"
             size="3xl" />
-          <p class="text-center text-xl font-display">
+          <p class="font-display text-center text-xl">
             {{ inviteQuery?.orgName }}
           </p>
         </div>
@@ -162,7 +162,7 @@
         v-if="pageReady && turnstileEnabled"
         ref="turnstile"
         v-model="turnstileToken"
-        class="fixed bottom-5 mb-[-30px] scale-50 hover:(mb-0 scale-100)" />
+        class="hover:(mb-0 scale-100) fixed bottom-5 mb-[-30px] scale-50" />
     </div>
   </div>
 </template>

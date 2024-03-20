@@ -88,10 +88,10 @@
 </script>
 
 <template>
-  <div class="h-full w-full flex flex-col items-start gap-8 p-4">
-    <div class="w-full flex flex-row items-center justify-between">
+  <div class="flex h-full w-full flex-col items-start gap-8 p-4">
+    <div class="flex w-full flex-row items-center justify-between">
       <div class="flex flex-col gap-1">
-        <span class="text-2xl font-display">Domains</span>
+        <span class="font-display text-2xl">Domains</span>
         <span class="text-sm">Manage your organizations domains</span>
       </div>
       <div class="flex flex-row items-center gap-4">
@@ -108,8 +108,8 @@
         </UnUiModal>
       </div>
     </div>
-    <div class="w-full flex flex-col gap-8 overflow-y-auto">
-      <div class="w-full flex flex-col gap-8">
+    <div class="flex w-full flex-col gap-8 overflow-y-auto">
+      <div class="flex w-full flex-col gap-8">
         <NuxtUiTable
           :columns="tableColumns"
           :rows="tableRows"

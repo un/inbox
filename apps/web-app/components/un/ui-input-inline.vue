@@ -138,7 +138,7 @@
 
 <template>
   <div
-    class="flex flex-row items-center gap-2 text-primary-12"
+    class="text-primary-12 flex flex-row items-center gap-2"
     :class="inputClasses({ width: props.width })">
     <label
       :id="`input-label-${props.label}`"
@@ -147,7 +147,7 @@
     >
 
     <div
-      class="flex flex-row items-center gap-2 border rounded bg-sand-1 px-1 py-1 focus-within:bg-sand-3"
+      class="bg-sand-1 focus-within:bg-sand-3 flex flex-row items-center gap-2 rounded border px-1 py-1"
       :class="[
         inputClasses({
           disabled: computedDisabled,
@@ -162,7 +162,7 @@
         ref="inputField"
         v-model="data"
         :aria-labelledby="`input-label-${props.label}`"
-        class="w-full bg-transparent outline-none placeholder:text-primary-12 placeholder:opacity-70"
+        class="placeholder:text-primary-12 w-full bg-transparent outline-none placeholder:opacity-70"
         :class="
           inputClasses({
             disabled: computedDisabled
@@ -172,7 +172,7 @@
         :placeholder="props.placeholder" />
       <button
         v-if="props.locked"
-        class="text-sm font-medium hover:text-primary-11"
+        class="hover:text-primary-11 text-sm font-medium"
         @click="toggleEditMode()">
         edit
       </button>
@@ -186,12 +186,12 @@
     </div>
     <span
       v-if="validationMessage"
-      class="w-full truncate text-right text-xs text-red-11"
+      class="text-red-11 w-full truncate text-right text-xs"
       >{{ validationMessage }}</span
     >
     <span
       v-if="valid === 'remote'"
-      class="w-full truncate text-right text-xs text-orange-11"
+      class="text-orange-11 w-full truncate text-right text-xs"
       >Verifying...</span
     >
   </div>

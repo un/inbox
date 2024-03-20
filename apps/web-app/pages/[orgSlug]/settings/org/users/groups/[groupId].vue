@@ -171,8 +171,8 @@
 </script>
 
 <template>
-  <div class="h-full w-full flex flex-col items-start gap-8 p-4">
-    <div class="w-full flex flex-row items-center justify-between">
+  <div class="flex h-full w-full flex-col items-start gap-8 p-4">
+    <div class="flex w-full flex-row items-center justify-between">
       <div class="flex flex-row items-center gap-4">
         <UnUiTooltip text="Back to groups">
           <UnUiIcon
@@ -191,7 +191,7 @@
         <div class="flex flex-col gap-1">
           <span
             v-if="!groupPending"
-            class="text-2xl font-display">
+            class="font-display text-2xl">
             {{ groupData?.group?.name }}
           </span>
           <span
@@ -201,29 +201,29 @@
           </span>
           <span
             v-if="groupPending"
-            class="text-2xl font-mono">
+            class="font-mono text-2xl">
             Loading...
           </span>
         </div>
       </div>
     </div>
-    <div class="w-full flex flex-col gap-8 overflow-y-auto">
+    <div class="flex w-full flex-col gap-8 overflow-y-auto">
       <div
         v-if="groupPending"
-        class="w-full flex flex-col gap-8">
+        class="flex w-full flex-col gap-8">
         <div class="flex flex-row items-center gap-4">
           <div class="flex flex-col gap-1">
-            <span class="text-2xl font-display">Loading...</span>
+            <span class="font-display text-2xl">Loading...</span>
             <span class="text-sm">Please wait while we load your group</span>
           </div>
         </div>
       </div>
       <div
         v-if="!groupPending && !groupData?.group"
-        class="w-full flex flex-col gap-8">
+        class="flex w-full flex-col gap-8">
         <div class="flex flex-row items-center gap-4">
           <div class="flex flex-col gap-1">
-            <span class="text-2xl font-display">Group not found</span>
+            <span class="font-display text-2xl">Group not found</span>
             <span class="text-sm"></span>
           </div>
         </div>
@@ -231,10 +231,10 @@
 
       <div
         v-if="!groupPending && groupData?.group"
-        class="w-full flex flex-col gap-8">
+        class="flex w-full flex-col gap-8">
         <div class="flex flex-col gap-4">
-          <div class="w-full border-b-1 border-base-5 pb-2">
-            <span class="text-sm text-base-11 font-semibold uppercase">
+          <div class="border-b-1 border-base-5 w-full pb-2">
+            <span class="text-base-11 text-sm font-semibold uppercase">
               Members
             </span>
           </div>
@@ -302,7 +302,7 @@
             @click="showAddUser()" />
           <div
             v-if="showAddNewUser && orgMembersPending"
-            class="w-full flex flex-row items-center justify-center gap-4">
+            class="flex w-full flex-row items-center justify-center gap-4">
             <UnUiIcon
               name="i-svg-spinners:3-dots-fade"
               size="32" />
@@ -310,7 +310,7 @@
           </div>
           <div
             v-if="showAddNewUser && !orgMembersPending"
-            class="grid grid-cols-2 w-full gap-4">
+            class="grid w-full grid-cols-2 gap-4">
             <NuxtUiSelectMenu
               v-model="selectedUserToAdd"
               searchable

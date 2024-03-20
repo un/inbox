@@ -52,10 +52,10 @@
   });
 </script>
 <template>
-  <div class="w-full flex flex-row justify-between gap-4 bg-base-2 p-4">
-    <div class="w-full flex flex-col gap-8">
-      <div class="w-full flex flex-col gap-0">
-        <span class="text-sm text-base-11 font-semibold uppercase"> Code </span>
+  <div class="bg-base-2 flex w-full flex-row justify-between gap-4 p-4">
+    <div class="flex w-full flex-col gap-8">
+      <div class="flex w-full flex-col gap-0">
+        <span class="text-base-11 text-sm font-semibold uppercase"> Code </span>
         <div class="flex flex-row gap-4">
           <span class="font-mono">{{ props.inviteData.inviteToken }}</span>
           <UnUiCopy :text="props.inviteData.inviteToken" />
@@ -63,8 +63,8 @@
       </div>
       <div
         v-if="props.inviteData.email"
-        class="w-full flex flex-col gap-0">
-        <span class="text-sm text-base-11 font-semibold uppercase">
+        class="flex w-full flex-col gap-0">
+        <span class="text-base-11 text-sm font-semibold uppercase">
           Email
         </span>
         <div class="flex flex-row gap-4">
@@ -72,15 +72,15 @@
         </div>
       </div>
     </div>
-    <div class="w-full flex flex-col gap-8">
-      <div class="w-full flex flex-col gap-0">
+    <div class="flex w-full flex-col gap-8">
+      <div class="flex w-full flex-col gap-0">
         <div
           v-if="
             !props.inviteData.invitedUser?.orgMemberships &&
             props.inviteData.expiresAt
           "
           class="flex flex-col gap-0">
-          <span class="text-sm text-base-11 font-semibold uppercase">
+          <span class="text-base-11 text-sm font-semibold uppercase">
             {{
               props.inviteData.expiresAt < new Date() ? 'Expired' : 'Expires on'
             }}
@@ -94,7 +94,7 @@
         <div class="flex flex-col gap-0">
           <span
             v-if="props.inviteData.invitedUser?.orgMemberships"
-            class="text-sm text-base-11 font-semibold uppercase">
+            class="text-base-11 text-sm font-semibold uppercase">
             Used by
           </span>
           <div
@@ -109,7 +109,7 @@
                 :alt="inviteeName" />
               <span class="text-sm font-medium"> {{ inviteeName }}</span>
             </div>
-            <span class="text-sm text-base-11 font-semibold uppercase">
+            <span class="text-base-11 text-sm font-semibold uppercase">
               on
             </span>
             <div
@@ -127,8 +127,8 @@
           </div>
         </div>
       </div>
-      <div class="w-full flex flex-col gap-0">
-        <span class="text-sm text-base-11 font-semibold uppercase">
+      <div class="flex w-full flex-col gap-0">
+        <span class="text-base-11 text-sm font-semibold uppercase">
           Created by
         </span>
         <div class="flex flex-row items-center gap-2">
@@ -142,7 +142,7 @@
                 :alt="inviterName" />
               <span class="text-sm font-medium"> {{ inviterName }}</span>
             </div>
-            <span class="text-sm text-base-11 font-semibold uppercase">
+            <span class="text-base-11 text-sm font-semibold uppercase">
               on
             </span>
             <div

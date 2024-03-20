@@ -17,7 +17,7 @@
 </script>
 <template>
   <button
-    class="max-w-full w-full flex flex-row items-center justify-start gap-2 overflow-hidden rounded p-2 hover:bg-base-4"
+    class="hover:bg-base-4 flex w-full max-w-full flex-row items-center justify-start gap-2 overflow-hidden rounded p-2"
     :class="props.isActive ? 'bg-base-5' : 'bg-base-2'">
     <UnUiAvatar
       :public-id="props.orgData.org.publicId"
