@@ -52,7 +52,7 @@ export const typeIdDataType = <const T extends IdTypePrefixes>(
     notNull: true;
     driverData: string;
   }>({
-    dataType: () => `varchar(${typeIdLength + idTypes[prefix].length + 1})`, // suffix length + prefix length + underscore
+    dataType: () => `char(${typeIdLength + idTypes[prefix].length + 1})`, // suffix length + prefix length + underscore
     fromDriver: (input) => TypeID.fromString(input).toString() as TypeId<T>,
     toDriver: (input) => input.toString()
   })(column);
