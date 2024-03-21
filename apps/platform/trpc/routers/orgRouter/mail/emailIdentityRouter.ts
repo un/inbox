@@ -16,7 +16,7 @@ import {
   emailIdentities,
   userGroupMembers
 } from '@u22n/database/schema';
-import { nanoId, zodSchemas } from '@u22n/utils';
+import { typeIdGenerator, typeIdValidator } from '@u22n/utils';
 import { isUserAdminOfOrg } from '../../../../utils/user';
 import { TRPCError } from '@trpc/server';
 
@@ -25,7 +25,7 @@ export const emailIdentityRouter = router({
     .input(
       z.object({
         emailUsername: z.string().min(1).max(255),
-        domainPublicId: zodSchemas.nanoId
+        domainPublicId: typeIdValidator('domains')
       })
     )
     .query(async ({ ctx, input }) => {
@@ -82,11 +82,15 @@ export const emailIdentityRouter = router({
     .input(
       z.object({
         emailUsername: z.string().min(1).max(255),
-        domainPublicId: zodSchemas.nanoId,
+        domainPublicId: typeIdValidator('domains'),
         sendName: z.string().min(3).max(255),
         catchAll: z.boolean().optional().default(false),
-        routeToUsersOrgMemberPublicIds: z.array(zodSchemas.nanoId).optional(),
-        routeToGroupsPublicIds: z.array(zodSchemas.nanoId).optional()
+        routeToUsersOrgMemberPublicIds: z
+          .array(typeIdValidator('orgMembers'))
+          .optional(),
+        routeToGroupsPublicIds: z
+          .array(typeIdValidator('userGroups'))
+          .optional()
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -108,7 +112,7 @@ export const emailIdentityRouter = router({
       } = input;
 
       const emailUsername = input.emailUsername.toLowerCase();
-      const newPublicId = nanoId();
+      const newPublicId = typeIdGenerator('emailRoutingRules');
 
       const isAdmin = await isUserAdminOfOrg(org);
       if (!isAdmin) {
@@ -219,7 +223,7 @@ export const emailIdentityRouter = router({
         .insert(emailRoutingRulesDestinations)
         .values(routingRuleInsertValues);
 
-      const emailIdentityPublicId = nanoId();
+      const emailIdentityPublicId = typeIdGenerator('emailIdentities');
       // create address
       const insertEmailIdentityResponse = await db
         .insert(emailIdentities)
@@ -252,7 +256,7 @@ export const emailIdentityRouter = router({
   getEmailIdentity: orgProcedure
     .input(
       z.object({
-        emailIdentityPublicId: zodSchemas.nanoId,
+        emailIdentityPublicId: typeIdValidator('emailIdentities'),
         newEmailIdentity: z.boolean().optional()
       })
     )

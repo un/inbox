@@ -5,7 +5,7 @@ import {
   postalServers,
   type ConvoEntryMetadata
 } from '@u22n/database/schema';
-import { zodSchemas } from '@u22n/utils';
+import { typeIdValidator } from '@u22n/utils';
 import { and, eq } from '@u22n/database/orm';
 import type { PostalConfig } from '../../types';
 import { useRuntimeConfig } from '#imports';
@@ -18,7 +18,7 @@ export const sendMailRouter = router({
         orgId: z.number(),
         convoId: z.number(),
         entryId: z.number(),
-        sendAsEmailIdentityPublicId: zodSchemas.nanoId,
+        sendAsEmailIdentityPublicId: typeIdValidator('emailIdentities'),
         toEmail: z.string().email(),
         ccEmail: z.array(z.string().email()).optional(),
         subject: z.string(),
@@ -26,8 +26,8 @@ export const sendMailRouter = router({
         bodyHtml: z.string(),
         attachments: z.array(
           z.object({
-            orgPublicId: zodSchemas.nanoId,
-            attachmentPublicId: zodSchemas.nanoId,
+            orgPublicId: typeIdValidator('org'),
+            attachmentPublicId: typeIdValidator('convoAttachments'),
             fileName: z.string(),
             fileType: z.string()
           })
@@ -36,7 +36,7 @@ export const sendMailRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const { config, db } = ctx;
-      const postalConfig: PostalConfig = config.postal;
+      const postalConfig = config.postal as PostalConfig;
 
       if (postalConfig.localMode === true) {
         return {

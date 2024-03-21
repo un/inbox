@@ -3,7 +3,6 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { db } from '@u22n/database';
 import { and, eq } from '@u22n/database/orm';
 import { orgMembers, orgs, pendingAttachments } from '@u22n/database/schema';
-import { nanoId } from '@u22n/utils';
 import { z } from 'zod';
 import type { S3Config } from '../../types';
 import {
@@ -15,6 +14,7 @@ import {
   useRuntimeConfig,
   s3Client
 } from '#imports';
+import { typeIdGenerator } from '@u22n/utils';
 
 const bodySchema = z.object({
   orgSlug: z.string(),
@@ -64,7 +64,7 @@ export default eventHandler({
     }
 
     const orgPublicId = orgQueryResponse.publicId;
-    const attachmentPublicId = nanoId();
+    const attachmentPublicId = typeIdGenerator('convoAttachments');
     const filename = data.filename;
 
     const s3Config: S3Config = useRuntimeConfig().s3;

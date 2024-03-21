@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { router, protectedProcedure } from '../trpc';
 import { and, eq } from '@u22n/database/orm';
 import { postalServers } from '@u22n/database/schema';
-import { zodSchemas } from '@u22n/utils';
+import { typeIdValidator } from '@u22n/utils';
 import type { PostalConfig } from '../../types';
 import { postalDB } from '../../postal-db';
 import { httpEndpoints, organizations, servers } from '../../postal-db/schema';
@@ -18,7 +18,7 @@ export const domainRouter = router({
     .input(
       z.object({
         orgId: z.number().min(1),
-        orgPublicId: zodSchemas.nanoId,
+        orgPublicId: typeIdValidator('org'),
         domainName: z.string().min(3).max(255)
       })
     )
@@ -27,7 +27,7 @@ export const domainRouter = router({
       const { orgId, orgPublicId, domainName } = input;
       const postalOrgId = orgPublicId;
 
-      const postalConfig: PostalConfig = config.postal;
+      const postalConfig = config.postal as PostalConfig;
 
       if (postalConfig.localMode === true) {
         return {
@@ -140,7 +140,7 @@ export const domainRouter = router({
       const { config } = ctx;
       const { postalDomainId, postalServerUrl } = input;
 
-      const postalConfig: PostalConfig = config.postal;
+      const postalConfig = config.postal as PostalConfig;
       if (postalConfig.localMode === true) {
         return {
           verification: {

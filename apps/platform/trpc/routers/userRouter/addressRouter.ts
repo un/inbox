@@ -10,11 +10,11 @@ import {
   emailIdentitiesAuthorizedUsers,
   emailRoutingRulesDestinations
 } from '@u22n/database/schema';
-import { nanoId } from '@u22n/utils';
 
 import { orgMembers } from '@u22n/database/schema';
 import { useRuntimeConfig } from '#imports';
 import type { MailDomains } from '../../../types';
+import { typeIdGenerator, typeIdValidator } from '@u22n/utils';
 
 export const addressRouter = router({
   getPersonalAddresses: userProcedure
@@ -55,7 +55,7 @@ export const addressRouter = router({
           }
         });
 
-      const mailDomains: MailDomains = useRuntimeConfig().mailDomains;
+      const mailDomains = useRuntimeConfig().mailDomains as MailDomains;
       const consumedDomains =
         usersEmailIdentitiesPersonal.map(
           (identity) => identity.emailIdentity.domainName
@@ -105,7 +105,7 @@ export const addressRouter = router({
         });
       }
 
-      const mailDomains: MailDomains = useRuntimeConfig().mailDomains;
+      const mailDomains = useRuntimeConfig().mailDomains as MailDomains;
 
       // Check the users already claimed personal addresses
       const usersEmailIdentitiesPersonal =
@@ -231,7 +231,7 @@ export const addressRouter = router({
       //     }
       //   );
 
-      const newroutingRulePublicId = nanoId();
+      const newroutingRulePublicId = typeIdGenerator('emailRoutingRules');
       const routingRuleInsertResponse = await db
         .insert(emailRoutingRules)
         .values({
@@ -248,7 +248,7 @@ export const addressRouter = router({
         orgMemberId: userOrgMembership.id
       });
 
-      const newEmailIdentityPublicId = nanoId();
+      const newEmailIdentityPublicId = typeIdGenerator('emailIdentities');
       const insertEmailIdentityResponse = await db
         .insert(emailIdentities)
         .values({
@@ -263,7 +263,9 @@ export const addressRouter = router({
           createdBy: userOrgMembership.id
         });
 
-      const newPersonalEmailIdentityPublicId = nanoId();
+      const newPersonalEmailIdentityPublicId = typeIdGenerator(
+        'emailIdentitiesPersonal'
+      );
       const newPersonalEmailIdentity = await db
         .insert(emailIdentitiesPersonal)
         .values({
@@ -296,7 +298,7 @@ export const addressRouter = router({
     .input(
       z
         .object({
-          emailIdentityPublicId: z.string().min(3),
+          emailIdentityPublicId: typeIdValidator('emailIdentities'),
           newSendName: z.string().min(1)
         })
         .strict()

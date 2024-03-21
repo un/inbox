@@ -20,11 +20,17 @@ import {
   userProfilesToOrgs,
   users
 } from '@u22n/database/schema';
-import { nanoId, nanoIdToken, zodSchemas } from '@u22n/utils';
+import {
+  nanoIdToken,
+  typeIdGenerator,
+  typeIdValidator,
+  zodSchemas
+} from '@u22n/utils';
 import { refreshOrgSlugCache } from '../../../../utils/orgSlug';
 import { isUserAdminOfOrg } from '../../../../utils/user';
 import { TRPCError } from '@trpc/server';
-import { billingTrpcClient, useRuntimeConfig } from '#imports';
+import { useRuntimeConfig } from '#imports';
+import { billingTrpcClient } from '../../../../utils/tRPCServerClients';
 
 export const invitesRouter = router({
   createNewInvite: orgProcedure
@@ -44,13 +50,13 @@ export const invitesRouter = router({
         email: z
           .object({
             emailUsername: z.string().min(1).max(64),
-            domainPublicId: zodSchemas.nanoId,
+            domainPublicId: typeIdValidator('domains'),
             sendName: z.string().min(1).max(64)
           })
           .optional(),
         groups: z
           .object({
-            groupsPublicIds: z.string().min(3).max(64).array()
+            groupsPublicIds: z.array(typeIdValidator('userGroups'))
           })
           .optional()
       })
@@ -71,7 +77,7 @@ export const invitesRouter = router({
 
       // Insert user profile - save ID
 
-      const userProfilePublicId = nanoId();
+      const userProfilePublicId = typeIdGenerator('userProfile');
       const userProfileResponse = await db.insert(userProfiles).values({
         publicId: userProfilePublicId,
         firstName: userInput.firstName,
@@ -87,7 +93,7 @@ export const invitesRouter = router({
       });
 
       // Insert orgMember - save ID
-      const orgMemberPublicId = nanoId();
+      const orgMemberPublicId = typeIdGenerator('orgMembers');
       const orgMemberResponse = await db.insert(orgMembers).values({
         publicId: orgMemberPublicId,
         orgId: orgId,
@@ -108,7 +114,7 @@ export const invitesRouter = router({
 
         // Fix type any
         const newGroupMembershipValues = groupIds.map((group) => ({
-          publicId: nanoId(),
+          publicId: typeIdGenerator('userGroupMembers'),
           orgMemberId: +orgMemberResponse.insertId,
           groupId: group.id,
           userProfileId: userProfileId,
@@ -134,7 +140,7 @@ export const invitesRouter = router({
           });
         }
 
-        const emailRoutingRulesPublicId = nanoId();
+        const emailRoutingRulesPublicId = typeIdGenerator('emailRoutingRules');
         const emailRoutingRulesResponse = await db
           .insert(emailRoutingRules)
           .values({
@@ -150,7 +156,7 @@ export const invitesRouter = router({
           orgMemberId: +orgMemberResponse.insertId
         });
 
-        const emailIdentityPublicId = nanoId();
+        const emailIdentityPublicId = typeIdGenerator('emailIdentities');
         const emailIdentityResponse = await db.insert(emailIdentities).values({
           publicId: emailIdentityPublicId,
           orgId: orgId,
@@ -174,8 +180,9 @@ export const invitesRouter = router({
 
       // Insert orgInvitations - save ID
 
-      const newInvitePublicId = nanoId();
+      const newInvitePublicId = typeIdGenerator('orgInvitations');
       const newInviteToken = nanoIdToken();
+
       await db.insert(orgInvitations).values({
         publicId: newInvitePublicId,
         orgId: orgId,
@@ -439,7 +446,7 @@ export const invitesRouter = router({
   invalidateInvite: orgProcedure
     .input(
       z.object({
-        invitePublicId: zodSchemas.nanoId
+        invitePublicId: typeIdValidator('orgInvitations')
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -473,7 +480,7 @@ export const invitesRouter = router({
   refreshInvite: orgProcedure
     .input(
       z.object({
-        invitePublicId: zodSchemas.nanoId
+        invitePublicId: typeIdValidator('orgInvitations')
       })
     )
     .mutation(async ({ ctx, input }) => {

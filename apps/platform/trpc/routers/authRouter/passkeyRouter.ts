@@ -7,11 +7,16 @@ import type {
   RegistrationResponseJSON,
   AuthenticationResponseJSON
 } from '@simplewebauthn/types';
-import { nanoId, zodSchemas } from '@u22n/utils';
+import {
+  nanoIdToken,
+  typeIdGenerator,
+  typeIdValidator,
+  zodSchemas
+} from '@u22n/utils';
 import { UAParser } from 'ua-parser-js';
 import { usePasskeys } from '../../../utils/auth/passkeys';
 import { usePasskeysDb } from '../../../utils/auth/passkeyDbAdaptor';
-import { setCookie, getCookie, getHeader } from '#imports';
+import { setCookie, getCookie, getHeader } from 'h3';
 import { lucia } from '../../../utils/auth';
 import { validateUsername } from './signupRouter';
 import { createLuciaSessionCookie } from '../../../utils/session';
@@ -68,7 +73,7 @@ export const passkeyRouter = router({
     )
     .query(async ({ input }) => {
       const { username, authenticatorType } = input;
-      const publicId = nanoId();
+      const publicId = typeIdGenerator('user');
       const passkeyOptions = await usePasskeys.generateRegistrationOptions({
         userDisplayName: username,
         userName: username,
@@ -82,7 +87,7 @@ export const passkeyRouter = router({
       z.object({
         registrationResponseRaw: z.any(),
         username: zodSchemas.username(),
-        publicId: z.string(),
+        publicId: typeIdValidator('user'),
         nickname: z.string().min(3).max(32).default('Passkey')
       })
     )
@@ -250,7 +255,7 @@ export const passkeyRouter = router({
     .query(async ({ ctx }) => {
       const { event } = ctx;
 
-      const authChallengeId = nanoId();
+      const authChallengeId = nanoIdToken();
 
       setCookie(event, 'unauth-challenge', authChallengeId, {
         httpOnly: true,
@@ -326,7 +331,7 @@ export const passkeyRouter = router({
       }
       const user = userAccount.user;
 
-      const { device, os } = UAParser(await getHeader(ctx.event, 'User-Agent'));
+      const { device, os } = UAParser(getHeader(ctx.event, 'User-Agent'));
       const userDevice =
         device.type === 'mobile' ? device.toString() : device.vendor;
 

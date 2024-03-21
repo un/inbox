@@ -6,7 +6,7 @@ import {
   postalServers,
   orgPostalConfigs
 } from '@u22n/database/schema';
-import { nanoId, zodSchemas } from '@u22n/utils';
+import { typeIdGenerator, typeIdValidator } from '@u22n/utils';
 import { TRPCError } from '@trpc/server';
 import { isUserAdminOfOrg } from '../../../../utils/user';
 import { mailBridgeTrpcClient } from '../../../../utils/tRPCServerClients';
@@ -29,7 +29,7 @@ export const domainsRouter = router({
       const { db, org } = ctx;
       const orgId = org.id;
       const orgPublicId = org.publicId;
-      const newPublicId = nanoId();
+      const newPublicId = typeIdGenerator('domains');
 
       const domainName = input.domainName.toLowerCase();
 
@@ -157,7 +157,7 @@ export const domainsRouter = router({
   getDomain: orgProcedure
     .input(
       z.object({
-        domainPublicId: zodSchemas.nanoId,
+        domainPublicId: typeIdValidator('domains'),
         newDomain: z.boolean().optional()
       })
     )
@@ -208,7 +208,7 @@ export const domainsRouter = router({
   getDomainDns: orgProcedure
     .input(
       z.object({
-        domainPublicId: z.string(),
+        domainPublicId: typeIdValidator('domains'),
         isNewDomain: z.boolean().optional()
       })
     )

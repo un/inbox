@@ -3,9 +3,9 @@ import { Argon2id } from 'oslo/password';
 import { limitedProcedure, router, userProcedure } from '../../trpc';
 import { eq } from '@u22n/database/orm';
 import { accounts, users } from '@u22n/database/schema';
-import { nanoId, zodSchemas } from '@u22n/utils';
+import { typeIdGenerator, zodSchemas } from '@u22n/utils';
 import { TRPCError } from '@trpc/server';
-import { createError, setCookie } from '#imports';
+import { createError, setCookie } from 'h3';
 import { lucia } from '../../../utils/auth';
 import { validateUsername } from './signupRouter';
 import { createLuciaSessionCookie } from '../../../utils/session';
@@ -34,7 +34,7 @@ export const passwordRouter = router({
       }
 
       const passwordHash = await new Argon2id().hash(password);
-      const publicId = nanoId();
+      const publicId = typeIdGenerator('user');
 
       const userId = await db
         .transaction(async (tx) => {

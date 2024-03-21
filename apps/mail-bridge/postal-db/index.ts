@@ -4,7 +4,7 @@ import * as schema from './schema';
 import { useRuntimeConfig } from '#imports';
 
 export const connection = await mysql.createConnection({
-  uri: `${useRuntimeConfig().postal.activeServers.dbConnectionString}/postal`,
+  uri: `${(useRuntimeConfig().postal as any).activeServers.dbConnectionString}/postal`,
   multipleStatements: true
 });
 

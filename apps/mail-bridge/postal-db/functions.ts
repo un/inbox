@@ -31,6 +31,8 @@ export type CreateOrgInput = {
   ipPoolId: number;
 };
 
+const postalConfig = useRuntimeConfig().postal as Record<string, any>;
+
 export async function createOrg(input: CreateOrgInput) {
   const [{ insertId }] = await postalDB.insert(organizations).values({
     uuid: randomUUID(),
@@ -189,13 +191,12 @@ export async function getDomainDNSRecords(
   records.spf.name = domainInfo.name;
   records.spf.extraSenders =
     (spfDomains &&
-      spfDomains.includes.filter(
-        (x) => x !== `_spf.${useRuntimeConfig().postal.dnsRootUrl}`
-      ).length > 0) ||
+      spfDomains.includes.filter((x) => x !== `_spf.${postalConfig.dnsRootUrl}`)
+        .length > 0) ||
     false;
   records.spf.value = buildSpfRecord(
     [
-      `_spf.${useRuntimeConfig().postal.dnsRootUrl}`,
+      `_spf.${postalConfig.dnsRootUrl}`,
       ...(records.spf.extraSenders ? spfDomains?.includes || [] : [])
     ],
     '~all'
@@ -203,9 +204,7 @@ export async function getDomainDNSRecords(
 
   records.spf.valid =
     (spfDomains &&
-      spfDomains.includes.includes(
-        `_spf.${useRuntimeConfig().postal.dnsRootUrl}`
-      )) ||
+      spfDomains.includes.includes(`_spf.${postalConfig.dnsRootUrl}`)) ||
     false;
 
   if (!records.spf.valid || domainInfo.spfStatus !== 'OK' || forceReverify) {
@@ -214,9 +213,7 @@ export async function getDomainDNSRecords(
       .set(
         !spfDomains
           ? { spfStatus: 'Missing', spfError: 'SPF record not found' }
-          : !spfDomains.includes.includes(
-                `_spf.${useRuntimeConfig().postal.dnsRootUrl}`
-              )
+          : !spfDomains.includes.includes(`_spf.${postalConfig.dnsRootUrl}`)
             ? { spfStatus: 'Invalid', spfError: 'SPF record Invalid' }
             : { spfStatus: 'OK', spfError: null }
       )

@@ -7,7 +7,7 @@ import {
   contacts,
   emailIdentities
 } from '@u22n/database/schema';
-import { nanoId } from '@u22n/utils';
+import { typeIdGenerator } from '@u22n/utils';
 
 export async function parseAddressIds(input: {
   addresses: EmailAddress[];
@@ -125,7 +125,7 @@ export async function parseAddressIds(input: {
       );
     }
     const contactInsert = await db.insert(contacts).values({
-      publicId: nanoId(),
+      publicId: typeIdGenerator('contacts'),
       orgId: input.orgId,
       reputationId: contactGlobalReputationId || 0,
       type: 'unknown',
