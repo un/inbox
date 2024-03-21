@@ -261,25 +261,25 @@
           text="Choose your username"
           class="w-full">
           <div
-            class="bg-primary-400 h-2 w-full rounded"
+            class="bg-accent-5 h-2 w-full rounded"
             @click="navigateTo('/join')" />
         </UnUiTooltip>
         <UnUiTooltip
           text="Secure your account"
           class="w-full">
           <div
-            class="bg-primary-600 h-2 w-full rounded"
+            class="bg-accent-9 h-2 w-full rounded"
             @click="navigateTo('/join/secure')" />
         </UnUiTooltip>
         <UnUiTooltip
           text="Set up your organization"
           class="w-full">
-          <div class="bg-primary-400 h-2 w-full rounded" />
+          <div class="bg-accent-5 h-2 w-full rounded" />
         </UnUiTooltip>
         <UnUiTooltip
           text="Create your profile"
           class="w-full">
-          <div class="bg-primary-400 h-2 w-full rounded" />
+          <div class="bg-accent-5 h-2 w-full rounded" />
         </UnUiTooltip>
       </div>
 
@@ -287,16 +287,14 @@
         <p class="">How do you want to secure your account?</p>
         <div class="grid w-full grid-cols-9 justify-items-center gap-8">
           <button
-            class="col-span-4 flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded border-2 bg-gray-50 p-4 dark:bg-gray-800"
+            class="bg-base-3 col-span-4 flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded border-2 p-4"
             :class="
-              secureType === 'passkey'
-                ? 'border-green-500'
-                : 'border-gray-200 dark:border-gray-700'
+              secureType === 'passkey' ? 'border-green-9' : 'border-base-9'
             "
             @click="switchSecureType('passkey')">
             <UnUiIcon
               name="i-mdi-fingerprint"
-              class="text-5xl text-gray-500" />
+              class="text-base-3 text-5xl" />
             <p class="font-medium">Passkey</p>
             <p class="text-sm">Fingerprint, Face ID, etc</p>
             <UnUiBadge
@@ -308,16 +306,14 @@
             orientation="vertical"
             class="w-fit" />
           <button
-            class="col-span-4 flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded border-2 bg-gray-50 p-4 dark:bg-gray-800"
+            class="bg-base-3 col-span-4 flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded border-2 p-4 dark:bg-gray-800"
             :class="
-              secureType === 'password'
-                ? 'border-green-500'
-                : 'border-gray-200 dark:border-gray-700'
+              secureType === 'password' ? 'border-green-9' : 'border-base-9'
             "
             @click="switchSecureType('password')">
             <UnUiIcon
               name="i-ph-password-light"
-              class="text-5xl text-gray-500" />
+              class="text-base-3 text-5xl" />
             <p class="font-medium">Password</p>
             <p class="text-sm">Alphanumeric!1</p>
             <UnUiBadge
@@ -350,7 +346,7 @@
             icon="i-mdi-help"
             variant="outline"
             size="sm"
-            color="orange"
+            color="amber"
             block
             @click="howToAddPasskeyDialogOpen = true" />
         </div>
