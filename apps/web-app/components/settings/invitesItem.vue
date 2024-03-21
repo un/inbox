@@ -5,7 +5,7 @@
 
   type PromiseType<T> = T extends Promise<infer U> ? U : never;
   type OrgInvitesData = PromiseType<
-    //@ts-ignore
+    // @ts-expect-error, Out of sync with trpc
     ReturnType<typeof $trpc.org.invites.viewInvites.query>
   >['invites'];
 

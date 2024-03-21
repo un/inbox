@@ -5,7 +5,7 @@ import { eq } from '@u22n/database/orm';
 import { accounts, users } from '@u22n/database/schema';
 import { typeIdGenerator, zodSchemas } from '@u22n/utils';
 import { TRPCError } from '@trpc/server';
-import { createError, setCookie } from '#imports';
+import { createError, setCookie } from 'h3';
 import { lucia } from '../../../utils/auth';
 import { validateUsername } from './signupRouter';
 import { createLuciaSessionCookie } from '../../../utils/session';

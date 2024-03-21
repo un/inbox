@@ -6,8 +6,9 @@
   "scripts": {
     "format": "prettier . --write",
     "check:format": "prettier . --check",
+    "check:types": "turbo run check --cache-dir=.turbo",
     "precheck": "dotenv -e .env.local -- pnpm -r precheck",
-    "check": "pnpm check:format && pnpm precheck && turbo run check --cache-dir=.turbo",
+    "check": "pnpm check:format && pnpm precheck && pnpm check:types",
     "build:all": "dotenv -e .env.local -- turbo run build --cache-dir=.turbo",
     "build:web-app": "turbo run build",
     "build:mail-bridge": "turbo run build",

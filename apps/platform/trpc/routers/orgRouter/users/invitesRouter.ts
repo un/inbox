@@ -29,7 +29,8 @@ import {
 import { refreshOrgSlugCache } from '../../../../utils/orgSlug';
 import { isUserAdminOfOrg } from '../../../../utils/user';
 import { TRPCError } from '@trpc/server';
-import { billingTrpcClient, useRuntimeConfig } from '#imports';
+import { useRuntimeConfig } from '#imports';
+import { billingTrpcClient } from '../../../../utils/tRPCServerClients';
 
 export const invitesRouter = router({
   createNewInvite: orgProcedure

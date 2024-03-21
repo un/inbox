@@ -1,6 +1,6 @@
 import type { EventHandlerRequest, H3Event } from 'h3';
 import { UAParser } from 'ua-parser-js';
-import { getHeader } from '#imports';
+import { getHeader } from 'h3';
 import { lucia } from './auth';
 import type { TypeId } from '@u22n/utils';
 

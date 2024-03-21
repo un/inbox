@@ -55,7 +55,7 @@ export const addressRouter = router({
           }
         });
 
-      const mailDomains: MailDomains = useRuntimeConfig().mailDomains;
+      const mailDomains = useRuntimeConfig().mailDomains as MailDomains;
       const consumedDomains =
         usersEmailIdentitiesPersonal.map(
           (identity) => identity.emailIdentity.domainName
@@ -105,7 +105,7 @@ export const addressRouter = router({
         });
       }
 
-      const mailDomains: MailDomains = useRuntimeConfig().mailDomains;
+      const mailDomains = useRuntimeConfig().mailDomains as MailDomains;
 
       // Check the users already claimed personal addresses
       const usersEmailIdentitiesPersonal =

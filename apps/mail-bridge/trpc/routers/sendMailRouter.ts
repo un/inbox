@@ -36,7 +36,7 @@ export const sendMailRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const { config, db } = ctx;
-      const postalConfig: PostalConfig = config.postal;
+      const postalConfig = config.postal as PostalConfig;
 
       if (postalConfig.localMode === true) {
         return {

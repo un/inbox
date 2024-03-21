@@ -135,7 +135,6 @@
         userOrgsButtons.value.push({
           slot: 'org',
           label: org.org.name,
-          //@ts-ignore
           publicId: org.org.publicId,
           avatarId: org.org.avatarId,
           slug: org.org.slug,
@@ -372,8 +371,8 @@
           <div class="flex w-full flex-row justify-between">
             <span class="truncate">{{ item.label }}</span>
           </div>
-          <template #item="{ item }">
-            <span class="truncate">{{ item.label }}</span>
+          <template #item="{ _item }">
+            <span class="truncate">{{ _item.label }}</span>
             <UnUiIcon
               :name="item.icon"
               class="ms-auto h-4 w-4 flex-shrink-0 text-gray-400 dark:text-gray-500" />

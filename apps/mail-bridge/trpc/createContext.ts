@@ -1,7 +1,8 @@
 import type { inferAsyncReturnType } from '@trpc/server';
 import type { H3Event } from 'h3';
 import { db } from '@u22n/database';
-import { useRuntimeConfig, getHeader } from '#imports';
+import { useRuntimeConfig } from '#imports';
+import { getHeader } from 'h3';
 
 //  * Creates context for an incoming request
 //  * @link https://trpc.io/docs/context

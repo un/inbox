@@ -27,7 +27,7 @@ export const domainRouter = router({
       const { orgId, orgPublicId, domainName } = input;
       const postalOrgId = orgPublicId;
 
-      const postalConfig: PostalConfig = config.postal;
+      const postalConfig = config.postal as PostalConfig;
 
       if (postalConfig.localMode === true) {
         return {
@@ -140,7 +140,7 @@ export const domainRouter = router({
       const { config } = ctx;
       const { postalDomainId, postalServerUrl } = input;
 
-      const postalConfig: PostalConfig = config.postal;
+      const postalConfig = config.postal as PostalConfig;
       if (postalConfig.localMode === true) {
         return {
           verification: {

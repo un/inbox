@@ -14,7 +14,7 @@
     onNuxtReady
   } from '#imports';
 
-  const { $trpc, $i18n } = useNuxtApp();
+  const { $trpc } = useNuxtApp();
   definePageMeta({ guest: true });
   const turnstileToken = ref();
   const errorMessage = ref(false);

@@ -26,7 +26,7 @@ export const orgRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { config } = ctx;
       const { orgId, orgPublicId } = input;
-      const postalConfig: PostalConfig = config.postal;
+      const postalConfig = config.postal as PostalConfig;
       const limits = postalConfig.limits;
 
       if (postalConfig.localMode === true) {

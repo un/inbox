@@ -16,7 +16,7 @@ import {
 import { UAParser } from 'ua-parser-js';
 import { usePasskeys } from '../../../utils/auth/passkeys';
 import { usePasskeysDb } from '../../../utils/auth/passkeyDbAdaptor';
-import { setCookie, getCookie, getHeader } from '#imports';
+import { setCookie, getCookie, getHeader } from 'h3';
 import { lucia } from '../../../utils/auth';
 import { validateUsername } from './signupRouter';
 import { createLuciaSessionCookie } from '../../../utils/session';

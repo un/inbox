@@ -10,7 +10,9 @@
     "build": "nuxt build",
     "dev": "PORT=3000 nuxt dev --host",
     "generate": "nuxt generate",
-    "preview": "nuxt preview"
+    "preview": "nuxt preview",
+    "precheck": "nuxt prepare",
+    "check": "vue-tsc"
   },
   "devDependencies": {
     "@iconify-json/mdi": "^1.1.64",

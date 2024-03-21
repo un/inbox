@@ -32,9 +32,8 @@ function chunkSplit(key: string, chunkSize: number, newLineReturn: string) {
   if (chunkSize < 1) {
     return false;
   }
-  //@ts-ignore
   const chunked = key
-    .match(new RegExp('.{0,' + chunkSize + '}', 'g'))
+    .match(new RegExp('.{0,' + chunkSize + '}', 'g'))!
     .join(newLineReturn);
   return chunked;
 }
