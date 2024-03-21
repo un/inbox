@@ -2,7 +2,7 @@ import { customType } from 'drizzle-orm/mysql-core';
 import { TypeID, typeid } from 'typeid-js';
 import { z } from 'zod';
 
-export const typeIdLength = 26;
+const typeIdLength = 26;
 
 export const idTypes = {
   user: 'u',
@@ -23,7 +23,6 @@ export const idTypes = {
   convoSubjects: 'cs',
   convoParticipants: 'cp',
   convoAttachments: 'ca',
-  pendingAttachments: 'cap',
   convoEntries: 'ce'
 } as const;
 
@@ -53,7 +52,7 @@ export const typeIdDataType = <const T extends IdTypePrefixes>(
     notNull: true;
     driverData: string;
   }>({
-    dataType: () => `varchar(${typeIdLength + idTypes[prefix].length + 1})`,
+    dataType: () => `varchar(${typeIdLength + idTypes[prefix].length + 1})`, // suffix length + prefix length + underscore
     fromDriver: (input) => TypeID.fromString(input).toString() as TypeId<T>,
     toDriver: (input) => input.toString()
   })(column);

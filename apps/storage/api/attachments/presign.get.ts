@@ -64,7 +64,7 @@ export default eventHandler({
     }
 
     const orgPublicId = orgQueryResponse.publicId;
-    const attachmentPublicId = typeIdGenerator('pendingAttachments');
+    const attachmentPublicId = typeIdGenerator('convoAttachments');
     const filename = data.filename;
 
     const s3Config: S3Config = useRuntimeConfig().s3;

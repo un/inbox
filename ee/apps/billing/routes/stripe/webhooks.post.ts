@@ -3,7 +3,6 @@ import type { StripeBillingPeriod, StripePlanName } from './../../types';
 import { db } from '@u22n/database';
 import { eq } from '@u22n/database/orm';
 import { orgBilling } from '@u22n/database/schema';
-import { nanoId } from '@u22n/utils';
 import Stripe from 'stripe';
 
 // const handleCheckoutSessionCompleted = async (stripeEvent: Stripe.Event) => {

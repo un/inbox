@@ -1082,7 +1082,7 @@ export const pendingAttachments = mysqlTable(
   'pending_attachments',
   {
     id: serial('id').primaryKey(),
-    publicId: publicId('pendingAttachments', 'public_id').notNull(),
+    publicId: publicId('convoAttachments', 'public_id').notNull(),
     orgId: foreignKey('org_id').notNull(),
     orgPublicId: publicId('org', 'org_public_id').notNull(),
     filename: varchar('filename', { length: 256 }).notNull(),

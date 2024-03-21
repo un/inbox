@@ -550,7 +550,7 @@ export const convoRouter = router({
         fileName: string;
         fileType: string;
       }[] = [];
-      const pendingAttachmentsToRemoveFromPending: TypeId<'pendingAttachments'>[] =
+      const pendingAttachmentsToRemoveFromPending: TypeId<'convoAttachments'>[] =
         [];
       if (input.attachments.length > 0) {
         const convoAttachmentsDbInsertValuesArray: InferInsertModel<
@@ -574,7 +574,6 @@ export const convoRouter = router({
             fileType: attachment.type
           });
           pendingAttachmentsToRemoveFromPending.push(
-            // @ts-expect-error, @McPizza0 please fix this and all other pendingAttachments related stuff
             attachment.attachmentPublicId
           );
         });

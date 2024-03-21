@@ -31,7 +31,7 @@ export default eventHandler({
       return send(event, 'Invalid input');
     }
     const { orgPublicId, filename } = inputValidation.data;
-    const attachmentPublicId = typeIdGenerator('pendingAttachments');
+    const attachmentPublicId = typeIdGenerator('convoAttachments');
 
     const s3Config: S3Config = useRuntimeConfig().s3;
     const command = new PutObjectCommand({
