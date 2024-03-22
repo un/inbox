@@ -1,9 +1,3 @@
-<script setup lang="ts">
-  import { useRoute } from '#imports';
-
-  const route = useRoute();
-</script>
-
 <template>
   <div class="bg-base-1 dark:bg-base-1 h-screen max-h-screen">
     <NuxtLayout class="h-screen max-h-screen">

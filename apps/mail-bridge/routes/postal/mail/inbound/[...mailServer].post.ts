@@ -143,6 +143,7 @@ export default eventHandler(async (event) => {
   const parsedEmail = await simpleParser(payloadEmail);
 
   //! verify email auth (DKIM, SPF, etc.) - unhandled right now
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const auth = await authenticate(payloadEmail, {
     trustReceived: true
   });
