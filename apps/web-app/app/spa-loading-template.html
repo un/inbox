@@ -7,7 +7,7 @@
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1.0" />
-    <title>Loading animation</title>
+    <title>UnInbox</title>
     <style>
       body {
         margin: 0;
@@ -82,13 +82,13 @@
       }
     </style>
     <script>
-      function hideLoading() {
+      document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('loading').style.opacity = '0';
         document.getElementById('loading').style.zIndex = '-1';
-      }
+      });
     </script>
   </head>
-  <body onload="hideLoading();">
+  <body>
     <div id="loading">
       <div class="spinner-box">
         <div class="pulse-container">

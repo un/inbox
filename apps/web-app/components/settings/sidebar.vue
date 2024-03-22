@@ -68,7 +68,7 @@
 </script>
 <template>
   <div
-    class="bg-base-1 border-base-6 flex h-full max-h-full flex-col gap-2 overflow-y-auto rounded-r-xl border-r-2 p-8 pl-12 shadow-md">
+    class="bg-base-2 border-base-6 flex h-full max-h-full flex-col gap-2 overflow-y-auto rounded-r-xl border-r-2 p-8 pl-12 shadow-md">
     <div
       class="flex h-full max-h-full grow flex-col gap-4 overflow-hidden overflow-y-auto">
       <div class="flex w-full flex-col gap-2">
@@ -107,7 +107,7 @@
         </div>
       </div>
 
-      <div class="from-base-1 mt-[-48px] h-[48px] bg-gradient-to-t" />
+      <div class="from-base-2 mt-[-48px] h-[48px] bg-gradient-to-t" />
     </div>
   </div>
 </template>

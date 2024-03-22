@@ -105,12 +105,12 @@
             v-if="showPricingTable"
             class="flex flex-col items-center gap-8">
             <div
-              class="border-1 border-base-7 bg-base-3 flex w-fit flex-row items-center justify-center gap-0 rounded-lg p-1">
+              class="border-base-7 bg-base-2 flex w-fit flex-row items-center justify-center gap-0 rounded-lg border-2 p-0">
               <button
                 class="rounded-md px-6 py-1"
                 :class="
                   pricingTableBillingPeriod === 'monthly'
-                    ? 'bg-primary-9 border-1 border-primary-7'
+                    ? 'bg-base-5  text-base-12 '
                     : ''
                 "
                 @click="pricingTableBillingPeriod = 'monthly'">
@@ -120,16 +120,16 @@
                 class="rounded-md px-6 py-1"
                 :class="
                   pricingTableBillingPeriod === 'yearly'
-                    ? 'bg-primary-9 border-1 border-primary-7'
+                    ? 'bg-primary-9 border-primary-7 border-2'
                     : ''
                 "
                 @click="pricingTableBillingPeriod = 'yearly'">
                 <span class="text-xs font-semibold uppercase"> yearly </span>
               </button>
             </div>
-            <div class="flex w-full flex-row flex-wrap justify-center gap-8">
+            <div class="row grid grid-cols-2 flex-wrap justify-center gap-8">
               <div
-                class="min-w-xs border-1 border-base-7 bg-base-2 flex flex-col gap-8 rounded-xl p-8">
+                class="min-w-xs border-base-7 bg-base-2 flex flex-col gap-8 rounded-xl border-2 p-8">
                 <span class="font-display text-xl leading-none">
                   Free Plan
                 </span>
@@ -183,7 +183,7 @@
                   :disabled="true" />
               </div>
               <div
-                class="min-w-xs border-1 border-base-7 bg-base-2 flex flex-col gap-8 rounded-xl p-8">
+                class="min-w-xs border-base-7 bg-base-2 flex flex-col gap-8 rounded-xl border-2 p-8">
                 <span class="font-display text-xl leading-none">
                   Pro Plan
                 </span>
@@ -216,7 +216,7 @@
                 <div class="flex flex-row items-center gap-2">
                   <span class="font-display text-4xl leading-none"
                     >${{
-                      pricingTableBillingPeriod === 'yearly' ? '120' : '12'
+                      pricingTableBillingPeriod === 'yearly' ? '80' : '8'
                     }}</span
                   >
                   <div class="flex flex-col gap-0">

@@ -47,14 +47,10 @@
         fit: 'w-44'
       },
       color: {
-        default:
-          'ring-gray-300 dark:ring-gray-700 focus:ring-primary-500 dark:focus:ring-primary-400',
-        valid:
-          'ring-green-300 dark:ring-green-700 focus:ring-primary-500 dark:focus:ring-primary-400',
-        invalid:
-          'ring-red-300 dark:ring-red-700 focus:ring-primary-500 dark:focus:ring-primary-400',
-        remote:
-          'ring-orange-300 dark:ring-orange-700 focus:ring-primary-500 dark:focus:ring-primary-400'
+        default: 'ring-base-5 focus:ring-accent-9',
+        valid: 'ring-green-5 focus:ring-green-9',
+        invalid: 'ring-red-5 focus:ring-red-9',
+        remote: 'ring-amber-5 focus:ring-amber-9'
       },
       disabled: {
         true: 'cursor-not-allowed',
@@ -157,7 +153,7 @@
       >
     </div>
     <div
-      class="flex flex-row items-center gap-2 rounded bg-white px-2.5 py-1.5 text-sm text-gray-900 shadow-sm ring-1 ring-inset focus:ring-2 dark:bg-gray-900 dark:text-white"
+      class="bg-base-1 text-base-12 flex flex-row items-center gap-2 rounded-md px-2.5 py-1.5 text-sm shadow-sm ring-2 ring-inset"
       :class="[
         inputClasses({
           disabled: computedDisabled

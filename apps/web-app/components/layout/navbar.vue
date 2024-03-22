@@ -205,23 +205,28 @@
     [
       {
         label: 'Documentation',
-        icon: 'i-ph-book'
+        icon: 'i-ph-book',
+        disabled: false
       },
       {
         label: 'Support',
-        icon: 'i-ph-question'
+        icon: 'i-ph-question',
+        disabled: false
       },
       {
         label: 'Roadmap',
-        icon: 'i-ph-map-trifold'
+        icon: 'i-ph-map-trifold',
+        disabled: false
       },
       {
         label: 'Changelog',
-        icon: 'i-ph-megaphone'
+        icon: 'i-ph-megaphone',
+        disabled: false
       },
       {
         label: 'Status',
-        icon: 'i-ph-activity'
+        icon: 'i-ph-activity',
+        disabled: false
       }
     ]
   ];
@@ -353,13 +358,13 @@
         <UnUiIcon
           v-if="item.slug === orgSlug"
           name="i-ph-check"
-          class="ms-auto h-4 w-4 flex-shrink-0 text-gray-400 dark:text-gray-500" />
+          class="ms-auto h-4 w-4 flex-shrink-0" />
       </template>
       <template #darkmode>
         <span class="truncate">{{ colorModeLabel }}</span>
         <UnUiIcon
           :name="colorModeIcon"
-          class="ms-auto h-4 w-4 flex-shrink-0 text-gray-400 dark:text-gray-500" />
+          class="ms-auto h-4 w-4 flex-shrink-0" />
       </template>
       <template #helpmenu="{ item }">
         <NuxtUiDropdown
@@ -368,25 +373,27 @@
           :ui="{ item: { disabled: 'cursor-text select-text' } }"
           :popper="{ offsetDistance: -5, placement: 'right-start' }"
           class="w-full">
-          <div class="flex w-full flex-row justify-between">
+          <div class="flex w-full flex-row items-center justify-between">
             <span class="truncate">{{ item.label }}</span>
-          </div>
-          <template #item="{ _item }">
-            <span class="truncate">{{ _item.label }}</span>
             <UnUiIcon
               :name="item.icon"
-              class="ms-auto h-4 w-4 flex-shrink-0 text-gray-400 dark:text-gray-500" />
+              class="ms-auto h-4 w-4 flex-shrink-0" />
+          </div>
+          <!-- eslint-disable vue/no-template-shadow -->
+          <template #item="{ item }">
+            <!-- eslint-enable -->
+            <span class="truncate">{{ item.label }}</span>
+            <UnUiIcon
+              :name="item.icon"
+              class="ms-auto h-4 w-4 flex-shrink-0" />
           </template>
         </NuxtUiDropdown>
-        <UnUiIcon
-          :name="item.icon"
-          class="ms-auto h-4 w-4 flex-shrink-0 text-gray-400 dark:text-gray-500" />
       </template>
       <template #item="{ item }">
         <span class="truncate">{{ item.label }}</span>
         <UnUiIcon
           :name="item.icon"
-          class="ms-auto h-4 w-4 flex-shrink-0 text-gray-400 dark:text-gray-500" />
+          class="ms-auto h-4 w-4 flex-shrink-0" />
       </template>
     </NuxtUiDropdown>
   </div>

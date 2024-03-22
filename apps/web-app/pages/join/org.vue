@@ -193,28 +193,28 @@
           text="Choose your username"
           class="w-full">
           <div
-            class="bg-primary-400 h-2 w-full rounded"
+            class="bg-accent-5 h-2 w-full rounded"
             @click="navigateTo('/join')" />
         </UnUiTooltip>
         <UnUiTooltip
           text="Secure your account"
           class="w-full">
           <div
-            class="bg-primary-400 h-2 w-full rounded"
+            class="bg-accent-5 h-2 w-full rounded"
             @click="navigateTo('/join/secure')" />
         </UnUiTooltip>
         <UnUiTooltip
           text="Set up your organization"
           class="w-full">
           <div
-            class="bg-primary-600 h-2 w-full rounded"
+            class="bg-accent-9 h-2 w-full rounded"
             @click="navigateTo('/join/org')" />
         </UnUiTooltip>
         <UnUiTooltip
           text="Create your profile"
           class="w-full">
           <div
-            class="bg-primary-400 h-2 w-full rounded"
+            class="bg-accent-5 h-2 w-full rounded"
             @click="navigateTo('/join/profile')" />
         </UnUiTooltip>
       </div>

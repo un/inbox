@@ -1,11 +1,12 @@
 import { defineAppConfig } from '#imports';
 export default defineAppConfig({
   ui: {
-    primary: 'bronze',
-    gray: 'zinc',
-    accent: 'bronze',
+    primary: 'sand',
+    gray: 'sand',
+    accent: 'sand',
     base: 'sand',
-    safelistColors: ['bronze'],
+    colors: ['sand', 'base', 'bronze', 'green', 'red', 'amber', 'blue'],
+    safelistColors: ['sand'],
     notification: {
       rounded: 'rounded-lg rounded-br-2xl'
     },
@@ -34,18 +35,18 @@ export default defineAppConfig({
       },
       variant: {
         solid:
-          'shadow-sm text-white dark:text-white bg-{color}-9 hover:bg-{color}-10 active:brightness-105 disabled:bg-{color}-5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-{color}-5 dark:focus-visible:outline-{color}-4 dark:bg-{color}-9 dark:hover:bg-{color}-10 dark:active:brightness-105 dark:disabled:bg-{color}-5 dark:focus-visible:outline-{color}-5 dark:focus-visible:outline-{color}-4',
+          'shadow-sm text-white dark:text-white bg-{color}-9 hover:bg-{color}-10 active:brightness-105 disabled:bg-{color}-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-{color}-5 dark:focus-visible:outline-{color}-4 dark:bg-{color}-9 dark:hover:bg-{color}-10 dark:active:brightness-105 dark:disabled:bg-{color}-3 dark:focus-visible:outline-{color}-5 dark:focus-visible:outline-{color}-4',
         outline:
-          'ring-1 ring-inset ring-{color}-8 active:ring-{color}-9 active:bg-{color}-5 text-{color}-11 hover:bg-{color}-3 disabled:bg-transparent disabled:text-{color}-5 disabled:ring-{color}-5 focus-visible:ring-2 focus-visible:ring-{color}-9 dark:ring-{color}-8 dark:active:ring-{color}-9 dark:active:bg-{color}-5 dark:text-{color}-11 dark:hover:bg-{color}-3 dark:disabled:bg-transparent dark:disabled:text-{color}-5 dark:disabled:ring-{color}-5 dark:focus-visible:ring-{color}-9 ',
-        soft: 'text-{color}-11 bg-{color}-3 hover:bg-{color}-4 active:bg-{color}-5 disabled:bg-{color}-1 disabled:text-{color}-5 dark:text-{color}-11 dark:bg-{color}-3 dark:hover:bg-{color}-5 dark:active:bg-{color}-5 dark:disabled:bg-{color}-1 dark:disabled:text-{color}-5 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-{color}-5 dark:focus-visible:ring-{color}-5 ',
+          'ring-1 ring-inset ring-{color}-8 active:ring-{color}-9 active:bg-{color}-5 text-{color}-11 hover:bg-{color}-3 disabled:bg-transparent disabled:text-{color}-3 disabled:ring-{color}-3 focus-visible:ring-2 focus-visible:ring-{color}-9 dark:ring-{color}-8 dark:active:ring-{color}-9 dark:active:bg-{color}-5 dark:text-{color}-11 dark:hover:bg-{color}-3 dark:disabled:bg-transparent dark:disabled:text-{color}-3 dark:disabled:ring-{color}-3 dark:focus-visible:ring-{color}-9 ',
+        soft: 'text-{color}-11 bg-{color}-3 hover:bg-{color}-4 active:bg-{color}-5 disabled:bg-{color}-1 disabled:text-{color}-3 dark:text-{color}-11 dark:bg-{color}-3 dark:hover:bg-{color}-5 dark:active:bg-{color}-5 dark:disabled:bg-{color}-1 dark:disabled:text-{color}-3 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-{color}-5 dark:focus-visible:ring-{color}-5 ',
         ghost:
-          'text-{color}-11 hover:bg-{color}-3 active:bg-{color}-4 disabled:bg-transparent disabled:text-{color}-5 dark:text-{color}-11 dark:hover:bg-{color}-3 dark:active:bg-{color}-5 dark:disabled:bg-transparent dark:disabled:text-{color}-5 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-{color}-5 dark:focus-visible:ring-{color}-5',
-        link: 'text-{color}-11 hover:text-{color}-12 disabled:text-{color}-5 underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-{color}-9'
+          'text-{color}-11 hover:bg-{color}-3 active:bg-{color}-4 disabled:bg-transparent disabled:text-{color}-3 dark:text-{color}-11 dark:hover:bg-{color}-3 dark:active:bg-{color}-5 dark:disabled:bg-transparent dark:disabled:text-{color}-3 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-{color}-5 dark:focus-visible:ring-{color}-5',
+        link: 'text-{color}-11 hover:text-{color}-12 disabled:text-{color}-3 underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-{color}-9'
       },
       default: {
         size: 'sm',
         variant: 'solid',
-        color: 'bronze',
+        color: 'sand',
         loadingIcon: 'i-heroicons-arrow-path-20-solid'
       }
     },
@@ -85,7 +86,7 @@ export default defineAppConfig({
       default: {
         size: 'sm',
         variant: 'solid',
-        color: 'bronze'
+        color: 'sand'
       }
     },
 
@@ -392,13 +393,13 @@ export default defineAppConfig({
     //tooltip
     tooltip: {
       wrapper: 'relative inline-flex',
-      container: 'z-500 group',
+      container: 'z-50 group',
       width: 'max-w-xs',
       background: 'bg-base-3 dark:bg-base-3',
       color: 'text-base-12 dark:text-base-12',
       shadow: 'shadow',
       rounded: 'rounded',
-      ring: 'ring-1 ring-base-7 dark:ring-base-7',
+      ring: 'ring-0 ring-base-7 dark:ring-base-7',
       base: '[@media(pointer:coarse)]:hidden h-6 px-2 py-1 text-xs font-normal truncate relative',
       shortcuts: 'hidden md:inline-flex flex-shrink-0 gap-0.5',
       middot: 'mx-1 text-base-11 dark:text-base-11',
@@ -419,9 +420,115 @@ export default defineAppConfig({
       },
       arrow: {
         base: '[@media(pointer:coarse)]:hidden invisible before:visible before:block before:rotate-45 before:z-[-1] before:w-2 before:h-2',
-        ring: 'before:ring-1 before:ring-base-7 dark:before:ring-base-7',
+        ring: 'before:ring-0 before:ring-base-7 dark:before:ring-base-7',
         rounded: 'before:rounded-sm',
         background: 'before:bg-base-3 dark:before:bg-base-3',
+        shadow: 'before:shadow',
+        placement:
+          "group-data-[popper-placement*='right']:-left-1 group-data-[popper-placement*='left']:-right-1 group-data-[popper-placement*='top']:-bottom-1 group-data-[popper-placement*='bottom']:-top-1"
+      }
+    },
+
+    // avatar
+    avatar: {
+      wrapper: 'relative inline-flex items-center justify-center flex-shrink-0',
+      background: 'bg-base-7 dark:bg-base-7',
+      rounded: 'rounded-full',
+      text: 'font-medium leading-none text-gray-900 dark:text-white truncate',
+      placeholder:
+        'font-medium leading-none text-gray-500 dark:text-gray-400 truncate',
+      size: {
+        '3xs': 'h-4 w-4 text-[8px]',
+        '2xs': 'h-5 w-5 text-[10px]',
+        xs: 'h-6 w-6 text-xs',
+        sm: 'h-8 w-8 text-sm',
+        md: 'h-10 w-10 text-base',
+        lg: 'h-12 w-12 text-lg',
+        xl: 'h-14 w-14 text-xl',
+        '2xl': 'h-16 w-16 text-2xl',
+        '3xl': 'h-20 w-20 text-3xl'
+      },
+      chip: {
+        base: 'absolute rounded-full ring-1 ring-white dark:ring-gray-900 flex items-center justify-center text-white dark:text-gray-900 font-medium',
+        background: 'bg-{color}-500 dark:bg-{color}-400',
+        position: {
+          'top-right': 'top-0 right-0',
+          'bottom-right': 'bottom-0 right-0',
+          'top-left': 'top-0 left-0',
+          'bottom-left': 'bottom-0 left-0'
+        },
+        size: {
+          '3xs': 'h-[4px] min-w-[4px] text-[4px] p-px',
+          '2xs': 'h-[5px] min-w-[5px] text-[5px] p-px',
+          xs: 'h-1.5 min-w-[0.375rem] text-[6px] p-px',
+          sm: 'h-2 min-w-[0.5rem] text-[7px] p-0.5',
+          md: 'h-2.5 min-w-[0.625rem] text-[8px] p-0.5',
+          lg: 'h-3 min-w-[0.75rem] text-[10px] p-0.5',
+          xl: 'h-3.5 min-w-[0.875rem] text-[11px] p-1',
+          '2xl': 'h-4 min-w-[1rem] text-[12px] p-1',
+          '3xl': 'h-5 min-w-[1.25rem] text-[14px] p-1'
+        }
+      },
+      icon: {
+        base: 'text-gray-500 dark:text-gray-400 flex-shrink-0',
+        size: {
+          '3xs': 'h-2 w-2',
+          '2xs': 'h-2.5 w-2.5',
+          xs: 'h-3 w-3',
+          sm: 'h-4 w-4',
+          md: 'h-5 w-5',
+          lg: 'h-6 w-6',
+          xl: 'h-7 w-7',
+          '2xl': 'h-8 w-8',
+          '3xl': 'h-10 w-10'
+        }
+      },
+      default: {
+        size: 'sm',
+        icon: null,
+        chipColor: null,
+        chipPosition: 'top-right'
+      }
+    },
+    //avatar group
+    avatarGroup: {
+      wrapper: 'inline-flex flex-row-reverse justify-end',
+      ring: 'ring-0 ring-base-5 dark:ring-base-5',
+      margin: '-me-1.5 first:me-0'
+    },
+
+    // dropdown
+    dropdown: {
+      width: 'w-52',
+      background: 'bg-base-1 dark:bg-base-3',
+      ring: 'ring-1 ring-base-7 dark:ring-base-7',
+      divide: 'divide-y divide-base-6 dark:divide-base-6',
+      padding: 'p-2',
+      item: {
+        base: 'group flex items-center gap-1.5 w-full',
+        rounded: 'rounded-md',
+        padding: 'px-1.5 py-1.5',
+        size: 'text-sm',
+        active: 'bg-base-3 dark:bg-base-2 text-base-12 dark:text-base-12',
+        inactive: 'text-base-12 dark:text-base-12',
+        disabled: 'cursor-not-allowed opacity-50',
+        icon: {
+          base: 'flex-shrink-0 w-5 h-5',
+          active: 'text-base-11 dark:text-base-11',
+          inactive: 'text-base-10 dark:text-base-10'
+        },
+        avatar: {
+          base: 'flex-shrink-0',
+          size: '2xs'
+        },
+        label: 'truncate',
+        shortcuts: 'hidden md:inline-flex flex-shrink-0 gap-0.5 ms-auto'
+      },
+      arrow: {
+        base: 'invisible before:visible before:block before:rotate-45 before:z-[-1] before:w-2 before:h-2',
+        ring: 'before:ring-1 before:ring-base-3 dark:before:ring-base-3',
+        rounded: 'before:rounded-sm',
+        background: 'before:bg-base-1 dark:before:bg-base-1',
         shadow: 'before:shadow',
         placement:
           "group-data-[popper-placement*='right']:-left-1 group-data-[popper-placement*='left']:-right-1 group-data-[popper-placement*='top']:-bottom-1 group-data-[popper-placement*='bottom']:-top-1"
@@ -430,6 +537,32 @@ export default defineAppConfig({
   }
 });
 
+const sand = [
+  'bg-sand-1',
+  'bg-sand-2',
+  'bg-sand-3',
+  'hover:bg-sand-3',
+  'bg-sand-4',
+  'hover:bg-sand-4',
+  'active:bg-sand-4',
+  'bg-sand-5',
+  'hover:bg-sand-5',
+  'active:bg-sand-5',
+  'bg-sand-9',
+  'bg-sand-10',
+  'hover:bg-sand-10',
+  'bg-sand-11',
+  'bg-sand-12',
+  'text-sand-5',
+  'text-sand-9',
+  'text-sand-10',
+  'text-sand-11',
+  'hover:text-sand-12',
+  'ring-sand-5',
+  'ring-sand-8',
+  'ring-sand-9',
+  'active:ring-sand-9'
+];
 const bronze = [
   'bg-bronze-1',
   'bg-bronze-2',
