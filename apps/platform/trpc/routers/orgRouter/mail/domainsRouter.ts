@@ -146,7 +146,7 @@ export const domainsRouter = router({
         forwardingAddress: mailBridgeResponse.forwardingAddress,
         receivingMode: 'disabled',
         sendingMode: 'disabled',
-        domainStatus: 'pending'
+        domainStatus: 'unverified'
       });
 
       return {
@@ -196,7 +196,8 @@ export const domainsRouter = router({
           createdAt: true,
           sendingMode: true,
           receivingMode: true,
-          domainStatus: true
+          domainStatus: true,
+          verificationToken: true
         }
       });
 
@@ -251,7 +252,9 @@ export const domainsRouter = router({
           receivingMode: true,
           domainStatus: true,
           forwardingAddress: true,
-          createdAt: true
+          createdAt: true,
+          verifiedAt: true,
+          verificationToken: true
         }
       });
 
@@ -271,7 +274,7 @@ export const domainsRouter = router({
         };
       }
 
-      let domainStatus: 'active' | 'pending' | 'disabled' =
+      let domainStatus: 'unverified' | 'active' | 'pending' | 'disabled' =
         domainResponse.domainStatus;
       let domainSendingMode: 'native' | 'external' | 'disabled' =
         domainResponse.sendingMode;
@@ -294,7 +297,9 @@ export const domainsRouter = router({
         mxDnsValid: dnsRecords.mx.valid,
         dkimDnsValid: dnsRecords.dkim.valid,
         spfDnsValid: dnsRecords.spf.valid,
-        returnPathDnsValid: dnsRecords.returnPath.valid
+        returnPathDnsValid: dnsRecords.returnPath.valid,
+        verification: dnsRecords.verification.valid,
+        dmarkPolicy: dnsRecords.dmarc.policy
       };
 
       // take all dns Records and count how many are valid, if all are valid then allOk
@@ -319,6 +324,9 @@ export const domainsRouter = router({
       }
 
       if (domainStatus !== 'disabled') {
+        if (!domainResponse.verifiedAt && dnsRecords.verification.valid) {
+          domainStatus = 'pending';
+        }
         const validSendingRecords =
           dnsStatus.spfDnsValid &&
           dnsStatus.dkimDnsValid &&
@@ -348,14 +356,22 @@ export const domainsRouter = router({
           domainStatus = 'active';
         }
 
+        const updateVertifiedAt = !domainResponse.verifiedAt;
+
         await db
           .update(domains)
           .set({
-            ...dnsStatus,
+            mxDnsValid: dnsStatus.mxDnsValid,
+            dkimDnsValid: dnsStatus.dkimDnsValid,
+            spfDnsValid: dnsStatus.spfDnsValid,
+            returnPathDnsValid: dnsStatus.returnPathDnsValid,
             receivingMode: domainReceivingMode,
             sendingMode: domainSendingMode,
             lastDnsCheckAt: new Date(),
-            domainStatus: domainStatus
+            domainStatus: domainStatus,
+            verifiedAt: updateVertifiedAt
+              ? new Date()
+              : domainResponse.verifiedAt
           })
           .where(eq(domains.id, domainResponse.id));
       }
@@ -371,13 +387,6 @@ export const domainsRouter = router({
             disabledAt: new Date()
           })
           .where(eq(domains.id, domainResponse.id));
-      }
-
-      if (domainResponse.postalId) {
-        mailBridgeTrpcClient.postal.domains.refreshDomainDns.query({
-          postalDomainId: domainResponse.postalId,
-          postalServerUrl: domainResponse.postalHost
-        });
       }
 
       return {

@@ -491,9 +491,14 @@ export const domains = mysqlTable(
     domain: varchar('domain', { length: 256 }).notNull(),
     forwardingAddress: varchar('forwarding_address', { length: 128 }),
     postalId: varchar('postal_id', { length: 64 }),
-    domainStatus: mysqlEnum('domain_status', ['pending', 'active', 'disabled'])
+    domainStatus: mysqlEnum('domain_status', [
+      'unverified',
+      'pending',
+      'active',
+      'disabled'
+    ])
       .notNull()
-      .default('pending'),
+      .default('unverified'),
     sendingMode: mysqlEnum('sending_mode', [
       'native',
       'external',

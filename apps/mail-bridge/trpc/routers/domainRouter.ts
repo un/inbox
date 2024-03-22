@@ -169,6 +169,12 @@ export const domainRouter = router({
             valid: true,
             name: 'localhost',
             value: 'rp.localhost'
+          },
+          dmarc: {
+            policy: 'quarantine',
+            name: 'localhost',
+            acceptable: 'v=DMARC1; p=quarantine;',
+            optimal: 'v=DMARC1; p=reject;'
           }
         } satisfies GetDomainDNSRecordsOutput;
       }
