@@ -453,7 +453,7 @@
   }
 </script>
 <template>
-  <div class="flex h-full max-h-full w-full max-w-full flex-col gap-4">
+  <div class="flex h-full max-h-full w-full max-w-full flex-col gap-4 p-4">
     <div class="z-20000 from-base-1 mb-[-24px] h-[24px] bg-gradient-to-b" />
     <UnUiAlert
       v-if="
@@ -567,9 +567,7 @@
               <template #option="{ option }">
                 <UnUiIcon :name="option.icon" />
                 <div v-if="option.type === 'email'">
-                  <span>
-                    {{ option.address }}
-                  </span>
+                  <span> {{ option.address }} - {{ option }} </span>
                 </div>
                 <div
                   v-if="option.type === 'contact'"
@@ -586,11 +584,11 @@
                   <span class="text-xs"> - {{ option.address }}</span>
                 </div>
                 <div
-                  v-if="option.type === 'user'"
+                  v-if="option.type === 'orgMember'"
                   class="flex flex-row items-center gap-2">
                   <UnUiAvatar
                     :public-id="option.profilePublicId"
-                    :avatar-id="option.profileAvatarId"
+                    :avatar-id="option.avatarId"
                     :type="'orgMember'"
                     :alt="option.name"
                     size="xs" />

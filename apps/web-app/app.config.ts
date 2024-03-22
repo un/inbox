@@ -259,7 +259,7 @@ export default defineAppConfig({
       color: {
         white: {
           outline:
-            'shadow-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-white ring-1 ring-inset ring-gray-300 dark:ring-gray-700 focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400'
+            'shadow-sm bg-base-2 dark:bg-base-2 text-base-12 dark:text-base-12 ring-1 ring-inset ring-base-7 dark:ring-base-7 focus:ring-2 focus:ring-base-9 dark:focus:ring-base-9'
         },
         gray: {
           outline:
@@ -324,7 +324,7 @@ export default defineAppConfig({
       width: 'w-full',
       height: 'max-h-60',
       base: 'relative focus:outline-none overflow-y-auto scroll-py-1',
-      background: 'bg-base-3 dark:bg-base-3',
+      background: 'bg-base-2 dark:bg-base-2',
       shadow: 'shadow-lg',
       rounded: 'rounded-md',
       padding: 'p-1',
