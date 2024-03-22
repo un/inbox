@@ -537,6 +537,7 @@ export default defineAppConfig({
   }
 });
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const sand = [
   'bg-sand-1',
   'bg-sand-2',
@@ -563,6 +564,8 @@ const sand = [
   'ring-sand-9',
   'active:ring-sand-9'
 ];
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const bronze = [
   'bg-bronze-1',
   'bg-bronze-2',
@@ -589,6 +592,8 @@ const bronze = [
   'ring-bronze-9',
   'active:ring-bronze-9'
 ];
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const green = [
   'bg-green-1',
   'bg-green-2',
@@ -615,6 +620,8 @@ const green = [
   'ring-green-9',
   'active:ring-green-9'
 ];
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const red = [
   'bg-red-1',
   'bg-red-2',
@@ -641,6 +648,8 @@ const red = [
   'ring-red-9',
   'active:ring-red-9'
 ];
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const amber = [
   'bg-amber-1',
   'bg-amber-2',
@@ -667,6 +676,8 @@ const amber = [
   'ring-amber-9',
   'active:ring-amber-9'
 ];
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const blue = [
   'bg-blue-1',
   'bg-blue-2',

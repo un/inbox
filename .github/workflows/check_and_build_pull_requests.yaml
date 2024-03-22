@@ -22,7 +22,7 @@ jobs:
       - name: Checkout Code 🛎
         uses: actions/checkout@v4
 
-      - name: Cache turbo build setup
+      - name: Cache turbo build setup 🚀
         uses: actions/cache@v4
         with:
           path: .turbo

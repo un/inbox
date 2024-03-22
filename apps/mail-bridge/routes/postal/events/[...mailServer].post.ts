@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
+// TODO: Make the event handler
+
 /**
  * used for all event notifications from Postal
  */

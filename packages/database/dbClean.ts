@@ -1,3 +1,5 @@
+/* eslint-disable no-console */
+
 import { db } from '.';
 import { sql } from './orm';
 import * as schema from './schema';
