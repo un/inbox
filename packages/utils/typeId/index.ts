@@ -5,16 +5,16 @@ import { z } from 'zod';
 const typeIdLength = 26;
 
 export const idTypes = {
-  user: 'u',
-  userProfile: 'up',
+  account: 'a',
   org: 'o',
   orgInvitations: 'oi',
   orgMembers: 'om',
-  userGroups: 'g',
-  userGroupMembers: 'gm',
+  orgMemberProfile: 'omp',
+  groups: 'g',
+  groupMembers: 'gm',
   domains: 'dom',
   postalServers: 'ps',
-  contacts: 'cntc',
+  contacts: 'k',
   emailRoutingRules: 'rr',
   emailIdentities: 'ei',
   emailIdentitiesPersonal: 'eip',

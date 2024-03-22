@@ -12,20 +12,24 @@ export const trpcContext = initTRPC
   .context<Context>()
   .create({ transformer: superjson });
 
-const isUserAuthenticated = trpcContext.middleware(({ next, ctx }) => {
-  if (!ctx.user || !ctx.user.session.userId || !ctx.user.id) {
+const isAccountAuthenticated = trpcContext.middleware(({ next, ctx }) => {
+  if (
+    !ctx.account ||
+    !ctx.account.session.attributes.account.id ||
+    !ctx.account.id
+  ) {
     throw new TRPCError({
       code: 'UNAUTHORIZED',
       message: 'You are not logged in, redirecting...'
     });
   }
   return next({
-    ctx: { ...ctx, user: ctx.user }
+    ctx: { ...ctx, account: ctx.account }
   });
 });
 
 // It is not unstable - only the API might change in the future: https://trpc.io/docs/faq#unstable
-const hasOrgSlug = isUserAuthenticated.unstable_pipe(({ next, ctx }) => {
+const hasOrgSlug = isAccountAuthenticated.unstable_pipe(({ next, ctx }) => {
   if (!ctx.org) {
     throw new TRPCError({
       code: 'BAD_REQUEST',
@@ -33,12 +37,12 @@ const hasOrgSlug = isUserAuthenticated.unstable_pipe(({ next, ctx }) => {
     });
   }
 
-  const userId = ctx.user?.id;
+  const accountId = ctx.account?.id;
   const orgMembership = ctx.org?.members.find(
-    (member) => member.userId === userId
+    (member) => member.accountId === accountId
   );
 
-  if (!userId || !orgMembership) {
+  if (!accountId || !orgMembership) {
     throw new TRPCError({
       code: 'UNAUTHORIZED',
       message: 'You are not a member of this organization, redirecting...'
@@ -97,7 +101,9 @@ export const publicProcedure = trpcContext.procedure;
 export const limitedProcedure = trpcContext.procedure
   .input(z.object({ turnstileToken: z.string() }))
   .use(turnstileTokenValidation);
-export const userProcedure = trpcContext.procedure.use(isUserAuthenticated);
+export const accountProcedure = trpcContext.procedure.use(
+  isAccountAuthenticated
+);
 export const orgProcedure = trpcContext.procedure.use(hasOrgSlug);
 export const eeProcedure = orgProcedure.use(isEeEnabled);
 

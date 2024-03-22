@@ -1,102 +1,49 @@
 import { z } from 'zod';
-import { router, userProcedure } from '../../trpc';
+import { router, accountProcedure } from '../../trpc';
 import { and, eq } from '@u22n/database/orm';
-import { userProfiles, orgs, orgMembers } from '@u22n/database/schema';
-import { typeIdGenerator, typeIdValidator } from '@u22n/utils';
+import { orgMemberProfiles, orgs, orgMembers } from '@u22n/database/schema';
+import { typeIdValidator } from '@u22n/utils';
 import { TRPCError } from '@trpc/server';
 
 export const profileRouter = router({
-  // generateAvatarUploadUrl: userProcedure.query(async ({ ctx }) => {
-  //   const { user } = ctx;
-  //   const userId = user.id;
-  //   const config = useRuntimeConfig();
-
-  //   const formData = new FormData();
-  //   formData.append('metadata', JSON.stringify({ userId }));
-
-  //   const uploadSignedURL: UploadSignedURLResponse = await fetch(
-  //     `https://api.cloudflare.com/client/v4/accounts/${config.cf.accountId}/images/v2/direct_upload`,
-  //     {
-  //       method: 'post',
-  //       headers: {
-  //         authorization: `Bearer ${config.cf.token}`
-  //       },
-  //       body: formData
-  //     }
-  //   ).then((res) => res.json());
-  //   return uploadSignedURL.result;
-  // }),
-
-  // awaitAvatarUpload: userProcedure
+  // createProfile: accountProcedure
   //   .input(
   //     z.object({
-  //       uploadId: z.string().uuid()
+  //       fName: z.string(),
+  //       lName: z.string(),
+  //       handle: z.string().min(2).max(20),
+  //       defaultProfile: z.boolean().optional().default(false)
   //     })
   //   )
-  //   .query(async ({ input }) => {
-  //     const config = useRuntimeConfig();
-  //     async function fetchUntilNotDraft() {
-  //       const imageUploadObject: ImageUploadObjectResponse = await fetch(
-  //         `https://api.cloudflare.com/client/v4/accounts/${config.cf.accountId}/images/v1/${input.uploadId}`,
-  //         {
-  //           method: 'get',
-  //           headers: {
-  //             authorization: `Bearer ${config.cf.token}`
-  //           }
-  //         }
-  //       ).then((res) => res.json());
-  //       if (imageUploadObject.result.draft) {
-  //         // Wait for 1 second and then retry
-  //         await new Promise((resolve) => setTimeout(resolve, 1000));
-  //         return fetchUntilNotDraft();
-  //       } else {
-  //         return imageUploadObject;
-  //       }
+  //   .mutation(async ({ ctx, input }) => {
+  //     const { db, user } = ctx;
+  //     const userId = user.id;
+
+  //     const newPublicId = typeIdGenerator('orgMemberProfile');
+  //     const insertUserProfileResponse = await db.insert(orgMemberProfiles).values({
+  //       userId: userId,
+  //       publicId: newPublicId,
+  //       firstName: input.fName,
+  //       lastName: input.lName,
+  //       defaultProfile: input.defaultProfile,
+  //       handle: input.handle
+  //     });
+
+  //     if (!insertUserProfileResponse.insertId) {
+  //       return {
+  //         success: false,
+  //         profileId: null,
+  //         error:
+  //           'Something went wrong, please retry. Contact our team if it persists'
+  //       };
   //     }
-
-  //     const finalImageUploadObject = await fetchUntilNotDraft();
-  //     const imageId = finalImageUploadObject.result.id;
-  //     return imageId;
+  //     return {
+  //       success: true,
+  //       profileId: newPublicId,
+  //       error: null
+  //     };
   //   }),
-
-  createProfile: userProcedure
-    .input(
-      z.object({
-        fName: z.string(),
-        lName: z.string(),
-        handle: z.string().min(2).max(20),
-        defaultProfile: z.boolean().optional().default(false)
-      })
-    )
-    .mutation(async ({ ctx, input }) => {
-      const { db, user } = ctx;
-      const userId = user.id;
-
-      const newPublicId = typeIdGenerator('userProfile');
-      const insertUserProfileResponse = await db.insert(userProfiles).values({
-        userId: userId,
-        publicId: newPublicId,
-        firstName: input.fName,
-        lastName: input.lName,
-        defaultProfile: input.defaultProfile,
-        handle: input.handle
-      });
-
-      if (!insertUserProfileResponse.insertId) {
-        return {
-          success: false,
-          profileId: null,
-          error:
-            'Something went wrong, please retry. Contact our team if it persists'
-        };
-      }
-      return {
-        success: true,
-        profileId: newPublicId,
-        error: null
-      };
-    }),
-  getUserOrgProfile: userProcedure
+  getOrgMemberProfile: accountProcedure
     .input(
       z
         .object({
@@ -106,8 +53,8 @@ export const profileRouter = router({
         .strict()
     )
     .query(async ({ ctx, input }) => {
-      const { db, user } = ctx;
-      const userId = user.id;
+      const { db, account } = ctx;
+      const accountId = account.id;
 
       let orgId: number | null = null;
       if (input.orgPublicId || input.orgSlug) {
@@ -133,10 +80,13 @@ export const profileRouter = router({
 
       const userOrgMembershipQuery = await db.query.orgMembers.findFirst({
         where: !orgId
-          ? eq(orgMembers.userId, userId)
-          : and(eq(orgMembers.userId, userId), eq(orgMembers.orgId, orgId)),
+          ? eq(orgMembers.accountId, accountId)
+          : and(
+              eq(orgMembers.accountId, accountId),
+              eq(orgMembers.orgId, orgId)
+            ),
         columns: {
-          userProfileId: true
+          orgMemberProfileId: true
         },
         with: {
           profile: {
@@ -160,31 +110,28 @@ export const profileRouter = router({
         });
       }
 
-      // TODO: Switch to FindMany when supporting single user multiple profiles to orgs
-
       return {
         profile: userOrgMembershipQuery?.profile
       };
     }),
-  updateUserProfile: userProcedure
+  updateOrgMemberProfile: accountProcedure
     .input(
       z.object({
-        profilePublicId: typeIdValidator('userProfile'),
+        profilePublicId: typeIdValidator('orgMemberProfile'),
         fName: z.string(),
         lName: z.string(),
         title: z.string(),
         blurb: z.string(),
         imageId: z.string().uuid().optional().nullable(),
-        handle: z.string().min(2).max(20),
-        defaultProfile: z.boolean().optional().default(false)
+        handle: z.string().min(2).max(20)
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const { db, user } = ctx;
-      const userId = user.id;
+      const { db, account } = ctx;
+      const accountId = account.id;
 
       await db
-        .update(userProfiles)
+        .update(orgMemberProfiles)
         .set({
           firstName: input.fName,
           lastName: input.lName,
@@ -194,8 +141,8 @@ export const profileRouter = router({
         })
         .where(
           and(
-            eq(userProfiles.publicId, input.profilePublicId),
-            eq(userProfiles.userId, userId)
+            eq(orgMemberProfiles.publicId, input.profilePublicId),
+            eq(orgMemberProfiles.accountId, accountId)
           )
         );
 
@@ -204,32 +151,3 @@ export const profileRouter = router({
       };
     })
 });
-
-// Types
-// interface ImageUploadObjectResponse {
-//   result: {
-//     id: string;
-//     metadata: {
-//       key: string;
-//     };
-//     uploaded: string;
-//     requireSignedURLs: boolean;
-//     variants: string[];
-//     draft: boolean;
-//   };
-//   success: boolean;
-//   errors: string[];
-//   messages: string[];
-// }
-
-// interface UploadSignedURLResponse {
-//   result: Result;
-//   success: boolean;
-//   errors: string[];
-//   messages: string[];
-// }
-
-// interface Result {
-//   id: string;
-//   uploadURL: string;
-// }

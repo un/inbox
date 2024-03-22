@@ -13,7 +13,7 @@
     avatarId: string | null;
     name?: string;
     alt?: string;
-    type: 'user' | 'org' | 'group' | 'contact';
+    type: 'orgMember' | 'org' | 'group' | 'contact';
     tooltip?: string;
     avatarUrl?: string;
     tooltipText?: string;
@@ -87,7 +87,7 @@
 
   const tooltipIcon = computed(() => {
     switch (props.type) {
-      case 'user':
+      case 'orgMember':
         return 'i-ph-user';
       case 'org':
         return 'i-ph-buildings';

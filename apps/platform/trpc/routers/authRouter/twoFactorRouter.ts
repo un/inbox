@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { router, userProcedure } from '../../trpc';
+import { router, accountProcedure } from '../../trpc';
 import { eq } from '@u22n/database/orm';
-import { accounts, users } from '@u22n/database/schema';
+import { accountAccesses, accounts } from '@u22n/database/schema';
 import { decodeHex, encodeHex } from 'oslo/encoding';
 import { TOTPController, createTOTPKeyURI } from 'oslo/otp';
 import { TRPCError } from '@trpc/server';
@@ -9,19 +9,19 @@ import { nanoIdToken } from '@u22n/utils';
 import { Argon2id } from 'oslo/password';
 
 export const twoFactorRouter = router({
-  createTwoFactorSecret: userProcedure
+  createTwoFactorSecret: accountProcedure
     .input(z.object({}).strict())
     .mutation(async ({ ctx }) => {
-      const { user, db } = ctx;
-      const userId = user.id;
+      const { account, db } = ctx;
+      const accountId = account.id;
 
-      const existingData = await db.query.users.findFirst({
-        where: eq(users.id, userId),
+      const existingData = await db.query.accounts.findFirst({
+        where: eq(accounts.id, accountId),
         columns: {
           username: true
         },
         with: {
-          account: {
+          accountAccess: {
             columns: {
               twoFactorSecret: true
             }
@@ -36,7 +36,7 @@ export const twoFactorRouter = router({
         });
       }
 
-      if (existingData.account.twoFactorSecret) {
+      if (existingData.accountAccess.twoFactorSecret) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message:
@@ -45,9 +45,9 @@ export const twoFactorRouter = router({
       }
       const newSecret = crypto.getRandomValues(new Uint8Array(20));
       await db
-        .update(accounts)
+        .update(accountAccesses)
         .set({ twoFactorSecret: encodeHex(newSecret) })
-        .where(eq(accounts.userId, userId));
+        .where(eq(accountAccesses.accountId, accountId));
       const uri = createTOTPKeyURI(
         'UnInbox.com',
         existingData.username,
@@ -56,7 +56,7 @@ export const twoFactorRouter = router({
       return { uri };
     }),
 
-  verifyTwoFactor: userProcedure
+  verifyTwoFactor: accountProcedure
     .input(
       z
         .object({
@@ -65,12 +65,13 @@ export const twoFactorRouter = router({
         .strict()
     )
     .mutation(async ({ ctx, input }) => {
-      const { user, db } = ctx;
-      const userId = user.id;
-      const existingData = await db.query.users.findFirst({
-        where: eq(users.id, userId),
+      const { account, db } = ctx;
+      const accountId = account.id;
+
+      const existingData = await db.query.accounts.findFirst({
+        where: eq(accounts.id, accountId),
         with: {
-          account: {
+          accountAccess: {
             columns: {
               twoFactorSecret: true,
               recoveryCode: true
@@ -86,14 +87,14 @@ export const twoFactorRouter = router({
         });
       }
 
-      if (!existingData.account.twoFactorSecret) {
+      if (!existingData.accountAccess.twoFactorSecret) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message:
             'Two Factor Authentication (2FA) is not set up for this account'
         });
       }
-      if (existingData.account.recoveryCode) {
+      if (existingData.accountAccess.recoveryCode) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message:
@@ -101,7 +102,7 @@ export const twoFactorRouter = router({
         });
       }
 
-      const secret = decodeHex(existingData.account.twoFactorSecret);
+      const secret = decodeHex(existingData.accountAccess.twoFactorSecret);
       const isValid = await new TOTPController().verify(
         input.twoFactorCode,
         secret
@@ -118,22 +119,22 @@ export const twoFactorRouter = router({
       const hashedRecoveryCode = await new Argon2id().hash(recoveryCode);
 
       await db
-        .update(accounts)
+        .update(accountAccesses)
         .set({ recoveryCode: hashedRecoveryCode })
-        .where(eq(accounts.userId, userId));
+        .where(eq(accountAccesses.accountId, accountId));
 
       return { recoveryCode: recoveryCode };
     }),
-  disableTwoFactor: userProcedure
+  disableTwoFactor: accountProcedure
     .input(z.object({ twoFactorCode: z.string() }).strict())
     .mutation(async ({ ctx, input }) => {
-      const { user, db } = ctx;
-      const userId = user.id;
+      const { account, db } = ctx;
+      const accountId = account.id;
 
-      const existingData = await db.query.users.findFirst({
-        where: eq(users.id, userId),
+      const existingData = await db.query.accounts.findFirst({
+        where: eq(accounts.id, accountId),
         with: {
-          account: {
+          accountAccess: {
             columns: {
               twoFactorSecret: true,
               recoveryCode: true
@@ -149,13 +150,13 @@ export const twoFactorRouter = router({
         });
       }
 
-      if (!existingData.account.twoFactorSecret) {
+      if (!existingData.accountAccess.twoFactorSecret) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message: '2FA is not set up for this account'
         });
       }
-      const secret = decodeHex(existingData.account.twoFactorSecret);
+      const secret = decodeHex(existingData.accountAccess.twoFactorSecret);
       const isValid = await new TOTPController().verify(
         input.twoFactorCode,
         secret
@@ -169,9 +170,9 @@ export const twoFactorRouter = router({
 
       // No need to check if twoFactorSecret exists
       await db
-        .update(accounts)
+        .update(accountAccesses)
         .set({ twoFactorSecret: null, recoveryCode: null })
-        .where(eq(accounts.userId, userId));
+        .where(eq(accountAccesses.accountId, accountId));
       return {};
     })
 });

@@ -108,18 +108,17 @@
     buttonLoading.value = true;
     buttonLabel.value = 'Creating...';
     const toast = useToast();
-    const createOrgUserGroupsTrpc =
-      $trpc.org.users.userGroups.createOrgUserGroups.useMutation();
-    const createOrgUserGroupsTrpcResponse =
-      await createOrgUserGroupsTrpc.mutate({
-        groupName: newGroupNameValue.value,
-        groupDescription: newGroupDescriptionValue.value,
-        groupColor: newGroupColorValue.value
-      });
+    const createOrgGroupsTrpc =
+      $trpc.org.users.groups.createGroup.useMutation();
+    const createOrgGroupsTrpcResponse = await createOrgGroupsTrpc.mutate({
+      groupName: newGroupNameValue.value,
+      groupDescription: newGroupDescriptionValue.value,
+      groupColor: newGroupColorValue.value
+    });
 
     if (
-      createOrgUserGroupsTrpc.status.value === 'error' ||
-      !createOrgUserGroupsTrpcResponse?.newGroupPublicId
+      createOrgGroupsTrpc.status.value === 'error' ||
+      !createOrgGroupsTrpcResponse?.newGroupPublicId
     ) {
       buttonLoading.value = false;
       buttonLabel.value = 'Create New Group';
@@ -133,7 +132,7 @@
       });
       return;
     }
-    const newGroupPublicId = createOrgUserGroupsTrpcResponse?.newGroupPublicId;
+    const newGroupPublicId = createOrgGroupsTrpcResponse?.newGroupPublicId;
 
     if (createEmailIdentityForGroup.value) {
       const createNewEmailIdentityTrpc =
@@ -143,7 +142,7 @@
         domainPublicId: selectedDomain.value?.domainPublicId as string,
         sendName: newEmailIdentitySendNameValue.value,
         routeToGroupsPublicIds: [newGroupPublicId],
-        routeToUsersOrgMemberPublicIds: [],
+        routeToOrgMemberPublicIds: [],
         catchAll: false
       });
       if (createNewEmailIdentityTrpc.status.value === 'error') {
@@ -254,7 +253,7 @@
       v-if="!dataPending && !isPro"
       class="flex flex-col gap-4">
       <span>
-        Sorry, your current billing plan does not support adding user groups.
+        Sorry, your current billing plan does not support adding groups.
       </span>
       <div>
         <UnUiButton

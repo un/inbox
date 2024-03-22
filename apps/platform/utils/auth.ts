@@ -23,7 +23,7 @@ export const lucia = new Lucia(adapter, {
   },
   getSessionAttributes: (attributes) => {
     return {
-      user: attributes.user
+      account: attributes.account
     };
   },
   getUserAttributes: (user) => {
@@ -51,16 +51,16 @@ declare module 'lucia' {
     Lucia: typeof lucia;
     DatabaseSessionAttributes: DatabaseSessionAttributes;
     DatabaseUserAttributes: DatabaseUserAttributes;
-    UserId: TypeId<'user'>;
+    UserId: number;
   }
   interface DatabaseSessionAttributes {
-    user: AuthUser;
+    account: AuthAccount;
     device: string;
     os: string;
   }
   interface DatabaseUserAttributes {
     id: number;
-    publicId: string;
+    publicId: TypeId<'account'>;
     username: string;
     passwordEnabled: boolean;
     totpEnabled: boolean;
@@ -68,19 +68,19 @@ declare module 'lucia' {
   }
 }
 
-export interface AuthUser {
+export interface AuthAccount {
   id: number;
-  publicId: string;
+  publicId: TypeId<'account'>;
   username: string;
 }
 
 export interface AuthSession {
   sessionToken: string;
-  user: AuthUser;
+  account: AuthAccount;
   expiresAt: Date;
 }
 
-export function luciaToAuthUser(user: DatabaseUser): AuthUser {
+export function luciaToAuthUser(user: DatabaseUser): AuthAccount {
   return {
     id: user.attributes.id,
     publicId: user.attributes.publicId,
@@ -90,7 +90,7 @@ export function luciaToAuthUser(user: DatabaseUser): AuthUser {
 export function luciaToAuthSession(session: DatabaseSession): AuthSession {
   return {
     sessionToken: session.id,
-    user: session.attributes.user,
+    account: session.attributes.account,
     expiresAt: session.expiresAt
   };
 }

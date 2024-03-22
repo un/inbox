@@ -26,7 +26,7 @@ export const validateOrgSlug = async (
       members: {
         columns: {
           id: true,
-          userId: true,
+          accountId: true,
           role: true,
           status: true
         }
@@ -55,7 +55,7 @@ export async function refreshOrgSlugCache(orgId: number): Promise<void> {
       members: {
         columns: {
           id: true,
-          userId: true,
+          accountId: true,
           role: true,
           status: true
         }

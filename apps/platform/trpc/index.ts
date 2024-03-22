@@ -13,7 +13,7 @@ import { contactsRouter } from './routers/contactRouter/contactRouter';
 import { orgProfileRouter } from './routers/orgRouter/setup/profileRouter';
 import { orgMembersRouter } from './routers/orgRouter/users/membersRouter';
 import { domainsRouter } from './routers/orgRouter/mail/domainsRouter';
-import { orgUserGroupsRouter } from './routers/orgRouter/users/groupsRouter';
+import { groupsRouter } from './routers/orgRouter/users/groupsRouter';
 import { emailIdentityRouter } from './routers/orgRouter/mail/emailIdentityRouter';
 import { billingRouter } from './routers/orgRouter/setup/billingRouter';
 import { addressRouter } from './routers/userRouter/addressRouter';
@@ -29,7 +29,7 @@ const trpcPlatformAuthRouter = router({
   twoFactorAuthentication: twoFactorRouter
 });
 
-const trpcPlatformUserRouter = router({
+const trpcPlatformAccountRouter = router({
   defaults: defaultsRouter,
   profile: profileRouter,
   addresses: addressRouter
@@ -42,7 +42,7 @@ const trpcPlatformOrgSetupRouter = router({
 const trpcPlatformOrgUsersRouter = router({
   invites: invitesRouter,
   members: orgMembersRouter,
-  userGroups: orgUserGroupsRouter
+  groups: groupsRouter
 });
 const trpcPlatformOrgMailRouter = router({
   domains: domainsRouter,
@@ -59,7 +59,7 @@ const trpcPlatformOrgRouter = router({
 
 export const trpcPlatformRouter = router({
   auth: trpcPlatformAuthRouter,
-  user: trpcPlatformUserRouter,
+  account: trpcPlatformAccountRouter,
   org: trpcPlatformOrgRouter,
   convos: convoRouter,
   test: testRouter

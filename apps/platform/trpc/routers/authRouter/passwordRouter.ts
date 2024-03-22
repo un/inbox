@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { Argon2id } from 'oslo/password';
-import { limitedProcedure, router, userProcedure } from '../../trpc';
+import { limitedProcedure, router, accountProcedure } from '../../trpc';
 import { eq } from '@u22n/database/orm';
-import { accounts, users } from '@u22n/database/schema';
+import { accountAccesses, accounts } from '@u22n/database/schema';
 import { typeIdGenerator, zodSchemas } from '@u22n/utils';
 import { TRPCError } from '@trpc/server';
 import { createError, setCookie } from 'h3';
@@ -34,16 +34,16 @@ export const passwordRouter = router({
       }
 
       const passwordHash = await new Argon2id().hash(password);
-      const publicId = typeIdGenerator('user');
+      const publicId = typeIdGenerator('account');
 
-      const userId = await db
+      const accountId = await db
         .transaction(async (tx) => {
-          const newUser = await tx.insert(users).values({
+          const newUser = await tx.insert(accounts).values({
             username,
             publicId
           });
-          await tx.insert(accounts).values({
-            userId: Number(newUser.insertId),
+          await tx.insert(accountAccesses).values({
+            accountId: Number(newUser.insertId),
             passwordHash
           });
           return Number(newUser.insertId);
@@ -57,16 +57,16 @@ export const passwordRouter = router({
         });
 
       const cookie = await createLuciaSessionCookie(ctx.event, {
-        userId,
+        accountId,
         username,
         publicId
       });
       setCookie(ctx.event, cookie.name, cookie.value, cookie.attributes);
 
       await db
-        .update(users)
+        .update(accounts)
         .set({ lastLoginAt: new Date() })
-        .where(eq(users.id, userId));
+        .where(eq(accounts.id, accountId));
 
       return { success: true };
     }),
@@ -97,15 +97,15 @@ export const passwordRouter = router({
         });
       }
 
-      const userResponse = await db.query.users.findFirst({
-        where: eq(users.username, input.username),
+      const userResponse = await db.query.accounts.findFirst({
+        where: eq(accounts.username, input.username),
         columns: {
           id: true,
           publicId: true,
           username: true
         },
         with: {
-          account: {
+          accountAccess: {
             columns: {
               passwordHash: true,
               twoFactorSecret: true,
@@ -125,7 +125,7 @@ export const passwordRouter = router({
       // verify password if provided
       let validPassword = false;
       if (input.password) {
-        if (!userResponse.account.passwordHash) {
+        if (!userResponse.accountAccess.passwordHash) {
           throw new TRPCError({
             code: 'METHOD_NOT_SUPPORTED',
             message: 'Password sign-in is not enabled'
@@ -133,7 +133,7 @@ export const passwordRouter = router({
         }
 
         validPassword = await new Argon2id().verify(
-          userResponse.account.passwordHash,
+          userResponse.accountAccess.passwordHash,
           input.password
         );
         if (!validPassword) {
@@ -147,13 +147,13 @@ export const passwordRouter = router({
       // verify otp if provided
       let otpValid = false;
       if (input.twoFactorCode) {
-        if (!userResponse.account.twoFactorSecret) {
+        if (!userResponse.accountAccess.twoFactorSecret) {
           throw new TRPCError({
             code: 'METHOD_NOT_SUPPORTED',
             message: '2FA sign-in is not enabled'
           });
         }
-        const secret = decodeHex(userResponse.account.twoFactorSecret);
+        const secret = decodeHex(userResponse.accountAccess.twoFactorSecret);
         otpValid = await new TOTPController().verify(
           input.twoFactorCode,
           secret
@@ -170,7 +170,7 @@ export const passwordRouter = router({
       let recoveryCodeValid = false;
 
       if (input.recoveryCode) {
-        if (!userResponse.account.recoveryCode) {
+        if (!userResponse.accountAccess.recoveryCode) {
           throw new TRPCError({
             code: 'METHOD_NOT_SUPPORTED',
             message: 'Recovery code sign-in is not enabled'
@@ -178,17 +178,17 @@ export const passwordRouter = router({
         }
 
         const isRecoveryCodeValid = await new Argon2id().verify(
-          userResponse.account.recoveryCode,
+          userResponse.accountAccess.recoveryCode,
           input.recoveryCode
         );
         if (isRecoveryCodeValid) {
           // Remove the used recovery code from the database
           await db
-            .update(accounts)
+            .update(accountAccesses)
             .set({
               recoveryCode: null
             })
-            .where(eq(accounts.userId, userResponse.id));
+            .where(eq(accountAccesses.accountId, userResponse.id));
           recoveryCodeValid = isRecoveryCodeValid;
         }
 
@@ -205,19 +205,19 @@ export const passwordRouter = router({
         (validPassword && recoveryCodeValid) ||
         (otpValid && recoveryCodeValid)
       ) {
-        const { id: userId, username, publicId } = userResponse;
+        const { id: accountId, username, publicId } = userResponse;
 
         const cookie = await createLuciaSessionCookie(ctx.event, {
-          userId,
+          accountId,
           username,
           publicId
         });
         setCookie(ctx.event, cookie.name, cookie.value, cookie.attributes);
 
         await db
-          .update(users)
+          .update(accounts)
           .set({ lastLoginAt: new Date() })
-          .where(eq(users.id, userResponse.id));
+          .where(eq(accounts.id, userResponse.id));
 
         return { success: true };
       }
@@ -227,7 +227,7 @@ export const passwordRouter = router({
       });
     }),
 
-  updateUserPassword: userProcedure
+  updateUserPassword: accountProcedure
     .input(
       z
         .object({
@@ -239,17 +239,17 @@ export const passwordRouter = router({
         .strict()
     )
     .mutation(async ({ ctx, input }) => {
-      const { db, user } = ctx;
-      const userId = user.id;
+      const { db, account } = ctx;
+      const accountId = account.id;
 
-      const userData = await db.query.users.findFirst({
-        where: eq(users.id, userId),
+      const accountData = await db.query.accounts.findFirst({
+        where: eq(accounts.id, accountId),
         columns: {
           publicId: true,
           username: true
         },
         with: {
-          account: {
+          accountAccess: {
             columns: {
               passwordHash: true,
               twoFactorSecret: true
@@ -258,14 +258,14 @@ export const passwordRouter = router({
         }
       });
 
-      if (!userData) {
+      if (!accountData) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'User not found'
         });
       }
 
-      if (!userData.account.passwordHash) {
+      if (!accountData.accountAccess.passwordHash) {
         throw new TRPCError({
           code: 'METHOD_NOT_SUPPORTED',
           message: 'Password sign-in is not enabled'
@@ -273,7 +273,7 @@ export const passwordRouter = router({
       }
 
       const oldPasswordValid = await new Argon2id().verify(
-        userData.account.passwordHash,
+        accountData.accountAccess.passwordHash,
         input.oldPassword
       );
 
@@ -284,13 +284,13 @@ export const passwordRouter = router({
         });
       }
 
-      if (!userData.account.twoFactorSecret) {
+      if (!accountData.accountAccess.twoFactorSecret) {
         throw new TRPCError({
           code: 'METHOD_NOT_SUPPORTED',
           message: '2FA is not enabled on this account, contact support'
         });
       }
-      const secret = decodeHex(userData.account.twoFactorSecret);
+      const secret = decodeHex(accountData.accountAccess.twoFactorSecret);
       const otpValid = await new TOTPController().verify(input.otp, secret);
       if (!otpValid) {
         throw new TRPCError({
@@ -302,21 +302,21 @@ export const passwordRouter = router({
       const passwordHash = await new Argon2id().hash(input.newPassword);
 
       await db
-        .update(accounts)
+        .update(accountAccesses)
         .set({
           passwordHash
         })
-        .where(eq(accounts.userId, userId));
+        .where(eq(accountAccesses.accountId, accountId));
 
       // Invalidate all sessions if requested
       if (input.invalidateAllSessions) {
-        await lucia.invalidateUserSessions(user.session.userId);
+        await lucia.invalidateUserSessions(accountId);
       }
 
       const cookie = await createLuciaSessionCookie(ctx.event, {
-        userId,
-        username: userData.username,
-        publicId: userData.publicId
+        accountId,
+        username: accountData.username,
+        publicId: accountData.publicId
       });
 
       setCookie(ctx.event, cookie.name, cookie.value, cookie.attributes);

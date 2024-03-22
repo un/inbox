@@ -1,13 +1,13 @@
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { orgProcedure, router, userProcedure } from '../../trpc';
+import { orgProcedure, router, accountProcedure } from '../../trpc';
 import { eq } from '@u22n/database/orm';
 import {
   emailIdentities,
   emailIdentitiesPersonal,
-  users,
+  accounts,
   emailRoutingRules,
-  emailIdentitiesAuthorizedUsers,
+  emailIdentitiesAuthorizedOrgMembers,
   emailRoutingRulesDestinations
 } from '@u22n/database/schema';
 
@@ -17,21 +17,21 @@ import type { MailDomains } from '../../../types';
 import { typeIdGenerator, typeIdValidator } from '@u22n/utils';
 
 export const addressRouter = router({
-  getPersonalAddresses: userProcedure
+  getPersonalAddresses: accountProcedure
     .input(z.object({}).strict())
     .query(async ({ ctx }) => {
-      const { db, user } = ctx;
-      const userId = user?.id;
-      if (!userId) {
+      const { db, account } = ctx;
+      const accountId = account?.id;
+      if (!accountId) {
         throw new TRPCError({
           code: 'FORBIDDEN',
-          message: 'User not found'
+          message: 'account not found'
         });
       }
 
-      const usersEmailIdentitiesPersonal =
+      const accountsEmailIdentitiesPersonal =
         await db.query.emailIdentitiesPersonal.findMany({
-          where: eq(emailIdentitiesPersonal.userId, userId),
+          where: eq(emailIdentitiesPersonal.accountId, accountId),
           columns: {
             publicId: true
           },
@@ -57,7 +57,7 @@ export const addressRouter = router({
 
       const mailDomains = useRuntimeConfig().mailDomains as MailDomains;
       const consumedDomains =
-        usersEmailIdentitiesPersonal.map(
+        accountsEmailIdentitiesPersonal.map(
           (identity) => identity.emailIdentity.domainName
         ) || [];
       const availableFreeDomains = mailDomains.free
@@ -66,51 +66,51 @@ export const addressRouter = router({
       const availablePremiumDomains = mailDomains.premium
         .filter((domain) => !consumedDomains.includes(domain))
         .map((domain) => domain);
-      const userObject = await db.query.users.findFirst({
-        where: eq(users.id, userId),
+      const accountObject = await db.query.accounts.findFirst({
+        where: eq(accounts.id, accountId),
         columns: {
           username: true
         }
       });
 
       return {
-        identities: usersEmailIdentitiesPersonal,
+        identities: accountsEmailIdentitiesPersonal,
         available: {
           free: availableFreeDomains,
           premium: availablePremiumDomains
         },
-        username: userObject?.username
+        username: accountObject?.username
       };
     }),
   claimPersonalAddress: orgProcedure
     .input(z.object({ emailIdentity: z.string().min(3) }).strict())
     .mutation(async ({ ctx, input }) => {
-      const { db, user, org } = ctx;
-      if (!user || !org) {
+      const { db, account, org } = ctx;
+      if (!account || !org) {
         throw new TRPCError({
           code: 'UNPROCESSABLE_CONTENT',
-          message: 'User or Organization is not defined'
+          message: 'Account or Organization is not defined'
         });
       }
-      const userId = user?.id;
+      const accountId = account?.id;
       const orgId = org.id;
 
-      const userOrgMembership = org.members.find(
-        (member) => member.userId === userId
+      const accountOrgMembership = org.members.find(
+        (member) => member.accountId === accountId
       );
-      if (!userOrgMembership) {
+      if (!accountOrgMembership) {
         throw new TRPCError({
           code: 'UNPROCESSABLE_CONTENT',
-          message: 'User Organization Member ID is not defined'
+          message: 'Account Organization Member ID is not defined'
         });
       }
 
       const mailDomains = useRuntimeConfig().mailDomains as MailDomains;
 
-      // Check the users already claimed personal addresses
-      const usersEmailIdentitiesPersonal =
+      // Check the accounts already claimed personal addresses
+      const accountsEmailIdentitiesPersonal =
         await db.query.emailIdentitiesPersonal.findMany({
-          where: eq(emailIdentitiesPersonal.userId, userId),
+          where: eq(emailIdentitiesPersonal.accountId, accountId),
           columns: {
             publicId: true
           },
@@ -134,7 +134,7 @@ export const addressRouter = router({
         });
 
       const consumedDomains =
-        usersEmailIdentitiesPersonal.map(
+        accountsEmailIdentitiesPersonal.map(
           (identity) => identity.emailIdentity.domainName
         ) || [];
 
@@ -160,9 +160,9 @@ export const addressRouter = router({
         });
       }
 
-      // get the user profile
-      const userResponse = await db.query.orgMembers.findFirst({
-        where: eq(orgMembers.id, userOrgMembership.id),
+      // get the account orgMemberProfile profile
+      const accountOrgMembershipResponse = await db.query.orgMembers.findFirst({
+        where: eq(orgMembers.id, accountOrgMembership.id),
         columns: {},
         with: {
           profile: {
@@ -171,7 +171,7 @@ export const addressRouter = router({
               lastName: true
             }
           },
-          user: {
+          account: {
             columns: {
               username: true,
               publicId: true
@@ -179,73 +179,38 @@ export const addressRouter = router({
           }
         }
       });
-      if (!userResponse || !userResponse.user) {
+      if (
+        !accountOrgMembershipResponse ||
+        !accountOrgMembershipResponse.account
+      ) {
         throw new TRPCError({
           code: 'UNPROCESSABLE_CONTENT',
-          message: 'User not found'
+          message: 'Account not found'
         });
       }
 
-      const userProfile = userResponse.profile;
-      const username = userResponse.user.username || userResponse.user.publicId;
+      const orgMemberProfile = accountOrgMembershipResponse.profile;
+      const username =
+        accountOrgMembershipResponse.account.username ||
+        accountOrgMembershipResponse.account.publicId;
       const rootUserEmailAddress = `${username}@${emailIdentityDomain}`;
-      const sendName = `${userProfile?.firstName} ${userProfile?.lastName}`;
+      const sendName = `${orgMemberProfile?.firstName} ${orgMemberProfile?.lastName}`;
 
-      //! LEGACY - WE NO LONGER CREATE A POSTAL ORG FOR ROOT EMAIL IDENTITIES
-      // const createMailBridgeOrgResponse =
-      //   await mailBridgeTrpcClient.postal.org.createOrg.mutate({
-      //     orgId: orgId,
-      //     orgPublicId: orgPublicId,
-      //     personalOrg: true
-      //   });
-
-      // const orgPostalConfigResponse = await db.query.orgPostalConfigs.findFirst(
-      //   {
-      //     where: eq(orgPostalConfigs.orgId, orgId),
-      //     columns: {
-      //       id: true
-      //     }
-      //   }
-      // );
-
-      // if (!orgPostalConfigResponse) {
-      //   await db.insert(orgPostalConfigs).values({
-      //     orgId: orgId,
-      //     host: createMailBridgeOrgResponse.config.host,
-      //     ipPools: createMailBridgeOrgResponse.config.ipPools,
-      //     defaultIpPool: createMailBridgeOrgResponse.config.defaultIpPool
-      //   });
-      // }
-
-      // // creates the new root email address
-      // const createMailBridgeRootEmailResponse =
-      //   await mailBridgeTrpcClient.postal.emailRoutes.createRootEmailAddress.mutate(
-      //     {
-      //       orgId: orgId,
-      //       rootDomainName: emailIdentityDomain,
-      //       sendName: sendName,
-      //       serverPublicId:
-      //         createMailBridgeOrgResponse.postalServer.serverPublicId,
-      //       userId: userOrgMembership.id,
-      //       username: username.toLocaleLowerCase()
-      //     }
-      //   );
-
-      const newroutingRulePublicId = typeIdGenerator('emailRoutingRules');
+      const newRoutingRulePublicId = typeIdGenerator('emailRoutingRules');
       const routingRuleInsertResponse = await db
         .insert(emailRoutingRules)
         .values({
-          publicId: newroutingRulePublicId,
+          publicId: newRoutingRulePublicId,
           orgId: orgId,
           name: `Delivery of emails to ${rootUserEmailAddress}`,
           description: 'This route helps deliver @uninbox emails to users',
-          createdBy: userOrgMembership.id
+          createdBy: accountOrgMembership.id
         });
 
       await db.insert(emailRoutingRulesDestinations).values({
         orgId: orgId,
         ruleId: +routingRuleInsertResponse.insertId,
-        orgMemberId: userOrgMembership.id
+        orgMemberId: accountOrgMembership.id
       });
 
       const newEmailIdentityPublicId = typeIdGenerator('emailIdentities');
@@ -260,7 +225,7 @@ export const addressRouter = router({
           sendName: sendName,
           isCatchAll: false,
           personalEmailIdentityId: null,
-          createdBy: userOrgMembership.id
+          createdBy: accountOrgMembership.id
         });
 
       const newPersonalEmailIdentityPublicId = typeIdGenerator(
@@ -270,7 +235,7 @@ export const addressRouter = router({
         .insert(emailIdentitiesPersonal)
         .values({
           publicId: newPersonalEmailIdentityPublicId,
-          userId: userId,
+          accountId: accountId,
           orgId: orgId,
           emailIdentityId: +insertEmailIdentityResponse.insertId
         });
@@ -282,11 +247,11 @@ export const addressRouter = router({
         })
         .where(eq(emailIdentities.id, +insertEmailIdentityResponse.insertId));
 
-      await db.insert(emailIdentitiesAuthorizedUsers).values({
+      await db.insert(emailIdentitiesAuthorizedOrgMembers).values({
         orgId: orgId,
-        addedBy: userOrgMembership.id,
+        addedBy: accountOrgMembership.id,
         identityId: +insertEmailIdentityResponse.insertId,
-        orgMemberId: userOrgMembership.id
+        orgMemberId: accountOrgMembership.id
       });
 
       return {
@@ -304,33 +269,33 @@ export const addressRouter = router({
         .strict()
     )
     .mutation(async ({ ctx, input }) => {
-      const { db, user, org } = ctx;
-      if (!user || !org) {
+      const { db, account, org } = ctx;
+      if (!account || !org) {
         throw new TRPCError({
           code: 'UNPROCESSABLE_CONTENT',
-          message: 'User or Organization is not defined'
+          message: 'Account or Organization is not defined'
         });
       }
-      const userId = user?.id;
+      const accountId = account?.id;
 
-      const userOrgMembership = org.members.find(
-        (member) => member.userId === userId
+      const accountOrgMembershipResponse = org.members.find(
+        (member) => member.accountId === accountId
       );
-      if (!userOrgMembership) {
+      if (!accountOrgMembershipResponse) {
         throw new TRPCError({
           code: 'UNPROCESSABLE_CONTENT',
-          message: 'User Organization Member ID is not defined'
+          message: 'Account Organization Member ID is not defined'
         });
       }
 
-      // get the email identity and list of authorized users
+      // get the email identity and list of authorized accounts
       const emailIdentityResponse = await db.query.emailIdentities.findFirst({
         where: eq(emailIdentities.publicId, input.emailIdentityPublicId),
         columns: {
           id: true
         },
         with: {
-          authorizedUsers: {
+          authorizedOrgMembers: {
             columns: {
               orgMemberId: true
             },
@@ -351,12 +316,14 @@ export const addressRouter = router({
           message: 'Email Identity not found'
         });
       }
-      const authorizedUsersOrgMembersUserIds =
-        emailIdentityResponse.authorizedUsers.map((user) => user.orgMember?.id);
-      if (!authorizedUsersOrgMembersUserIds.includes(userId)) {
+      const authorizedOrgMembersIds =
+        emailIdentityResponse.authorizedOrgMembers.map(
+          (authorizedOrgMember) => authorizedOrgMember.orgMember?.id
+        );
+      if (!authorizedOrgMembersIds.includes(accountOrgMembershipResponse.id)) {
         throw new TRPCError({
           code: 'UNPROCESSABLE_CONTENT',
-          message: 'User ID is not authorized'
+          message: 'Org Member ID is not authorized'
         });
       }
       await db

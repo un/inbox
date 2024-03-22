@@ -5,7 +5,7 @@ type AuthStatusResponseType = {
 };
 
 export default eventHandler((event): AuthStatusResponseType => {
-  if (!event.context.user || !event.context.user.id) {
+  if (!event.context.account || !event.context.account.id) {
     return { authStatus: 'unauthenticated' };
   }
   return { authStatus: 'authenticated' };

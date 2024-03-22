@@ -94,7 +94,7 @@
             <UnUiAvatar
               :public-id="row.publicId"
               :avatar-id="row.avatarId"
-              :type="'user'"
+              :type="'orgMember'"
               :alt="row.name ? row.name : ''"
               size="xs" />
             <span class="">{{ row.name }}</span>

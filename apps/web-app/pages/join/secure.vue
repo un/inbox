@@ -27,7 +27,7 @@
   const pageError = ref(false);
   const turnstileError = ref(false);
 
-  const userCreated = ref(false);
+  const accountCreated = ref(false);
   const passkeyCreated = ref(false);
   const passwordCreated = ref(false);
   // check if the users device can directly support passkeys
@@ -122,8 +122,8 @@
   }
 
   const toast = useToast();
-  async function createUserAccount() {
-    if (!userCreated.value) {
+  async function createAccount() {
+    if (!accountCreated.value) {
       if (turnstileEnabled && turnstileToken.value === null) {
         turnstileError.value = true;
         await new Promise((resolve) => {
@@ -141,7 +141,7 @@
       buttonLabel.value = 'Creating your account';
     }
 
-    userCreated.value = true;
+    accountCreated.value = true;
 
     if (secureType.value === 'password') {
       const signUp = await $trpc.auth.password.signUpWithPassword.mutate({
@@ -481,7 +481,7 @@
           :loading="buttonLoading"
           :disabled="!formValid"
           block
-          @click="createUserAccount()" />
+          @click="createAccount()" />
       </div>
       <p
         v-if="pageError"

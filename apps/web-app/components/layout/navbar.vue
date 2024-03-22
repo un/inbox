@@ -83,26 +83,27 @@
 
   const { $trpc } = useNuxtApp();
 
-  const { data: userProfile } =
-    $trpc.user.profile.getUserOrgProfile.useLazyQuery(
+  const { data: orgMemberProfile } =
+    $trpc.account.profile.getOrgMemberProfile.useLazyQuery(
       { orgSlug: orgSlug },
-      { server: false, queryKey: 'getUserSingleProfileNav' }
+      { server: false, queryKey: 'getOrgMemberSingleProfileNav' }
     );
 
-  const { data: userOrgs } = await $trpc.org.crud.getUserOrgs.useLazyQuery(
-    {},
-    { server: false, queryKey: 'getUserOrgsNav' }
-  );
+  const { data: accountOrgs } =
+    await $trpc.org.crud.getAccountOrgs.useLazyQuery(
+      {},
+      { server: false, queryKey: 'getUserOrgsNav' }
+    );
 
-  const isUserAdminOfActiveOrg = ref(false);
-  watch(userOrgs, (newUserOrgs) => {
+  const isAccountAdminOfActiveOrg = ref(false);
+  watch(accountOrgs, (newUserOrgs) => {
     const userOrgSlugs = newUserOrgs?.userOrgs.map(
       (userOrg) => userOrg.org.slug
     );
     if (newUserOrgs?.adminOrgSlugs?.includes(orgSlug)) {
-      isUserAdminOfActiveOrg.value = true;
+      isAccountAdminOfActiveOrg.value = true;
     } else {
-      isUserAdminOfActiveOrg.value = false;
+      isAccountAdminOfActiveOrg.value = false;
     }
 
     if (!userOrgSlugs?.includes(orgSlug)) {
@@ -111,8 +112,8 @@
   });
 
   const currentOrgProfile = computed(() => {
-    if (userOrgs.value && userOrgs.value.userOrgs.length > 0) {
-      return userOrgs.value.userOrgs.find((org) => org.org.slug === orgSlug)
+    if (accountOrgs.value && accountOrgs.value.userOrgs.length > 0) {
+      return accountOrgs.value.userOrgs.find((org) => org.org.slug === orgSlug)
         ?.org;
     }
     return null;
@@ -128,7 +129,7 @@
   }
   const userOrgsButtons = ref<OrgButtons[]>([]);
 
-  watch(userOrgs, (newVal) => {
+  watch(accountOrgs, (newVal) => {
     if (newVal && newVal.userOrgs.length > 0) {
       userOrgsButtons.value = [];
       for (const org of newVal.userOrgs) {
@@ -149,11 +150,11 @@
   const userMenuItems = computed(() => [
     [
       {
-        publicId: userProfile.value?.profile?.publicId || '',
+        publicId: orgMemberProfile.value?.profile?.publicId || '',
         label:
-          userProfile.value?.profile?.firstName +
+          orgMemberProfile.value?.profile?.firstName +
           ' ' +
-          userProfile.value?.profile?.lastName,
+          orgMemberProfile.value?.profile?.lastName,
         slot: 'account'
       }
     ],
@@ -166,7 +167,7 @@
           navigateTo(`/${orgSlug}/settings`);
         }
       },
-      ...(isUserAdminOfActiveOrg.value
+      ...(isAccountAdminOfActiveOrg.value
         ? [
             {
               label: 'Organization Settings',
@@ -325,18 +326,18 @@
           <p>Signed in as</p>
           <div class="flex w-full flex-row items-center gap-2 overflow-hidden">
             <UnUiAvatar
-              :public-id="userProfile?.profile?.publicId || ''"
-              :avatar-id="userProfile?.profile?.avatarId || ''"
-              :type="'user'"
+              :public-id="orgMemberProfile?.profile?.publicId || ''"
+              :avatar-id="orgMemberProfile?.profile?.avatarId || ''"
+              :type="'orgMember'"
               :alt="
-                userProfile?.profile?.firstName +
+                orgMemberProfile?.profile?.firstName +
                 ' ' +
-                userProfile?.profile?.lastName
+                orgMemberProfile?.profile?.lastName
               " />
             <span class="truncate text-sm">{{
-              userProfile?.profile?.firstName +
+              orgMemberProfile?.profile?.firstName +
               ' ' +
-              userProfile?.profile?.lastName
+              orgMemberProfile?.profile?.lastName
             }}</span>
           </div>
         </div>

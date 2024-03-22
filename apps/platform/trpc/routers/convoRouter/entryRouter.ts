@@ -17,21 +17,21 @@ export const convoEntryRouter = router({
     .query(async ({ ctx, input }) => {
       const { db, org } = ctx;
 
-      if (!ctx.user || !ctx.org) {
+      if (!ctx.account || !ctx.org) {
         throw new TRPCError({
           code: 'UNPROCESSABLE_CONTENT',
-          message: 'User or Organization is not defined'
+          message: 'Account or Organization is not defined'
         });
       }
       if (!org?.memberId) {
         throw new TRPCError({
           code: 'UNPROCESSABLE_CONTENT',
-          message: 'User is not a member of the organization'
+          message: 'Account is not a member of the organization'
         });
       }
 
       const orgId = org.id;
-      const userOrgMemberId = org.memberId;
+      const accountOrgMemberId = org.memberId;
 
       const { convoPublicId, cursorLastCreatedAt, cursorLastPublicId } = input;
       const inputLastCreatedAt = cursorLastCreatedAt
@@ -70,7 +70,7 @@ export const convoEntryRouter = router({
                   id: true
                 }
               },
-              userGroup: {
+              group: {
                 columns: {
                   id: true
                 },
@@ -98,13 +98,13 @@ export const convoEntryRouter = router({
       convoDetails?.participants.forEach((participant) => {
         participant.orgMember?.id &&
           convoParticipantsOrgMemberIds.push(participant.orgMember?.id);
-        participant.userGroup?.members.forEach((groupMember) => {
+        participant.group?.members.forEach((groupMember) => {
           groupMember.orgMemberId &&
             convoParticipantsOrgMemberIds.push(groupMember.orgMemberId);
         });
       });
 
-      if (!convoParticipantsOrgMemberIds.includes(userOrgMemberId)) {
+      if (!convoParticipantsOrgMemberIds.includes(accountOrgMemberId)) {
         throw new TRPCError({
           code: 'UNAUTHORIZED',
           message: 'You are not a participant of this conversation'

@@ -92,7 +92,7 @@
             ? invite.invitedByOrgMember.profile.avatarId
             : '',
           created: invite.invitedAt,
-          userAvatarId: invite.orgMember?.profile
+          orgMemberAvatarId: invite.orgMember?.profile
             ? invite.orgMember?.profile.avatarId
             : '',
           usedBy: invite.orgMember?.profile
@@ -154,8 +154,8 @@
               <UnUiAvatar
                 v-if="row.userAvatar || row.usedBy"
                 :public-id="''"
-                :avatar-id="row.userAvatarId"
-                :type="'user'"
+                :avatar-id="row.orgMemberAvatarId"
+                :type="'orgMember'"
                 :alt="row.usedBy ? row.usedBy : ''"
                 size="xs" />
               <span class="">{{ row.usedBy }}</span>
@@ -187,7 +187,7 @@
               <UnUiAvatar
                 :public-id="''"
                 :avatar-id="row.creatorAvatarId"
-                :type="'user'"
+                :type="'orgMember'"
                 :alt="row.createdBy ? row.createdBy : ''"
                 size="xs" />
             </div>

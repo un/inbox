@@ -8,7 +8,7 @@ import {
 } from '@u22n/database/schema';
 import { typeIdGenerator, typeIdValidator } from '@u22n/utils';
 import { TRPCError } from '@trpc/server';
-import { isUserAdminOfOrg } from '../../../../utils/user';
+import { isAccountAdminOfOrg } from '../../../../utils/account';
 import { mailBridgeTrpcClient } from '../../../../utils/tRPCServerClients';
 import { lookupNS } from '@u22n/utils/dns';
 
@@ -20,10 +20,10 @@ export const domainsRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.user || !ctx.org) {
+      if (!ctx.account || !ctx.org) {
         throw new TRPCError({
           code: 'UNPROCESSABLE_CONTENT',
-          message: 'User or Organization is not defined'
+          message: 'Account or Organization is not defined'
         });
       }
       const { db, org } = ctx;
@@ -33,7 +33,7 @@ export const domainsRouter = router({
 
       const domainName = input.domainName.toLowerCase();
 
-      const isAdmin = await isUserAdminOfOrg(org);
+      const isAdmin = await isAccountAdminOfOrg(org);
       if (!isAdmin) {
         throw new TRPCError({
           code: 'UNAUTHORIZED',
@@ -162,10 +162,10 @@ export const domainsRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      if (!ctx.user || !ctx.org) {
+      if (!ctx.account || !ctx.org) {
         throw new TRPCError({
           code: 'UNPROCESSABLE_CONTENT',
-          message: 'User or Organization is not defined'
+          message: 'Account or Organization is not defined'
         });
       }
       const { db, org } = ctx;
@@ -176,7 +176,7 @@ export const domainsRouter = router({
       // Handle when adding database replicas
       const dbReplica = db;
 
-      const isAdmin = await isUserAdminOfOrg(org);
+      const isAdmin = await isAccountAdminOfOrg(org);
       if (!isAdmin) {
         throw new TRPCError({
           code: 'UNAUTHORIZED',
@@ -214,10 +214,10 @@ export const domainsRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      if (!ctx.user || !ctx.org) {
+      if (!ctx.account || !ctx.org) {
         throw new TRPCError({
           code: 'UNPROCESSABLE_CONTENT',
-          message: 'User or Organization is not defined'
+          message: 'Account or Organization is not defined'
         });
       }
       const { db, org } = ctx;
@@ -227,7 +227,7 @@ export const domainsRouter = router({
       // Handle when adding database replicas
       const dbReplica = db;
 
-      const isAdmin = await isUserAdminOfOrg(org);
+      const isAdmin = await isAccountAdminOfOrg(org);
       if (!isAdmin) {
         throw new TRPCError({
           code: 'UNAUTHORIZED',
@@ -356,7 +356,7 @@ export const domainsRouter = router({
           domainStatus = 'active';
         }
 
-        const updateVertifiedAt = !domainResponse.verifiedAt;
+        const updateVerifiedAt = !domainResponse.verifiedAt;
 
         await db
           .update(domains)
@@ -369,7 +369,7 @@ export const domainsRouter = router({
             sendingMode: domainSendingMode,
             lastDnsCheckAt: new Date(),
             domainStatus: domainStatus,
-            verifiedAt: updateVertifiedAt
+            verifiedAt: updateVerifiedAt
               ? new Date()
               : domainResponse.verifiedAt
           })
@@ -403,10 +403,10 @@ export const domainsRouter = router({
   getOrgDomains: orgProcedure
     .input(z.object({}).strict())
     .query(async ({ ctx }) => {
-      if (!ctx.user || !ctx.org) {
+      if (!ctx.account || !ctx.org) {
         throw new TRPCError({
           code: 'UNPROCESSABLE_CONTENT',
-          message: 'User or Organization is not defined'
+          message: 'Account or Organization is not defined'
         });
       }
       const { db, org } = ctx;

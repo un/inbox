@@ -35,7 +35,7 @@ export default eventHandler({
     }
     const data = inputValidation.data;
 
-    const userId = event.context.user.id;
+    const accountId = event.context.account.id;
 
     const orgQueryResponse = await db.query.orgs.findFirst({
       where: eq(orgs.slug, data.orgSlug),
@@ -49,16 +49,16 @@ export default eventHandler({
       return send(event, 'Invalid org');
     }
 
-    const orgUserMembershipResponse = await db.query.orgMembers.findFirst({
+    const orgAccountMembershipResponse = await db.query.orgMembers.findFirst({
       where: and(
         eq(orgMembers.orgId, orgQueryResponse.id),
-        eq(orgMembers.userId, userId)
+        eq(orgMembers.accountId, accountId)
       ),
       columns: {
         id: true
       }
     });
-    if (!orgUserMembershipResponse) {
+    if (!orgAccountMembershipResponse) {
       setResponseStatus(event, 401);
       return send(event, 'Unauthorized');
     }

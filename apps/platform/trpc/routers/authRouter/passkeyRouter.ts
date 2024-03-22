@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { limitedProcedure, router, userProcedure } from '../../trpc';
+import { limitedProcedure, router, accountProcedure } from '../../trpc';
 import { eq } from '@u22n/database/orm';
-import { accounts, users } from '@u22n/database/schema';
+import { accountAccesses, accounts } from '@u22n/database/schema';
 import { TRPCError } from '@trpc/server';
 import type {
   RegistrationResponseJSON,
@@ -22,7 +22,7 @@ import { validateUsername } from './signupRouter';
 import { createLuciaSessionCookie } from '../../../utils/session';
 
 export const passkeyRouter = router({
-  // generateNewPasskeyChallenge: userProcedure
+  // generateNewPasskeyChallenge: accountProcedure
   //   .input(
   //     z
   //       .object({
@@ -35,8 +35,8 @@ export const passkeyRouter = router({
 
   //     const userId = user.id;
   //     // Update to use read replicas when implemented - primary db
-  //     const userResponse = await db.query.users.findFirst({
-  //       where: eq(users.id, userId),
+  //     const userResponse = await db.query.accounts.findFirst({
+  //       where: eq(accounts.id, userId),
   //       columns: {
   //         id: true,
   //         publicId: true,
@@ -73,11 +73,11 @@ export const passkeyRouter = router({
     )
     .query(async ({ input }) => {
       const { username, authenticatorType } = input;
-      const publicId = typeIdGenerator('user');
+      const publicId = typeIdGenerator('account');
       const passkeyOptions = await usePasskeys.generateRegistrationOptions({
         userDisplayName: username,
-        userName: username,
-        userPublicId: publicId,
+        username: username,
+        accountPublicId: publicId,
         authenticatorAttachment: authenticatorType
       });
       return { publicId, options: passkeyOptions };
@@ -87,7 +87,7 @@ export const passkeyRouter = router({
       z.object({
         registrationResponseRaw: z.any(),
         username: zodSchemas.username(),
-        publicId: typeIdValidator('user'),
+        publicId: typeIdValidator('account'),
         nickname: z.string().min(3).max(32).default('Passkey')
       })
     )
@@ -118,14 +118,14 @@ export const passkeyRouter = router({
         });
       }
 
-      const userId = await db
+      const accountId = await db
         .transaction(async (tx) => {
-          const newUser = await tx.insert(users).values({
+          const newAccount = await tx.insert(accounts).values({
             username: input.username,
             publicId: input.publicId
           });
-          await tx.insert(accounts).values({
-            userId: Number(newUser.insertId)
+          await tx.insert(accountAccesses).values({
+            accountId: Number(newAccount.insertId)
           });
 
           if (!passkeyVerification.registrationInfo) {
@@ -137,7 +137,7 @@ export const passkeyRouter = router({
 
           const insertPasskey = await usePasskeysDb.createAuthenticator(
             {
-              accountId: Number(newUser.insertId),
+              accountAccessId: Number(newAccount.insertId),
               credentialID: passkeyVerification.registrationInfo.credentialID,
               credentialPublicKey:
                 passkeyVerification.registrationInfo.credentialPublicKey,
@@ -160,7 +160,7 @@ export const passkeyRouter = router({
                 'Something went wrong adding your passkey, please try again'
             });
           }
-          return Number(newUser.insertId);
+          return Number(newAccount.insertId);
         })
         .catch((err) => {
           console.error(err);
@@ -172,14 +172,14 @@ export const passkeyRouter = router({
         });
 
       const cookie = await createLuciaSessionCookie(ctx.event, {
-        userId,
+        accountId,
         username: input.username,
         publicId: input.publicId
       });
       setCookie(ctx.event, cookie.name, cookie.value, cookie.attributes);
       return { success: true };
     }),
-  addNewPasskey: userProcedure
+  addNewPasskey: accountProcedure
     .input(
       z
         .object({
@@ -189,9 +189,9 @@ export const passkeyRouter = router({
         .strict()
     )
     .mutation(async ({ ctx, input }) => {
-      const { db, user } = ctx;
+      const { db, account } = ctx;
 
-      const publicId = user.session.attributes.user.publicId;
+      const publicId = account.session.attributes.account.publicId;
       const registrationResponse =
         input.registrationResponseRaw as RegistrationResponseJSON;
 
@@ -210,14 +210,14 @@ export const passkeyRouter = router({
         });
       }
 
-      const userAccount = await db.query.accounts.findFirst({
-        where: eq(accounts.userId, user.id),
+      const accountAccessQuery = await db.query.accountAccesses.findFirst({
+        where: eq(accountAccesses.accountId, account.id),
         columns: {
           id: true
         }
       });
 
-      if (!userAccount || !userAccount.id) {
+      if (!accountAccessQuery || !accountAccessQuery.id) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message: 'User account not found'
@@ -226,7 +226,7 @@ export const passkeyRouter = router({
 
       const insertPasskey = await usePasskeysDb.createAuthenticator(
         {
-          accountId: userAccount.id,
+          accountAccessId: accountAccessQuery.id,
           credentialID: passkeyVerification.registrationInfo.credentialID,
           credentialPublicKey:
             passkeyVerification.registrationInfo.credentialPublicKey,
@@ -308,13 +308,13 @@ export const passkeyRouter = router({
         });
       }
 
-      const userAccount = await db.query.accounts.findFirst({
-        where: eq(accounts.id, passkeyVerification.userAccount),
+      const accountAccessQuery = await db.query.accountAccesses.findFirst({
+        where: eq(accountAccesses.id, passkeyVerification.accountAccessId),
         columns: {
           id: true
         },
         with: {
-          user: {
+          account: {
             columns: {
               id: true,
               publicId: true,
@@ -323,34 +323,34 @@ export const passkeyRouter = router({
           }
         }
       });
-      if (!userAccount) {
+      if (!accountAccessQuery) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
-          message: 'User account not found'
+          message: 'Account account not found'
         });
       }
-      const user = userAccount.user;
+      const account = accountAccessQuery.account;
 
       const { device, os } = UAParser(getHeader(ctx.event, 'User-Agent'));
       const userDevice =
         device.type === 'mobile' ? device.toString() : device.vendor;
 
-      const userSession = await lucia.createSession(user.publicId, {
-        user: {
-          id: user.id,
-          username: user.username,
-          publicId: user.publicId
+      const accountSession = await lucia.createSession(account.id, {
+        account: {
+          id: account.id,
+          username: account.username,
+          publicId: account.publicId
         },
         device: userDevice || 'Unknown',
         os: os.name || 'Unknown'
       });
-      const cookie = lucia.createSessionCookie(userSession.id);
+      const cookie = lucia.createSessionCookie(accountSession.id);
       setCookie(ctx.event, cookie.name, cookie.value, cookie.attributes);
 
       await db
-        .update(users)
+        .update(accounts)
         .set({ lastLoginAt: new Date() })
-        .where(eq(users.id, user.id));
+        .where(eq(accounts.id, account.id));
 
       return { success: true };
     })

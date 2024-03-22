@@ -22,14 +22,14 @@
     if (!firstEntryAuthor) return null;
     return (
       firstEntryAuthor.orgMember?.publicId ||
-      firstEntryAuthor.userGroup?.publicId ||
+      firstEntryAuthor.group?.publicId ||
       firstEntryAuthor.contact?.publicId
     );
   });
   const authorEntryName = computed(() => {
     if (!firstEntryAuthor) return null;
     return (
-      firstEntryAuthor.userGroup?.name ||
+      firstEntryAuthor.group?.name ||
       firstEntryAuthor.contact?.setName ||
       firstEntryAuthor.contact?.name ||
       firstEntryAuthor.orgMember?.profile.firstName +

@@ -1,9 +1,8 @@
 import type { Adapter, DatabaseSession, DatabaseUser } from 'lucia';
 import { db } from '@u22n/database';
 import { eq, inArray, lte } from '@u22n/database/orm';
-import { sessions, users } from '@u22n/database/schema';
+import { sessions, accounts } from '@u22n/database/schema';
 import { useStorage } from '#imports';
-import type { TypeId } from '@u22n/utils';
 
 //! Enable debug logging
 const debug = false;
@@ -27,11 +26,10 @@ export class UnInboxDBAdapter implements Adapter {
     sessionStorage.removeItem(sessionId);
   }
 
-  public async deleteUserSessions(userId: TypeId<'user'>): Promise<void> {
-    log('deleteUserSessions', { userId });
-    const userPublicId = userId;
-    const userOject = await db.query.users.findFirst({
-      where: eq(users.publicId, userPublicId),
+  public async deleteUserSessions(accountId: number): Promise<void> {
+    log('deleteUserSessions', { accountId });
+    const accountObject = await db.query.accounts.findFirst({
+      where: eq(accounts.id, accountId),
       columns: { id: true },
       with: {
         sessions: {
@@ -41,12 +39,12 @@ export class UnInboxDBAdapter implements Adapter {
         }
       }
     });
-    log('deleteUserSessions', { userOject });
+    log('deleteUserSessions', { accountObject });
 
-    if (!userOject) {
+    if (!accountObject) {
       return;
     }
-    const sessionIds = userOject?.sessions.map(
+    const sessionIds = accountObject?.sessions.map(
       (session) => session.sessionToken
     );
 
@@ -77,14 +75,11 @@ export class UnInboxDBAdapter implements Adapter {
     return [databaseSession, databaseUser];
   }
 
-  public async getUserSessions(
-    userId: TypeId<'user'>
-  ): Promise<DatabaseSession[]> {
-    log('getUserSessions', { userId });
-    const userPublicId = userId;
+  public async getUserSessions(accountId: number): Promise<DatabaseSession[]> {
+    log('getUserSessions', { accountId });
 
-    const userSessions = await db.query.sessions.findMany({
-      where: eq(sessions.userPublicId, userPublicId),
+    const accountSessions = await db.query.sessions.findMany({
+      where: eq(sessions.accountId, accountId),
       columns: {
         sessionToken: true,
         expiresAt: true,
@@ -92,7 +87,7 @@ export class UnInboxDBAdapter implements Adapter {
         os: true
       },
       with: {
-        user: {
+        account: {
           columns: {
             id: true,
             username: true,
@@ -102,21 +97,21 @@ export class UnInboxDBAdapter implements Adapter {
       }
     });
 
-    log('getUserSessions', { userSessions });
+    log('getUserSessions', { accountSessions });
 
     const results: DatabaseSession[] = [];
-    for (const session of userSessions) {
+    for (const session of accountSessions) {
       results.push({
         id: session.sessionToken,
-        userId: session.user.publicId,
+        userId: session.account.id,
         expiresAt: session.expiresAt,
         attributes: {
           device: session.device,
           os: session.os,
-          user: {
-            id: session.user.id,
-            publicId: session.user.publicId,
-            username: session.user.username
+          account: {
+            id: session.account.id,
+            publicId: session.account.publicId,
+            username: session.account.username
           }
         }
       });
@@ -127,13 +122,13 @@ export class UnInboxDBAdapter implements Adapter {
   public async setSession(session: DatabaseSession): Promise<void> {
     log('setSession', { session });
     const sessionStorage = useStorage('sessions');
-    const userPublicId = session.userId;
-    const userId = session.attributes.user.id;
+    const accountId = session.attributes.account.id;
+    const accountPublicId = session.attributes.account.publicId;
 
     await db.insert(sessions).values({
       sessionToken: session.id,
-      userPublicId: userPublicId,
-      userId: userId,
+      accountPublicId: accountPublicId,
+      accountId: accountId,
       device: session.attributes.device,
       os: session.attributes.os,
       expiresAt: session.expiresAt
@@ -194,20 +189,20 @@ export class UnInboxDBAdapter implements Adapter {
   ): Promise<DatabaseUser | null> {
     log('getUserFromSessionId', { sessionId });
     const sessionToken = sessionId;
-    const userSessions = await db.query.sessions.findFirst({
+    const accountSessions = await db.query.sessions.findFirst({
       where: eq(sessions.sessionToken, sessionToken),
       columns: {
         id: true
       },
       with: {
-        user: {
+        account: {
           columns: {
             id: true,
             username: true,
             publicId: true
           },
           with: {
-            account: {
+            accountAccess: {
               columns: {
                 twoFactorSecret: true,
                 passwordHash: true
@@ -224,42 +219,21 @@ export class UnInboxDBAdapter implements Adapter {
         }
       }
     });
-    log('getUserFromSessionId', { userSessions });
-    if (!userSessions || !userSessions.user) return null;
+    log('getUserFromSessionId', { accountSessions });
+    if (!accountSessions || !accountSessions.account) return null;
 
     const result: DatabaseUser = {
-      id: userSessions.user.publicId,
+      id: accountSessions.account.id,
       attributes: {
-        id: userSessions.user.id,
-        publicId: userSessions.user.publicId,
-        username: userSessions.user.username,
-        passkeyEnabled: userSessions.user.account.authenticators.length > 0,
-        passwordEnabled: !!userSessions.user.account.passwordHash,
-        totpEnabled: !!userSessions.user.account.twoFactorSecret
+        id: accountSessions.account.id,
+        publicId: accountSessions.account.publicId,
+        username: accountSessions.account.username,
+        passkeyEnabled:
+          accountSessions.account.accountAccess.authenticators.length > 0,
+        passwordEnabled: !!accountSessions.account.accountAccess.passwordHash,
+        totpEnabled: !!accountSessions.account.accountAccess.twoFactorSecret
       }
     };
     return result;
   }
 }
-
-// function transformIntoDatabaseSession(
-//   raw: InferSelectModel<MySQLSessionTable>
-// ): DatabaseSession {
-//   const { id, userId, expiresAt, ...attributes } = raw;
-//   return {
-//     userId,
-//     id,
-//     expiresAt,
-//     attributes,
-//   };
-// }
-
-// function transformIntoDatabaseUser(
-//   raw: InferSelectModel<MySQLUserTable>
-// ): DatabaseUser {
-//   const { id, ...attributes } = raw;
-//   return {
-//     id,
-//     attributes,
-//   };
-// }
