@@ -65,7 +65,7 @@
       case 'rose':
         return 'bg-rose-400 dark:bg-rose-400';
       default:
-        return 'bg-gray-400 dark:bg-gray-400';
+        return 'bg-base-9 dark:bg-base-9';
     }
   });
 

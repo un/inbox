@@ -178,14 +178,14 @@
             </UnUiTooltip>
           </template>
           <template #role-data="{ row }">
-            <UnUiBadge :color="row.role === 'admin' ? 'yellow' : 'blue'">
+            <UnUiBadge :color="row.role === 'admin' ? 'amber' : 'bronze'">
               <span class="uppercase">{{ row.role }}</span>
             </UnUiBadge>
           </template>
           <template #createdBy-data="{ row }">
             <div class="flex flex-row items-center gap-2">
               <UnUiAvatar
-                :public-id="''"
+                :public-id="row.createdByAvatarId"
                 :avatar-id="row.creatorAvatarId"
                 :type="'orgMember'"
                 :alt="row.createdBy ? row.createdBy : ''"

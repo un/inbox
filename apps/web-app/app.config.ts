@@ -436,7 +436,7 @@ export default defineAppConfig({
       rounded: 'rounded-full',
       text: 'font-medium leading-none text-gray-900 dark:text-white truncate',
       placeholder:
-        'font-medium leading-none text-gray-500 dark:text-gray-400 truncate',
+        'font-medium leading-none text-base-3 dark:text-base-3 truncate',
       size: {
         '3xs': 'h-4 w-4 text-[8px]',
         '2xs': 'h-5 w-5 text-[10px]',
@@ -470,7 +470,7 @@ export default defineAppConfig({
         }
       },
       icon: {
-        base: 'text-gray-500 dark:text-gray-400 flex-shrink-0',
+        base: 'text-base-3 dark:text-base-3 flex-shrink-0',
         size: {
           '3xs': 'h-2 w-2',
           '2xs': 'h-2.5 w-2.5',
