@@ -294,7 +294,7 @@
             @click="switchSecureType('passkey')">
             <UnUiIcon
               name="i-mdi-fingerprint"
-              class="text-base-3 text-5xl" />
+              class="text-base-9 text-5xl" />
             <p class="font-medium">Passkey</p>
             <p class="text-sm">Fingerprint, Face ID, etc</p>
             <UnUiBadge
@@ -306,19 +306,19 @@
             orientation="vertical"
             class="w-fit" />
           <button
-            class="bg-base-3 col-span-4 flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded border-2 p-4 dark:bg-gray-800"
+            class="bg-base-3 col-span-4 flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded border-2 p-4"
             :class="
               secureType === 'password' ? 'border-green-9' : 'border-base-9'
             "
             @click="switchSecureType('password')">
             <UnUiIcon
               name="i-ph-password-light"
-              class="text-base-3 text-5xl" />
+              class="text-base-9 text-5xl" />
             <p class="font-medium">Password</p>
             <p class="text-sm">Alphanumeric!1</p>
             <UnUiBadge
               label="Less Secure"
-              color="orange" />
+              color="amber" />
           </button>
         </div>
       </div>

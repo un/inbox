@@ -90,7 +90,7 @@
     // @ts-ignore
     const storageUrl = useRuntimeConfig().public.storageUrl;
     formData.append('file', selectedFiles[0]);
-    formData.append('type', 'account');
+    formData.append('type', 'orgMember');
     formData.append(
       'publicId',
       accountOrgProfile.value?.profile?.publicId || ''

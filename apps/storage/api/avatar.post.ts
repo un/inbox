@@ -27,7 +27,7 @@ export default eventHandler({
   onRequest: [loggedIn],
   async handler(event) {
     const types = [
-      { name: 'account', value: 'a' },
+      { name: 'orgMember', value: 'om' },
       { name: 'org', value: 'o' },
       { name: 'contact', value: 'c' },
       { name: 'group', value: 'g' }
@@ -61,9 +61,9 @@ export default eventHandler({
     const publicId = publicIdInput.data.toString('utf8');
     const accountId = +event.context.account.id || null;
 
-    if (typeObject.name === 'account') {
+    if (typeObject.name === 'orgMember') {
       if (!validateTypeId('orgMemberProfile', publicId)) {
-        return send(event, 'Invalid account publicId');
+        return send(event, 'Invalid org member publicId');
       }
       const profileResponse = await db.query.orgMemberProfiles.findFirst({
         where: eq(orgMemberProfiles.publicId, publicId),
@@ -195,7 +195,7 @@ export default eventHandler({
       await s3Client.send(command);
     }
 
-    if (typeObject.name === 'account') {
+    if (typeObject.name === 'orgMember') {
       if (!validateTypeId('orgMemberProfile', publicId)) {
         return send(event, 'Invalid publicId');
       }
