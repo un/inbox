@@ -22,7 +22,9 @@ import {
   buildDkimRecord,
   buildSpfRecord,
   parseDkim,
-  parseSpfIncludes
+  parseSpfIncludes,
+  parseDmarc,
+  buildDmarcRecord
 } from '@u22n/utils/dns/txtParsers';
 import { useRuntimeConfig } from '#imports';
 
@@ -109,6 +111,12 @@ export type GetDomainDNSRecordsOutput =
         name: string;
         value: string;
       };
+      dmarc: {
+        policy: 'reject' | 'quarantine' | 'none' | null;
+        name: string;
+        optimal: string;
+        acceptable: string;
+      };
     }
   | { error: string };
 
@@ -152,6 +160,12 @@ export async function getDomainDNSRecords(
       valid: false,
       name: '',
       value: ''
+    },
+    dmarc: {
+      policy: null,
+      name: '',
+      optimal: '',
+      acceptable: ''
     }
   };
 
@@ -163,15 +177,18 @@ export async function getDomainDNSRecords(
     };
   }
 
-  const verificationRecord = `_unplatform-challenge ${domainInfo.verificationToken}`;
-  const verified = txtRecords.success
-    ? txtRecords.data.includes(verificationRecord)
+  const verificationRecordValue = `${domainInfo.verificationToken}`;
+  const verificationTxtRecordName = await lookupTXT(
+    `_unplatform-challenge.${domainInfo.name}`
+  );
+  const verified = verificationTxtRecordName.success
+    ? verificationTxtRecordName.data.includes(verificationRecordValue)
     : false;
 
   records.verification = {
     valid: verified,
-    name: domainInfo.name,
-    value: verificationRecord
+    name: `_unplatform-challenge`,
+    value: verificationRecordValue
   };
 
   if (!verified || !domainInfo.verifiedAt || forceReverify) {
@@ -188,7 +205,7 @@ export async function getDomainDNSRecords(
         txtRecords.data.find((_) => _.startsWith('v=spf1')) || ''
       )
     : null;
-  records.spf.name = domainInfo.name;
+  records.spf.name = '@';
   records.spf.extraSenders =
     (spfDomains &&
       spfDomains.includes.filter((x) => x !== `_spf.${postalConfig.dnsRootUrl}`)
@@ -221,7 +238,7 @@ export async function getDomainDNSRecords(
   }
 
   const publicKey = generatePublicKey(domainInfo.dkimPrivateKey);
-  records.dkim.name = `unplatform-${domainInfo.dkimIdentifierString}._domainkey.${domainInfo.name}`;
+  records.dkim.name = `unplatform-${domainInfo.dkimIdentifierString}._domainkey`;
   records.dkim.value = buildDkimRecord({
     t: 's',
     h: 'sha256',
@@ -265,7 +282,7 @@ export async function getDomainDNSRecords(
     }
   }
 
-  records.returnPath.name = `unrp.${domainInfo.name}`;
+  records.returnPath.name = `unrp`;
   records.returnPath.value = `rp.${postalServerUrl}`;
   records.returnPath.valid = true;
 
@@ -297,7 +314,7 @@ export async function getDomainDNSRecords(
     }
   }
   records.mx.name = domainInfo.name;
-  records.mx.priority = 10;
+  records.mx.priority = 1;
   records.mx.value = `mx.${postalServerUrl}`;
   records.mx.valid = true;
 
@@ -312,7 +329,7 @@ export async function getDomainDNSRecords(
     } else if (
       mxRecords.data.length > 1 ||
       !mxRecords.data.find(
-        (x) => x.exchange === records.mx.value && x.priority === 10
+        (x) => x.exchange === records.mx.value && x.priority === 1
       )
     ) {
       records.mx.valid = false;
@@ -328,6 +345,19 @@ export async function getDomainDNSRecords(
     }
   }
 
+  const dmarcRecord = await lookupTXT(`_dmarc.${domainInfo.name}`);
+  if (dmarcRecord.success && dmarcRecord.data.length > 0) {
+    const dmarcValues = parseDmarc(
+      dmarcRecord.data.find((_) => _.startsWith('v=DMARC1')) || ''
+    );
+    if (dmarcValues) {
+      records.dmarc.policy =
+        (dmarcValues['p'] as 'reject' | 'quarantine' | 'none') || null;
+    }
+  }
+  records.dmarc.name = '_dmarc';
+  records.dmarc.optimal = buildDmarcRecord({ p: 'reject' });
+  records.dmarc.acceptable = buildDmarcRecord({ p: 'quarantine' });
   return records;
 }
 

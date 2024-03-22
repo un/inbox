@@ -46,7 +46,9 @@
       { server: false }
     );
 
-  const domainStatus = ref('pending');
+  const domainStatus = ref<'unverified' | 'pending' | 'active' | 'disabled'>(
+    'unverified'
+  );
   const incomingForwardingModeEnabled = ref(false);
   const incomingNativeModeEnabled = ref(false);
   const outgoingNativeModeEnabled = ref(false);
@@ -58,7 +60,7 @@
 
     (data) => {
       if (!data) return;
-      domainStatus.value = data.domainData?.domainStatus || 'pending';
+      domainStatus.value = data.domainData?.domainStatus || 'unverified';
       incomingForwardingModeEnabled.value =
         data.domainData?.receivingMode === 'forwarding' ||
         data.domainData?.receivingMode === 'native'
@@ -87,9 +89,34 @@
     ];
     return mailStatus;
   });
+  watch(
+    domainDnsQuery,
+
+    (data) => {
+      if (!data) return;
+      if (data.dnsStatus?.verification) {
+        if (
+          mail.value[0]?.status === 'disabled' ||
+          mail.value[1]?.status === 'disabled'
+        ) {
+          domainStatus.value = 'pending';
+        } else {
+          domainStatus.value = 'active';
+        }
+      } else {
+        domainStatus.value = 'unverified';
+      }
+    },
+    { deep: true }
+  );
 
   const dns = computed(() => {
     return [
+      {
+        label: 'Verification',
+        slot: 'verification-record',
+        status: domainDnsQuery.value?.dnsStatus?.verification || false
+      },
       {
         label: 'MX-Records',
         slot: 'mx-records',
@@ -109,6 +136,11 @@
         label: 'Return Path',
         slot: 'return-path',
         status: domainDnsQuery.value?.dnsStatus?.returnPathDnsValid || false
+      },
+      {
+        label: 'DMARC-Record',
+        slot: 'dmarc-record',
+        status: domainDnsQuery.value?.dnsStatus?.dmarkPolicy || null
       }
     ];
   });
@@ -121,6 +153,66 @@
       dnsRefreshLoading.value = false;
       showDnsRefreshMessage.value = true;
     }, 2000);
+  }
+
+  function statusColor(
+    status: 'unverified' | 'pending' | 'active' | 'disabled'
+  ) {
+    switch (status) {
+      case 'unverified':
+        return 'red';
+      case 'pending':
+        return 'amber';
+      case 'active':
+        return 'green';
+      case 'disabled':
+        return 'red';
+    }
+  }
+  function mailModeColor(
+    status: 'native' | 'external' | 'forwarding' | 'disabled'
+  ) {
+    switch (status) {
+      case 'disabled':
+        return 'red';
+      case 'external':
+        return 'amber';
+      case 'forwarding':
+        return 'amber';
+      case 'native':
+        return 'green';
+    }
+  }
+
+  function dnsItemStatusColor(
+    status: boolean | 'reject' | 'quarantine' | 'none' | null
+  ) {
+    switch (status) {
+      case true:
+        return 'green';
+      case 'reject':
+        return 'green';
+      case 'quarantine':
+        return 'amber';
+      default:
+        return 'red';
+    }
+  }
+  function dnsItemStatusText(
+    status: boolean | 'reject' | 'quarantine' | 'none' | null
+  ) {
+    switch (status) {
+      case true:
+        return 'VALID';
+      case 'reject':
+        return 'GREAT';
+      case 'quarantine':
+        return 'OK';
+      case 'none':
+        return 'BAD';
+      default:
+        return 'INVALID';
+    }
   }
 
   // TODO: If Existing SPF, Add checkbox to SPF record: "Select which senders to include" + create dynamic string- suggestion by @KumoMTA. Current behaviors injects UnInbox into the string.
@@ -150,13 +242,7 @@
         </div>
       </div>
       <UnUiBadge
-        :color="
-          domainStatus === 'disabled'
-            ? 'red'
-            : domainStatus === 'pending'
-              ? 'orange'
-              : 'green'
-        "
+        :color="statusColor(domainStatus)"
         :label="domainStatus.toUpperCase()"
         size="lg" />
     </div>
@@ -192,11 +278,19 @@
             </span>
           </div>
           <div
-            v-if="domainStatus === 'pending'"
+            v-if="domainStatus === 'unverified'"
             class="text-base-12 flex flex-col gap-0">
             <span class=""> Your domain is unverified. </span>
             <span class="">
-              Create at least one DNS record below to verify your domain.
+              Please add the DNS records below to your domain.
+            </span>
+          </div>
+          <div
+            v-if="domainStatus === 'pending'"
+            class="text-base-12 flex flex-col gap-0">
+            <span class="">
+              Your domain is verified, but the DNS records below are not
+              configured correctly.
             </span>
             <span class="font-italic">
               If you have an existing mail system you want to continue using,
@@ -246,23 +340,13 @@
                 variant="soft"
                 class="mb-1.5"
                 :class="
-                  open
-                    ? 'bg-accent-5 dark:bg-accent-5'
-                    : 'bg-accent-3 dark:bg-accent-3'
+                  open ? 'bg-base-5 dark:bg-base-5' : 'bg-base-3 dark:bg-base-3'
                 ">
                 <div
                   class="mr-4 flex w-full flex-row items-center justify-between">
                   <span class="truncate">{{ item.label }}</span>
                   <UnUiBadge
-                    :color="
-                      item.status === 'disabled'
-                        ? 'red'
-                        : item.status === 'pending'
-                          ? 'orange'
-                          : item.status === 'forwarding'
-                            ? 'yellow'
-                            : 'green'
-                    "
+                    :color="mailModeColor(item.status)"
                     :label="item.status.toUpperCase()" />
                 </div>
                 <UnUiIcon
@@ -322,18 +406,13 @@
                       <div class="mt-[8px] flex flex-col gap-1">
                         <span
                           class="text-base-11 overflow-hidden text-xs uppercase">
-                          class="text-base-11 overflow-hidden text-xs
-                          uppercase"> Forwarding Address
+                          Forwarding Address
                         </span>
                         <div class="flex flex-row items-center gap-2">
                           <div
                             class="bg-base-3 flex w-fit min-w-[50px] flex-col items-center rounded-lg p-4">
-                            class="bg-base-3 flex w-fit min-w-[50px] flex-col
-                            items-center rounded-lg p-4">
                             <span
                               class="break-anywhere w-fit text-left font-mono text-sm">
-                              class="break-anywhere w-fit text-left font-mono
-                              text-sm">
                               {{ domainQuery?.domainData?.forwardingAddress }}
                             </span>
                           </div>
@@ -439,14 +518,36 @@
                     class="mr-4 flex w-full flex-row items-center justify-between">
                     <span class="text-base-12 truncate">{{ item.label }}</span>
                     <UnUiBadge
-                      :color="item.status ? 'green' : 'red'"
-                      :label="item.status ? 'VALID' : 'INVALID'" />
+                      :color="dnsItemStatusColor(item.status)"
+                      :label="dnsItemStatusText(item.status)" />
                   </div>
                   <UnUiIcon
                     name="i-heroicons-chevron-down-20-solid"
                     class="ms-auto h-5 w-5 transform transition-transform duration-200"
                     :class="[open && 'rotate-90']" />
                 </UnUiButton>
+              </template>
+              <template #verification-record>
+                <SettingsDomainDnsItem
+                  text="This record is used to verify that you own the domain. Please do not delete the record after verification."
+                  :blocks="[
+                    {
+                      title: 'Type',
+                      value: 'TXT'
+                    },
+                    {
+                      title: 'Name',
+                      value:
+                        domainDnsQuery?.dnsRecords?.verification.name || '',
+                      hasCopyButton: true
+                    },
+                    {
+                      title: 'Content',
+                      value:
+                        domainDnsQuery?.dnsRecords?.verification.value || '',
+                      hasCopyButton: true
+                    }
+                  ]" />
               </template>
               <template #mx-records>
                 <SettingsDomainDnsItem
@@ -530,6 +631,44 @@
                     {
                       title: 'Target',
                       value: domainDnsQuery?.dnsRecords?.returnPath.value || '',
+                      hasCopyButton: true
+                    }
+                  ]" />
+              </template>
+              <template #dmarc-record>
+                <SettingsDomainDnsItem
+                  text="DMARC records help receivers verify the email came from an authorized sender. If you will only be sending email via UnInbox, add a TXT record with the following value."
+                  :blocks="[
+                    {
+                      title: 'Type',
+                      value: 'TXT'
+                    },
+                    {
+                      title: 'Name',
+                      value: domainDnsQuery?.dnsRecords?.dmarc.name || '_dmarc',
+                      hasCopyButton: true
+                    },
+                    {
+                      title: 'Value',
+                      value: domainDnsQuery?.dnsRecords?.dmarc.optimal || '',
+                      hasCopyButton: true
+                    }
+                  ]" />
+                <SettingsDomainDnsItem
+                  text="If you'll be sending mail from other services that dont enforce DMARC, use this record instead."
+                  :blocks="[
+                    {
+                      title: 'Type',
+                      value: 'TXT'
+                    },
+                    {
+                      title: 'Name',
+                      value: domainDnsQuery?.dnsRecords?.dmarc.name || '_dmarc',
+                      hasCopyButton: true
+                    },
+                    {
+                      title: 'Value',
+                      value: domainDnsQuery?.dnsRecords?.dmarc.acceptable || '',
                       hasCopyButton: true
                     }
                   ]" />

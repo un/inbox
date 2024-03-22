@@ -70,6 +70,41 @@
     navigateTo(`/${orgSlug}/settings/org/mail/domains/${row.domainId}`);
   }
 
+  function rowStatusColor(
+    status: 'unverified' | 'pending' | 'active' | 'disabled'
+  ) {
+    switch (status) {
+      case 'unverified':
+        return 'red';
+      case 'pending':
+        return 'amber';
+      case 'active':
+        return 'green';
+      case 'disabled':
+        return 'red';
+    }
+  }
+  function rowSendingModeColor(status: 'native' | 'external' | 'disabled') {
+    switch (status) {
+      case 'disabled':
+        return 'red';
+      case 'external':
+        return 'amber';
+      case 'native':
+        return 'green';
+    }
+  }
+  function rowReceivingModeColor(status: 'native' | 'forwarding' | 'disabled') {
+    switch (status) {
+      case 'disabled':
+        return 'red';
+      case 'forwarding':
+        return 'amber';
+      case 'native':
+        return 'green';
+    }
+  }
+
   const addNewModalOpen = ref(false);
   const closeModal = () => {
     addNewModalOpen.value = false;
@@ -109,7 +144,7 @@
           <template #status-data="{ row }">
             <UnUiBadge
               :label="row.status.toUpperCase()"
-              :color="row.status === 'active' ? 'green' : 'red'" />
+              :color="rowStatusColor(row.status)" />
           </template>
           <template #domain-data="{ row }">
             <div class="w-fit">
@@ -119,19 +154,13 @@
           <template #sendingMode-data="{ row }">
             <UnUiBadge
               :label="row.sendingMode.toUpperCase()"
-              :color="row.sendingMode === 'native' ? 'green' : 'red'" />
+              :color="rowSendingModeColor(row.sendingMode)" />
           </template>
 
           <template #receivingMode-data="{ row }">
             <UnUiBadge
               :label="row.receivingMode.toUpperCase()"
-              :color="
-                row.receivingMode === 'native'
-                  ? 'green'
-                  : row.receivingMode === 'forwarding'
-                    ? 'orange'
-                    : 'red'
-              " />
+              :color="rowReceivingModeColor(row.receivingMode)" />
           </template>
         </NuxtUiTable>
       </div>
