@@ -64,7 +64,7 @@ export const accounts = mysqlTable(
 );
 
 export const accountsRelations = relations(accounts, ({ one, many }) => ({
-  accountCredentials: one(accountCredentials, {
+  accountCredential: one(accountCredentials, {
     fields: [accounts.id],
     references: [accountCredentials.accountId]
   }),
