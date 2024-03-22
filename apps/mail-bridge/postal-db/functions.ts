@@ -211,14 +211,16 @@ export async function getDomainDNSRecords(
       spfDomains.includes.filter((x) => x !== `_spf.${postalConfig.dnsRootUrl}`)
         .length > 0) ||
     false;
-  records.spf.value = buildSpfRecord(
-    [
+
+  // We need to resolve duplicate entries incase the spf record is already included, so that we don't have duplicate entries
+  const allSenders = Array.from(
+    new Set([
       `_spf.${postalConfig.dnsRootUrl}`,
       ...(records.spf.extraSenders ? spfDomains?.includes || [] : [])
-    ],
-    '~all'
+    ]).values()
   );
 
+  records.spf.value = buildSpfRecord(allSenders, '~all');
   records.spf.valid =
     (spfDomains &&
       spfDomains.includes.includes(`_spf.${postalConfig.dnsRootUrl}`)) ||
