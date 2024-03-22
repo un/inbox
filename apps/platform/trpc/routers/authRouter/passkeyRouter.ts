@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { limitedProcedure, router, accountProcedure } from '../../trpc';
 import { eq } from '@u22n/database/orm';
-import { accountAccesses, accounts } from '@u22n/database/schema';
+import { accountCredentials, accounts } from '@u22n/database/schema';
 import { TRPCError } from '@trpc/server';
 import type {
   RegistrationResponseJSON,
@@ -124,7 +124,7 @@ export const passkeyRouter = router({
             username: input.username,
             publicId: input.publicId
           });
-          await tx.insert(accountAccesses).values({
+          await tx.insert(accountCredentials).values({
             accountId: Number(newAccount.insertId)
           });
 
@@ -137,7 +137,7 @@ export const passkeyRouter = router({
 
           const insertPasskey = await usePasskeysDb.createAuthenticator(
             {
-              accountAccessId: Number(newAccount.insertId),
+              accountCredentialId: Number(newAccount.insertId),
               credentialID: passkeyVerification.registrationInfo.credentialID,
               credentialPublicKey:
                 passkeyVerification.registrationInfo.credentialPublicKey,
@@ -210,14 +210,15 @@ export const passkeyRouter = router({
         });
       }
 
-      const accountAccessQuery = await db.query.accountAccesses.findFirst({
-        where: eq(accountAccesses.accountId, account.id),
-        columns: {
-          id: true
-        }
-      });
+      const accountCredentialQuery =
+        await db.query.accountCredentials.findFirst({
+          where: eq(accountCredentials.accountId, account.id),
+          columns: {
+            id: true
+          }
+        });
 
-      if (!accountAccessQuery || !accountAccessQuery.id) {
+      if (!accountCredentialQuery || !accountCredentialQuery.id) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message: 'User account not found'
@@ -226,7 +227,7 @@ export const passkeyRouter = router({
 
       const insertPasskey = await usePasskeysDb.createAuthenticator(
         {
-          accountAccessId: accountAccessQuery.id,
+          accountCredentialId: accountCredentialQuery.id,
           credentialID: passkeyVerification.registrationInfo.credentialID,
           credentialPublicKey:
             passkeyVerification.registrationInfo.credentialPublicKey,
@@ -308,28 +309,32 @@ export const passkeyRouter = router({
         });
       }
 
-      const accountAccessQuery = await db.query.accountAccesses.findFirst({
-        where: eq(accountAccesses.id, passkeyVerification.accountAccessId),
-        columns: {
-          id: true
-        },
-        with: {
-          account: {
-            columns: {
-              id: true,
-              publicId: true,
-              username: true
+      const accountCredentialQuery =
+        await db.query.accountCredentials.findFirst({
+          where: eq(
+            accountCredentials.id,
+            passkeyVerification.accountCredentialId
+          ),
+          columns: {
+            id: true
+          },
+          with: {
+            account: {
+              columns: {
+                id: true,
+                publicId: true,
+                username: true
+              }
             }
           }
-        }
-      });
-      if (!accountAccessQuery) {
+        });
+      if (!accountCredentialQuery) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message: 'Account account not found'
         });
       }
-      const account = accountAccessQuery.account;
+      const account = accountCredentialQuery.account;
 
       const { device, os } = UAParser(getHeader(ctx.event, 'User-Agent'));
       const userDevice =

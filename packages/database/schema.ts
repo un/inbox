@@ -64,9 +64,9 @@ export const accounts = mysqlTable(
 );
 
 export const accountsRelations = relations(accounts, ({ one, many }) => ({
-  accountAccess: one(accountAccesses, {
+  accountCredentials: one(accountCredentials, {
     fields: [accounts.id],
-    references: [accountAccesses.accountId]
+    references: [accountCredentials.accountId]
   }),
   sessions: many(sessions),
   orgMemberships: many(orgMembers),
@@ -75,8 +75,8 @@ export const accountsRelations = relations(accounts, ({ one, many }) => ({
 }));
 
 //* Auth tables
-export const accountAccesses = mysqlTable(
-  'accountAccesses',
+export const accountCredentials = mysqlTable(
+  'account_credentials',
   {
     id: serial('id').primaryKey(),
     accountId: foreignKey('account_id').notNull(),
@@ -90,10 +90,10 @@ export const accountAccesses = mysqlTable(
 );
 
 export const accountAuthRelationships = relations(
-  accountAccesses,
+  accountCredentials,
   ({ one, many }) => ({
     account: one(accounts, {
-      fields: [accountAccesses.accountId],
+      fields: [accountCredentials.accountId],
       references: [accounts.id]
     }),
     authenticators: many(authenticators)
@@ -105,7 +105,7 @@ export const authenticators = mysqlTable(
   'authenticators',
   {
     id: serial('id').primaryKey(),
-    accountAccessId: foreignKey('account_access_id').notNull(),
+    accountCredentialId: foreignKey('account_credential_id').notNull(),
     nickname: varchar('nickname', { length: 64 }).notNull(),
     credentialID: varchar('credential_id', { length: 255 }).notNull(), //Uint8Array
     credentialPublicKey: varchar('credential_public_key', {
@@ -131,8 +131,8 @@ export const authenticators = mysqlTable(
     createdAt: timestamp('created_at').defaultNow().notNull()
   },
   (table) => ({
-    accountAccessIdIndex: index('provider_account_id_idx').on(
-      table.accountAccessId
+    accountCredentialIdIndex: index('provider_account_id_idx').on(
+      table.accountCredentialId
     ),
     credentialIDIndex: uniqueIndex('credential_id_idx').on(table.credentialID)
   })
@@ -141,9 +141,9 @@ export const authenticators = mysqlTable(
 export const authenticatorRelationships = relations(
   authenticators,
   ({ one }) => ({
-    accountAccesses: one(accountAccesses, {
-      fields: [authenticators.accountAccessId],
-      references: [accountAccesses.id]
+    accountCredentials: one(accountCredentials, {
+      fields: [authenticators.accountCredentialId],
+      references: [accountCredentials.id]
     })
   })
 );

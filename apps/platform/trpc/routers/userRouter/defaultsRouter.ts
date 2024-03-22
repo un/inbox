@@ -22,7 +22,7 @@ export const defaultsRouter = router({
               }
             }
           },
-          accountAccess: {
+          accountCredential: {
             columns: {
               twoFactorSecret: true,
               passwordHash: true
@@ -35,9 +35,9 @@ export const defaultsRouter = router({
         throw new Error('User not found');
       }
 
-      const twoFactorEnabledCorrectly = accountResponse.accountAccess
+      const twoFactorEnabledCorrectly = accountResponse.accountCredential
         .passwordHash
-        ? !!accountResponse?.accountAccess?.twoFactorSecret
+        ? !!accountResponse?.accountCredential?.twoFactorSecret
         : true;
 
       return {

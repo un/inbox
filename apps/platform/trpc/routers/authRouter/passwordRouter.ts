@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { Argon2id } from 'oslo/password';
 import { limitedProcedure, router, accountProcedure } from '../../trpc';
 import { eq } from '@u22n/database/orm';
-import { accountAccesses, accounts } from '@u22n/database/schema';
+import { accountCredentials, accounts } from '@u22n/database/schema';
 import { typeIdGenerator, zodSchemas } from '@u22n/utils';
 import { TRPCError } from '@trpc/server';
 import { createError, setCookie } from 'h3';
@@ -42,7 +42,7 @@ export const passwordRouter = router({
             username,
             publicId
           });
-          await tx.insert(accountAccesses).values({
+          await tx.insert(accountCredentials).values({
             accountId: Number(newUser.insertId),
             passwordHash
           });
@@ -105,7 +105,7 @@ export const passwordRouter = router({
           username: true
         },
         with: {
-          accountAccess: {
+          accountCredential: {
             columns: {
               passwordHash: true,
               twoFactorSecret: true,
@@ -125,7 +125,7 @@ export const passwordRouter = router({
       // verify password if provided
       let validPassword = false;
       if (input.password) {
-        if (!userResponse.accountAccess.passwordHash) {
+        if (!userResponse.accountCredential.passwordHash) {
           throw new TRPCError({
             code: 'METHOD_NOT_SUPPORTED',
             message: 'Password sign-in is not enabled'
@@ -133,7 +133,7 @@ export const passwordRouter = router({
         }
 
         validPassword = await new Argon2id().verify(
-          userResponse.accountAccess.passwordHash,
+          userResponse.accountCredential.passwordHash,
           input.password
         );
         if (!validPassword) {
@@ -147,13 +147,15 @@ export const passwordRouter = router({
       // verify otp if provided
       let otpValid = false;
       if (input.twoFactorCode) {
-        if (!userResponse.accountAccess.twoFactorSecret) {
+        if (!userResponse.accountCredential.twoFactorSecret) {
           throw new TRPCError({
             code: 'METHOD_NOT_SUPPORTED',
             message: '2FA sign-in is not enabled'
           });
         }
-        const secret = decodeHex(userResponse.accountAccess.twoFactorSecret);
+        const secret = decodeHex(
+          userResponse.accountCredential.twoFactorSecret
+        );
         otpValid = await new TOTPController().verify(
           input.twoFactorCode,
           secret
@@ -170,7 +172,7 @@ export const passwordRouter = router({
       let recoveryCodeValid = false;
 
       if (input.recoveryCode) {
-        if (!userResponse.accountAccess.recoveryCode) {
+        if (!userResponse.accountCredential.recoveryCode) {
           throw new TRPCError({
             code: 'METHOD_NOT_SUPPORTED',
             message: 'Recovery code sign-in is not enabled'
@@ -178,17 +180,17 @@ export const passwordRouter = router({
         }
 
         const isRecoveryCodeValid = await new Argon2id().verify(
-          userResponse.accountAccess.recoveryCode,
+          userResponse.accountCredential.recoveryCode,
           input.recoveryCode
         );
         if (isRecoveryCodeValid) {
           // Remove the used recovery code from the database
           await db
-            .update(accountAccesses)
+            .update(accountCredentials)
             .set({
               recoveryCode: null
             })
-            .where(eq(accountAccesses.accountId, userResponse.id));
+            .where(eq(accountCredentials.accountId, userResponse.id));
           recoveryCodeValid = isRecoveryCodeValid;
         }
 
@@ -249,7 +251,7 @@ export const passwordRouter = router({
           username: true
         },
         with: {
-          accountAccess: {
+          accountCredential: {
             columns: {
               passwordHash: true,
               twoFactorSecret: true
@@ -265,7 +267,7 @@ export const passwordRouter = router({
         });
       }
 
-      if (!accountData.accountAccess.passwordHash) {
+      if (!accountData.accountCredential.passwordHash) {
         throw new TRPCError({
           code: 'METHOD_NOT_SUPPORTED',
           message: 'Password sign-in is not enabled'
@@ -273,7 +275,7 @@ export const passwordRouter = router({
       }
 
       const oldPasswordValid = await new Argon2id().verify(
-        accountData.accountAccess.passwordHash,
+        accountData.accountCredential.passwordHash,
         input.oldPassword
       );
 
@@ -284,13 +286,13 @@ export const passwordRouter = router({
         });
       }
 
-      if (!accountData.accountAccess.twoFactorSecret) {
+      if (!accountData.accountCredential.twoFactorSecret) {
         throw new TRPCError({
           code: 'METHOD_NOT_SUPPORTED',
           message: '2FA is not enabled on this account, contact support'
         });
       }
-      const secret = decodeHex(accountData.accountAccess.twoFactorSecret);
+      const secret = decodeHex(accountData.accountCredential.twoFactorSecret);
       const otpValid = await new TOTPController().verify(input.otp, secret);
       if (!otpValid) {
         throw new TRPCError({
@@ -302,11 +304,11 @@ export const passwordRouter = router({
       const passwordHash = await new Argon2id().hash(input.newPassword);
 
       await db
-        .update(accountAccesses)
+        .update(accountCredentials)
         .set({
           passwordHash
         })
-        .where(eq(accountAccesses.accountId, accountId));
+        .where(eq(accountCredentials.accountId, accountId));
 
       // Invalidate all sessions if requested
       if (input.invalidateAllSessions) {

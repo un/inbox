@@ -158,7 +158,7 @@ async function verifyAuthenticationResponse({
   });
   return {
     result: verificationResult,
-    accountAccessId: authenticator.accountAccessId
+    accountCredentialId: authenticator.accountCredentialId
   };
 }
 

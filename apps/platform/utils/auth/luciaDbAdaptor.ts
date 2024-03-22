@@ -202,7 +202,7 @@ export class UnInboxDBAdapter implements Adapter {
             publicId: true
           },
           with: {
-            accountAccess: {
+            accountCredential: {
               columns: {
                 twoFactorSecret: true,
                 passwordHash: true
@@ -229,9 +229,10 @@ export class UnInboxDBAdapter implements Adapter {
         publicId: accountSessions.account.publicId,
         username: accountSessions.account.username,
         passkeyEnabled:
-          accountSessions.account.accountAccess.authenticators.length > 0,
-        passwordEnabled: !!accountSessions.account.accountAccess.passwordHash,
-        totpEnabled: !!accountSessions.account.accountAccess.twoFactorSecret
+          accountSessions.account.accountCredential.authenticators.length > 0,
+        passwordEnabled:
+          !!accountSessions.account.accountCredential.passwordHash,
+        totpEnabled: !!accountSessions.account.accountCredential.twoFactorSecret
       }
     };
     return result;
