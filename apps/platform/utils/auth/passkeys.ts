@@ -126,6 +126,7 @@ async function generateAuthenticationOptions({
 
 async function verifyAuthenticationResponse({
   authenticationResponse,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   expectedAllowedCredentials,
   authChallengeId
 }: {
