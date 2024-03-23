@@ -4,12 +4,13 @@ import * as schema from './schema';
 import { useRuntimeConfig } from '#imports';
 import type { PostalConfig } from '../types';
 
-const postalConfig: PostalConfig = useRuntimeConfig().postal;
+const postalConfig = useRuntimeConfig().postal as PostalConfig;
 
 const isLocal = postalConfig.localMode;
 export const connection = await mysql.createConnection({
   uri: isLocal
-    ? process.env.DB_MYSQL_MIGRATION_URL
+    ? // we actually don't use the db in local mode, it is set to the local docker db to avoid throwing connection errors
+      process.env.DB_MYSQL_MIGRATION_URL
     : `${(useRuntimeConfig().postal as any).activeServers.dbConnectionString}/postal`,
   multipleStatements: true
 });
