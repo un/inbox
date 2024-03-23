@@ -51,13 +51,6 @@ export default defineNuxtConfig({
         origin: process.env.WEBAPP_URL || 'http://localhost:3000'
       }
     },
-    realtime: {
-      url: process.env.REALTIME_URL || '',
-      appId: process.env.REALTIME_APP_ID || '',
-      appKey: process.env.REALTIME_APP_KEY || '',
-      appSecret: process.env.REALTIME_APP_SECRET || '',
-      appCluster: process.env.REALTIME_APP_CLUSTER || ''
-    },
     mailBridge: {
       url: process.env.WEBAPP_MAILBRIDGE_URL || '',
       key: process.env.WEBAPP_MAILBRIDGE_KEY || '',
@@ -76,8 +69,8 @@ export default defineNuxtConfig({
       realtime: {
         host: process.env.REALTIME_HOST || '',
         port: process.env.REALTIME_PORT || '',
-        appId: process.env.REALTIME_APP_ID || '',
-        appKey: process.env.REALTIME_APP_KEY || ''
+        appKey: process.env.REALTIME_APP_KEY || '',
+        authEndpoint: `${process.env.PLATFORM_URL}/realtime/auth`
       }
     },
     turnstile: {
