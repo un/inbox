@@ -1,9 +1,5 @@
 lockfileVersion: '6.0'
 
-settings:
-  autoInstallPeers: true
-  excludeLinksFromLockfile: false
-
 importers:
   .:
     devDependencies:
@@ -57,7 +53,7 @@ importers:
         version: 0.0.1
       '@u22n/realtime':
         specifier: workspace:^
-        version: link:../realtime
+        version: link:../../packages/realtime
       '@u22n/tiptap':
         specifier: workspace:^
         version: link:../../packages/tiptap
@@ -117,7 +113,7 @@ importers:
         version: link:../../packages/database
       '@u22n/realtime':
         specifier: workspace:^
-        version: link:../realtime
+        version: link:../../packages/realtime
       '@u22n/tiptap':
         specifier: workspace:^
         version: link:../../packages/tiptap
@@ -155,22 +151,6 @@ importers:
       '@uninbox-ee/types':
         specifier: workspace:^
         version: link:../../ee/packages/types
-
-  apps/realtime:
-    dependencies:
-      '@u22n/utils':
-        specifier: workspace:^
-        version: link:../../packages/utils
-      pusher:
-        specifier: ^5.2.0
-        version: 5.2.0
-      pusher-js:
-        specifier: 8.4.0-rc2
-        version: 8.4.0-rc2
-    devDependencies:
-      '@u22n/tsconfig':
-        specifier: ^0.0.2
-        version: 0.0.2
 
   apps/storage:
     dependencies:
@@ -230,7 +210,7 @@ importers:
         version: link:../../packages/database
       '@u22n/realtime':
         specifier: workspace:^
-        version: link:../realtime
+        version: link:../../packages/realtime
       '@u22n/tiptap':
         specifier: workspace:^
         version: link:../../packages/tiptap
@@ -378,7 +358,7 @@ importers:
         version: link:../../../packages/utils
       nitropack:
         specifier: ^2.8.1
-        version: 2.9.4(drizzle-orm@0.30.3)
+        version: 2.9.4(@upstash/redis@1.28.4)
       stripe:
         specifier: ^14.17.0
         version: 14.17.0
@@ -428,6 +408,22 @@ importers:
       tsx:
         specifier: ^4.7.1
         version: 4.7.1
+
+  packages/realtime:
+    dependencies:
+      '@u22n/utils':
+        specifier: workspace:^
+        version: link:../utils
+      pusher:
+        specifier: ^5.2.0
+        version: 5.2.0
+      pusher-js:
+        specifier: 8.4.0-rc2
+        version: 8.4.0-rc2
+    devDependencies:
+      '@u22n/tsconfig':
+        specifier: ^0.0.2
+        version: 0.0.2
 
   packages/tiptap:
     dependencies:
@@ -4774,6 +4770,7 @@ packages:
     dependencies:
       is-glob: 4.0.3
       micromatch: 4.0.5
+      napi-wasm: 1.1.0
     bundledDependencies:
       - napi-wasm
 
@@ -11969,6 +11966,12 @@ packages:
     hasBin: true
     dev: false
 
+  /napi-wasm@1.1.0:
+    resolution:
+      {
+        integrity: sha512-lHwIAJbmLSjF9VDRm9GoVOy9AGp3aIvkjv+Kvz9h16QR3uSVYH78PNQUnT2U4X53mhlnV2M7wrhibQ3GHicDmg==
+      }
+
   /natural-compare@1.4.0:
     resolution:
       {
@@ -16626,3 +16629,7 @@ packages:
       {
         integrity: sha512-iC+8Io04lddc+mVqQ9AZ7OQ2MrUKGN+oIQyq1vemgt46jwCwLfhq7/pwnBnNXXXZb8VTVLKwp9EDkx+ryxIWmg==
       }
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false

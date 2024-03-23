@@ -31,7 +31,7 @@ import {
   parseAddressIds,
   useRuntimeConfig
 } from '#imports';
-import { realtime } from '../../../../realtime';
+import { realtime } from '../../../../utils/realtime';
 
 // TODO!: remove all `|| <default>` and `<nullish>?.` shortcuts in favour of proper error handling
 
