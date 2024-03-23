@@ -99,6 +99,8 @@ services:
       - SOKETI_DEFAULT_APP_ID=default
       - SOKETI_DEFAULT_APP_KEY=secretsecretsecret
       - SOKETI_DEFAULT_APP_SECRET=secretsecretsecret
+      - SOKETI_DEFAULT_APP_USER_AUTHENTICATION=true
+      - SOKETI_USER_AUTHENTICATION_TIMEOUT=10000 # 10 seconds
     depends_on:
       - redis
     links:

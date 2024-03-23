@@ -19,7 +19,8 @@
     "h3": "^1.11.1",
     "lucia": "^3.1.1",
     "nitropack": "2.9.4",
-    "oslo": "^1.1.3"
+    "oslo": "^1.1.3",
+    "pusher": "^5.2.0"
   },
   "devDependencies": {
     "@simplewebauthn/types": "^9.0.1",

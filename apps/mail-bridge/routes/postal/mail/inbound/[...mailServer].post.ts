@@ -32,6 +32,9 @@ import {
   useRuntimeConfig
 } from '#imports';
 
+// TODO: separate pusher in a different package maybe
+import { pusher } from '../../../../../platform/pusher';
+
 // TODO!: remove all `|| <default>` and `<nullish>?.` shortcuts in favour of proper error handling
 
 /**
@@ -751,6 +754,28 @@ export default eventHandler(async (event) => {
   }
 
   // send alerts
+  const alertingUsers = await db.query.convoParticipants.findMany({
+    where: and(
+      eq(convoParticipants.orgId, orgId),
+      eq(convoParticipants.convoId, convoId!),
+      eq(convoParticipants.role, 'contributor')
+    ),
+    columns: {
+      publicId: true
+    }
+  });
+
+  if (!alertingUsers.length) {
+    console.error('⛔ no alerting users found', { convoId });
+    return;
+  }
+
+  // TODO: Make a dedicated notification backend with granular events
+  await Promise.all(
+    alertingUsers.map((e) => {
+      pusher.sendToUser(e.publicId, 'notify:email', null);
+    })
+  );
 
   return;
 });

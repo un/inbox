@@ -1,8 +1,11 @@
 <script setup lang="ts">
   import { useInfiniteScroll } from '@vueuse/core';
   import { ref, useNuxtApp, watch } from '#imports';
+  import { useRealtime } from '~/composables/realtime';
 
   const { $trpc } = useNuxtApp();
+  const realtime = await useRealtime();
+
   type ConvoEntriesDataType = Awaited<
     ReturnType<typeof $trpc.convos.entries.getConvoEntries.query>
   >['entries'];
@@ -31,6 +34,8 @@
       entriesArray.value.push(...convoEntries.value.entries);
     }
   });
+
+  realtime.onEmail(() => convoEntriesRefresh());
 
   useInfiniteScroll(
     el,
