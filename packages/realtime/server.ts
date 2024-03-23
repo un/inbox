@@ -36,7 +36,7 @@ export default class RealtimeServer {
   ) {
     if (typeof accountIds === 'string') accountIds = [accountIds];
     for (const id of accountIds) {
-      this.pusher.sendToUser(id, event, data);
+      this.pusher.sendToUser(id, event, data || null);
     }
   }
 

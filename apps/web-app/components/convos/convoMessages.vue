@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { useInfiniteScroll } from '@vueuse/core';
-  import { onMounted, ref, useNuxtApp, watch } from '#imports';
+  import { ref, useNuxtApp, watch } from '#imports';
   import { useRealtime } from '~/composables/realtime';
 
   const { $trpc } = useNuxtApp();
@@ -43,10 +43,8 @@
     { distance: 300 }
   );
 
-  onMounted(async () => {
-    await realtime.connect();
-    realtime.on('convo:created', () => convoEntriesRefresh());
-  });
+  await realtime.connect();
+  realtime.on('convo:created', () => convoEntriesRefresh());
 </script>
 <template>
   <UnUiButton
