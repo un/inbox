@@ -18,7 +18,7 @@ export default class RealtimeClient {
       wsHost: this.config.host,
       wsPort: Number(this.config.port),
       cluster: 'default',
-      //   forceTLS: platformUrl.startsWith('https'),
+      forceTLS: this.config.authEndpoint.startsWith('https'),
       enabledTransports: ['ws', 'wss'],
       userAuthentication: {
         customHandler: async (params, callback) => {
