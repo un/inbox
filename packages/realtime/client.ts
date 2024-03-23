@@ -1,21 +1,28 @@
 import Pusher, { type UserAuthenticationCallback } from 'pusher-js';
-import { appKey, host, port, authEndpoint } from './config';
 import { type RealtimeEventsMap } from './types';
 
 export default class RealtimeClient {
   private client: Pusher | null = null;
 
+  constructor(
+    private config: {
+      appKey: string;
+      host: string;
+      port: number;
+      authEndpoint: string;
+    }
+  ) {}
   public async connect() {
     if (this.client) return;
-    const client = new Pusher(appKey, {
-      wsHost: host,
-      wsPort: Number(port),
+    const client = new Pusher(this.config.appKey, {
+      wsHost: this.config.host,
+      wsPort: Number(this.config.port),
       cluster: 'default',
       //   forceTLS: platformUrl.startsWith('https'),
       enabledTransports: ['ws', 'wss'],
       userAuthentication: {
         customHandler: async (params, callback) => {
-          const res = await fetch(authEndpoint, {
+          const res = await fetch(this.config.authEndpoint, {
             body: JSON.stringify(params),
             method: 'POST',
             credentials: 'include'

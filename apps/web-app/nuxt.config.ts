@@ -68,7 +68,7 @@ export default defineNuxtConfig({
       mailDomainPremium: [] as MailDomainEntries[],
       realtime: {
         host: process.env.REALTIME_HOST || '',
-        port: process.env.REALTIME_PORT || '',
+        port: Number(process.env.REALTIME_PORT || ''),
         appKey: process.env.REALTIME_APP_KEY || '',
         authEndpoint: `${process.env.PLATFORM_URL}/realtime/auth`
       }

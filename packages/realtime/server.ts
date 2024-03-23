@@ -1,17 +1,22 @@
 import Pusher from 'pusher';
-import { appId, appKey, appSecret, host, port } from './config';
 import type { RealtimeEventsMap } from './types';
 import type { TypeId } from '@u22n/utils';
 
 export default class RealtimeServer {
   private pusher: Pusher;
-  constructor() {
+  constructor(config: {
+    host: string;
+    port: string;
+    appId: string;
+    appKey: string;
+    appSecret: string;
+  }) {
     this.pusher = new Pusher({
-      host: host,
-      port: port,
-      appId: appId,
-      key: appKey,
-      secret: appSecret,
+      host: config.host,
+      port: config.port,
+      appId: config.appId,
+      key: config.appKey,
+      secret: config.appSecret,
       cluster: 'default',
       timeout: 10000
     });
