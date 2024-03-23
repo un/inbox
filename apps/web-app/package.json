@@ -42,6 +42,7 @@
     "@trpc/client": "^10.45.2",
     "@trpc/server": "^10.45.2",
     "@u22n/database": "workspace:*",
+    "@u22n/realtime": "workspace:^",
     "@u22n/tiptap": "workspace:^",
     "@u22n/tsconfig": "^0.0.2",
     "@u22n/types": "workspace:*",

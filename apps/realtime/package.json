@@ -1,0 +1,19 @@
+{
+  "name": "@u22n/realtime",
+  "version": "0.0.0",
+  "main": "index.js",
+  "scripts": {
+    "check": "tsc --noEmit"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@u22n/utils": "workspace:^",
+    "pusher": "^5.2.0",
+    "pusher-js": "8.4.0-rc2"
+  },
+  "devDependencies": {
+    "@u22n/tsconfig": "^0.0.2"
+  }
+}

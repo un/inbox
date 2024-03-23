@@ -1,6 +1,7 @@
 import { eventHandler, createError, readBody } from 'h3';
 import { z } from 'zod';
-import { pusher } from '../../pusher';
+import { realtime } from '../../realtime';
+import { validateTypeId } from '@u22n/utils';
 
 const bodySchema = z.object({
   socketId: z.string()
@@ -28,7 +29,14 @@ export default eventHandler(async (event) => {
       message: 'Invalid request'
     });
   }
-  return pusher.authenticateUser(body.data.socketId, {
-    id: event.context?.account?.session?.attributes?.account?.publicId
-  });
+  const accountId =
+    event.context.account.session?.attributes?.account?.publicId;
+
+  if (!validateTypeId('account', accountId)) {
+    throw createError({
+      status: 403,
+      message: 'Forbidden'
+    });
+  }
+  return realtime.authenticate(body.data.socketId, accountId);
 });

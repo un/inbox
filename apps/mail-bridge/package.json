@@ -20,6 +20,7 @@
     "@types/mailparser": "^3.4.4",
     "@u22n/database": "workspace:*",
     "@u22n/mailtools": "^0.0.1",
+    "@u22n/realtime": "workspace:^",
     "@u22n/tiptap": "workspace:^",
     "@u22n/tsconfig": "^0.0.2",
     "@u22n/types": "workspace:*",

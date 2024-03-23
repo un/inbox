@@ -1,10 +1,10 @@
 <script setup lang="ts">
   import { useInfiniteScroll } from '@vueuse/core';
-  import { ref, useNuxtApp, watch } from '#imports';
+  import { onMounted, ref, useNuxtApp, watch } from '#imports';
   import { useRealtime } from '~/composables/realtime';
 
   const { $trpc } = useNuxtApp();
-  const realtime = await useRealtime();
+  const realtime = useRealtime();
 
   type ConvoEntriesDataType = Awaited<
     ReturnType<typeof $trpc.convos.entries.getConvoEntries.query>
@@ -35,8 +35,6 @@
     }
   });
 
-  realtime.onEmail(() => convoEntriesRefresh());
-
   useInfiniteScroll(
     el,
     () => {
@@ -44,6 +42,11 @@
     },
     { distance: 300 }
   );
+
+  onMounted(async () => {
+    await realtime.connect();
+    realtime.on('convo:created', () => convoEntriesRefresh());
+  });
 </script>
 <template>
   <UnUiButton

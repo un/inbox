@@ -21,7 +21,7 @@ import type {
   MessageParseAddressPlatformObject,
   postalEmailPayload
 } from '../../../../types';
-import { typeIdGenerator, validateTypeId } from '@u22n/utils';
+import { typeIdGenerator, validateTypeId, type TypeId } from '@u22n/utils';
 import { tiptapCore, tiptapHtml } from '@u22n/tiptap';
 import { tipTapExtensions } from '@u22n/tiptap/extensions';
 import {
@@ -31,9 +31,7 @@ import {
   parseAddressIds,
   useRuntimeConfig
 } from '#imports';
-
-// TODO: separate pusher in a different package maybe
-import { pusher } from '../../../../../platform/pusher';
+import { realtime } from '../../../../realtime';
 
 // TODO!: remove all `|| <default>` and `<nullish>?.` shortcuts in favour of proper error handling
 
@@ -754,28 +752,31 @@ export default eventHandler(async (event) => {
   }
 
   // send alerts
-  const alertingUsers = await db.query.convoParticipants.findMany({
-    where: and(
-      eq(convoParticipants.orgId, orgId),
-      eq(convoParticipants.convoId, convoId!),
-      eq(convoParticipants.role, 'contributor')
-    ),
-    columns: {
-      publicId: true
-    }
-  });
+  const alertingUsers = (
+    (await db.query.convoParticipants.findMany({
+      where: and(
+        eq(convoParticipants.orgId, orgId),
+        eq(convoParticipants.convoId, convoId!),
+        eq(convoParticipants.role, 'contributor')
+      ),
+      columns: {},
+      with: {
+        orgMember: {
+          columns: {},
+          with: {
+            account: {
+              columns: {
+                publicId: true
+              }
+            }
+          }
+        }
+      }
+    })) || []
+  )
+    .map((p) => p.orgMember?.account?.publicId)
+    .filter((e) => typeof e === 'string') as TypeId<'account'>[];
 
-  if (!alertingUsers.length) {
-    console.error('⛔ no alerting users found', { convoId });
-    return;
-  }
-
-  // TODO: Make a dedicated notification backend with granular events
-  await Promise.all(
-    alertingUsers.map((e) => {
-      pusher.sendToUser(e.publicId, 'notify:email', null);
-    })
-  );
-
+  realtime.emit(alertingUsers, 'convo:created');
   return;
 });

@@ -55,6 +55,9 @@ importers:
       '@u22n/mailtools':
         specifier: ^0.0.1
         version: 0.0.1
+      '@u22n/realtime':
+        specifier: workspace:^
+        version: link:../realtime
       '@u22n/tiptap':
         specifier: workspace:^
         version: link:../../packages/tiptap
@@ -112,6 +115,9 @@ importers:
       '@u22n/database':
         specifier: workspace:^
         version: link:../../packages/database
+      '@u22n/realtime':
+        specifier: workspace:^
+        version: link:../realtime
       '@u22n/tiptap':
         specifier: workspace:^
         version: link:../../packages/tiptap
@@ -149,6 +155,22 @@ importers:
       '@uninbox-ee/types':
         specifier: workspace:^
         version: link:../../ee/packages/types
+
+  apps/realtime:
+    dependencies:
+      '@u22n/utils':
+        specifier: workspace:^
+        version: link:../../packages/utils
+      pusher:
+        specifier: ^5.2.0
+        version: 5.2.0
+      pusher-js:
+        specifier: 8.4.0-rc2
+        version: 8.4.0-rc2
+    devDependencies:
+      '@u22n/tsconfig':
+        specifier: ^0.0.2
+        version: 0.0.2
 
   apps/storage:
     dependencies:
@@ -206,6 +228,9 @@ importers:
       '@u22n/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@u22n/realtime':
+        specifier: workspace:^
+        version: link:../realtime
       '@u22n/tiptap':
         specifier: workspace:^
         version: link:../../packages/tiptap
@@ -353,7 +378,7 @@ importers:
         version: link:../../../packages/utils
       nitropack:
         specifier: ^2.8.1
-        version: 2.9.4(@upstash/redis@1.28.4)
+        version: 2.9.4(drizzle-orm@0.30.3)
       stripe:
         specifier: ^14.17.0
         version: 14.17.0
