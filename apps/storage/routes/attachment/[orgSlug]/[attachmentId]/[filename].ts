@@ -16,7 +16,7 @@ import {
 import { validateTypeId } from '@u22n/utils';
 
 /**
- * provides a proxy to attachments after verifying the user has access to the attachment
+ * provides a proxy to attachments after verifying the account has access to the attachment
  * path: storageServer/attachment/[orgSlug]/[attachmentId]/[filename.ext]
  */
 export default eventHandler({
@@ -62,22 +62,22 @@ export default eventHandler({
     }
 
     if (!attachmentQueryResponse.public) {
-      const userId = event.context.user.id;
-      if (!userId) {
+      const accountId = event.context.account.id;
+      if (!accountId) {
         setResponseStatus(event, 401);
         return send(event, 'Unauthorized');
       }
 
-      const orgUserMembershipResponse = await db.query.orgMembers.findFirst({
+      const orgAccountMembershipResponse = await db.query.orgMembers.findFirst({
         where: and(
           eq(orgMembers.orgId, orgQueryResponse.id),
-          eq(orgMembers.userId, userId)
+          eq(orgMembers.accountId, accountId)
         ),
         columns: {
           id: true
         }
       });
-      if (!orgUserMembershipResponse) {
+      if (!orgAccountMembershipResponse) {
         setResponseStatus(event, 401);
         return send(event, 'Unauthorized');
       }

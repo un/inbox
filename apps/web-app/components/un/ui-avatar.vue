@@ -13,7 +13,7 @@
     avatarId: string | null;
     name?: string;
     alt?: string;
-    type: 'user' | 'org' | 'group' | 'contact';
+    type: 'orgMember' | 'org' | 'group' | 'contact';
     tooltip?: string;
     avatarUrl?: string;
     tooltipText?: string;
@@ -65,7 +65,7 @@
       case 'rose':
         return 'bg-rose-400 dark:bg-rose-400';
       default:
-        return 'bg-gray-400 dark:bg-gray-400';
+        return 'bg-base-9 dark:bg-base-9';
     }
   });
 
@@ -87,7 +87,7 @@
 
   const tooltipIcon = computed(() => {
     switch (props.type) {
-      case 'user':
+      case 'orgMember':
         return 'i-ph-user';
       case 'org':
         return 'i-ph-buildings';

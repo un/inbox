@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm';
 import { db } from '@u22n/database';
-import { accounts, authenticators } from '@u22n/database/schema';
+import { accountCredentials, authenticators } from '@u22n/database/schema';
 import type { AuthenticatorTransportFuture } from '@simplewebauthn/types';
 import { isoBase64URL } from '@simplewebauthn/server/helpers';
 
@@ -18,7 +18,7 @@ async function transformDbToAuthAuthenticator(
   dbQuery: typeof authenticators.$inferInsert
 ): Promise<Authenticator> {
   return {
-    accountId: dbQuery.accountId,
+    accountCredentialId: dbQuery.accountCredentialId,
     credentialID: isoBase64URL.toBuffer(dbQuery.credentialID),
     credentialPublicKey: isoBase64URL.toBuffer(dbQuery.credentialPublicKey),
     counter: Number(dbQuery.counter),
@@ -31,7 +31,7 @@ async function transformDbToAuthAuthenticator(
 //* Passkey DB
 export type CredentialDeviceType = 'singleDevice' | 'multiDevice';
 export interface Authenticator {
-  accountId: number;
+  accountCredentialId: number;
   credentialID: Uint8Array;
   credentialPublicKey: Uint8Array;
   counter: number;
@@ -51,7 +51,7 @@ async function createAuthenticator(
   const b64PK = isoBase64URL.fromBuffer(authenticator.credentialPublicKey);
 
   await passkeyDb.insert(authenticators).values({
-    accountId: authenticator.accountId,
+    accountCredentialId: authenticator.accountCredentialId,
     nickname: nickname,
     credentialID: b64ID,
     credentialPublicKey: b64PK,
@@ -102,7 +102,7 @@ async function getAuthenticator(credentialId: string) {
     where: eq(authenticators.credentialID, credentialId),
     columns: {
       id: true,
-      accountId: true,
+      accountCredentialId: true,
       nickname: true,
       credentialID: true,
       credentialPublicKey: true,
@@ -131,13 +131,17 @@ async function deleteAuthenticator(credentialId: Uint8Array) {
   return dbDeleteResult.rowsAffected > 0;
 }
 
-async function listAuthenticatorsByAccountId(accountId: number) {
-  log('passkey: listAuthenticatorsByAccountId', { accountId });
+async function listAuthenticatorsByaccountCredentialId(
+  accountCredentialId: number
+) {
+  log('passkey: listAuthenticatorsByaccountCredentialId', {
+    accountCredentialId
+  });
   const dbQuery = await db.query.authenticators.findMany({
-    where: eq(authenticators.accountId, accountId),
+    where: eq(authenticators.accountCredentialId, accountCredentialId),
     columns: {
       id: true,
-      accountId: true,
+      accountCredentialId: true,
       nickname: true,
       credentialID: true,
       credentialPublicKey: true,
@@ -156,10 +160,10 @@ async function listAuthenticatorsByAccountId(accountId: number) {
   );
   return decodedResults;
 }
-async function listAuthenticatorsByUserId(userId: number) {
-  log('passkey: listAuthenticatorsByAccountId', { userId });
-  const dbQuery = await db.query.accounts.findFirst({
-    where: eq(accounts.userId, userId),
+async function listAuthenticatorsByAccountId(accountId: number) {
+  log('passkey: listAuthenticatorsByAccountId', { accountId });
+  const dbQuery = await db.query.accountCredentials.findFirst({
+    where: eq(accountCredentials.accountId, accountId),
     columns: {
       id: true
     },
@@ -167,7 +171,7 @@ async function listAuthenticatorsByUserId(userId: number) {
       authenticators: {
         columns: {
           id: true,
-          accountId: true,
+          accountCredentialId: true,
           nickname: true,
           credentialID: true,
           credentialPublicKey: true,
@@ -195,6 +199,6 @@ export const usePasskeysDb = {
   updateAuthenticatorCounter,
   getAuthenticator,
   deleteAuthenticator,
-  listAuthenticatorsByAccountId,
-  listAuthenticatorsByUserId
+  listAuthenticatorsByaccountCredentialId,
+  listAuthenticatorsByAccountId
 };

@@ -10,14 +10,14 @@ import {
 import {
   orgMembers,
   domains,
-  userGroups,
+  groups,
   emailRoutingRules,
   emailRoutingRulesDestinations,
   emailIdentities,
-  userGroupMembers
+  groupMembers
 } from '@u22n/database/schema';
 import { typeIdGenerator, typeIdValidator } from '@u22n/utils';
-import { isUserAdminOfOrg } from '../../../../utils/user';
+import { isAccountAdminOfOrg } from '../../../../utils/account';
 import { TRPCError } from '@trpc/server';
 
 export const emailIdentityRouter = router({
@@ -29,10 +29,10 @@ export const emailIdentityRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      if (!ctx.user || !ctx.org) {
+      if (!ctx.account || !ctx.org) {
         throw new TRPCError({
           code: 'UNPROCESSABLE_CONTENT',
-          message: 'User or Organization is not defined'
+          message: 'Account or Organization is not defined'
         });
       }
       const { db, org } = ctx;
@@ -85,36 +85,33 @@ export const emailIdentityRouter = router({
         domainPublicId: typeIdValidator('domains'),
         sendName: z.string().min(3).max(255),
         catchAll: z.boolean().optional().default(false),
-        routeToUsersOrgMemberPublicIds: z
+        routeToOrgMemberPublicIds: z
           .array(typeIdValidator('orgMembers'))
           .optional(),
-        routeToGroupsPublicIds: z
-          .array(typeIdValidator('userGroups'))
-          .optional()
+        routeToGroupsPublicIds: z.array(typeIdValidator('groups')).optional()
       })
     )
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.user || !ctx.org) {
+      if (!ctx.account || !ctx.org) {
         throw new TRPCError({
           code: 'UNPROCESSABLE_CONTENT',
-          message: 'User or Organization is not defined'
+          message: 'Account or Organization is not defined'
         });
       }
-      const { db, user, org } = ctx;
-      const userId = user?.id;
+      const { db, org } = ctx;
       const orgId = org?.id;
       const {
         domainPublicId,
         sendName,
         catchAll,
-        routeToUsersOrgMemberPublicIds,
+        routeToOrgMemberPublicIds,
         routeToGroupsPublicIds
       } = input;
 
       const emailUsername = input.emailUsername.toLowerCase();
       const newPublicId = typeIdGenerator('emailRoutingRules');
 
-      const isAdmin = await isUserAdminOfOrg(org);
+      const isAdmin = await isAccountAdminOfOrg(org);
       if (!isAdmin) {
         throw new TRPCError({
           code: 'UNAUTHORIZED',
@@ -122,7 +119,7 @@ export const emailIdentityRouter = router({
         });
       }
 
-      if (!routeToUsersOrgMemberPublicIds && !routeToGroupsPublicIds) {
+      if (!routeToOrgMemberPublicIds && !routeToGroupsPublicIds) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message: 'Must route to at least one user or group'
@@ -155,13 +152,9 @@ export const emailIdentityRouter = router({
 
       const orgMemberIds: number[] = [];
       const orgMemberIdsResponse =
-        routeToUsersOrgMemberPublicIds &&
-        routeToUsersOrgMemberPublicIds.length > 0
+        routeToOrgMemberPublicIds && routeToOrgMemberPublicIds.length > 0
           ? await db.query.orgMembers.findMany({
-              where: inArray(
-                orgMembers.publicId,
-                routeToUsersOrgMemberPublicIds
-              ),
+              where: inArray(orgMembers.publicId, routeToOrgMemberPublicIds),
               columns: {
                 id: true
               }
@@ -174,8 +167,8 @@ export const emailIdentityRouter = router({
       const userGroupIds: number[] = [];
       const userGroupIdsResponse =
         routeToGroupsPublicIds && routeToGroupsPublicIds.length > 0
-          ? await db.query.userGroups.findMany({
-              where: inArray(userGroups.publicId, routeToGroupsPublicIds),
+          ? await db.query.groups.findMany({
+              where: inArray(groups.publicId, routeToGroupsPublicIds),
               columns: {
                 id: true
               }
@@ -190,7 +183,7 @@ export const emailIdentityRouter = router({
       const insertEmailRoutingRule = await db.insert(emailRoutingRules).values({
         publicId: newPublicId,
         orgId: orgId,
-        createdBy: userId,
+        createdBy: org.memberId,
         name: emailUsername,
         description: `Email routing rule for ${emailUsername}@${domainResponse.domain}`
       });
@@ -230,7 +223,7 @@ export const emailIdentityRouter = router({
         .values({
           publicId: emailIdentityPublicId,
           orgId: orgId,
-          createdBy: userId,
+          createdBy: org.memberId,
           username: emailUsername,
           domainName: domainResponse.domain,
           domainId: domainResponse.id,
@@ -261,10 +254,10 @@ export const emailIdentityRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      if (!ctx.user || !ctx.org) {
+      if (!ctx.account || !ctx.org) {
         throw new TRPCError({
           code: 'UNPROCESSABLE_CONTENT',
-          message: 'User or Organization is not defined'
+          message: 'Account or Organization is not defined'
         });
       }
       const { db, org } = ctx;
@@ -341,10 +334,10 @@ export const emailIdentityRouter = router({
   getOrgEmailIdentities: orgProcedure
     .input(z.object({}).strict())
     .query(async ({ ctx }) => {
-      if (!ctx.user || !ctx.org) {
+      if (!ctx.account || !ctx.org) {
         throw new TRPCError({
           code: 'UNPROCESSABLE_CONTENT',
-          message: 'User or Organization is not defined'
+          message: 'Account or Organization is not defined'
         });
       }
       const { db, org } = ctx;
@@ -411,10 +404,10 @@ export const emailIdentityRouter = router({
   getUserEmailIdentities: orgProcedure
     .input(z.object({}).strict())
     .query(async ({ ctx }) => {
-      if (!ctx.user || !ctx.org) {
+      if (!ctx.account || !ctx.org) {
         throw new TRPCError({
           code: 'UNPROCESSABLE_CONTENT',
-          message: 'User or Organization is not defined'
+          message: 'Account or Organization is not defined'
         });
       }
       const { db, org } = ctx;
@@ -422,21 +415,20 @@ export const emailIdentityRouter = router({
       const orgMemberId = org?.memberId || 0;
       // search for user org group memberships, get id of org group
 
-      const userOrgGroupMembershipQuery =
-        await db.query.userGroupMembers.findMany({
-          where: eq(userGroupMembers.orgMemberId, orgMemberId),
-          columns: {
-            groupId: true
-          },
-          with: {
-            group: {
-              columns: {
-                id: true,
-                orgId: true
-              }
+      const userOrgGroupMembershipQuery = await db.query.groupMembers.findMany({
+        where: eq(groupMembers.orgMemberId, orgMemberId),
+        columns: {
+          groupId: true
+        },
+        with: {
+          group: {
+            columns: {
+              id: true,
+              orgId: true
             }
           }
-        });
+        }
+      });
 
       const orgGroupIds = userOrgGroupMembershipQuery.filter(
         (userOrgGroupMembership) => userOrgGroupMembership.group.orgId === orgId
@@ -451,7 +443,7 @@ export const emailIdentityRouter = router({
         uniqueUserGroupIds.push(0);
       }
 
-      // search email routingrulesdestinations for orgmemberId or orgGroupId
+      // search email routingRulesDestinations for orgMemberId or orgGroupId
 
       const routingRulesDestinationsQuery =
         await db.query.emailRoutingRulesDestinations.findMany({

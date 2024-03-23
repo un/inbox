@@ -72,8 +72,8 @@
   const selectedDomain = ref<OrgDomains | undefined>(undefined);
 
   // get list of groups
-  const { data: orgUserGroupsData, pending: orgUserGroupPending } =
-    await $trpc.org.users.userGroups.getOrgUserGroups.useLazyQuery(
+  const { data: orgGroupsData, pending: orgGroupPending } =
+    await $trpc.org.users.groups.getOrgGroups.useLazyQuery(
       {},
       { server: false }
     );
@@ -86,7 +86,7 @@
   }
   const orgUserGroups = ref<OrgUserGroups[]>([]);
 
-  watch(orgUserGroupsData, (newOrgUserGroupsData) => {
+  watch(orgGroupsData, (newOrgUserGroupsData) => {
     if (newOrgUserGroupsData?.groups) {
       for (const group of newOrgUserGroupsData.groups) {
         orgUserGroups.value.push({
@@ -203,7 +203,7 @@
       domainPublicId: selectedDomain.value?.domainPublicId as string,
       sendName: newIdentitySendNameValue.value,
       routeToGroupsPublicIds: selectedGroupsPublicIds,
-      routeToUsersOrgMemberPublicIds: selectedOrgMembersPublicIds,
+      routeToOrgMemberPublicIds: selectedOrgMembersPublicIds,
       catchAll: newIdentityCatchAll.value
     });
     if (createNewEmailIdentityTrpc.status.value === 'error') {
@@ -347,13 +347,13 @@
           class="grid-row-2 md:grid-row-1 grid grid-cols-1 gap-4 md:grid-cols-2">
           <div class="flex flex-col gap-2">
             <span class="text-sm font-medium">Groups</span>
-            <span v-if="orgUserGroupPending">
+            <span v-if="orgGroupPending">
               <UnUiIcon name="i-svg-spinners:3-dots-fade" /> Loading User Groups
             </span>
             <div
-              v-if="!orgUserGroupPending"
+              v-if="!orgGroupPending"
               class="flex flex-row flex-wrap gap-4">
-              <span v-if="orgUserGroupsData?.groups.length === 0">
+              <span v-if="orgGroupsData?.groups.length === 0">
                 No Groups Found
               </span>
               <NuxtUiSelectMenu
@@ -434,7 +434,7 @@
                         :alt="member.name.toString()"
                         :public-id="member.publicId?.toString()"
                         :avatar-id="member.avatarId?.toString()"
-                        :type="'user'"
+                        :type="'orgMember'"
                         size="3xs" />
                       <span>{{ member.name }}</span>
                     </div>
@@ -445,7 +445,7 @@
                   <UnUiAvatar
                     :public-id="option.publicId"
                     :avatar-id="option.avatarId"
-                    :type="'user'"
+                    :type="'orgMember'"
                     :alt="option.name"
                     size="xs" />
                   <span>

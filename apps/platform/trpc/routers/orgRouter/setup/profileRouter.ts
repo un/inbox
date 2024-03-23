@@ -3,7 +3,7 @@ import { router, orgProcedure } from '../../../trpc';
 import { eq } from '@u22n/database/orm';
 import { orgs } from '@u22n/database/schema';
 import { typeIdValidator } from '@u22n/utils';
-import { isUserAdminOfOrg } from '../../../../utils/user';
+import { isAccountAdminOfOrg } from '../../../../utils/account';
 import { TRPCError } from '@trpc/server';
 
 export const orgProfileRouter = router({
@@ -14,10 +14,10 @@ export const orgProfileRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      if (!ctx.user || !ctx.org) {
+      if (!ctx.account || !ctx.org) {
         throw new TRPCError({
           code: 'UNPROCESSABLE_CONTENT',
-          message: 'User or Organization is not defined'
+          message: 'Account or Organization is not defined'
         });
       }
       const { db, org } = ctx;
@@ -52,17 +52,17 @@ export const orgProfileRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.user || !ctx.org) {
+      if (!ctx.account || !ctx.org) {
         throw new TRPCError({
           code: 'UNPROCESSABLE_CONTENT',
-          message: 'User or Organization is not defined'
+          message: 'Account or Organization is not defined'
         });
       }
       const { db, org } = ctx;
       const orgId = org?.id;
       const { orgName } = input;
 
-      const isAdmin = await isUserAdminOfOrg(org);
+      const isAdmin = await isAccountAdminOfOrg(org);
       if (!isAdmin) {
         throw new TRPCError({
           code: 'UNAUTHORIZED',

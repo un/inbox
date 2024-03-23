@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { router, eeProcedure } from '../../../trpc';
 import { eq, and, sql } from '@u22n/database/orm';
 import { orgBilling, orgMembers } from '@u22n/database/schema';
-import { isUserAdminOfOrg } from '../../../../utils/user';
+import { isAccountAdminOfOrg } from '../../../../utils/account';
 import { TRPCError } from '@trpc/server';
 import { billingTrpcClient } from '../../../../utils/tRPCServerClients';
 
@@ -10,16 +10,16 @@ export const billingRouter = router({
   getOrgBillingOverview: eeProcedure
     .input(z.object({}).strict())
     .query(async ({ ctx }) => {
-      if (!ctx.user || !ctx.org) {
+      if (!ctx.account || !ctx.org) {
         throw new TRPCError({
           code: 'UNPROCESSABLE_CONTENT',
-          message: 'User or Organization is not defined'
+          message: 'Account or Organization is not defined'
         });
       }
       const { db, org } = ctx;
       const orgId = org?.id;
 
-      const isAdmin = await isUserAdminOfOrg(org);
+      const isAdmin = await isAccountAdminOfOrg(org);
       if (!isAdmin) {
         throw new TRPCError({
           code: 'UNAUTHORIZED',
@@ -54,16 +54,16 @@ export const billingRouter = router({
   getOrgStripePortalLink: eeProcedure
     .input(z.object({}).strict())
     .query(async ({ ctx }) => {
-      if (!ctx.user || !ctx.org) {
+      if (!ctx.account || !ctx.org) {
         throw new TRPCError({
           code: 'UNPROCESSABLE_CONTENT',
-          message: 'User or Organization is not defined'
+          message: 'Account or Organization is not defined'
         });
       }
       const { org } = ctx;
       const orgId = org?.id;
 
-      const isAdmin = await isUserAdminOfOrg(org);
+      const isAdmin = await isAccountAdminOfOrg(org);
       if (!isAdmin) {
         throw new TRPCError({
           code: 'UNAUTHORIZED',
@@ -94,17 +94,17 @@ export const billingRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      if (!ctx.user || !ctx.org) {
+      if (!ctx.account || !ctx.org) {
         throw new TRPCError({
           code: 'UNPROCESSABLE_CONTENT',
-          message: 'User or Organization is not defined'
+          message: 'Account or Organization is not defined'
         });
       }
       const { db, org } = ctx;
       const orgId = org?.id;
       const { plan, period } = input;
 
-      const isAdmin = await isUserAdminOfOrg(org);
+      const isAdmin = await isAccountAdminOfOrg(org);
       if (!isAdmin) {
         throw new TRPCError({
           code: 'UNAUTHORIZED',

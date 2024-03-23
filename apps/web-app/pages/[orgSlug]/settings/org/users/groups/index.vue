@@ -5,10 +5,10 @@
   const orgSlug = useRoute().params.orgSlug as string;
 
   const {
-    data: orgUserGroupsQuery,
+    data: orgGroupsQuery,
     pending,
     refresh
-  } = await $trpc.org.users.userGroups.getOrgUserGroups.useLazyQuery(
+  } = await $trpc.org.users.groups.getOrgGroups.useLazyQuery(
     {},
     {
       server: false
@@ -49,7 +49,7 @@
   }
 
   const tableRows = ref<TableRow[]>([]);
-  watch(orgUserGroupsQuery, (newResults) => {
+  watch(orgGroupsQuery, (newResults) => {
     if (newResults?.groups) {
       tableRows.value = [];
       for (const group of newResults.groups) {
@@ -111,7 +111,7 @@
             <UnUiAvatar
               :public-id="row.publicId"
               :avatar-id="row.avatarId"
-              :type="'user'"
+              :type="'orgMember'"
               :alt="row.name ? row.name : ''"
               :color="row.color ? row.color : ''"
               size="xs" />
@@ -127,7 +127,7 @@
               :key="member.publicId"
               :public-id="member.publicId"
               :avatar-id="member.avatarId"
-              :type="'user'"
+              :type="'orgMember'"
               :alt="
                 member.firstName && member.lastName
                   ? member.firstName + ' ' + member.lastName

@@ -151,8 +151,8 @@
   });
 
   // get list of groups
-  const { data: orgUserGroupsData } =
-    await $trpc.org.users.userGroups.getOrgUserGroups.useLazyQuery(
+  const { data: orgGroupsData } =
+    await $trpc.org.users.groups.getOrgGroups.useLazyQuery(
       {},
       { server: false }
     );
@@ -165,9 +165,9 @@
   }
   const orgUserGroups = ref<OrgUserGroups[]>([]);
 
-  watch(orgUserGroupsData, (newOrgUserGroupsData) => {
-    if (newOrgUserGroupsData?.groups) {
-      for (const group of newOrgUserGroupsData.groups) {
+  watch(orgGroupsData, (newOrgGroupsData) => {
+    if (newOrgGroupsData?.groups) {
+      for (const group of newOrgGroupsData.groups) {
         orgUserGroups.value.push({
           publicId: group.publicId,
           avatarId: group.avatarId || '',
@@ -192,7 +192,7 @@
       timeout: 30000
     });
 
-    const user = {
+    const newOrgMember = {
       firstName: newInviteUserFnameValue.value,
       ...(newInviteUserLnameValue.value && {
         lastName: newInviteUserLnameValue.value
@@ -230,7 +230,7 @@
     const createNewInviteTrpc =
       $trpc.org.users.invites.createNewInvite.useMutation();
     await createNewInviteTrpc.mutate({
-      user,
+      newOrgMember: newOrgMember,
       notification: sendEmailNotification.value ? sendNotification : undefined,
       email: createEmailIdentity.value ? createEmail : undefined,
       groups: addUserToGroups.value ? addToGroups : undefined
@@ -462,9 +462,7 @@
           label="Add user to group" />
       </div>
       <div v-if="addUserToGroups">
-        <span v-if="orgUserGroupsData?.groups.length === 0">
-          No Groups Found
-        </span>
+        <span v-if="orgGroupsData?.groups.length === 0"> No Groups Found </span>
         <NuxtUiSelectMenu
           v-else
           v-model="selectedOrgGroups"

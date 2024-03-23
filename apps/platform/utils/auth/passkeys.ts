@@ -16,38 +16,38 @@ import { useRuntimeConfig, useStorage } from '#imports';
 const runtimeConfig = useRuntimeConfig();
 
 type RegistrationOptions = {
-  userId?: number;
-  userPublicId: string;
-  userName: string;
+  accountId?: number;
+  accountPublicId: string;
+  username: string;
   userDisplayName: string;
   authenticatorAttachment?: 'platform' | 'cross-platform';
 };
 
 async function generateRegistrationOptions(options: RegistrationOptions) {
   const {
-    userPublicId,
-    userName,
+    accountPublicId,
+    username,
     userDisplayName,
     authenticatorAttachment,
-    userId
+    accountId
   } = options;
 
-  // We assume that the user is new if userId is undefined, and we don't have any authenticators for them
-  const userAuthenticators: Authenticator[] =
-    typeof userId === 'undefined'
+  // We assume that the account is new if accountId is undefined, and we don't have any authenticators for them
+  const accountAuthenticators: Authenticator[] =
+    typeof accountId === 'undefined'
       ? []
-      : await usePasskeysDb.listAuthenticatorsByUserId(userId);
+      : await usePasskeysDb.listAuthenticatorsByAccountId(accountId);
 
   const registrationOptions = await webAuthnGenerateRegistrationOptions({
     rpName: runtimeConfig.auth.passkeys.rpName,
     rpID: runtimeConfig.auth.passkeys.rpID,
-    userID: userPublicId,
-    userName,
+    userID: accountPublicId,
+    userName: username,
     userDisplayName,
     timeout: 60000,
     // As suggested by https://simplewebauthn.dev/docs/packages/server#1-generate-registration-options
     attestationType: 'none',
-    excludeCredentials: userAuthenticators.map((authenticator) => ({
+    excludeCredentials: accountAuthenticators.map((authenticator) => ({
       id: authenticator.credentialID,
       type: 'public-key',
       transports: authenticator.transports
@@ -61,7 +61,7 @@ async function generateRegistrationOptions(options: RegistrationOptions) {
 
   const authStorage = useStorage('auth');
   authStorage.setItem(
-    `passkeyChallenge: ${userPublicId}`,
+    `passkeyChallenge: ${accountPublicId}`,
     registrationOptions.challenge
   );
 
@@ -84,7 +84,7 @@ async function verifyRegistrationResponse({
     throw new TRPCError({
       code: 'BAD_REQUEST',
       message:
-        'No challenge found for user, It may have expired. Please try again.'
+        'No challenge found for account, It may have expired. Please try again.'
     });
   }
 
@@ -126,8 +126,7 @@ async function generateAuthenticationOptions({
 
 async function verifyAuthenticationResponse({
   authenticationResponse,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  expectedAllowedCredentials,
+  // expectedAllowedCredentials,
   authChallengeId
 }: {
   authenticationResponse: AuthenticationResponseJSON;
@@ -157,7 +156,10 @@ async function verifyAuthenticationResponse({
     requireUserVerification: true,
     authenticator: authenticator
   });
-  return { result: verificationResult, userAccount: authenticator.accountId };
+  return {
+    result: verificationResult,
+    accountCredentialId: authenticator.accountCredentialId
+  };
 }
 
 export const usePasskeys = {

@@ -33,7 +33,7 @@
   }
 
   interface ConvoParticipantOrgMembers {
-    type: 'user';
+    type: 'orgMember';
     icon: 'i-ph-user';
     publicId: String;
     avatarId: String;
@@ -45,7 +45,7 @@
     keywords: String;
     own?: Boolean;
   }
-  interface ConvoParticipantOrgUserGroups {
+  interface ConvoParticipantOrgGroups {
     type: 'group';
     icon: 'i-ph-users-three';
     publicId: String;
@@ -75,7 +75,7 @@
 
   type NewConvoParticipant =
     | ConvoParticipantOrgMembers
-    | ConvoParticipantOrgUserGroups
+    | ConvoParticipantOrgGroups
     | ConvoParticipantOrgContacts
     | NewConvoParticipantEmailAddresses;
 
@@ -99,8 +99,8 @@
     );
 
   // get list of groups
-  const { data: orgUserGroupsData, status: orgUserGroupsStatus } =
-    await $trpc.org.users.userGroups.getOrgUserGroups.useLazyQuery(
+  const { data: orgGroupsData, status: orgGroupsStatus } =
+    await $trpc.org.users.groups.getOrgGroups.useLazyQuery(
       {},
       {
         server: false
@@ -119,14 +119,14 @@
   //* List Data
   const orgEmailIdentities = ref<OrgEmailIdentities[]>([]);
   const orgMembers = ref<ConvoParticipantOrgMembers[]>([]);
-  const orgUserGroups = ref<ConvoParticipantOrgUserGroups[]>([]);
+  const orgGroups = ref<ConvoParticipantOrgGroups[]>([]);
   const orgContacts = ref<ConvoParticipantOrgContacts[]>([]);
 
   //* Data Watchers
   function setParticipantOptions() {
     participantOptions.value = [
       ...orgMembers.value,
-      ...orgUserGroups.value,
+      ...orgGroups.value,
       ...orgContacts.value
     ];
   }
@@ -154,7 +154,7 @@
         throw new Error('own org member data not found');
       }
       const ownData: ConvoParticipantOrgMembers = {
-        type: 'user',
+        type: 'orgMember',
         icon: 'i-ph-user',
         publicId: ownOrgMemberData.publicId,
         profilePublicId: ownOrgMemberData.profile.publicId,
@@ -185,7 +185,7 @@
           continue;
         }
         orgMembers.value.push({
-          type: 'user',
+          type: 'orgMember',
           icon: 'i-ph-user',
           publicId: member.publicId,
           profilePublicId: member.profile.publicId,
@@ -208,10 +208,10 @@
     setParticipantOptions();
   });
 
-  watch(orgUserGroupsData, (newOrgUserGroupsData) => {
-    if (newOrgUserGroupsData?.groups) {
-      for (const group of newOrgUserGroupsData.groups) {
-        orgUserGroups.value.push({
+  watch(orgGroupsData, (newOrgGroupsData) => {
+    if (newOrgGroupsData?.groups) {
+      for (const group of newOrgGroupsData.groups) {
+        orgGroups.value.push({
           type: 'group',
           icon: 'i-ph-users-three',
           publicId: group.publicId,
@@ -327,7 +327,7 @@
 
   const participantPlaceholder = computed(() => {
     if (
-      orgUserGroupsStatus.value !== 'success' ||
+      orgGroupsStatus.value !== 'success' ||
       orgMembersStatus.value !== 'success'
     ) {
       return 'Loading Participants';
@@ -405,7 +405,7 @@
 
     const convoToValue:
       | { type: 'email'; emailAddress: string }
-      | { type: 'user' | 'group' | 'contact'; publicId: string } =
+      | { type: 'orgMember' | 'group' | 'contact'; publicId: string } =
       firstParticipant.type === 'email'
         ? {
             type: 'email',
@@ -453,7 +453,7 @@
   }
 </script>
 <template>
-  <div class="flex h-full max-h-full w-full max-w-full flex-col gap-4">
+  <div class="flex h-full max-h-full w-full max-w-full flex-col gap-4 p-4">
     <div class="z-20000 from-base-1 mb-[-24px] h-[24px] bg-gradient-to-b" />
     <UnUiAlert
       v-if="
@@ -525,12 +525,12 @@
                       </span>
                     </div>
                     <div
-                      v-if="participant.type === 'user'"
+                      v-if="participant.type === 'orgMember'"
                       class="flex flex-row items-center gap-1">
                       <UnUiAvatar
                         :public-id="participant.profilePublicId.toString()"
                         :avatar-id="participant.avatarId.toString()"
-                        :type="'user'"
+                        :type="'orgMember'"
                         :alt="participant.name.toString()"
                         size="xs" />
                       <span>
@@ -567,9 +567,7 @@
               <template #option="{ option }">
                 <UnUiIcon :name="option.icon" />
                 <div v-if="option.type === 'email'">
-                  <span>
-                    {{ option.address }}
-                  </span>
+                  <span> {{ option.address }} - {{ option }} </span>
                 </div>
                 <div
                   v-if="option.type === 'contact'"
@@ -586,12 +584,12 @@
                   <span class="text-xs"> - {{ option.address }}</span>
                 </div>
                 <div
-                  v-if="option.type === 'user'"
+                  v-if="option.type === 'orgMember'"
                   class="flex flex-row items-center gap-2">
                   <UnUiAvatar
                     :public-id="option.profilePublicId"
-                    :avatar-id="option.profileAvatarId"
-                    :type="'user'"
+                    :avatar-id="option.avatarId"
+                    :type="'orgMember'"
                     :alt="option.name"
                     size="xs" />
                   <span>

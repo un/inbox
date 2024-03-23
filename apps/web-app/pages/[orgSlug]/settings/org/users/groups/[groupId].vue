@@ -15,15 +15,15 @@
   const groupPublicId = route.params.groupId as string;
   const isNewGroup = route.query.new === 'true';
 
-  const showAddNewUser = ref(false);
+  const showAddNewOrgMember = ref(false);
 
-  const addingUserId = ref('');
+  const addingOrgMemberId = ref('');
 
   const { data: groupData, pending: groupPending } =
-    await $trpc.org.users.userGroups.getUserGroup.useLazyQuery(
+    await $trpc.org.users.groups.getGroup.useLazyQuery(
       {
-        userGroupPublicId: groupPublicId,
-        newUserGroup: isNewGroup
+        groupPublicId: groupPublicId,
+        newGroup: isNewGroup
       },
       { server: false }
     );
@@ -54,22 +54,24 @@
     notifications: string;
   }
 
-  const usersInGroup = ref<string[]>([]);
+  const orgMembersInGroup = ref<string[]>([]);
   const tableRows = ref<TableRow[]>([]);
   watch(groupData, (newResults) => {
     if (newResults?.group?.members) {
       for (const member of newResults.group.members) {
         tableRows.value.push({
           publicId: member.publicId,
-          avatarId: member.userProfile?.avatarId || '',
+          avatarId: member.orgMemberProfile?.avatarId || '',
           name:
-            member.userProfile?.firstName + ' ' + member.userProfile?.lastName,
-          handle: member.userProfile?.handle || '',
-          title: member.userProfile?.title || '',
+            member.orgMemberProfile?.firstName +
+            ' ' +
+            member.orgMemberProfile?.lastName,
+          handle: member.orgMemberProfile?.handle || '',
+          title: member.orgMemberProfile?.title || '',
           role: member.role,
           notifications: member.notifications
         });
-        usersInGroup.value.push(member.orgMember.publicId);
+        orgMembersInGroup.value.push(member.orgMember.publicId);
       }
     }
   });
@@ -83,9 +85,9 @@
     { server: false, immediate: false }
   );
 
-  function showAddUser() {
+  function showAddOrgMember() {
     getOrgMembersList();
-    showAddNewUser.value = true;
+    showAddNewOrgMember.value = true;
   }
 
   interface OrgMemberDropdownData {
@@ -100,7 +102,7 @@
   watch(orgMembersData, (newOrgMembersData) => {
     if (newOrgMembersData?.members) {
       for (const member of newOrgMembersData.members) {
-        if (!usersInGroup.value.includes(member.publicId)) {
+        if (!orgMembersInGroup.value.includes(member.publicId)) {
           orgMembersDropdownData.value.push({
             orgMemberPublicId: member.publicId,
             label:
@@ -118,22 +120,24 @@
     }
   });
 
-  const selectedUserToAdd = ref<OrgMemberDropdownData | undefined>(undefined);
+  const selectedOrgMemberToAdd = ref<OrgMemberDropdownData | undefined>(
+    undefined
+  );
 
-  async function addNewUserToGroup(orgMemberPublicId: string) {
+  async function addNewOrgMemberToGroup(orgMemberPublicId: string) {
     const toast = useToast();
-    addingUserId.value = orgMemberPublicId;
-    const addUserToGroupTrpc =
-      $trpc.org.users.userGroups.addUserToGroup.useMutation();
-    await addUserToGroupTrpc.mutate({
+    addingOrgMemberId.value = orgMemberPublicId;
+    const addOrgMemberToGroupTrpc =
+      $trpc.org.users.groups.addOrgMemberToGroup.useMutation();
+    await addOrgMemberToGroupTrpc.mutate({
       groupPublicId: groupPublicId,
       orgMemberPublicId: orgMemberPublicId
     });
-    if (addUserToGroupTrpc.status.value === 'error') {
+    if (addOrgMemberToGroupTrpc.status.value === 'error') {
       toast.add({
-        id: 'add_user_to_group_fail',
-        title: 'Could not add user to group',
-        description: `${selectedUserToAdd.value?.name} could not be added to the ${groupData.value?.group?.name} group`,
+        id: 'add_org_member_to_group_fail',
+        title: 'Could not add org member to group',
+        description: `${selectedOrgMemberToAdd.value?.name} could not be added to the ${groupData.value?.group?.name} group`,
         color: 'red',
         icon: 'i-ph-warning-circle',
         timeout: 5000
@@ -141,8 +145,8 @@
       return;
     }
 
-    usersInGroup.value.push(orgMemberPublicId);
-    // get the user profile from the org members list
+    orgMembersInGroup.value.push(orgMemberPublicId);
+    // get the org member profile from the org members list
     const member = orgMembersData?.value?.members?.find(
       (member) => member.publicId === orgMemberPublicId
     );
@@ -156,11 +160,11 @@
       notifications: ''
     });
 
-    addingUserId.value = '';
+    addingOrgMemberId.value = '';
     toast.add({
-      id: 'user_added_to_group',
-      title: 'User Added',
-      description: `${selectedUserToAdd.value?.name} has been added to the ${groupData.value?.group?.name} group`,
+      id: 'org_member_added_to_group',
+      title: 'Org Member Added',
+      description: `${selectedOrgMemberToAdd.value?.name} has been added to the ${groupData.value?.group?.name} group`,
       icon: 'i-ph-thumbs-up',
       timeout: 5000
     });
@@ -245,7 +249,7 @@
                 <UnUiAvatar
                   :public-id="row.publicId"
                   :avatar-id="row.avatarId"
-                  :type="'user'"
+                  :type="'orgMember'"
                   :alt="row.name"
                   size="xs" />
                 <span class="">{{ row.name }}</span>
@@ -294,11 +298,11 @@
             </template>
           </NuxtUiTable>
           <UnUiButton
-            v-if="!showAddNewUser"
+            v-if="!showAddNewOrgMember"
             label="Add more users to the group"
-            @click="showAddUser()" />
+            @click="showAddOrgMember()" />
           <div
-            v-if="showAddNewUser && orgMembersPending"
+            v-if="showAddNewOrgMember && orgMembersPending"
             class="flex w-full flex-row items-center justify-center gap-4">
             <UnUiIcon
               name="i-svg-spinners:3-dots-fade"
@@ -306,24 +310,24 @@
             <span>Loading group members</span>
           </div>
           <div
-            v-if="showAddNewUser && !orgMembersPending"
+            v-if="showAddNewOrgMember && !orgMembersPending"
             class="grid w-full grid-cols-2 gap-4">
             <NuxtUiSelectMenu
-              v-model="selectedUserToAdd"
+              v-model="selectedOrgMemberToAdd"
               searchable
               searchable-placeholder="Search a person..."
               placeholder="Select a person"
               :options="orgMembersDropdownData">
               <template
-                v-if="selectedUserToAdd"
+                v-if="selectedOrgMemberToAdd"
                 #label>
                 <UnUiIcon
                   name="i-ph-check"
                   class="h-4 w-4" />
 
-                {{ selectedUserToAdd.label }}
+                {{ selectedOrgMemberToAdd.label }}
                 <UnUiTooltip
-                  v-if="selectedUserToAdd.role === 'admin'"
+                  v-if="selectedOrgMemberToAdd.role === 'admin'"
                   text="Organization Admin">
                   <UnUiIcon
                     name="i-ph-crown"
@@ -334,7 +338,7 @@
                 <UnUiAvatar
                   :public-id="option.publicId"
                   :avatar-id="option.avatarId"
-                  :type="'user'"
+                  :type="'orgMember'"
                   :alt="option.label"
                   size="3xs" />
 
@@ -351,9 +355,11 @@
             <UnUiButton
               label="Add to group"
               size="sm"
-              :disabled="!selectedUserToAdd"
+              :disabled="!selectedOrgMemberToAdd"
               @click="
-                addNewUserToGroup(selectedUserToAdd?.orgMemberPublicId || '')
+                addNewOrgMemberToGroup(
+                  selectedOrgMemberToAdd?.orgMemberPublicId || ''
+                )
               " />
           </div>
         </div>

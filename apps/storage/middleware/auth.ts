@@ -4,19 +4,19 @@ import { getCookie, useStorage } from '#imports';
 export default defineEventHandler(async (event) => {
   const sessionCookie = getCookie(event, 'unsession');
   if (!sessionCookie) {
-    event.context.user = null;
+    event.context.account = null;
     return;
   }
   const sessionStorage = useStorage('sessions');
   const sessionObject = await sessionStorage.getItem(sessionCookie);
   if (!sessionObject) {
-    event.context.user = null;
+    event.context.account = null;
     return;
   }
-  const userContext = {
+  const accountContext = {
     // @ts-expect-error, not typed properly yet
-    id: +sessionObject.attributes.user.id,
+    id: +sessionObject.attributes.account.id,
     session: sessionObject
   };
-  event.context.user = userContext;
+  event.context.account = accountContext;
 });

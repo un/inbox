@@ -14,14 +14,14 @@ import {
   convos,
   convoParticipants,
   convoSubjects,
-  userProfiles,
-  userGroups,
+  orgMemberProfiles,
+  groups,
   orgMembers,
   contacts,
   contactGlobalReputations,
   convoEntries,
-  emailIdentitiesAuthorizedUsers,
-  userGroupMembers,
+  emailIdentitiesAuthorizedOrgMembers,
+  groupMembers,
   type ConvoEntryMetadataEmailAddress,
   convoAttachments,
   pendingAttachments
@@ -44,16 +44,18 @@ export const convoRouter = router({
     .input(
       z.object({
         participantsOrgMembersPublicIds: z.array(typeIdValidator('orgMembers')),
-        participantsGroupsPublicIds: z.array(typeIdValidator('userGroups')),
-        participantsContactsPublicIds: z.array(typeIdValidator('userProfile')),
+        participantsGroupsPublicIds: z.array(typeIdValidator('groups')),
+        participantsContactsPublicIds: z.array(
+          typeIdValidator('orgMemberProfile')
+        ),
         participantsEmails: z.array(z.string()),
         sendAsEmailIdentityPublicId:
           typeIdValidator('emailIdentities').optional(),
         to: z
           .object({
-            type: z.enum(['user', 'group', 'contact']),
+            type: z.enum(['orgMember', 'group', 'contact']),
             publicId: typeIdValidator('orgMembers')
-              .or(typeIdValidator('userGroups'))
+              .or(typeIdValidator('groups'))
               .or(typeIdValidator('contacts'))
           })
           .or(
@@ -76,21 +78,21 @@ export const convoRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.user || !ctx.org) {
+      if (!ctx.account || !ctx.org) {
         throw new TRPCError({
           code: 'UNPROCESSABLE_CONTENT',
-          message: 'User or Organization is not defined'
+          message: 'account or Organization is not defined'
         });
       }
       const { db, org } = ctx;
       if (!org?.memberId) {
         throw new TRPCError({
           code: 'UNPROCESSABLE_CONTENT',
-          message: 'User is not a member of the organization'
+          message: 'account is not a member of the organization'
         });
       }
 
-      const userOrgMemberId = org?.memberId;
+      const accountOrgMemberId = org?.memberId;
       const orgId = org?.id;
       const {
         sendAsEmailIdentityPublicId,
@@ -139,7 +141,7 @@ export const convoRouter = router({
           convoMetadataToAddress = { id: +contactResponse.id, type: 'contact' };
           return `${contactResponse.emailUsername}@${contactResponse.emailDomain}`;
         } else if (convoMessageToType === 'group') {
-          if (!validateTypeId('userGroups', convoMessageTo.publicId)) {
+          if (!validateTypeId('groups', convoMessageTo.publicId)) {
             throw new TRPCError({
               code: 'INTERNAL_SERVER_ERROR',
               message:
@@ -147,8 +149,8 @@ export const convoRouter = router({
             });
           }
 
-          const groupResponse = await db.query.userGroups.findFirst({
-            where: eq(userGroups.publicId, convoMessageTo.publicId),
+          const groupResponse = await db.query.groups.findFirst({
+            where: eq(groups.publicId, convoMessageTo.publicId),
             columns: {
               id: true,
               name: true
@@ -161,13 +163,13 @@ export const convoRouter = router({
             });
           }
           const emailIdentitiesResponse =
-            await db.query.emailIdentitiesAuthorizedUsers.findFirst({
+            await db.query.emailIdentitiesAuthorizedOrgMembers.findFirst({
               where: and(
                 eq(
-                  emailIdentitiesAuthorizedUsers.userGroupId,
+                  emailIdentitiesAuthorizedOrgMembers.groupId,
                   groupResponse.id
                 ),
-                eq(emailIdentitiesAuthorizedUsers.default, true)
+                eq(emailIdentitiesAuthorizedOrgMembers.default, true)
               ),
               columns: {
                 id: true
@@ -192,7 +194,7 @@ export const convoRouter = router({
             type: 'emailIdentity'
           };
           return `${emailIdentitiesResponse.identity.username}@${emailIdentitiesResponse.identity.domainName}`;
-        } else if (convoMessageToType === 'user') {
+        } else if (convoMessageToType === 'orgMember') {
           if (!validateTypeId('orgMembers', convoMessageTo.publicId)) {
             throw new TRPCError({
               code: 'INTERNAL_SERVER_ERROR',
@@ -221,13 +223,13 @@ export const convoRouter = router({
             });
           }
           const emailIdentitiesResponse =
-            await db.query.emailIdentitiesAuthorizedUsers.findFirst({
+            await db.query.emailIdentitiesAuthorizedOrgMembers.findFirst({
               where: and(
                 eq(
-                  emailIdentitiesAuthorizedUsers.orgMemberId,
+                  emailIdentitiesAuthorizedOrgMembers.orgMemberId,
                   orgMemberResponse.id
                 ),
-                eq(emailIdentitiesAuthorizedUsers.default, true)
+                eq(emailIdentitiesAuthorizedOrgMembers.default, true)
               ),
               columns: {
                 id: true
@@ -296,13 +298,13 @@ export const convoRouter = router({
 
       // validate the publicIds of Groups and get the IDs
       if (participantsGroupsPublicIds && participantsGroupsPublicIds.length) {
-        const groupResponses = await db.query.userGroups.findMany({
-          where: inArray(userGroups.publicId, participantsGroupsPublicIds),
+        const groupResponses = await db.query.groups.findMany({
+          where: inArray(groups.publicId, participantsGroupsPublicIds),
           columns: {
             id: true
           }
         });
-        orgGroupIds.push(...groupResponses.map((userGroups) => userGroups.id));
+        orgGroupIds.push(...groupResponses.map((groups) => groups.id));
 
         if (orgGroupIds.length !== participantsGroupsPublicIds.length) {
           throw new TRPCError({
@@ -318,7 +320,10 @@ export const convoRouter = router({
         participantsContactsPublicIds.length
       ) {
         const contactResponses = await db.query.contacts.findMany({
-          where: inArray(userProfiles.publicId, participantsContactsPublicIds),
+          where: inArray(
+            orgMemberProfiles.publicId,
+            participantsContactsPublicIds
+          ),
           columns: {
             id: true
           }
@@ -485,7 +490,7 @@ export const convoRouter = router({
             orgId: orgId,
             convoId: +insertConvoResponse.insertId,
             publicId: convoMemberPublicId,
-            userGroupId: groupId
+            groupId: groupId
           });
         });
         await db
@@ -518,7 +523,7 @@ export const convoRouter = router({
           orgId: orgId,
           convoId: +insertConvoResponse.insertId,
           publicId: authorConvoParticipantPublicId,
-          orgMemberId: userOrgMemberId,
+          orgMemberId: accountOrgMemberId,
           role: 'assigned'
         });
 
@@ -621,10 +626,13 @@ export const convoRouter = router({
           await Promise.all(
             orgMemberIds.map(async (orgMemberId) => {
               const emailIdentityResponse =
-                await db.query.emailIdentitiesAuthorizedUsers.findFirst({
+                await db.query.emailIdentitiesAuthorizedOrgMembers.findFirst({
                   where: and(
-                    eq(emailIdentitiesAuthorizedUsers.orgMemberId, orgMemberId),
-                    eq(emailIdentitiesAuthorizedUsers.default, true)
+                    eq(
+                      emailIdentitiesAuthorizedOrgMembers.orgMemberId,
+                      orgMemberId
+                    ),
+                    eq(emailIdentitiesAuthorizedOrgMembers.default, true)
                   ),
                   columns: {
                     id: true
@@ -680,10 +688,10 @@ export const convoRouter = router({
           await Promise.all(
             orgGroupIds.map(async (orgGroupId) => {
               const emailIdentityResponse =
-                await db.query.emailIdentitiesAuthorizedUsers.findFirst({
+                await db.query.emailIdentitiesAuthorizedOrgMembers.findFirst({
                   where: and(
-                    eq(emailIdentitiesAuthorizedUsers.userGroupId, orgGroupId),
-                    eq(emailIdentitiesAuthorizedUsers.default, true)
+                    eq(emailIdentitiesAuthorizedOrgMembers.groupId, orgGroupId),
+                    eq(emailIdentitiesAuthorizedOrgMembers.default, true)
                   ),
                   columns: {
                     id: true
@@ -698,8 +706,8 @@ export const convoRouter = router({
                   }
                 });
               if (!emailIdentityResponse) {
-                const orgGroupResponse = await db.query.userGroups.findFirst({
-                  where: eq(userGroups.id, orgGroupId),
+                const orgGroupResponse = await db.query.groups.findFirst({
+                  where: eq(groups.id, orgGroupId),
                   columns: {
                     publicId: true,
                     name: true
@@ -806,24 +814,24 @@ export const convoRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      const { db, user, org } = ctx;
+      const { db, account, org } = ctx;
 
-      if (!ctx.user || !ctx.org) {
+      if (!ctx.account || !ctx.org) {
         throw new TRPCError({
           code: 'UNPROCESSABLE_CONTENT',
-          message: 'User or Organization is not defined'
+          message: 'account or Organization is not defined'
         });
       }
       if (!org?.memberId) {
         throw new TRPCError({
           code: 'UNPROCESSABLE_CONTENT',
-          message: 'User is not a member of the organization'
+          message: 'account is not a member of the organization'
         });
       }
 
-      const userId = user.id;
+      const accountId = account.id;
       const orgId = org.id;
-      const userOrgMemberId = org.memberId;
+      const accountOrgMemberId = org.memberId;
 
       const { convoPublicId } = input;
 
@@ -845,7 +853,7 @@ export const convoRouter = router({
         const convoOrgOwnerMembersIds = await db.query.orgMembers.findMany({
           where: eq(orgMembers.orgId, convoResponse.orgId),
           columns: {
-            userId: true
+            accountId: true
           },
           with: {
             org: {
@@ -856,9 +864,9 @@ export const convoRouter = router({
           }
         });
         const convoOrgOwnerUserIds = convoOrgOwnerMembersIds.map((member) =>
-          Number(member?.userId ?? 0)
+          Number(member?.accountId ?? 0)
         );
-        if (!convoOrgOwnerUserIds.includes(userId)) {
+        if (!convoOrgOwnerUserIds.includes(accountId)) {
           throw new TRPCError({
             code: 'NOT_FOUND',
             message: 'Conversation not found'
@@ -889,7 +897,7 @@ export const convoRouter = router({
             columns: {
               publicId: true,
               orgMemberId: true,
-              userGroupId: true,
+              groupId: true,
               contactId: true,
               lastReadAt: true,
               notifications: true,
@@ -915,7 +923,7 @@ export const convoRouter = router({
                   }
                 }
               },
-              userGroup: {
+              group: {
                 columns: {
                   avatarId: true,
                   id: true,
@@ -962,21 +970,21 @@ export const convoRouter = router({
         });
       }
 
-      // Find the participant.publicId for the userOrgMemberId
+      // Find the participant.publicId for the accountOrgMemberId
       let participantPublicId: string | undefined;
 
       // Check if the user's orgMemberId is in the conversation participants
       convoDetails?.participants.forEach((participant) => {
-        if (participant.orgMember?.id === userOrgMemberId) {
+        if (participant.orgMember?.id === accountOrgMemberId) {
           participantPublicId = participant.publicId;
         }
       });
 
-      // If not found, check if the user's orgMemberId is in any participant's userGroup members
+      // If not found, check if the user's orgMemberId is in any participant's group members
       if (!participantPublicId) {
         convoDetails?.participants.forEach((participant) => {
-          participant.userGroup?.members.forEach((groupMember) => {
-            if (groupMember.orgMemberId === userOrgMemberId) {
+          participant.group?.members.forEach((groupMember) => {
+            if (groupMember.orgMemberId === accountOrgMemberId) {
               participantPublicId = participant.publicId;
             }
           });
@@ -994,7 +1002,7 @@ export const convoRouter = router({
       // strip the user IDs from the response
       convoDetails.participants.forEach((participant) => {
         if (participant.orgMember?.id) participant.orgMember.id = 0;
-        participant.userGroup?.members.forEach((groupMember) => {
+        participant.group?.members.forEach((groupMember) => {
           if (groupMember.orgMemberId) groupMember.orgMemberId = 0;
         });
       });
@@ -1058,11 +1066,11 @@ export const convoRouter = router({
                 or(
                   eq(convoParticipants.orgMemberId, orgMemberId),
                   inArray(
-                    convoParticipants.userGroupId,
+                    convoParticipants.groupId,
                     db
-                      .select({ id: userGroupMembers.groupId })
-                      .from(userGroupMembers)
-                      .where(eq(userGroupMembers.orgMemberId, orgMemberId))
+                      .select({ id: groupMembers.groupId })
+                      .from(groupMembers)
+                      .where(eq(groupMembers.orgMemberId, orgMemberId))
                   )
                 )
               )
@@ -1094,7 +1102,7 @@ export const convoRouter = router({
                   }
                 }
               },
-              userGroup: {
+              group: {
                 columns: {
                   publicId: true,
                   name: true,
@@ -1144,7 +1152,7 @@ export const convoRouter = router({
                       }
                     }
                   },
-                  userGroup: {
+                  group: {
                     columns: {
                       publicId: true,
                       name: true,

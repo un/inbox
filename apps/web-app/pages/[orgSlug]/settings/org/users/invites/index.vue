@@ -92,7 +92,7 @@
             ? invite.invitedByOrgMember.profile.avatarId
             : '',
           created: invite.invitedAt,
-          userAvatarId: invite.orgMember?.profile
+          orgMemberAvatarId: invite.orgMember?.profile
             ? invite.orgMember?.profile.avatarId
             : '',
           usedBy: invite.orgMember?.profile
@@ -154,8 +154,8 @@
               <UnUiAvatar
                 v-if="row.userAvatar || row.usedBy"
                 :public-id="''"
-                :avatar-id="row.userAvatarId"
-                :type="'user'"
+                :avatar-id="row.orgMemberAvatarId"
+                :type="'orgMember'"
                 :alt="row.usedBy ? row.usedBy : ''"
                 size="xs" />
               <span class="">{{ row.usedBy }}</span>
@@ -178,16 +178,16 @@
             </UnUiTooltip>
           </template>
           <template #role-data="{ row }">
-            <UnUiBadge :color="row.role === 'admin' ? 'yellow' : 'blue'">
+            <UnUiBadge :color="row.role === 'admin' ? 'amber' : 'bronze'">
               <span class="uppercase">{{ row.role }}</span>
             </UnUiBadge>
           </template>
           <template #createdBy-data="{ row }">
             <div class="flex flex-row items-center gap-2">
               <UnUiAvatar
-                :public-id="''"
+                :public-id="row.createdByAvatarId"
                 :avatar-id="row.creatorAvatarId"
-                :type="'user'"
+                :type="'orgMember'"
                 :alt="row.createdBy ? row.createdBy : ''"
                 size="xs" />
             </div>

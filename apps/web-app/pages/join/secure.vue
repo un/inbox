@@ -27,7 +27,7 @@
   const pageError = ref(false);
   const turnstileError = ref(false);
 
-  const userCreated = ref(false);
+  const accountCreated = ref(false);
   const passkeyCreated = ref(false);
   const passwordCreated = ref(false);
   // check if the users device can directly support passkeys
@@ -122,8 +122,8 @@
   }
 
   const toast = useToast();
-  async function createUserAccount() {
-    if (!userCreated.value) {
+  async function createAccount() {
+    if (!accountCreated.value) {
       if (turnstileEnabled && turnstileToken.value === null) {
         turnstileError.value = true;
         await new Promise((resolve) => {
@@ -141,7 +141,7 @@
       buttonLabel.value = 'Creating your account';
     }
 
-    userCreated.value = true;
+    accountCreated.value = true;
 
     if (secureType.value === 'password') {
       const signUp = await $trpc.auth.password.signUpWithPassword.mutate({
@@ -294,7 +294,7 @@
             @click="switchSecureType('passkey')">
             <UnUiIcon
               name="i-mdi-fingerprint"
-              class="text-base-3 text-5xl" />
+              class="text-base-9 text-5xl" />
             <p class="font-medium">Passkey</p>
             <p class="text-sm">Fingerprint, Face ID, etc</p>
             <UnUiBadge
@@ -306,19 +306,19 @@
             orientation="vertical"
             class="w-fit" />
           <button
-            class="bg-base-3 col-span-4 flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded border-2 p-4 dark:bg-gray-800"
+            class="bg-base-3 col-span-4 flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded border-2 p-4"
             :class="
               secureType === 'password' ? 'border-green-9' : 'border-base-9'
             "
             @click="switchSecureType('password')">
             <UnUiIcon
               name="i-ph-password-light"
-              class="text-base-3 text-5xl" />
+              class="text-base-9 text-5xl" />
             <p class="font-medium">Password</p>
             <p class="text-sm">Alphanumeric!1</p>
             <UnUiBadge
               label="Less Secure"
-              color="orange" />
+              color="amber" />
           </button>
         </div>
       </div>
@@ -481,7 +481,7 @@
           :loading="buttonLoading"
           :disabled="!formValid"
           block
-          @click="createUserAccount()" />
+          @click="createAccount()" />
       </div>
       <p
         v-if="pageError"

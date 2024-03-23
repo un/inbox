@@ -107,7 +107,7 @@
                 <UnUiAvatar
                   :public-id="destination.orgMember?.profile?.publicId || ''"
                   :avatar-id="destination.orgMember?.profile?.avatarId || ''"
-                  :type="'user'"
+                  :type="'orgMember'"
                   :alt="
                     destination.orgMember?.profile?.firstName +
                     ' ' +

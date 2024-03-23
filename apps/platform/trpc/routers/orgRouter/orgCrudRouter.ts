@@ -1,8 +1,13 @@
 import { z } from 'zod';
-import { router, userProcedure } from '../../trpc';
+import { router, accountProcedure } from '../../trpc';
 import type { DBType } from '@u22n/database';
 import { eq, and } from '@u22n/database/orm';
-import { orgs, orgMembers, userProfiles, users } from '@u22n/database/schema';
+import {
+  orgs,
+  orgMembers,
+  orgMemberProfiles,
+  accounts
+} from '@u22n/database/schema';
 import { typeIdGenerator } from '@u22n/utils';
 import { TRPCError } from '@trpc/server';
 import { blockedUsernames, reservedUsernames } from '../../../utils/signup';
@@ -44,7 +49,7 @@ async function validateOrgSlug(
 }
 
 export const crudRouter = router({
-  checkSlugAvailability: userProcedure
+  checkSlugAvailability: accountProcedure
     .input(
       z.object({
         slug: z
@@ -60,7 +65,7 @@ export const crudRouter = router({
       return await validateOrgSlug(ctx.db, input.slug);
     }),
 
-  createNewOrg: userProcedure
+  createNewOrg: accountProcedure
     .input(
       z.object({
         orgName: z.string().min(3).max(32),
@@ -74,95 +79,57 @@ export const crudRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const { db, user } = ctx;
-      const userId = user.id;
+      const { db, account } = ctx;
+      const accountId = account.id;
 
       const newPublicId = typeIdGenerator('org');
 
       const insertOrgResponse = await db.insert(orgs).values({
-        ownerId: userId,
+        ownerId: accountId,
         name: input.orgName,
         slug: input.orgSlug,
         publicId: newPublicId
       });
       const orgId = +insertOrgResponse.insertId;
 
-      const userProfile = await db.query.userProfiles.findFirst({
-        where: and(
-          eq(userProfiles.userId, userId),
-          eq(userProfiles.defaultProfile, true)
-        ),
-        columns: {
-          id: true,
-          publicId: true,
-          avatarId: true,
-          userId: true,
-          firstName: true,
-          lastName: true,
-          handle: true,
-          title: true,
-          blurb: true,
-          defaultProfile: true,
-          createdAt: true
-        }
-      });
-      const newProfilePublicId = typeIdGenerator('userProfile');
-      let userProfileId: number;
-      if (userProfile && userProfile.id) {
-        const existingFields = {
-          publicId: newProfilePublicId,
-          avatarId: userProfile.avatarId,
-          userId: userProfile.userId,
-          firstName: userProfile.firstName,
-          lastName: userProfile.lastName,
-          handle: userProfile.handle,
-          title: userProfile.title,
-          blurb: userProfile.blurb,
-          defaultProfile: false
-        };
-        const newProfile = await db.insert(userProfiles).values(existingFields);
-        userProfileId = +newProfile.insertId;
-      } else {
-        const { username } =
-          (await db.query.users.findFirst({
-            where: eq(users.id, userId),
-            columns: {
-              username: true
-            }
-          })) || {};
+      const newProfilePublicId = typeIdGenerator('orgMemberProfile');
 
-        if (!username) {
-          throw new TRPCError({
-            code: 'NOT_FOUND',
-            message: 'User not found. Please contact support.'
-          });
-        }
+      const { username } =
+        (await db.query.accounts.findFirst({
+          where: eq(accounts.id, accountId),
+          columns: {
+            username: true
+          }
+        })) || {};
 
-        const defaultProfileValues = {
+      if (!username) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'User not found. Please contact support.'
+        });
+      }
+
+      const newOrgMemberProfileInsert = await db
+        .insert(orgMemberProfiles)
+        .values({
+          orgId: orgId,
           publicId: newProfilePublicId,
-          userId: userId,
+          accountId: accountId,
           firstName: username,
           lastName: '',
           handle: username,
           title: '',
-          blurb: '',
-          defaultProfile: true
-        };
+          blurb: ''
+        });
 
-        const newProfile = await db
-          .insert(userProfiles)
-          .values(defaultProfileValues);
-        userProfileId = +newProfile.insertId;
-      }
-
-      const newPublicId2 = typeIdGenerator('orgMembers');
+      const newOrgMemberPublicId = typeIdGenerator('orgMembers');
       await db.insert(orgMembers).values({
         orgId: orgId,
-        publicId: newPublicId2,
+        publicId: newOrgMemberPublicId,
         role: 'admin',
-        userId: userId,
+        accountId: accountId,
         status: 'active',
-        userProfileId: userProfileId
+        orgMemberProfileId: Number(newOrgMemberProfileInsert.insertId)
       });
 
       return {
@@ -171,25 +138,28 @@ export const crudRouter = router({
       };
     }),
 
-  getUserOrgs: userProcedure
+  getAccountOrgs: accountProcedure
     .input(
       z.object({
         onlyAdmin: z.boolean().optional()
       })
     )
     .query(async ({ ctx, input }) => {
-      const { db, user } = ctx;
-      const userId = user.id;
+      const { db, account } = ctx;
+      const accountId = account.id;
 
-      const whereUserIsAdmin = input.onlyAdmin || false;
+      const whereAccountIsAdmin = input.onlyAdmin || false;
 
       const orgMembersQuery = await db.query.orgMembers.findMany({
         columns: {
           role: true
         },
-        where: whereUserIsAdmin
-          ? and(eq(orgMembers.userId, userId), eq(orgMembers.role, 'admin'))
-          : eq(orgMembers.userId, userId),
+        where: whereAccountIsAdmin
+          ? and(
+              eq(orgMembers.accountId, accountId),
+              eq(orgMembers.role, 'admin')
+            )
+          : eq(orgMembers.accountId, accountId),
         with: {
           org: {
             columns: {

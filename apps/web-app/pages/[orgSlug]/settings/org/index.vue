@@ -92,7 +92,7 @@
         '5xl'
       ) as string;
     }
-    refreshNuxtData('getUserOrgsNav');
+    refreshNuxtData('getAccountOrgsNav');
     uploadLoading.value = false;
     //TODO: make the image only appear once it has been loaded to avoid blank box, find a way to show skeleton loading animation
   });

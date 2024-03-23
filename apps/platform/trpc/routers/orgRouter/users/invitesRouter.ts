@@ -3,7 +3,7 @@ import {
   router,
   orgProcedure,
   limitedProcedure,
-  userProcedure
+  accountProcedure
 } from '../../../trpc';
 import { eq, inArray } from '@u22n/database/orm';
 import {
@@ -11,14 +11,13 @@ import {
   emailIdentities,
   emailRoutingRules,
   emailRoutingRulesDestinations,
-  emailIdentitiesAuthorizedUsers,
+  emailIdentitiesAuthorizedOrgMembers,
   orgInvitations,
   orgMembers,
-  userGroupMembers,
-  userGroups,
-  userProfiles,
-  userProfilesToOrgs,
-  users
+  groupMembers,
+  groups,
+  orgMemberProfiles,
+  accounts
 } from '@u22n/database/schema';
 import {
   nanoIdToken,
@@ -27,7 +26,7 @@ import {
   zodSchemas
 } from '@u22n/utils';
 import { refreshOrgSlugCache } from '../../../../utils/orgSlug';
-import { isUserAdminOfOrg } from '../../../../utils/user';
+import { isAccountAdminOfOrg } from '../../../../utils/account';
 import { TRPCError } from '@trpc/server';
 import { useRuntimeConfig } from '#imports';
 import { billingTrpcClient } from '../../../../utils/tRPCServerClients';
@@ -36,7 +35,7 @@ export const invitesRouter = router({
   createNewInvite: orgProcedure
     .input(
       z.object({
-        user: z.object({
+        newOrgMember: z.object({
           firstName: z.string().min(1).max(64),
           lastName: z.string().min(1).max(64).optional(),
           title: z.string().min(1).max(64).optional(),
@@ -56,16 +55,16 @@ export const invitesRouter = router({
           .optional(),
         groups: z
           .object({
-            groupsPublicIds: z.array(typeIdValidator('userGroups'))
+            groupsPublicIds: z.array(typeIdValidator('groups'))
           })
           .optional()
       })
     )
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.user || !ctx.org) {
+      if (!ctx.account || !ctx.org) {
         throw new TRPCError({
           code: 'UNPROCESSABLE_CONTENT',
-          message: 'User or Organization is not defined'
+          message: 'Account or Organization is not defined'
         });
       }
       const { db, org } = ctx;
@@ -73,24 +72,22 @@ export const invitesRouter = router({
       const orgId = org?.id;
       const orgMemberId = org?.memberId || 0;
 
-      const { user: userInput, notification, email, groups } = input;
+      const { newOrgMember, notification, email, groups: groupsInput } = input;
 
-      // Insert user profile - save ID
+      // Insert account profile - save ID
 
-      const userProfilePublicId = typeIdGenerator('userProfile');
-      const userProfileResponse = await db.insert(userProfiles).values({
-        publicId: userProfilePublicId,
-        firstName: userInput.firstName,
-        lastName: userInput.lastName || '',
-        title: userInput.title || '',
-        handle: '',
-        defaultProfile: true
-      });
-      const userProfileId = +userProfileResponse.insertId;
-      await db.insert(userProfilesToOrgs).values({
-        userProfileId: userProfileId,
-        orgId: orgId
-      });
+      const orgMemberProfilePublicId = typeIdGenerator('orgMemberProfile');
+      const orgMemberProfileResponse = await db
+        .insert(orgMemberProfiles)
+        .values({
+          publicId: orgMemberProfilePublicId,
+          orgId: orgId,
+          firstName: newOrgMember.firstName,
+          lastName: newOrgMember.lastName || '',
+          title: newOrgMember.title || '',
+          handle: ''
+        });
+      const orgMemberProfileId = +orgMemberProfileResponse.insertId;
 
       // Insert orgMember - save ID
       const orgMemberPublicId = typeIdGenerator('orgMembers');
@@ -99,14 +96,14 @@ export const invitesRouter = router({
         orgId: orgId,
         invitedByOrgMemberId: orgMemberId,
         status: 'invited',
-        role: userInput.role,
-        userProfileId: userProfileId
+        role: newOrgMember.role,
+        orgMemberProfileId: orgMemberProfileId
       });
 
       // Insert groupMemberships - save ID
-      if (groups) {
-        const groupIds = await db.query.userGroups.findMany({
-          where: inArray(userGroups.publicId, groups.groupsPublicIds),
+      if (groupsInput) {
+        const groupIds = await db.query.groups.findMany({
+          where: inArray(groups.publicId, groupsInput.groupsPublicIds),
           columns: {
             id: true
           }
@@ -114,15 +111,15 @@ export const invitesRouter = router({
 
         // Fix type any
         const newGroupMembershipValues = groupIds.map((group) => ({
-          publicId: typeIdGenerator('userGroupMembers'),
+          publicId: typeIdGenerator('groupMembers'),
           orgMemberId: +orgMemberResponse.insertId,
           groupId: group.id,
-          userProfileId: userProfileId,
+          orgMemberProfileId: orgMemberProfileId,
           addedBy: orgMemberId,
           role: 'member' as 'admin' | 'member'
         }));
 
-        await db.insert(userGroupMembers).values([...newGroupMembershipValues]);
+        await db.insert(groupMembers).values([...newGroupMembershipValues]);
       }
       // Insert Email identities
       if (email) {
@@ -169,7 +166,7 @@ export const invitesRouter = router({
           sendName: email.sendName
         });
 
-        await db.insert(emailIdentitiesAuthorizedUsers).values({
+        await db.insert(emailIdentitiesAuthorizedOrgMembers).values({
           orgId: orgId,
           identityId: +emailIdentityResponse.insertId,
           default: true,
@@ -188,10 +185,10 @@ export const invitesRouter = router({
         orgId: orgId,
         invitedByOrgMemberId: orgMemberId,
         orgMemberId: +orgMemberResponse.insertId,
-        role: userInput.role,
+        role: newOrgMember.role,
         email: notification?.notificationEmailAddress || null,
         inviteToken: newInviteToken,
-        invitedUserProfileId: userProfileId,
+        invitedOrgMemberProfileId: orgMemberProfileId,
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 Days from now
       });
 
@@ -207,10 +204,10 @@ export const invitesRouter = router({
   viewInvites: orgProcedure
     .input(z.object({}).strict())
     .query(async ({ ctx }) => {
-      if (!ctx.user || !ctx.org) {
+      if (!ctx.account || !ctx.org) {
         throw new TRPCError({
           code: 'UNPROCESSABLE_CONTENT',
-          message: 'User or Organization is not defined'
+          message: 'Account or Organization is not defined'
         });
       }
       const { db, org } = ctx;
@@ -270,7 +267,7 @@ export const invitesRouter = router({
     )
     .query(async ({ ctx, input }) => {
       const db = ctx.db;
-      const userLoggedIn = ctx.user?.id ? true : false;
+      const userLoggedIn = ctx.account?.id ? true : false;
 
       const queryInvitesResponse = await db.query.orgInvitations.findFirst({
         where: eq(orgInvitations.inviteToken, input.inviteToken),
@@ -323,18 +320,18 @@ export const invitesRouter = router({
         loggedIn: userLoggedIn
       };
     }),
-  redeemInvite: userProcedure
+  redeemInvite: accountProcedure
     .input(
       z.object({
         inviteToken: zodSchemas.nanoIdToken()
       })
     )
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.user) {
-        throw new Error('User is not defined');
+      if (!ctx.account) {
+        throw new Error('Account is not defined');
       }
-      const { db, user } = ctx;
-      const userId = user?.id;
+      const { db, account } = ctx;
+      const accountId = account?.id;
 
       const queryInvitesResponse = await db.query.orgInvitations.findFirst({
         where: eq(orgInvitations.inviteToken, input.inviteToken),
@@ -345,7 +342,7 @@ export const invitesRouter = router({
           invitedByOrgMemberId: true,
           expiresAt: true,
           acceptedAt: true,
-          invitedUserProfileId: true,
+          invitedOrgMemberProfileId: true,
           orgMemberId: true
         },
         with: {
@@ -362,11 +359,11 @@ export const invitesRouter = router({
         }
       });
 
-      const invitedUserProfilePublicId =
+      const invitedOrgMemberProfilePublicId =
         queryInvitesResponse?.invitedProfile?.publicId;
       if (
-        !invitedUserProfilePublicId ||
-        !queryInvitesResponse.invitedUserProfileId ||
+        !invitedOrgMemberProfilePublicId ||
+        !queryInvitesResponse.invitedOrgMemberProfileId ||
         !queryInvitesResponse.orgMemberId
       ) {
         throw new TRPCError({
@@ -399,25 +396,30 @@ export const invitesRouter = router({
         });
       }
 
-      const userHandleQuery = await db.query.users.findFirst({
-        where: eq(users.id, userId),
+      const userHandleQuery = await db.query.accounts.findFirst({
+        where: eq(accounts.id, accountId),
         columns: {
           username: true
         }
       });
 
       await db
-        .update(userProfiles)
+        .update(orgMemberProfiles)
         .set({
-          userId: userId,
+          accountId: accountId,
           handle: userHandleQuery?.username || ''
         })
-        .where(eq(userProfiles.id, +queryInvitesResponse.invitedUserProfileId));
+        .where(
+          eq(
+            orgMemberProfiles.id,
+            +queryInvitesResponse.invitedOrgMemberProfileId
+          )
+        );
 
       await db
         .update(orgMembers)
         .set({
-          userId: userId,
+          accountId: accountId,
           status: 'active',
           addedAt: new Date()
         })
@@ -450,15 +452,15 @@ export const invitesRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.user || !ctx.org) {
+      if (!ctx.account || !ctx.org) {
         throw new TRPCError({
           code: 'UNPROCESSABLE_CONTENT',
-          message: 'User or Organization is not defined'
+          message: 'Account or Organization is not defined'
         });
       }
       const { db, org } = ctx;
 
-      const isAdmin = await isUserAdminOfOrg(org);
+      const isAdmin = await isAccountAdminOfOrg(org);
       if (!isAdmin) {
         throw new TRPCError({
           code: 'UNAUTHORIZED',
@@ -484,7 +486,7 @@ export const invitesRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.user || !ctx.org) {
+      if (!ctx.account || !ctx.org) {
         throw new TRPCError({
           code: 'UNPROCESSABLE_CONTENT',
           message: 'User or Organization is not defined'
@@ -492,7 +494,7 @@ export const invitesRouter = router({
       }
       const { db, org } = ctx;
 
-      const isAdmin = await isUserAdminOfOrg(org);
+      const isAdmin = await isAccountAdminOfOrg(org);
       if (!isAdmin) {
         throw new TRPCError({
           code: 'UNAUTHORIZED',

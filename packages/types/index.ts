@@ -5,13 +5,13 @@ export type OrgContext = {
   memberId?: number;
   members: {
     id: number;
-    userId: number | null;
+    accountId: number | null;
     // Refer to DB schema orgMembers.role and orgMembers.status
     status: 'invited' | 'active' | 'removed';
     role: 'admin' | 'member';
   }[];
 } | null;
-export type UserContext = {
+export type AccountContext = {
   id: number;
   session: DatabaseSession;
 } | null;

@@ -3,7 +3,7 @@ import type { UserConvosDataType } from '~/composables/types';
 import { useRuntimeConfig } from '#imports';
 
 function generateAvatarUrl(
-  type: 'user' | 'org' | 'group' | 'contact',
+  type: 'orgMember' | 'org' | 'group' | 'contact',
   avatarId: string,
   size:
     | '3xs'
@@ -20,7 +20,7 @@ function generateAvatarUrl(
     | undefined
 ) {
   const types = [
-    { name: 'user', value: 'u' },
+    { name: 'orgMember', value: 'om' },
     { name: 'org', value: 'o' },
     { name: 'contact', value: 'c' },
     { name: 'group', value: 'g' }
@@ -43,12 +43,12 @@ function useParticipantData(
   const {
     publicId: participantPublicId,
     contact,
-    userGroup,
+    group,
     orgMember,
     role: participantRole
   } = participant;
 
-  let participantType: 'user' | 'group' | 'contact',
+  let participantType: 'orgMember' | 'group' | 'contact',
     participantTypePublicId,
     avatarPublicId,
     participantName,
@@ -63,22 +63,22 @@ function useParticipantData(
         contact.name || `${contact.emailUsername}@${contact.emailDomain}`;
       participantColor = null;
       break;
-    case !!userGroup?.name:
+    case !!group?.name:
       participantType = 'group';
-      participantTypePublicId = userGroup.publicId;
-      avatarPublicId = userGroup.avatarId || '';
-      participantName = userGroup.name;
-      participantColor = userGroup.color;
+      participantTypePublicId = group.publicId;
+      avatarPublicId = group.avatarId || '';
+      participantName = group.name;
+      participantColor = group.color;
       break;
     case !!orgMember?.publicId:
-      participantType = 'user';
+      participantType = 'orgMember';
       participantTypePublicId = orgMember.publicId;
       avatarPublicId = orgMember.profile.avatarId || '';
       participantName = `${orgMember.profile.firstName} ${orgMember.profile.lastName}`;
       participantColor = null;
       break;
     default:
-      participantType = 'user';
+      participantType = 'orgMember';
       participantTypePublicId = '';
       avatarPublicId = '';
       participantName = '';

@@ -288,7 +288,7 @@ export default eventHandler(async (event) => {
 
   // get the routing rule destinations for each of the email addresses, then get the users and contacts within those routing rules
 
-  const routingRuleUserGroupIds: number[] = [];
+  const routingRulegroupIds: number[] = [];
   const routingRuleOrgMemberIds: number[] = [];
   const emailIdentityResponse = await db.query.emailIdentities.findMany({
     where: and(
@@ -317,7 +317,7 @@ export default eventHandler(async (event) => {
   emailIdentityResponse.forEach((emailIdentity) => {
     emailIdentity.routingRules.destinations.forEach((destination) => {
       if (destination.groupId) {
-        routingRuleUserGroupIds.push(destination.groupId);
+        routingRulegroupIds.push(destination.groupId);
       } else if (destination.orgMemberId) {
         routingRuleOrgMemberIds.push(destination.orgMemberId);
       }
@@ -363,7 +363,7 @@ export default eventHandler(async (event) => {
               columns: {
                 id: true,
                 contactId: true,
-                userGroupId: true,
+                groupId: true,
                 orgMemberId: true
               }
             }
@@ -417,10 +417,10 @@ export default eventHandler(async (event) => {
       const missingOrgMembers = routingRuleOrgMemberIds.filter(
         (c) => !existingConvoParticipantsOrgMemberIds.includes(c)
       );
-      const existingConvoParticipantsUserGroupIds =
-        existingMessage.convo.participants.map((p) => p.userGroupId);
-      const missingUserGroups = routingRuleUserGroupIds.filter(
-        (c) => !existingConvoParticipantsUserGroupIds.includes(c)
+      const existingConvoParticipantsgroupIds =
+        existingMessage.convo.participants.map((p) => p.groupId);
+      const missingUserGroups = routingRulegroupIds.filter(
+        (c) => !existingConvoParticipantsgroupIds.includes(c)
       );
 
       // - if not, then add them to the convo participants to add array
@@ -448,9 +448,9 @@ export default eventHandler(async (event) => {
       }
       if (missingUserGroups.length) {
         convoParticipantsToAdd.push(
-          ...missingUserGroups.map((userGroupId) => ({
+          ...missingUserGroups.map((groupId) => ({
             convoId: convoId || 0,
-            userGroupId: userGroupId || 0,
+            groupId: groupId || 0,
             orgId: orgId || 0,
             publicId: typeIdGenerator('convoParticipants'),
             role: 'contributor' as const
@@ -505,11 +505,11 @@ export default eventHandler(async (event) => {
         }))
       );
     }
-    if (routingRuleUserGroupIds.length) {
+    if (routingRulegroupIds.length) {
       convoParticipantsToAdd.push(
-        ...routingRuleUserGroupIds.map((userGroupId) => ({
+        ...routingRulegroupIds.map((groupId) => ({
           convoId: convoId || 0,
-          userGroupId: userGroupId || 0,
+          groupId: groupId || 0,
           orgId: orgId || 0,
           publicId: typeIdGenerator('convoParticipants'),
           role: 'contributor' as const
@@ -586,7 +586,7 @@ export default eventHandler(async (event) => {
             where: and(
               eq(convoParticipants.orgId, orgId),
               eq(convoParticipants.convoId, convoId || 0),
-              eq(convoParticipants.userGroupId, firstDestination.groupId)
+              eq(convoParticipants.groupId, firstDestination.groupId)
             ),
             columns: {
               id: true

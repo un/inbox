@@ -7,7 +7,7 @@ import {
 } from '#imports';
 
 export const loggedIn = defineRequestMiddleware(async (event) => {
-  if (!event.context.user) {
+  if (!event.context.account) {
     setResponseStatus(event, 401);
     return send(event, 'Unauthorized');
   }

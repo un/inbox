@@ -94,7 +94,7 @@
 
     newButtonLoading.value = false;
     newButtonLabel.value = 'All Done!';
-    refreshNuxtData('getUserOrgsNav');
+    refreshNuxtData('getAccountOrgsNav');
     toast.add({
       id: 'org_created',
       title: 'New Organization Created',

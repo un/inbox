@@ -32,16 +32,16 @@
   const tableRows = ref<{}[]>([]);
 
   const {
-    data: userAddresses,
+    data: accountAddresses,
     pending,
-    refresh: refreshUserAddresses
-  } = await $trpc.user.addresses.getPersonalAddresses.useLazyQuery(
+    refresh: refreshAccountAddresses
+  } = await $trpc.account.addresses.getPersonalAddresses.useLazyQuery(
     {},
-    { server: false, queryKey: 'getUserAddresses' }
+    { server: false, queryKey: 'getAccountAddresses' }
   );
 
-  watch(userAddresses, (newResults) => {
-    const username = userAddresses.value?.username?.toLowerCase();
+  watch(accountAddresses, (newResults) => {
+    const username = accountAddresses.value?.username?.toLowerCase();
     if (newResults?.identities.length) {
       hasAddresses.value = true;
       tableRows.value = [];
@@ -98,7 +98,7 @@
     });
     const emailIdentityPublicId = emailIdentityPublicIdToEdit.value;
     const sendName = editedSendName.value;
-    const editSendNameTrpc = $trpc.user.addresses.editSendName.useMutation();
+    const editSendNameTrpc = $trpc.account.addresses.editSendName.useMutation();
     await editSendNameTrpc.mutate({
       emailIdentityPublicId: emailIdentityPublicId,
       newSendName: sendName
@@ -115,7 +115,7 @@
       return;
     }
     toast.remove('editing_send_name');
-    refreshUserAddresses();
+    refreshAccountAddresses();
     toast.add({
       id: 'send_name_edited',
       title: 'Success',
@@ -165,7 +165,7 @@
       return;
     }
     const claimPersonalAddressTrpc =
-      $trpc.user.addresses.claimPersonalAddress.useMutation();
+      $trpc.account.addresses.claimPersonalAddress.useMutation();
     await claimPersonalAddressTrpc.mutate({
       emailIdentity: emailIdentity
     });
@@ -182,7 +182,7 @@
       return;
     }
     toast.remove('claiming_email');
-    refreshUserAddresses();
+    refreshAccountAddresses();
     toast.add({
       id: 'email_claimed',
       title: 'Success',

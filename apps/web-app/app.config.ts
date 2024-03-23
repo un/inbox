@@ -259,7 +259,7 @@ export default defineAppConfig({
       color: {
         white: {
           outline:
-            'shadow-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-white ring-1 ring-inset ring-gray-300 dark:ring-gray-700 focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400'
+            'shadow-sm bg-base-2 dark:bg-base-2 text-base-12 dark:text-base-12 ring-1 ring-inset ring-base-7 dark:ring-base-7 focus:ring-2 focus:ring-base-9 dark:focus:ring-base-9'
         },
         gray: {
           outline:
@@ -324,7 +324,7 @@ export default defineAppConfig({
       width: 'w-full',
       height: 'max-h-60',
       base: 'relative focus:outline-none overflow-y-auto scroll-py-1',
-      background: 'bg-base-3 dark:bg-base-3',
+      background: 'bg-base-2 dark:bg-base-2',
       shadow: 'shadow-lg',
       rounded: 'rounded-md',
       padding: 'p-1',
@@ -436,7 +436,7 @@ export default defineAppConfig({
       rounded: 'rounded-full',
       text: 'font-medium leading-none text-gray-900 dark:text-white truncate',
       placeholder:
-        'font-medium leading-none text-gray-500 dark:text-gray-400 truncate',
+        'font-medium leading-none text-base-3 dark:text-base-3 truncate',
       size: {
         '3xs': 'h-4 w-4 text-[8px]',
         '2xs': 'h-5 w-5 text-[10px]',
@@ -470,7 +470,7 @@ export default defineAppConfig({
         }
       },
       icon: {
-        base: 'text-gray-500 dark:text-gray-400 flex-shrink-0',
+        base: 'text-base-3 dark:text-base-3 flex-shrink-0',
         size: {
           '3xs': 'h-2 w-2',
           '2xs': 'h-2.5 w-2.5',

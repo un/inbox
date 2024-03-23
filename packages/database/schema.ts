@@ -46,12 +46,12 @@ const foreignKey = customType<{ data: number }>({
 });
 
 //******************* */
-//* User tables
-export const users = mysqlTable(
-  'users',
+//* Account tables
+export const accounts = mysqlTable(
+  'accounts',
   {
     id: serial('id').primaryKey(),
-    publicId: publicId('user', 'public_id').notNull(),
+    publicId: publicId('account', 'public_id').notNull(),
     username: varchar('username', { length: 32 }).notNull(),
     metadata: json('metadata').$type<Record<string, unknown>>(),
     createdAt: timestamp('created_at').defaultNow(),
@@ -63,51 +63,49 @@ export const users = mysqlTable(
   })
 );
 
-export const usersRelations = relations(users, ({ one, many }) => ({
-  account: one(accounts, {
-    fields: [users.id],
-    references: [accounts.userId]
+export const accountsRelations = relations(accounts, ({ one, many }) => ({
+  accountCredential: one(accountCredentials, {
+    fields: [accounts.id],
+    references: [accountCredentials.accountId]
   }),
   sessions: many(sessions),
   orgMemberships: many(orgMembers),
-  profiles: many(userProfiles),
-  defaultProfile: one(userProfiles, {
-    fields: [users.id],
-    references: [userProfiles.userId]
-  }),
+  orgMemberProfiles: many(orgMemberProfiles),
   personalEmailIdentities: many(emailIdentitiesPersonal)
 }));
 
-//******************* */
 //* Auth tables
-export const accounts = mysqlTable(
-  'accounts',
+export const accountCredentials = mysqlTable(
+  'account_credentials',
   {
     id: serial('id').primaryKey(),
-    userId: foreignKey('userId').notNull(),
+    accountId: foreignKey('account_id').notNull(),
     passwordHash: varchar('password_hash', { length: 255 }),
     twoFactorSecret: varchar('two_factor_secret', { length: 255 }),
     recoveryCode: varchar('recovery_code', { length: 256 })
   },
-  (accounts) => ({
-    userIdIndex: index('user_id_idx').on(accounts.userId)
+  (accountAuth) => ({
+    accountIdIndex: index('account_id_idx').on(accountAuth.accountId)
   })
 );
 
-export const accountsRelationships = relations(accounts, ({ one, many }) => ({
-  user: one(users, {
-    fields: [accounts.userId],
-    references: [users.id]
-  }),
-  authenticators: many(authenticators)
-}));
+export const accountAuthRelationships = relations(
+  accountCredentials,
+  ({ one, many }) => ({
+    account: one(accounts, {
+      fields: [accountCredentials.accountId],
+      references: [accounts.id]
+    }),
+    authenticators: many(authenticators)
+  })
+);
 
 // transports type comes from @simplewebauthn/types AuthenticatorTransportFuture
 export const authenticators = mysqlTable(
   'authenticators',
   {
     id: serial('id').primaryKey(),
-    accountId: foreignKey('account_id').notNull(),
+    accountCredentialId: foreignKey('account_credential_id').notNull(),
     nickname: varchar('nickname', { length: 64 }).notNull(),
     credentialID: varchar('credential_id', { length: 255 }).notNull(), //Uint8Array
     credentialPublicKey: varchar('credential_public_key', {
@@ -133,7 +131,9 @@ export const authenticators = mysqlTable(
     createdAt: timestamp('created_at').defaultNow().notNull()
   },
   (table) => ({
-    accountIdIndex: index('provider_account_id_idx').on(table.accountId),
+    accountCredentialIdIndex: index('provider_account_id_idx').on(
+      table.accountCredentialId
+    ),
     credentialIDIndex: uniqueIndex('credential_id_idx').on(table.credentialID)
   })
 );
@@ -141,9 +141,9 @@ export const authenticators = mysqlTable(
 export const authenticatorRelationships = relations(
   authenticators,
   ({ one }) => ({
-    account: one(accounts, {
-      fields: [authenticators.accountId],
-      references: [accounts.id]
+    accountCredentials: one(accountCredentials, {
+      fields: [authenticators.accountCredentialId],
+      references: [accountCredentials.id]
     })
   })
 );
@@ -152,8 +152,8 @@ export const sessions = mysqlTable(
   'sessions',
   {
     id: serial('id').primaryKey(),
-    userId: foreignKey('user_id').notNull(),
-    userPublicId: publicId('user', 'user_public_id').notNull(),
+    accountId: foreignKey('account_id').notNull(),
+    accountPublicId: publicId('account', 'account_public_id').notNull(),
     sessionToken: varchar('session_token', { length: 255 }).notNull(),
     device: varchar('device', { length: 255 }).notNull(),
     os: varchar('os', { length: 255 }).notNull(),
@@ -161,52 +161,21 @@ export const sessions = mysqlTable(
     createdAt: timestamp('created_at').defaultNow().notNull()
   },
   (table) => ({
-    userIdIndex: index('user_id_idx').on(table.userId),
+    accountIdIndex: index('account_id_idx').on(table.accountId),
     sessionTokenIndex: uniqueIndex('session_token_idx').on(table.sessionToken),
     expiryIndex: index('expires_at_idx').on(table.expiresAt)
   })
 );
 export const sessionRelationships = relations(sessions, ({ one }) => ({
-  user: one(users, {
-    fields: [sessions.userId],
-    references: [users.id]
+  account: one(accounts, {
+    fields: [sessions.accountId],
+    references: [accounts.id]
   })
 }));
 
-export const userProfiles = mysqlTable(
-  'user_profiles',
-  {
-    id: serial('id').primaryKey(),
-    publicId: publicId('userProfile', 'public_id').notNull(),
-    avatarId: avatarId('avatar_id'),
-    userId: foreignKey('user_id'),
-    firstName: varchar('first_name', { length: 64 }),
-    lastName: varchar('last_name', { length: 64 }),
-    handle: varchar('handle', { length: 64 }),
-    title: varchar('title', { length: 64 }),
-    blurb: text('blurb'),
-    defaultProfile: boolean('default_profile').notNull().default(false),
-    createdAt: timestamp('created_at').defaultNow().notNull()
-  },
-  (table) => ({
-    publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
-    userIdIndex: index('user_id_idx').on(table.userId)
-  })
-);
-
-export const userProfileRelations = relations(
-  userProfiles,
-  ({ one, many }) => ({
-    user: one(users, {
-      fields: [userProfiles.userId],
-      references: [users.id]
-    }),
-    orgs: many(orgMembers)
-  })
-);
-
 //******************* */
-//* Organization table
+//* ORG DATA
+
 export const orgs = mysqlTable(
   'orgs',
   {
@@ -225,9 +194,9 @@ export const orgs = mysqlTable(
   })
 );
 export const orgsRelations = relations(orgs, ({ one, many }) => ({
-  owner: one(users, {
+  owner: one(accounts, {
     fields: [orgs.ownerId],
-    references: [users.id]
+    references: [accounts.id]
   }),
   members: many(orgMembers),
   domains: many(domains),
@@ -237,7 +206,7 @@ export const orgsRelations = relations(orgs, ({ one, many }) => ({
     references: [orgPostalConfigs.orgId]
   }),
   modules: many(orgModules),
-  userProfiles: many(userProfilesToOrgs)
+  orgMemberProfiles: many(orgMemberProfiles)
 }));
 
 export const orgInvitations = mysqlTable(
@@ -249,7 +218,7 @@ export const orgInvitations = mysqlTable(
     invitedByOrgMemberId: foreignKey('invited_by_org_member_id').notNull(),
     role: mysqlEnum('role', ['member', 'admin']).notNull(),
     orgMemberId: foreignKey('org_member_id'),
-    invitedUserProfileId: foreignKey('invited_user_profile_id'),
+    invitedOrgMemberProfileId: foreignKey('invited_org_member_profile_id'),
     email: varchar('email', { length: 128 }),
     inviteToken: varchar('invite_token', { length: 64 }),
     invitedAt: timestamp('invited_at').defaultNow().notNull(),
@@ -279,9 +248,9 @@ export const orgInvitationsRelations = relations(orgInvitations, ({ one }) => ({
     fields: [orgInvitations.orgMemberId],
     references: [orgMembers.id]
   }),
-  invitedProfile: one(userProfiles, {
-    fields: [orgInvitations.invitedUserProfileId],
-    references: [userProfiles.id]
+  invitedProfile: one(orgMemberProfiles, {
+    fields: [orgInvitations.invitedOrgMemberProfileId],
+    references: [orgMemberProfiles.id]
   })
 }));
 
@@ -296,7 +265,9 @@ export const orgModules = mysqlTable(
       'anonymous analytics'
     ]).notNull(),
     enabled: boolean('enabled').notNull().default(false),
-    lastModifiedByUser: foreignKey('last_modified_by_user').notNull(),
+    lastModifiedByOrgMember: foreignKey(
+      'last_modified_by_org_member'
+    ).notNull(),
     lastModifiedAt: timestamp('last_modified_at'),
     createdAt: timestamp('created_at').defaultNow().notNull()
   },
@@ -311,9 +282,9 @@ export const orgModulesRelations = relations(orgModules, ({ one }) => ({
     fields: [orgModules.orgId],
     references: [orgs.id]
   }),
-  lastModifiedByUser: one(users, {
-    fields: [orgModules.lastModifiedByUser],
-    references: [users.id]
+  lastModifiedByOrgMember: one(orgMembers, {
+    fields: [orgModules.lastModifiedByOrgMember],
+    references: [orgMembers.id]
   })
 }));
 
@@ -343,7 +314,6 @@ export const orgPostalConfigsRelations = relations(
   })
 );
 
-//******************* */
 //* Org Members
 
 // changes to status and role must be reflected in types OrgContext
@@ -352,68 +322,81 @@ export const orgMembers = mysqlTable(
   {
     id: serial('id').primaryKey(),
     publicId: publicId('orgMembers', 'public_id').notNull(),
-    userId: foreignKey('user_id'),
+    accountId: foreignKey('account_id'),
     orgId: foreignKey('org_id').notNull(),
     invitedByOrgMemberId: foreignKey('invited_by_org_member_id'),
     status: mysqlEnum('status', ['invited', 'active', 'removed']).notNull(),
     role: mysqlEnum('role', ['member', 'admin']).notNull(),
-    userProfileId: foreignKey('user_profile_id').notNull(),
+    orgMemberProfileId: foreignKey('org_member_profile_id').notNull(),
     addedAt: timestamp('added_at').defaultNow().notNull(),
     removedAt: timestamp('removed_at')
   },
   (table) => ({
     publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
-    userIdIndex: index('user_id_idx').on(table.userId),
+    accountIdIndex: index('account_id_idx').on(table.accountId),
     orgIdIndex: index('org_id_idx').on(table.orgId),
-    orgUserIndex: uniqueIndex('org_user_idx').on(table.orgId, table.userId)
+    orgaccountIndex: uniqueIndex('org_account_idx').on(
+      table.orgId,
+      table.accountId
+    )
   })
 );
 export const orgMembersRelations = relations(orgMembers, ({ one, many }) => ({
-  user: one(users, {
-    fields: [orgMembers.userId],
-    references: [users.id]
+  account: one(accounts, {
+    fields: [orgMembers.accountId],
+    references: [accounts.id]
   }),
   org: one(orgs, {
     fields: [orgMembers.orgId],
     references: [orgs.id]
   }),
-  profile: one(userProfiles, {
-    fields: [orgMembers.userProfileId],
-    references: [userProfiles.id]
+  profile: one(orgMemberProfiles, {
+    fields: [orgMembers.orgMemberProfileId],
+    references: [orgMemberProfiles.id]
   }),
   routingRules: many(emailRoutingRulesDestinations)
 }));
 
-export const userProfilesToOrgs = mysqlTable(
-  'user_profiles_to_orgs',
+export const orgMemberProfiles = mysqlTable(
+  'org_member_profiles',
   {
-    userProfileId: foreignKey('user_profile_id').notNull(),
-    orgId: foreignKey('org_id').notNull()
+    id: serial('id').primaryKey(),
+    publicId: publicId('orgMemberProfile', 'public_id').notNull(),
+    orgId: foreignKey('org_id').notNull(),
+    avatarId: avatarId('avatar_id'),
+    accountId: foreignKey('account_id'),
+    firstName: varchar('first_name', { length: 64 }),
+    lastName: varchar('last_name', { length: 64 }),
+    handle: varchar('handle', { length: 64 }),
+    title: varchar('title', { length: 64 }),
+    blurb: text('blurb'),
+    createdAt: timestamp('created_at').defaultNow().notNull()
   },
   (table) => ({
-    pk: primaryKey({ columns: [table.userProfileId, table.orgId] })
+    publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
+    accountIdIndex: index('account_id_idx').on(table.accountId)
   })
 );
 
-export const userProfilesToOrgsRelations = relations(
-  userProfilesToOrgs,
+export const orgMemberProfileRelations = relations(
+  orgMemberProfiles,
   ({ one }) => ({
-    userProfile: one(userProfiles, {
-      fields: [userProfilesToOrgs.userProfileId],
-      references: [userProfiles.id]
+    account: one(accounts, {
+      fields: [orgMemberProfiles.accountId],
+      references: [accounts.id]
     }),
     org: one(orgs, {
-      fields: [userProfilesToOrgs.orgId],
+      fields: [orgMemberProfiles.orgId],
       references: [orgs.id]
     })
   })
 );
 
-export const userGroups = mysqlTable(
-  'user_groups',
+export const groups = mysqlTable(
+  'groups',
   {
     id: serial('id').primaryKey(),
-    publicId: publicId('userGroups', 'public_id').notNull(),
+    publicId: publicId('groups', 'public_id').notNull(),
     avatarId: avatarId('avatar_id'),
     orgId: foreignKey('org_id').notNull(),
     name: varchar('name', { length: 128 }).notNull(),
@@ -427,23 +410,23 @@ export const userGroups = mysqlTable(
   })
 );
 
-export const userGroupsRelations = relations(userGroups, ({ one, many }) => ({
+export const groupsRelations = relations(groups, ({ one, many }) => ({
   org: one(orgs, {
-    fields: [userGroups.orgId],
+    fields: [groups.orgId],
     references: [orgs.id]
   }),
-  members: many(userGroupMembers),
+  members: many(groupMembers),
   routingRules: many(emailRoutingRulesDestinations)
 }));
 
-export const userGroupMembers = mysqlTable(
-  'user_group_members',
+export const groupMembers = mysqlTable(
+  'group_members',
   {
     id: serial('id').primaryKey(),
-    publicId: publicId('userGroupMembers', 'public_id').notNull(),
+    publicId: publicId('groupMembers', 'public_id').notNull(),
     groupId: foreignKey('group_id').notNull(),
     orgMemberId: foreignKey('org_member_id').notNull(),
-    userProfileId: foreignKey('user_profile_id'),
+    orgMemberProfileId: foreignKey('org_member_profile_id'),
     addedBy: foreignKey('added_by').notNull(),
     role: mysqlEnum('role', ['member', 'admin']).notNull().default('member'),
     notifications: mysqlEnum('notifications', ['active', 'muted', 'off'])
@@ -453,30 +436,27 @@ export const userGroupMembers = mysqlTable(
   },
   (table) => ({
     groupIdIndex: index('group_id_idx').on(table.groupId),
-    orgMemberIdIndex: index('user_id_idx').on(table.orgMemberId),
-    userToGroupIndex: uniqueIndex('user_to_group_idx').on(
+    orgMemberIdIndex: index('org_member_id_idx').on(table.orgMemberId),
+    orgMemberToGroupIndex: uniqueIndex('org_member_to_group_idx').on(
       table.groupId,
       table.orgMemberId
     )
   })
 );
-export const userGroupMembersRelations = relations(
-  userGroupMembers,
-  ({ one }) => ({
-    group: one(userGroups, {
-      fields: [userGroupMembers.groupId],
-      references: [userGroups.id]
-    }),
-    orgMember: one(orgMembers, {
-      fields: [userGroupMembers.orgMemberId],
-      references: [orgMembers.id]
-    }),
-    userProfile: one(userProfiles, {
-      fields: [userGroupMembers.userProfileId],
-      references: [userProfiles.id]
-    })
+export const groupMembersRelations = relations(groupMembers, ({ one }) => ({
+  group: one(groups, {
+    fields: [groupMembers.groupId],
+    references: [groups.id]
+  }),
+  orgMember: one(orgMembers, {
+    fields: [groupMembers.orgMemberId],
+    references: [orgMembers.id]
+  }),
+  orgMemberProfile: one(orgMemberProfiles, {
+    fields: [groupMembers.orgMemberProfileId],
+    references: [orgMemberProfiles.id]
   })
-);
+}));
 
 //******************* */
 //* Domains table
@@ -687,9 +667,9 @@ export const emailRoutingRulesRelations = relations(
       fields: [emailRoutingRules.orgId],
       references: [orgs.id]
     }),
-    createdByUser: one(users, {
+    createdByOrgMember: one(orgMembers, {
       fields: [emailRoutingRules.createdBy],
-      references: [users.id]
+      references: [orgMembers.id]
     }),
     mailIdentities: many(emailIdentities),
     destinations: many(emailRoutingRulesDestinations)
@@ -708,7 +688,7 @@ export const emailRoutingRulesDestinations = mysqlTable(
   },
   (table) => ({
     orgIdIndex: index('org_id_idx').on(table.orgId)
-    //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit : userId//userGroupId
+    //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit : orgMemberId//groupId
   })
 );
 export const emailRoutingRulesDestinationsRelations = relations(
@@ -722,9 +702,9 @@ export const emailRoutingRulesDestinationsRelations = relations(
       fields: [emailRoutingRulesDestinations.ruleId],
       references: [emailRoutingRules.id]
     }),
-    group: one(userGroups, {
+    group: one(groups, {
       fields: [emailRoutingRulesDestinations.groupId],
-      references: [userGroups.id]
+      references: [groups.id]
     }),
     orgMember: one(orgMembers, {
       fields: [emailRoutingRulesDestinations.orgMemberId],
@@ -764,9 +744,9 @@ export const emailIdentities = mysqlTable(
 export const emailIdentitiesRelations = relations(
   emailIdentities,
   ({ one, many }) => ({
-    createdBy: one(users, {
+    createdBy: one(orgMembers, {
       fields: [emailIdentities.createdBy],
-      references: [users.id]
+      references: [orgMembers.id]
     }),
     org: one(orgs, {
       fields: [emailIdentities.orgId],
@@ -776,7 +756,7 @@ export const emailIdentitiesRelations = relations(
       fields: [emailIdentities.domainId],
       references: [domains.id]
     }),
-    authorizedUsers: many(emailIdentitiesAuthorizedUsers),
+    authorizedOrgMembers: many(emailIdentitiesAuthorizedOrgMembers),
     routingRules: one(emailRoutingRules, {
       fields: [emailIdentities.routingRuleId],
       references: [emailRoutingRules.id]
@@ -788,51 +768,51 @@ export const emailIdentitiesRelations = relations(
   })
 );
 
-export const emailIdentitiesAuthorizedUsers = mysqlTable(
-  'email_identities_authorized_users',
+export const emailIdentitiesAuthorizedOrgMembers = mysqlTable(
+  'email_identities_authorized_org_members',
   {
     id: serial('id').primaryKey(),
     orgId: foreignKey('org_id').notNull(),
     identityId: foreignKey('identity_id').notNull(),
     orgMemberId: foreignKey('org_member_id'),
-    userGroupId: foreignKey('user_group_id'),
+    groupId: foreignKey('group_id'),
     default: boolean('default').notNull().default(false),
     addedBy: foreignKey('added_by').notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull()
   },
   (table) => ({
-    //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit : userId//userGroupId, userId//default, userGroupId//default
+    //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit : orgMemberId//groupId, orgMemberId//default, groupId//default
     orgIdIndex: index('org_id_idx').on(table.orgId),
     identityIdIndex: index('identity_id_idx').on(table.identityId),
     orgMemberToIdentityIndex: uniqueIndex('org_member_to_identity_idx').on(
       table.identityId,
       table.orgMemberId
     ),
-    userGroupToIdentityIndex: uniqueIndex('user_group_to_identity_idx').on(
+    groupToIdentityIndex: uniqueIndex('group_to_identity_idx').on(
       table.identityId,
-      table.userGroupId
+      table.groupId
     )
   })
 );
 
-export const emailIdentitiesAuthorizedUsersRelations = relations(
-  emailIdentitiesAuthorizedUsers,
+export const emailIdentitiesAuthorizedOrgMemberRelations = relations(
+  emailIdentitiesAuthorizedOrgMembers,
   ({ one }) => ({
     org: one(orgs, {
-      fields: [emailIdentitiesAuthorizedUsers.orgId],
+      fields: [emailIdentitiesAuthorizedOrgMembers.orgId],
       references: [orgs.id]
     }),
     identity: one(emailIdentities, {
-      fields: [emailIdentitiesAuthorizedUsers.identityId],
+      fields: [emailIdentitiesAuthorizedOrgMembers.identityId],
       references: [emailIdentities.id]
     }),
     orgMember: one(orgMembers, {
-      fields: [emailIdentitiesAuthorizedUsers.orgMemberId],
+      fields: [emailIdentitiesAuthorizedOrgMembers.orgMemberId],
       references: [orgMembers.id]
     }),
-    userGroup: one(userGroups, {
-      fields: [emailIdentitiesAuthorizedUsers.userGroupId],
-      references: [userGroups.id]
+    group: one(groups, {
+      fields: [emailIdentitiesAuthorizedOrgMembers.groupId],
+      references: [groups.id]
     })
   })
 );
@@ -842,14 +822,14 @@ export const emailIdentitiesPersonal = mysqlTable(
   {
     id: serial('id').primaryKey(),
     publicId: publicId('emailIdentitiesPersonal', 'public_id').notNull(),
-    userId: foreignKey('user_id').notNull(),
+    accountId: foreignKey('account_id').notNull(),
     orgId: foreignKey('org_id').notNull(),
     emailIdentityId: foreignKey('email_identity_id').notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull()
   },
   (table) => ({
     publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
-    userIdIndex: index('user_id_idx').on(table.userId),
+    accountIdIndex: index('account_id_idx').on(table.accountId),
     orgIdIndex: index('org_id_idx').on(table.orgId),
     emailIdentityIdIndex: index('email_identity_id_idx').on(
       table.emailIdentityId
@@ -860,9 +840,9 @@ export const emailIdentitiesPersonal = mysqlTable(
 export const emailIdentitiesPersonalRelations = relations(
   emailIdentitiesPersonal,
   ({ one }) => ({
-    user: one(users, {
-      fields: [emailIdentitiesPersonal.userId],
-      references: [users.id]
+    account: one(accounts, {
+      fields: [emailIdentitiesPersonal.accountId],
+      references: [accounts.id]
     }),
     org: one(orgs, {
       fields: [emailIdentitiesPersonal.orgId],
@@ -977,7 +957,7 @@ export const convoParticipants = mysqlTable(
     orgId: foreignKey('org_id').notNull(),
     publicId: publicId('convoParticipants', 'public_id').notNull(),
     orgMemberId: foreignKey('org_member_id'),
-    userGroupId: foreignKey('user_group_id'),
+    groupId: foreignKey('group_id'),
     contactId: foreignKey('contact_id'),
     convoId: foreignKey('convo_id').notNull(),
     role: mysqlEnum('role', [
@@ -997,18 +977,18 @@ export const convoParticipants = mysqlTable(
     createdAt: timestamp('created_at').defaultNow().notNull()
   },
   (table) => ({
-    //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit : userId//userGroupId
+    //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit : orgMemberId//groupId
     orgIdIndex: index('org_id_idx').on(table.orgId),
     publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
-    orgMemberIdIndex: index('user_id_idx').on(table.orgMemberId),
+    orgMemberIdIndex: index('org_member_id_idx').on(table.orgMemberId),
     convoIdIndex: index('convo_id_idx').on(table.convoId),
     orgMemberToConvoIndex: uniqueIndex('org_member_to_convo_idx').on(
       table.convoId,
       table.orgMemberId
     ),
-    userGroupToConvoIndex: uniqueIndex('user_group_to_convo_idx').on(
+    groupToConvoIndex: uniqueIndex('group_to_convo_idx').on(
       table.convoId,
-      table.userGroupId
+      table.groupId
     )
   })
 );
@@ -1023,9 +1003,9 @@ export const convoParticipantsRelations = relations(
       fields: [convoParticipants.orgMemberId],
       references: [orgMembers.id]
     }),
-    userGroup: one(userGroups, {
-      fields: [convoParticipants.userGroupId],
-      references: [userGroups.id]
+    group: one(groups, {
+      fields: [convoParticipants.groupId],
+      references: [groups.id]
     }),
     contact: one(contacts, {
       fields: [convoParticipants.contactId],

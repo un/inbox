@@ -1,8 +1,8 @@
 import {
   orgs,
-  userProfiles,
+  orgMemberProfiles,
   orgMembers,
-  userGroups,
+  groups,
   contacts
 } from '@u22n/database/schema';
 import { nanoIdLong, validateTypeId } from '@u22n/utils';
@@ -21,13 +21,13 @@ import {
   s3Client
 } from '#imports';
 
-//?  Avatar Path: /[type.value]/[userProfilePublicId]/[size]
+//?  Avatar Path: /[type.value]/[orgMemberProfilePublicId]/[size]
 
 export default eventHandler({
   onRequest: [loggedIn],
   async handler(event) {
     const types = [
-      { name: 'user', value: 'u' },
+      { name: 'orgMember', value: 'om' },
       { name: 'org', value: 'o' },
       { name: 'contact', value: 'c' },
       { name: 'group', value: 'g' }
@@ -59,25 +59,25 @@ export default eventHandler({
       return send(event, 'Missing publicId value');
     }
     const publicId = publicIdInput.data.toString('utf8');
-    const userId = +event.context.user.id || null;
+    const accountId = +event.context.account.id || null;
 
-    if (typeObject.name === 'user') {
-      if (!validateTypeId('userProfile', publicId)) {
-        return send(event, 'Invalid user publicId');
+    if (typeObject.name === 'orgMember') {
+      if (!validateTypeId('orgMemberProfile', publicId)) {
+        return send(event, 'Invalid org member publicId');
       }
-      const profileResponse = await db.query.userProfiles.findFirst({
-        where: eq(userProfiles.publicId, publicId),
+      const profileResponse = await db.query.orgMemberProfiles.findFirst({
+        where: eq(orgMemberProfiles.publicId, publicId),
         columns: {
           id: true,
-          userId: true,
+          accountId: true,
           avatarId: true
         }
       });
-      if (!profileResponse || !profileResponse.userId) {
+      if (!profileResponse || !profileResponse.accountId) {
         setResponseStatus(event, 400);
-        return send(event, 'Invalid user profile ');
+        return send(event, 'Invalid profile ');
       }
-      if (+profileResponse.userId !== userId) {
+      if (+profileResponse.accountId !== accountId) {
         setResponseStatus(event, 401);
         return send(event, 'Unauthorized');
       }
@@ -95,7 +95,7 @@ export default eventHandler({
         with: {
           members: {
             columns: {
-              userId: true,
+              accountId: true,
               role: true
             },
             where: eq(orgMembers.role, 'admin')
@@ -107,7 +107,7 @@ export default eventHandler({
         return send(event, 'Invalid org');
       }
       const isAdmin = orgResponse.members.some(
-        (member) => member.userId === userId
+        (member) => member.accountId === accountId
       );
       if (!isAdmin) {
         setResponseStatus(event, 401);
@@ -117,11 +117,11 @@ export default eventHandler({
       setResponseStatus(event, 400);
       return send(event, 'Not implemented');
     } else if (typeObject.name === 'group') {
-      if (!validateTypeId('userGroups', publicId)) {
-        return send(event, 'Invalid userGroups publicId');
+      if (!validateTypeId('groups', publicId)) {
+        return send(event, 'Invalid groups publicId');
       }
-      const groupResponse = await db.query.userGroups.findFirst({
-        where: eq(userGroups.publicId, publicId),
+      const groupResponse = await db.query.groups.findFirst({
+        where: eq(groups.publicId, publicId),
         columns: {
           id: true,
           avatarId: true
@@ -131,7 +131,7 @@ export default eventHandler({
             with: {
               members: {
                 columns: {
-                  userId: true,
+                  accountId: true,
                   role: true
                 },
                 where: eq(orgMembers.role, 'admin')
@@ -145,7 +145,7 @@ export default eventHandler({
         return send(event, 'Invalid group');
       }
       const isAdmin = groupResponse.org.members.some(
-        (member) => member.userId === userId
+        (member) => member.accountId === accountId
       );
       if (!isAdmin) {
         setResponseStatus(event, 401);
@@ -195,16 +195,16 @@ export default eventHandler({
       await s3Client.send(command);
     }
 
-    if (typeObject.name === 'user') {
-      if (!validateTypeId('userProfile', publicId)) {
+    if (typeObject.name === 'orgMember') {
+      if (!validateTypeId('orgMemberProfile', publicId)) {
         return send(event, 'Invalid publicId');
       }
       await db
-        .update(userProfiles)
+        .update(orgMemberProfiles)
         .set({
           avatarId: avatarId
         })
-        .where(eq(userProfiles.publicId, publicId));
+        .where(eq(orgMemberProfiles.publicId, publicId));
     } else if (typeObject.name === 'org') {
       if (!validateTypeId('org', publicId)) {
         return send(event, 'Invalid publicId');
@@ -216,15 +216,15 @@ export default eventHandler({
         })
         .where(eq(orgs.publicId, publicId));
     } else if (typeObject.name === 'group') {
-      if (!validateTypeId('userGroups', publicId)) {
+      if (!validateTypeId('groups', publicId)) {
         return send(event, 'Invalid publicId');
       }
       await db
-        .update(userGroups)
+        .update(groups)
         .set({
           avatarId: avatarId
         })
-        .where(eq(userGroups.publicId, publicId));
+        .where(eq(groups.publicId, publicId));
     } else if (typeObject.name === 'contact') {
       if (!validateTypeId('contacts', publicId)) {
         return send(event, 'Invalid publicId');

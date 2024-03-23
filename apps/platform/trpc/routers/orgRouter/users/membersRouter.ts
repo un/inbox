@@ -8,10 +8,10 @@ export const orgMembersRouter = router({
   getOrgMembers: orgProcedure
     .input(z.object({}).strict())
     .query(async ({ ctx }) => {
-      if (!ctx.user || !ctx.org) {
+      if (!ctx.account || !ctx.org) {
         throw new TRPCError({
           code: 'UNPROCESSABLE_CONTENT',
-          message: 'User or Organization is not defined'
+          message: 'Account or Organization is not defined'
         });
       }
       const { db, org } = ctx;
@@ -60,14 +60,14 @@ export const orgMembersRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      if (!ctx.user || !ctx.org) {
+      if (!ctx.account || !ctx.org) {
         throw new TRPCError({
           code: 'UNPROCESSABLE_CONTENT',
-          message: 'User or Organization is not defined'
+          message: 'Account or Organization is not defined'
         });
       }
-      const { db, user, org } = ctx;
-      const userId = user?.id;
+      const { db, account, org } = ctx;
+      const accountId = account?.id;
       const orgId = org?.id;
 
       const { includeRemoved } = input;
@@ -83,7 +83,7 @@ export const orgMembersRouter = router({
               publicId: true,
               role: true,
               status: true,
-              userId: true
+              accountId: true
             },
             where: !includeRemoved
               ? or(
@@ -108,11 +108,11 @@ export const orgMembersRouter = router({
       });
 
       const ownMembershipId = orgQuery?.members.find(
-        (member) => member.userId === userId
+        (member) => member.accountId === accountId
       )?.publicId;
 
       orgQuery?.members.forEach((member) => {
-        member.userId = 0;
+        member.accountId = 0;
       });
 
       return {

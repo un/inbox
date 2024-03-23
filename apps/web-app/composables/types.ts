@@ -19,7 +19,7 @@ export type ConvoParticipantEntry = {
   typePublicId: string;
   avatarPublicId: string;
   name: string;
-  type: 'user' | 'group' | 'contact';
+  type: 'orgMember' | 'group' | 'contact';
   role: 'assigned' | 'contributor' | 'commenter' | 'watcher' | 'guest';
   color: (typeof uiColors)[number] | null;
 };

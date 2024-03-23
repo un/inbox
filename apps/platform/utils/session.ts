@@ -5,9 +5,9 @@ import { lucia } from './auth';
 import type { TypeId } from '@u22n/utils';
 
 type SessionInfo = {
-  userId: number;
+  accountId: number;
   username: string;
-  publicId: TypeId<'user'>;
+  publicId: TypeId<'account'>;
 };
 
 export const createLuciaSessionCookie = async (
@@ -17,16 +17,16 @@ export const createLuciaSessionCookie = async (
   const { device, os } = UAParser(getHeader(event, 'User-Agent'));
   const userDevice =
     device.type === 'mobile' ? device.toString() : device.vendor;
-  const { userId, username, publicId } = info;
-  const userSession = await lucia.createSession(publicId, {
-    user: {
-      id: userId,
+  const { accountId, username, publicId } = info;
+  const accountSession = await lucia.createSession(accountId, {
+    account: {
+      id: accountId,
       username,
       publicId
     },
     device: userDevice || 'Unknown',
     os: os.name || 'Unknown'
   });
-  const cookie = lucia.createSessionCookie(userSession.id);
+  const cookie = lucia.createSessionCookie(accountSession.id);
   return cookie;
 };

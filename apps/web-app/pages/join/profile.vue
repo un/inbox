@@ -40,15 +40,15 @@
     }
   }
 
-  const { data: userOrgProfile, pending } =
-    await $trpc.user.profile.getUserOrgProfile.useLazyQuery(
+  const { data: accountOrgProfile, pending } =
+    await $trpc.account.profile.getOrgMemberProfile.useLazyQuery(
       {
         orgSlug: orgSlug.value as string
       },
       { server: false }
     );
 
-  watch(userOrgProfile, (newVal) => {
+  watch(accountOrgProfile, (newVal) => {
     if (newVal && newVal.profile) {
       fNameValue.value = newVal.profile.firstName || '';
       lNameValue.value = newVal.profile.lastName || '';
@@ -57,7 +57,7 @@
 
       if (newVal.profile.avatarId) {
         imageUrl.value = useUtils().generateAvatarUrl(
-          'user',
+          'orgMember',
           newVal.profile.avatarId,
           '5xl'
         ) as string;
@@ -90,9 +90,15 @@
     // @ts-ignore
     const storageUrl = useRuntimeConfig().public.storageUrl;
     formData.append('file', selectedFiles[0]);
-    formData.append('type', 'user');
-    formData.append('publicId', userOrgProfile.value?.profile?.publicId || '');
-    formData.append('avatarId', userOrgProfile.value?.profile?.avatarId || '');
+    formData.append('type', 'orgMember');
+    formData.append(
+      'publicId',
+      accountOrgProfile.value?.profile?.publicId || ''
+    );
+    formData.append(
+      'avatarId',
+      accountOrgProfile.value?.profile?.avatarId || ''
+    );
     const response = (await $fetch(`${storageUrl}/api/avatar`, {
       method: 'post',
       body: formData,
@@ -100,7 +106,7 @@
     })) as any;
     if (response.avatarId) {
       imageUrl.value = useUtils().generateAvatarUrl(
-        'user',
+        'orgMember',
         response.avatarId,
         '5xl'
       ) as string;
@@ -113,23 +119,23 @@
     buttonLoading.value = true;
     buttonLabel.value = 'Saving...';
 
-    if (!userOrgProfile.value?.profile?.publicId) {
+    if (!accountOrgProfile.value?.profile?.publicId) {
       pageError.value = true;
       buttonLoading.value = false;
       buttonLabel.value = 'Save profile';
       return;
     }
-    const updateUserProfileTrpc =
-      $trpc.user.profile.updateUserProfile.useMutation();
-    await updateUserProfileTrpc.mutate({
-      profilePublicId: userOrgProfile.value.profile.publicId,
+    const updateAccountProfileTrpc =
+      $trpc.account.profile.updateOrgMemberProfile.useMutation();
+    await updateAccountProfileTrpc.mutate({
+      profilePublicId: accountOrgProfile.value.profile.publicId,
       fName: fNameValue.value,
       lName: lNameValue.value,
       title: titleValue.value,
       blurb: blurbValue.value,
-      handle: userOrgProfile.value.profile.handle || ''
+      handle: accountOrgProfile.value.profile.handle || ''
     });
-    if (updateUserProfileTrpc.status.value === 'error') {
+    if (updateAccountProfileTrpc.status.value === 'error') {
       pageError.value = true;
       buttonLoading.value = false;
       buttonLabel.value = 'Save profile';

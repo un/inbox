@@ -1,18 +1,14 @@
 import { z } from 'zod';
 import { router, orgProcedure } from '../../../trpc';
 import { eq, and } from '@u22n/database/orm';
-import {
-  orgMembers,
-  userGroupMembers,
-  userGroups
-} from '@u22n/database/schema';
+import { orgMembers, groupMembers, groups } from '@u22n/database/schema';
 import { typeIdGenerator, typeIdValidator } from '@u22n/utils';
 import { uiColors } from '@u22n/types/ui';
-import { isUserAdminOfOrg } from '../../../../utils/user';
+import { isAccountAdminOfOrg } from '../../../../utils/account';
 import { TRPCError } from '@trpc/server';
 
-export const orgUserGroupsRouter = router({
-  createOrgUserGroups: orgProcedure
+export const groupsRouter = router({
+  createGroup: orgProcedure
     .input(
       z.object({
         groupName: z.string().min(2).max(50),
@@ -21,19 +17,19 @@ export const orgUserGroupsRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.user || !ctx.org) {
+      if (!ctx.account || !ctx.org) {
         throw new TRPCError({
           code: 'UNPROCESSABLE_CONTENT',
-          message: 'User or Organization is not defined'
+          message: 'Account or Organization is not defined'
         });
       }
       const { db, org } = ctx;
 
       const orgId = org?.id;
       const { groupName, groupDescription, groupColor } = input;
-      const newPublicId = typeIdGenerator('userGroups');
+      const newPublicId = typeIdGenerator('groups');
 
-      const isAdmin = await isUserAdminOfOrg(org);
+      const isAdmin = await isAccountAdminOfOrg(org);
       if (!isAdmin) {
         throw new TRPCError({
           code: 'UNAUTHORIZED',
@@ -41,7 +37,7 @@ export const orgUserGroupsRouter = router({
         });
       }
 
-      await db.insert(userGroups).values({
+      await db.insert(groups).values({
         publicId: newPublicId,
         name: groupName,
         description: groupDescription,
@@ -53,10 +49,10 @@ export const orgUserGroupsRouter = router({
         newGroupPublicId: newPublicId
       };
     }),
-  getOrgUserGroups: orgProcedure
+  getOrgGroups: orgProcedure
     .input(z.object({}).strict())
     .query(async ({ ctx }) => {
-      if (!ctx.user || !ctx.org) {
+      if (!ctx.account || !ctx.org) {
         throw new TRPCError({
           code: 'UNPROCESSABLE_CONTENT',
           message: 'User or Organization is not defined'
@@ -65,7 +61,7 @@ export const orgUserGroupsRouter = router({
       const { db, org } = ctx;
       const orgId = org?.id;
 
-      const userGroupQuery = await db.query.userGroups.findMany({
+      const groupQuery = await db.query.groups.findMany({
         columns: {
           publicId: true,
           avatarId: true,
@@ -73,14 +69,14 @@ export const orgUserGroupsRouter = router({
           description: true,
           color: true
         },
-        where: and(eq(userGroups.orgId, orgId)),
+        where: and(eq(groups.orgId, orgId)),
         with: {
           members: {
             columns: {
               publicId: true
             },
             with: {
-              userProfile: {
+              orgMemberProfile: {
                 columns: {
                   publicId: true,
                   avatarId: true,
@@ -96,18 +92,18 @@ export const orgUserGroupsRouter = router({
       });
 
       return {
-        groups: userGroupQuery
+        groups: groupQuery
       };
     }),
-  getUserGroup: orgProcedure
+  getGroup: orgProcedure
     .input(
       z.object({
-        userGroupPublicId: typeIdValidator('userGroups'),
-        newUserGroup: z.boolean().optional()
+        groupPublicId: typeIdValidator('groups'),
+        newGroup: z.boolean().optional()
       })
     )
     .query(async ({ ctx, input }) => {
-      if (!ctx.user || !ctx.org) {
+      if (!ctx.account || !ctx.org) {
         throw new TRPCError({
           code: 'UNPROCESSABLE_CONTENT',
           message: 'User or Organization is not defined'
@@ -119,7 +115,7 @@ export const orgUserGroupsRouter = router({
       // Handle when adding database replicas
       const dbReplica = db;
 
-      const userGroupQuery = await dbReplica.query.userGroups.findFirst({
+      const groupQuery = await dbReplica.query.groups.findFirst({
         columns: {
           publicId: true,
           avatarId: true,
@@ -128,8 +124,8 @@ export const orgUserGroupsRouter = router({
           color: true
         },
         where: and(
-          eq(userGroups.publicId, input.userGroupPublicId),
-          eq(userGroups.orgId, orgId)
+          eq(groups.publicId, input.groupPublicId),
+          eq(groups.orgId, orgId)
         ),
         with: {
           members: {
@@ -144,7 +140,7 @@ export const orgUserGroupsRouter = router({
                   publicId: true
                 }
               },
-              userProfile: {
+              orgMemberProfile: {
                 columns: {
                   publicId: true,
                   avatarId: true,
@@ -160,29 +156,28 @@ export const orgUserGroupsRouter = router({
       });
 
       return {
-        group: userGroupQuery
+        group: groupQuery
       };
     }),
-  addUserToGroup: orgProcedure
+  addOrgMemberToGroup: orgProcedure
     .input(
       z.object({
-        groupPublicId: typeIdValidator('userGroups'),
+        groupPublicId: typeIdValidator('groups'),
         orgMemberPublicId: typeIdValidator('orgMembers')
       })
     )
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.user || !ctx.org) {
+      if (!ctx.account || !ctx.org) {
         throw new TRPCError({
           code: 'UNPROCESSABLE_CONTENT',
-          message: 'User or Organization is not defined'
+          message: 'Account or Organization is not defined'
         });
       }
-      const { db, user, org } = ctx;
-      const userId = user?.id;
+      const { db, org } = ctx;
       const { groupPublicId, orgMemberPublicId } = input;
-      const newPublicId = typeIdGenerator('userGroupMembers');
+      const newPublicId = typeIdGenerator('groupMembers');
 
-      const isAdmin = await isUserAdminOfOrg(org);
+      const isAdmin = await isAccountAdminOfOrg(org);
       if (!isAdmin) {
         throw new TRPCError({
           code: 'UNAUTHORIZED',
@@ -192,9 +187,9 @@ export const orgUserGroupsRouter = router({
 
       const orgMember = await db.query.orgMembers.findFirst({
         columns: {
-          userId: true,
+          accountId: true,
           id: true,
-          userProfileId: true
+          orgMemberProfileId: true
         },
         where: eq(orgMembers.publicId, orgMemberPublicId)
       });
@@ -203,33 +198,31 @@ export const orgUserGroupsRouter = router({
         throw new Error('User not found');
       }
 
-      const userGroup = await db.query.userGroups.findFirst({
+      const group = await db.query.groups.findFirst({
         columns: {
           id: true
         },
-        where: eq(userGroups.publicId, groupPublicId)
+        where: eq(groups.publicId, groupPublicId)
       });
 
-      if (!userGroup) {
+      if (!group) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'Group not found'
         });
       }
 
-      const insertUserGroupMemberResult = await db
-        .insert(userGroupMembers)
-        .values({
-          publicId: newPublicId,
-          orgMemberId: orgMember.id,
-          groupId: userGroup.id,
-          userProfileId: orgMember.userProfileId,
-          role: 'member',
-          notifications: 'active',
-          addedBy: userId
-        });
+      const insertGroupMemberResult = await db.insert(groupMembers).values({
+        publicId: newPublicId,
+        orgMemberId: orgMember.id,
+        groupId: group.id,
+        orgMemberProfileId: orgMember.orgMemberProfileId,
+        role: 'member',
+        notifications: 'active',
+        addedBy: org.memberId
+      });
 
-      if (!insertUserGroupMemberResult) {
+      if (!insertGroupMemberResult) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Could not add user to group'

@@ -1,17 +1,17 @@
 import { z } from 'zod';
-import { router, userProcedure } from '../../trpc';
+import { router, accountProcedure } from '../../trpc';
 import { eq } from '@u22n/database/orm';
-import { users } from '@u22n/database/schema';
+import { accounts } from '@u22n/database/schema';
 
 export const defaultsRouter = router({
-  redirectionData: userProcedure
+  redirectionData: accountProcedure
     .input(z.object({}).strict())
     .query(async ({ ctx }) => {
-      const { db, user } = ctx;
-      const userId = user.id;
+      const { db, account } = ctx;
+      const accountId = account.id;
 
-      const userResponse = await db.query.users.findFirst({
-        where: eq(users.id, userId),
+      const accountResponse = await db.query.accounts.findFirst({
+        where: eq(accounts.id, accountId),
         with: {
           orgMemberships: {
             with: {
@@ -22,7 +22,7 @@ export const defaultsRouter = router({
               }
             }
           },
-          account: {
+          accountCredential: {
             columns: {
               twoFactorSecret: true,
               passwordHash: true
@@ -31,16 +31,17 @@ export const defaultsRouter = router({
         }
       });
 
-      if (!userResponse) {
+      if (!accountResponse) {
         throw new Error('User not found');
       }
 
-      const twoFactorEnabledCorrectly = userResponse.account.passwordHash
-        ? !!userResponse?.account?.twoFactorSecret
+      const twoFactorEnabledCorrectly = accountResponse.accountCredential
+        .passwordHash
+        ? !!accountResponse?.accountCredential?.twoFactorSecret
         : true;
 
       return {
-        defaultOrgSlug: userResponse?.orgMemberships[0]?.org?.slug || '',
+        defaultOrgSlug: accountResponse?.orgMemberships[0]?.org?.slug || '',
         twoFactorEnabledCorrectly: twoFactorEnabledCorrectly
       };
     })

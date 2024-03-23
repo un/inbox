@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { router, limitedProcedure } from '../../trpc';
 import type { DBType } from '@u22n/database';
 import { eq } from '@u22n/database/orm';
-import { users } from '@u22n/database/schema';
+import { accounts } from '@u22n/database/schema';
 import { blockedUsernames, reservedUsernames } from '../../../utils/signup';
 import { zodSchemas } from '@u22n/utils';
 
@@ -13,8 +13,8 @@ export async function validateUsername(
   available: boolean;
   error: string | null;
 }> {
-  const registeredUser = await db.query.users.findFirst({
-    where: eq(users.username, username)
+  const registeredUser = await db.query.accounts.findFirst({
+    where: eq(accounts.username, username)
   });
 
   if (registeredUser) {

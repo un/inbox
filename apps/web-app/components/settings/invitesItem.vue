@@ -98,7 +98,7 @@
               <UnUiAvatar
                 :public-id="inviteePublicId"
                 :avatar-id="inviteeAvatarId"
-                :type="'user'"
+                :type="'orgMember'"
                 :size="'md'"
                 :alt="inviteeName" />
               <span class="text-sm font-medium"> {{ inviteeName }}</span>
@@ -128,7 +128,7 @@
               <UnUiAvatar
                 :public-id="inviterPublicId"
                 :avatar-id="inviterAvatarId"
-                :type="'user'"
+                :type="'orgMember'"
                 :size="'md'"
                 :alt="inviterName" />
               <span class="text-sm font-medium"> {{ inviterName }}</span>
