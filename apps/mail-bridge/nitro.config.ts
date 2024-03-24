@@ -36,6 +36,9 @@ const mailDomains: MailDomains = JSON.parse(process.env.MAIL_DOMAINS);
 
 // TODO: ensure limits are pulled from the billing module
 export default defineNitroConfig({
+  alias: {
+    '~': './src'
+  },
   esbuild: {
     options: {
       target: 'EsNext'
@@ -57,6 +60,13 @@ export default defineNitroConfig({
       limits: postalServerLimits,
       // Assume local only if the env variable is set
       localMode: !!process.env.MAILBRIDGE_LOCAL_MODE || false
+    },
+    realtime: {
+      host: process.env.REALTIME_HOST || '',
+      port: process.env.REALTIME_PORT || '',
+      appId: process.env.REALTIME_APP_ID || '',
+      appKey: process.env.REALTIME_APP_KEY || '',
+      appSecret: process.env.REALTIME_APP_SECRET || ''
     },
     storage: {
       url: process.env.WEBAPP_STORAGE_URL || '',

@@ -51,11 +51,6 @@ export default defineNuxtConfig({
         origin: process.env.WEBAPP_URL || 'http://localhost:3000'
       }
     },
-    authJs: {},
-    realtime: {
-      url: process.env.WEBAPP_REALTIME_URL || '',
-      key: process.env.WEBAPP_REALTIME_KEY || ''
-    },
     mailBridge: {
       url: process.env.WEBAPP_MAILBRIDGE_URL || '',
       key: process.env.WEBAPP_MAILBRIDGE_KEY || '',
@@ -70,7 +65,13 @@ export default defineNuxtConfig({
       siteUrl: process.env.WEBAPP_URL || '',
       storageUrl: process.env.WEBAPP_STORAGE_URL || '',
       mailDomainPublic: [] as MailDomainEntries[],
-      mailDomainPremium: [] as MailDomainEntries[]
+      mailDomainPremium: [] as MailDomainEntries[],
+      realtime: {
+        host: process.env.REALTIME_HOST || '',
+        port: Number(process.env.REALTIME_PORT || ''),
+        appKey: process.env.REALTIME_APP_KEY || '',
+        authEndpoint: `${process.env.PLATFORM_URL}/realtime/auth`
+      }
     },
     turnstile: {
       secretKey: process.env.WEBAPP_TURNSTILE_SECRET_KEY || ''

@@ -3,6 +3,7 @@
   import { ref, useNuxtApp, watch } from '#imports';
 
   const { $trpc } = useNuxtApp();
+
   type ConvoEntriesDataType = Awaited<
     ReturnType<typeof $trpc.convos.entries.getConvoEntries.query>
   >['entries'];

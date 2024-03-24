@@ -751,6 +751,5 @@ export default eventHandler(async (event) => {
   }
 
   // send alerts
-
   return;
 });

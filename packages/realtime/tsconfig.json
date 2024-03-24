@@ -1,0 +1,6 @@
+{
+  "extends": "@u22n/tsconfig",
+  "compilerOptions": {
+    "esModuleInterop": true
+  }
+}
