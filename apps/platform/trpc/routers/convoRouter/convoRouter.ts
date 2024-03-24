@@ -46,9 +46,7 @@ export const convoRouter = router({
       z.object({
         participantsOrgMembersPublicIds: z.array(typeIdValidator('orgMembers')),
         participantsGroupsPublicIds: z.array(typeIdValidator('groups')),
-        participantsContactsPublicIds: z.array(
-          typeIdValidator('orgMemberProfile')
-        ),
+        participantsContactsPublicIds: z.array(typeIdValidator('contacts')),
         participantsEmails: z.array(z.string()),
         sendAsEmailIdentityPublicId:
           typeIdValidator('emailIdentities').optional(),
@@ -332,13 +330,10 @@ export const convoRouter = router({
       // validate the publicIds of Contacts and get the IDs
       if (
         participantsContactsPublicIds &&
-        participantsContactsPublicIds.length
+        participantsContactsPublicIds.length > 0
       ) {
         const contactResponses = await db.query.contacts.findMany({
-          where: inArray(
-            orgMemberProfiles.publicId,
-            participantsContactsPublicIds
-          ),
+          where: inArray(contacts.publicId, participantsContactsPublicIds),
           columns: {
             id: true
           }
