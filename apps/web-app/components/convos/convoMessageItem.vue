@@ -91,11 +91,11 @@
               class="text-sm leading-none">
               {{ author.name }}
             </span>
-            <UnUiTooltip :text="props.entry.createdAt.toLocaleString()">
-              <span class="text-xs leading-none text-gray-500">
-                {{ timeAgo }}
-              </span>
-            </UnUiTooltip>
+            <span
+              v-if="props.entry.metadata?.email?.from?.[0]?.email"
+              class="text-base-9 text-xs">
+              - via {{ props.entry.metadata?.email.from[0].email }}</span
+            >
           </div>
           <div class="flex flex-row gap-0">
             <UnUiTooltip text="Report a bug">
@@ -130,10 +130,18 @@
             </UnUiTooltip>
           </div>
         </div>
+        <!-- eslint-disable vue/no-v-html -->
         <div
           class="rounded-br-x w-full overflow-hidden rounded-bl-xl p-2 shadow-md"
           :class="convoBubbleClasses"
-          v-html="convoEntryBody"></div>
+          v-html="convoEntryBody" />
+        <div class="flex flex-row justify-end">
+          <UnUiTooltip :text="props.entry.createdAt.toLocaleString()">
+            <span class="text-base-9 text-xs leading-none">
+              {{ timeAgo }}
+            </span>
+          </UnUiTooltip>
+        </div>
       </div>
     </div>
   </div>
