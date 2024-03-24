@@ -1,5 +1,9 @@
 lockfileVersion: '6.0'
 
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
 importers:
   .:
     devDependencies:
@@ -420,6 +424,9 @@ importers:
       pusher-js:
         specifier: 8.4.0-rc2
         version: 8.4.0-rc2
+      zod:
+        specifier: ^3.22.4
+        version: 3.22.4
     devDependencies:
       '@u22n/tsconfig':
         specifier: ^0.0.2
@@ -16629,7 +16636,3 @@ packages:
       {
         integrity: sha512-iC+8Io04lddc+mVqQ9AZ7OQ2MrUKGN+oIQyq1vemgt46jwCwLfhq7/pwnBnNXXXZb8VTVLKwp9EDkx+ryxIWmg==
       }
-
-settings:
-  autoInstallPeers: true
-  excludeLinksFromLockfile: false

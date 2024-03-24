@@ -1,9 +1,9 @@
 import Pusher, { type UserAuthenticationCallback } from 'pusher-js';
-import { type RealtimeEventsMap } from './types';
+import { eventDataMaps, type EventDataMap } from './events';
+import type { z } from 'zod';
 
 export default class RealtimeClient {
   private client: Pusher | null = null;
-
   constructor(
     private config: {
       appKey: string;
@@ -58,30 +58,28 @@ export default class RealtimeClient {
     }
   }
 
-  public on<const T extends keyof RealtimeEventsMap>(
+  public on<const T extends keyof EventDataMap>(
     event: T,
-    callback: RealtimeEventsMap[T]
+    callback: (data: z.infer<EventDataMap[T]>) => Promise<void>
   ) {
-    if (!this.client) {
-      throw new Error('Client not connected');
-    }
-    this.client.bind(event, callback);
+    if (!this.client) throw new Error('Client not connected');
+    this.client.bind(event, (e: unknown) =>
+      callback(eventDataMaps[event].parse(e))
+    );
   }
 
-  public off<const T extends keyof RealtimeEventsMap>(event: T) {
-    if (!this.client) {
-      throw new Error('Client not connected');
-    }
+  public off<const T extends keyof EventDataMap>(event: T) {
+    if (!this.client) throw new Error('Client not connected');
     this.client.unbind(event);
   }
 
-  public onBroadcast<const T extends keyof RealtimeEventsMap>(
+  public onBroadcast<const T extends keyof EventDataMap>(
     event: T,
-    callback: RealtimeEventsMap[T]
+    callback: (data: z.infer<EventDataMap[T]>) => Promise<void>
   ) {
-    if (!this.client) {
-      throw new Error('Client not connected');
-    }
-    this.client.subscribe('broadcasts').bind(event, callback);
+    if (!this.client) throw new Error('Client not connected');
+    this.client
+      .subscribe('broadcasts')
+      .bind(event, (e: unknown) => callback(eventDataMaps[event].parse(e)));
   }
 }

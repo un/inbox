@@ -44,7 +44,11 @@
   );
 
   await realtime.connect();
-  realtime.on('convo:created', () => convoEntriesRefresh());
+  realtime.on('convo:created', async (data) => {
+    convoEntriesRefresh();
+    // Remove this line after testing
+    console.warn('convo:created', data);
+  });
 </script>
 <template>
   <UnUiButton

@@ -1,6 +1,7 @@
 import Pusher from 'pusher';
-import type { RealtimeEventsMap } from './types';
+import { type EventDataMap, eventDataMaps } from './events';
 import type { TypeId } from '@u22n/utils';
+import type { z } from 'zod';
 
 export default class RealtimeServer {
   private pusher: Pusher;
@@ -22,25 +23,31 @@ export default class RealtimeServer {
     });
   }
 
-  broadcast<T extends keyof RealtimeEventsMap>(
+  public async broadcast<const T extends keyof EventDataMap>(
     event: T,
-    data: Parameters<RealtimeEventsMap[T]>[0]
+    data: z.infer<EventDataMap[T]>
   ) {
-    this.pusher.trigger('broadcasts', event, data);
+    // Parse the data before sending it to the client, ensuring it matches the schema
+    await this.pusher.trigger(
+      'broadcasts',
+      event,
+      eventDataMaps[event].parse(data)
+    );
   }
 
-  emit<T extends keyof RealtimeEventsMap>(
+  public async emit<const T extends keyof EventDataMap>(
     accountIds: TypeId<'account'> | TypeId<'account'>[],
     event: T,
-    data?: Parameters<RealtimeEventsMap[T]>[0]
+    data: z.infer<EventDataMap[T]>
   ) {
     if (typeof accountIds === 'string') accountIds = [accountIds];
+    // Parse the data before sending it to the client, ensuring it matches the schema
     for (const id of accountIds) {
-      this.pusher.sendToUser(id, event, data || null);
+      await this.pusher.sendToUser(id, event, eventDataMaps[event].parse(data));
     }
   }
 
-  authenticate(socketId: string, accountId: TypeId<'account'>) {
+  public authenticate(socketId: string, accountId: TypeId<'account'>) {
     return this.pusher.authenticateUser(socketId, {
       id: accountId
     });

@@ -777,6 +777,10 @@ export default eventHandler(async (event) => {
     .map((p) => p.orgMember?.account?.publicId)
     .filter((e) => typeof e === 'string') as TypeId<'account'>[];
 
-  realtime.emit(alertingUsers, 'convo:created');
+  realtime.emit(alertingUsers, 'convo:created', {
+    // I created the ID here just to showcase type-safety, replace it with the original ID from above
+    publicId: typeIdGenerator('convos'),
+    subject: subject
+  });
   return;
 });
