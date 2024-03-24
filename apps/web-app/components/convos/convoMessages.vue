@@ -1,10 +1,8 @@
 <script setup lang="ts">
   import { useInfiniteScroll } from '@vueuse/core';
   import { ref, useNuxtApp, watch } from '#imports';
-  import { useRealtime } from '~/composables/realtime';
 
   const { $trpc } = useNuxtApp();
-  const realtime = useRealtime();
 
   type ConvoEntriesDataType = Awaited<
     ReturnType<typeof $trpc.convos.entries.getConvoEntries.query>
@@ -42,13 +40,6 @@
     },
     { distance: 300 }
   );
-
-  await realtime.connect();
-  realtime.on('convo:created', async (data) => {
-    convoEntriesRefresh();
-    // Remove this line after testing
-    console.warn('convo:created', data);
-  });
 </script>
 <template>
   <UnUiButton

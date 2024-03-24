@@ -21,7 +21,7 @@ import type {
   MessageParseAddressPlatformObject,
   postalEmailPayload
 } from '../../../../types';
-import { typeIdGenerator, validateTypeId, type TypeId } from '@u22n/utils';
+import { typeIdGenerator, validateTypeId } from '@u22n/utils';
 import { tiptapCore, tiptapHtml } from '@u22n/tiptap';
 import { tipTapExtensions } from '@u22n/tiptap/extensions';
 import {
@@ -31,7 +31,6 @@ import {
   parseAddressIds,
   useRuntimeConfig
 } from '#imports';
-import { realtime } from '../../../../utils/realtime';
 
 // TODO!: remove all `|| <default>` and `<nullish>?.` shortcuts in favour of proper error handling
 
@@ -752,35 +751,5 @@ export default eventHandler(async (event) => {
   }
 
   // send alerts
-  const alertingUsers = (
-    (await db.query.convoParticipants.findMany({
-      where: and(
-        eq(convoParticipants.orgId, orgId),
-        eq(convoParticipants.convoId, convoId!),
-        eq(convoParticipants.role, 'contributor')
-      ),
-      columns: {},
-      with: {
-        orgMember: {
-          columns: {},
-          with: {
-            account: {
-              columns: {
-                publicId: true
-              }
-            }
-          }
-        }
-      }
-    })) || []
-  )
-    .map((p) => p.orgMember?.account?.publicId)
-    .filter((e) => typeof e === 'string') as TypeId<'account'>[];
-
-  realtime.emit(alertingUsers, 'convo:created', {
-    // I created the ID here just to showcase type-safety, replace it with the original ID from above
-    publicId: typeIdGenerator('convos'),
-    subject: subject
-  });
   return;
 });
