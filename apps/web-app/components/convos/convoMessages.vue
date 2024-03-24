@@ -1,12 +1,14 @@
 <script setup lang="ts">
   import { useInfiniteScroll } from '@vueuse/core';
   import { ref, useNuxtApp, watch } from '#imports';
+  import { type ConvoEntryMetadata } from '@u22n/database/schema';
 
   const { $trpc } = useNuxtApp();
 
   type ConvoEntriesDataType = Awaited<
     ReturnType<typeof $trpc.convos.entries.getConvoEntries.query>
   >['entries'];
+
   const el = ref<HTMLElement | null>(null);
   const entriesArray = ref<ConvoEntriesDataType>([]);
 
@@ -16,10 +18,10 @@
 
   const props = defineProps<Props>();
 
-  const replyToMessagePublicId = defineModel('replyToMessagePublicId', {
-    type: String,
-    default: ''
-  });
+  const replyToMessagePublicId = defineModel<string>('replyToMessagePublicId');
+  const replyToMessageMetadata = defineModel<ConvoEntryMetadata>(
+    'replyToMessageMetadata'
+  );
 
   const {
     data: convoEntries,
@@ -35,8 +37,7 @@
   watch(convoEntries, () => {
     if (convoEntries.value && convoEntries.value.entries) {
       entriesArray.value.push(...convoEntries.value.entries);
-      replyToMessagePublicId.value =
-        convoEntries.value.entries[0]?.publicId ?? '';
+      setReplyToMessagePublicId(convoEntries.value.entries[0]?.publicId ?? '');
     }
   });
 
@@ -50,6 +51,10 @@
 
   function setReplyToMessagePublicId(publicId: string) {
     replyToMessagePublicId.value = publicId;
+    const messageMetadata = entriesArray.value.find(
+      (entry) => entry.publicId === publicId
+    );
+    replyToMessageMetadata.value = messageMetadata?.metadata ?? {};
   }
 </script>
 <template>

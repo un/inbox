@@ -39,7 +39,7 @@
 
 <template>
   <div
-    class="border-1 border-base-6 bg-base-1 h-full max-h-full w-full rounded-xl border px-2 py-1">
+    class="border-1 border-base-6 bg-base-1 h-full max-h-full w-full rounded-xl border px-2 py-1 shadow-md">
     <tiptapVue3.EditorContent
       :editor="editor"
       class="h-full max-h-full overflow-y-auto" />
