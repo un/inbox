@@ -11,6 +11,7 @@
   import { useUtils } from '~/composables/utils';
   import { useTimeAgo } from '@vueuse/core';
   import type { ConvoParticipantEntry } from '~/composables/types';
+  import { tiptapVue3, emptyTiptapEditorContent } from '@u22n/tiptap';
 
   const { $trpc } = useNuxtApp();
 
@@ -153,7 +154,7 @@
   }
 
   // // New Data
-  const editorData = ref({});
+  const editorData = ref<tiptapVue3.JSONContent>(emptyTiptapEditorContent);
 </script>
 <template>
   <div
@@ -194,8 +195,10 @@
           variant="soft" />
       </div>
     </div>
+
     <div
       class="grid h-full max-h-full w-full max-w-full grid-cols-3 gap-2 overflow-hidden pt-8">
+      <!-- Messages Pane -->
       <div class="col-span-2 flex h-full max-h-full flex-col gap-2 pr-8">
         <div class="flex h-full max-h-full grow flex-col gap-0 overflow-hidden">
           <div
@@ -222,6 +225,8 @@
           </div>
         </div>
       </div>
+
+      <!-- Context Pane -->
       <div
         class="border-l-1 border-base-6 flex h-full w-full max-w-full flex-col justify-between gap-8 overflow-hidden border border-b-0 border-r-0 border-t-0 pl-8">
         <div class="flex w-full max-w-full flex-col gap-8 overflow-hidden">
