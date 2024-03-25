@@ -568,7 +568,7 @@
               <template #option="{ option }">
                 <UnUiIcon :name="option.icon" />
                 <div v-if="option.type === 'email'">
-                  <span> {{ option.address }} - {{ option }} </span>
+                  <span> {{ option.address }} </span>
                 </div>
                 <div
                   v-if="option.type === 'contact'"

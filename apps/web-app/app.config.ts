@@ -94,9 +94,9 @@ export default defineAppConfig({
     modal: {
       overlay: {
         base: 'fixed inset-0 transition-opacity',
-        background: 'bg-sand-1 dark:bg-sand-1 opacity-75 backdrop-blur-lg'
+        background: 'bg-base-1 dark:bg-base-1 opacity-75 backdrop-blur-lg'
       },
-      background: 'bg-sand-9 dark:bg-sand-9',
+      background: 'bg-base-3 dark:bg-base-3',
       ring: 'ring-sand-9 dark:ring-sand-9 ring-1',
       rounded: 'rounded-lg',
       shadow: 'shadow-xl'

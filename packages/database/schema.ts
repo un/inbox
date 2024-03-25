@@ -1096,6 +1096,12 @@ export type ConvoEntryMetadataEmailAddress = {
   email: string;
 };
 
+export type ConvoEntryMetadataMissingParticipant = {
+  type: 'user' | 'group';
+  publicId: String;
+  name: String;
+};
+
 export type ConvoEntryMetadataEmail = {
   messageId: string;
   to: ConvoEntryMetadataEmailAddress[];
@@ -1108,6 +1114,7 @@ export type ConvoEntryMetadataEmail = {
     postalMessageId: string | null;
   }[];
   emailHeaders?: string;
+  missingParticipants?: ConvoEntryMetadataMissingParticipant[];
 };
 export type ConvoEntryMetadata = {
   email?: ConvoEntryMetadataEmail;
