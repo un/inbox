@@ -1,6 +1,7 @@
 <script setup lang="ts">
   import {
     computed,
+    computed,
     navigateTo,
     provide,
     ref,
@@ -151,6 +152,9 @@
         name: participantName,
         type: participantType,
         role: participant.role,
+        color: participantColor,
+        signaturePlainText: participantSignaturePlainText,
+        signatureHtml: participantSignatureHtml
         color: participantColor,
         signaturePlainText: participantSignaturePlainText,
         signatureHtml: participantSignatureHtml
@@ -358,6 +362,7 @@
         <div class="flex h-full max-h-full grow flex-col gap-0 overflow-hidden">
           <div
             class="from-base-1 z-[20000] mb-[-12px] h-[12px] bg-gradient-to-b" />
+          class="from-base-1 z-[20000] mb-[-12px] h-[12px] bg-gradient-to-b" />
           <ConvosConvoMessages
             v-model:reply-to-message-public-id="replyToMessagePublicId"
             v-model:reply-to-message-metadata="replyToMessageMetadata"
@@ -365,6 +370,7 @@
             :participant-public-id="convoDetails?.participantPublicId || ''" />
           <div
             class="from-base-1 z-[20000] mt-[-12px] h-[12px] bg-gradient-to-t" />
+          class="from-base-1 z-[20000] mt-[-12px] h-[12px] bg-gradient-to-t" />
         </div>
         <div class="flex w-full flex-col justify-items-end gap-2">
           <div class="flex flex-row items-center gap-2">
@@ -437,6 +443,8 @@
       </div>
 
       <!-- Context Pane -->
+
+      <!-- Context Pane -->
       <div
         class="border-l-1 border-base-6 flex h-full w-full max-w-full flex-col justify-between gap-8 overflow-hidden border border-b-0 border-r-0 border-t-0 pl-8">
         <div class="flex w-full max-w-full flex-col gap-8 overflow-hidden">
@@ -464,17 +472,21 @@
               <NuxtUiAvatarGroup>
                 <template
                   v-for="participant of participantsAll"
+                  v-for="participant of participantsAll"
                   :key="participant.participantPublicId">
                   <ConvosConvoAvatar
                     :participant="participant"
                     size="sm"
                     :ring="true" />
+                  size="sm" :ring="true" />
                 </template>
               </NuxtUiAvatarGroup>
             </div>
             <div
               v-if="!convoParticipantsCollapsed"
               class="flex h-fit w-full max-w-full flex-col gap-4 overflow-hidden">
+              class="flex h-fit w-full max-w-full flex-col gap-4
+              overflow-hidden">
               <div
                 v-if="participantsAssignedArray.length"
                 class="flex w-full max-w-full flex-col gap-2 overflow-hidden">
