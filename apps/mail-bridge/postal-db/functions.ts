@@ -39,7 +39,7 @@ export async function createOrg(input: CreateOrgInput) {
   const [{ insertId }] = await postalDB.insert(organizations).values({
     uuid: randomUUID(),
     name: input.orgPublicId,
-    permalink: input.orgPublicId.toLowerCase(),
+    permalink: input.orgPublicId.toLowerCase().replaceAll('_', '-'),
     ipPoolId: input.ipPoolId,
     timeZone: 'UTC',
     createdAt: sql`CURRENT_TIMESTAMP`,
@@ -562,7 +562,7 @@ export async function addMailServer(input: AddMailServerInput) {
     mode: 'Live',
     createdAt: sql`CURRENT_TIMESTAMP`,
     updatedAt: sql`CURRENT_TIMESTAMP`,
-    permalink: input.serverPublicId,
+    permalink: input.serverPublicId.toLowerCase().replaceAll('_', '-'),
     token,
     messageRetentionDays: 60,
     ipPoolId: input.defaultIpPoolId,
