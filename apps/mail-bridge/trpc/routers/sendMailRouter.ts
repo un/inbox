@@ -132,7 +132,9 @@ export const sendMailRouter = router({
           bodyPlainText: true,
           author: true,
           replyToId: true,
-          subjectId: true
+          subjectId: true,
+          metadata: true,
+          emailMessageId: true
         },
         with: {
           subject: {
@@ -155,7 +157,8 @@ export const sendMailRouter = router({
             with: {
               convoMessageSource: {
                 columns: {
-                  emailMessageId: true
+                  emailMessageId: true,
+                  metadata: true
                 }
               }
             }
@@ -417,13 +420,33 @@ export const sendMailRouter = router({
       // END CONVO EMAIL PARTICIPANTS SECTION
 
       // remove TO email address from CCs if it exists
+
+      if (!convoMetadataToAddress) {
+        const replySourceMetadata = convoEntryResponse.replyTo
+          ?.convoMessageSource?.metadata?.email?.from[0]
+          ? convoEntryResponse.replyTo.convoMessageSource.metadata.email.from[0]
+          : convoMetadataFromAddress;
+
+        convoMetadataToAddress = {
+          id: replySourceMetadata.id,
+          type: replySourceMetadata.type,
+          publicId: replySourceMetadata.publicId,
+          email: replySourceMetadata.email
+        };
+      }
+      if (!convoToAddress) {
+        const replySourceMetadata = convoEntryResponse.replyTo
+          ?.convoMessageSource?.metadata?.email?.from[0]
+          ? convoEntryResponse.replyTo.convoMessageSource.metadata.email.from[0]
+          : convoMetadataFromAddress;
+
+        convoToAddress = replySourceMetadata.email;
+      }
       const convoCcAddressesFiltered = convoCcAddresses.filter(
         (emailAddress) => {
           return emailAddress !== convoToAddress && emailAddress !== convoFrom;
         }
       );
-
-      //! END CONVOSENDING MISC DATA
 
       //* get sending server details
       let postalServerUrl: string;
@@ -540,6 +563,16 @@ export const sendMailRouter = router({
       );
       const emailBodyPlainText = convoEntryResponse.bodyPlainText;
 
+      const replyToEmailId =
+        convoEntryResponse.replyTo?.convoMessageSource.emailMessageId || null;
+
+      const emailHeaders: { [key: string]: string } = replyToEmailId
+        ? {
+            'In-Reply-To': `<${replyToEmailId}>`,
+            References: `<${replyToEmailId}>`
+          }
+        : {};
+
       type PostalResponse =
         | {
             status: 'success';
@@ -577,7 +610,8 @@ export const sendMailRouter = router({
           subject: convoEntryResponse.subject?.subject || 'No Subject',
           plain_body: emailBodyPlainText,
           html_body: emailBodyHTML,
-          attachments: postalAttachments
+          attachments: postalAttachments,
+          headers: emailHeaders
         })
       })
         .then((res) => res.json())
@@ -817,6 +851,7 @@ export const sendMailRouter = router({
       }
 
       //* Send email
+
       type PostalResponse =
         | {
             status: 'success';

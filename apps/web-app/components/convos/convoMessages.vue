@@ -24,9 +24,9 @@
   );
 
   const {
-    data: convoEntries,
-    refresh: convoEntriesRefresh,
-    status: convoEntriesStatus
+    data: convoEntries
+    // refresh: convoEntriesRefresh,
+    // status: convoEntriesStatus
   } = await $trpc.convos.entries.getConvoEntries.useLazyQuery(
     {
       convoPublicId: props.convoPublicId
@@ -64,9 +64,9 @@
     :loading="convoEntriesStatus === 'pending'"
     @click="convoEntriesRefresh()" /> -->
   <div
-    class="flex h-full max-h-full w-full max-w-full flex-col-reverse overflow-y-auto">
+    class="flex h-full max-h-full w-full max-w-full flex-col-reverse overflow-y-scroll">
     <div
-      class="mb-[24px] mt-[24px] flex w-full flex-col-reverse items-start gap-4">
+      class="mb-[24px] mt-[24px] flex w-full flex-col-reverse items-start gap-12">
       <div
         v-for="entry of entriesArray"
         :key="entry.publicId"

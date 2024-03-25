@@ -6,9 +6,11 @@
     </NuxtLayout>
     <NuxtUiNotifications>
       <template #title="{ title }">
+        <!-- eslint-disable-next-line vue/no-v-html -->
         <span v-html="title" />
       </template>
       <template #description="{ description }">
+        <!-- eslint-disable-next-line vue/no-v-html -->
         <span v-html="description" />
       </template>
     </NuxtUiNotifications>
