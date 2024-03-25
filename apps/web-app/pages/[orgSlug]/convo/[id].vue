@@ -1,7 +1,6 @@
 <script setup lang="ts">
   import {
     computed,
-    computed,
     navigateTo,
     provide,
     ref,
@@ -152,9 +151,6 @@
         name: participantName,
         type: participantType,
         role: participant.role,
-        color: participantColor,
-        signaturePlainText: participantSignaturePlainText,
-        signatureHtml: participantSignatureHtml
         color: participantColor,
         signaturePlainText: participantSignaturePlainText,
         signatureHtml: participantSignatureHtml
@@ -471,7 +467,6 @@
               @click="convoParticipantsCollapsed = !convoParticipantsCollapsed">
               <NuxtUiAvatarGroup>
                 <template
-                  v-for="participant of participantsAll"
                   v-for="participant of participantsAll"
                   :key="participant.participantPublicId">
                   <ConvosConvoAvatar

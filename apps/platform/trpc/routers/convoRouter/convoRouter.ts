@@ -23,8 +23,7 @@ import {
   groupMembers,
   convoAttachments,
   pendingAttachments,
-  convoEntryReplies,
-  type ConvoEntryMetadata
+  convoEntryReplies
 } from '@u22n/database/schema';
 import { typeIdValidator, type TypeId, typeIdGenerator } from '@u22n/utils';
 import { TRPCError } from '@trpc/server';
@@ -341,10 +340,6 @@ export const convoRouter = router({
             ),
             columns: {
               id: true,
-              reputationId: true,
-              publicId: true,
-              emailUsername: true,
-              emailDomain: true
               reputationId: true,
               publicId: true,
               emailUsername: true,

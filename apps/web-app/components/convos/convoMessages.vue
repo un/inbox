@@ -36,7 +36,6 @@
 
   watch(convoEntries, () => {
     if (convoEntries.value && convoEntries.value.entries) {
-    if (convoEntries.value && convoEntries.value.entries) {
       entriesArray.value.push(...convoEntries.value.entries);
       setReplyToMessagePublicId(convoEntries.value.entries[0]?.publicId ?? '');
     }

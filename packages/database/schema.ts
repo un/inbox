@@ -1092,7 +1092,6 @@ export const pendingAttachmentsRelations = relations(
 export type ConvoEntryMetadataEmailAddress = {
   id: number;
   publicId: string;
-  publicId: string;
   type: 'contact' | 'emailIdentity';
   email: string;
 };
