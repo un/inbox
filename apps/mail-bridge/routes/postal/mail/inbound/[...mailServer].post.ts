@@ -647,7 +647,7 @@ export default eventHandler(async (event) => {
             where: and(
               eq(convoParticipants.orgId, orgId),
               eq(convoParticipants.convoId, convoId || 0),
-              eq(convoParticipants.groupId, firstDestination.groupId)
+              eq(convoParticipants.groupId, firstDestination!.groupId)
             ),
             columns: {
               id: true

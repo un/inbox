@@ -111,7 +111,7 @@ export const orgRouter = router({
 
       await setMailServerRoutingHttpEndpoint({
         mailBridgeUrl: postalConfig.webhookDestinations.messages,
-        orgId: internalPostalOrgId,
+        orgId: orgId,
         serverId: internalPostalMailserverId,
         serverPublicId: newServerPublicId
       });
