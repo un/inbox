@@ -7,9 +7,6 @@ export default defineAppConfig({
     base: 'sand',
     colors: ['sand', 'base', 'bronze', 'green', 'red', 'amber', 'blue'],
     safelistColors: ['sand'],
-    notification: {
-      rounded: 'rounded-lg rounded-br-2xl'
-    },
 
     // Button
     button: {
@@ -536,7 +533,7 @@ export default defineAppConfig({
     },
 
     // toast
-    notifications: {
+    notification: {
       title: 'text-sm font-medium text-base-12 dark:text-base-12',
       description: 'mt-1 text-sm leading-4 text-base-11 dark:text-base-11',
       background: 'bg-base-3 dark:bg-base-3',

@@ -416,7 +416,9 @@
               <template #default="{ openFileDialog, loading }">
                 <UnUiButton
                   :loading="loading"
-                  label="upload"
+                  label="Upload"
+                  icon="i-ph-upload"
+                  variant="outline"
                   @click="openFileDialog" />
               </template>
             </ConvosUpload>
