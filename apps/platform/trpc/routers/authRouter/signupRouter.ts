@@ -4,10 +4,7 @@ import type { DBType } from '@u22n/database';
 import { eq } from '@u22n/database/orm';
 import { accounts } from '@u22n/database/schema';
 import { blockedUsernames, reservedUsernames } from '../../../utils/signup';
-import { zodSchemas } from '@u22n/utils';
-import { zxcvbn, zxcvbnOptions } from '@zxcvbn-ts/core';
-import { dictionary, adjacencyGraphs } from '@zxcvbn-ts/language-common';
-import humanFormat from 'human-format';
+import { calculatePasswordStrength, zodSchemas } from '@u22n/utils';
 
 export async function validateUsername(
   db: DBType,
@@ -42,34 +39,6 @@ export async function validateUsername(
   return {
     available: true,
     error: null
-  };
-}
-
-zxcvbnOptions.setOptions({
-  dictionary,
-  graphs: adjacencyGraphs
-});
-
-function calculatePasswordStrength(password: string) {
-  const { score, crackTimesSeconds } = zxcvbn(password);
-  return {
-    score,
-    crackTime: humanFormat(crackTimesSeconds.offlineSlowHashing1e4PerSecond, {
-      separator: ' ',
-      scale: new humanFormat.Scale({
-        milliseconds: 1 / 1000,
-        seconds: 1,
-        minutes: 60,
-        hours: 60 * 60,
-        days: 60 * 60 * 24,
-        weeks: 60 * 60 * 24 * 7,
-        months: 60 * 60 * 24 * 30,
-        years: 60 * 60 * 24 * 365,
-        decades: 60 * 60 * 24 * 365 * 10,
-        centuries: 60 * 60 * 24 * 365 * 100
-      })
-    }),
-    allowed: score >= 3
   };
 }
 

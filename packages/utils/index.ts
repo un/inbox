@@ -33,3 +33,4 @@ export const zodSchemas = {
 };
 
 export * from './typeId';
+export * from './password';
