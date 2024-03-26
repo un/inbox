@@ -921,7 +921,8 @@ export const convosRelations = relations(convos, ({ one, many }) => ({
   participants: many(convoParticipants),
   attachments: many(convoAttachments),
   entries: many(convoEntries),
-  subjects: many(convoSubjects)
+  subjects: many(convoSubjects),
+  seen: many(convoSeenTimestamps)
 }));
 
 export const convoSubjects = mysqlTable(
@@ -995,7 +996,7 @@ export const convoParticipants = mysqlTable(
 );
 export const convoParticipantsRelations = relations(
   convoParticipants,
-  ({ one }) => ({
+  ({ one, many }) => ({
     org: one(orgs, {
       fields: [convoParticipants.orgId],
       references: [orgs.id]
@@ -1015,7 +1016,8 @@ export const convoParticipantsRelations = relations(
     convo: one(convos, {
       fields: [convoParticipants.convoId],
       references: [convos.id]
-    })
+    }),
+    seen: many(convoSeenTimestamps)
   })
 );
 
@@ -1186,7 +1188,8 @@ export const convoEntriesRelations = relations(
       fields: [convoEntries.replyToId],
       references: [convoEntryReplies.entrySourceId],
       relationName: 'inReplyTo'
-    })
+    }),
+    seenBy: many(convoSeenTimestamps)
   })
 );
 
@@ -1243,6 +1246,45 @@ export const convoEntryPrivateVisibilityParticipantsRelations = relations(
     convoMember: one(convoParticipants, {
       fields: [convoEntryPrivateVisibilityParticipants.convoMemberId],
       references: [convoParticipants.id]
+    })
+  })
+);
+
+export const convoSeenTimestamps = mysqlTable(
+  'convo_seen_timestamps',
+  {
+    id: serial('id').primaryKey(),
+    convoId: foreignKey('convo_id'),
+    convoEntryId: foreignKey('convo_entry_id'),
+    participantId: foreignKey('participant_id').notNull(),
+    orgMemberId: foreignKey('participant_id').notNull(),
+    seenAt: timestamp('seen_at').notNull()
+  },
+  (table) => ({
+    convoIdIndex: index('convo_id_idx').on(table.convoId),
+    convoEntryIdIndex: index('convo_entry_id_idx').on(table.convoEntryId),
+    seenAt: index('seen_at_idx').on(table.seenAt)
+  })
+);
+
+export const convoSeenTimestampsRelations = relations(
+  convoSeenTimestamps,
+  ({ one }) => ({
+    convo: one(convos, {
+      fields: [convoSeenTimestamps.convoId],
+      references: [convos.id]
+    }),
+    convoEntry: one(convoEntries, {
+      fields: [convoSeenTimestamps.convoEntryId],
+      references: [convoEntries.id]
+    }),
+    participant: one(convoParticipants, {
+      fields: [convoSeenTimestamps.participantId],
+      references: [convoParticipants.id]
+    }),
+    orgMember: one(orgMembers, {
+      fields: [convoSeenTimestamps.orgMemberId],
+      references: [orgMembers.id]
     })
   })
 );
