@@ -259,25 +259,25 @@
           text="Choose your username"
           class="w-full">
           <div
-            class="bg-accent-5 h-2 w-full rounded"
+            class="bg-base-5 h-2 w-full rounded"
             @click="navigateTo('/join')" />
         </UnUiTooltip>
         <UnUiTooltip
           text="Secure your account"
           class="w-full">
           <div
-            class="bg-accent-9 h-2 w-full rounded"
+            class="bg-base-9 h-2 w-full rounded"
             @click="navigateTo('/join/secure')" />
         </UnUiTooltip>
         <UnUiTooltip
           text="Set up your organization"
           class="w-full">
-          <div class="bg-accent-5 h-2 w-full rounded" />
+          <div class="bg-base-5 h-2 w-full rounded" />
         </UnUiTooltip>
         <UnUiTooltip
           text="Create your profile"
           class="w-full">
-          <div class="bg-accent-5 h-2 w-full rounded" />
+          <div class="bg-base-5 h-2 w-full rounded" />
         </UnUiTooltip>
       </div>
 
@@ -369,8 +369,8 @@
                   [
                     'font-bold',
                     passwordStats.score && passwordStats.score >= 3
-                      ? 'text-green-600'
-                      : 'text-red-500'
+                      ? 'text-green-9'
+                      : 'text-red-9'
                   ].join(' ')
                 ">
                 {{
@@ -385,11 +385,10 @@
                 name="i-ph-check-circle-fill"
                 :class="
                   passwordStats.score && passwordStats.score >= 3
-                    ? 'text-green-500'
-                    : 'text-red-500'
+                    ? 'text-green-9'
+                    : 'text-red-9'
                 " />
-              <span
-                class="text-sm leading-none text-gray-800 dark:text-gray-200">
+              <span class="text-base-11 dark:text-base-11 text-sm leading-none">
                 It would take {{ passwordStats.crackTime }} to crack
               </span>
             </div>

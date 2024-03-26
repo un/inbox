@@ -398,9 +398,7 @@
               <template #option="{ option }">
                 <span>
                   {{ option.sendName }}
-                  <span class="text-gray-800 dark:text-gray-300">
-                    - {{ option.address }}
-                  </span>
+                  <span class="text-base-11"> - {{ option.address }} </span>
                 </span>
               </template>
               <template #option-empty=""> No email identities found </template>
@@ -648,7 +646,7 @@
             <div
               v-if="!attachments.length"
               class="flex max-w-full flex-row flex-wrap gap-2 overflow-hidden">
-              <span class="text-xs text-gray-500">No attachments</span>
+              <span class="text-base-11 text-xs">No attachments</span>
             </div>
           </div>
         </div>
