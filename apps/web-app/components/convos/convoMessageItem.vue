@@ -50,7 +50,7 @@
       case 'message':
         return 'bg-base-2 dark:bg-base-2';
       default:
-        return 'bg-gray-100 dark:bg-gray-900';
+        return 'bg-base-1';
     }
   });
   const containerClasses = computed(() => {
