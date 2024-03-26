@@ -27,6 +27,13 @@ export const defaultsRouter = router({
               twoFactorSecret: true,
               passwordHash: true,
               twoFactorEnabled: true
+            },
+            with: {
+              authenticators: {
+                columns: {
+                  id: true
+                }
+              }
             }
           }
         }
@@ -36,13 +43,18 @@ export const defaultsRouter = router({
         throw new Error('User not found');
       }
 
+      const userHasPasskeys =
+        accountResponse.accountCredential.authenticators.length > 0;
+
       const twoFactorEnabledCorrectly =
         accountResponse.accountCredential.passwordHash &&
         accountResponse.accountCredential.twoFactorEnabled;
 
       return {
         defaultOrgSlug: accountResponse?.orgMemberships[0]?.org?.slug || '',
-        twoFactorEnabledCorrectly: twoFactorEnabledCorrectly
+        twoFactorEnabledCorrectly: userHasPasskeys
+          ? true
+          : twoFactorEnabledCorrectly
       };
     })
 });
