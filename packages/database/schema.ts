@@ -42,6 +42,9 @@ const avatarId = customType<{ data: string }>({
 const foreignKey = customType<{ data: number }>({
   dataType() {
     return 'bigint unsigned';
+  },
+  fromDriver(value: unknown): number {
+    return Number(value);
   }
 });
 
@@ -355,7 +358,8 @@ export const orgMembersRelations = relations(orgMembers, ({ one, many }) => ({
     fields: [orgMembers.orgMemberProfileId],
     references: [orgMemberProfiles.id]
   }),
-  routingRules: many(emailRoutingRulesDestinations)
+  routingRuleDestinations: many(emailRoutingRulesDestinations),
+  authorizedEmailIdentities: many(emailIdentitiesAuthorizedOrgMembers)
 }));
 
 export const orgMemberProfiles = mysqlTable(
@@ -417,13 +421,15 @@ export const groupsRelations = relations(groups, ({ one, many }) => ({
     references: [orgs.id]
   }),
   members: many(groupMembers),
-  routingRules: many(emailRoutingRulesDestinations)
+  routingRuleDestinations: many(emailRoutingRulesDestinations),
+  authorizedEmailIdentities: many(emailIdentitiesAuthorizedOrgMembers)
 }));
 
 export const groupMembers = mysqlTable(
   'group_members',
   {
     id: serial('id').primaryKey(),
+    orgId: foreignKey('org_id').notNull(),
     publicId: publicId('groupMembers', 'public_id').notNull(),
     groupId: foreignKey('group_id').notNull(),
     orgMemberId: foreignKey('org_member_id').notNull(),
@@ -803,7 +809,7 @@ export const emailIdentitiesAuthorizedOrgMemberRelations = relations(
       fields: [emailIdentitiesAuthorizedOrgMembers.orgId],
       references: [orgs.id]
     }),
-    identity: one(emailIdentities, {
+    emailIdentity: one(emailIdentities, {
       fields: [emailIdentitiesAuthorizedOrgMembers.identityId],
       references: [emailIdentities.id]
     }),
@@ -923,8 +929,6 @@ export const convosRelations = relations(convos, ({ one, many }) => ({
   entries: many(convoEntries),
   subjects: many(convoSubjects),
   seen: many(convoSeenTimestamps)
-  subjects: many(convoSubjects),
-  seen: many(convoSeenTimestamps)
 }));
 
 export const convoSubjects = mysqlTable(
@@ -1021,7 +1025,43 @@ export const convoParticipantsRelations = relations(
       fields: [convoParticipants.convoId],
       references: [convos.id]
     }),
-    seen: many(convoSeenTimestamps)
+    seen: many(convoSeenTimestamps),
+    groupMemberships: many(convoParticipantGroupMembers, {
+      relationName: 'memberships'
+    }),
+    groupMembers: many(convoParticipantGroupMembers, { relationName: 'group' })
+  })
+);
+
+export const convoParticipantGroupMembers = mysqlTable(
+  'convo_participant_group_members',
+  {
+    id: serial('id').primaryKey(),
+    orgId: foreignKey('org_id').notNull(),
+    convoParticipantId: foreignKey('convo_participant_id').notNull(),
+    groupId: foreignKey('group_id').notNull()
+  },
+  (table) => ({
+    convoParticipantIdIndex: index('convo_participant_id_idx').on(
+      table.convoParticipantId
+    ),
+    groupIdIndex: index('group_id_idx').on(table.groupId)
+  })
+);
+
+export const convoParticipantGroupMembersRelations = relations(
+  convoParticipantGroupMembers,
+  ({ one }) => ({
+    convoParticipant: one(convoParticipants, {
+      fields: [convoParticipantGroupMembers.convoParticipantId],
+      references: [convoParticipants.id],
+      relationName: 'memberships'
+    }),
+    group: one(convoParticipants, {
+      fields: [convoParticipantGroupMembers.groupId],
+      references: [convoParticipants.groupId],
+      relationName: 'group'
+    })
   })
 );
 
@@ -1231,6 +1271,7 @@ export const convoEntryPrivateVisibilityParticipants = mysqlTable(
   'convo_entry_private_visibility_participants',
   {
     id: serial('id').primaryKey(),
+    orgId: foreignKey('org_id').notNull(),
     entryId: foreignKey('entry_id').notNull(),
     convoMemberId: foreignKey('convo_member_id').notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull()
@@ -1258,6 +1299,7 @@ export const convoEntryPrivateVisibilityParticipantsRelations = relations(
 export const convoSeenTimestamps = mysqlTable(
   'convo_seen_timestamps',
   {
+    orgId: foreignKey('org_id').notNull(),
     convoId: foreignKey('convo_id').notNull(),
     participantId: foreignKey('participant_id').notNull(),
     orgMemberId: foreignKey('org_member_id').notNull(),
@@ -1296,6 +1338,7 @@ export const convoSeenTimestampsRelations = relations(
 export const convoEntrySeenTimestamps = mysqlTable(
   'convo_entry_seen_timestamps',
   {
+    orgId: foreignKey('org_id').notNull(),
     convoEntryId: foreignKey('convo_entry_id').notNull(),
     participantId: foreignKey('participant_id').notNull(),
     orgMemberId: foreignKey('org_member_id').notNull(),
