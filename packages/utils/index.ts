@@ -25,20 +25,12 @@ export const zodSchemas = {
         message: `Must be at least ${minLength} characters long`
       })
       .max(32, {
-        message: 'Too Long, Aint nobody typing that 😂'
+        message: "Too Long, Ain't nobody typing that 😂"
       })
       .regex(/^[a-zA-Z0-9]*$/, {
         message: 'Only letters and numbers'
-      }),
-  password: () =>
-    z
-      .string()
-      .min(8, { message: 'Minimum 8 characters' })
-      .max(64)
-      .regex(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*\W)(?!.*\s).{8,}$/, {
-        message:
-          'At least one digit, one lowercase letter, one uppercase letter, one special character, no whitespace allowed, minimum eight characters in length'
       })
 };
 
 export * from './typeId';
+export * from './password';

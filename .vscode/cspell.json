@@ -36,7 +36,8 @@
     "unstorage",
     "UPSTASH",
     "vueuse",
-    "waitlist"
+    "waitlist",
+    "zxcvbn"
   ],
   "ignoreWords": ["ABCDEFGHJKMNPQRSTVWXYZ"],
   "import": []

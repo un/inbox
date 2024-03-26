@@ -55,7 +55,8 @@
     }
     if (secureType.value === 'password') {
       return (
-        passwordValid.value === true && passwordConfirmationValid.value === true
+        passwordStats.value?.allowed === true &&
+        passwordConfirmationValid.value === true
       );
     }
     return null;
@@ -64,38 +65,35 @@
   // Password Form Fields
   const secureType = ref<'passkey' | 'password'>('passkey');
   const passwordInput = ref('');
-  const passwordValid = ref<boolean | null>(null);
-  const passwordValidationMessage = ref('');
+  const passwordStats = ref<{
+    score: number | null;
+    crackTime: string | null;
+    allowed: boolean | null;
+  }>({
+    score: null,
+    crackTime: null,
+    allowed: null
+  });
+
   const passwordConfirmationInput = ref('');
   const passwordConfirmationValid = ref<boolean | null>(null);
   const passwordConfirmationValidationMessage = ref('');
 
-  const passwordConditionLengthValid = computed(() => {
-    const schema = z.string().min(8);
-    return schema.safeParse(passwordInput.value).success;
-  });
-  const passwordConditionDigitValid = computed(() => {
-    const schema = z.string().regex(/(?=.*\d)/);
-    return schema.safeParse(passwordInput.value).success;
-  });
-  const passwordConditionLowercaseValid = computed(() => {
-    const schema = z.string().regex(/(?=.*[a-z])/);
-    return schema.safeParse(passwordInput.value).success;
-  });
-  const passwordConditionUppercaseValid = computed(() => {
-    const schema = z.string().regex(/(?=.*[A-Z])/);
-    return schema.safeParse(passwordInput.value).success;
-  });
-  const passwordConditionSpecialCharValid = computed(() => {
-    const schema = z
-      .string()
-      .regex(/(?=.*[ !"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])/);
-    return schema.safeParse(passwordInput.value).success;
-  });
-  const passwordConditionNoWhitespaceValid = computed(() => {
-    const schema = z.string().regex(/(?!.*\s)/);
-    return schema.safeParse(passwordInput.value).success;
-  });
+  watchDebounced(
+    passwordInput,
+    async () => {
+      if (passwordInput.value === '') return;
+      const res = await $trpc.auth.signup.checkPasswordStrength.query({
+        password: passwordInput.value,
+        turnstileToken: turnstileToken.value
+      });
+      passwordStats.value = res;
+    },
+    {
+      debounce: 600,
+      maxWait: 5000
+    }
+  );
 
   watchDebounced(
     passwordConfirmationInput,
@@ -315,7 +313,7 @@
               name="i-ph-password-light"
               class="text-base-9 text-5xl" />
             <p class="font-medium">Password</p>
-            <p class="text-sm">Alphanumeric!1</p>
+            <p class="text-sm">Alphanumeric</p>
             <UnUiBadge
               label="Less Secure"
               color="amber" />
@@ -354,124 +352,58 @@
       <div
         v-if="secureType === 'password'"
         class="w-full">
-        <div class="grid grid-cols-2 gap-8">
-          <div class="flex flex-col gap-2">
-            <UnUiInput
-              v-model:value="passwordInput"
-              v-model:valid="passwordValid"
-              v-model:validationMessage="passwordValidationMessage"
-              width="full"
-              icon="i-ph-password"
-              label="Password"
-              password
-              placeholder=""
-              :schema="
-                z
-                  .string()
-                  .min(8, { message: 'Minimum 8 characters' })
-                  .max(64)
-                  .regex(
-                    /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*\W)(?!.*\s).{8,}$/,
-                    {
-                      message:
-                        'At least one digit, one lowercase letter, one uppercase letter, one special character, no whitespace allowed, minimum eight characters in length'
-                    }
-                  )
-              " />
-            <UnUiInput
-              v-model:value="passwordConfirmationInput"
-              v-model:valid="passwordConfirmationValid"
-              v-model:validationMessage="passwordConfirmationValidationMessage"
-              width="full"
-              icon="i-ph-password"
-              label="Confirm"
-              password
-              placeholder=""
-              :schema="z.string()" />
-          </div>
-          <div class="flex flex-col gap-2">
-            <span class="text-sm"> Your password must be: </span>
+        <div class="mx-auto flex w-2/3 flex-col gap-2">
+          <UnUiInput
+            v-model:value="passwordInput"
+            :valid="passwordStats.allowed"
+            width="full"
+            icon="i-ph-password"
+            label="Password"
+            password
+            placeholder="" />
+          <div v-if="passwordInput !== ''">
+            <p class="text-sm">
+              Your password is
+              <span
+                :class="
+                  [
+                    'font-bold',
+                    passwordStats.score && passwordStats.score >= 3
+                      ? 'text-green-600'
+                      : 'text-red-500'
+                  ].join(' ')
+                ">
+                {{
+                  ['very weak', 'weak', 'fair', 'strong', 'very strong'][
+                    passwordStats.score || 0
+                  ]
+                }}
+              </span>
+            </p>
             <div class="flex flex-row items-center gap-1">
               <UnUiIcon
                 name="i-ph-check-circle-fill"
                 :class="
-                  passwordConditionLengthValid
+                  passwordStats.score && passwordStats.score >= 3
                     ? 'text-green-500'
                     : 'text-red-500'
                 " />
               <span
                 class="text-sm leading-none text-gray-800 dark:text-gray-200">
-                at least 8 characters long
-              </span>
-            </div>
-            <div class="flex flex-row items-center gap-1">
-              <UnUiIcon
-                name="i-ph-check-circle-fill"
-                :class="
-                  passwordConditionDigitValid
-                    ? 'text-green-500'
-                    : 'text-red-500'
-                " />
-              <span
-                class="text-sm leading-none text-gray-800 dark:text-gray-200">
-                include 1 number
-              </span>
-            </div>
-            <div class="flex flex-row items-center gap-1">
-              <UnUiIcon
-                name="i-ph-check-circle-fill"
-                :class="
-                  passwordConditionLowercaseValid
-                    ? 'text-green-500'
-                    : 'text-red-500'
-                " />
-              <span
-                class="text-sm leading-none text-gray-800 dark:text-gray-200">
-                include 1 lowercase letter
-              </span>
-            </div>
-            <div class="flex flex-row items-center gap-1">
-              <UnUiIcon
-                name="i-ph-check-circle-fill"
-                :class="
-                  passwordConditionUppercaseValid
-                    ? 'text-green-500'
-                    : 'text-red-500'
-                " />
-              <span
-                class="text-sm leading-none text-gray-800 dark:text-gray-200">
-                include 1 uppercase letter
-              </span>
-            </div>
-            <div class="flex flex-row items-center gap-1">
-              <UnUiIcon
-                name="i-ph-check-circle-fill"
-                :class="
-                  passwordConditionSpecialCharValid
-                    ? 'text-green-500'
-                    : 'text-red-500'
-                " />
-              <span
-                class="text-sm leading-none text-gray-800 dark:text-gray-200">
-                include 1 special character
-              </span>
-            </div>
-            <div
-              v-if="!passwordConditionNoWhitespaceValid"
-              class="flex flex-row gap-2">
-              <UnUiIcon
-                name="i-ph-check-circle-fill"
-                :class="
-                  passwordConditionNoWhitespaceValid
-                    ? 'text-green-500'
-                    : 'text-red-500'
-                " />
-              <span
-                class="text-sm leading-none text-gray-800 dark:text-gray-200">
-                include no whitespaces
+                It would take {{ passwordStats.crackTime }} to crack
               </span>
             </div>
           </div>
+          <UnUiInput
+            v-model:value="passwordConfirmationInput"
+            v-model:valid="passwordConfirmationValid"
+            v-model:validationMessage="passwordConfirmationValidationMessage"
+            width="full"
+            icon="i-ph-password"
+            label="Confirm"
+            password
+            placeholder=""
+            :schema="z.string()" />
         </div>
       </div>
       <div class="mt-3 w-full">

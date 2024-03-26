@@ -25,7 +25,8 @@ export const defaultsRouter = router({
           accountCredential: {
             columns: {
               twoFactorSecret: true,
-              passwordHash: true
+              passwordHash: true,
+              twoFactorEnabled: true
             }
           }
         }
@@ -35,10 +36,9 @@ export const defaultsRouter = router({
         throw new Error('User not found');
       }
 
-      const twoFactorEnabledCorrectly = accountResponse.accountCredential
-        .passwordHash
-        ? !!accountResponse?.accountCredential?.twoFactorSecret
-        : true;
+      const twoFactorEnabledCorrectly =
+        accountResponse.accountCredential.passwordHash &&
+        accountResponse.accountCredential.twoFactorEnabled;
 
       return {
         defaultOrgSlug: accountResponse?.orgMemberships[0]?.org?.slug || '',

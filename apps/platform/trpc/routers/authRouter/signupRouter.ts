@@ -4,7 +4,7 @@ import type { DBType } from '@u22n/database';
 import { eq } from '@u22n/database/orm';
 import { accounts } from '@u22n/database/schema';
 import { blockedUsernames, reservedUsernames } from '../../../utils/signup';
-import { zodSchemas } from '@u22n/utils';
+import { calculatePasswordStrength, zodSchemas } from '@u22n/utils';
 
 export async function validateUsername(
   db: DBType,
@@ -51,5 +51,12 @@ export const signupRouter = router({
     )
     .query(async ({ ctx, input }) => {
       return await validateUsername(ctx.db, input.username);
-    })
+    }),
+  checkPasswordStrength: limitedProcedure
+    .input(
+      z.object({
+        password: z.string()
+      })
+    )
+    .query(({ input }) => calculatePasswordStrength(input.password))
 });

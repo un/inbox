@@ -3,7 +3,7 @@ import { Argon2id } from 'oslo/password';
 import { limitedProcedure, router, accountProcedure } from '../../trpc';
 import { eq } from '@u22n/database/orm';
 import { accountCredentials, accounts } from '@u22n/database/schema';
-import { typeIdGenerator, zodSchemas } from '@u22n/utils';
+import { strongPasswordSchema, typeIdGenerator, zodSchemas } from '@u22n/utils';
 import { TRPCError } from '@trpc/server';
 import { createError, setCookie } from 'h3';
 import { lucia } from '../../../utils/auth';
@@ -17,7 +17,7 @@ export const passwordRouter = router({
     .input(
       z.object({
         username: zodSchemas.username(),
-        password: zodSchemas.password()
+        password: strongPasswordSchema
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -77,7 +77,7 @@ export const passwordRouter = router({
         turnstileToken: z.string(),
         // we allow min length of 2 for username if we plan to provide them in the future
         username: zodSchemas.username(2),
-        password: zodSchemas.password().optional(),
+        password: strongPasswordSchema.optional(),
         twoFactorCode: zodSchemas.nanoIdToken(),
         recoveryCode: z.string().optional()
       })
@@ -233,8 +233,8 @@ export const passwordRouter = router({
     .input(
       z
         .object({
-          oldPassword: zodSchemas.password(),
-          newPassword: zodSchemas.password(),
+          oldPassword: strongPasswordSchema,
+          newPassword: strongPasswordSchema,
           otp: zodSchemas.nanoIdToken(),
           invalidateAllSessions: z.boolean().default(false)
         })
