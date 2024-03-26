@@ -35,7 +35,6 @@ export default defineNuxtConfig({
     '/**': { ssr: false },
     '/redirect': { ssr: true },
     '/join/**': { ssr: true },
-    '/login/**': { ssr: true },
     '/': { ssr: true }
   },
 

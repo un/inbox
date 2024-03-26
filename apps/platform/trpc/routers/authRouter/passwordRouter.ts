@@ -17,7 +17,7 @@ export const passwordRouter = router({
     .input(
       z.object({
         username: zodSchemas.username(),
-        password: zodSchemas.password()
+        password: z.string()
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -77,7 +77,7 @@ export const passwordRouter = router({
         turnstileToken: z.string(),
         // we allow min length of 2 for username if we plan to provide them in the future
         username: zodSchemas.username(2),
-        password: zodSchemas.password().optional(),
+        password: z.string().optional(),
         twoFactorCode: zodSchemas.nanoIdToken(),
         recoveryCode: z.string().optional()
       })
@@ -233,8 +233,8 @@ export const passwordRouter = router({
     .input(
       z
         .object({
-          oldPassword: zodSchemas.password(),
-          newPassword: zodSchemas.password(),
+          oldPassword: z.string(),
+          newPassword: z.string(),
           otp: zodSchemas.nanoIdToken(),
           invalidateAllSessions: z.boolean().default(false)
         })

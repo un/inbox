@@ -74,7 +74,8 @@ export const twoFactorRouter = router({
           accountCredential: {
             columns: {
               twoFactorSecret: true,
-              recoveryCode: true
+              recoveryCode: true,
+              twoFactorEnabled: true
             }
           }
         }
@@ -94,6 +95,7 @@ export const twoFactorRouter = router({
             'Two Factor Authentication (2FA) is not set up for this account'
         });
       }
+
       if (existingData.accountCredential.recoveryCode) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
@@ -120,7 +122,7 @@ export const twoFactorRouter = router({
 
       await db
         .update(accountCredentials)
-        .set({ recoveryCode: hashedRecoveryCode })
+        .set({ recoveryCode: hashedRecoveryCode, twoFactorEnabled: true })
         .where(eq(accountCredentials.accountId, accountId));
 
       return { recoveryCode: recoveryCode };

@@ -1,6 +1,8 @@
 {
   "version": "0.2",
-  "ignorePaths": ["package.json"],
+  "ignorePaths": [
+    "package.json"
+  ],
   "dictionaryDefinitions": [],
   "dictionaries": [],
   "words": [
@@ -36,8 +38,11 @@
     "unstorage",
     "UPSTASH",
     "vueuse",
-    "waitlist"
+    "waitlist",
+    "zxcvbn"
   ],
-  "ignoreWords": ["ABCDEFGHJKMNPQRSTVWXYZ"],
+  "ignoreWords": [
+    "ABCDEFGHJKMNPQRSTVWXYZ"
+  ],
   "import": []
 }

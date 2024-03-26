@@ -8,7 +8,7 @@
       await $trpc.account.defaults.redirectionData.query({});
 
     if (!twoFactorEnabledCorrectly) {
-      return navigateTo(`/login/2fa`);
+      return navigateTo(`/join/2fa`);
     }
 
     if (!defaultOrgSlug) {

@@ -82,6 +82,7 @@ export const accountCredentials = mysqlTable(
     accountId: foreignKey('account_id').notNull(),
     passwordHash: varchar('password_hash', { length: 255 }),
     twoFactorSecret: varchar('two_factor_secret', { length: 255 }),
+    twoFactorEnabled: boolean('two_factor_enabled').notNull().default(false),
     recoveryCode: varchar('recovery_code', { length: 256 })
   },
   (accountAuth) => ({
