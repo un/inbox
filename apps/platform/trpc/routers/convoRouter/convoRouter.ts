@@ -23,7 +23,11 @@ import {
   groupMembers,
   convoAttachments,
   pendingAttachments,
-  convoEntryReplies
+  convoEntryReplies,
+  convoSeenTimestamps,
+  convoEntrySeenTimestamps,
+  convoParticipantGroupMembers,
+  emailIdentities
 } from '@u22n/database/schema';
 import { typeIdValidator, type TypeId, typeIdGenerator } from '@u22n/utils';
 import { TRPCError } from '@trpc/server';
@@ -103,6 +107,7 @@ export const convoRouter = router({
       type IdPair = {
         id: number;
         publicId: string;
+        emailIdentityId: number | null;
       };
       const orgMemberIds: IdPair[] = [];
       const orgGroupIds: IdPair[] = [];
@@ -119,11 +124,40 @@ export const convoRouter = router({
           columns: {
             id: true,
             publicId: true
+          },
+          with: {
+            authorizedEmailIdentities: {
+              columns: {
+                id: true,
+                default: true
+              },
+              with: {
+                emailIdentity: {
+                  columns: {
+                    id: true
+                  }
+                }
+              }
+            }
           }
         });
-        orgMemberIds.push(
-          ...orgMemberResponses.map((orgMembers) => orgMembers)
-        );
+
+        for (const orgMember of orgMemberResponses) {
+          let emailIdentityId = orgMember.authorizedEmailIdentities.find(
+            (emailIdentity) => emailIdentity.default
+          )?.emailIdentity.id;
+
+          if (!emailIdentityId) {
+            emailIdentityId =
+              orgMember.authorizedEmailIdentities[0]?.emailIdentity.id;
+          }
+          const orgMemberIdObject: IdPair = {
+            id: orgMember.id,
+            publicId: orgMember.publicId,
+            emailIdentityId: emailIdentityId || null
+          };
+          orgMemberIds.push(orgMemberIdObject);
+        }
 
         if (orgMemberIds.length !== participantsOrgMembersPublicIds.length) {
           throw new TRPCError({
@@ -140,9 +174,40 @@ export const convoRouter = router({
           columns: {
             id: true,
             publicId: true
+          },
+          with: {
+            authorizedEmailIdentities: {
+              columns: {
+                id: true,
+                default: true
+              },
+              with: {
+                emailIdentity: {
+                  columns: {
+                    id: true
+                  }
+                }
+              }
+            }
           }
         });
-        orgGroupIds.push(...groupResponses.map((groups) => groups));
+
+        for (const group of groupResponses) {
+          let emailIdentityId = group.authorizedEmailIdentities.find(
+            (emailIdentity) => emailIdentity.default
+          )?.emailIdentity.id;
+
+          if (!emailIdentityId) {
+            emailIdentityId =
+              group.authorizedEmailIdentities[0]?.emailIdentity.id;
+          }
+          const groupObject: IdPair = {
+            id: group.id,
+            publicId: group.publicId,
+            emailIdentityId: emailIdentityId || null
+          };
+          orgGroupIds.push(groupObject);
+        }
 
         if (orgGroupIds.length !== participantsGroupsPublicIds.length) {
           throw new TRPCError({
@@ -164,7 +229,13 @@ export const convoRouter = router({
             publicId: true
           }
         });
-        orgContactIds.push(...contactResponses.map((contact) => contact));
+
+        orgContactIds.push(
+          ...contactResponses.map((contact) => ({
+            ...contact,
+            emailIdentityId: null
+          }))
+        );
 
         if (orgContactIds.length !== participantsContactsPublicIds.length) {
           throw new TRPCError({
@@ -204,7 +275,8 @@ export const convoRouter = router({
             }
             orgContactIds.push({
               id: existingContact.id,
-              publicId: existingContact.publicId
+              publicId: existingContact.publicId,
+              emailIdentityId: null
             });
             orgContactReputationIds.push(existingContact.reputationId);
           } else {
@@ -240,7 +312,8 @@ export const convoRouter = router({
               }
               orgContactIds.push({
                 id: Number(newContactInsertResponse.insertId),
-                publicId: newContactPublicId
+                publicId: newContactPublicId,
+                emailIdentityId: null
               });
               orgContactReputationIds.push(existingContactGlobalReputations.id);
             } else {
@@ -275,7 +348,8 @@ export const convoRouter = router({
               }
               orgContactIds.push({
                 id: Number(newContactInsertResponse.insertId),
-                publicId: newContactPublicId
+                publicId: newContactPublicId,
+                emailIdentityId: null
               });
               orgContactReputationIds.push(
                 Number(newContactGlobalReputationInsertResponse.insertId)
@@ -287,10 +361,11 @@ export const convoRouter = router({
 
       // create the conversation get id
       const newConvoPublicId = typeIdGenerator('convos');
+      const newConvoTimestamp = new Date();
       const insertConvoResponse = await db.insert(convos).values({
         publicId: newConvoPublicId,
         orgId: orgId,
-        lastUpdatedAt: new Date()
+        lastUpdatedAt: newConvoTimestamp
       });
 
       // create conversationSubject entry
@@ -321,7 +396,8 @@ export const convoRouter = router({
             orgId: orgId,
             convoId: Number(insertConvoResponse.insertId),
             publicId: convoMemberPublicId,
-            orgMemberId: orgMemberId.id
+            orgMemberId: orgMemberId.id,
+            emailIdentityId: orgMemberId.emailIdentityId
           });
         });
         await db
@@ -330,10 +406,8 @@ export const convoRouter = router({
       }
 
       if (orgGroupIds.length) {
-        const convoParticipantsDbInsertValuesArray: InferInsertModel<
-          typeof convoParticipants
-        >[] = [];
-        orgGroupIds.forEach((groupId) => {
+        for (const groupId of orgGroupIds) {
+          // add the group to the convo participants
           const convoGroupPublicId = typeIdGenerator('convoParticipants');
 
           if (
@@ -343,16 +417,77 @@ export const convoRouter = router({
             convoParticipantToPublicId = convoGroupPublicId;
           }
 
-          convoParticipantsDbInsertValuesArray.push({
-            orgId: orgId,
-            convoId: Number(insertConvoResponse.insertId),
-            publicId: convoGroupPublicId,
-            groupId: groupId.id
+          const insertConvoParticipantGroupResponse = await db
+            .insert(convoParticipants)
+            .values({
+              orgId: orgId,
+              convoId: Number(insertConvoResponse.insertId),
+              publicId: convoGroupPublicId,
+              groupId: groupId.id,
+              emailIdentityId: groupId.emailIdentityId
+            });
+
+          //get the groups members and add to convo separately
+          const groupMembersQuery = await db.query.groupMembers.findMany({
+            where: and(
+              eq(groupMembers.orgId, orgId),
+              eq(groupMembers.groupId, groupId.id)
+            ),
+            columns: {
+              orgMemberId: true
+            }
           });
-        });
-        await db
-          .insert(convoParticipants)
-          .values(convoParticipantsDbInsertValuesArray);
+          if (groupMembersQuery.length > 0) {
+            for (const groupMember of groupMembersQuery) {
+              const convoParticipantGroupMemberPublicId =
+                typeIdGenerator('convoParticipants');
+              let convoParticipantId: number | undefined;
+              try {
+                const insertConvoParticipantResponse = await db
+                  .insert(convoParticipants)
+                  .values({
+                    orgId: orgId,
+                    publicId: convoParticipantGroupMemberPublicId,
+                    convoId: Number(insertConvoResponse.insertId),
+                    orgMemberId: groupMember.orgMemberId,
+                    role: 'groupMember',
+                    notifications: 'active',
+                    emailIdentityId: groupId.emailIdentityId
+                  });
+                if (insertConvoParticipantResponse) {
+                  convoParticipantId = Number(
+                    insertConvoParticipantResponse.insertId
+                  );
+                }
+              } catch (retry) {
+                const existingConvoParticipant =
+                  await db.query.convoParticipants.findFirst({
+                    columns: {
+                      id: true
+                    },
+                    where: and(
+                      eq(convoParticipants.orgId, orgId),
+                      eq(
+                        convoParticipants.convoId,
+                        Number(insertConvoResponse.insertId)
+                      ),
+                      eq(convoParticipants.orgMemberId, groupMember.orgMemberId)
+                    )
+                  });
+                if (existingConvoParticipant) {
+                  convoParticipantId = Number(existingConvoParticipant.id);
+                }
+              }
+              if (convoParticipantId) {
+                await db.insert(convoParticipantGroupMembers).values({
+                  convoParticipantId: Number(convoParticipantId),
+                  groupId: Number(insertConvoParticipantGroupResponse.insertId),
+                  orgId: orgId
+                });
+              }
+            }
+          }
+        }
       }
 
       if (orgContactIds.length) {
@@ -381,6 +516,20 @@ export const convoRouter = router({
           .insert(convoParticipants)
           .values(convoParticipantsDbInsertValuesArray);
       }
+
+      let authorEmailIdentityId: number | null = null;
+      if (sendAsEmailIdentityPublicId) {
+        const emailIdentityResponse = await db.query.emailIdentities.findFirst({
+          where: eq(emailIdentities.publicId, sendAsEmailIdentityPublicId),
+          columns: {
+            id: true,
+            publicId: true
+          }
+        });
+        if (emailIdentityResponse) {
+          authorEmailIdentityId = emailIdentityResponse.id;
+        }
+      }
       const authorConvoParticipantPublicId =
         typeIdGenerator('convoParticipants');
       const insertAuthorConvoParticipantResponse = await db
@@ -390,6 +539,7 @@ export const convoRouter = router({
           convoId: Number(insertConvoResponse.insertId),
           publicId: authorConvoParticipantPublicId,
           orgMemberId: accountOrgMemberId,
+          emailIdentityId: authorEmailIdentityId,
           role: 'assigned'
         });
 
@@ -410,8 +560,30 @@ export const convoRouter = router({
         subjectId: Number(insertConvoSubjectResponse.insertId),
         type: input.firstMessageType,
         body: newConvoBody,
-        bodyPlainText: newConvoBodyPlainText
+        bodyPlainText: newConvoBodyPlainText,
+        createdAt: newConvoTimestamp
       });
+
+      await db
+        .insert(convoSeenTimestamps)
+        .values({
+          orgId: orgId,
+          convoId: Number(insertConvoResponse.insertId),
+          participantId: Number(insertAuthorConvoParticipantResponse.insertId),
+          orgMemberId: accountOrgMemberId,
+          seenAt: newConvoTimestamp
+        })
+        .onDuplicateKeyUpdate({ set: { seenAt: newConvoTimestamp } });
+      await db
+        .insert(convoEntrySeenTimestamps)
+        .values({
+          orgId: orgId,
+          convoEntryId: Number(insertConvoEntryResponse.insertId),
+          participantId: Number(insertAuthorConvoParticipantResponse.insertId),
+          orgMemberId: accountOrgMemberId,
+          seenAt: newConvoTimestamp
+        })
+        .onDuplicateKeyUpdate({ set: { seenAt: newConvoTimestamp } });
 
       //* if convo has attachments, add them to the convo
       const attachmentsToSend: {
@@ -437,7 +609,8 @@ export const convoRouter = router({
             publicId: attachment.attachmentPublicId,
             fileName: attachment.fileName,
             type: attachment.type,
-            size: attachment.size
+            size: attachment.size,
+            createdAt: newConvoTimestamp
           });
           attachmentsToSend.push({
             orgPublicId: org.publicId,
@@ -549,6 +722,7 @@ export const convoRouter = router({
           with: {
             convo: {
               columns: {
+                id: true,
                 publicId: true
               },
               with: {
@@ -614,6 +788,7 @@ export const convoRouter = router({
       );
 
       const newConvoEntryPublicId = typeIdGenerator('convoEntries');
+      const newConvoEntryTimestamp = new Date();
       const insertConvoEntryResponse = await db.insert(convoEntries).values({
         orgId: orgId,
         publicId: newConvoEntryPublicId,
@@ -627,8 +802,16 @@ export const convoRouter = router({
         type: messageType,
         body: newConvoEntryBody,
         bodyPlainText: newConvoEntryBodyPlainText,
-        replyToId: Number(convoEntryToReplyToQueryResponse.id)
+        replyToId: Number(convoEntryToReplyToQueryResponse.id),
+        createdAt: newConvoEntryTimestamp
       });
+
+      await db
+        .update(convos)
+        .set({
+          lastUpdatedAt: newConvoEntryTimestamp
+        })
+        .where(eq(convos.id, Number(convoEntryToReplyToQueryResponse.convoId)));
 
       await db.insert(convoEntryReplies).values({
         entrySourceId: Number(convoEntryToReplyToQueryResponse.id),
@@ -658,7 +841,8 @@ export const convoRouter = router({
             publicId: attachment.attachmentPublicId,
             fileName: attachment.fileName,
             type: attachment.type,
-            size: attachment.size
+            size: attachment.size,
+            createdAt: newConvoEntryTimestamp
           });
           attachmentsToSend.push({
             orgPublicId: org.publicId,
@@ -702,6 +886,26 @@ export const convoRouter = router({
         });
       }
 
+      await db
+        .insert(convoSeenTimestamps)
+        .values({
+          orgId: orgId,
+          convoId: Number(convoEntryToReplyToQueryResponse.convo.id),
+          participantId: Number(authorConvoParticipantId),
+          orgMemberId: accountOrgMemberId,
+          seenAt: new Date()
+        })
+        .onDuplicateKeyUpdate({ set: { seenAt: new Date() } });
+      await db
+        .insert(convoEntrySeenTimestamps)
+        .values({
+          orgId: orgId,
+          convoEntryId: Number(insertConvoEntryResponse.insertId),
+          participantId: Number(authorConvoParticipantId),
+          orgMemberId: accountOrgMemberId,
+          seenAt: new Date()
+        })
+        .onDuplicateKeyUpdate({ set: { seenAt: new Date() } });
       return {
         status: 'success',
         publicId: newConvoEntryPublicId

@@ -14,7 +14,9 @@ import {
   emailRoutingRules,
   emailRoutingRulesDestinations,
   emailIdentities,
-  groupMembers
+  groupMembers,
+  emailIdentitiesAuthorizedOrgMemberRelations,
+  emailIdentitiesAuthorizedOrgMembers
 } from '@u22n/database/schema';
 import { typeIdGenerator, typeIdValidator } from '@u22n/utils';
 import { isAccountAdminOfOrg } from '../../../../utils/account';
@@ -150,32 +152,56 @@ export const emailIdentityRouter = router({
         });
       }
 
-      const orgMemberIds: number[] = [];
+      const orgMemberObjects: { id: number; hasDefault: boolean }[] = [];
       const orgMemberIdsResponse =
         routeToOrgMemberPublicIds && routeToOrgMemberPublicIds.length > 0
           ? await db.query.orgMembers.findMany({
               where: inArray(orgMembers.publicId, routeToOrgMemberPublicIds),
               columns: {
                 id: true
+              },
+              with: {
+                authorizedEmailIdentities: {
+                  columns: {
+                    default: true
+                  }
+                }
               }
             })
           : [];
       orgMemberIdsResponse.forEach((orgMember) => {
-        orgMemberIds.push(orgMember.id);
+        orgMemberObjects.push({
+          id: orgMember.id,
+          hasDefault: orgMember.authorizedEmailIdentities.some(
+            (identity) => identity.default
+          )
+        });
       });
 
-      const userGroupIds: number[] = [];
+      const userGroupObjects: { id: number; hasDefault: boolean }[] = [];
       const userGroupIdsResponse =
         routeToGroupsPublicIds && routeToGroupsPublicIds.length > 0
           ? await db.query.groups.findMany({
               where: inArray(groups.publicId, routeToGroupsPublicIds),
               columns: {
                 id: true
+              },
+              with: {
+                authorizedEmailIdentities: {
+                  columns: {
+                    default: true
+                  }
+                }
               }
             })
           : [];
       userGroupIdsResponse.forEach((userGroup) => {
-        userGroupIds.push(userGroup.id);
+        userGroupObjects.push({
+          id: userGroup.id,
+          hasDefault: userGroup.authorizedEmailIdentities.some(
+            (identity) => identity.default
+          )
+        });
       });
 
       // create email routing rule
@@ -193,21 +219,21 @@ export const emailIdentityRouter = router({
       >;
       // create email routing rule destinations
       const routingRuleInsertValues: InsertRoutingRuleDestination[] = [];
-      if (orgMemberIds.length > 0) {
-        orgMemberIds.forEach((orgMemberId) => {
+      if (orgMemberObjects.length > 0) {
+        orgMemberObjects.forEach((orgMemberObject) => {
           routingRuleInsertValues.push({
             orgId: orgId,
             ruleId: +insertEmailRoutingRule.insertId,
-            orgMemberId: orgMemberId
+            orgMemberId: orgMemberObject.id
           });
         });
       }
-      if (userGroupIds.length > 0) {
-        userGroupIds.forEach((userGroupId) => {
+      if (userGroupObjects.length > 0) {
+        userGroupObjects.forEach((userGroupObject) => {
           routingRuleInsertValues.push({
             orgId: orgId,
             ruleId: +insertEmailRoutingRule.insertId,
-            groupId: userGroupId
+            groupId: userGroupObject.id
           });
         });
       }
@@ -231,6 +257,42 @@ export const emailIdentityRouter = router({
           sendName: sendName,
           isCatchAll: catchAll
         });
+
+      type InsertEmailIdentityAuthorizedOrgMembers = InferInsertModel<
+        typeof emailIdentitiesAuthorizedOrgMembers
+      >;
+      const emailIdentityAuthorizedOrgMembersObjects: InsertEmailIdentityAuthorizedOrgMembers[] =
+        [];
+
+      if (orgMemberObjects.length > 0) {
+        orgMemberObjects.forEach((orgMemberObject) => {
+          emailIdentityAuthorizedOrgMembersObjects.push({
+            orgId: orgId,
+            identityId: +insertEmailIdentityResponse.insertId,
+            addedBy: org.memberId,
+            orgMemberId: orgMemberObject.id,
+            default: !orgMemberObject.hasDefault
+          });
+        });
+      }
+
+      if (userGroupObjects.length > 0) {
+        userGroupObjects.forEach((userGroupObject) => {
+          emailIdentityAuthorizedOrgMembersObjects.push({
+            orgId: orgId,
+            identityId: +insertEmailIdentityResponse.insertId,
+            addedBy: org.memberId,
+            groupId: userGroupObject.id,
+            default: !userGroupObject.hasDefault
+          });
+        });
+      }
+
+      if (emailIdentityAuthorizedOrgMembersObjects.length > 0) {
+        await db
+          .insert(emailIdentitiesAuthorizedOrgMembers)
+          .values(emailIdentityAuthorizedOrgMembersObjects);
+      }
 
       if (catchAll) {
         await db
