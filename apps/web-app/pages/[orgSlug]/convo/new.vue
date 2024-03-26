@@ -394,7 +394,8 @@
         );
     };
 
-    const convoParticipantsOrgMembersPublicIds = getPublicIdsByType('user');
+    const convoParticipantsOrgMembersPublicIds =
+      getPublicIdsByType('orgMember');
     const convoParticipantsGroupPublicIds = getPublicIdsByType('group');
     const convoParticipantsContactPublicIds = getPublicIdsByType('contact');
     const convoParticipantsEmailPublicIds = getPublicIdsByType(
@@ -417,6 +418,7 @@
             publicId: firstParticipantPublicId
           };
     const createNewConvoTrpc = $trpc.convos.createNewConvo.useMutation();
+
     const createNewConvo = await createNewConvoTrpc.mutate({
       firstMessageType: type,
       to: convoToValue,
@@ -442,6 +444,7 @@
       });
       return;
     }
+
     toast.add({
       title: 'Conversation created',
       description: `Redirecting to new conversation...`,
@@ -731,14 +734,16 @@
         :org-slug="orgSlug">
         <template #default="{ openFileDialog, loading }">
           <UnUiButton
+            label="Upload"
+            variant="outline"
             :loading="loading"
-            label="upload"
+            icon="i-ph-upload"
             @click="openFileDialog" />
         </template>
       </ConvosUpload>
       <UnUiButton
         label="Save Draft"
-        color="orange"
+        color="amber"
         variant="outline"
         :disabled="!formValid || actionLoading"
         icon="i-ph-note" />
