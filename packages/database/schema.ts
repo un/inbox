@@ -923,6 +923,8 @@ export const convosRelations = relations(convos, ({ one, many }) => ({
   entries: many(convoEntries),
   subjects: many(convoSubjects),
   seen: many(convoSeenTimestamps)
+  subjects: many(convoSubjects),
+  seen: many(convoSeenTimestamps)
 }));
 
 export const convoSubjects = mysqlTable(
