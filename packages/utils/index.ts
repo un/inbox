@@ -25,7 +25,7 @@ export const zodSchemas = {
         message: `Must be at least ${minLength} characters long`
       })
       .max(32, {
-        message: 'Too Long, Ain\'t nobody typing that 😂'
+        message: "Too Long, Ain't nobody typing that 😂"
       })
       .regex(/^[a-zA-Z0-9]*$/, {
         message: 'Only letters and numbers'
