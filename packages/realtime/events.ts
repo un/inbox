@@ -4,9 +4,12 @@ import { z } from 'zod';
 // Just a few examples, do the real implementation here
 export const eventDataMaps = {
   'platform:update': z.string(),
-  'convo:created': z.object({
-    publicId: typeIdValidator('convos'),
-    subject: z.string()
+  'convo:new': z.object({
+    publicId: typeIdValidator('convos')
+  }),
+  'convo:entry:new': z.object({
+    convoPublicId: typeIdValidator('convos'),
+    convoEntryPublicId: typeIdValidator('convoEntries')
   }),
   'convo:updated': z.object({})
 } as const;
