@@ -73,9 +73,15 @@ export const groupsRouter = router({
         with: {
           members: {
             columns: {
-              publicId: true
+              publicId: true,
+              id: true
             },
             with: {
+              orgMember: {
+                columns: {
+                  publicId: true
+                }
+              },
               orgMemberProfile: {
                 columns: {
                   publicId: true,
