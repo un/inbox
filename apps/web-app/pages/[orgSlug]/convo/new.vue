@@ -289,8 +289,8 @@
 
   const emailButNoIdentityRingColor = computed(() => {
     return hasEmailParticipantsNoEmailIdentitySelected.value
-      ? 'ring-red-500 dark:ring-red-400'
-      : 'ring-gray-200 dark:ring-gray-700';
+      ? 'ring-red-9'
+      : 'ring-base-9';
   });
 
   const participantLabels = computed({
@@ -501,7 +501,7 @@
                     class="flex flex-row items-center gap-2 truncate">
                     <span
                       v-if="hasEmailParticipants && index === 0"
-                      class="leading-0 text-xs text-gray-400 dark:text-gray-600">
+                      class="leading-0 text-base-11 text-xs">
                       TO:
                     </span>
                     <div
@@ -558,7 +558,7 @@
                         index === 0 &&
                         selectedParticipants.length > 1
                       "
-                      class="border-l-1 border-l-1 leading-0 ml-2 border-l pl-2 text-xs text-gray-400 dark:text-gray-600">
+                      class="border-l-1 border-l-1 leading-0 text-base-11 ml-2 border-l pl-2 text-xs">
                       CC:
                     </span>
                   </div>
@@ -655,7 +655,7 @@
                 color: {
                   white: {
                     outline: emailButNoIdentityRingColor,
-                    background: 'bg-white dark:bg-gray-800'
+                    background: 'bg-base-1'
                   }
                 }
               }">
@@ -671,7 +671,7 @@
                   <div class="flex flex-row items-center gap-1 truncate">
                     <span
                       >{{ selectedOrgEmailIdentities.sendName }}
-                      <span class="text-gray-800 dark:text-gray-300"
+                      <span class="text-base-11"
                         >- {{ selectedOrgEmailIdentities.address }}</span
                       >
                     </span>
@@ -682,9 +682,7 @@
               <template #option="{ option }">
                 <span
                   >{{ option.sendName }}
-                  <span class="text-gray-800 dark:text-gray-300"
-                    >- {{ option.address }}</span
-                  >
+                  <span class="text-base-11">- {{ option.address }}</span>
                 </span>
               </template>
               <template #option-empty=""> No email identities found </template>
@@ -719,7 +717,7 @@
           class="w-fit">
           <UnUiTooltip text="click to remove">
             <div
-              class="border-1 flex flex-row gap-1 rounded-md border border-gray-500 px-2 py-1 text-gray-700 hover:border-red-500 hover:bg-red-50 hover:text-red-700">
+              class="border-1 border-base-9 text-base-11 hover:border-red-9 hover:bg-base-12 hover:text-red-9 flex flex-row gap-1 rounded-md border px-2 py-1">
               <UnUiIcon name="i-ph-paperclip" />
               <span class="truncate text-xs"> {{ attachment.fileName }}</span>
             </div>
