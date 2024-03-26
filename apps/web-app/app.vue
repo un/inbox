@@ -1,13 +1,16 @@
 <template>
-  <div class="bg-base-1 dark:bg-base-1 h-screen max-h-screen">
+  <div
+    class="bg-base-1 dark:bg-base-1 selection:bg-base-11 selection:text-base-1 h-screen max-h-screen">
     <NuxtLayout class="h-screen max-h-screen">
       <NuxtPage />
     </NuxtLayout>
     <NuxtUiNotifications>
       <template #title="{ title }">
+        <!-- eslint-disable-next-line vue/no-v-html -->
         <span v-html="title" />
       </template>
       <template #description="{ description }">
+        <!-- eslint-disable-next-line vue/no-v-html -->
         <span v-html="description" />
       </template>
     </NuxtUiNotifications>

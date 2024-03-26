@@ -106,8 +106,6 @@
           </div>
         </div>
       </div>
-
-      <div class="from-base-2 mt-[-48px] h-[48px] bg-gradient-to-t" />
     </div>
   </div>
 </template>

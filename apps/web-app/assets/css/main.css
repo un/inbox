@@ -30,6 +30,3 @@
   src: url('/fonts/Inter-italic.var.woff2?v=3.19') format('woff2');
   font-named-instance: 'Italic';
 }
-[data-radix-popper-content-wrapper] {
-  z-index: 10000;
-}

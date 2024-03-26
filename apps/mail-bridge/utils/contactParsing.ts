@@ -17,11 +17,12 @@ export async function parseAddressIds(input: {
   const parsedAddressIds: MessageParseAddressPlatformObject[] = [];
   for (const addressObject of input.addresses) {
     if (!addressObject.address) {
-      continue;
+      return [];
     }
-    const [emailUsername = '', emailDomain = ''] =
-      addressObject.address.split('@');
-
+    const [emailUsername, emailDomain] = addressObject.address.split('@');
+    if (!emailDomain || !emailUsername) {
+      return [];
+    }
     // check if email is existing contact
     const contactQuery = await db.query.contacts.findFirst({
       where: and(
@@ -31,6 +32,9 @@ export async function parseAddressIds(input: {
       ),
       columns: {
         id: true,
+        publicId: true,
+        emailUsername: true,
+        emailDomain: true,
         name: true,
         type: true
       }
@@ -39,6 +43,8 @@ export async function parseAddressIds(input: {
       parsedAddressIds.push({
         id: contactQuery.id,
         type: 'contact',
+        publicId: contactQuery.publicId,
+        email: contactQuery.emailUsername + '@' + contactQuery.emailDomain,
         contactType: contactQuery.type,
         ref: input.addressType
       });
@@ -61,7 +67,10 @@ export async function parseAddressIds(input: {
         eq(emailIdentities.username, emailUsername)
       ),
       columns: {
-        id: true
+        id: true,
+        publicId: true,
+        username: true,
+        domainName: true
       }
     });
 
@@ -69,6 +78,9 @@ export async function parseAddressIds(input: {
       parsedAddressIds.push({
         id: emailIdentityQuery.id,
         type: 'emailIdentity',
+        publicId: emailIdentityQuery.publicId,
+        email:
+          emailIdentityQuery.username + '@' + emailIdentityQuery.domainName,
         contactType: null,
         ref: input.addressType
       });
@@ -85,7 +97,10 @@ export async function parseAddressIds(input: {
               eq(emailIdentities.isCatchAll, true)
             ),
             columns: {
-              id: true
+              id: true,
+              publicId: true,
+              username: true,
+              domainName: true
             }
           });
 
@@ -93,6 +108,11 @@ export async function parseAddressIds(input: {
       parsedAddressIds.push({
         id: emailIdentityCatchAllQuery.id,
         type: 'emailIdentity',
+        publicId: emailIdentityCatchAllQuery.publicId,
+        email:
+          emailIdentityCatchAllQuery.username +
+          '@' +
+          emailIdentityCatchAllQuery.domainName,
         contactType: null,
         ref: input.addressType
       });
@@ -108,6 +128,7 @@ export async function parseAddressIds(input: {
           id: true
         }
       });
+
     let contactGlobalReputationId: number | null = null;
     if (contactGlobalReputation) {
       contactGlobalReputationId = contactGlobalReputation.id;
@@ -127,16 +148,19 @@ export async function parseAddressIds(input: {
     const contactInsert = await db.insert(contacts).values({
       publicId: typeIdGenerator('contacts'),
       orgId: input.orgId,
-      reputationId: contactGlobalReputationId || 0,
+      reputationId: +contactGlobalReputationId!,
       type: 'unknown',
       emailUsername: emailUsername,
       emailDomain: emailDomain,
       name: addressObject.name || emailUsername + '@' + emailDomain,
       screenerStatus: 'pending'
     });
+
     parsedAddressIds.push({
       id: Number(contactInsert.insertId),
       type: 'contact',
+      publicId: contactInsert.insertId,
+      email: emailUsername + '@' + emailDomain,
       contactType: 'unknown',
       ref: input.addressType
     });

@@ -129,7 +129,8 @@ export const convoEntryRouter = router({
           publicId: true,
           createdAt: true,
           body: true,
-          type: true
+          type: true,
+          metadata: true
         },
         with: {
           subject: {
@@ -149,6 +150,27 @@ export const convoEntryRouter = router({
             columns: {
               publicId: true
             }
+          }
+        }
+      });
+
+      // for each of the email.to, email.cc and email.from arrays from the metadata, set all entries.id fields to 0
+      convoEntriesQuery.forEach((entry) => {
+        if (entry.metadata?.email) {
+          if (entry.metadata.email.to) {
+            entry.metadata.email.to.forEach((to) => {
+              to.id = 0;
+            });
+          }
+          if (entry.metadata.email.cc) {
+            entry.metadata.email.cc.forEach((cc) => {
+              cc.id = 0;
+            });
+          }
+          if (entry.metadata.email.from) {
+            entry.metadata.email.from.forEach((from) => {
+              from.id = 0;
+            });
           }
         }
       });

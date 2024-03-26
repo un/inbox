@@ -7,9 +7,6 @@ export default defineAppConfig({
     base: 'sand',
     colors: ['sand', 'base', 'bronze', 'green', 'red', 'amber', 'blue'],
     safelistColors: ['sand'],
-    notification: {
-      rounded: 'rounded-lg rounded-br-2xl'
-    },
 
     // Button
     button: {
@@ -94,9 +91,9 @@ export default defineAppConfig({
     modal: {
       overlay: {
         base: 'fixed inset-0 transition-opacity',
-        background: 'bg-sand-1 dark:bg-sand-1 opacity-75 backdrop-blur-lg'
+        background: 'bg-base-1 dark:bg-base-1 opacity-75 backdrop-blur-lg'
       },
-      background: 'bg-sand-9 dark:bg-sand-9',
+      background: 'bg-base-3 dark:bg-base-3',
       ring: 'ring-sand-9 dark:ring-sand-9 ring-1',
       rounded: 'rounded-lg',
       shadow: 'shadow-xl'
@@ -532,6 +529,37 @@ export default defineAppConfig({
         shadow: 'before:shadow',
         placement:
           "group-data-[popper-placement*='right']:-left-1 group-data-[popper-placement*='left']:-right-1 group-data-[popper-placement*='top']:-bottom-1 group-data-[popper-placement*='bottom']:-top-1"
+      }
+    },
+
+    // toast
+    notification: {
+      title: 'text-sm font-medium text-base-12 dark:text-base-12',
+      description: 'mt-1 text-sm leading-4 text-base-11 dark:text-base-11',
+      background: 'bg-base-3 dark:bg-base-3',
+      ring: 'ring-1 ring-base-7 dark:ring-base-7',
+      icon: {
+        base: 'flex-shrink-0 w-5 h-5',
+        color: 'text-{color}-9 dark:text-{color}-9'
+      },
+      progress: {
+        base: 'absolute bottom-0 end-0 start-0 h-1',
+        background: 'bg-{color}-9 dark:bg-{color}-9'
+      },
+      default: {
+        color: 'green',
+        icon: null,
+        timeout: 5000,
+        closeButton: {
+          icon: 'i-heroicons-x-mark-20-solid',
+          color: 'base',
+          variant: 'link',
+          padded: false
+        },
+        actionButton: {
+          size: 'xs',
+          color: 'white'
+        }
       }
     }
   }

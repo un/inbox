@@ -10,6 +10,7 @@
   } from '#imports';
   import { type ConvoAttachmentUpload } from '~/composables/types';
   import type { tiptapVue3 } from '@u22n/tiptap';
+  import { emptyTiptapEditorContent } from '@u22n/tiptap';
   import type { UiColor } from '@u22n/types/ui';
   import { stringify } from 'superjson';
   import { z } from 'zod';
@@ -347,7 +348,7 @@
     );
   });
 
-  const messageEditorData = ref<JSONContent>({});
+  const messageEditorData = ref<JSONContent>(emptyTiptapEditorContent);
 
   const isTextPresent = computed(() => {
     const contentArray = messageEditorData.value?.content;
@@ -567,7 +568,7 @@
               <template #option="{ option }">
                 <UnUiIcon :name="option.icon" />
                 <div v-if="option.type === 'email'">
-                  <span> {{ option.address }} - {{ option }} </span>
+                  <span> {{ option.address }} </span>
                 </div>
                 <div
                   v-if="option.type === 'contact'"

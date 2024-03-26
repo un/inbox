@@ -1,3 +1,4 @@
+import { mailBridgeTrpcClient } from './../../../utils/tRPCServerClients';
 import { z } from 'zod';
 import { parse } from 'superjson';
 import { router, orgProcedure } from '../../trpc';
@@ -14,29 +15,21 @@ import {
   convos,
   convoParticipants,
   convoSubjects,
-  orgMemberProfiles,
   groups,
   orgMembers,
   contacts,
   contactGlobalReputations,
   convoEntries,
-  emailIdentitiesAuthorizedOrgMembers,
   groupMembers,
-  type ConvoEntryMetadataEmailAddress,
   convoAttachments,
-  pendingAttachments
+  pendingAttachments,
+  convoEntryReplies
 } from '@u22n/database/schema';
-import {
-  typeIdValidator,
-  validateTypeId,
-  type TypeId,
-  typeIdGenerator
-} from '@u22n/utils';
+import { typeIdValidator, type TypeId, typeIdGenerator } from '@u22n/utils';
 import { TRPCError } from '@trpc/server';
 import { tipTapExtensions } from '@u22n/tiptap/extensions';
-import { tiptapCore, tiptapHtml, type tiptapVue3 } from '@u22n/tiptap';
+import { tiptapCore, type tiptapVue3 } from '@u22n/tiptap';
 import { convoEntryRouter } from './entryRouter';
-import { mailBridgeTrpcClient } from '../../../utils/tRPCServerClients';
 
 export const convoRouter = router({
   entries: convoEntryRouter,
@@ -45,9 +38,7 @@ export const convoRouter = router({
       z.object({
         participantsOrgMembersPublicIds: z.array(typeIdValidator('orgMembers')),
         participantsGroupsPublicIds: z.array(typeIdValidator('groups')),
-        participantsContactsPublicIds: z.array(
-          typeIdValidator('orgMemberProfile')
-        ),
+        participantsContactsPublicIds: z.array(typeIdValidator('contacts')),
         participantsEmails: z.array(z.string()),
         sendAsEmailIdentityPublicId:
           typeIdValidator('emailIdentities').optional(),
@@ -106,171 +97,16 @@ export const convoRouter = router({
       } = input;
 
       const message: tiptapVue3.JSONContent = parse(messageString);
+      let convoParticipantToPublicId: TypeId<'convoParticipants'>;
+      let convoMessageToNewContactPublicId: TypeId<'contacts'>;
 
-      // early check if "to" value has a valid email address, if not, then return an error
-      let convoMetadataToAddress: ConvoEntryMetadataEmailAddress | undefined;
-      const convoMetadataCcAddresses: ConvoEntryMetadataEmailAddress[] = [];
-
-      async function getConvoToAddress() {
-        const convoMessageToType = convoMessageTo.type;
-        if (convoMessageToType === 'email') {
-          return convoMessageTo.emailAddress;
-        } else if (convoMessageToType === 'contact') {
-          if (!validateTypeId('contacts', convoMessageTo.publicId)) {
-            throw new TRPCError({
-              code: 'INTERNAL_SERVER_ERROR',
-              message:
-                "You caught a bug that shouldn't exist, please contact support"
-            });
-          }
-
-          const contactResponse = await db.query.contacts.findFirst({
-            where: eq(contacts.publicId, convoMessageTo.publicId),
-            columns: {
-              id: true,
-              emailUsername: true,
-              emailDomain: true
-            }
-          });
-          if (!contactResponse) {
-            throw new TRPCError({
-              code: 'UNPROCESSABLE_CONTENT',
-              message: 'TO address contact not found'
-            });
-          }
-          convoMetadataToAddress = { id: +contactResponse.id, type: 'contact' };
-          return `${contactResponse.emailUsername}@${contactResponse.emailDomain}`;
-        } else if (convoMessageToType === 'group') {
-          if (!validateTypeId('groups', convoMessageTo.publicId)) {
-            throw new TRPCError({
-              code: 'INTERNAL_SERVER_ERROR',
-              message:
-                "You caught a bug that shouldn't exist, please contact support"
-            });
-          }
-
-          const groupResponse = await db.query.groups.findFirst({
-            where: eq(groups.publicId, convoMessageTo.publicId),
-            columns: {
-              id: true,
-              name: true
-            }
-          });
-          if (!groupResponse) {
-            throw new TRPCError({
-              code: 'UNPROCESSABLE_CONTENT',
-              message: 'TO address group not found'
-            });
-          }
-          const emailIdentitiesResponse =
-            await db.query.emailIdentitiesAuthorizedOrgMembers.findFirst({
-              where: and(
-                eq(
-                  emailIdentitiesAuthorizedOrgMembers.groupId,
-                  groupResponse.id
-                ),
-                eq(emailIdentitiesAuthorizedOrgMembers.default, true)
-              ),
-              columns: {
-                id: true
-              },
-              with: {
-                identity: {
-                  columns: {
-                    username: true,
-                    domainName: true
-                  }
-                }
-              }
-            });
-          if (!emailIdentitiesResponse) {
-            throw new TRPCError({
-              code: 'UNPROCESSABLE_CONTENT',
-              message: `${groupResponse.name} Group does not have a default email identity set and cant be set as the TO address`
-            });
-          }
-          convoMetadataToAddress = {
-            id: +emailIdentitiesResponse.id,
-            type: 'emailIdentity'
-          };
-          return `${emailIdentitiesResponse.identity.username}@${emailIdentitiesResponse.identity.domainName}`;
-        } else if (convoMessageToType === 'orgMember') {
-          if (!validateTypeId('orgMembers', convoMessageTo.publicId)) {
-            throw new TRPCError({
-              code: 'INTERNAL_SERVER_ERROR',
-              message:
-                "You caught a bug that shouldn't exist, please contact support"
-            });
-          }
-          const orgMemberResponse = await db.query.orgMembers.findFirst({
-            where: eq(orgMembers.publicId, convoMessageTo.publicId),
-            columns: {
-              id: true
-            },
-            with: {
-              profile: {
-                columns: {
-                  firstName: true,
-                  lastName: true
-                }
-              }
-            }
-          });
-          if (!orgMemberResponse) {
-            throw new TRPCError({
-              code: 'UNPROCESSABLE_CONTENT',
-              message: 'TO address user not found'
-            });
-          }
-          const emailIdentitiesResponse =
-            await db.query.emailIdentitiesAuthorizedOrgMembers.findFirst({
-              where: and(
-                eq(
-                  emailIdentitiesAuthorizedOrgMembers.orgMemberId,
-                  orgMemberResponse.id
-                ),
-                eq(emailIdentitiesAuthorizedOrgMembers.default, true)
-              ),
-              columns: {
-                id: true
-              },
-              with: {
-                identity: {
-                  columns: {
-                    username: true,
-                    domainName: true
-                  }
-                }
-              }
-            });
-          if (!emailIdentitiesResponse) {
-            throw new TRPCError({
-              code: 'UNPROCESSABLE_CONTENT',
-              message: `${orgMemberResponse.profile.firstName} ${orgMemberResponse.profile.lastName} User does not have a default email identity set and cant be set as the TO address`
-            });
-          }
-          convoMetadataToAddress = {
-            id: +emailIdentitiesResponse.id,
-            type: 'emailIdentity'
-          };
-          return `${emailIdentitiesResponse.identity.username}@${emailIdentitiesResponse.identity.domainName}`;
-        } else {
-          throw new TRPCError({
-            code: 'UNPROCESSABLE_CONTENT',
-            message: 'TO address type is invalid'
-          });
-        }
-      }
-      let newConvoToEmailAddress: string;
-      if (participantsContactsPublicIds.length || participantsEmails.length) {
-        newConvoToEmailAddress = await getConvoToAddress();
-      } else {
-        newConvoToEmailAddress = '';
-      }
-
-      const orgMemberIds: number[] = [];
-      const orgGroupIds: number[] = [];
-      const orgContactIds: number[] = [];
+      type IdPair = {
+        id: number;
+        publicId: string;
+      };
+      const orgMemberIds: IdPair[] = [];
+      const orgGroupIds: IdPair[] = [];
+      const orgContactIds: IdPair[] = [];
       const orgContactReputationIds: number[] = [];
 
       // validate the publicIds of Users and get the IDs
@@ -281,11 +117,12 @@ export const convoRouter = router({
         const orgMemberResponses = await db.query.orgMembers.findMany({
           where: inArray(orgMembers.publicId, participantsOrgMembersPublicIds),
           columns: {
-            id: true
+            id: true,
+            publicId: true
           }
         });
         orgMemberIds.push(
-          ...orgMemberResponses.map((orgMembers) => orgMembers.id)
+          ...orgMemberResponses.map((orgMembers) => orgMembers)
         );
 
         if (orgMemberIds.length !== participantsOrgMembersPublicIds.length) {
@@ -301,10 +138,11 @@ export const convoRouter = router({
         const groupResponses = await db.query.groups.findMany({
           where: inArray(groups.publicId, participantsGroupsPublicIds),
           columns: {
-            id: true
+            id: true,
+            publicId: true
           }
         });
-        orgGroupIds.push(...groupResponses.map((groups) => groups.id));
+        orgGroupIds.push(...groupResponses.map((groups) => groups));
 
         if (orgGroupIds.length !== participantsGroupsPublicIds.length) {
           throw new TRPCError({
@@ -317,18 +155,16 @@ export const convoRouter = router({
       // validate the publicIds of Contacts and get the IDs
       if (
         participantsContactsPublicIds &&
-        participantsContactsPublicIds.length
+        participantsContactsPublicIds.length > 0
       ) {
         const contactResponses = await db.query.contacts.findMany({
-          where: inArray(
-            orgMemberProfiles.publicId,
-            participantsContactsPublicIds
-          ),
+          where: inArray(contacts.publicId, participantsContactsPublicIds),
           columns: {
-            id: true
+            id: true,
+            publicId: true
           }
         });
-        orgContactIds.push(...contactResponses.map((contact) => contact.id));
+        orgContactIds.push(...contactResponses.map((contact) => contact));
 
         if (orgContactIds.length !== participantsContactsPublicIds.length) {
           throw new TRPCError({
@@ -351,23 +187,25 @@ export const convoRouter = router({
             ),
             columns: {
               id: true,
-              reputationId: true
+              reputationId: true,
+              publicId: true,
+              emailUsername: true,
+              emailDomain: true
             }
           });
 
           if (existingContact) {
-            if (newConvoToEmailAddress === email && !convoMetadataToAddress) {
-              convoMetadataToAddress = {
-                id: +existingContact.id,
-                type: 'contact'
-              };
-            } else {
-              convoMetadataCcAddresses.push({
-                id: +existingContact.id,
-                type: 'contact'
-              });
+            if (
+              convoMessageTo.type === 'email' &&
+              convoMessageTo.emailAddress &&
+              convoMessageTo.emailAddress === email
+            ) {
+              convoMessageToNewContactPublicId = existingContact.publicId;
             }
-            orgContactIds.push(existingContact.id);
+            orgContactIds.push({
+              id: existingContact.id,
+              publicId: existingContact.publicId
+            });
             orgContactReputationIds.push(existingContact.reputationId);
           } else {
             const existingContactGlobalReputations =
@@ -391,18 +229,19 @@ export const convoRouter = router({
                   emailDomain: emailDomain,
                   screenerStatus: 'approve'
                 });
-              if (newConvoToEmailAddress === email && !convoMetadataToAddress) {
-                convoMetadataToAddress = {
-                  id: +newContactInsertResponse.insertId,
-                  type: 'contact'
-                };
-              } else {
-                convoMetadataCcAddresses.push({
-                  id: +newContactInsertResponse.insertId,
-                  type: 'contact'
-                });
+
+              if (
+                convoMessageTo.type === 'email' &&
+                convoMessageTo.emailAddress &&
+                convoMessageTo.emailAddress ===
+                  `${emailUsername}@${emailDomain}`
+              ) {
+                convoMessageToNewContactPublicId = newContactPublicId;
               }
-              orgContactIds.push(+newContactInsertResponse.insertId);
+              orgContactIds.push({
+                id: Number(newContactInsertResponse.insertId),
+                publicId: newContactPublicId
+              });
               orgContactReputationIds.push(existingContactGlobalReputations.id);
             } else {
               const newContactGlobalReputationInsertResponse = await db
@@ -418,26 +257,28 @@ export const convoRouter = router({
                   publicId: newContactPublicId,
                   type: 'person',
                   orgId: orgId,
-                  reputationId:
-                    +newContactGlobalReputationInsertResponse.insertId,
+                  reputationId: Number(
+                    newContactGlobalReputationInsertResponse.insertId
+                  ),
                   emailUsername: emailUsername,
                   emailDomain: emailDomain,
                   screenerStatus: 'approve'
                 });
-              if (newConvoToEmailAddress === email && !convoMetadataToAddress) {
-                convoMetadataToAddress = {
-                  id: +newContactInsertResponse.insertId,
-                  type: 'contact'
-                };
-              } else {
-                convoMetadataCcAddresses.push({
-                  id: +newContactInsertResponse.insertId,
-                  type: 'contact'
-                });
+
+              if (
+                convoMessageTo.type === 'email' &&
+                convoMessageTo.emailAddress &&
+                convoMessageTo.emailAddress ===
+                  `${emailUsername}@${emailDomain}`
+              ) {
+                convoMessageToNewContactPublicId = newContactPublicId;
               }
-              orgContactIds.push(+newContactInsertResponse.insertId);
+              orgContactIds.push({
+                id: Number(newContactInsertResponse.insertId),
+                publicId: newContactPublicId
+              });
               orgContactReputationIds.push(
-                +newContactGlobalReputationInsertResponse.insertId
+                Number(newContactGlobalReputationInsertResponse.insertId)
               );
             }
           }
@@ -456,23 +297,31 @@ export const convoRouter = router({
       const newConvoSubjectPublicId = typeIdGenerator('convoSubjects');
       const insertConvoSubjectResponse = await db.insert(convoSubjects).values({
         orgId: orgId,
-        convoId: +insertConvoResponse.insertId,
+        convoId: Number(insertConvoResponse.insertId),
         publicId: newConvoSubjectPublicId,
         subject: topic
       });
 
-      // create conversationParticipants Entries
+      //* create conversationParticipants Entries
       if (orgMemberIds.length) {
         const convoParticipantsDbInsertValuesArray: InferInsertModel<
           typeof convoParticipants
         >[] = [];
         orgMemberIds.forEach((orgMemberId) => {
           const convoMemberPublicId = typeIdGenerator('convoParticipants');
+
+          if (
+            convoMessageTo.type === 'orgMember' &&
+            convoMessageTo.publicId === orgMemberId.publicId
+          ) {
+            convoParticipantToPublicId = convoMemberPublicId;
+          }
+
           convoParticipantsDbInsertValuesArray.push({
             orgId: orgId,
-            convoId: +insertConvoResponse.insertId,
+            convoId: Number(insertConvoResponse.insertId),
             publicId: convoMemberPublicId,
-            orgMemberId: orgMemberId
+            orgMemberId: orgMemberId.id
           });
         });
         await db
@@ -485,12 +334,20 @@ export const convoRouter = router({
           typeof convoParticipants
         >[] = [];
         orgGroupIds.forEach((groupId) => {
-          const convoMemberPublicId = typeIdGenerator('convoParticipants');
+          const convoGroupPublicId = typeIdGenerator('convoParticipants');
+
+          if (
+            convoMessageTo.type === 'group' &&
+            convoMessageTo.publicId === groupId.publicId
+          ) {
+            convoParticipantToPublicId = convoGroupPublicId;
+          }
+
           convoParticipantsDbInsertValuesArray.push({
             orgId: orgId,
-            convoId: +insertConvoResponse.insertId,
-            publicId: convoMemberPublicId,
-            groupId: groupId
+            convoId: Number(insertConvoResponse.insertId),
+            publicId: convoGroupPublicId,
+            groupId: groupId.id
           });
         });
         await db
@@ -503,12 +360,21 @@ export const convoRouter = router({
           typeof convoParticipants
         >[] = [];
         orgContactIds.forEach((contactId) => {
-          const convoMemberPublicId = typeIdGenerator('convoParticipants');
+          const convoContactPublicId = typeIdGenerator('convoParticipants');
+
+          if (
+            (convoMessageTo.type === 'contact' &&
+              convoMessageTo.publicId === contactId.publicId) ||
+            convoMessageToNewContactPublicId === contactId.publicId
+          ) {
+            convoParticipantToPublicId = convoContactPublicId;
+          }
+
           convoParticipantsDbInsertValuesArray.push({
             orgId: orgId,
-            convoId: +insertConvoResponse.insertId,
-            publicId: convoMemberPublicId,
-            contactId: contactId
+            convoId: Number(insertConvoResponse.insertId),
+            publicId: convoContactPublicId,
+            contactId: contactId.id
           });
         });
         await db
@@ -521,14 +387,13 @@ export const convoRouter = router({
         .insert(convoParticipants)
         .values({
           orgId: orgId,
-          convoId: +insertConvoResponse.insertId,
+          convoId: Number(insertConvoResponse.insertId),
           publicId: authorConvoParticipantPublicId,
           orgMemberId: accountOrgMemberId,
           role: 'assigned'
         });
 
-      // create convoEntry
-
+      //* create convoEntry
       const newConvoBody = message;
       const newConvoBodyPlainText = tiptapCore.generateText(
         newConvoBody,
@@ -539,10 +404,10 @@ export const convoRouter = router({
       const insertConvoEntryResponse = await db.insert(convoEntries).values({
         orgId: orgId,
         publicId: newConvoEntryPublicId,
-        convoId: +insertConvoResponse.insertId,
-        author: +insertAuthorConvoParticipantResponse.insertId,
+        convoId: Number(insertConvoResponse.insertId),
+        author: Number(insertAuthorConvoParticipantResponse.insertId),
         visibility: 'all_participants',
-        subjectId: +insertConvoSubjectResponse.insertId,
+        subjectId: Number(insertConvoSubjectResponse.insertId),
         type: input.firstMessageType,
         body: newConvoBody,
         bodyPlainText: newConvoBodyPlainText
@@ -564,9 +429,232 @@ export const convoRouter = router({
         input.attachments.forEach((attachment) => {
           convoAttachmentsDbInsertValuesArray.push({
             orgId: orgId,
-            convoId: +insertConvoResponse.insertId,
-            convoEntryId: +insertConvoEntryResponse.insertId,
-            convoParticipantId: +insertAuthorConvoParticipantResponse.insertId,
+            convoId: Number(insertConvoResponse.insertId),
+            convoEntryId: Number(insertConvoEntryResponse.insertId),
+            convoParticipantId: Number(
+              insertAuthorConvoParticipantResponse.insertId
+            ),
+            publicId: attachment.attachmentPublicId,
+            fileName: attachment.fileName,
+            type: attachment.type,
+            size: attachment.size
+          });
+          attachmentsToSend.push({
+            orgPublicId: org.publicId,
+            attachmentPublicId: attachment.attachmentPublicId,
+            fileName: attachment.fileName,
+            fileType: attachment.type
+          });
+          pendingAttachmentsToRemoveFromPending.push(
+            attachment.attachmentPublicId
+          );
+        });
+        await db
+          .insert(convoAttachments)
+          .values(convoAttachmentsDbInsertValuesArray);
+      }
+
+      if (
+        input.attachments.length > 0 &&
+        pendingAttachmentsToRemoveFromPending.length > 0
+      ) {
+        await db
+          .delete(pendingAttachments)
+          .where(
+            and(
+              eq(pendingAttachments.orgId, orgId),
+              inArray(
+                pendingAttachments.publicId,
+                pendingAttachmentsToRemoveFromPending
+              )
+            )
+          );
+      }
+
+      //* if convo has contacts, send external email via mail bridge
+      const convoHasEmailParticipants = orgContactIds.length > 0;
+
+      if (convoHasEmailParticipants) {
+        mailBridgeTrpcClient.mail.send.sendConvoEntryEmail.mutate({
+          convoId: Number(insertConvoResponse.insertId),
+          entryId: Number(insertConvoEntryResponse.insertId),
+          sendAsEmailIdentityPublicId: sendAsEmailIdentityPublicId || '',
+          newConvoToParticipantPublicId: convoParticipantToPublicId!,
+          orgId: orgId
+        });
+      }
+
+      return {
+        status: 'success',
+        publicId: newConvoPublicId
+      };
+    }),
+
+  //* reply to a conversation
+  replyToConvo: orgProcedure
+    .input(
+      z.object({
+        sendAsEmailIdentityPublicId:
+          typeIdValidator('emailIdentities').optional(),
+        replyToMessagePublicId: typeIdValidator('convoEntries'),
+        message: z.string().min(1),
+        attachments: z.array(
+          z.object({
+            fileName: z.string(),
+            attachmentPublicId: typeIdValidator('convoAttachments'),
+            size: z.number(),
+            type: z.string()
+          })
+        ),
+        messageType: z.enum(['message', 'draft', 'comment'])
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.account || !ctx.org) {
+        throw new TRPCError({
+          code: 'UNPROCESSABLE_CONTENT',
+          message: 'account or Organization is not defined'
+        });
+      }
+      const { db, org } = ctx;
+      if (!org?.memberId) {
+        throw new TRPCError({
+          code: 'UNPROCESSABLE_CONTENT',
+          message: 'account is not a member of the organization'
+        });
+      }
+
+      const accountOrgMemberId = org?.memberId;
+      const orgId = org?.id;
+      const {
+        sendAsEmailIdentityPublicId,
+        message: messageString,
+        messageType
+      } = input;
+
+      const message: tiptapVue3.JSONContent = parse(messageString);
+
+      const convoEntryToReplyToQueryResponse =
+        await db.query.convoEntries.findFirst({
+          where: eq(convoEntries.publicId, input.replyToMessagePublicId),
+          columns: {
+            id: true,
+            orgId: true,
+            convoId: true,
+            metadata: true,
+            emailMessageId: true,
+            type: true,
+            subjectId: true
+          },
+          with: {
+            convo: {
+              columns: {
+                publicId: true
+              },
+              with: {
+                participants: {
+                  columns: {
+                    id: true,
+                    publicId: true,
+                    orgMemberId: true,
+                    groupId: true,
+                    contactId: true
+                  }
+                }
+              }
+            }
+          }
+        });
+
+      if (!convoEntryToReplyToQueryResponse) {
+        throw new TRPCError({
+          code: 'UNPROCESSABLE_CONTENT',
+          message: 'Reply to message not found'
+        });
+      }
+      if (Number(convoEntryToReplyToQueryResponse.orgId) !== orgId) {
+        throw new TRPCError({
+          code: 'UNPROCESSABLE_CONTENT',
+          message: 'Reply to message not found'
+        });
+      }
+
+      let authorConvoParticipantId: number | undefined;
+      authorConvoParticipantId =
+        convoEntryToReplyToQueryResponse?.convo.participants.find(
+          (participant) => participant.orgMemberId === accountOrgMemberId
+        )?.id;
+      // if we cant find the orgMembers participant id, we assume they're a part of the convo as a group member, so now we add them as a dedicated participant
+      if (!authorConvoParticipantId) {
+        const newConvoParticipantInsertResponse = await db
+          .insert(convoParticipants)
+          .values({
+            convoId: convoEntryToReplyToQueryResponse.convoId,
+            orgId: orgId,
+            publicId: typeIdGenerator('convoParticipants'),
+            orgMemberId: accountOrgMemberId,
+            role: 'contributor'
+          });
+        authorConvoParticipantId = Number(
+          newConvoParticipantInsertResponse.insertId
+        );
+      }
+
+      // check if any of the convo participants have a contactId
+      const convoHasContactParticipants =
+        convoEntryToReplyToQueryResponse.convo.participants.some(
+          (participant) => participant.contactId !== null
+        );
+      // create convoEntry
+
+      const newConvoEntryBody = message;
+      const newConvoEntryBodyPlainText = tiptapCore.generateText(
+        newConvoEntryBody,
+        tipTapExtensions
+      );
+
+      const newConvoEntryPublicId = typeIdGenerator('convoEntries');
+      const insertConvoEntryResponse = await db.insert(convoEntries).values({
+        orgId: orgId,
+        publicId: newConvoEntryPublicId,
+        convoId: Number(convoEntryToReplyToQueryResponse.convoId),
+        author: Number(authorConvoParticipantId),
+        visibility: 'all_participants',
+        subjectId:
+          convoEntryToReplyToQueryResponse.subjectId !== null
+            ? Number(convoEntryToReplyToQueryResponse.subjectId)
+            : null,
+        type: messageType,
+        body: newConvoEntryBody,
+        bodyPlainText: newConvoEntryBodyPlainText,
+        replyToId: Number(convoEntryToReplyToQueryResponse.id)
+      });
+
+      await db.insert(convoEntryReplies).values({
+        entrySourceId: Number(convoEntryToReplyToQueryResponse.id),
+        entryReplyId: Number(insertConvoEntryResponse.insertId),
+        orgId: orgId
+      });
+
+      //* if convo has attachments, add them to the convo
+      const attachmentsToSend: {
+        orgPublicId: string;
+        attachmentPublicId: string;
+        fileName: string;
+        fileType: string;
+      }[] = [];
+      const pendingAttachmentsToRemoveFromPending: TypeId<'convoAttachments'>[] =
+        [];
+      if (input.attachments.length > 0) {
+        const convoAttachmentsDbInsertValuesArray: InferInsertModel<
+          typeof convoAttachments
+        >[] = [];
+        input.attachments.forEach((attachment) => {
+          convoAttachmentsDbInsertValuesArray.push({
+            orgId: orgId,
+            convoId: Number(convoEntryToReplyToQueryResponse.convoId),
+            convoEntryId: Number(insertConvoEntryResponse.insertId),
+            convoParticipantId: Number(authorConvoParticipantId),
             publicId: attachment.attachmentPublicId,
             fileName: attachment.fileName,
             type: attachment.type,
@@ -586,223 +674,37 @@ export const convoRouter = router({
           .insert(convoAttachments)
           .values(convoAttachmentsDbInsertValuesArray);
 
-        // insertedAttachmentIds = +insertAttachmentsResponse.insertId;
+        // insertedAttachmentIds = Number(insertAttachmentsResponse.insertId;
+      }
+      if (
+        input.attachments.length > 0 &&
+        pendingAttachmentsToRemoveFromPending.length > 0
+      ) {
+        db.delete(pendingAttachments).where(
+          and(
+            eq(pendingAttachments.orgId, orgId),
+            inArray(
+              pendingAttachments.publicId,
+              pendingAttachmentsToRemoveFromPending
+            )
+          )
+        );
       }
 
       //* if convo has contacts, send external email via mail bridge
-      const convoHasEmailParticipants = orgContactIds.length > 0;
-      const missingEmailIdentitiesWarnings: {
-        type: 'user' | 'group';
-        publicId: String;
-        name: String;
-      }[] = [];
 
-      if (convoHasEmailParticipants) {
-        const newConvoBodyHTML = tiptapHtml.generateHTML(
-          newConvoBody,
-          tipTapExtensions
-        );
-        const ccEmailAddresses: string[] = [];
-        // get the email addresses for all contacts
-        await Promise.all(
-          orgContactIds.map(async (contactId) => {
-            const contactResponse = await db.query.contacts.findFirst({
-              where: eq(contacts.id, contactId),
-              columns: {
-                emailUsername: true,
-                emailDomain: true
-              }
-            });
-            if (contactResponse) {
-              ccEmailAddresses.push(
-                `${contactResponse.emailUsername}@${contactResponse.emailDomain}`
-              );
-            }
-          })
-        );
-
-        // get the default email addresses for all users
-        if (orgMemberIds.length) {
-          await Promise.all(
-            orgMemberIds.map(async (orgMemberId) => {
-              const emailIdentityResponse =
-                await db.query.emailIdentitiesAuthorizedOrgMembers.findFirst({
-                  where: and(
-                    eq(
-                      emailIdentitiesAuthorizedOrgMembers.orgMemberId,
-                      orgMemberId
-                    ),
-                    eq(emailIdentitiesAuthorizedOrgMembers.default, true)
-                  ),
-                  columns: {
-                    id: true
-                  },
-                  with: {
-                    identity: {
-                      columns: {
-                        username: true,
-                        domainName: true
-                      }
-                    }
-                  }
-                });
-              if (!emailIdentityResponse) {
-                const memberProfile = await db.query.orgMembers.findFirst({
-                  where: eq(orgMembers.id, orgMemberId),
-                  columns: {
-                    publicId: true
-                  },
-                  with: {
-                    profile: {
-                      columns: {
-                        firstName: true,
-                        lastName: true
-                      }
-                    }
-                  }
-                });
-                if (memberProfile) {
-                  missingEmailIdentitiesWarnings.push({
-                    type: 'user',
-                    publicId: memberProfile.publicId,
-                    name: `${memberProfile.profile.firstName} ${memberProfile.profile.lastName}`
-                  });
-                  return;
-                }
-              }
-              if (emailIdentityResponse) {
-                convoMetadataCcAddresses.push({
-                  id: +emailIdentityResponse.id,
-                  type: 'emailIdentity'
-                });
-                ccEmailAddresses.push(
-                  `${emailIdentityResponse.identity.username}@${emailIdentityResponse.identity.domainName}`
-                );
-              }
-            })
-          );
-        }
-
-        // get the default email addresses for all groups
-        if (orgGroupIds.length) {
-          await Promise.all(
-            orgGroupIds.map(async (orgGroupId) => {
-              const emailIdentityResponse =
-                await db.query.emailIdentitiesAuthorizedOrgMembers.findFirst({
-                  where: and(
-                    eq(emailIdentitiesAuthorizedOrgMembers.groupId, orgGroupId),
-                    eq(emailIdentitiesAuthorizedOrgMembers.default, true)
-                  ),
-                  columns: {
-                    id: true
-                  },
-                  with: {
-                    identity: {
-                      columns: {
-                        username: true,
-                        domainName: true
-                      }
-                    }
-                  }
-                });
-              if (!emailIdentityResponse) {
-                const orgGroupResponse = await db.query.groups.findFirst({
-                  where: eq(groups.id, orgGroupId),
-                  columns: {
-                    publicId: true,
-                    name: true
-                  }
-                });
-
-                if (orgGroupResponse) {
-                  missingEmailIdentitiesWarnings.push({
-                    type: 'group',
-                    publicId: orgGroupResponse.publicId,
-                    name: orgGroupResponse.name
-                  });
-                  return;
-                }
-              }
-              if (emailIdentityResponse) {
-                convoMetadataCcAddresses.push({
-                  id: +emailIdentityResponse.id,
-                  type: 'emailIdentity'
-                });
-                ccEmailAddresses.push(
-                  `${emailIdentityResponse.identity.username}@${emailIdentityResponse.identity.domainName}`
-                );
-              }
-            })
-          );
-        }
-
-        // remove TO email address from CCs if it exists
-        const ccEmailAddressesFiltered = ccEmailAddresses.filter(
-          (emailAddress) => {
-            return emailAddress !== newConvoToEmailAddress;
-          }
-        );
-
-        const mailBridgeSendMailResponse =
-          await mailBridgeTrpcClient.mail.send.sendNewEmail.mutate({
-            orgId: orgId,
-            convoId: +insertConvoResponse.insertId,
-            entryId: +insertConvoEntryResponse.insertId,
-            sendAsEmailIdentityPublicId: sendAsEmailIdentityPublicId || '',
-            toEmail: newConvoToEmailAddress,
-            ccEmail: ccEmailAddressesFiltered,
-            subject: topic,
-            bodyHtml: newConvoBodyHTML,
-            bodyPlainText: newConvoBodyPlainText,
-            attachments: attachmentsToSend
-          });
-
-        if (
-          !mailBridgeSendMailResponse.success ||
-          !mailBridgeSendMailResponse.metadata ||
-          !mailBridgeSendMailResponse.metadata.email
-        ) {
-          throw new TRPCError({
-            code: 'INTERNAL_SERVER_ERROR',
-            message:
-              'Something went wrong when trying to send the message, please contact support'
-          });
-        }
-
-        mailBridgeSendMailResponse.metadata.email.to = [
-          convoMetadataToAddress!
-        ];
-        mailBridgeSendMailResponse.metadata.email.cc = convoMetadataCcAddresses;
-
-        await db
-          .update(convoEntries)
-          .set({
-            metadata: mailBridgeSendMailResponse.metadata
-          })
-          .where(eq(convoEntries.id, +insertConvoEntryResponse.insertId));
-
-        if (
-          input.attachments.length > 0 &&
-          pendingAttachmentsToRemoveFromPending.length > 0
-        ) {
-          await db
-            .delete(pendingAttachments)
-            .where(
-              and(
-                eq(pendingAttachments.orgId, orgId),
-                inArray(
-                  pendingAttachments.publicId,
-                  pendingAttachmentsToRemoveFromPending
-                )
-              )
-            );
-        }
+      if (convoHasContactParticipants && sendAsEmailIdentityPublicId) {
+        mailBridgeTrpcClient.mail.send.sendConvoEntryEmail.mutate({
+          convoId: Number(convoEntryToReplyToQueryResponse.convoId),
+          entryId: Number(insertConvoEntryResponse.insertId),
+          sendAsEmailIdentityPublicId: sendAsEmailIdentityPublicId,
+          orgId: orgId
+        });
       }
 
       return {
         status: 'success',
-        publicId: newConvoPublicId,
-        missingEmailIdentities: missingEmailIdentitiesWarnings
+        publicId: newConvoEntryPublicId
       };
     }),
 
@@ -949,7 +851,8 @@ export const convoRouter = router({
                   emailDomain: true,
                   setName: true,
                   signaturePlainText: true,
-                  signatureHtml: true
+                  signatureHtml: true,
+                  type: true
                 }
               }
             }

@@ -12,7 +12,7 @@ export const subscriptionsRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const { stripe, db } = ctx;
+      const { db } = ctx;
       const { orgId } = input;
 
       const orgSubscriptionQuery = await db.query.orgBilling.findFirst({

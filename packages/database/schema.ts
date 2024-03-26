@@ -1091,7 +1091,15 @@ export const pendingAttachmentsRelations = relations(
 
 export type ConvoEntryMetadataEmailAddress = {
   id: number;
+  publicId: string;
   type: 'contact' | 'emailIdentity';
+  email: string;
+};
+
+export type ConvoEntryMetadataMissingParticipant = {
+  type: 'user' | 'group';
+  publicId: String;
+  name: String;
 };
 
 export type ConvoEntryMetadataEmail = {
@@ -1106,6 +1114,7 @@ export type ConvoEntryMetadataEmail = {
     postalMessageId: string | null;
   }[];
   emailHeaders?: string;
+  missingParticipants?: ConvoEntryMetadataMissingParticipant[];
 };
 export type ConvoEntryMetadata = {
   email?: ConvoEntryMetadataEmail;

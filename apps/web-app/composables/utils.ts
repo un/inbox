@@ -52,7 +52,9 @@ function useParticipantData(
     participantTypePublicId,
     avatarPublicId,
     participantName,
-    participantColor;
+    participantColor,
+    participantSignaturePlainText,
+    participantSignatureHtml;
 
   switch (true) {
     case !!contact?.publicId:
@@ -62,6 +64,8 @@ function useParticipantData(
       participantName =
         contact.name || `${contact.emailUsername}@${contact.emailDomain}`;
       participantColor = null;
+      participantSignaturePlainText = contact.signaturePlainText;
+      participantSignatureHtml = contact.signatureHtml;
       break;
     case !!group?.name:
       participantType = 'group';
@@ -92,7 +96,9 @@ function useParticipantData(
     avatarPublicId,
     participantName,
     participantColor,
-    participantRole
+    participantRole,
+    participantSignaturePlainText,
+    participantSignatureHtml
   };
 }
 
