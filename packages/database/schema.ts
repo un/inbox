@@ -967,10 +967,12 @@ export const convoParticipants = mysqlTable(
       'contributor',
       'commenter',
       'watcher',
+      'groupMember',
       'guest'
     ]) // Assigned/Contributor will be added to email CCs - other roles will not
       .notNull()
       .default('contributor'),
+    emailIdentityId: foreignKey('email_identity_id'),
     notifications: mysqlEnum('notifications', ['active', 'muted', 'off'])
       .notNull()
       .default('active'),
@@ -1189,7 +1191,7 @@ export const convoEntriesRelations = relations(
       references: [convoEntryReplies.entrySourceId],
       relationName: 'inReplyTo'
     }),
-    seenBy: many(convoSeenTimestamps)
+    seenBy: many(convoEntrySeenTimestamps)
   })
 );
 
@@ -1250,21 +1252,25 @@ export const convoEntryPrivateVisibilityParticipantsRelations = relations(
   })
 );
 
+// timestamps
 export const convoSeenTimestamps = mysqlTable(
   'convo_seen_timestamps',
   {
-    id: serial('id').primaryKey(),
-    convoId: foreignKey('convo_id'),
-    convoEntryId: foreignKey('convo_entry_id'),
+    convoId: foreignKey('convo_id').notNull(),
     participantId: foreignKey('participant_id').notNull(),
-    orgMemberId: foreignKey('participant_id').notNull(),
+    orgMemberId: foreignKey('org_member_id').notNull(),
     seenAt: timestamp('seen_at').notNull()
   },
-  (table) => ({
-    convoIdIndex: index('convo_id_idx').on(table.convoId),
-    convoEntryIdIndex: index('convo_entry_id_idx').on(table.convoEntryId),
-    seenAt: index('seen_at_idx').on(table.seenAt)
-  })
+  (table) => {
+    return {
+      id: primaryKey({
+        name: 'id',
+        columns: [table.convoId, table.participantId, table.orgMemberId]
+      }),
+      convoIdIndex: index('convo_id_idx').on(table.convoId),
+      seenAt: index('seen_at_idx').on(table.seenAt)
+    };
+  }
 );
 
 export const convoSeenTimestampsRelations = relations(
@@ -1274,16 +1280,50 @@ export const convoSeenTimestampsRelations = relations(
       fields: [convoSeenTimestamps.convoId],
       references: [convos.id]
     }),
-    convoEntry: one(convoEntries, {
-      fields: [convoSeenTimestamps.convoEntryId],
-      references: [convoEntries.id]
-    }),
     participant: one(convoParticipants, {
       fields: [convoSeenTimestamps.participantId],
       references: [convoParticipants.id]
     }),
     orgMember: one(orgMembers, {
       fields: [convoSeenTimestamps.orgMemberId],
+      references: [orgMembers.id]
+    })
+  })
+);
+
+export const convoEntrySeenTimestamps = mysqlTable(
+  'convo_entry_seen_timestamps',
+  {
+    convoEntryId: foreignKey('convo_entry_id').notNull(),
+    participantId: foreignKey('participant_id').notNull(),
+    orgMemberId: foreignKey('org_member_id').notNull(),
+    seenAt: timestamp('seen_at').notNull()
+  },
+  (table) => {
+    return {
+      id: primaryKey({
+        name: 'id',
+        columns: [table.convoEntryId, table.participantId, table.orgMemberId]
+      }),
+      convoEntryIdIndex: index('convo_entry_id_idx').on(table.convoEntryId),
+      seenAt: index('seen_at_idx').on(table.seenAt)
+    };
+  }
+);
+
+export const convoEntrySeenTimestampsRelations = relations(
+  convoEntrySeenTimestamps,
+  ({ one }) => ({
+    convoEntry: one(convoEntries, {
+      fields: [convoEntrySeenTimestamps.convoEntryId],
+      references: [convoEntries.id]
+    }),
+    participant: one(convoParticipants, {
+      fields: [convoEntrySeenTimestamps.participantId],
+      references: [convoParticipants.id]
+    }),
+    orgMember: one(orgMembers, {
+      fields: [convoEntrySeenTimestamps.orgMemberId],
       references: [orgMembers.id]
     })
   })
