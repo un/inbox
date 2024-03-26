@@ -15,7 +15,6 @@ import {
   emailRoutingRulesDestinations,
   emailIdentities,
   groupMembers,
-  emailIdentitiesAuthorizedOrgMemberRelations,
   emailIdentitiesAuthorizedOrgMembers
 } from '@u22n/database/schema';
 import { typeIdGenerator, typeIdValidator } from '@u22n/utils';

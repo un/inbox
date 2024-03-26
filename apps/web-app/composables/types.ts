@@ -23,7 +23,13 @@ export type ConvoParticipantEntry = {
   avatarPublicId: string;
   name: string;
   type: 'orgMember' | 'group' | 'contact';
-  role: 'assigned' | 'contributor' | 'commenter' | 'watcher' | 'guest';
+  role:
+    | 'assigned'
+    | 'contributor'
+    | 'commenter'
+    | 'watcher'
+    | 'groupMember'
+    | 'guest';
   color: (typeof uiColors)[number] | null;
   signaturePlainText?: string | null;
   signatureHtml?: string | null;
