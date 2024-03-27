@@ -49,7 +49,7 @@ _And email is just the start_
 
 ---
 
-## Why
+## Why?
 
 The first email was sent almost 45 years ago (1979). Before the invention of the mobile telephone.
 
