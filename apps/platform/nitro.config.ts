@@ -42,15 +42,6 @@ if (eeLicenseKey && billingUrl && billingKey) {
 }
 
 export default defineNitroConfig({
-  typescript: {
-    tsConfig: {
-      compilerOptions: {
-        paths: {
-          '~/*': ['../../*']
-        }
-      }
-    }
-  },
   imports: {
     autoImport: false
   },

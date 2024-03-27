@@ -2,15 +2,6 @@ import { defineNitroConfig } from 'nitropack/config';
 
 //https://nitro.unjs.io/config
 export default defineNitroConfig({
-  typescript: {
-    tsConfig: {
-      compilerOptions: {
-        paths: {
-          '~/*': ['../../*']
-        }
-      }
-    }
-  },
   imports: {
     autoImport: false
   },

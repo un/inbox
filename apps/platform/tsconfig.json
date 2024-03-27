@@ -1,7 +1,3 @@
 {
-  "extends": [
-    "./.nitro/types/tsconfig.json",
-    "../mail-bridge/.nitro/types/tsconfig.json",
-    "@u22n/tsconfig"
-  ]
+  "extends": ["./.nitro/types/tsconfig.json", "@u22n/tsconfig"]
 }
