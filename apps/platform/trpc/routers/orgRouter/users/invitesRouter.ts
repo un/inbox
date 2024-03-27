@@ -5,7 +5,7 @@ import {
   limitedProcedure,
   accountProcedure
 } from '../../../trpc';
-import { eq, inArray } from '@u22n/database/orm';
+import { eq } from '@u22n/database/orm';
 import {
   domains,
   emailIdentities,
