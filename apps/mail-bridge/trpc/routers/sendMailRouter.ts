@@ -16,7 +16,7 @@ import {
   convoParticipants
 } from '@u22n/database/schema';
 import { typeIdValidator } from '@u22n/utils';
-import { and, eq } from '@u22n/database/orm';
+import { and, eq, inArray } from '@u22n/database/orm';
 import type { PostalConfig } from '../../types';
 import { useRuntimeConfig } from '#imports';
 import { tiptapHtml, tiptapVue3 } from '@u22n/tiptap';
@@ -89,7 +89,7 @@ export const sendMailRouter = router({
               groupId: true,
               contactId: true
             },
-            where: eq(convoParticipants.role, 'assigned' || 'contributor')
+            where: inArray(convoParticipants.role, ['assigned', 'contributor'])
           }
         }
       });
@@ -121,6 +121,12 @@ export const sendMailRouter = router({
         !contactConvoParticipants.length ||
         contactConvoParticipants.length === 0
       ) {
+        console.error('🚨 no contact participants found', {
+          orgId,
+          convoId,
+          entryId,
+          sendAsEmailIdentityPublicId
+        });
         return {
           success: true
         };
@@ -216,8 +222,8 @@ export const sendMailRouter = router({
         publicId: sendAsEmailIdentity.publicId,
         email: `${sendAsEmailIdentity.username}@${sendAsEmailIdentity.domainName}`
       };
-      const convoSender = `${sendAsEmailIdentity.username}@${sendAsEmailIdentity.domainName}`;
-      const convoFrom = `${sendAsEmailIdentity.sendName} <${convoSender}>`;
+      const convoSenderEmailAddress = `${sendAsEmailIdentity.username}@${sendAsEmailIdentity.domainName}`;
+      const convoFromStringObject = `${sendAsEmailIdentity.sendName} <${convoSenderEmailAddress}>`;
       let convoMetadataToAddress: ConvoEntryMetadataEmailAddress | undefined;
       let convoToAddress: string | undefined;
       const convoMetadataCcAddresses: ConvoEntryMetadataEmailAddress[] = [];
@@ -444,9 +450,13 @@ export const sendMailRouter = router({
 
         convoToAddress = replySourceMetadata.email;
       }
-      const convoCcAddressesFiltered = [...new Set(convoCcAddresses)].filter(
-        (emailAddress) => {
-          return emailAddress !== convoToAddress && emailAddress !== convoFrom;
+      const convoCcAddressesUnique = Array.from(new Set(convoCcAddresses));
+      const convoCcAddressesFiltered = convoCcAddressesUnique.filter(
+        (ccAddress) => {
+          return (
+            ccAddress !== convoToAddress &&
+            ccAddress !== convoSenderEmailAddress
+          );
         }
       );
 
@@ -598,6 +608,7 @@ export const sendMailRouter = router({
               message: string;
             };
           };
+
       const sendMailPostalResponse = (await fetch(postalServerUrl, {
         method: 'POST',
         headers: {
@@ -607,8 +618,8 @@ export const sendMailRouter = router({
         body: JSON.stringify({
           to: [`${convoToAddress}`],
           cc: convoCcAddressesFiltered,
-          from: convoFrom,
-          sender: convoSender,
+          from: convoFromStringObject,
+          sender: convoSenderEmailAddress,
           subject: convoEntryResponse.subject?.subject || 'No Subject',
           plain_body: emailBodyPlainText,
           html_body: emailBodyHTML,
