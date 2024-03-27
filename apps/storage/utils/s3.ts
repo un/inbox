@@ -1,5 +1,5 @@
 import { S3Client } from '@aws-sdk/client-s3';
-import type { S3Config } from '../types';
+import type { S3Config } from '~/types';
 import { useRuntimeConfig } from '#imports';
 const s3Config: S3Config = useRuntimeConfig().s3;
 

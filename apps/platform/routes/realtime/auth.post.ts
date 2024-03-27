@@ -1,6 +1,6 @@
 import { eventHandler, createError, readBody } from 'h3';
 import { z } from 'zod';
-import { realtime } from '../../realtime';
+import { realtime } from '~/realtime';
 import { validateTypeId } from '@u22n/utils';
 
 const bodySchema = z.object({

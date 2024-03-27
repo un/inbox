@@ -4,7 +4,7 @@ import { db } from '@u22n/database';
 import { and, eq } from '@u22n/database/orm';
 import { orgMembers, orgs, pendingAttachments } from '@u22n/database/schema';
 import { z } from 'zod';
-import type { S3Config } from '../../types';
+import type { S3Config } from '~/types';
 import {
   eventHandler,
   loggedIn,

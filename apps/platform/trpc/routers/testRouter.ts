@@ -1,4 +1,4 @@
-import { router, publicProcedure } from '../trpc';
+import { router, publicProcedure } from '~/trpc/trpc';
 import { TRPCError } from '@trpc/server';
 
 // TODO: Figure out what to do with this route
