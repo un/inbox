@@ -530,6 +530,7 @@ export const convoRouter = router({
           authorEmailIdentityId = emailIdentityResponse.id;
         }
       }
+
       const authorConvoParticipantPublicId =
         typeIdGenerator('convoParticipants');
       const insertAuthorConvoParticipantResponse = await db
