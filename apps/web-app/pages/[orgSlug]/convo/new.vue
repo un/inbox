@@ -144,6 +144,22 @@
         });
       }
     }
+    if (newUserEmailIdentitiesData?.defaultEmailIdentity) {
+      const defaultEmailIdentityObject =
+        newUserEmailIdentitiesData?.emailIdentities.find(
+          (emailIdentity) =>
+            emailIdentity.publicId ===
+            newUserEmailIdentitiesData.defaultEmailIdentity
+        );
+      selectedOrgEmailIdentities.value = {
+        publicId: defaultEmailIdentityObject?.publicId || '',
+        address:
+          defaultEmailIdentityObject?.username +
+            '@' +
+            defaultEmailIdentityObject?.domainName || '',
+        sendName: defaultEmailIdentityObject?.sendName || ''
+      };
+    }
   });
 
   watch(orgMembersData, (newOrgMembersData) => {

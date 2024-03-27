@@ -1029,7 +1029,11 @@ export const convoParticipantsRelations = relations(
     groupMemberships: many(convoParticipantGroupMembers, {
       relationName: 'memberships'
     }),
-    groupMembers: many(convoParticipantGroupMembers, { relationName: 'group' })
+    groupMembers: many(convoParticipantGroupMembers, { relationName: 'group' }),
+    emailIdentity: one(emailIdentities, {
+      fields: [convoParticipants.emailIdentityId],
+      references: [emailIdentities.id]
+    })
   })
 );
 
