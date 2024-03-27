@@ -444,7 +444,7 @@ export const sendMailRouter = router({
 
         convoToAddress = replySourceMetadata.email;
       }
-      const convoCcAddressesFiltered = convoCcAddresses.filter(
+      const convoCcAddressesFiltered = [...new Set(convoCcAddresses)].filter(
         (emailAddress) => {
           return emailAddress !== convoToAddress && emailAddress !== convoFrom;
         }
