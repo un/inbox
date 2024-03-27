@@ -300,7 +300,7 @@
                 :name="selectedMemberRole.icon"
                 class="h-4 w-4"
                 :class="
-                  selectedMemberRole.value === 'admin' ? 'text-yellow-500' : ''
+                  selectedMemberRole.value === 'admin' ? 'text-yellow-9' : ''
                 " />
 
               {{ selectedMemberRole.label }}
@@ -309,7 +309,7 @@
               <UnUiIcon
                 :name="option.icon"
                 class="h-4 w-4"
-                :class="option.value === 'admin' ? 'text-yellow-500' : ''" />
+                :class="option.value === 'admin' ? 'text-yellow-9' : ''" />
               {{ option.label }}
             </template>
           </NuxtUiSelectMenu>
@@ -332,10 +332,10 @@
           <div
             v-if="!sendEmailNotification"
             class="flex w-full flex-col justify-between gap-0">
-            <span class="text- text-sm text-gray-700 dark:text-gray-200">
+            <span class="text- text-base-11 text-sm">
               Send an invitation to join this organization via email
             </span>
-            <span class="text- text-sm text-gray-700 dark:text-gray-200">
+            <span class="text- text-base-11 text-sm">
               Otherwise you can send the invite code manually
             </span>
           </div>
@@ -364,7 +364,7 @@
           <div class="flex w-full flex-row justify-between gap-8">
             <span
               v-if="!createEmailIdentity"
-              class="text- text-sm text-gray-700 dark:text-gray-200">
+              class="text- text-base-11 text-sm">
               Create an email identity for this user
             </span>
             <div class="flex flex-col gap-1"></div>
@@ -450,7 +450,7 @@
           <div class="flex w-full flex-row justify-between gap-8">
             <span
               v-if="!addUserToGroups"
-              class="text- text-sm text-gray-700 dark:text-gray-200">
+              class="text- text-base-11 text-sm">
               Give them access to existing group conversations and email
               identities
             </span>

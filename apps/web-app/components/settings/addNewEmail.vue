@@ -13,6 +13,7 @@
 
   const { $trpc } = useNuxtApp();
 
+  const proPending = ref(true);
   const newIdentityUsernameValue = ref('');
   const newIdentityUsernameValid = ref<boolean | 'remote' | null>(null);
   const newIdentityUsernameValidationMessage = ref('');
@@ -239,11 +240,13 @@
 
   const isPro = ref(false);
   if (useEE().config.modules.billing) {
-    const { data: isProQuery } =
-      await $trpc.org.setup.billing.isPro.useLazyQuery({}, { server: false });
-
-    isPro.value = isProQuery.value?.isPro || false;
+    proPending.value = true;
+    isPro.value =
+      (await $trpc.org.setup.billing.isPro.useQuery({}).data.value?.isPro) ||
+      false;
+    proPending.value = false;
   } else {
+    proPending.value = false;
     isPro.value = true;
   }
 </script>
@@ -312,7 +315,7 @@
         <div class="flex flex-col gap-1">
           <span class="text-base-12 text-sm font-medium">CatchAll</span>
           <div class="flex flex-row justify-between">
-            <span class="text- text-sm text-gray-700 dark:text-gray-200">
+            <span class="text- text-base-11 text-sm">
               Emails sent to unknown addresses will be delivered here
             </span>
             <UnUiTooltip

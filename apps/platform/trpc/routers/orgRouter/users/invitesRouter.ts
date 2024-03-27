@@ -5,7 +5,7 @@ import {
   limitedProcedure,
   accountProcedure
 } from '../../../trpc';
-import { eq, inArray } from '@u22n/database/orm';
+import { eq } from '@u22n/database/orm';
 import {
   domains,
   emailIdentities,
@@ -14,8 +14,6 @@ import {
   emailIdentitiesAuthorizedOrgMembers,
   orgInvitations,
   orgMembers,
-  groupMembers,
-  groups,
   orgMemberProfiles,
   accounts
 } from '@u22n/database/schema';
@@ -30,6 +28,7 @@ import { isAccountAdminOfOrg } from '../../../../utils/account';
 import { TRPCError } from '@trpc/server';
 import { useRuntimeConfig } from '#imports';
 import { billingTrpcClient } from '../../../../utils/tRPCServerClients';
+import { addOrgMemberToGroupHandler } from './groupHandler';
 
 export const invitesRouter = router({
   createNewInvite: orgProcedure
@@ -102,24 +101,14 @@ export const invitesRouter = router({
 
       // Insert groupMemberships - save ID
       if (groupsInput) {
-        const groupIds = await db.query.groups.findMany({
-          where: inArray(groups.publicId, groupsInput.groupsPublicIds),
-          columns: {
-            id: true
-          }
-        });
-
-        // Fix type any
-        const newGroupMembershipValues = groupIds.map((group) => ({
-          publicId: typeIdGenerator('groupMembers'),
-          orgMemberId: +orgMemberResponse.insertId,
-          groupId: group.id,
-          orgMemberProfileId: orgMemberProfileId,
-          addedBy: orgMemberId,
-          role: 'member' as 'admin' | 'member'
-        }));
-
-        await db.insert(groupMembers).values([...newGroupMembershipValues]);
+        for (const groupPublicId of groupsInput.groupsPublicIds) {
+          await addOrgMemberToGroupHandler({
+            orgId: org.id,
+            groupPublicId: groupPublicId,
+            orgMemberPublicId: orgMemberPublicId,
+            orgMemberId: org.memberId
+          });
+        }
       }
       // Insert Email identities
       if (email) {

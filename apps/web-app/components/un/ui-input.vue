@@ -168,7 +168,7 @@
         v-model="data"
         :type="computedType"
         :aria-labelledby="`input-label-${props.label}`"
-        class="w-full bg-transparent outline-none"
+        class="selection:bg-base-9 selection:text-base-1 w-full bg-transparent outline-none"
         :class="
           inputClasses({
             disabled: computedDisabled

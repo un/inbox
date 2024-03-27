@@ -283,7 +283,7 @@
           be able to recover your your account.
         </span>
         <div
-          class="mb-2 mt-2 flex items-center justify-center gap-2 rounded-md bg-gray-200 p-2 dark:bg-gray-800">
+          class="bg-base-11 dark:bg-base-11 mb-2 mt-2 flex items-center justify-center gap-2 rounded-md p-2">
           <span class="select-all px-2 font-mono">{{ recoveryCode }}</span>
           <span>
             <UnUiButton

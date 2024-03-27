@@ -28,7 +28,7 @@
       </div>
       <!-- Fake Dash. Inspired by Stripe's MFA input. -->
       <div class="flex w-10 items-center justify-center">
-        <div class="h-1 w-3 rounded-full bg-gray-500" />
+        <div class="bg-base-9 h-1 w-3 rounded-full" />
       </div>
       <div class="flex">
         <Slot

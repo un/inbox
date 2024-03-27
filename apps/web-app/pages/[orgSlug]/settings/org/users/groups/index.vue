@@ -60,7 +60,7 @@
           description: group.description,
           color: group.color,
           // @ts-ignore
-          members: group.members.map((member) => member.userProfile)
+          members: group.members
         });
       }
     }
@@ -119,24 +119,36 @@
           </div>
         </template>
         <template #members-data="{ row }">
-          <NuxtUiAvatarGroup
-            size="sm"
-            :max="3">
-            <UnUiAvatar
-              v-for="member in row.members"
-              :key="member.publicId"
-              :public-id="member.publicId"
-              :avatar-id="member.avatarId"
-              :type="'orgMember'"
-              :alt="
-                member.firstName && member.lastName
-                  ? member.firstName + ' ' + member.lastName
-                  : ''
-              "
-              :color="member.color ? member.color : ''"
-              size="xs" />
-            <span v-if="row.members.length === 0"></span>
-          </NuxtUiAvatarGroup>
+          <div v-if="row.members.length > 0">
+            <NuxtUiAvatarGroup
+              size="sm"
+              :max="3">
+              <UnUiAvatar
+                v-for="member in row.members"
+                :key="member.publicId"
+                :public-id="member.orgMember.publicId"
+                :avatar-id="member.orgMemberProfile.avatarId"
+                :type="'orgMember'"
+                :alt="
+                  member.orgMemberProfile.firstName &&
+                  member.orgMemberProfile.lastName
+                    ? member.orgMemberProfile.firstName +
+                      ' ' +
+                      member.orgMemberProfile.lastName
+                    : ''
+                "
+                :color="
+                  member.orgMemberProfile.color
+                    ? member.orgMemberProfile.color
+                    : ''
+                "
+                size="xs" />
+            </NuxtUiAvatarGroup>
+          </div>
+
+          <div v-if="!row.members">
+            <span class="text-xs">No Members</span>
+          </div>
         </template>
       </NuxtUiTable>
     </div>

@@ -1,11 +1,12 @@
 import { z } from 'zod';
 import { router, orgProcedure } from '../../../trpc';
 import { eq, and } from '@u22n/database/orm';
-import { orgMembers, groupMembers, groups } from '@u22n/database/schema';
+import { groups } from '@u22n/database/schema';
 import { typeIdGenerator, typeIdValidator } from '@u22n/utils';
 import { uiColors } from '@u22n/types/ui';
 import { isAccountAdminOfOrg } from '../../../../utils/account';
 import { TRPCError } from '@trpc/server';
+import { addOrgMemberToGroupHandler } from './groupHandler';
 
 export const groupsRouter = router({
   createGroup: orgProcedure
@@ -73,9 +74,15 @@ export const groupsRouter = router({
         with: {
           members: {
             columns: {
-              publicId: true
+              publicId: true,
+              id: true
             },
             with: {
+              orgMember: {
+                columns: {
+                  publicId: true
+                }
+              },
               orgMemberProfile: {
                 columns: {
                   publicId: true,
@@ -173,9 +180,8 @@ export const groupsRouter = router({
           message: 'Account or Organization is not defined'
         });
       }
-      const { db, org } = ctx;
+      const { org } = ctx;
       const { groupPublicId, orgMemberPublicId } = input;
-      const newPublicId = typeIdGenerator('groupMembers');
 
       const isAdmin = await isAccountAdminOfOrg(org);
       if (!isAdmin) {
@@ -185,52 +191,15 @@ export const groupsRouter = router({
         });
       }
 
-      const orgMember = await db.query.orgMembers.findFirst({
-        columns: {
-          accountId: true,
-          id: true,
-          orgMemberProfileId: true
-        },
-        where: eq(orgMembers.publicId, orgMemberPublicId)
+      const newGroupMemberPublicId = await addOrgMemberToGroupHandler({
+        orgId: org.id,
+        groupPublicId: groupPublicId,
+        orgMemberPublicId: orgMemberPublicId,
+        orgMemberId: org.memberId
       });
-
-      if (!orgMember) {
-        throw new Error('User not found');
-      }
-
-      const group = await db.query.groups.findFirst({
-        columns: {
-          id: true
-        },
-        where: eq(groups.publicId, groupPublicId)
-      });
-
-      if (!group) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Group not found'
-        });
-      }
-
-      const insertGroupMemberResult = await db.insert(groupMembers).values({
-        publicId: newPublicId,
-        orgMemberId: orgMember.id,
-        groupId: group.id,
-        orgMemberProfileId: orgMember.orgMemberProfileId,
-        role: 'member',
-        notifications: 'active',
-        addedBy: org.memberId
-      });
-
-      if (!insertGroupMemberResult) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Could not add user to group'
-        });
-      }
 
       return {
-        publicId: newPublicId
+        publicId: newGroupMemberPublicId
       };
     })
 });
