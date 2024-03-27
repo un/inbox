@@ -1,5 +1,5 @@
-import { validatePostalWebhookSignature } from '../utils/validatePostalWebhookSignature';
-import type { PostalConfig } from '../types';
+import { validatePostalWebhookSignature } from '~/utils/validatePostalWebhookSignature';
+import type { PostalConfig } from '~/types';
 import {
   defineEventHandler,
   getRequestURL,
