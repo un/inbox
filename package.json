@@ -33,8 +33,7 @@
     "db:up:r": "infisical run --env=local -- turbo run db:up",
     "db:check:r": "infisical run --env=local -- turbo run db:generate",
     "db:drop:r": "infisical run --env=local -- turbo run db:drop",
-    "ee:dev:r": "infisical run --env=local -- turbo run ee:dev",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "ee:dev:r": "infisical run --env=local -- turbo run ee:dev"
   },
   "keywords": [],
   "author": "Omar McAdam - @McPizza0",
