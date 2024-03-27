@@ -2,7 +2,7 @@ import { drizzle } from 'drizzle-orm/mysql2';
 import mysql from 'mysql2/promise';
 import * as schema from './schema';
 import { useRuntimeConfig } from '#imports';
-import type { PostalConfig } from '~/types';
+import type { PostalConfig } from '../types';
 
 const postalConfig = useRuntimeConfig().postal as PostalConfig;
 

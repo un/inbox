@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { router, accountProcedure } from '~/trpc/trpc';
+import { router, accountProcedure } from '../../trpc';
 import { eq } from '@u22n/database/orm';
 import { accountCredentials, accounts } from '@u22n/database/schema';
 import { decodeHex, encodeHex } from 'oslo/encoding';

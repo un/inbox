@@ -1,17 +1,17 @@
 import { z } from 'zod';
-import { router, protectedProcedure } from '~/trpc/trpc';
+import { router, protectedProcedure } from '../trpc';
 import { and, eq } from '@u22n/database/orm';
 import { postalServers } from '@u22n/database/schema';
 import { typeIdValidator } from '@u22n/utils';
-import type { PostalConfig } from '~/types';
-import { postalDB } from '~/postal-db';
-import { httpEndpoints, organizations, servers } from '~/postal-db/schema';
+import type { PostalConfig } from '../../types';
+import { postalDB } from '../../postal-db';
+import { httpEndpoints, organizations, servers } from '../../postal-db/schema';
 import {
   createDomain,
   setMailServerRouteForDomain,
   getDomainDNSRecords,
   type GetDomainDNSRecordsOutput
-} from '~/postal-db/functions';
+} from '../../postal-db/functions';
 
 export const domainRouter = router({
   createDomain: protectedProcedure

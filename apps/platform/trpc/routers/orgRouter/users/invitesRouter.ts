@@ -4,7 +4,7 @@ import {
   orgProcedure,
   limitedProcedure,
   accountProcedure
-} from '~/trpc/trpc';
+} from '../../../trpc';
 import { eq, inArray } from '@u22n/database/orm';
 import {
   domains,
@@ -25,11 +25,11 @@ import {
   typeIdValidator,
   zodSchemas
 } from '@u22n/utils';
-import { refreshOrgSlugCache } from '~/utils/orgSlug';
-import { isAccountAdminOfOrg } from '~/utils/account';
+import { refreshOrgSlugCache } from '../../../../utils/orgSlug';
+import { isAccountAdminOfOrg } from '../../../../utils/account';
 import { TRPCError } from '@trpc/server';
 import { useRuntimeConfig } from '#imports';
-import { billingTrpcClient } from '~/utils/tRPCServerClients';
+import { billingTrpcClient } from '../../../../utils/tRPCServerClients';
 
 export const invitesRouter = router({
   createNewInvite: orgProcedure

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { router, accountProcedure } from '~/trpc/trpc';
+import { router, accountProcedure } from '../../trpc';
 import type { DBType } from '@u22n/database';
 import { eq, and } from '@u22n/database/orm';
 import {
@@ -10,7 +10,7 @@ import {
 } from '@u22n/database/schema';
 import { typeIdGenerator } from '@u22n/utils';
 import { TRPCError } from '@trpc/server';
-import { blockedUsernames, reservedUsernames } from '~/utils/signup';
+import { blockedUsernames, reservedUsernames } from '../../../utils/signup';
 
 async function validateOrgSlug(
   db: DBType,

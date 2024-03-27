@@ -1,10 +1,10 @@
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { GetObjectCommand } from '@aws-sdk/client-s3';
-import { s3Client } from '~/utils/s3';
+import { s3Client } from '../../../../utils/s3';
 import { db } from '@u22n/database';
 import { and, eq } from '@u22n/database/orm';
 import { convoAttachments, orgMembers, orgs } from '@u22n/database/schema';
-import type { S3Config } from '~/types';
+import type { S3Config } from '../../../../types';
 import {
   eventHandler,
   getRouterParam,

@@ -1,6 +1,6 @@
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { orgProcedure, router, accountProcedure } from '~/trpc/trpc';
+import { orgProcedure, router, accountProcedure } from '../../trpc';
 import { eq } from '@u22n/database/orm';
 import {
   emailIdentities,
@@ -13,7 +13,7 @@ import {
 
 import { orgMembers } from '@u22n/database/schema';
 import { useRuntimeConfig } from '#imports';
-import type { MailDomains } from '~/types';
+import type { MailDomains } from '../../../types';
 import { typeIdGenerator, typeIdValidator } from '@u22n/utils';
 
 export const addressRouter = router({

@@ -10,7 +10,7 @@ import { eq } from '@u22n/database/orm';
 import { db } from '@u22n/database';
 import sharp from 'sharp';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
-import type { S3Config } from '~/types';
+import type { S3Config } from '../types';
 import {
   eventHandler,
   loggedIn,
