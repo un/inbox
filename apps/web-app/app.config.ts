@@ -536,7 +536,7 @@ export default defineAppConfig({
     notification: {
       title: 'text-sm font-medium text-base-12 dark:text-base-12',
       description: 'mt-1 text-sm leading-4 text-base-11 dark:text-base-11',
-      background: 'bg-base-3 dark:bg-base-3',
+      background: 'bg-base-2 dark:bg-base-2',
       ring: 'ring-1 ring-base-7 dark:ring-base-7',
       icon: {
         base: 'flex-shrink-0 w-5 h-5',

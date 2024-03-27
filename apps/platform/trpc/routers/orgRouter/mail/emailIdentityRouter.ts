@@ -17,7 +17,7 @@ import {
   groupMembers,
   emailIdentitiesAuthorizedOrgMembers
 } from '@u22n/database/schema';
-import { typeIdGenerator, typeIdValidator } from '@u22n/utils';
+import { typeIdGenerator, typeIdValidator, type TypeId } from '@u22n/utils';
 import { isAccountAdminOfOrg } from '../../../../utils/account';
 import { TRPCError } from '@trpc/server';
 
@@ -349,6 +349,37 @@ export const emailIdentityRouter = router({
                 domainStatus: true
               }
             },
+            authorizedOrgMembers: {
+              columns: {
+                orgMemberId: true,
+                groupId: true,
+                default: true
+              },
+              with: {
+                orgMember: {
+                  with: {
+                    profile: {
+                      columns: {
+                        publicId: true,
+                        avatarId: true,
+                        firstName: true,
+                        lastName: true,
+                        handle: true,
+                        title: true
+                      }
+                    }
+                  }
+                },
+                group: {
+                  columns: {
+                    publicId: true,
+                    name: true,
+                    description: true,
+                    color: true
+                  }
+                }
+              }
+            },
             routingRules: {
               columns: {
                 publicId: true,
@@ -506,33 +537,48 @@ export const emailIdentityRouter = router({
 
       // search email routingRulesDestinations for orgMemberId or orgGroupId
 
-      const routingRulesDestinationsQuery =
-        await db.query.emailRoutingRulesDestinations.findMany({
+      const authorizedEmailIdentities =
+        await db.query.emailIdentitiesAuthorizedOrgMembers.findMany({
           where: or(
-            eq(emailRoutingRulesDestinations.orgMemberId, orgMemberId),
+            eq(emailIdentitiesAuthorizedOrgMembers.orgMemberId, orgMemberId),
             inArray(
-              emailRoutingRulesDestinations.groupId,
+              emailIdentitiesAuthorizedOrgMembers.groupId,
               uniqueUserGroupIds || [0]
             )
           ),
+          columns: {
+            orgMemberId: true,
+            groupId: true,
+            default: true
+          },
           with: {
-            rule: {
-              with: {
-                mailIdentities: {
-                  columns: {
-                    publicId: true,
-                    username: true,
-                    domainName: true,
-                    sendName: true
-                  }
-                }
+            emailIdentity: {
+              columns: {
+                publicId: true,
+                username: true,
+                domainName: true,
+                sendName: true
               }
             }
           }
         });
-      const emailIdentities = routingRulesDestinationsQuery
-        .map((routingRulesDestination) => {
-          const emailIdentity = routingRulesDestination.rule.mailIdentities[0]!;
+
+      if (!authorizedEmailIdentities.length) {
+        return {
+          emailIdentities: [],
+          defaultEmailIdentity: undefined
+        };
+      }
+      const defaultEmailIdentityPublicId:
+        | TypeId<'emailIdentities'>
+        | undefined = authorizedEmailIdentities.find(
+        (emailIdentityAuthorization) =>
+          emailIdentityAuthorization.default &&
+          emailIdentityAuthorization.emailIdentity?.publicId
+      )?.emailIdentity.publicId;
+      const emailIdentities = authorizedEmailIdentities
+        .map((emailIdentityAuthorization) => {
+          const emailIdentity = emailIdentityAuthorization.emailIdentity;
           return {
             publicId: emailIdentity.publicId,
             username: emailIdentity.username,
@@ -547,7 +593,8 @@ export const emailIdentityRouter = router({
 
       // TODO: Check if domains are enabled/validated, if not return invalid, but display the email address in the list with a tooltip
       return {
-        emailIdentities: emailIdentities
+        emailIdentities: emailIdentities,
+        defaultEmailIdentity: defaultEmailIdentityPublicId
       };
     })
 });

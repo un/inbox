@@ -1011,6 +1011,11 @@ export const convoRouter = router({
               role: true
             },
             with: {
+              emailIdentity: {
+                columns: {
+                  publicId: true
+                }
+              },
               orgMember: {
                 columns: {
                   id: true,
@@ -1115,7 +1120,7 @@ export const convoRouter = router({
       });
       return {
         data: convoDetails,
-        participantPublicId: participantPublicId
+        ownParticipantPublicId: participantPublicId
       };
     }),
 
