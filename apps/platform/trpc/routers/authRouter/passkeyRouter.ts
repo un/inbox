@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { limitedProcedure, router, accountProcedure } from '../../trpc';
+import { limitedProcedure, router, accountProcedure } from '~/trpc/trpc';
 import { eq } from '@u22n/database/orm';
 import { accountCredentials, accounts } from '@u22n/database/schema';
 import { TRPCError } from '@trpc/server';
@@ -14,12 +14,12 @@ import {
   zodSchemas
 } from '@u22n/utils';
 import { UAParser } from 'ua-parser-js';
-import { usePasskeys } from '../../../utils/auth/passkeys';
-import { usePasskeysDb } from '../../../utils/auth/passkeyDbAdaptor';
+import { usePasskeys } from '~/utils/auth/passkeys';
+import { usePasskeysDb } from '~/utils/auth/passkeyDbAdaptor';
 import { setCookie, getCookie, getHeader } from 'h3';
-import { lucia } from '../../../utils/auth';
+import { lucia } from '~/utils/auth';
 import { validateUsername } from './signupRouter';
-import { createLuciaSessionCookie } from '../../../utils/session';
+import { createLuciaSessionCookie } from '~/utils/session';
 
 export const passkeyRouter = router({
   // generateNewPasskeyChallenge: accountProcedure

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { router, accountProcedure } from '../../trpc';
+import { router, accountProcedure } from '~/trpc/trpc';
 import { and, eq } from '@u22n/database/orm';
 import { orgMemberProfiles, orgs, orgMembers } from '@u22n/database/schema';
 import { typeIdValidator } from '@u22n/utils';

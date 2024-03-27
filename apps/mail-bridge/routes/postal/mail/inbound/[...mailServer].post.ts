@@ -20,7 +20,7 @@ import { parseMessage } from '@u22n/mailtools';
 import type {
   MessageParseAddressPlatformObject,
   postalEmailPayload
-} from '../../../../types';
+} from '~/types';
 import { typeIdGenerator, validateTypeId } from '@u22n/utils';
 import { tiptapCore, tiptapHtml } from '@u22n/tiptap';
 import { tipTapExtensions } from '@u22n/tiptap/extensions';

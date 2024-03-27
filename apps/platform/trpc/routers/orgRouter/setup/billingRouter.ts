@@ -1,10 +1,10 @@
 import { z } from 'zod';
-import { router, eeProcedure } from '../../../trpc';
+import { router, eeProcedure } from '~/trpc/trpc';
 import { eq, and, sql } from '@u22n/database/orm';
 import { orgBilling, orgMembers } from '@u22n/database/schema';
-import { isAccountAdminOfOrg } from '../../../../utils/account';
+import { isAccountAdminOfOrg } from '~/utils/account';
 import { TRPCError } from '@trpc/server';
-import { billingTrpcClient } from '../../../../utils/tRPCServerClients';
+import { billingTrpcClient } from '~/utils/tRPCServerClients';
 
 export const billingRouter = router({
   getOrgBillingOverview: eeProcedure

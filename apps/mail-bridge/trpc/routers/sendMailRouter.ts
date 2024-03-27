@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { router, protectedProcedure } from '../trpc';
+import { router, protectedProcedure } from '~/trpc/trpc';
 import {
   emailIdentities,
   postalServers,
@@ -16,7 +16,7 @@ import {
 } from '@u22n/database/schema';
 import { typeIdValidator } from '@u22n/utils';
 import { and, eq } from '@u22n/database/orm';
-import type { PostalConfig } from '../../types';
+import type { PostalConfig } from '~/types';
 import { useRuntimeConfig } from '#imports';
 import { tiptapHtml, tiptapVue3 } from '@u22n/tiptap';
 import { tipTapExtensions } from '@u22n/tiptap/extensions';

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { router, orgProcedure } from '../../../trpc';
+import { router, orgProcedure } from '~/trpc/trpc';
 import {
   and,
   eq,
@@ -17,7 +17,7 @@ import {
   groupMembers
 } from '@u22n/database/schema';
 import { typeIdGenerator, typeIdValidator } from '@u22n/utils';
-import { isAccountAdminOfOrg } from '../../../../utils/account';
+import { isAccountAdminOfOrg } from '~/utils/account';
 import { TRPCError } from '@trpc/server';
 
 export const emailIdentityRouter = router({

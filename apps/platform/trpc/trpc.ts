@@ -7,7 +7,7 @@ import superjson from 'superjson';
 import type { Context } from './createContext';
 import { z } from 'zod';
 import { useRuntimeConfig } from '#imports';
-import verifyTurnstileToken from '../utils/turnstile';
+import verifyTurnstileToken from '~/utils/turnstile';
 export const trpcContext = initTRPC
   .context<Context>()
   .create({ transformer: superjson });

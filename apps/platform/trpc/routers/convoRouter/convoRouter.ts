@@ -1,7 +1,7 @@
-import { mailBridgeTrpcClient } from './../../../utils/tRPCServerClients';
+import { mailBridgeTrpcClient } from '~/utils/tRPCServerClients';
 import { z } from 'zod';
 import { parse } from 'superjson';
-import { router, orgProcedure } from '../../trpc';
+import { router, orgProcedure } from '~/trpc/trpc';
 import {
   type InferInsertModel,
   and,

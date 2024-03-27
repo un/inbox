@@ -1,8 +1,8 @@
 import { z } from 'zod';
-import { router, protectedProcedure } from '../trpc';
+import { router, protectedProcedure } from '~/trpc/trpc';
 import { eq } from '@u22n/database/orm';
 import { typeIdGenerator, typeIdValidator } from '@u22n/utils';
-import type { PostalConfig } from '../../types';
+import type { PostalConfig } from '~/types';
 import {
   addMailServer,
   createOrg,
@@ -11,9 +11,9 @@ import {
   setMailServerKey,
   setMailServerRoutingHttpEndpoint,
   setOrgIpPools
-} from '../../postal-db/functions';
-import { postalDB } from '../../postal-db';
-import { ipPools } from '../../postal-db/schema';
+} from '~/postal-db/functions';
+import { postalDB } from '~/postal-db';
+import { ipPools } from '~/postal-db/schema';
 
 export const orgRouter = router({
   createPostalOrg: protectedProcedure

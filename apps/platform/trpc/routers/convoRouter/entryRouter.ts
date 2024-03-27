@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { router, orgProcedure } from '../../trpc';
+import { router, orgProcedure } from '~/trpc/trpc';
 import { and, desc, eq, lt, or } from '@u22n/database/orm';
 import { convos, convoEntries } from '@u22n/database/schema';
 import { typeIdValidator } from '@u22n/utils';

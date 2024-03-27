@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { router, orgProcedure } from '../../../trpc';
+import { router, orgProcedure } from '~/trpc/trpc';
 import { eq, and, or } from '@u22n/database/orm';
 import { orgs, orgMembers } from '@u22n/database/schema';
 import { TRPCError } from '@trpc/server';
