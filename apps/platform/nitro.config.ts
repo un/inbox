@@ -49,7 +49,7 @@ export default defineNitroConfig({
           '~/*': ['../../*']
         }
       }
-    },
+    }
   },
   imports: {
     autoImport: false
