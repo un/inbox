@@ -228,11 +228,11 @@
 
   const isPro = ref(false);
   if (useEE().config.modules.billing) {
-    const { data: isProQuery, pending } =
-      await $trpc.org.setup.billing.isPro.useLazyQuery({}, { server: false });
-
-    isPro.value = isProQuery.value?.isPro || false;
-    dataPending.value = pending.value;
+    dataPending.value = true;
+    isPro.value =
+      (await $trpc.org.setup.billing.isPro.useQuery({})).data.value?.isPro ||
+      false;
+    dataPending.value = false;
   } else {
     dataPending.value = false;
     isPro.value = true;
@@ -284,7 +284,7 @@
         <span class="text-sm">Group Color</span>
         <div class="flex flex-row gap-2">
           <div
-            class="h-8 w-8 cursor-pointer rounded bg-red-500 p-2 text-white"
+            class="bg-red-9 h-8 w-8 cursor-pointer rounded p-2 text-white"
             @click="newGroupColorValue = 'red'">
             <UnUiIcon
               v-if="newGroupColorValue === 'red'"
@@ -292,7 +292,7 @@
               size="24" />
           </div>
           <div
-            class="h-8 w-8 cursor-pointer rounded bg-pink-500 p-2 text-white"
+            class="bg-pink-9 h-8 w-8 cursor-pointer rounded p-2 text-white"
             @click="newGroupColorValue = 'pink'">
             <UnUiIcon
               v-if="newGroupColorValue === 'pink'"
@@ -300,7 +300,7 @@
               size="24" />
           </div>
           <div
-            class="h-8 w-8 cursor-pointer rounded bg-purple-500 p-2 text-white"
+            class="bg-purple-9 h-8 w-8 cursor-pointer rounded p-2 text-white"
             @click="newGroupColorValue = 'purple'">
             <UnUiIcon
               v-if="newGroupColorValue === 'purple'"
@@ -308,7 +308,7 @@
               size="24" />
           </div>
           <div
-            class="h-8 w-8 cursor-pointer rounded bg-blue-500 p-2 text-white"
+            class="bg-blue-9 h-8 w-8 cursor-pointer rounded p-2 text-white"
             @click="newGroupColorValue = 'blue'">
             <UnUiIcon
               v-if="newGroupColorValue === 'blue'"
@@ -316,7 +316,7 @@
               size="24" />
           </div>
           <div
-            class="h-8 w-8 cursor-pointer rounded bg-cyan-500 p-2 text-white"
+            class="bg-cyan-9 h-8 w-8 cursor-pointer rounded p-2 text-white"
             @click="newGroupColorValue = 'cyan'">
             <UnUiIcon
               v-if="newGroupColorValue === 'cyan'"
@@ -324,7 +324,7 @@
               size="24" />
           </div>
           <div
-            class="h-8 w-8 cursor-pointer rounded bg-green-500 p-2 text-white"
+            class="bg-green-9 h-8 w-8 cursor-pointer rounded p-2 text-white"
             @click="newGroupColorValue = 'green'">
             <UnUiIcon
               v-if="newGroupColorValue === 'green'"
@@ -332,7 +332,7 @@
               size="24" />
           </div>
           <div
-            class="h-8 w-8 cursor-pointer rounded bg-orange-500 p-2 text-white"
+            class="bg-orange-9 h-8 w-8 cursor-pointer rounded p-2 text-white"
             @click="newGroupColorValue = 'orange'">
             <UnUiIcon
               v-if="newGroupColorValue === 'orange'"
@@ -340,7 +340,7 @@
               size="24" />
           </div>
           <div
-            class="h-8 w-8 cursor-pointer rounded bg-yellow-500 p-2 text-white"
+            class="bg-yellow-9 h-8 w-8 cursor-pointer rounded p-2 text-white"
             @click="newGroupColorValue = 'yellow'">
             <UnUiIcon
               v-if="newGroupColorValue === 'yellow'"

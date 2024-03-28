@@ -27,7 +27,7 @@
     <NuxtUiCard
       :ui="{
         ring: '',
-        divide: 'divide-y divide-gray-100 dark:divide-gray-800'
+        divide: 'divide-y divide-base-6 dark:divide-base-6'
       }">
       <template
         v-if="$slots.header || $props.hasClose"

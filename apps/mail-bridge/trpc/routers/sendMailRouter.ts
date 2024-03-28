@@ -12,10 +12,11 @@ import {
   orgMembers,
   groups,
   type ConvoEntryMetadataMissingParticipant,
-  orgs
+  orgs,
+  convoParticipants
 } from '@u22n/database/schema';
 import { typeIdValidator } from '@u22n/utils';
-import { and, eq } from '@u22n/database/orm';
+import { and, eq, inArray } from '@u22n/database/orm';
 import type { PostalConfig } from '../../types';
 import { useRuntimeConfig } from '#imports';
 import { tiptapHtml, tiptapVue3 } from '@u22n/tiptap';
@@ -87,7 +88,8 @@ export const sendMailRouter = router({
               orgMemberId: true,
               groupId: true,
               contactId: true
-            }
+            },
+            where: inArray(convoParticipants.role, ['assigned', 'contributor'])
           }
         }
       });
@@ -119,6 +121,12 @@ export const sendMailRouter = router({
         !contactConvoParticipants.length ||
         contactConvoParticipants.length === 0
       ) {
+        console.error('🚨 no contact participants found', {
+          orgId,
+          convoId,
+          entryId,
+          sendAsEmailIdentityPublicId
+        });
         return {
           success: true
         };
@@ -214,8 +222,8 @@ export const sendMailRouter = router({
         publicId: sendAsEmailIdentity.publicId,
         email: `${sendAsEmailIdentity.username}@${sendAsEmailIdentity.domainName}`
       };
-      const convoSender = `${sendAsEmailIdentity.username}@${sendAsEmailIdentity.domainName}`;
-      const convoFrom = `${sendAsEmailIdentity.sendName} <${convoSender}>`;
+      const convoSenderEmailAddress = `${sendAsEmailIdentity.username}@${sendAsEmailIdentity.domainName}`;
+      const convoFromStringObject = `${sendAsEmailIdentity.sendName} <${convoSenderEmailAddress}>`;
       let convoMetadataToAddress: ConvoEntryMetadataEmailAddress | undefined;
       let convoToAddress: string | undefined;
       const convoMetadataCcAddresses: ConvoEntryMetadataEmailAddress[] = [];
@@ -282,7 +290,7 @@ export const sendMailRouter = router({
                   id: true
                 },
                 with: {
-                  identity: {
+                  emailIdentity: {
                     columns: {
                       id: true,
                       publicId: true,
@@ -322,21 +330,21 @@ export const sendMailRouter = router({
                 input.newConvoToParticipantPublicId
               ) {
                 convoMetadataToAddress = {
-                  id: Number(emailIdentityResponse.identity.id),
+                  id: Number(emailIdentityResponse.emailIdentity.id),
                   type: 'emailIdentity',
-                  publicId: emailIdentityResponse.identity.publicId,
-                  email: `${emailIdentityResponse.identity.username}@${emailIdentityResponse.identity.domainName}`
+                  publicId: emailIdentityResponse.emailIdentity.publicId,
+                  email: `${emailIdentityResponse.emailIdentity.username}@${emailIdentityResponse.emailIdentity.domainName}`
                 };
-                convoToAddress = `${emailIdentityResponse.identity.username}@${emailIdentityResponse.identity.domainName}`;
+                convoToAddress = `${emailIdentityResponse.emailIdentity.username}@${emailIdentityResponse.emailIdentity.domainName}`;
               } else {
                 convoMetadataCcAddresses.push({
-                  id: Number(emailIdentityResponse.identity.id),
+                  id: Number(emailIdentityResponse.emailIdentity.id),
                   type: 'emailIdentity',
-                  publicId: emailIdentityResponse.identity.publicId,
-                  email: `${emailIdentityResponse.identity.username}@${emailIdentityResponse.identity.domainName}`
+                  publicId: emailIdentityResponse.emailIdentity.publicId,
+                  email: `${emailIdentityResponse.emailIdentity.username}@${emailIdentityResponse.emailIdentity.domainName}`
                 });
                 convoCcAddresses.push(
-                  `${emailIdentityResponse.identity.username}@${emailIdentityResponse.identity.domainName}`
+                  `${emailIdentityResponse.emailIdentity.username}@${emailIdentityResponse.emailIdentity.domainName}`
                 );
               }
             }
@@ -361,7 +369,7 @@ export const sendMailRouter = router({
                   id: true
                 },
                 with: {
-                  identity: {
+                  emailIdentity: {
                     columns: {
                       id: true,
                       publicId: true,
@@ -395,21 +403,21 @@ export const sendMailRouter = router({
                 input.newConvoToParticipantPublicId
               ) {
                 convoMetadataToAddress = {
-                  id: Number(emailIdentityResponse.identity.id),
+                  id: Number(emailIdentityResponse.emailIdentity.id),
                   type: 'emailIdentity',
-                  publicId: emailIdentityResponse.identity.publicId,
-                  email: `${emailIdentityResponse.identity.username}@${emailIdentityResponse.identity.domainName}`
+                  publicId: emailIdentityResponse.emailIdentity.publicId,
+                  email: `${emailIdentityResponse.emailIdentity.username}@${emailIdentityResponse.emailIdentity.domainName}`
                 };
-                convoToAddress = `${emailIdentityResponse.identity.username}@${emailIdentityResponse.identity.domainName}`;
+                convoToAddress = `${emailIdentityResponse.emailIdentity.username}@${emailIdentityResponse.emailIdentity.domainName}`;
               } else {
                 convoMetadataCcAddresses.push({
                   id: Number(emailIdentityResponse.id),
                   type: 'emailIdentity',
-                  publicId: emailIdentityResponse.identity.publicId,
-                  email: `${emailIdentityResponse.identity.username}@${emailIdentityResponse.identity.domainName}`
+                  publicId: emailIdentityResponse.emailIdentity.publicId,
+                  email: `${emailIdentityResponse.emailIdentity.username}@${emailIdentityResponse.emailIdentity.domainName}`
                 });
                 convoCcAddresses.push(
-                  `${emailIdentityResponse.identity.username}@${emailIdentityResponse.identity.domainName}`
+                  `${emailIdentityResponse.emailIdentity.username}@${emailIdentityResponse.emailIdentity.domainName}`
                 );
               }
             }
@@ -442,9 +450,13 @@ export const sendMailRouter = router({
 
         convoToAddress = replySourceMetadata.email;
       }
-      const convoCcAddressesFiltered = convoCcAddresses.filter(
-        (emailAddress) => {
-          return emailAddress !== convoToAddress && emailAddress !== convoFrom;
+      const convoCcAddressesUnique = Array.from(new Set(convoCcAddresses));
+      const convoCcAddressesFiltered = convoCcAddressesUnique.filter(
+        (ccAddress) => {
+          return (
+            ccAddress !== convoToAddress &&
+            ccAddress !== convoSenderEmailAddress
+          );
         }
       );
 
@@ -596,6 +608,7 @@ export const sendMailRouter = router({
               message: string;
             };
           };
+
       const sendMailPostalResponse = (await fetch(postalServerUrl, {
         method: 'POST',
         headers: {
@@ -605,8 +618,8 @@ export const sendMailRouter = router({
         body: JSON.stringify({
           to: [`${convoToAddress}`],
           cc: convoCcAddressesFiltered,
-          from: convoFrom,
-          sender: convoSender,
+          from: convoFromStringObject,
+          sender: convoSenderEmailAddress,
           subject: convoEntryResponse.subject?.subject || 'No Subject',
           plain_body: emailBodyPlainText,
           html_body: emailBodyHTML,

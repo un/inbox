@@ -31,7 +31,7 @@
   const attachments = ref<AttachmentEntry[]>([]);
   const convoParticipantsCollapsed = ref(true);
   const attachmentsCollapsed = ref(true);
-  const participantPublicId = ref('');
+  const participantOwnPublicId = ref('');
   const participantArray = ref<ConvoParticipantEntry[]>([]);
   const participantsAssignedArray = ref<ConvoParticipantEntry[]>([]);
   const participantContributorsArray = ref<ConvoParticipantEntry[]>([]);
@@ -188,10 +188,11 @@
         });
       }
     }
-    participantPublicId.value = convoDetails.value?.participantPublicId || '';
+    participantOwnPublicId.value =
+      convoDetails.value?.ownParticipantPublicId || '';
   });
   provide('convoParticipants', participantArray);
-  provide('participantPublicId', participantPublicId);
+  provide('participantPublicId', participantOwnPublicId);
 
   // Get email identities
 
@@ -213,6 +214,26 @@
           sendName: orgObject.sendName
         });
       }
+    }
+    if (participantOwnPublicId.value) {
+      const ownConvoParticipantObject =
+        convoDetails.value?.data?.participants.find(
+          (participant) => participant.publicId === participantOwnPublicId.value
+        );
+      const ownConvoEmailIdentityObject =
+        userEmailIdentitiesData?.value?.emailIdentities.find(
+          (emailIdentity) =>
+            emailIdentity.publicId ===
+            ownConvoParticipantObject?.emailIdentity?.publicId
+        );
+      selectedOrgEmailIdentities.value = {
+        publicId: ownConvoEmailIdentityObject?.publicId || '',
+        address:
+          ownConvoEmailIdentityObject?.username +
+            '@' +
+            ownConvoEmailIdentityObject?.domainName || '',
+        sendName: ownConvoEmailIdentityObject?.sendName || ''
+      };
     }
   });
 
@@ -362,7 +383,7 @@
             v-model:reply-to-message-public-id="replyToMessagePublicId"
             v-model:reply-to-message-metadata="replyToMessageMetadata"
             :convo-public-id="convoPublicId"
-            :participant-public-id="convoDetails?.participantPublicId || ''" />
+            :participant-public-id="participantOwnPublicId || ''" />
           <div
             class="from-base-1 z-[20000] mt-[-12px] h-[12px] bg-gradient-to-t" />
         </div>
@@ -398,9 +419,7 @@
               <template #option="{ option }">
                 <span>
                   {{ option.sendName }}
-                  <span class="text-gray-800 dark:text-gray-300">
-                    - {{ option.address }}
-                  </span>
+                  <span class="text-base-11"> - {{ option.address }} </span>
                 </span>
               </template>
               <template #option-empty=""> No email identities found </template>
@@ -648,7 +667,7 @@
             <div
               v-if="!attachments.length"
               class="flex max-w-full flex-row flex-wrap gap-2 overflow-hidden">
-              <span class="text-xs text-gray-500">No attachments</span>
+              <span class="text-base-11 text-xs">No attachments</span>
             </div>
           </div>
         </div>

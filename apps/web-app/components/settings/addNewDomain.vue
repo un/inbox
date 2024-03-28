@@ -69,10 +69,10 @@
 
   const isPro = ref(false);
   if (useEE().config.modules.billing) {
-    const { data: isProQuery } =
-      await $trpc.org.setup.billing.isPro.useLazyQuery({}, { server: false });
-
-    isPro.value = isProQuery.value?.isPro || false;
+    dataPending.value = true;
+    isPro.value =
+      (await $trpc.org.setup.billing.isPro.useQuery({}).data.value?.isPro) ||
+      false;
     dataPending.value = false;
   } else {
     dataPending.value = false;

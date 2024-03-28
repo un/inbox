@@ -536,7 +536,7 @@ export default defineAppConfig({
     notification: {
       title: 'text-sm font-medium text-base-12 dark:text-base-12',
       description: 'mt-1 text-sm leading-4 text-base-11 dark:text-base-11',
-      background: 'bg-base-3 dark:bg-base-3',
+      background: 'bg-base-2 dark:bg-base-2',
       ring: 'ring-1 ring-base-7 dark:ring-base-7',
       icon: {
         base: 'flex-shrink-0 w-5 h-5',
@@ -704,6 +704,33 @@ const amber = [
   'ring-amber-9',
   'active:ring-amber-9'
 ];
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const yellow = [
+  'bg-yellow-1',
+  'bg-yellow-2',
+  'bg-yellow-3',
+  'hover:bg-yellow-3',
+  'bg-yellow-4',
+  'hover:bg-yellow-4',
+  'active:bg-yellow-4',
+  'bg-yellow-5',
+  'hover:bg-yellow-5',
+  'active:bg-yellow-5',
+  'bg-yellow-9',
+  'bg-yellow-10',
+  'hover:bg-yellow-10',
+  'bg-yellow-11',
+  'bg-yellow-12',
+  'text-yellow-5',
+  'text-yellow-9',
+  'text-yellow-10',
+  'text-yellow-11',
+  'hover:text-yellow-12',
+  'ring-yellow-5',
+  'ring-yellow-8',
+  'ring-yellow-9',
+  'active:ring-yellow-9'
+];
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const blue = [
@@ -731,4 +758,16 @@ const blue = [
   'ring-blue-8',
   'ring-blue-9',
   'active:ring-blue-9'
+];
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const avatarColors = [
+  'bg-red-9',
+  'bg-pink-9',
+  'bg-purple-9',
+  'bg-blue-9',
+  'bg-cyan-9',
+  'bg-green-9',
+  'bg-orange-9',
+  'bg-yellow-9'
 ];

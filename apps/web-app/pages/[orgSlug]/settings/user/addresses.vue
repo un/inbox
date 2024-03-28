@@ -214,7 +214,7 @@
     <UnUiModal v-model="preClaimModalOpen">
       <template #header>
         <div class="flex flex-row items-center gap-2">
-          <span class="text-2xl leading-none text-red-500">
+          <span class="text-red-9 text-2xl leading-none">
             <UnUiIcon
               name="i-ph-warning-octagon"
               size="xl" />
@@ -236,7 +236,7 @@
         <span class="">
           We suggest creating a separate organization for personal addresses.
           <nuxt-link
-            class="text inline-flex flex-row items-center gap-1 text-sm leading-none text-gray-500"
+            class="text text-base-11 inline-flex flex-row items-center gap-1 text-sm leading-none"
             :to="`/${orgSlug}/settings/org/new`">
             <span>Create a new organization here</span>
             <UnUiIcon
