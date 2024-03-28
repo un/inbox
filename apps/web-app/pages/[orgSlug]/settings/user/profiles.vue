@@ -96,7 +96,7 @@
     if (response.avatarTimestamp) {
       imageUrl.value = useUtils().generateAvatarUrl({
         publicId: initialAccountProfile.value?.profile.publicId,
-        avatarTimestamp: response.avatarTimestamp || new Date(),
+        avatarTimestamp: new Date(),
         size: '5xl'
       });
     }
@@ -163,7 +163,7 @@
       v-if="pending"
       class="bg-base-3 flex w-full flex-row justify-center gap-4 rounded-xl rounded-tl-2xl p-8">
       <UnUiIcon
-        name="i-svg-spinners:3-dots-fade"
+        name="i-svg-spinners-3-dots-fade"
         size="24" />
       <span>Loading your profiles</span>
     </div>
@@ -183,7 +183,7 @@
               <UnUiIcon
                 :name="
                   uploadLoading
-                    ? 'i-svg-spinners:3-dots-fade'
+                    ? 'i-svg-spinners-3-dots-fade'
                     : 'i-ph-image-square'
                 "
                 size="100%" />

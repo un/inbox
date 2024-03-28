@@ -104,7 +104,7 @@
     if (response.avatarTimestamp) {
       imageUrl.value = useUtils().generateAvatarUrl({
         publicId: accountOrgProfile.value?.profile?.publicId,
-        avatarTimestamp: response.avatarTimestamp,
+        avatarTimestamp: new Date(),
         size: '5xl'
       });
     }

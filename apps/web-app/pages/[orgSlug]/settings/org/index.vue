@@ -87,7 +87,7 @@
     if (response.avatarTimestamp) {
       imageUrl.value = useUtils().generateAvatarUrl({
         publicId: orgPublicId,
-        avatarTimestamp: response.avatarTimestamp,
+        avatarTimestamp: new Date(),
         size: '5xl'
       }) as string;
     }
@@ -164,7 +164,7 @@
               <UnUiIcon
                 :name="
                   uploadLoading
-                    ? 'i-svg-spinners:3-dots-fade'
+                    ? 'i-svg-spinners-3-dots-fade'
                     : 'i-ph-image-square'
                 "
                 size="100%" />

@@ -74,7 +74,7 @@
         v-if="author"
         class="flex flex-row items-center gap-1">
         <UnUiAvatar
-          :public-id="author.publicId"
+          :public-id="author.avatarProfilePublicId"
           :avatar-timestamp="author.avatarTimestamp"
           :alt="author.name"
           :type="author.type"

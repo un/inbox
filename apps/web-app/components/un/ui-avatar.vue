@@ -130,7 +130,7 @@
     </template>
     <NuxtUiAvatar
       :size="size"
-      :alt="altText"
+      :alt="altText.toUpperCase()"
       :src="avatarUrl"
       :ui="{
         text: 'font-display text-white dark:text-white',

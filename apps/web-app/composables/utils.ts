@@ -27,7 +27,7 @@ function generateAvatarUrl({
   if (!avatarTimestamp) {
     return null;
   }
-  const epochTs = Math.floor(avatarTimestamp.getTime() / 1000);
+  const epochTs = avatarTimestamp.getTime() / 1000;
   //@ts-ignore
   const storageBaseUrl = useRuntimeConfig().public.storageUrl;
 
@@ -59,11 +59,11 @@ function useParticipantData(
       participant.contact?.avatarTimestamp ||
       null,
     name:
+      participant.group?.name ||
+      participant.contact?.name ||
       participant.orgMember?.profile.firstName +
         ' ' +
         participant.orgMember?.profile.lastName ||
-      participant.group?.name ||
-      participant.contact?.name ||
       '',
     color: participant.group?.color || null,
     type: participant.orgMember
