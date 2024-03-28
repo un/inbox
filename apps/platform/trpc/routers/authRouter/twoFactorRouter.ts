@@ -23,7 +23,8 @@ export const twoFactorRouter = router({
         with: {
           accountCredential: {
             columns: {
-              twoFactorSecret: true
+              twoFactorSecret: true,
+              twoFactorEnabled: true
             }
           }
         }
@@ -36,7 +37,7 @@ export const twoFactorRouter = router({
         });
       }
 
-      if (existingData.accountCredential.twoFactorSecret) {
+      if (existingData.accountCredential.twoFactorEnabled) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message:
