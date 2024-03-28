@@ -75,7 +75,7 @@
         class="flex flex-row items-center gap-1">
         <UnUiAvatar
           :public-id="author.publicId"
-          :avatar-id="author.avatarPublicId"
+          :avatar-timestamp="author.avatarTimestamp"
           :alt="author.name"
           :type="author.type"
           :color="author.color"

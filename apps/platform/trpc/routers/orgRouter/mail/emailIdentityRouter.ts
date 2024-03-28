@@ -361,7 +361,7 @@ export const emailIdentityRouter = router({
                     profile: {
                       columns: {
                         publicId: true,
-                        avatarId: true,
+                        avatarTimestamp: true,
                         firstName: true,
                         lastName: true,
                         handle: true,
@@ -392,7 +392,7 @@ export const emailIdentityRouter = router({
                     group: {
                       columns: {
                         publicId: true,
-                        avatarId: true,
+                        avatarTimestamp: true,
                         name: true,
                         description: true,
                         color: true
@@ -403,7 +403,7 @@ export const emailIdentityRouter = router({
                         profile: {
                           columns: {
                             publicId: true,
-                            avatarId: true,
+                            avatarTimestamp: true,
                             firstName: true,
                             lastName: true,
                             handle: true,

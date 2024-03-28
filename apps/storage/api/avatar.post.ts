@@ -35,7 +35,7 @@ export default eventHandler({
 
     const formInputs = await readMultipartFormData(event);
 
-    const avatarId = nanoIdLong();
+    const newAvatarTimestamp = new Date();
 
     if (!formInputs) {
       setResponseStatus(event, 400);
@@ -70,7 +70,7 @@ export default eventHandler({
         columns: {
           id: true,
           accountId: true,
-          avatarId: true
+          avatarTimestamp: true
         }
       });
       if (!profileResponse || !profileResponse.accountId) {
@@ -90,7 +90,7 @@ export default eventHandler({
         columns: {
           id: true,
           slug: true,
-          avatarId: true
+          avatarTimestamp: true
         },
         with: {
           members: {
@@ -124,7 +124,7 @@ export default eventHandler({
         where: eq(groups.publicId, publicId),
         columns: {
           id: true,
-          avatarId: true
+          avatarTimestamp: true
         },
         with: {
           org: {
@@ -188,7 +188,7 @@ export default eventHandler({
         .toBuffer();
       const command = new PutObjectCommand({
         Bucket: s3Config.bucketAvatars,
-        Key: `${typeObject.value}_${avatarId}/${size.name}`,
+        Key: `${publicId}/${size.name}`,
         Body: resizedImage,
         ContentType: file.type
       });
@@ -202,7 +202,7 @@ export default eventHandler({
       await db
         .update(orgMemberProfiles)
         .set({
-          avatarId: avatarId
+          avatarTimestamp: newAvatarTimestamp
         })
         .where(eq(orgMemberProfiles.publicId, publicId));
     } else if (typeObject.name === 'org') {
@@ -212,7 +212,7 @@ export default eventHandler({
       await db
         .update(orgs)
         .set({
-          avatarId: avatarId
+          avatarTimestamp: newAvatarTimestamp
         })
         .where(eq(orgs.publicId, publicId));
     } else if (typeObject.name === 'group') {
@@ -222,7 +222,7 @@ export default eventHandler({
       await db
         .update(groups)
         .set({
-          avatarId: avatarId
+          avatarTimestamp: newAvatarTimestamp
         })
         .where(eq(groups.publicId, publicId));
     } else if (typeObject.name === 'contact') {
@@ -232,11 +232,11 @@ export default eventHandler({
       await db
         .update(contacts)
         .set({
-          avatarId: avatarId
+          avatarTimestamp: newAvatarTimestamp
         })
         .where(eq(contacts.publicId, publicId));
     }
 
-    return { avatarId: avatarId };
+    return { avatarTimestamp: newAvatarTimestamp };
   }
 });

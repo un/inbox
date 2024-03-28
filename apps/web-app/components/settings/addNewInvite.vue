@@ -8,6 +8,7 @@
     watchDebounced
   } from '#imports';
   import type { UiColor } from '@u22n/types/ui';
+  import type { TypeId } from '@u22n/utils';
   import { z } from 'zod';
 
   const { $trpc } = useNuxtApp();
@@ -157,8 +158,8 @@
       { server: false }
     );
   interface OrgUserGroups {
-    publicId: String;
-    avatarId: String;
+    publicId: TypeId<'groups'>;
+    avatarTimestamp: Date | null;
     name: String;
     description: String | null;
     color: String | null;
@@ -170,7 +171,7 @@
       for (const group of newOrgGroupsData.groups) {
         orgUserGroups.value.push({
           publicId: group.publicId,
-          avatarId: group.avatarId || '',
+          avatarTimestamp: group.avatarTimestamp,
           name: group.name,
           description: group.description,
           color: group.color
@@ -485,8 +486,8 @@
                 class="flex flex-row items-center gap-1 truncate">
                 <UnUiAvatar
                   :alt="group.name.toString()"
-                  :public-id="group.publicId?.toString()"
-                  :avatar-id="group.avatarId?.toString()"
+                  :public-id="group.publicId"
+                  :avatar-timestamp="group.avatarTimestamp"
                   :type="'group'"
                   :color="group.color as UiColor"
                   size="3xs" />
@@ -498,7 +499,7 @@
           <template #option="{ option }">
             <UnUiAvatar
               :public-id="option.publicId"
-              :avatar-id="option.avatarId"
+              :avatar-timestamp="option.avatarTimestamp"
               :type="'group'"
               :alt="option.name"
               :color="option.color.toString()"

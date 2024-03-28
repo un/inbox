@@ -143,8 +143,9 @@
         </h2>
         <div class="flex flex-col items-center gap-2">
           <UnUiAvatar
-            :public-id="inviteQuery?.orgPublicId || ''"
-            :avatar-id="inviteQuery?.orgAvatarId || ''"
+            v-if="inviteQuery"
+            :public-id="inviteQuery?.orgPublicId"
+            :avatar-timestamp="inviteQuery?.orgAvatarTimestamp"
             :type="'org'"
             :alt="inviteQuery?.orgName"
             size="3xl" />

@@ -92,7 +92,7 @@ export const profileRouter = router({
           profile: {
             columns: {
               publicId: true,
-              avatarId: true,
+              avatarTimestamp: true,
               firstName: true,
               lastName: true,
               handle: true,

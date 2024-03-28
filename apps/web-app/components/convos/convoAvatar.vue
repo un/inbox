@@ -11,8 +11,8 @@
 <template>
   <UnUiAvatar
     v-if="props.participant"
-    :avatar-id="props.participant.avatarPublicId"
-    :public-id="props.participant.avatarPublicId"
+    :public-id="props.participant.avatarProfilePublicId"
+    :avatar-timestamp="props.participant.avatarTimestamp"
     :alt="props.participant.name"
     :type="props.participant.type"
     :color="props.participant.color"

@@ -29,8 +29,8 @@
   <div class="z-20 flex h-fit flex-row items-end">
     <UnUiAvatar
       v-if="primaryAvatar"
-      :avatar-id="primaryAvatar.avatarPublicId"
-      :public-id="primaryAvatar.participantPublicId"
+      :public-id="primaryAvatar.avatarProfilePublicId"
+      :avatar-timestamp="primaryAvatar.avatarTimestamp"
       :alt="primaryAvatar.name"
       :type="primaryAvatar.type"
       :color="primaryAvatar.color"
@@ -51,8 +51,8 @@
             v-for="avatar in avatarArray"
             :key="avatar.participantPublicId">
             <UnUiAvatar
-              :avatar-id="avatar.avatarPublicId"
-              :public-id="avatar.participantPublicId"
+              :public-id="avatar.avatarProfilePublicId"
+              :avatar-timestamp="avatar.avatarTimestamp"
               :alt="avatar.name"
               :type="avatar.type"
               :color="avatar.color"

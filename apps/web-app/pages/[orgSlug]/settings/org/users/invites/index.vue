@@ -88,12 +88,18 @@
             invite.invitedByOrgMember.profile.firstName +
             ' ' +
             invite.invitedByOrgMember.profile.lastName,
-          createdByAvatarId: invite.invitedByOrgMember.profile
-            ? invite.invitedByOrgMember.profile.avatarId
+          createdByOrgMemberProfilePublicId: invite.invitedByOrgMember.profile
+            ? invite.invitedByOrgMember.profile.publicId
+            : '',
+          createdByAvatarTimestamp: invite.invitedByOrgMember.profile
+            ? invite.invitedByOrgMember.profile.avatarTimestamp
             : '',
           created: invite.invitedAt,
-          orgMemberAvatarId: invite.orgMember?.profile
-            ? invite.orgMember?.profile.avatarId
+          orgMemberProfilePublicId: invite.orgMember?.profile
+            ? invite.orgMember?.profile.publicId
+            : '',
+          orgMemberAvatarTimestamp: invite.orgMember?.profile
+            ? invite.orgMember?.profile.avatarTimestamp
             : '',
           usedBy: invite.orgMember?.profile
             ? invite.orgMember?.profile.firstName +
@@ -153,8 +159,8 @@
             <div class="flex flex-row items-center gap-2">
               <UnUiAvatar
                 v-if="row.userAvatar || row.usedBy"
-                :public-id="''"
-                :avatar-id="row.orgMemberAvatarId"
+                :public-id="row.orgMemberProfilePublicId"
+                :avatar-timestamp="row.orgMemberAvatarTimestamp"
                 :type="'orgMember'"
                 :alt="row.usedBy ? row.usedBy : ''"
                 size="xs" />
@@ -185,8 +191,8 @@
           <template #createdBy-data="{ row }">
             <div class="flex flex-row items-center gap-2">
               <UnUiAvatar
-                :public-id="row.createdByAvatarId"
-                :avatar-id="row.creatorAvatarId"
+                :public-id="row.createdByOrgMemberProfilePublicId"
+                :avatar-timestamp="row.createdByAvatarTimestamp"
                 :type="'orgMember'"
                 :alt="row.createdBy ? row.createdBy : ''"
                 size="xs" />
