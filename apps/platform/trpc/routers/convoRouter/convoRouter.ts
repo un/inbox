@@ -97,7 +97,8 @@ export const convoRouter = router({
         participantsContactsPublicIds,
         topic,
         message: messageString,
-        to: convoMessageTo
+        to: convoMessageTo,
+        firstMessageType
       } = input;
 
       const message: tiptapVue3.JSONContent = parse(messageString);
@@ -648,7 +649,7 @@ export const convoRouter = router({
       //* if convo has contacts, send external email via mail bridge
       const convoHasEmailParticipants = orgContactIds.length > 0;
 
-      if (convoHasEmailParticipants) {
+      if (convoHasEmailParticipants && firstMessageType === 'message') {
         mailBridgeTrpcClient.mail.send.sendConvoEntryEmail.mutate({
           convoId: Number(insertConvoResponse.insertId),
           entryId: Number(insertConvoEntryResponse.insertId),
@@ -733,7 +734,9 @@ export const convoRouter = router({
                     publicId: true,
                     orgMemberId: true,
                     groupId: true,
-                    contactId: true
+                    contactId: true,
+                    emailIdentityId: true,
+                    role: true
                   }
                 }
               }
@@ -754,12 +757,64 @@ export const convoRouter = router({
         });
       }
 
+      // get the email identity the user wants to email from
+      let emailIdentityId: number | null = null;
+      if (sendAsEmailIdentityPublicId) {
+        const sendAsEmailIdentityResponse =
+          await db.query.emailIdentities.findFirst({
+            where: and(
+              eq(emailIdentities.orgId, orgId),
+              eq(emailIdentities.publicId, sendAsEmailIdentityPublicId)
+            ),
+            columns: {
+              id: true
+            },
+            with: {
+              authorizedOrgMembers: {
+                columns: {
+                  orgMemberId: true,
+                  groupId: true
+                },
+                with: {
+                  group: {
+                    columns: {
+                      id: true
+                    },
+                    with: {
+                      members: {
+                        columns: {
+                          orgMemberId: true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          });
+        const userIsAuthorized =
+          sendAsEmailIdentityResponse?.authorizedOrgMembers.some(
+            (authorizedOrgMember) =>
+              authorizedOrgMember.orgMemberId === accountOrgMemberId ||
+              authorizedOrgMember.group?.members.some(
+                (groupMember) => groupMember.orgMemberId === accountOrgMemberId
+              )
+          );
+        if (!userIsAuthorized) {
+          throw new TRPCError({
+            code: 'UNAUTHORIZED',
+            message: 'User is not authorized to send as this email identity'
+          });
+        }
+        emailIdentityId = sendAsEmailIdentityResponse?.id || null;
+      }
+
       let authorConvoParticipantId: number | undefined;
       authorConvoParticipantId =
         convoEntryToReplyToQueryResponse?.convo.participants.find(
           (participant) => participant.orgMemberId === accountOrgMemberId
         )?.id;
-      // if we cant find the orgMembers participant id, we assume they're a part of the convo as a group member, so now we add them as a dedicated participant
+      // if we cant find the orgMembers participant id, we assume they're a part of the convo as a group member and we're somehow skipped accidentally, so now we add them as a dedicated participant
       if (!authorConvoParticipantId) {
         const newConvoParticipantInsertResponse = await db
           .insert(convoParticipants)
@@ -768,11 +823,28 @@ export const convoRouter = router({
             orgId: orgId,
             publicId: typeIdGenerator('convoParticipants'),
             orgMemberId: accountOrgMemberId,
+            emailIdentityId: emailIdentityId,
             role: 'contributor'
           });
         authorConvoParticipantId = Number(
           newConvoParticipantInsertResponse.insertId
         );
+      } else {
+        const isParticipantEmailIdentityIdNotEqualToSendAsEmailIdentityId =
+          convoEntryToReplyToQueryResponse.convo.participants.find(
+            (participant) => participant.id === authorConvoParticipantId
+          )?.emailIdentityId !== emailIdentityId;
+        if (
+          isParticipantEmailIdentityIdNotEqualToSendAsEmailIdentityId &&
+          messageType === 'message'
+        ) {
+          await db
+            .update(convoParticipants)
+            .set({
+              emailIdentityId: emailIdentityId
+            })
+            .where(eq(convoParticipants.id, authorConvoParticipantId));
+        }
       }
 
       // check if any of the convo participants have a contactId
@@ -878,7 +950,11 @@ export const convoRouter = router({
 
       //* if convo has contacts, send external email via mail bridge
 
-      if (convoHasContactParticipants && sendAsEmailIdentityPublicId) {
+      if (
+        convoHasContactParticipants &&
+        sendAsEmailIdentityPublicId &&
+        messageType === 'message'
+      ) {
         mailBridgeTrpcClient.mail.send.sendConvoEntryEmail.mutate({
           convoId: Number(convoEntryToReplyToQueryResponse.convoId),
           entryId: Number(insertConvoEntryResponse.insertId),
