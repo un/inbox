@@ -14,6 +14,7 @@
   import type { UiColor } from '@u22n/types/ui';
   import { stringify } from 'superjson';
   import { z } from 'zod';
+  import type { TypeId } from '@u22n/utils';
 
   const { $trpc } = useNuxtApp();
   const orgSlug = useRoute().params.orgSlug as string;
@@ -28,17 +29,18 @@
 
   // TODO: handle if the domain is not valid/enabled. display the email address in the list but show it as disabled and show a tooltip on hover that says "this domain is not enabled for sending"
   interface OrgEmailIdentities {
-    publicId: string;
+    publicId: TypeId<'emailIdentities'>;
     address: string;
     sendName: string | null;
+    disabled?: boolean;
   }
 
   interface ConvoParticipantOrgMembers {
     type: 'orgMember';
     icon: 'i-ph-user';
-    publicId: String;
-    avatarId: String;
-    profilePublicId: String;
+    publicId: TypeId<'orgMembers'>;
+    avatarTimestamp: Date | null;
+    profilePublicId: TypeId<'orgMemberProfile'>;
     name: String;
     handle: String;
     title: String | null;
@@ -49,8 +51,8 @@
   interface ConvoParticipantOrgGroups {
     type: 'group';
     icon: 'i-ph-users-three';
-    publicId: String;
-    avatarId: String;
+    publicId: TypeId<'groups'>;
+    avatarTimestamp: Date | null;
     name: String;
     description: String | null;
     color: String | null;
@@ -59,8 +61,8 @@
   interface ConvoParticipantOrgContacts {
     type: 'contact';
     icon: 'i-ph-address-book';
-    publicId: String;
-    avatarId: String;
+    publicId: TypeId<'contacts'>;
+    avatarTimestamp: Date | null;
     name: String;
     address: String;
     keywords: String;
@@ -152,7 +154,7 @@
             newUserEmailIdentitiesData.defaultEmailIdentity
         );
       selectedOrgEmailIdentities.value = {
-        publicId: defaultEmailIdentityObject?.publicId || '',
+        publicId: defaultEmailIdentityObject?.publicId!,
         address:
           defaultEmailIdentityObject?.username +
             '@' +
@@ -175,7 +177,7 @@
         icon: 'i-ph-user',
         publicId: ownOrgMemberData.publicId,
         profilePublicId: ownOrgMemberData.profile.publicId,
-        avatarId: ownOrgMemberData.profile.avatarId || '',
+        avatarTimestamp: ownOrgMemberData.profile.avatarTimestamp,
         name:
           ownOrgMemberData.profile?.firstName +
             ' ' +
@@ -206,7 +208,7 @@
           icon: 'i-ph-user',
           publicId: member.publicId,
           profilePublicId: member.profile.publicId,
-          avatarId: member.profile.avatarId || '',
+          avatarTimestamp: member.profile.avatarTimestamp,
           name:
             member.profile?.firstName + ' ' + member.profile?.lastName || '',
           handle: member.profile?.handle || '',
@@ -232,7 +234,7 @@
           type: 'group',
           icon: 'i-ph-users-three',
           publicId: group.publicId,
-          avatarId: group.avatarId || '',
+          avatarTimestamp: group.avatarTimestamp,
           name: group.name,
           description: group.description,
           color: group.color,
@@ -250,7 +252,7 @@
           type: 'contact',
           icon: 'i-ph-address-book',
           publicId: contact.publicId,
-          avatarId: contact.avatarId || '',
+          avatarTimestamp: contact.avatarTimestamp,
           name:
             contact.setName ||
             contact.name ||
@@ -316,7 +318,8 @@
         if (label.publicId) {
           return label;
         }
-        const isEmail = z.string().email().safeParse(label.keywords);
+        const keywords = (label as { keywords: string }).keywords;
+        const isEmail = z.string().email().safeParse(keywords);
         if (!isEmail.success) {
           return;
         }
@@ -325,8 +328,8 @@
           icon: 'i-ph-envelope',
           publicId: participantOptions.value.length + 1,
           //@ts-ignore
-          address: label.keywords,
-          keywords: label.keywords
+          address: keywords,
+          keywords: keywords
         };
 
         participantOptions.value.push(newEntry);
@@ -535,8 +538,8 @@
                       v-if="participant.type === 'contact'"
                       class="flex flex-row items-center gap-1">
                       <UnUiAvatar
-                        :public-id="participant.publicId?.toString()"
-                        :avatar-id="participant.avatarId?.toString()"
+                        :public-id="participant.publicId"
+                        :avatar-timestamp="participant.avatarTimestamp"
                         :type="'contact'"
                         :alt="participant.name.toString()"
                         size="xs" />
@@ -548,8 +551,8 @@
                       v-if="participant.type === 'orgMember'"
                       class="flex flex-row items-center gap-1">
                       <UnUiAvatar
-                        :public-id="participant.profilePublicId.toString()"
-                        :avatar-id="participant.avatarId.toString()"
+                        :public-id="participant.profilePublicId"
+                        :avatar-timestamp="participant.avatarTimestamp"
                         :type="'orgMember'"
                         :alt="participant.name.toString()"
                         size="xs" />
@@ -561,8 +564,8 @@
                       v-if="participant.type === 'group'"
                       class="flex flex-row items-center gap-1">
                       <UnUiAvatar
-                        :public-id="participant.publicId?.toString()"
-                        :avatar-id="participant.avatarId?.toString()"
+                        :public-id="participant.publicId"
+                        :avatar-timestamp="participant.avatarTimestamp"
                         :type="'group'"
                         :alt="participant.name.toString()"
                         :color="participant.color as UiColor"
@@ -594,7 +597,7 @@
                   class="flex flex-row items-center gap-2">
                   <UnUiAvatar
                     :public-id="option.publicId"
-                    :avatar-id="option.avatarId"
+                    :avatar-timestamp="option.avatarTimestamp"
                     :type="'contact'"
                     :alt="option.name"
                     size="xs" />
@@ -608,7 +611,7 @@
                   class="flex flex-row items-center gap-2">
                   <UnUiAvatar
                     :public-id="option.profilePublicId"
-                    :avatar-id="option.avatarId"
+                    :avatar-timestamp="option.avatarTimestamp"
                     :type="'orgMember'"
                     :alt="option.name"
                     size="xs" />
@@ -636,7 +639,7 @@
                   class="flex flex-row items-center gap-2">
                   <UnUiAvatar
                     :public-id="option.publicId"
-                    :avatar-id="option.avatarId"
+                    :avatar-timestamp="option.avatarTimestamp"
                     :type="'group'"
                     :alt="option.name"
                     :color="option.color.toString()"

@@ -55,7 +55,7 @@
             address: 'forwardingAddress'
           },
           org: identity.org,
-          avatarId: identity.org.avatarId,
+          avatarTimestamp: identity.org.avatarTimestamp,
           publicId: identity.emailIdentity.publicId
         });
       });
@@ -417,7 +417,7 @@
               <div class="flex flex-row items-center gap-2">
                 <UnUiAvatar
                   :public-id="row.org.publicId"
-                  :avatar-id="row.org.avatarId"
+                  :avatar-timestamp="row.org.avatarTimestamp"
                   type="org"
                   :alt="row.org.name ? row.org.name : ''"
                   size="xs" />

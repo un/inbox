@@ -44,12 +44,12 @@
         titleValue.value = newVal.profile.title || '';
         blurbValue.value = newVal.profile.blurb || '';
 
-        if (newVal.profile.avatarId) {
-          imageUrl.value = useUtils().generateAvatarUrl(
-            'orgMember',
-            newVal.profile.avatarId,
-            '5xl'
-          );
+        if (newVal.profile.avatarTimestamp) {
+          imageUrl.value = useUtils().generateAvatarUrl({
+            publicId: newVal.profile.publicId!,
+            avatarTimestamp: newVal.profile.avatarTimestamp,
+            size: '5xl'
+          });
         }
       }
     }
@@ -78,6 +78,7 @@
   selectedFilesOnChange(async (selectedFiles) => {
     uploadLoading.value = true;
     if (!selectedFiles || !selectedFiles[0]) return;
+    if (!initialAccountProfile.value?.profile.publicId) return;
     const formData = new FormData();
     // @ts-ignore
     const storageUrl = useRuntimeConfig().public.storageUrl;
@@ -87,21 +88,17 @@
       'publicId',
       initialAccountProfile.value?.profile.publicId || ''
     );
-    formData.append(
-      'avatarId',
-      initialAccountProfile.value?.profile.avatarId || ''
-    );
     const response = (await $fetch(`${storageUrl}/api/avatar`, {
       method: 'post',
       body: formData,
       credentials: 'include'
     })) as any;
-    if (response.avatarId) {
-      imageUrl.value = useUtils().generateAvatarUrl(
-        'orgMember',
-        response.avatarId,
-        '5xl'
-      );
+    if (response.avatarTimestamp) {
+      imageUrl.value = useUtils().generateAvatarUrl({
+        publicId: initialAccountProfile.value?.profile.publicId,
+        avatarTimestamp: new Date(),
+        size: '5xl'
+      });
     }
     refreshNuxtData('getOrgMemberSingleProfileNav');
     uploadLoading.value = false;
@@ -166,7 +163,7 @@
       v-if="pending"
       class="bg-base-3 flex w-full flex-row justify-center gap-4 rounded-xl rounded-tl-2xl p-8">
       <UnUiIcon
-        name="i-svg-spinners:3-dots-fade"
+        name="i-svg-spinners-3-dots-fade"
         size="24" />
       <span>Loading your profiles</span>
     </div>
@@ -186,7 +183,7 @@
               <UnUiIcon
                 :name="
                   uploadLoading
-                    ? 'i-svg-spinners:3-dots-fade'
+                    ? 'i-svg-spinners-3-dots-fade'
                     : 'i-ph-image-square'
                 "
                 size="100%" />

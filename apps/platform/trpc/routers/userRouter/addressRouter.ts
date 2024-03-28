@@ -39,7 +39,7 @@ export const addressRouter = router({
             org: {
               columns: {
                 publicId: true,
-                avatarId: true,
+                avatarTimestamp: true,
                 name: true,
                 slug: true
               }

@@ -123,7 +123,7 @@
     slot: 'org';
     label: string;
     publicId: string;
-    avatarId: string | null;
+    avatarTimestamp: Date | null;
     slug: string;
     click: () => void;
   }
@@ -137,7 +137,7 @@
           slot: 'org',
           label: org.org.name,
           publicId: org.org.publicId,
-          avatarId: org.org.avatarId,
+          avatarTimestamp: org.org.avatarTimestamp,
           slug: org.org.slug,
           click: () => {
             navigateTo(`/${org.org.slug}`);
@@ -312,8 +312,9 @@
         class="flex w-full max-w-[240px] flex-row items-center justify-between gap-2 p-2">
         <div class="flex w-full flex-row items-center gap-2 overflow-hidden">
           <UnUiAvatar
-            :public-id="currentOrgProfile?.publicId || ''"
-            :avatar-id="currentOrgProfile?.avatarId || ''"
+            v-if="currentOrgProfile"
+            :public-id="currentOrgProfile?.publicId"
+            :avatar-timestamp="currentOrgProfile?.avatarTimestamp || null"
             :type="'org'"
             :alt="currentOrgProfile?.name"
             size="xs" />
@@ -326,8 +327,11 @@
           <p>Signed in as</p>
           <div class="flex w-full flex-row items-center gap-2 overflow-hidden">
             <UnUiAvatar
-              :public-id="orgMemberProfile?.profile?.publicId || ''"
-              :avatar-id="orgMemberProfile?.profile?.avatarId || ''"
+              v-if="orgMemberProfile"
+              :public-id="orgMemberProfile?.profile?.publicId"
+              :avatar-timestamp="
+                orgMemberProfile?.profile?.avatarTimestamp || null
+              "
               :type="'orgMember'"
               :alt="
                 orgMemberProfile?.profile?.firstName +
@@ -346,7 +350,7 @@
         <div class="flex max-w-full flex-row items-center gap-2">
           <UnUiAvatar
             :public-id="item.publicId"
-            :avatar-id="item.avatarId"
+            :avatar-timestamp="item.avatarTimestamp"
             :type="'org'"
             :alt="item.label"
             size="sm" />

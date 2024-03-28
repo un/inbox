@@ -32,12 +32,6 @@ const stripePlanNames = ['starter', 'pro'] as const;
 
 // These custom types support incompatibilities with drizzle-orm or types that must remain in sync across db
 
-const avatarId = customType<{ data: string }>({
-  dataType() {
-    return `varchar(${nanoIdLongLength})`;
-  }
-});
-
 // Foreign Key type as drizzle does not support unsigned bigint
 const foreignKey = customType<{ data: number }>({
   dataType() {
@@ -185,7 +179,7 @@ export const orgs = mysqlTable(
   {
     id: serial('id').primaryKey(),
     publicId: publicId('org', 'public_id').notNull(),
-    avatarId: avatarId('avatar_id'),
+    avatarTimestamp: timestamp('avatar_timestamp'),
     slug: varchar('slug', { length: 64 }).notNull(),
     ownerId: foreignKey('owner_id').notNull(),
     name: varchar('name', { length: 64 }).notNull(),
@@ -368,7 +362,7 @@ export const orgMemberProfiles = mysqlTable(
     id: serial('id').primaryKey(),
     publicId: publicId('orgMemberProfile', 'public_id').notNull(),
     orgId: foreignKey('org_id').notNull(),
-    avatarId: avatarId('avatar_id'),
+    avatarTimestamp: timestamp('avatar_timestamp'),
     accountId: foreignKey('account_id'),
     firstName: varchar('first_name', { length: 64 }),
     lastName: varchar('last_name', { length: 64 }),
@@ -402,7 +396,7 @@ export const groups = mysqlTable(
   {
     id: serial('id').primaryKey(),
     publicId: publicId('groups', 'public_id').notNull(),
-    avatarId: avatarId('avatar_id'),
+    avatarTimestamp: timestamp('avatar_timestamp'),
     orgId: foreignKey('org_id').notNull(),
     name: varchar('name', { length: 128 }).notNull(),
     color: mysqlEnum('color', [...uiColors]),
@@ -575,7 +569,7 @@ export const contacts = mysqlTable(
   {
     id: serial('id').primaryKey(),
     publicId: publicId('contacts', 'public_id').notNull(),
-    avatarId: avatarId('avatar_id'),
+    avatarTimestamp: timestamp('avatar_timestamp'),
     orgId: foreignKey('org_id').notNull(),
     reputationId: foreignKey('reputation_id').notNull(),
     name: varchar('name', { length: 128 }),

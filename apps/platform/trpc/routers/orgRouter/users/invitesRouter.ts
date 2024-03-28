@@ -221,7 +221,7 @@ export const invitesRouter = router({
               profile: {
                 columns: {
                   publicId: true,
-                  avatarId: true,
+                  avatarTimestamp: true,
                   firstName: true,
                   lastName: true
                 }
@@ -233,7 +233,7 @@ export const invitesRouter = router({
               profile: {
                 columns: {
                   publicId: true,
-                  avatarId: true,
+                  avatarTimestamp: true,
                   firstName: true,
                   lastName: true
                 }
@@ -270,7 +270,7 @@ export const invitesRouter = router({
           org: {
             columns: {
               publicId: true,
-              avatarId: true,
+              avatarTimestamp: true,
               name: true,
               slug: true
             }
@@ -303,7 +303,7 @@ export const invitesRouter = router({
       return {
         valid: true,
         orgPublicId: queryInvitesResponse.org.publicId,
-        orgAvatarId: queryInvitesResponse.org.avatarId,
+        orgAvatarTimestamp: queryInvitesResponse.org.avatarTimestamp,
         orgName: queryInvitesResponse.org.name,
         orgSlug: queryInvitesResponse.org.slug,
         loggedIn: userLoggedIn

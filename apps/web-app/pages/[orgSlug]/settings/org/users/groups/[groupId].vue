@@ -8,6 +8,7 @@
     watch
   } from '#imports';
   import type { UiColor } from '@u22n/types/ui';
+  import type { TypeId } from '@u22n/utils';
 
   const { $trpc } = useNuxtApp();
   const route = useRoute();
@@ -45,8 +46,10 @@
     }
   ];
   interface TableRow {
-    publicId: string;
-    avatarId: string;
+    groupMemberPublicId: TypeId<'groupMembers'>;
+    orgMemberPublicId: TypeId<'orgMembers'> | null;
+    orgMemberProfilePublicId: TypeId<'orgMemberProfile'> | null;
+    avatarTimestamp: Date | null;
     name: string;
     handle: string;
     title: string;
@@ -60,8 +63,10 @@
     if (newResults?.group?.members) {
       for (const member of newResults.group.members) {
         tableRows.value.push({
-          publicId: member.publicId,
-          avatarId: member.orgMemberProfile?.avatarId || '',
+          groupMemberPublicId: member.publicId,
+          orgMemberPublicId: member.orgMember.publicId,
+          orgMemberProfilePublicId: member.orgMemberProfile?.publicId || null,
+          avatarTimestamp: member.orgMemberProfile?.avatarTimestamp || null,
           name:
             member.orgMemberProfile?.firstName +
             ' ' +
@@ -133,7 +138,10 @@
       groupPublicId: groupPublicId,
       orgMemberPublicId: orgMemberPublicId
     });
-    if (addOrgMemberToGroupTrpc.status.value === 'error') {
+    if (
+      addOrgMemberToGroupTrpc.status.value === 'error' ||
+      !addOrgMemberToGroupTrpc.data.value?.publicId
+    ) {
       toast.add({
         id: 'add_org_member_to_group_fail',
         title: 'Could not add org member to group',
@@ -151,8 +159,10 @@
       (member) => member.publicId === orgMemberPublicId
     );
     tableRows.value.push({
-      publicId: member?.profile.publicId || '',
-      avatarId: member?.profile.avatarId || '',
+      groupMemberPublicId: addOrgMemberToGroupTrpc.data.value?.publicId,
+      orgMemberPublicId: member?.publicId || null,
+      orgMemberProfilePublicId: member?.profile.publicId || null,
+      avatarTimestamp: member?.profile.avatarTimestamp || null,
       name: member?.profile.firstName + ' ' + member?.profile.lastName,
       handle: member?.profile.handle || '',
       title: member?.profile.title || '',
@@ -182,10 +192,11 @@
             @click="navigateTo('./')" />
         </UnUiTooltip>
         <UnUiAvatar
+          v-if="groupData?.group"
           :color="groupData?.group?.color || ('base' as UiColor)"
           :name="groupData?.group?.name"
-          :public-id="groupData?.group?.publicId || ''"
-          :avatar-id="groupData?.group?.avatarId || ''"
+          :public-id="groupData?.group?.publicId"
+          :avatar-timestamp="groupData?.group?.avatarTimestamp"
           :type="'group'"
           size="lg" />
 
@@ -247,8 +258,8 @@
             <template #name-data="{ row }">
               <div class="flex flex-row items-center gap-2">
                 <UnUiAvatar
-                  :public-id="row.publicId"
-                  :avatar-id="row.avatarId"
+                  :public-id="row.orgMemberProfilePublicId"
+                  :avatar-timestamp="row.avatarTimestamp"
                   :type="'orgMember'"
                   :alt="row.name"
                   size="xs" />
@@ -336,8 +347,8 @@
               </template>
               <template #option="{ option }">
                 <UnUiAvatar
-                  :public-id="option.publicId"
-                  :avatar-id="option.avatarId"
+                  :public-id="option.orgMemberProfilePublicId"
+                  :avatar-timestamp="option.avatarTimestamp"
                   :type="'orgMember'"
                   :alt="option.label"
                   size="3xs" />

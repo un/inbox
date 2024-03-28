@@ -32,12 +32,12 @@
   watch(initialOrgProfile, (newVal) => {
     if (newVal && newVal.orgProfile) {
       orgNameValue.value = newVal.orgProfile.name;
-      newVal.orgProfile.avatarId
-        ? ((imageUrl.value = useUtils().generateAvatarUrl(
-            'org',
-            newVal.orgProfile.avatarId,
-            '5xl'
-          )) as string)
+      newVal.orgProfile.avatarTimestamp
+        ? (imageUrl.value = useUtils().generateAvatarUrl({
+            publicId: newVal.orgProfile.publicId,
+            avatarTimestamp: newVal.orgProfile.avatarTimestamp,
+            size: '5xl'
+          }))
         : null;
     }
   });
@@ -68,6 +68,8 @@
     openFileDialog();
   }
   selectedFilesOnChange(async (selectedFiles: any) => {
+    const orgPublicId = initialOrgProfile.value?.orgProfile.publicId;
+    if (!orgPublicId) return;
     uploadLoading.value = true;
     if (!selectedFiles) return;
     const formData = new FormData();
@@ -75,22 +77,19 @@
     const storageUrl = useRuntimeConfig().public.storageUrl as string;
     formData.append('file', selectedFiles[0]);
     formData.append('type', 'org');
-    formData.append(
-      'publicId',
-      initialOrgProfile.value?.orgProfile.publicId || ''
-    );
+    formData.append('publicId', orgPublicId);
     const response = (await $fetch(`${storageUrl}/api/avatar`, {
       method: 'post',
       body: formData,
       credentials: 'include'
     })) as any;
 
-    if (response.avatarId) {
-      imageUrl.value = useUtils().generateAvatarUrl(
-        'org',
-        response.avatarId,
-        '5xl'
-      ) as string;
+    if (response.avatarTimestamp) {
+      imageUrl.value = useUtils().generateAvatarUrl({
+        publicId: orgPublicId,
+        avatarTimestamp: new Date(),
+        size: '5xl'
+      }) as string;
     }
     refreshNuxtData('getAccountOrgsNav');
     uploadLoading.value = false;
@@ -165,7 +164,7 @@
               <UnUiIcon
                 :name="
                   uploadLoading
-                    ? 'i-svg-spinners:3-dots-fade'
+                    ? 'i-svg-spinners-3-dots-fade'
                     : 'i-ph-image-square'
                 "
                 size="100%" />

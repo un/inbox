@@ -3,6 +3,7 @@
   import { useUtils } from '~/composables/utils';
   import { NuxtUiAvatar } from '#components';
   import { uiColors } from '@u22n/types/ui';
+  import type { TypeId } from '@u22n/utils';
 
   type UiColors = (typeof uiColors)[number] | null;
 
@@ -10,7 +11,8 @@
 
   type Props = {
     color?: UiColors;
-    avatarId: string | null;
+    publicId: TypeId<'orgMemberProfile' | 'contacts' | 'groups' | 'org'> | null;
+    avatarTimestamp: Date | null;
     name?: string;
     alt?: string;
     type: 'orgMember' | 'org' | 'group' | 'contact';
@@ -80,11 +82,19 @@
   });
 
   const avatarUrl = computed(() => {
-    return props.avatarUrl
-      ? props.avatarUrl
-      : props.avatarId
-        ? useUtils().generateAvatarUrl(props.type, props.avatarId, size.value)
-        : undefined;
+    if (props.avatarUrl) {
+      return props.avatarUrl;
+    }
+    if (props.avatarTimestamp && props.publicId) {
+      return (
+        useUtils().generateAvatarUrl({
+          publicId: props.publicId,
+          avatarTimestamp: props.avatarTimestamp,
+          size: size.value
+        }) || false
+      );
+    }
+    return false;
   });
 
   const tooltipText = computed(() => {
@@ -120,7 +130,7 @@
     </template>
     <NuxtUiAvatar
       :size="size"
-      :alt="altText"
+      :alt="altText.toUpperCase()"
       :src="avatarUrl"
       :ui="{
         text: 'font-display text-white dark:text-white',

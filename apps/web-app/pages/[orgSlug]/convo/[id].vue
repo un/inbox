@@ -133,28 +133,8 @@
 
     const convoParticipants = convoDetails.value?.data?.participants || [];
     for (const participant of convoParticipants) {
-      const {
-        participantPublicId,
-        participantTypePublicId,
-        avatarPublicId,
-        participantName,
-        participantType,
-        participantColor,
-        // participantRole,
-        participantSignaturePlainText,
-        participantSignatureHtml
-      } = useUtils().convos.useParticipantData(participant);
-      const participantData: ConvoParticipantEntry = {
-        participantPublicId: participantPublicId,
-        typePublicId: participantTypePublicId,
-        avatarPublicId: avatarPublicId,
-        name: participantName,
-        type: participantType,
-        role: participant.role,
-        color: participantColor,
-        signaturePlainText: participantSignaturePlainText,
-        signatureHtml: participantSignatureHtml
-      };
+      const participantData = useUtils().convos.useParticipantData(participant);
+      if (!participantData) continue;
 
       participantArray.value.push(participantData);
       if (participant.role === 'assigned')

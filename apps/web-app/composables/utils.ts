@@ -1,11 +1,17 @@
+import type { ConvoParticipantEntry } from './types';
 import { cva, type VariantProps } from 'class-variance-authority';
 import type { UserConvosDataType } from '~/composables/types';
 import { useRuntimeConfig } from '#imports';
+import type { TypeId } from '@u22n/utils';
 
-function generateAvatarUrl(
-  type: 'orgMember' | 'org' | 'group' | 'contact',
-  avatarId: string,
-  size:
+function generateAvatarUrl({
+  publicId,
+  avatarTimestamp,
+  size
+}: {
+  publicId: TypeId<'orgMemberProfile' | 'contacts' | 'groups' | 'org'>;
+  avatarTimestamp: Date | null;
+  size?:
     | '3xs'
     | '2xs'
     | 'xs'
@@ -16,90 +22,60 @@ function generateAvatarUrl(
     | '2xl'
     | '3xl'
     | '4xl'
-    | '5xl'
-    | undefined
-) {
-  const types = [
-    { name: 'orgMember', value: 'om' },
-    { name: 'org', value: 'o' },
-    { name: 'contact', value: 'c' },
-    { name: 'group', value: 'g' }
-  ];
-  const typeObject = types.find((t) => t.name === type);
-  if (!typeObject) {
-    return undefined;
+    | '5xl';
+}) {
+  if (!avatarTimestamp) {
+    return null;
   }
+  const epochTs = avatarTimestamp.getTime() / 1000;
   //@ts-ignore
   const storageBaseUrl = useRuntimeConfig().public.storageUrl;
 
-  return `${storageBaseUrl}/avatar/${typeObject.value}_${avatarId}/${
+  return `${storageBaseUrl}/avatar/${publicId}/${
     size ? size : '5xl'
-  }`;
+  }?t=${epochTs}`;
 }
 
 function useParticipantData(
   participant: UserConvosDataType[number]['participants'][0]
 ) {
-  const {
-    publicId: participantPublicId,
-    contact,
-    group,
-    orgMember,
-    role: participantRole
-  } = participant;
+  const typePublicId =
+    participant.orgMember?.publicId ||
+    participant.group?.publicId ||
+    participant.contact?.publicId;
+  const avatarProfilePublicId =
+    participant.orgMember?.profile.publicId ||
+    participant.group?.publicId ||
+    participant.contact?.publicId;
+  if (!typePublicId || !avatarProfilePublicId) return null;
 
-  let participantType: 'orgMember' | 'group' | 'contact',
-    participantTypePublicId,
-    avatarPublicId,
-    participantName,
-    participantColor,
-    participantSignaturePlainText,
-    participantSignatureHtml;
-
-  switch (true) {
-    case !!contact?.publicId:
-      participantType = 'contact';
-      participantTypePublicId = contact.publicId;
-      avatarPublicId = contact.avatarId || '';
-      participantName =
-        contact.name || `${contact.emailUsername}@${contact.emailDomain}`;
-      participantColor = null;
-      participantSignaturePlainText = contact.signaturePlainText;
-      participantSignatureHtml = contact.signatureHtml;
-      break;
-    case !!group?.name:
-      participantType = 'group';
-      participantTypePublicId = group.publicId;
-      avatarPublicId = group.avatarId || '';
-      participantName = group.name;
-      participantColor = group.color;
-      break;
-    case !!orgMember?.publicId:
-      participantType = 'orgMember';
-      participantTypePublicId = orgMember.publicId;
-      avatarPublicId = orgMember.profile.avatarId || '';
-      participantName = `${orgMember.profile.firstName} ${orgMember.profile.lastName}`;
-      participantColor = null;
-      break;
-    default:
-      participantType = 'orgMember';
-      participantTypePublicId = '';
-      avatarPublicId = '';
-      participantName = '';
-      participantColor = null;
-  }
-
-  return {
-    participantPublicId,
-    participantType,
-    participantTypePublicId,
-    avatarPublicId,
-    participantName,
-    participantColor,
-    participantRole,
-    participantSignaturePlainText,
-    participantSignatureHtml
+  const participantData: ConvoParticipantEntry = {
+    participantPublicId: participant.publicId,
+    typePublicId: typePublicId,
+    avatarProfilePublicId: avatarProfilePublicId,
+    avatarTimestamp:
+      participant.orgMember?.profile.avatarTimestamp ||
+      participant.group?.avatarTimestamp ||
+      participant.contact?.avatarTimestamp ||
+      null,
+    name:
+      participant.group?.name ||
+      participant.contact?.name ||
+      participant.orgMember?.profile.firstName +
+        ' ' +
+        participant.orgMember?.profile.lastName ||
+      '',
+    color: participant.group?.color || null,
+    type: participant.orgMember
+      ? 'orgMember'
+      : participant.group
+        ? 'group'
+        : 'contact',
+    role: participant.role,
+    signatureHtml: participant.contact?.signatureHtml || null,
+    signaturePlainText: participant.contact?.signaturePlainText || null
   };
+  return participantData;
 }
 
 export const useUtils = () => {

@@ -78,12 +78,12 @@
               ?.routingRules.destinations"
             :key="destination.id">
             <div
-              v-if="destination.groupId"
+              v-if="destination.groupId && destination.group"
               class="bg-base-2 flex flex-row items-center gap-8 rounded-xl p-2">
               <div class="flex flex-row items-center gap-4">
                 <UnUiAvatar
-                  :public-id="destination.group?.publicId || ''"
-                  :avatar-id="destination.group?.avatarId || ''"
+                  :public-id="destination.group?.publicId"
+                  :avatar-timestamp="destination.group?.avatarTimestamp"
                   :type="'group'"
                   :alt="destination.group?.name"
                   :color="destination.group?.color as UiColor"
@@ -101,12 +101,14 @@
             </div>
 
             <div
-              v-if="destination.orgMemberId"
+              v-if="destination.orgMemberId && destination.orgMember?.profile"
               class="bg-base-2 flex flex-row items-center gap-8 rounded-xl p-2">
               <div class="flex flex-row items-center gap-4">
                 <UnUiAvatar
-                  :public-id="destination.orgMember?.profile?.publicId || ''"
-                  :avatar-id="destination.orgMember?.profile?.avatarId || ''"
+                  :public-id="destination.orgMember?.profile?.publicId"
+                  :avatar-timestamp="
+                    destination.orgMember?.profile?.avatarTimestamp
+                  "
                   :type="'orgMember'"
                   :alt="
                     destination.orgMember?.profile?.firstName +

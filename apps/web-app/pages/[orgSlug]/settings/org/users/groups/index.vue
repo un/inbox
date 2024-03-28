@@ -1,5 +1,6 @@
 <script setup lang="ts">
   import { navigateTo, ref, useNuxtApp, useRoute, watch } from '#imports';
+  import type { TypeId } from '@u22n/utils';
 
   const { $trpc } = useNuxtApp();
   const orgSlug = useRoute().params.orgSlug as string;
@@ -33,18 +34,21 @@
   ];
 
   interface TableRow {
-    publicId: string;
-    avatarId: string;
+    publicId: TypeId<'groups'>;
+    avatarTimestamp: Date | null;
     name: string;
     description: string | null;
     color: string | null;
     members: ({
       publicId: string;
-      avatarId: string;
-      firstName: string | null;
-      lastName: string | null;
-      handle: string | null;
-      title: string | null;
+      orgMemberProfile: {
+        publicId: TypeId<'orgMemberProfile'>;
+        avatarTimestamp: Date | null;
+        firstName: string | null;
+        lastName: string | null;
+        handle: string | null;
+        title: string | null;
+      };
     } | null)[];
   }
 
@@ -55,7 +59,7 @@
       for (const group of newResults.groups) {
         tableRows.value.push({
           publicId: group.publicId,
-          avatarId: group.avatarId || '',
+          avatarTimestamp: group.avatarTimestamp,
           name: group.name,
           description: group.description,
           color: group.color,
@@ -110,7 +114,7 @@
           <div class="flex flex-row items-center gap-2">
             <UnUiAvatar
               :public-id="row.publicId"
-              :avatar-id="row.avatarId"
+              :avatar-timestamp="row.avatarTimestamp"
               :type="'orgMember'"
               :alt="row.name ? row.name : ''"
               :color="row.color ? row.color : ''"
@@ -126,20 +130,22 @@
               <UnUiAvatar
                 v-for="member in row.members"
                 :key="member.publicId"
-                :public-id="member.orgMember.publicId"
-                :avatar-id="member.orgMemberProfile.avatarId"
+                :public-id="member.orgMember.orgMemberProfile.publicId"
+                :avatar-timestamp="
+                  member.orgMemberProfile.orgMemberProfile.avatarTimestamp
+                "
                 :type="'orgMember'"
                 :alt="
-                  member.orgMemberProfile.firstName &&
-                  member.orgMemberProfile.lastName
-                    ? member.orgMemberProfile.firstName +
+                  member.orgMemberProfile.orgMemberProfile.firstName &&
+                  member.orgMemberProfile.orgMemberProfile.lastName
+                    ? member.orgMemberProfile.orgMemberProfile.firstName +
                       ' ' +
-                      member.orgMemberProfile.lastName
+                      member.orgMemberProfile.orgMemberProfile.lastName
                     : ''
                 "
                 :color="
-                  member.orgMemberProfile.color
-                    ? member.orgMemberProfile.color
+                  member.orgMemberProfile.orgMemberProfile.color
+                    ? member.orgMemberProfile.orgMemberProfile.color
                     : ''
                 "
                 size="xs" />

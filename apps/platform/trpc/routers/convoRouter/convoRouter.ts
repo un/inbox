@@ -1101,7 +1101,7 @@ export const convoRouter = router({
                 with: {
                   profile: {
                     columns: {
-                      avatarId: true,
+                      avatarTimestamp: true,
                       firstName: true,
                       lastName: true,
                       publicId: true,
@@ -1113,7 +1113,7 @@ export const convoRouter = router({
               },
               group: {
                 columns: {
-                  avatarId: true,
+                  avatarTimestamp: true,
                   id: true,
                   name: true,
                   color: true,
@@ -1130,7 +1130,7 @@ export const convoRouter = router({
               },
               contact: {
                 columns: {
-                  avatarId: true,
+                  avatarTimestamp: true,
                   publicId: true,
                   name: true,
                   emailUsername: true,
@@ -1285,7 +1285,7 @@ export const convoRouter = router({
                       publicId: true,
                       firstName: true,
                       lastName: true,
-                      avatarId: true,
+                      avatarTimestamp: true,
                       handle: true
                     }
                   }
@@ -1296,14 +1296,14 @@ export const convoRouter = router({
                   publicId: true,
                   name: true,
                   color: true,
-                  avatarId: true
+                  avatarTimestamp: true
                 }
               },
               contact: {
                 columns: {
                   publicId: true,
                   name: true,
-                  avatarId: true,
+                  avatarTimestamp: true,
                   setName: true,
                   emailUsername: true,
                   emailDomain: true,
@@ -1335,7 +1335,7 @@ export const convoRouter = router({
                           publicId: true,
                           firstName: true,
                           lastName: true,
-                          avatarId: true,
+                          avatarTimestamp: true,
                           handle: true
                         }
                       }
@@ -1346,14 +1346,14 @@ export const convoRouter = router({
                       publicId: true,
                       name: true,
                       color: true,
-                      avatarId: true
+                      avatarTimestamp: true
                     }
                   },
                   contact: {
                     columns: {
                       publicId: true,
                       name: true,
-                      avatarId: true,
+                      avatarTimestamp: true,
                       setName: true,
                       emailUsername: true,
                       emailDomain: true,

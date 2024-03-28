@@ -55,12 +55,12 @@
       titleValue.value = newVal.profile.title || '';
       blurbValue.value = newVal.profile.blurb || '';
 
-      if (newVal.profile.avatarId) {
-        imageUrl.value = useUtils().generateAvatarUrl(
-          'orgMember',
-          newVal.profile.avatarId,
-          '5xl'
-        ) as string;
+      if (newVal.profile.avatarTimestamp) {
+        imageUrl.value = useUtils().generateAvatarUrl({
+          publicId: newVal.profile.publicId!,
+          avatarTimestamp: newVal.profile.avatarTimestamp,
+          size: '5xl'
+        });
       }
     }
   });
@@ -86,6 +86,7 @@
   selectedFilesOnChange(async (selectedFiles) => {
     uploadLoading.value = true;
     if (!selectedFiles || !selectedFiles[0]) return;
+    if (!accountOrgProfile.value?.profile?.publicId) return;
     const formData = new FormData();
     // @ts-ignore
     const storageUrl = useRuntimeConfig().public.storageUrl;
@@ -95,21 +96,17 @@
       'publicId',
       accountOrgProfile.value?.profile?.publicId || ''
     );
-    formData.append(
-      'avatarId',
-      accountOrgProfile.value?.profile?.avatarId || ''
-    );
     const response = (await $fetch(`${storageUrl}/api/avatar`, {
       method: 'post',
       body: formData,
       credentials: 'include'
     })) as any;
-    if (response.avatarId) {
-      imageUrl.value = useUtils().generateAvatarUrl(
-        'orgMember',
-        response.avatarId,
-        '5xl'
-      ) as string;
+    if (response.avatarTimestamp) {
+      imageUrl.value = useUtils().generateAvatarUrl({
+        publicId: accountOrgProfile.value?.profile?.publicId,
+        avatarTimestamp: new Date(),
+        size: '5xl'
+      });
     }
     uploadLoading.value = false;
   });

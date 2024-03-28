@@ -40,25 +40,9 @@
   });
 
   for (const participant of props.convo.participants) {
-    const {
-      participantPublicId,
-      participantTypePublicId,
-      avatarPublicId,
-      participantName,
-      participantType,
-      participantColor,
-      participantRole
-    } = useUtils().convos.useParticipantData(participant);
-    const participantData: ConvoParticipantEntry = {
-      participantPublicId: participantPublicId,
-      typePublicId: participantTypePublicId,
-      avatarPublicId: avatarPublicId,
-      name: participantName,
-      type: participantType,
-      role: participantRole,
-      color: participantColor
-    };
-    if (participantTypePublicId === authorEntryPublicId.value) {
+    const participantData = useUtils().convos.useParticipantData(participant);
+    if (!participantData) continue;
+    if (participantData?.typePublicId === authorEntryPublicId.value) {
       author.value = participantData;
     } else {
       participantArray.value.push(participantData);

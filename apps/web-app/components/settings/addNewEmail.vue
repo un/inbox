@@ -10,6 +10,7 @@
     watchDebounced
   } from '#imports';
   import { useEE } from '~/composables/EE';
+  import type { TypeId } from '@u22n/utils';
 
   const { $trpc } = useNuxtApp();
 
@@ -79,8 +80,8 @@
       { server: false }
     );
   interface OrgUserGroups {
-    publicId: String;
-    avatarId: String;
+    publicId: TypeId<'groups'>;
+    avatarTimestamp: Date | null;
     name: String;
     description: String | null;
     color: String | null;
@@ -92,7 +93,7 @@
       for (const group of newOrgUserGroupsData.groups) {
         orgUserGroups.value.push({
           publicId: group.publicId,
-          avatarId: group.avatarId || '',
+          avatarTimestamp: group.avatarTimestamp,
           name: group.name,
           description: group.description,
           color: group.color
@@ -110,8 +111,9 @@
       { server: false }
     );
   interface OrgMembers {
-    publicId: String;
-    avatarId: String;
+    publicId: TypeId<'orgMembers'>;
+    profilePublicId: TypeId<'orgMemberProfile'>;
+    avatarTimestamp: Date | null;
     name: String;
     handle: String;
     title: String | null;
@@ -124,7 +126,8 @@
       for (const member of newOrgMembersData.members) {
         orgMembers.value.push({
           publicId: member.publicId,
-          avatarId: member.profile?.avatarId || '',
+          profilePublicId: member.profile?.publicId,
+          avatarTimestamp: member.profile?.avatarTimestamp,
           name:
             member.profile?.firstName + ' ' + member.profile?.lastName || '',
           handle: member.profile?.handle || '',
@@ -381,8 +384,8 @@
                       class="flex flex-row items-center gap-1 truncate">
                       <UnUiAvatar
                         :alt="group.name.toString()"
-                        :public-id="group.publicId?.toString()"
-                        :avatar-id="group.avatarId?.toString()"
+                        :public-id="group.publicId"
+                        :avatar-timestamp="group.avatarTimestamp"
                         :type="'group'"
                         :color="group.color as UiColor"
                         size="3xs" />
@@ -394,7 +397,7 @@
                 <template #option="{ option }">
                   <UnUiAvatar
                     :public-id="option.publicId"
-                    :avatar-id="option.avatarId"
+                    :avatar-timestamp="option.avatarTimestamp"
                     :type="'group'"
                     :alt="option.name"
                     :color="option.color as UiColor"
@@ -434,9 +437,10 @@
                       :key="index"
                       class="flex flex-row items-center gap-1 truncate">
                       <UnUiAvatar
+                        v-if="member.publicId"
+                        :public-id="member.profilePublicId"
                         :alt="member.name.toString()"
-                        :public-id="member.publicId?.toString()"
-                        :avatar-id="member.avatarId?.toString()"
+                        :avatar-timestamp="member.avatarTimestamp"
                         :type="'orgMember'"
                         size="3xs" />
                       <span>{{ member.name }}</span>
@@ -447,7 +451,7 @@
                 <template #option="{ option }">
                   <UnUiAvatar
                     :public-id="option.publicId"
-                    :avatar-id="option.avatarId"
+                    :avatar-timestamp="option.avatarTimestamp"
                     :type="'orgMember'"
                     :alt="option.name"
                     size="xs" />

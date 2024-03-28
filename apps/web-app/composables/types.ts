@@ -1,5 +1,6 @@
 import { useNuxtApp } from '#imports';
 import { uiColors } from '@u22n/types/ui';
+import type { TypeId } from '@u22n/utils';
 
 const { $trpc } = useNuxtApp();
 
@@ -18,9 +19,10 @@ export type ConvoAttachmentUpload = {
 };
 
 export type ConvoParticipantEntry = {
-  participantPublicId: string;
-  typePublicId: string;
-  avatarPublicId: string;
+  participantPublicId: TypeId<'convoParticipants'>;
+  typePublicId: TypeId<'orgMembers' | 'groups' | 'contacts'>;
+  avatarProfilePublicId: TypeId<'orgMemberProfile' | 'groups' | 'contacts'>;
+  avatarTimestamp: Date | null;
   name: string;
   type: 'orgMember' | 'group' | 'contact';
   role:

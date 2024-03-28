@@ -50,7 +50,7 @@
         tableRows.value.push({
           name: member.profile.firstName + ' ' + member.profile.lastName,
           publicId: member.profile.publicId,
-          avatarId: member.profile.avatarId || '',
+          avatarTimestamp: member.profile.avatarTimestamp,
           handle: member.profile.handle,
           title: member.profile.title,
           role: member.role,
@@ -93,7 +93,7 @@
           <div class="flex flex-row items-center gap-2">
             <UnUiAvatar
               :public-id="row.publicId"
-              :avatar-id="row.avatarId"
+              :avatar-timestamp="row.avatarTimestamp"
               :type="'orgMember'"
               :alt="row.name ? row.name : ''"
               size="xs" />
