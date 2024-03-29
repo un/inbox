@@ -1,98 +1,51 @@
 <script setup lang="ts">
   import { useInfiniteScroll } from '@vueuse/core';
-  import {
-    computed,
-    navigateTo,
-    ref,
-    useNuxtApp,
-    watch,
-    useRoute,
-    onMounted
-  } from '#imports';
-
-  const { $trpc } = useNuxtApp();
+  import { navigateTo, ref, useRoute, onMounted, storeToRefs } from '#imports';
+  import { useConvoStore } from '~/stores/convoStore';
 
   const orgSlug = useRoute().params.orgSlug as string;
   const infiniteContainer = ref<HTMLElement | null>(null);
 
-  const convoCursor = ref<{
-    cursorLastUpdatedAt: Date | null;
-    cursorLastPublicId: string | null;
-  }>({
-    cursorLastUpdatedAt: null,
-    cursorLastPublicId: null
-  });
-  const userHasMoreConvos = ref(true);
-  const pauseLoading = ref(false);
-  const convos = ref<{}[]>([]);
-
-  type UserConvoQueryParams =
-    | {
-        cursorLastUpdatedAt: Date;
-        cursorLastPublicId: string;
-      }
-    | {};
-  const userConvoQueryParams = ref<UserConvoQueryParams>({});
-  const userConvoQueryPending = computed(() => {
-    return userConvosStatus.value === 'idle';
-  });
-  const userHasConvos = computed(() => {
-    return convos.value.length > 0;
-  });
+  const convoStore = useConvoStore();
 
   const {
-    data: userConvosData,
-    status: userConvosStatus,
-    execute: getUserConvos
-  } = await $trpc.convos.getUserConvos.useLazyQuery(userConvoQueryParams, {
-    server: false,
-    queryKey: `userConvos-${orgSlug}`,
-    immediate: false,
-    watch: [userConvoQueryParams]
-  });
-
-  watch(
-    userConvosData,
-    (newVal) => {
-      if (!newVal) return;
-      if (!newVal.data || !newVal.cursor || newVal.data.length === 0) {
-        userHasMoreConvos.value = false;
-        return;
-      }
-      convos.value.push(...newVal.data);
-      convoCursor.value.cursorLastUpdatedAt = newVal.cursor.lastUpdatedAt;
-      convoCursor.value.cursorLastPublicId = newVal.cursor.lastPublicId;
-    },
-    {
-      immediate: true,
-      deep: true
-    }
-  );
+    pauseConvoLoading,
+    orgMemberConvos,
+    orgMemberHasConvos,
+    orgMemberHasMoreConvos,
+    convoQueryPending,
+    convoQueryParams,
+    convosListCursor
+  } = storeToRefs(convoStore);
 
   useInfiniteScroll(
     infiniteContainer,
     async () => {
-      if (pauseLoading.value) return;
-      if (!userHasMoreConvos.value) return;
-      if (userConvosStatus.value === 'pending') return;
-      pauseLoading.value = true;
-      userConvoQueryParams.value = {
-        cursorLastUpdatedAt: convoCursor.value.cursorLastUpdatedAt,
-        cursorLastPublicId: convoCursor.value.cursorLastPublicId
+      if (pauseConvoLoading.value) return;
+      if (!orgMemberHasMoreConvos.value) return;
+      if (convoQueryPending.value) return;
+      pauseConvoLoading.value = true;
+      convoQueryParams.value = {
+        cursorLastUpdatedAt: convosListCursor.value.cursorLastUpdatedAt,
+        cursorLastPublicId: convosListCursor.value.cursorLastPublicId
       };
-      pauseLoading.value = false;
+      await convoStore.getConvoList();
+      pauseConvoLoading.value = false;
     },
-    { distance: 100, canLoadMore: () => userHasMoreConvos.value }
+    {
+      distance: 100,
+      canLoadMore: () => orgMemberHasMoreConvos.value
+    }
   );
 
   onMounted(() => {
-    if (convos.value.length === 0) getUserConvos();
+    if (orgMemberConvos.value.length === 0) convoStore.getConvoList();
   });
 </script>
 <template>
   <div class="h-full max-h-full w-full max-w-full overflow-hidden">
     <div
-      v-if="userConvoQueryPending"
+      v-if="convoQueryPending"
       class="bg-base-3 flex w-full flex-row justify-center gap-4 rounded-xl rounded-tl-2xl p-8">
       <UnUiIcon
         name="i-svg-spinners:3-dots-fade"
@@ -100,7 +53,7 @@
       <span>Loading conversations</span>
     </div>
     <div
-      v-if="!userConvoQueryPending"
+      v-if="!convoQueryPending"
       class="mb-[48px] flex max-h-full flex-col items-start gap-4 overflow-hidden">
       <!-- <UnUiButton
         label="Refresh"
@@ -108,7 +61,7 @@
         :loading="userConvosStatus === 'pending'"
         @click="refreshUserConvos()" /> -->
       <div
-        v-if="!userHasConvos"
+        v-if="!orgMemberHasConvos"
         class="bg-base-3 flex w-full flex-row justify-center gap-4 rounded-xl rounded-tl-2xl p-8">
         <UnUiIcon
           name="i-ph-chat-circle"
@@ -116,13 +69,13 @@
         <span>No conversations found</span>
       </div>
       <div
-        v-if="userHasConvos"
+        v-if="orgMemberHasConvos"
         ref="infiniteContainer"
         class="h-full max-h-full w-full max-w-full overflow-auto">
         <DynamicScroller
-          :items="convos"
+          :items="orgMemberConvos"
           key-field="publicId"
-          :min-item-size="48">
+          :min-item-size="24">
           <template #default="{ item, index, active }">
             <DynamicScrollerItem
               :item="item"
@@ -136,7 +89,7 @@
           </template>
         </DynamicScroller>
         <div
-          v-if="userHasMoreConvos && pauseLoading"
+          v-if="orgMemberHasMoreConvos && pauseConvoLoading"
           class="bg-base-3 flex w-full flex-row justify-center gap-4 rounded-xl rounded-tl-2xl p-8">
           <UnUiIcon
             name="i-svg-spinners:3-dots-fade"

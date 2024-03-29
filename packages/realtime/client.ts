@@ -12,7 +12,7 @@ export default class RealtimeClient {
       authEndpoint: string;
     }
   ) {}
-  public async connect() {
+  public async connect({ orgSlug }: { orgSlug: string }) {
     if (this.client) return;
     const client = new Pusher(this.config.appKey, {
       wsHost: this.config.host,
@@ -25,7 +25,10 @@ export default class RealtimeClient {
           const res = await fetch(this.config.authEndpoint, {
             body: JSON.stringify(params),
             method: 'POST',
-            credentials: 'include'
+            credentials: 'include',
+            headers: {
+              'org-slug': `${orgSlug}`
+            }
           });
           if (!res.ok) {
             return callback(new Error('Unauthorized'), null);

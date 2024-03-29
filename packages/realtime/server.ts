@@ -35,21 +35,28 @@ export default class RealtimeServer {
     );
   }
 
-  public async emit<const T extends keyof EventDataMap>(
-    accountIds: TypeId<'account'> | TypeId<'account'>[],
-    event: T,
-    data: z.infer<EventDataMap[T]>
-  ) {
-    if (typeof accountIds === 'string') accountIds = [accountIds];
+  public async emit<const T extends keyof EventDataMap>({
+    orgMemberIds,
+    event,
+    data
+  }: {
+    orgMemberIds: TypeId<'orgMembers'> | TypeId<'orgMembers'>[];
+    event: T;
+    data: z.infer<EventDataMap[T]>;
+  }) {
+    if (typeof orgMemberIds === 'string') orgMemberIds = [orgMemberIds];
     // Parse the data before sending it to the client, ensuring it matches the schema
-    for (const id of accountIds) {
+    for (const id of orgMemberIds) {
       await this.pusher.sendToUser(id, event, eventDataMaps[event].parse(data));
     }
   }
 
-  public authenticate(socketId: string, accountId: TypeId<'account'>) {
+  public authenticate(
+    socketId: string,
+    orgMemberPublicId: TypeId<'orgMembers'>
+  ) {
     return this.pusher.authenticateUser(socketId, {
-      id: accountId
+      id: orgMemberPublicId
     });
   }
 }
