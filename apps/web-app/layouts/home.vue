@@ -20,6 +20,9 @@
       convoPublicId: convoEntry.convoPublicId,
       convoEntryPublicId: convoEntry.convoEntryPublicId
     });
+    await convoStore.refreshConvoInList({
+      convoPublicId: convoEntry.convoPublicId
+    });
     return;
   });
 </script>

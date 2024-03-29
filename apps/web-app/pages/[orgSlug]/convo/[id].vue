@@ -309,9 +309,11 @@
       });
       return;
     }
+    actionLoading.value = false;
+    messageEditorData.value = emptyTiptapEditorContent;
     toast.add({
       title: 'Reply Added',
-      description: `Refreshing...`,
+      description: `Loading...`,
       icon: 'i-ph-thumbs-up',
       timeout: 5000
     });
@@ -430,12 +432,14 @@
             <UnUiButton
               label="Note"
               icon="i-ph-note"
+              :disabled="actionLoading"
               variant="outline" />
             <UnUiButton
               label="Send"
               icon="i-ph-envelope"
               variant="outline"
-              :disabled="!formValid"
+              :loading="actionLoading"
+              :disabled="!formValid || actionLoading"
               @click="createNewReply('message')" />
           </div>
         </div>

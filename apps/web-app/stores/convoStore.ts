@@ -17,7 +17,11 @@ export const useConvoStore = defineStore(
     });
     const orgMemberHasMoreConvos = ref(true);
     const pauseConvoLoading = ref(false);
-    const orgMemberConvos = ref<{}[]>([]);
+
+    type OrgMemberConvosDataType = Awaited<
+      ReturnType<typeof $trpc.convos.getOrgMemberConvos.query>
+    >['data'];
+    const orgMemberConvos = ref<OrgMemberConvosDataType>([]);
 
     type UserConvoQueryParams =
       | {
@@ -34,9 +38,7 @@ export const useConvoStore = defineStore(
     async function getConvoList() {
       convoQueryPending.value = true;
       const { data: convosListData } =
-        await $trpc.convos.getOrgMemberConvos.useQuery(convoQueryParams, {
-          queryKey: `convos-${orgSlug}`
-        });
+        await $trpc.convos.getOrgMemberConvos.useQuery(convoQueryParams);
 
       if (!convosListData.value) {
         convoQueryPending.value = false;
@@ -51,6 +53,7 @@ export const useConvoStore = defineStore(
         convoQueryPending.value = false;
         return;
       }
+      // @ts-ignore - no idea why this errors out
       orgMemberConvos.value.push(...convosListData.value.data);
       convosListCursor.value.cursorLastUpdatedAt =
         convosListData.value.cursor.lastUpdatedAt;
@@ -66,20 +69,34 @@ export const useConvoStore = defineStore(
       convoPublicId: TypeId<'convos'>;
     }) {
       const { data: newConvo } =
-        await $trpc.convos.getOrgMemberSpecificConvo.useQuery(
-          { convoPublicId },
-          {
-            queryKey: `convo-${convoPublicId}`
-          }
-        );
+        await $trpc.convos.getOrgMemberSpecificConvo.useQuery({
+          convoPublicId
+        });
       if (!newConvo.value || !('publicId' in newConvo.value)) return;
       //! send push notification
+      // @ts-ignore - no idea why this errors out
       orgMemberConvos.value.unshift(newConvo.value);
+    }
+
+    async function refreshConvoInList({
+      convoPublicId
+    }: {
+      convoPublicId: TypeId<'convos'>;
+    }) {
+      const convoIndex = orgMemberConvos.value.findIndex(
+        (convo) => convo.publicId === convoPublicId
+      );
+
+      if (convoIndex === -1) return;
+
+      orgMemberConvos.value.splice(convoIndex, 1);
+      await fetchAndAddSingleConvo({ convoPublicId });
     }
 
     return {
       getConvoList,
       fetchAndAddSingleConvo,
+      refreshConvoInList,
       orgMemberConvos,
       orgMemberHasConvos,
       orgMemberHasMoreConvos,

@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { useInfiniteScroll } from '@vueuse/core';
-  import { ref, useNuxtApp } from '#imports';
+  import { ref, useNuxtApp, watch } from '#imports';
   import { type ConvoEntryMetadata } from '@u22n/database/schema';
   import { useConvoEntryStore } from '~/stores/convoEntryStore';
   import type { TypeId } from '@u22n/utils';
@@ -25,34 +25,20 @@
     'replyToMessageMetadata'
   );
 
-  // const {
-  //   data: convoEntries
-  //   // refresh: convoEntriesRefresh,
-  //   // status: convoEntriesStatus
-  // } = await $trpc.convos.entries.getConvoEntries.useLazyQuery(
-  //   {
-  //     convoPublicId: props.convoPublicId
-  //   },
-  //   { server: false, queryKey: `convoEntries-${props.convoPublicId}` }
-  // );
-
-  // watch(convoEntries, () => {
-  //   if (convoEntries.value && convoEntries.value.entries) {
-  //     entriesArray.value.push(...convoEntries.value.entries);
-  //     setReplyToMessagePublicId(convoEntries.value.entries[0]?.publicId ?? '');
-  //   }
-  // });
-
   const convoEntryStore = useConvoEntryStore();
 
-  // await convoEntryStore.getConvoEntries({
-  //   convoPublicId: props.convoPublicId
-  // });
   const convoEntries = await convoEntryStore.getConvoEntries({
     convoPublicId: props.convoPublicId
   });
   entriesArray.value = convoEntries?.entries ?? [];
   setReplyToMessagePublicId(entriesArray.value[0]?.publicId ?? '');
+  watch(
+    entriesArray,
+    () => {
+      setReplyToMessagePublicId(entriesArray.value[0]?.publicId ?? '');
+    },
+    { deep: true }
+  );
 
   useInfiniteScroll(
     el,
