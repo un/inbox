@@ -18,6 +18,7 @@
   import { tiptapVue3, emptyTiptapEditorContent } from '@u22n/tiptap';
   import { type ConvoEntryMetadata } from '@u22n/database/schema';
   import { stringify } from 'superjson';
+  import { validateTypeId, type TypeId } from '@u22n/utils';
 
   const { $trpc } = useNuxtApp();
 
@@ -55,7 +56,12 @@
   const replyToMessageMetadata = ref<ConvoEntryMetadata | undefined>(undefined);
 
   const orgSlug = useRoute().params.orgSlug as string;
-  const convoPublicId = useRoute().params.id as string;
+
+  const convoPublicId = useRoute().params.id as TypeId<'convos'>;
+  if (!validateTypeId('convos', convoPublicId)) {
+    await navigateTo(`/${orgSlug}/convo/404`);
+  }
+
   const { data: convoDetails, status: convoDetailsStatus } =
     await $trpc.convos.getConvo.useLazyQuery(
       {

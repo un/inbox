@@ -1,6 +1,6 @@
 import { eventHandler, createError, readBody } from 'h3';
 import { z } from 'zod';
-import { realtime } from '../../realtime';
+import { realtime } from '../../utils/realtime';
 import { validateTypeId } from '@u22n/utils';
 import { db } from '@u22n/database';
 import { and, eq } from '@u22n/database/orm';

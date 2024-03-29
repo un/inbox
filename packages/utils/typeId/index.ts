@@ -59,5 +59,5 @@ export const typeIdDataType = <const T extends IdTypePrefixes>(
 
 export const validateTypeId = <const T extends IdTypePrefixes>(
   prefix: T,
-  data: string
+  data: unknown
 ): data is TypeId<T> => typeIdValidator(prefix).safeParse(data).success;

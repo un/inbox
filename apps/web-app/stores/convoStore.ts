@@ -72,9 +72,8 @@ export const useConvoStore = defineStore(
             queryKey: `convo-${convoPublicId}`
           }
         );
-      if (!newConvo.value || !newConvo.value.publicId) return;
-      convosListCursor.value.cursorLastUpdatedAt = newConvo.value.lastUpdatedAt;
-      convosListCursor.value.cursorLastPublicId = convoPublicId;
+      if (!newConvo.value || !('publicId' in newConvo.value)) return;
+      //! send push notification
       orgMemberConvos.value.unshift(newConvo.value);
     }
 

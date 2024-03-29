@@ -4,10 +4,11 @@ import { eq } from '@u22n/database/orm';
 import { convoEntries, convos } from '@u22n/database/schema';
 import RealtimeServer from '@u22n/realtime/server';
 import type { TypeId } from '@u22n/utils';
+
 export const realtime = new RealtimeServer(useRuntimeConfig().realtime);
 
 export async function sendRealtimeNotification({
-  newConvo: newConvo,
+  newConvo,
   convoId,
   convoEntryId
 }: {

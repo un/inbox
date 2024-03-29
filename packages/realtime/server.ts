@@ -36,17 +36,18 @@ export default class RealtimeServer {
   }
 
   public async emit<const T extends keyof EventDataMap>({
-    orgMemberIds,
+    orgMemberPublicIds,
     event,
     data
   }: {
-    orgMemberIds: TypeId<'orgMembers'> | TypeId<'orgMembers'>[];
+    orgMemberPublicIds: TypeId<'orgMembers'> | TypeId<'orgMembers'>[];
     event: T;
     data: z.infer<EventDataMap[T]>;
   }) {
-    if (typeof orgMemberIds === 'string') orgMemberIds = [orgMemberIds];
+    if (typeof orgMemberPublicIds === 'string')
+      orgMemberPublicIds = [orgMemberPublicIds];
     // Parse the data before sending it to the client, ensuring it matches the schema
-    for (const id of orgMemberIds) {
+    for (const id of orgMemberPublicIds) {
       await this.pusher.sendToUser(id, event, eventDataMaps[event].parse(data));
     }
   }

@@ -34,7 +34,7 @@ import { TRPCError } from '@trpc/server';
 import { tipTapExtensions } from '@u22n/tiptap/extensions';
 import { tiptapCore, type tiptapVue3 } from '@u22n/tiptap';
 import { convoEntryRouter } from './entryRouter';
-import { realtime } from '../../../realtime';
+import { realtime, sendRealtimeNotification } from '../../../utils/realtime';
 
 export const convoRouter = router({
   entries: convoEntryRouter,
@@ -696,7 +696,7 @@ export const convoRouter = router({
       }
 
       realtime.emit({
-        orgMemberIds: orgMemberPublicIdsForNotifications,
+        orgMemberPublicIds: orgMemberPublicIdsForNotifications,
         event: 'convo:new',
         data: { publicId: newConvoPublicId }
       });
@@ -989,6 +989,13 @@ export const convoRouter = router({
           )
         );
       }
+
+      //* send notifications
+      await sendRealtimeNotification({
+        newConvo: false,
+        convoId: Number(convoEntryToReplyToQueryResponse.convoId),
+        convoEntryId: Number(insertConvoEntryResponse.insertId)
+      });
 
       //* if convo has contacts, send external email via mail bridge
 
