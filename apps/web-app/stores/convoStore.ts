@@ -1,12 +1,11 @@
 import { ref, computed } from 'vue';
-import { defineStore, acceptHMRUpdate, useRoute, useNuxtApp } from '#imports';
+import { defineStore, acceptHMRUpdate, useNuxtApp } from '#imports';
 import type { TypeId } from '@u22n/utils';
 
 export const useConvoStore = defineStore(
   'convos',
   () => {
     const { $trpc } = useNuxtApp();
-    const orgSlug = useRoute().params.orgSlug as string;
 
     const convosListCursor = ref<{
       cursorLastUpdatedAt: Date | null;

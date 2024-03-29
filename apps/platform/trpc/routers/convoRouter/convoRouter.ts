@@ -1445,8 +1445,6 @@ export const convoRouter = router({
       const { db, org } = ctx;
       const { convoPublicId } = input;
 
-      const orgMemberId = org.memberId;
-
       const convoQuery = await db.query.convos.findFirst({
         columns: {
           publicId: true,
