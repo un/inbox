@@ -2,3 +2,4 @@ node_modules
 .turbo
 .pnpm-store
 .nuxt
+pnpm-lock.yaml
