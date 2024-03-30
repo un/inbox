@@ -122,7 +122,7 @@ function createRatelimiter({
   duration: Duration;
   namespace: string;
 }) {
-  const rootKey = useRuntimeConfig().unkey.rootKey;
+  const rootKey = (useRuntimeConfig().unkey as any).rootKey;
   const unkey = rootKey
     ? new Ratelimit({
         async: true,
@@ -147,19 +147,21 @@ function createRatelimiter({
 }
 
 export const publicProcedure = trpcContext.procedure;
+const limitedProcedure = trpcContext.procedure
+  .input(z.object({ turnstileToken: z.string() }))
+  .use(turnstileTokenValidation);
 
 export const publicRateLimitedProcedure = Object.entries(
   publicRateLimits
 ).reduce(
   (acc, [key, [limit, duration]]) => {
     // @ts-expect-error, we know this is a valid key
-    acc[key] = trpcContext.procedure
-      .input(z.object({ turnstileToken: z.string() }))
-      .use(turnstileTokenValidation)
-      .use(createRatelimiter({ limit, duration, namespace: `public.${key}` }));
+    acc[key] = limitedProcedure.use(
+      createRatelimiter({ limit, duration, namespace: `public.${key}` })
+    );
     return acc;
   },
-  {} as Record<keyof typeof publicRateLimits, typeof publicProcedure>
+  {} as Record<keyof typeof publicRateLimits, typeof limitedProcedure>
 );
 
 export const accountProcedure = trpcContext.procedure.use(
