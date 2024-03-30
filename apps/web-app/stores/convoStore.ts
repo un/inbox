@@ -52,7 +52,7 @@ export const useConvoStore = defineStore(
         convoQueryPending.value = false;
         return;
       }
-      // @ts-ignore - no idea why this errors out
+
       orgMemberConvos.value.push(...convosListData.value.data);
       convosListCursor.value.cursorLastUpdatedAt =
         convosListData.value.cursor.lastUpdatedAt;
@@ -73,7 +73,6 @@ export const useConvoStore = defineStore(
         });
       if (!newConvo.value || !('publicId' in newConvo.value)) return;
       //! send push notification
-      // @ts-ignore - no idea why this errors out
       orgMemberConvos.value.unshift(newConvo.value);
     }
 

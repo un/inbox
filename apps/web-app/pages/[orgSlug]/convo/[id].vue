@@ -39,15 +39,14 @@
   const participantCommentersArray = ref<ConvoParticipantEntry[]>([]);
   const participantWatchersArray = ref<ConvoParticipantEntry[]>([]);
   const participantGuestsArray = ref<ConvoParticipantEntry[]>([]);
-  const participantsAll = computed(() => {
-    return [
-      ...participantsAssignedArray.value,
-      ...participantContributorsArray.value,
-      ...participantCommentersArray.value,
-      ...participantWatchersArray.value,
-      ...participantGuestsArray.value
-    ];
-  });
+  const participantsAll = computed(() =>
+    participantsAssignedArray.value.concat(
+      participantContributorsArray.value,
+      participantCommentersArray.value,
+      participantWatchersArray.value,
+      participantGuestsArray.value
+    )
+  );
   const createDate = ref<Date | null>(null);
   const updateDate = ref<Date | null>(null);
   const createdAgo = ref('');

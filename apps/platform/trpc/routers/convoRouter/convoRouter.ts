@@ -1418,7 +1418,7 @@ export const convoRouter = router({
 
       if (!convoQuery.length) {
         return {
-          data: [],
+          data: <typeof convoQuery>[],
           cursor: null
         };
       }
@@ -1557,9 +1557,7 @@ export const convoRouter = router({
       });
 
       if (!convoQuery || !convoQuery?.publicId) {
-        return {
-          data: []
-        };
+        return null;
       }
 
       return convoQuery;
