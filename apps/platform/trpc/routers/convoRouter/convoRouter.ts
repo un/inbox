@@ -34,6 +34,7 @@ import { TRPCError } from '@trpc/server';
 import { tipTapExtensions } from '@u22n/tiptap/extensions';
 import { tiptapCore, type tiptapVue3 } from '@u22n/tiptap';
 import { convoEntryRouter } from './entryRouter';
+import { realtime, sendRealtimeNotification } from '../../../utils/realtime';
 
 export const convoRouter = router({
   entries: convoEntryRouter,
@@ -110,10 +111,34 @@ export const convoRouter = router({
         publicId: string;
         emailIdentityId: number | null;
       };
-      const orgMemberIds: IdPair[] = [];
+      type IdPairOrgMembers = {
+        id: number;
+        publicId: TypeId<'orgMembers'>;
+        emailIdentityId: number | null;
+      };
+      const orgMemberIds: IdPairOrgMembers[] = [];
+      const orgMemberPublicIdsForNotifications: TypeId<'orgMembers'>[] = [];
       const orgGroupIds: IdPair[] = [];
       const orgContactIds: IdPair[] = [];
       const orgContactReputationIds: number[] = [];
+
+      // get the authors publicId for the notifications
+      const authorOrgMemberObject = await db.query.orgMembers.findFirst({
+        where: and(
+          eq(orgMembers.orgId, orgId),
+          eq(orgMembers.id, accountOrgMemberId)
+        ),
+        columns: {
+          publicId: true
+        }
+      });
+      if (!authorOrgMemberObject) {
+        throw new TRPCError({
+          code: 'UNPROCESSABLE_CONTENT',
+          message: 'account is not a member of the organization'
+        });
+      }
+      orgMemberPublicIdsForNotifications.push(authorOrgMemberObject.publicId);
 
       // validate the publicIds of Users and get the IDs
       if (
@@ -152,7 +177,7 @@ export const convoRouter = router({
             emailIdentityId =
               orgMember.authorizedEmailIdentities[0]?.emailIdentity.id;
           }
-          const orgMemberIdObject: IdPair = {
+          const orgMemberIdObject: IdPairOrgMembers = {
             id: orgMember.id,
             publicId: orgMember.publicId,
             emailIdentityId: emailIdentityId || null
@@ -400,6 +425,7 @@ export const convoRouter = router({
             orgMemberId: orgMemberId.id,
             emailIdentityId: orgMemberId.emailIdentityId
           });
+          orgMemberPublicIdsForNotifications.push(orgMemberId.publicId);
         });
         await db
           .insert(convoParticipants)
@@ -436,6 +462,13 @@ export const convoRouter = router({
             ),
             columns: {
               orgMemberId: true
+            },
+            with: {
+              orgMember: {
+                columns: {
+                  publicId: true
+                }
+              }
             }
           });
           if (groupMembersQuery.length > 0) {
@@ -486,6 +519,9 @@ export const convoRouter = router({
                   orgId: orgId
                 });
               }
+              orgMemberPublicIdsForNotifications.push(
+                groupMember.orgMember.publicId
+              );
             }
           }
         }
@@ -658,6 +694,12 @@ export const convoRouter = router({
           orgId: orgId
         });
       }
+
+      realtime.emit({
+        orgMemberPublicIds: orgMemberPublicIdsForNotifications,
+        event: 'convo:new',
+        data: { publicId: newConvoPublicId }
+      });
 
       return {
         status: 'success',
@@ -948,6 +990,13 @@ export const convoRouter = router({
         );
       }
 
+      //* send notifications
+      await sendRealtimeNotification({
+        newConvo: false,
+        convoId: Number(convoEntryToReplyToQueryResponse.convoId),
+        convoEntryId: Number(insertConvoEntryResponse.insertId)
+      });
+
       //* if convo has contacts, send external email via mail bridge
 
       if (
@@ -1212,7 +1261,7 @@ export const convoRouter = router({
     )
     .query(async () => {}),
 
-  getUserConvos: orgProcedure
+  getOrgMemberConvos: orgProcedure
     .input(
       z.object({
         cursorLastUpdatedAt: z.date().optional(),
@@ -1369,7 +1418,7 @@ export const convoRouter = router({
 
       if (!convoQuery.length) {
         return {
-          data: [],
+          data: <typeof convoQuery>[],
           cursor: null
         };
       }
@@ -1385,5 +1434,132 @@ export const convoRouter = router({
           lastPublicId: newCursorLastPublicId
         }
       };
+    }),
+  getOrgMemberSpecificConvo: orgProcedure
+    .input(
+      z.object({
+        convoPublicId: typeIdValidator('convos')
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const { db, org } = ctx;
+      const { convoPublicId } = input;
+
+      const convoQuery = await db.query.convos.findFirst({
+        columns: {
+          publicId: true,
+          lastUpdatedAt: true
+        },
+        where: and(
+          eq(convos.publicId, convoPublicId),
+          eq(convos.orgId, org.id)
+        ),
+        with: {
+          subjects: {
+            columns: {
+              subject: true
+            }
+          },
+          participants: {
+            columns: {
+              role: true,
+              publicId: true
+            },
+            with: {
+              orgMember: {
+                columns: { publicId: true },
+                with: {
+                  profile: {
+                    columns: {
+                      publicId: true,
+                      firstName: true,
+                      lastName: true,
+                      avatarTimestamp: true,
+                      handle: true
+                    }
+                  }
+                }
+              },
+              group: {
+                columns: {
+                  publicId: true,
+                  name: true,
+                  color: true,
+                  avatarTimestamp: true
+                }
+              },
+              contact: {
+                columns: {
+                  publicId: true,
+                  name: true,
+                  avatarTimestamp: true,
+                  setName: true,
+                  emailUsername: true,
+                  emailDomain: true,
+                  type: true,
+                  signaturePlainText: true,
+                  signatureHtml: true
+                }
+              }
+            }
+          },
+          entries: {
+            orderBy: [desc(convoEntries.createdAt)],
+            limit: 1,
+            columns: {
+              bodyPlainText: true,
+              type: true
+            },
+            with: {
+              author: {
+                columns: {},
+                with: {
+                  orgMember: {
+                    columns: {
+                      publicId: true
+                    },
+                    with: {
+                      profile: {
+                        columns: {
+                          publicId: true,
+                          firstName: true,
+                          lastName: true,
+                          avatarTimestamp: true,
+                          handle: true
+                        }
+                      }
+                    }
+                  },
+                  group: {
+                    columns: {
+                      publicId: true,
+                      name: true,
+                      color: true,
+                      avatarTimestamp: true
+                    }
+                  },
+                  contact: {
+                    columns: {
+                      publicId: true,
+                      name: true,
+                      avatarTimestamp: true,
+                      setName: true,
+                      emailUsername: true,
+                      emailDomain: true,
+                      type: true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      });
+
+      if (!convoQuery || !convoQuery?.publicId) {
+        return null;
+      }
+
+      return convoQuery;
     })
 });

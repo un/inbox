@@ -5,7 +5,7 @@ import {
   groups,
   contacts
 } from '@u22n/database/schema';
-import { nanoIdLong, validateTypeId } from '@u22n/utils';
+import { validateTypeId } from '@u22n/utils';
 import { eq } from '@u22n/database/orm';
 import { db } from '@u22n/database';
 import sharp from 'sharp';

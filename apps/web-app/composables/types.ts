@@ -5,7 +5,7 @@ import type { TypeId } from '@u22n/utils';
 const { $trpc } = useNuxtApp();
 
 export type UserConvosDataType = Awaited<
-  ReturnType<typeof $trpc.convos.getUserConvos.query>
+  ReturnType<typeof $trpc.convos.getOrgMemberConvos.query>
 >['data'];
 export type UserConvoDataType = Awaited<
   ReturnType<typeof $trpc.convos.getConvo.useLazyQuery>

@@ -18,6 +18,7 @@
   import { tiptapVue3, emptyTiptapEditorContent } from '@u22n/tiptap';
   import { type ConvoEntryMetadata } from '@u22n/database/schema';
   import { stringify } from 'superjson';
+  import { validateTypeId, type TypeId } from '@u22n/utils';
 
   const { $trpc } = useNuxtApp();
 
@@ -38,15 +39,14 @@
   const participantCommentersArray = ref<ConvoParticipantEntry[]>([]);
   const participantWatchersArray = ref<ConvoParticipantEntry[]>([]);
   const participantGuestsArray = ref<ConvoParticipantEntry[]>([]);
-  const participantsAll = computed(() => {
-    return [
-      ...participantsAssignedArray.value,
-      ...participantContributorsArray.value,
-      ...participantCommentersArray.value,
-      ...participantWatchersArray.value,
-      ...participantGuestsArray.value
-    ];
-  });
+  const participantsAll = computed(() =>
+    participantsAssignedArray.value.concat(
+      participantContributorsArray.value,
+      participantCommentersArray.value,
+      participantWatchersArray.value,
+      participantGuestsArray.value
+    )
+  );
   const createDate = ref<Date | null>(null);
   const updateDate = ref<Date | null>(null);
   const createdAgo = ref('');
@@ -55,7 +55,12 @@
   const replyToMessageMetadata = ref<ConvoEntryMetadata | undefined>(undefined);
 
   const orgSlug = useRoute().params.orgSlug as string;
-  const convoPublicId = useRoute().params.id as string;
+
+  const convoPublicId = useRoute().params.id as TypeId<'convos'>;
+  if (!validateTypeId('convos', convoPublicId)) {
+    await navigateTo(`/${orgSlug}/convo/404`);
+  }
+
   const { data: convoDetails, status: convoDetailsStatus } =
     await $trpc.convos.getConvo.useLazyQuery(
       {
@@ -303,9 +308,11 @@
       });
       return;
     }
+    actionLoading.value = false;
+    messageEditorData.value = emptyTiptapEditorContent;
     toast.add({
       title: 'Reply Added',
-      description: `Refreshing...`,
+      description: `Loading...`,
       icon: 'i-ph-thumbs-up',
       timeout: 5000
     });
@@ -424,12 +431,14 @@
             <UnUiButton
               label="Note"
               icon="i-ph-note"
+              :disabled="actionLoading"
               variant="outline" />
             <UnUiButton
               label="Send"
               icon="i-ph-envelope"
               variant="outline"
-              :disabled="!formValid"
+              :loading="actionLoading"
+              :disabled="!formValid || actionLoading"
               @click="createNewReply('message')" />
           </div>
         </div>

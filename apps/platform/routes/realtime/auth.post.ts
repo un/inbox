@@ -1,7 +1,11 @@
 import { eventHandler, createError, readBody } from 'h3';
 import { z } from 'zod';
-import { realtime } from '../../realtime';
+import { realtime } from '../../utils/realtime';
 import { validateTypeId } from '@u22n/utils';
+import { db } from '@u22n/database';
+import { and, eq } from '@u22n/database/orm';
+import { orgMembers } from '@u22n/database/schema';
+import type { AccountContext, OrgContext } from '@u22n/types';
 
 const bodySchema = z.object({
   socketId: z.string()
@@ -16,12 +20,6 @@ const safeBodyParse = (body: any) => {
 };
 
 export default eventHandler(async (event) => {
-  if (!event.context.account || !event.context.account.session.id) {
-    throw createError({
-      status: 403,
-      message: 'Forbidden'
-    });
-  }
   const body = safeBodyParse(await readBody(event));
   if (!body.success) {
     throw createError({
@@ -29,14 +27,47 @@ export default eventHandler(async (event) => {
       message: 'Invalid request'
     });
   }
-  const accountId =
-    event.context.account.session?.attributes?.account?.publicId;
 
-  if (!validateTypeId('account', accountId)) {
+  const orgContext: OrgContext = await event.context.org;
+  const accountContext: AccountContext = await event.context.account;
+
+  if (!orgContext || !accountContext) {
     throw createError({
       status: 403,
       message: 'Forbidden'
     });
   }
-  return realtime.authenticate(body.data.socketId, accountId);
+
+  const orgMemberId = orgContext?.members.find(
+    (m) => m.accountId === accountContext.id
+  )?.id;
+  if (!orgMemberId) {
+    throw createError({
+      status: 403,
+      message: 'Forbidden'
+    });
+  }
+
+  const orgMemberObject = await db.query.orgMembers.findFirst({
+    where: and(
+      eq(orgMembers.id, orgMemberId),
+      eq(orgMembers.orgId, orgContext.id)
+    ),
+    columns: { publicId: true }
+  });
+  if (!orgMemberObject) {
+    throw createError({
+      status: 403,
+      message: 'Forbidden'
+    });
+  }
+
+  const orgMemberPublicId = orgMemberObject?.publicId;
+  if (!validateTypeId('orgMembers', orgMemberPublicId)) {
+    throw createError({
+      status: 403,
+      message: 'Forbidden'
+    });
+  }
+  return realtime.authenticate(body.data.socketId, orgMemberPublicId);
 });

@@ -31,6 +31,7 @@ import {
   parseAddressIds,
   useRuntimeConfig
 } from '#imports';
+import { sendRealtimeNotification } from '../../../../utils/realtime';
 
 // TODO!: remove all `|| <default>` and `<nullish>?.` shortcuts in favour of proper error handling
 
@@ -815,6 +816,14 @@ export default eventHandler(async (event) => {
       })
     );
   }
+
+  ///! Notifications
+
+  await sendRealtimeNotification({
+    newConvo: !inReplyToEmailId || hasReplyToButIsNewConvo || false,
+    convoId: convoId,
+    convoEntryId: +insertNewConvoEntry.insertId
+  });
 
   // send alerts
   return;
