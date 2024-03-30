@@ -1,5 +1,9 @@
 import { z } from 'zod';
-import { limitedProcedure, router, accountProcedure } from '../../trpc';
+import {
+  router,
+  accountProcedure,
+  publicRateLimitedProcedure
+} from '../../trpc';
 import { eq } from '@u22n/database/orm';
 import { accountCredentials, accounts } from '@u22n/database/schema';
 import { TRPCError } from '@trpc/server';
@@ -64,7 +68,7 @@ export const passkeyRouter = router({
   //     return { options: passkeyOptions };
   //   }),
 
-  signUpWithPasskeyStart: limitedProcedure
+  signUpWithPasskeyStart: publicRateLimitedProcedure.signUpPasskeyStart
     .input(
       z.object({
         username: zodSchemas.username(),
@@ -82,7 +86,7 @@ export const passkeyRouter = router({
       });
       return { publicId, options: passkeyOptions };
     }),
-  signUpWithPasskeyFinish: limitedProcedure
+  signUpWithPasskeyFinish: publicRateLimitedProcedure.signUpPasskeyFinish
     .input(
       z.object({
         registrationResponseRaw: z.any(),
@@ -251,7 +255,7 @@ export const passkeyRouter = router({
       return { success: true };
     }),
 
-  generatePasskeyChallenge: limitedProcedure
+  generatePasskeyChallenge: publicRateLimitedProcedure.generatePasskeyChallenge
     .input(z.object({}))
     .query(async ({ ctx }) => {
       const { event } = ctx;
@@ -271,7 +275,7 @@ export const passkeyRouter = router({
       return { options: passkeyOptions };
     }),
 
-  verifyPasskey: limitedProcedure
+  verifyPasskey: publicRateLimitedProcedure.verifyPasskey
     .input(
       z
         .object({

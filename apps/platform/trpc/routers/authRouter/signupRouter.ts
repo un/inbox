@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { router, limitedProcedure } from '../../trpc';
+import { router, publicRateLimitedProcedure } from '../../trpc';
 import type { DBType } from '@u22n/database';
 import { eq } from '@u22n/database/orm';
 import { accounts } from '@u22n/database/schema';
@@ -43,16 +43,17 @@ export async function validateUsername(
 }
 
 export const signupRouter = router({
-  checkUsernameAvailability: limitedProcedure
-    .input(
-      z.object({
-        username: zodSchemas.username()
-      })
-    )
-    .query(async ({ ctx, input }) => {
-      return await validateUsername(ctx.db, input.username);
-    }),
-  checkPasswordStrength: limitedProcedure
+  checkUsernameAvailability:
+    publicRateLimitedProcedure.checkUsernameAvailability
+      .input(
+        z.object({
+          username: zodSchemas.username()
+        })
+      )
+      .query(async ({ ctx, input }) => {
+        return await validateUsername(ctx.db, input.username);
+      }),
+  checkPasswordStrength: publicRateLimitedProcedure.checkPasswordStrength
     .input(
       z.object({
         password: z.string()
