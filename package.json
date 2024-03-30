@@ -33,7 +33,8 @@
     "db:up:r": "infisical run --env=local -- turbo run db:up",
     "db:check:r": "infisical run --env=local -- turbo run db:generate",
     "db:drop:r": "infisical run --env=local -- turbo run db:drop",
-    "ee:dev:r": "infisical run --env=local -- turbo run ee:dev"
+    "ee:dev:r": "infisical run --env=local -- turbo run ee:dev",
+    "prepare": "husky"
   },
   "keywords": [],
   "author": "Omar McAdam - @McPizza0",
@@ -45,10 +46,15 @@
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.1.3",
+    "husky": "^9.0.11",
+    "lint-staged": "^15.2.2",
     "prettier": "^3.2.5",
     "prettier-plugin-tailwindcss": "^0.5.12",
     "turbo": "^1.13.0",
     "typescript": "^5.4.2"
+  },
+  "lint-staged": {
+    "*": "pnpm format"
   },
   "packageManager": "pnpm@8.5.1"
 }
