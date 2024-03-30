@@ -18,7 +18,6 @@ import {
   customType
 } from 'drizzle-orm/mysql-core';
 import { relations } from 'drizzle-orm';
-import { nanoIdLongLength } from '@u22n/utils';
 import { uiColors } from '@u22n/types/ui';
 import { typeIdDataType as publicId } from '@u22n/utils/typeId';
 
@@ -1231,7 +1230,11 @@ export const convoEntriesRelations = relations(
       references: [convoEntryReplies.entrySourceId],
       relationName: 'inReplyTo'
     }),
-    seenBy: many(convoEntrySeenTimestamps)
+    seenBy: many(convoEntrySeenTimestamps),
+    rawHtml: one(convoEntryRawHtmlEmails, {
+      fields: [convoEntries.id],
+      references: [convoEntryRawHtmlEmails.entryId]
+    })
   })
 );
 
@@ -1289,6 +1292,34 @@ export const convoEntryPrivateVisibilityParticipantsRelations = relations(
     convoMember: one(convoParticipants, {
       fields: [convoEntryPrivateVisibilityParticipants.convoMemberId],
       references: [convoParticipants.id]
+    })
+  })
+);
+
+export const convoEntryRawHtmlEmails = mysqlTable(
+  'convo_entry_raw_html_emails',
+  {
+    id: serial('id').primaryKey(),
+    orgId: foreignKey('org_id').notNull(),
+    entryId: foreignKey('entry_id').notNull(),
+    html: text('html').notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull()
+  },
+  (table) => ({
+    entryIdIndex: index('entry_id_idx').on(table.entryId)
+  })
+);
+
+export const convoEntryRawHtmlEmailsRelations = relations(
+  convoEntryRawHtmlEmails,
+  ({ one }) => ({
+    convoEntry: one(convoEntries, {
+      fields: [convoEntryRawHtmlEmails.entryId],
+      references: [convoEntries.id]
+    }),
+    org: one(orgs, {
+      fields: [convoEntryRawHtmlEmails.orgId],
+      references: [orgs.id]
     })
   })
 );
