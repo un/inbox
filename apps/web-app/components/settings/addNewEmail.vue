@@ -4,17 +4,17 @@
   import {
     computed,
     ref,
+    storeToRefs,
     useNuxtApp,
     useToast,
     watch,
     watchDebounced
   } from '#imports';
-  import { useEE } from '~/composables/EE';
   import type { TypeId } from '@u22n/utils';
+  import { useEEStore } from '~/stores/eeStore';
 
   const { $trpc } = useNuxtApp();
 
-  const proPending = ref(true);
   const newIdentityUsernameValue = ref('');
   const newIdentityUsernameValid = ref<boolean | 'remote' | null>(null);
   const newIdentityUsernameValidationMessage = ref('');
@@ -241,17 +241,8 @@
     return selectedOrgGroups.value.length + selectedOrgMembers.value.length > 1;
   });
 
-  const isPro = ref(false);
-  if (useEE().config.modules.billing) {
-    proPending.value = true;
-    isPro.value =
-      (await $trpc.org.setup.billing.isPro.useQuery({}).data.value?.isPro) ||
-      false;
-    proPending.value = false;
-  } else {
-    proPending.value = false;
-    isPro.value = true;
-  }
+  const eeStore = useEEStore();
+  const { isPro } = storeToRefs(eeStore);
 </script>
 
 <template>

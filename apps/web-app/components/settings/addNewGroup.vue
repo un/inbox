@@ -5,13 +5,14 @@
     computed,
     navigateTo,
     ref,
+    storeToRefs,
     useNuxtApp,
     useRoute,
     useToast,
     watch,
     watchDebounced
   } from '#imports';
-  import { useEE } from '~/composables/EE';
+  import { useEEStore } from '~/stores/eeStore';
 
   const { $trpc } = useNuxtApp();
 
@@ -224,25 +225,14 @@
     checkEmailAvailability();
   });
 
-  const dataPending = ref(true);
-
-  const isPro = ref(false);
-  if (useEE().config.modules.billing) {
-    dataPending.value = true;
-    isPro.value =
-      (await $trpc.org.setup.billing.isPro.useQuery({})).data.value?.isPro ||
-      false;
-    dataPending.value = false;
-  } else {
-    dataPending.value = false;
-    isPro.value = true;
-  }
+  const eeStore = useEEStore();
+  const { isPro, isProPending } = storeToRefs(eeStore);
 </script>
 
 <template>
   <div class="flex h-full w-full flex-col items-start">
     <div
-      v-if="dataPending"
+      v-if="isProPending"
       class="bg-base-3 flex w-full flex-row justify-center gap-4 rounded-xl rounded-tl-2xl p-8">
       <UnUiIcon
         name="i-svg-spinners:3-dots-fade"
@@ -250,7 +240,7 @@
       <span>Checking status</span>
     </div>
     <div
-      v-if="!dataPending && !isPro"
+      v-if="!isProPending && !isPro"
       class="flex flex-col gap-4">
       <span>
         Sorry, your current billing plan does not support adding groups.
@@ -263,7 +253,7 @@
       </div>
     </div>
     <div
-      v-if="!dataPending && isPro"
+      v-if="!isProPending && isPro"
       class="flex w-full flex-col gap-4">
       <div
         class="grid w-full grid-cols-1 grid-rows-2 gap-4 md:grid-cols-2 md:grid-rows-1">

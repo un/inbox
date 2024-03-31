@@ -1,7 +1,14 @@
 <script setup lang="ts">
   import { z } from 'zod';
-  import { useNuxtApp, useToast, ref, watch, useRoute } from '#imports';
-  import { useEE } from '~/composables/EE';
+  import {
+    useNuxtApp,
+    useToast,
+    ref,
+    watch,
+    useRoute,
+    storeToRefs
+  } from '#imports';
+  import { useEEStore } from '~/stores/eeStore';
 
   const { $trpc } = useNuxtApp();
   const route = useRoute();
@@ -195,15 +202,8 @@
     }, 1000);
   }
 
-  const isPro = ref(false);
-  if (useEE().config.modules.billing) {
-    const { data: isProQuery } =
-      await $trpc.org.setup.billing.isPro.useLazyQuery({}, { server: false });
-
-    isPro.value = isProQuery.value?.isPro || false;
-  } else {
-    isPro.value = true;
-  }
+  const eeStore = useEEStore();
+  const { isPro } = storeToRefs(eeStore);
 </script>
 
 <template>
