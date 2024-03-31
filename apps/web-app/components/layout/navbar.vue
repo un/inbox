@@ -278,26 +278,34 @@
         </div>
       </div>
     </UnUiModal>
-    <UnUiVerticalNavigation :links="navLinks">
-      <template #default="{ link }">
-        <UnUiTooltip
-          v-if="link.tooltip"
-          :text="link.tooltip"
-          :popper="{ placement: 'right-start' }">
-          <span class="text-base-12 truncate">{{ link.label }}</span>
-        </UnUiTooltip>
-      </template>
-      <template #badge="{ link }">
-        <div class="relative ml-4 flex flex-1 items-end justify-end truncate">
-          <UnUiBadge
-            v-if="link.badge"
-            size="xs"
-            variant="soft"
-            :label="link.badge" />
-        </div>
-      </template>
-    </UnUiVerticalNavigation>
-
+    <div class="flex flex-col gap-4">
+      <div class="flex flex-row items-center justify-between pl-2 pr-2">
+        <span class="font-display leading-none">UnInbox</span>
+        <UnUiBadge
+          size="sm"
+          color="amber"
+          label="Beta" />
+      </div>
+      <UnUiVerticalNavigation :links="navLinks">
+        <template #default="{ link }">
+          <UnUiTooltip
+            v-if="link.tooltip"
+            :text="link.tooltip"
+            :popper="{ placement: 'right-start' }">
+            <span class="text-base-12 truncate">{{ link.label }}</span>
+          </UnUiTooltip>
+        </template>
+        <template #badge="{ link }">
+          <div class="relative ml-4 flex flex-1 items-end justify-end truncate">
+            <UnUiBadge
+              v-if="link.badge"
+              size="xs"
+              variant="soft"
+              :label="link.badge" />
+          </div>
+        </template>
+      </UnUiVerticalNavigation>
+    </div>
     <NuxtUiDropdown
       :items="userMenuItems"
       :ui="{
