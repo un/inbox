@@ -95,16 +95,10 @@
       { server: false, queryKey: 'getUserOrgsNav' }
     );
 
-  const isAccountAdminOfActiveOrg = ref(false);
   watch(accountOrgs, (newUserOrgs) => {
     const userOrgSlugs = newUserOrgs?.userOrgs.map(
       (userOrg) => userOrg.org.slug
     );
-    if (newUserOrgs?.adminOrgSlugs?.includes(orgSlug)) {
-      isAccountAdminOfActiveOrg.value = true;
-    } else {
-      isAccountAdminOfActiveOrg.value = false;
-    }
 
     if (!userOrgSlugs?.includes(orgSlug)) {
       navigateTo(`/redirect`);
@@ -161,23 +155,12 @@
     userOrgsButtons.value,
     [
       {
-        label: 'Account Settings',
-        icon: 'i-ph-user',
+        label: 'Settings',
+        icon: 'i-ph-gear',
         click: () => {
           navigateTo(`/${orgSlug}/settings`);
         }
       },
-      ...(isAccountAdminOfActiveOrg.value
-        ? [
-            {
-              label: 'Organization Settings',
-              icon: 'i-ph-gear',
-              click: () => {
-                navigateTo(`/${orgSlug}/settings`);
-              }
-            }
-          ]
-        : []),
       {
         label: colorModeLabel.value,
         icon: colorModeIcon.value,
