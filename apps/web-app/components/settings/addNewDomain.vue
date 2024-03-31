@@ -1,13 +1,12 @@
 <script setup lang="ts">
   import { z } from 'zod';
-  import { computed, ref, useNuxtApp, useToast } from '#imports';
-  import { useEE } from '~/composables/EE';
+  import { computed, ref, storeToRefs, useNuxtApp, useToast } from '#imports';
+  import { useEEStore } from '~/stores/eeStore';
 
   const { $trpc } = useNuxtApp();
 
   const buttonLoading = ref(false);
   const buttonLabel = ref('Add Domain');
-  const dataPending = ref(true);
   const newDomainNameValid = ref<boolean | 'remote' | null>(null);
   const newDomainNameValue = ref('');
   const newDomainNameValidationMessage = ref('');
@@ -67,23 +66,14 @@
     }, 1000);
   }
 
-  const isPro = ref(false);
-  if (useEE().config.modules.billing) {
-    dataPending.value = true;
-    isPro.value =
-      (await $trpc.org.setup.billing.isPro.useQuery({}).data.value?.isPro) ||
-      false;
-    dataPending.value = false;
-  } else {
-    dataPending.value = false;
-    isPro.value = true;
-  }
+  const eeStore = useEEStore();
+  const { isPro, isProPending } = storeToRefs(eeStore);
 </script>
 
 <template>
   <div class="flex h-full w-full flex-col items-start">
     <div
-      v-if="dataPending"
+      v-if="isProPending"
       class="bg-base-3 flex w-full flex-row justify-center gap-4 rounded-xl rounded-tl-2xl p-8">
       <UnUiIcon
         name="i-svg-spinners:3-dots-fade"
@@ -91,7 +81,7 @@
       <span>Checking status</span>
     </div>
     <div
-      v-if="!dataPending && isPro"
+      v-if="!isProPending && isPro"
       class="flex w-full flex-col gap-4">
       <UnUiInput
         v-model:value="newDomainNameValue"
@@ -113,7 +103,7 @@
       </div>
     </div>
     <div
-      v-if="!dataPending && !isPro"
+      v-if="!isProPending && !isPro"
       class="flex w-full flex-col gap-4">
       <span class="text-xl font-semibold">Add a new domain</span>
       <span>
