@@ -240,6 +240,7 @@
           <span class="text-base-11 text-sm uppercase"> Raw Email </span>
           <div class="relative h-0 w-full overflow-hidden pb-[60%]">
             <iframe
+              sandbox=""
               class="absolute left-0 top-0 h-full w-full border-0"
               title="HTML Email Content"
               :srcdoc="`<style>body { font-family: Arial, Helvetica, sans-serif; }</style>${rawHtmlData?.rawEmailData.html}`"></iframe>
