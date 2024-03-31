@@ -1302,8 +1302,11 @@ export const convoEntryRawHtmlEmails = mysqlTable(
     id: serial('id').primaryKey(),
     orgId: foreignKey('org_id').notNull(),
     entryId: foreignKey('entry_id').notNull(),
+    headers: json('headers').notNull(),
     html: text('html').notNull(),
-    createdAt: timestamp('created_at').defaultNow().notNull()
+    wipeDate: timestamp('wipe_date').notNull(),
+    keep: boolean('keep').notNull().default(false),
+    wiped: boolean('wiped').notNull().default(false)
   },
   (table) => ({
     entryIdIndex: index('entry_id_idx').on(table.entryId)

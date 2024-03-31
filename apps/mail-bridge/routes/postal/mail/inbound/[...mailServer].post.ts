@@ -14,7 +14,8 @@ import {
   convoSubjects,
   convos,
   emailIdentities,
-  postalServers
+  postalServers,
+  convoEntryRawHtmlEmails
 } from '@u22n/database/schema';
 import { parseMessage } from '@u22n/mailtools';
 import type {
@@ -817,7 +818,13 @@ export default eventHandler(async (event) => {
     );
   }
 
-  ///! Notifications
+  await db.insert(convoEntryRawHtmlEmails).values({
+    orgId: orgId,
+    entryId: Number(insertNewConvoEntry.insertId),
+    html: parsedEmail.html || parsedEmail.textAsHtml || '',
+    headers: Object.fromEntries(parsedEmail.headers),
+    wipeDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 28) // 28 days
+  });
 
   await sendRealtimeNotification({
     newConvo: !inReplyToEmailId || hasReplyToButIsNewConvo || false,
@@ -825,6 +832,5 @@ export default eventHandler(async (event) => {
     convoEntryId: +insertNewConvoEntry.insertId
   });
 
-  // send alerts
   return;
 });
