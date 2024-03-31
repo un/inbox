@@ -1,10 +1,13 @@
 <script setup lang="ts">
-  import { computed, useRoute, navigateTo } from '#imports';
+  import { computed, useRoute, navigateTo, useNuxtApp } from '#imports';
   import { useEE } from '~/composables/EE';
 
+  const { $trpc } = useNuxtApp();
   const orgSlug = useRoute().params.orgSlug as string;
 
   const eeBilling = useEE().config.modules.billing;
+
+  const { data: currentIds } = $trpc.account.defaults.getIds.useQuery({});
 
   // Settings Links
 
@@ -75,7 +78,8 @@
         <div class="flex flex-row items-center justify-between">
           <span class="font-display text-base-11">Personal</span>
           <UnUiCopy
-            :text="`/${orgSlug}/settings/org`"
+            v-if="currentIds?.orgMemberPublicId"
+            :text="currentIds?.orgMemberPublicId"
             variant="ghost"
             size="xs"
             icon="i-ph-hash"
@@ -88,7 +92,8 @@
         <div class="flex flex-row items-center justify-between">
           <span class="font-display text-base-11">Organization</span>
           <UnUiCopy
-            :text="`/${orgSlug}/settings/org`"
+            v-if="currentIds?.orgPublicId"
+            :text="currentIds?.orgPublicId"
             variant="ghost"
             size="xs"
             icon="i-ph-hash"
