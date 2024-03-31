@@ -71,8 +71,15 @@
     class="flex h-screen w-screen flex-col items-center justify-between p-4 pb-14">
     <div
       class="flex w-full max-w-72 grow flex-col items-center justify-center gap-8 pb-4 md:max-w-xl">
-      <h1 class="font-display mb-4 text-center text-2xl">
-        Let's make your <br /><span class="text-5xl">UnInbox</span>
+      <h1 class="mb-4 flex flex-col gap-2 text-center">
+        <span class="text-2xl font-medium leading-none">Let's make your</span>
+        <span class="font-display text-5xl leading-none">UnInbox</span>
+        <div>
+          <NuxtUiBadge
+            label="Beta"
+            size="md"
+            color="amber" />
+        </div>
       </h1>
       <h2 class="text-center text-xl font-semibold">Choose your username</h2>
       <div class="flex w-full flex-row justify-stretch gap-2">

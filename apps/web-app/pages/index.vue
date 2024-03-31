@@ -163,8 +163,15 @@
     class="flex h-screen w-screen flex-col items-center justify-between p-4 pb-14">
     <div
       class="flex w-full max-w-48 grow flex-col items-center justify-center gap-8 md:max-w-72">
-      <h1 class="font-display mb-4 text-center text-2xl">
-        Login to your <br /><span class="text-5xl">UnInbox</span>
+      <h1 class="mb-4 flex flex-col gap-1 text-center">
+        <span class="text-2xl font-medium">Login to your</span>
+        <span class="font-display text-5xl">UnInbox</span>
+        <div>
+          <NuxtUiBadge
+            label="Beta"
+            size="md"
+            color="amber" />
+        </div>
       </h1>
 
       <div class="flex w-full flex-col gap-4">
