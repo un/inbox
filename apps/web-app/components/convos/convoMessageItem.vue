@@ -2,7 +2,7 @@
   import { useTimeAgo } from '@vueuse/core';
   import { tiptapHtml } from '@u22n/tiptap';
   import { tipTapExtensions } from '@u22n/tiptap/extensions';
-  import { computed, inject, useNuxtApp } from '#imports';
+  import { computed, inject, ref, useNuxtApp } from '#imports';
 
   const { $trpc } = useNuxtApp();
 
@@ -64,6 +64,33 @@
   function setAsReplyTo() {
     emits('set-as-reply-to');
   }
+
+  // Raw HTML Fields
+
+  const {
+    data: rawHtmlData,
+    status: rawHtmlStatus,
+    execute: rawHtmlExecute
+  } = $trpc.convos.entries.getConvoSingleEntryRawEmail.useLazyQuery(
+    {
+      convoEntryPublicId: props.entry.publicId
+    },
+    { immediate: false }
+  );
+  const entryHasRawHtml = computed(() => {
+    return props.entry.rawHtml?.wipeDate ? true : false;
+  });
+
+  const showRawHtmlModalVisible = ref(false);
+  const showRawHtmlModalHeaders = ref(false);
+
+  const openRawHtmlModal = () => {
+    rawHtmlExecute();
+    showRawHtmlModalVisible.value = true;
+  };
+  const closeRawHtmlModal = () => {
+    showRawHtmlModalVisible.value = false;
+  };
 </script>
 <template>
   <div
@@ -98,19 +125,22 @@
             >
           </div>
           <div class="flex flex-row gap-0">
+            <UnUiTooltip
+              v-if="entryHasRawHtml"
+              text="View original message">
+              <UnUiButton
+                size="xs"
+                square
+                variant="soft"
+                icon="i-ph-code"
+                @click="openRawHtmlModal" />
+            </UnUiTooltip>
             <UnUiTooltip text="Report a bug">
               <UnUiButton
                 size="xs"
                 square
                 variant="soft"
                 icon="i-ph-bug" />
-            </UnUiTooltip>
-            <UnUiTooltip text="View original message">
-              <UnUiButton
-                size="xs"
-                square
-                variant="soft"
-                icon="i-ph-code" />
             </UnUiTooltip>
             <UnUiCopy
               icon="i-ph-hash"
@@ -144,5 +174,82 @@
         </div>
       </div>
     </div>
+    <UnUiModal
+      v-model="showRawHtmlModalVisible"
+      :fullscreen="true">
+      <template #header>
+        <span class="">Original Email Message</span>
+      </template>
+      <div v-if="rawHtmlStatus === 'pending'">Loading...</div>
+      <div
+        v-else-if="rawHtmlStatus === 'error'"
+        class="overflow-scroll">
+        Error loading raw HTML
+      </div>
+      <div
+        v-else-if="rawHtmlStatus === 'success'"
+        class="divide-base-7 flex flex-col gap-8 divide-y-2 overflow-scroll">
+        <div>
+          <UnUiButton
+            v-if="rawHtmlData?.rawEmailData.headers"
+            :label="!showRawHtmlModalHeaders ? 'Show Headers' : 'Hide Headers'"
+            @click="showRawHtmlModalHeaders = !showRawHtmlModalHeaders" />
+        </div>
+        <div
+          v-if="showRawHtmlModalHeaders && rawHtmlData?.rawEmailData.headers">
+          <template
+            v-for="(value, key, index) in rawHtmlData?.rawEmailData.headers"
+            :key="index">
+            <div class="mb-2 grid-cols-6 gap-2">
+              <span class="text-base-11 col-span-1 text-xs uppercase">
+                {{ key }}:
+              </span>
+              <div class="col-span-5">
+                <span v-if="typeof value === 'object'">
+                  <template
+                    v-for="(subValue, subKey, subIndex) in value"
+                    :key="subIndex">
+                    <span class="font-mono text-xs"
+                      >{{ subKey }}: {{ subValue }}</span
+                    >
+                  </template>
+                </span>
+                <span
+                  v-else
+                  class="font-mono text-xs">
+                  {{ value }}
+                </span>
+              </div>
+            </div>
+          </template>
+          <span class="text-base-11 col-span-1 text-sm uppercase">
+            END OF HEADERS
+          </span>
+        </div>
+        <div
+          v-if="rawHtmlData?.rawEmailData.wipeDate"
+          class="flex flex-col gap-2">
+          <span class="text-base-11 text-sm uppercase">
+            Raw message will be deleted on
+          </span>
+          <span class="text-sm">{{ rawHtmlData?.rawEmailData.wipeDate }}</span>
+        </div>
+        <div
+          v-if="rawHtmlData?.rawEmailData.html"
+          class="mb-4 flex flex-col gap-2">
+          <span class="text-base-11 text-sm uppercase"> Raw Email </span>
+          <div class="relative h-0 w-full overflow-hidden pb-[60%]">
+            <iframe
+              sandbox=""
+              class="absolute left-0 top-0 h-full w-full border-0"
+              title="HTML Email Content"
+              :srcdoc="`<style>body { font-family: Arial, Helvetica, sans-serif; }</style>${rawHtmlData?.rawEmailData.html}`"></iframe>
+          </div>
+        </div>
+      </div>
+      <UnUiButton
+        label="Close"
+        @click="closeRawHtmlModal()" />
+    </UnUiModal>
   </div>
 </template>
