@@ -1,6 +1,7 @@
 <script setup lang="ts">
   import { startAuthentication } from '@simplewebauthn/browser';
   import { z } from 'zod';
+  import { zodSchemas } from '@u22n/utils';
   import {
     navigateTo,
     definePageMeta,
@@ -195,17 +196,7 @@
               label="Username"
               helper="Can only contain letters and numbers."
               placeholder=""
-              :schema="
-                z
-                  .string()
-                  .min(2, { message: 'Must be at least 5 characters long' })
-                  .max(32, {
-                    message: 'Too Long, Aint nobody typing that 😂'
-                  })
-                  .regex(/^[a-zA-Z0-9]*$/, {
-                    message: 'Only letters and numbers'
-                  })
-              " />
+              :schema="zodSchemas.username()" />
             <UnUiInput
               v-model:value="passwordInput"
               v-model:valid="passwordValid"
@@ -215,19 +206,7 @@
               label="Password"
               password
               placeholder=""
-              :schema="
-                z
-                  .string()
-                  .min(8, { message: 'Minimum 8 characters' })
-                  .max(64)
-                  .regex(
-                    /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*\W)(?!.*\s).{8,}$/,
-                    {
-                      message:
-                        'At least one digit, one lowercase letter, one uppercase letter, one special character, no whitespace allowed, minimum eight characters in length'
-                    }
-                  )
-              " />
+              :schema="z.string()" />
             <div class="flex flex-col gap-2">
               <span class="text-sm"
                 >Enter the 6-digit code from your 2FA app</span
@@ -261,16 +240,17 @@
         <UnUiAlert
           v-show="errorMessage"
           icon="i-ph-warning-circle"
-          title="Waiting for human verification!"
+          title="Waiting for automatic captcha!"
           description="This is an automated process and should complete within a few seconds. If it doesn't, please refresh the page."
           color="orange"
           variant="solid" />
       </div>
-      <!-- TODO: Make it look good -->
+    </div>
+    <div v-if="pageReady && turnstileEnabled">
+      <!-- This should be invisible, we will be using invisible challenges -->
       <NuxtTurnstile
-        v-if="pageReady && turnstileEnabled"
         v-model="turnstileToken"
-        class="fixed bottom-5 mb-[-30px] scale-50 hover:mb-0 hover:scale-100" />
+        class="hidden" />
     </div>
   </div>
 </template>

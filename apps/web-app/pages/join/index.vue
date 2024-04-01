@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { z } from 'zod';
+  import { zodSchemas } from '@u22n/utils';
   import {
     navigateTo,
     definePageMeta,
@@ -7,6 +7,7 @@
     useNuxtApp,
     ref,
     computed,
+    watch,
     watchDebounced,
     useCookie,
     type Ref,
@@ -37,21 +38,30 @@
     navigateTo('/join/secure');
   }
 
+  async function checkUsername() {
+    if (
+      (turnstileEnabled && !turnstileToken.value) ||
+      !zodSchemas.username().safeParse(usernameValue.value).success
+    ) {
+      return;
+    }
+    const { available, error } =
+      await $trpc.auth.signup.checkUsernameAvailability.query({
+        turnstileToken: turnstileToken.value,
+        username: usernameValue.value
+      });
+    if (!available) {
+      usernameValid.value = false;
+      usernameValidationMessage.value = error || 'something went wrong';
+    }
+    available && (usernameValid.value = true);
+  }
+
   watchDebounced(
     usernameValue,
     async () => {
       if (usernameValid.value === 'remote') {
-        const { available, error } =
-          await $trpc.auth.signup.checkUsernameAvailability.query({
-            turnstileToken: turnstileToken.value,
-            username: usernameValue.value
-          });
-        //resetTurnstileToken();
-        if (!available) {
-          usernameValid.value = false;
-          usernameValidationMessage.value = error || 'something went wrong';
-        }
-        available && (usernameValid.value = true);
+        await checkUsername();
       }
     },
     {
@@ -59,6 +69,9 @@
       maxWait: 5000
     }
   );
+
+  // Make sure to check the username if the check was skipped due to token not being available
+  watch(turnstileToken, checkUsername, { once: true });
 
   const pageReady: Ref<boolean> = ref(false);
   onNuxtReady(() => {
@@ -122,17 +135,7 @@
         helper="Can only contain letters and numbers."
         placeholder=""
         :remote-validation="true"
-        :schema="
-          z
-            .string()
-            .min(5, { message: 'Must be at least 5 characters long' })
-            .max(32, {
-              message: 'Too Long, Aint nobody typing that 😂'
-            })
-            .regex(/^[a-zA-Z0-9]*$/, {
-              message: 'Only letters and numbers'
-            })
-        " />
+        :schema="zodSchemas.username()" />
 
       <div class="mt-3 flex w-full flex-col gap-2">
         <UnUiButton
@@ -148,11 +151,12 @@
           block
           @click="navigateTo('/')" />
       </div>
-      <!-- TODO: Make it look good -->
-      <NuxtTurnstile
-        v-if="pageReady && turnstileEnabled"
-        v-model="turnstileToken"
-        class="fixed bottom-5 mb-[-30px] scale-50 hover:mb-0 hover:scale-100" />
+      <div v-if="pageReady && turnstileEnabled">
+        <!-- This should be invisible, we will be using invisible challenges -->
+        <NuxtTurnstile
+          v-model="turnstileToken"
+          class="hidden" />
+      </div>
     </div>
   </div>
 </template>
