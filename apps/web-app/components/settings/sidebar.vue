@@ -1,10 +1,13 @@
 <script setup lang="ts">
-  import { computed, useRoute } from '#imports';
+  import { computed, useRoute, navigateTo, useNuxtApp } from '#imports';
   import { useEE } from '~/composables/EE';
 
+  const { $trpc } = useNuxtApp();
   const orgSlug = useRoute().params.orgSlug as string;
 
   const eeBilling = useEE().config.modules.billing;
+
+  const { data: currentIds } = $trpc.account.defaults.getIds.useQuery({});
 
   // Settings Links
 
@@ -70,18 +73,32 @@
   <div
     class="bg-base-2 border-base-6 flex h-full max-h-full flex-col gap-2 overflow-y-auto rounded-r-xl border-r-2 p-8 pl-12 shadow-md">
     <div
-      class="flex h-full max-h-full grow flex-col gap-4 overflow-hidden overflow-y-auto">
+      class="flex h-full max-h-full grow flex-col gap-8 overflow-hidden overflow-y-auto">
       <div class="flex w-full flex-col gap-2">
-        <div>
+        <div class="flex flex-row items-center justify-between">
           <span class="font-display text-base-11">Personal</span>
+          <UnUiCopy
+            v-if="currentIds?.orgMemberPublicId"
+            :text="currentIds?.orgMemberPublicId"
+            variant="ghost"
+            size="xs"
+            icon="i-ph-hash"
+            helper="Copy User ID" />
         </div>
         <UnUiVerticalNavigation :links="personalLinks" />
       </div>
-      <div class="mb-[48px] flex flex-col gap-4">
-        <div>
-          <span class="font-display text-base-11">Org</span>
+      <div class="border-base-7 w-full border-[1px]" />
+      <div class="flex flex-col gap-4">
+        <div class="flex flex-row items-center justify-between">
+          <span class="font-display text-base-11">Organization</span>
+          <UnUiCopy
+            v-if="currentIds?.orgPublicId"
+            :text="currentIds?.orgPublicId"
+            variant="ghost"
+            size="xs"
+            icon="i-ph-hash"
+            helper="Copy Organization ID" />
         </div>
-
         <div class="flex flex-col gap-2">
           <div class="flex flex-col gap-2 pb-2 pl-2">
             <span
@@ -105,6 +122,13 @@
             <UnUiVerticalNavigation :links="orgMailLinks" />
           </div>
         </div>
+      </div>
+      <div class="px-2">
+        <UnUiButton
+          label="Add new organization"
+          icon="i-ph-plus"
+          variant="ghost"
+          @click="navigateTo('/join/org')" />
       </div>
     </div>
   </div>
