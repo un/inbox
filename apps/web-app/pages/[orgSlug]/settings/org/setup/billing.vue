@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { definePageMeta, navigateTo, ref, useNuxtApp, watch } from '#imports';
+  import { definePageMeta, navigateTo, ref, useNuxtApp } from '#imports';
 
   definePageMeta({
     middleware: 'ee'
