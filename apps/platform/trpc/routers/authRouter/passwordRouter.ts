@@ -1,6 +1,10 @@
 import { z } from 'zod';
 import { Argon2id } from 'oslo/password';
-import { limitedProcedure, router, accountProcedure } from '../../trpc';
+import {
+  router,
+  accountProcedure,
+  publicRateLimitedProcedure
+} from '../../trpc';
 import { eq } from '@u22n/database/orm';
 import { accountCredentials, accounts } from '@u22n/database/schema';
 import { strongPasswordSchema, typeIdGenerator, zodSchemas } from '@u22n/utils';
@@ -13,7 +17,7 @@ import { decodeHex } from 'oslo/encoding';
 import { TOTPController } from 'oslo/otp';
 
 export const passwordRouter = router({
-  signUpWithPassword: limitedProcedure
+  signUpWithPassword: publicRateLimitedProcedure.signUpWithPassword
     .input(
       z.object({
         username: zodSchemas.username(),
@@ -71,7 +75,7 @@ export const passwordRouter = router({
       return { success: true };
     }),
 
-  signInWithPassword: limitedProcedure
+  signInWithPassword: publicRateLimitedProcedure.signInWithPassword
     .input(
       z.object({
         turnstileToken: z.string(),

@@ -76,6 +76,9 @@ export default defineNitroConfig({
     turnstile: {
       secretKey: process.env.WEBAPP_TURNSTILE_SECRET_KEY || ''
     },
+    unkey: {
+      rootKey: process.env.UNKEY_ROOT_KEY || null
+    },
     billing: billingConfig
   }
 });

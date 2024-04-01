@@ -3,7 +3,6 @@ import { router } from './trpc';
 import { createContext } from './createContext';
 import { passkeyRouter } from './routers/authRouter/passkeyRouter';
 import { passwordRouter } from './routers/authRouter/passwordRouter';
-import { testRouter } from './routers/testRouter';
 import { signupRouter } from './routers/authRouter/signupRouter';
 import { profileRouter } from './routers/userRouter/profileRouter';
 import { crudRouter } from './routers/orgRouter/orgCrudRouter';
@@ -61,8 +60,7 @@ export const trpcPlatformRouter = router({
   auth: trpcPlatformAuthRouter,
   account: trpcPlatformAccountRouter,
   org: trpcPlatformOrgRouter,
-  convos: convoRouter,
-  test: testRouter
+  convos: convoRouter
 });
 
 export type TrpcPlatformRouter = typeof trpcPlatformRouter;

@@ -1,13 +1,16 @@
 import {
   TRPCError,
   initTRPC,
-  experimental_standaloneMiddleware
+  experimental_standaloneMiddleware as standaloneMiddleware
 } from '@trpc/server';
 import superjson from 'superjson';
 import type { Context } from './createContext';
 import { z } from 'zod';
 import { useRuntimeConfig } from '#imports';
 import verifyTurnstileToken from '../utils/turnstile';
+import { type Duration, Ratelimit, NoopRatelimit } from '@unkey/ratelimit';
+import { getRequestIP } from 'h3';
+
 export const trpcContext = initTRPC
   .context<Context>()
   .create({ transformer: superjson });
@@ -71,7 +74,7 @@ const isEeEnabled = trpcContext.middleware(({ next }) => {
 });
 
 //TODO: check when standalone middleware is no longer experimental or fix inputs in standard middleware
-const turnstileTokenValidation = experimental_standaloneMiddleware<{
+const turnstileTokenValidation = standaloneMiddleware<{
   input: { turnstileToken?: string }; // defaults to 'unknown' if not defined
 }>().create(async (opts) => {
   if (!useRuntimeConfig().turnstile.secretKey) return opts.next();
@@ -97,10 +100,70 @@ const turnstileTokenValidation = experimental_standaloneMiddleware<{
   return opts.next();
 });
 
+// Placeholder for the actual rate limits, to be defined later
+const publicRateLimits = {
+  checkUsernameAvailability: [30, '1h'],
+  checkPasswordStrength: [30, '1h'],
+  generatePasskeyChallenge: [20, '1h'],
+  signUpPasskeyStart: [10, '1h'],
+  signUpPasskeyFinish: [10, '1h'],
+  verifyPasskey: [30, '1h'],
+  signUpWithPassword: [10, '1h'],
+  signInWithPassword: [20, '1h'],
+  validateInvite: [10, '1h']
+} satisfies Record<string, [number, Duration]>;
+
+function createRatelimiter({
+  limit,
+  duration,
+  namespace
+}: {
+  limit: number;
+  duration: Duration;
+  namespace: string;
+}) {
+  const rootKey = (useRuntimeConfig().unkey as any).rootKey;
+  const unkey = rootKey
+    ? new Ratelimit({
+        async: true,
+        limit,
+        duration,
+        namespace,
+        rootKey
+      })
+    : new NoopRatelimit();
+
+  return trpcContext.middleware(async ({ ctx, next }) => {
+    const ip = getRequestIP(ctx.event);
+    const result = await unkey.limit(ip || 'unknown');
+    if (!result.success) {
+      throw new TRPCError({
+        code: 'TOO_MANY_REQUESTS',
+        message: 'Too many requests, please try again later'
+      });
+    }
+    return next();
+  });
+}
+
 export const publicProcedure = trpcContext.procedure;
-export const limitedProcedure = trpcContext.procedure
+const limitedProcedure = trpcContext.procedure
   .input(z.object({ turnstileToken: z.string() }))
   .use(turnstileTokenValidation);
+
+export const publicRateLimitedProcedure = Object.entries(
+  publicRateLimits
+).reduce(
+  (acc, [key, [limit, duration]]) => {
+    // @ts-expect-error, we know this is a valid key
+    acc[key] = limitedProcedure.use(
+      createRatelimiter({ limit, duration, namespace: `public.${key}` })
+    );
+    return acc;
+  },
+  {} as Record<keyof typeof publicRateLimits, typeof limitedProcedure>
+);
+
 export const accountProcedure = trpcContext.procedure.use(
   isAccountAuthenticated
 );

@@ -2,8 +2,8 @@ import { z } from 'zod';
 import {
   router,
   orgProcedure,
-  limitedProcedure,
-  accountProcedure
+  accountProcedure,
+  publicRateLimitedProcedure
 } from '../../../trpc';
 import { eq } from '@u22n/database/orm';
 import {
@@ -248,7 +248,7 @@ export const invitesRouter = router({
       };
     }),
 
-  validateInvite: limitedProcedure
+  validateInvite: publicRateLimitedProcedure.validateInvite
     .input(
       z.object({
         inviteToken: zodSchemas.nanoIdToken()
