@@ -4,6 +4,7 @@ import { createContext } from './createContext';
 import { orgRouter } from './routers/orgRouter';
 import { domainRouter } from './routers/domainRouter';
 import { sendMailRouter } from './routers/sendMailRouter';
+import { smtpRouter } from './routers/smtpRouter';
 
 export const trpcMailBridgeContext = createContext;
 export const trpcMailBridgePostalRouter = router({
@@ -15,7 +16,8 @@ export const trpcMailBridgeMailRouter = router({
 });
 export const trpcMailBridgeRouter = router({
   mail: trpcMailBridgeMailRouter,
-  postal: trpcMailBridgePostalRouter
+  postal: trpcMailBridgePostalRouter,
+  smtp: smtpRouter
 });
 
 export type TrpcMailBridgeRouter = typeof trpcMailBridgeRouter;
