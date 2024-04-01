@@ -10,7 +10,8 @@
   const {
     data: orgBillingOverview,
     pending,
-    error
+    error,
+    refresh: refreshBillingOverview
   } = await $trpc.org.setup.billing.getOrgBillingOverview.useLazyQuery(
     {},
     {
@@ -21,9 +22,13 @@
   const showPricingTable = ref(false);
   const pricingTableBillingPeriod = ref<'monthly' | 'yearly'>('monthly');
   const loadingButton = ref('');
+  const pendingAction = ref(false);
+  const currentPlan = ref(orgBillingOverview?.value?.currentPlan);
 
   async function subscribeToPlan(plan: 'starter' | 'pro') {
     loadingButton.value = plan;
+    pendingAction.value = true;
+    watchStripeData();
     const billingPeriod = pricingTableBillingPeriod.value;
     const { data: linkData } =
       await $trpc.org.setup.billing.getOrgSubscriptionPaymentLink.useLazyQuery({
@@ -37,9 +42,29 @@
     });
     loadingButton.value = '';
   }
+
+  async function watchStripeData() {
+    let hasChanged = false;
+    const initialPlan = currentPlan.value;
+
+    while (hasChanged === false) {
+      await refreshBillingOverview();
+      if (orgBillingOverview?.value?.currentPlan !== initialPlan) {
+        hasChanged = true;
+        pendingAction.value = false;
+        return;
+      } else {
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+      }
+    }
+    return;
+  }
+
   const goToPortalButtonLoading = ref(false);
   async function goToBillingPortal() {
     goToPortalButtonLoading.value = true;
+    pendingAction.value = true;
+    watchStripeData();
     const { data: linkData } =
       await $trpc.org.setup.billing.getOrgStripePortalLink.useLazyQuery(
         {},
@@ -236,7 +261,7 @@
                 <UnUiButton
                   :label="loadingButton === 'pro' ? 'Loading' : 'Subscribe'"
                   variant="solid"
-                  :loading="loadingButton === 'pro'"
+                  :loading="loadingButton === 'pro' || pendingAction"
                   @click="subscribeToPlan('pro')" />
               </div>
             </div>
@@ -254,7 +279,7 @@
           <UnUiButton
             label="Manage Billing"
             variant="solid"
-            :loading="goToPortalButtonLoading"
+            :loading="goToPortalButtonLoading || pendingAction"
             @click="goToBillingPortal()" />
         </div>
       </div>
