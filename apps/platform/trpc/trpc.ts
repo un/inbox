@@ -102,15 +102,15 @@ const turnstileTokenValidation = standaloneMiddleware<{
 
 // Placeholder for the actual rate limits, to be defined later
 const publicRateLimits = {
-  checkUsernameAvailability: [100, '1m'],
-  checkPasswordStrength: [100, '1m'],
-  signUpPasskeyStart: [100, '1m'],
-  signUpPasskeyFinish: [100, '1m'],
-  generatePasskeyChallenge: [100, '1m'],
-  verifyPasskey: [100, '1m'],
-  signUpWithPassword: [100, '1m'],
-  signInWithPassword: [100, '1m'],
-  validateInvite: [100, '1m']
+  checkUsernameAvailability: [30, '1h'],
+  checkPasswordStrength: [30, '1h'],
+  generatePasskeyChallenge: [20, '1h'],
+  signUpPasskeyStart: [10, '1h'],
+  signUpPasskeyFinish: [10, '1h'],
+  verifyPasskey: [30, '1h'],
+  signUpWithPassword: [10, '1h'],
+  signInWithPassword: [20, '1h'],
+  validateInvite: [10, '1h']
 } satisfies Record<string, [number, Duration]>;
 
 function createRatelimiter({
