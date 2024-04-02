@@ -682,6 +682,7 @@ export const emailRoutingRulesDestinations = mysqlTable(
   'email_routing_rules_destinations',
   {
     id: serial('id').primaryKey(),
+    publicId: publicId('emailRoutingRuleDestinations', 'public_id').notNull(),
     orgId: foreignKey('org_id').notNull(),
     ruleId: foreignKey('rule_id').notNull(),
     groupId: foreignKey('group_id'),

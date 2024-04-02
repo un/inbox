@@ -135,8 +135,11 @@ export const invitesRouter = router({
             name: `Email routing rule for ${email.emailUsername}@${domainResponse?.domain}`,
             createdBy: orgMemberId
           });
-
+        const newRoutingRuleDestinationPublicId = typeIdGenerator(
+          'emailRoutingRuleDestinations'
+        );
         await db.insert(emailRoutingRulesDestinations).values({
+          publicId: newRoutingRuleDestinationPublicId,
           orgId: orgId,
           ruleId: +emailRoutingRulesResponse.insertId,
           orgMemberId: +orgMemberResponse.insertId

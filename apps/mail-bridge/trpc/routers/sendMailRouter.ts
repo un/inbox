@@ -602,7 +602,8 @@ export const sendMailRouter = router({
       // If there is external email credentials then the identity is external, use their smtp server instead of postal's
       if (sendAsEmailIdentity.externalCredentialsId) {
         const auth = sendAsEmailIdentity.externalCredentials!; // it should be defined here
-        return await sendEmail({
+
+        const sentEmail = await sendEmail({
           auth,
           email: {
             to: [`${convoToAddress}`],
@@ -615,25 +616,52 @@ export const sendMailRouter = router({
             attachments: postalAttachments,
             headers: emailHeaders
           }
-        })
-          .then(
-            (data) =>
-              ({
-                email: {
-                  to: [convoMetadataToAddress!],
-                  from: [convoMetadataFromAddress],
-                  cc: convoMetadataCcAddresses,
-                  messageId: data.messageId,
-                  postalMessages: [] // Not sure about this one
-                }
-              }) satisfies ConvoEntryMetadata
-          )
-          .catch((e) => {
-            console.error('🚨 error sending email as external identity', e);
-            return {
-              success: false
-            };
-          });
+        }).catch((e) => {
+          console.error('🚨 error sending email as external identity', e);
+          return {
+            success: false
+          };
+        });
+
+        if ('success' in sentEmail && sentEmail.success === false) {
+          console.error(
+            '🚨 error sending email as external identity',
+            `send convoId: ${entryId} from convoId: ${convoId}`
+          );
+          return {
+            success: false
+          };
+        } else if (!('success' in sentEmail) && sentEmail.messageId) {
+          const entryMetadata: ConvoEntryMetadata = {
+            email: {
+              to: [convoMetadataToAddress!],
+              from: [convoMetadataFromAddress],
+              cc: convoMetadataCcAddresses,
+              messageId: sentEmail.messageId,
+              postalMessages: [] // Not sure about this one
+            }
+          };
+
+          await db
+            .update(convoEntries)
+            .set({
+              metadata: entryMetadata
+            })
+            .where(eq(convoEntries.id, entryId));
+
+          return {
+            success: true,
+            metadata: entryMetadata as ConvoEntryMetadata
+          };
+        } else {
+          console.error(
+            '🚨 error sending email as external identity, no idea what went wrong. didnt get success or fail',
+            `send convoId: ${entryId} from convoId: ${convoId}`
+          );
+          return {
+            success: false
+          };
+        }
       }
 
       type PostalResponse =

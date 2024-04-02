@@ -18,6 +18,7 @@ export const idTypes = {
   postalServers: 'ps',
   contacts: 'k',
   emailRoutingRules: 'rr',
+  emailRoutingRuleDestinations: 'rrd',
   emailIdentities: 'ei',
   emailIdentitiesPersonal: 'eip',
   emailIdentitiesExternal: 'eie',
