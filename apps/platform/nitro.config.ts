@@ -62,6 +62,9 @@ export default defineNitroConfig({
     primaryDomain: process.env.PRIMARY_DOMAIN || 'localhost',
     mailDomains: mailDomains,
     transactionalCredentials: transactionalCredentials,
+    platform: {
+      secret: process.env.PLATFORM_SECRET || ''
+    },
     auth: {
       baseUrl: process.env.WEBAPP_URL || 'http://localhost:3000',
       secret: process.env.WEBAPP_AUTH_SECRET,

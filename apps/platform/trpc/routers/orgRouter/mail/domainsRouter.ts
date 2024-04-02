@@ -299,7 +299,10 @@ export const domainsRouter = router({
         spfDnsValid: dnsRecords.spf.valid,
         returnPathDnsValid: dnsRecords.returnPath.valid,
         verification: dnsRecords.verification.valid,
-        dmarkPolicy: dnsRecords.dmarc.policy
+        dmarcPolicy: dnsRecords.dmarc.policy,
+        mtaStsDns: dnsRecords.mtaSts.dns.valid,
+        mtaStsTls: dnsRecords.mtaSts.tls.valid,
+        mtaStsPolicy: dnsRecords.mtaSts.policy.valid
       };
 
       // take all dns Records and count how many are valid, if all are valid then allOk
@@ -368,6 +371,9 @@ export const domainsRouter = router({
             dkimDnsValid: dnsStatus.dkimDnsValid,
             spfDnsValid: dnsStatus.spfDnsValid,
             returnPathDnsValid: dnsStatus.returnPathDnsValid,
+            mtaStsDnsValid: dnsStatus.mtaStsDns,
+            mtaStsTlsValid: dnsStatus.mtaStsTls,
+            mtaStsPolicyValid: dnsStatus.mtaStsPolicy,
             receivingMode: domainReceivingMode,
             sendingMode: domainSendingMode,
             lastDnsCheckAt: new Date(),

@@ -1,0 +1,13 @@
+{
+	on_demand_tls {
+		ask {env.PLATFORM_URL}/caddy-check/{env.PLATFORM_SECRET}
+	}
+}
+
+https:// {
+	tls {
+		on_demand
+	}
+	root * ./files
+	file_server
+}
