@@ -18,6 +18,7 @@ import { billingRouter } from './routers/orgRouter/setup/billingRouter';
 import { addressRouter } from './routers/userRouter/addressRouter';
 import { defaultsRouter } from './routers/userRouter/defaultsRouter';
 import { twoFactorRouter } from './routers/authRouter/twoFactorRouter';
+import { securityRouter } from './routers/userRouter/securityRouter';
 
 export const trpcPlatformContext = createContext;
 
@@ -31,7 +32,8 @@ const trpcPlatformAuthRouter = router({
 const trpcPlatformAccountRouter = router({
   defaults: defaultsRouter,
   profile: profileRouter,
-  addresses: addressRouter
+  addresses: addressRouter,
+  security: securityRouter
 });
 
 const trpcPlatformOrgSetupRouter = router({

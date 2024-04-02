@@ -1,9 +1,5 @@
 import { z } from 'zod';
-import {
-  router,
-  accountProcedure,
-  publicRateLimitedProcedure
-} from '../../trpc';
+import { router, publicRateLimitedProcedure } from '../../trpc';
 import { eq } from '@u22n/database/orm';
 import { accountCredentials, accounts } from '@u22n/database/schema';
 import { TRPCError } from '@trpc/server';
@@ -26,48 +22,6 @@ import { validateUsername } from './signupRouter';
 import { createLuciaSessionCookie } from '../../../utils/session';
 
 export const passkeyRouter = router({
-  // generateNewPasskeyChallenge: accountProcedure
-  //   .input(
-  //     z
-  //       .object({
-  //         authenticatorType: z.enum(['platform', 'cross-platform'])
-  //       })
-  //       .strict()
-  //   )
-  //   .query(async ({ ctx, input }) => {
-  //     const { db, user } = ctx;
-
-  //     const userId = user.id;
-  //     // Update to use read replicas when implemented - primary db
-  //     const userResponse = await db.query.accounts.findFirst({
-  //       where: eq(accounts.id, userId),
-  //       columns: {
-  //         id: true,
-  //         publicId: true,
-  //         username: true
-  //       }
-  //     });
-
-  //     if (!userResponse) {
-  //       throw new TRPCError({
-  //         code: 'BAD_REQUEST',
-  //         message: 'User not found'
-  //       });
-  //     }
-
-  //     const authenticatorAttachment = input.authenticatorType;
-
-  //     const passkeyOptions = await usePasskeys.generateRegistrationOptions({
-  //       userId: userId,
-  //       userPublicId: userResponse.publicId,
-  //       userName: userResponse.username,
-  //       userDisplayName: userResponse.username,
-  //       authenticatorAttachment: authenticatorAttachment
-  //     });
-
-  //     return { options: passkeyOptions };
-  //   }),
-
   signUpWithPasskeyStart: publicRateLimitedProcedure.signUpPasskeyStart
     .input(
       z.object({
@@ -181,77 +135,6 @@ export const passkeyRouter = router({
         publicId: input.publicId
       });
       setCookie(ctx.event, cookie.name, cookie.value, cookie.attributes);
-      return { success: true };
-    }),
-  addNewPasskey: accountProcedure
-    .input(
-      z
-        .object({
-          registrationResponseRaw: z.any(),
-          nickname: z.string().min(3).max(32).default('Passkey')
-        })
-        .strict()
-    )
-    .mutation(async ({ ctx, input }) => {
-      const { db, account } = ctx;
-
-      const publicId = account.session.attributes.account.publicId;
-      const registrationResponse =
-        input.registrationResponseRaw as RegistrationResponseJSON;
-
-      const passkeyVerification = await usePasskeys.verifyRegistrationResponse({
-        registrationResponse: registrationResponse,
-        publicId: publicId
-      });
-
-      if (
-        !passkeyVerification.verified ||
-        !passkeyVerification.registrationInfo
-      ) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Passkey verification failed'
-        });
-      }
-
-      const accountCredentialQuery =
-        await db.query.accountCredentials.findFirst({
-          where: eq(accountCredentials.accountId, account.id),
-          columns: {
-            id: true
-          }
-        });
-
-      if (!accountCredentialQuery || !accountCredentialQuery.id) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'User account not found'
-        });
-      }
-
-      const insertPasskey = await usePasskeysDb.createAuthenticator(
-        {
-          accountCredentialId: accountCredentialQuery.id,
-          credentialID: passkeyVerification.registrationInfo.credentialID,
-          credentialPublicKey:
-            passkeyVerification.registrationInfo.credentialPublicKey,
-          credentialDeviceType:
-            passkeyVerification.registrationInfo.credentialDeviceType,
-          credentialBackedUp:
-            passkeyVerification.registrationInfo.credentialBackedUp,
-          transports: registrationResponse.response.transports,
-          counter: passkeyVerification.registrationInfo.counter
-        },
-        input.nickname
-      );
-
-      if (!insertPasskey.credentialID) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Something went wrong adding your passkey, please try again'
-        });
-      }
-
       return { success: true };
     }),
 
