@@ -873,8 +873,10 @@ export const emailIdentityExternal = mysqlTable(
     }).notNull(),
     host: varchar('hostname', { length: 128 }).notNull(),
     port: smallint('port').notNull(),
-    authMethod: mysqlEnum('auth_method', ['plain', 'login', 'cram_md5']),
-    encryption: mysqlEnum('encryption', ['ssl', 'tls', 'starttls', 'none']),
+    authMethod: mysqlEnum('auth_method', ['plain', 'login']).notNull(), // No support for CRAM_MD5 yet, does it even gets used?
+    encryption: mysqlEnum('encryption', ['ssl', 'tls', 'starttls', 'none'])
+      .default('none')
+      .notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull()
   },
   (table) => ({

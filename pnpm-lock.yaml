@@ -1,5 +1,9 @@
 lockfileVersion: '6.0'
 
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
 importers:
 
   .:
@@ -94,6 +98,9 @@ importers:
       nitropack:
         specifier: ^2.9.4
         version: 2.9.4(drizzle-orm@0.30.3)
+      nodemailer:
+        specifier: ^6.9.13
+        version: 6.9.13
       superjson:
         specifier: ^2.2.1
         version: 2.2.1
@@ -103,6 +110,10 @@ importers:
       zod:
         specifier: ^3.22.4
         version: 3.22.4
+    devDependencies:
+      '@types/nodemailer':
+        specifier: ^6.4.14
+        version: 6.4.14
 
   apps/platform:
     dependencies:
@@ -5219,6 +5230,12 @@ packages:
     dependencies:
       undici-types: 5.26.5
 
+  /@types/nodemailer@6.4.14:
+    resolution: {integrity: sha512-fUWthHO9k9DSdPCSPRqcu6TWhYyxTBg382vlNIttSe9M7XfsT06y0f24KHXtbnijPGGRIcVvdKHTNikOI6qiHA==}
+    dependencies:
+      '@types/node': 20.12.2
+    dev: true
+
   /@types/resolve@1.20.2:
     resolution: {integrity: sha512-60BCwRFOZCQhDncwQdxxeOEEkbc5dIMccYLwbxsS4TUNeVECQ/pBJ0j09mrHOl/JJvpRPGwO9SvE4nR2Nb/a4Q==}
 
@@ -9359,6 +9376,11 @@ packages:
     engines: {node: '>=6.0.0'}
     dev: false
 
+  /nodemailer@6.9.13:
+    resolution: {integrity: sha512-7o38Yogx6krdoBf3jCAqnIN4oSQFx+fMa0I7dK1D+me9kBxx12D+/33wSb+fhOCtIxvYJ+4x4IMEhmhCKfAiOA==}
+    engines: {node: '>=6.0.0'}
+    dev: false
+
   /nodemailer@6.9.9:
     resolution: {integrity: sha512-dexTll8zqQoVJEZPwQAKzxxtFn0qTnjdQTchoU6Re9BUUGBJiOy3YMn/0ShTW6J5M0dfQ1NeDeRTTl4oIWgQMA==}
     engines: {node: '>=6.0.0'}
@@ -12732,7 +12754,3 @@ packages:
 
   /zod@3.22.4:
     resolution: {integrity: sha512-iC+8Io04lddc+mVqQ9AZ7OQ2MrUKGN+oIQyq1vemgt46jwCwLfhq7/pwnBnNXXXZb8VTVLKwp9EDkx+ryxIWmg==}
-
-settings:
-  autoInstallPeers: true
-  excludeLinksFromLockfile: false

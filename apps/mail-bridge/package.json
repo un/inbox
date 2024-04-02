@@ -32,8 +32,12 @@
     "mailparser": "^3.6.9",
     "mysql2": "^3.9.2",
     "nitropack": "^2.9.4",
+    "nodemailer": "^6.9.13",
     "superjson": "^2.2.1",
     "trpc-nuxt": "^0.10.20",
     "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/nodemailer": "^6.4.14"
   }
 }
