@@ -1,14 +1,5 @@
 <script setup lang="ts">
-  import {
-    computed,
-    navigateTo,
-    onMounted,
-    ref,
-    useNuxtApp,
-    useCookie,
-    useToast,
-    watch
-  } from '#imports';
+  import { onMounted, ref, useNuxtApp, useToast, watch } from '#imports';
 
   import { useClipboard } from '@vueuse/core';
   import { useQRCode } from '@vueuse/integrations/useQRCode';
@@ -17,20 +8,13 @@
   const { $trpc } = useNuxtApp();
   const toast = useToast();
 
-  const emit = defineEmits(['complete', 'cancel']);
-
-  const username = ref('');
-  if (process.client) {
-    const usernameCookie = useCookie('un-join-username').value;
-    !usernameCookie
-      ? navigateTo('/join')
-      : (username.value = usernameCookie || '');
-  }
+  const emit = defineEmits(['complete', 'cancel', 'close']);
+  type Props = {
+    verificationToken: string;
+  };
+  const props = defineProps<Props>();
 
   const loadingData = ref(true);
-  const alreadySetUpError = ref(false);
-  const showResetTotpModal = ref(false);
-  const disable2FALoading = ref(false);
   const new2FAVerified = ref(false);
   const showConfirmCopiedModal = ref(false);
   const savedRecoveryCode = ref(false);
@@ -45,26 +29,23 @@
   const twoFactorCode = ref('');
   const recoveryCode = ref('');
 
-  const twoFactorCodeValid = computed(() => {
-    return twoFactorCode.value.length === 6;
-  });
-
   const {
     data: new2FAData,
     status: new2FAStatus,
-    error: new2FAError,
     mutate: getNew2FA
-  } = $trpc.auth.twoFactorAuthentication.createTwoFactorSecret.useMutation();
+  } = $trpc.account.security.createTwoFactorSecret.useMutation();
 
   watch(new2FAStatus, (status) => {
     if (status === 'error') {
       loadingData.value = false;
-      if (
-        new2FAError?.value?.message ===
-        'Two Factor Authentication (2FA) is already set up for this account'
-      ) {
-        alreadySetUpError.value = true;
-      }
+      toast.add({
+        id: '2fa_already_setup',
+        title: 'Something went wrong',
+        description: `Something went wrong when setting up Two Factor Authentication (2FA) on your account, please contact support.`,
+        icon: 'i-ph-warning-octagon',
+        color: 'orange',
+        timeout: 5000
+      });
     }
     if (status === 'success') {
       loadingData.value = false;
@@ -75,8 +56,7 @@
   });
 
   async function verify2FA() {
-    const verifyTotp =
-      $trpc.auth.twoFactorAuthentication.verifyTwoFactor.useMutation();
+    const verifyTotp = $trpc.account.security.verifyTwoFactor.useMutation();
     await verifyTotp.mutate({ twoFactorCode: twoFactorCode.value });
     if (verifyTotp.error.value) {
       toast.add({
@@ -101,83 +81,31 @@
     });
   }
 
-  function showReset2FA() {
-    twoFactorCodeValid.value ? (showResetTotpModal.value = true) : null;
-  }
-
-  async function reset2FA() {
-    disable2FALoading.value = true;
-    const reset2FAMutation =
-      $trpc.auth.twoFactorAuthentication.disableTwoFactor.useMutation();
-    await reset2FAMutation.mutate({ twoFactorCode: twoFactorCode.value });
-    if (reset2FAMutation.error.value) {
-      disable2FALoading.value = false;
-      return;
-    }
-    toast.add({
-      id: '2fa_disabled',
-      title: 'Two Factor Authentication (2FA) has been disabled',
-      description: `Please reconfigure your Two Factor Authentication (2FA) immediately.`,
-      icon: 'i-ph-warning-octagon',
-      color: 'orange',
-      timeout: 5000
-    });
-    await getNew2FA({});
-    showResetTotpModal.value = false;
-    twoFactorCode.value = '';
-    alreadySetUpError.value = false;
-  }
-
   function download() {
     const element = document.createElement('a');
     element.setAttribute(
       'href',
       'data:text/plain;charset=utf-8,' + encodeURIComponent(recoveryCode.value)
     );
-    element.setAttribute('download', `${username.value}-recovery-code.txt`);
+    element.setAttribute('download', `uninbox-recovery-code.txt`);
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
   }
 
+  function completeProcess() {
+    showConfirmCopiedModal.value = false;
+    emit('complete');
+    emit('close');
+  }
+
   onMounted(async () => {
-    await getNew2FA({});
+    await getNew2FA({ verificationToken: props.verificationToken });
   });
 </script>
 
 <template>
   <div class="flex w-full flex-col items-start">
-    <UnUiModal v-model="showResetTotpModal">
-      <template #header>
-        <span class="">Are you sure you want to reset 2FA?</span>
-      </template>
-
-      <div class="flex flex-col gap-2">
-        <span class="">
-          This will disable two factor authentication on your account.
-        </span>
-        <span class="">
-          If you don't immediately re-configure two factor authentication, you
-          wont be able to log back in to your account.
-        </span>
-        <span class=""> Are you sure you want to do this? </span>
-      </div>
-
-      <template #footer>
-        <div class="flex flex-row gap-2">
-          <UnUiButton
-            label="Disable 2FA"
-            color="red"
-            :loading="disable2FALoading"
-            :disabled="disable2FALoading"
-            @click="reset2FA()" />
-          <UnUiButton
-            label="Cancel"
-            variant="outline"
-            @click="showResetTotpModal = false" />
-        </div>
-      </template>
-    </UnUiModal>
     <UnUiModal v-model="showConfirmCopiedModal">
       <template #header>
         <span class="">Are your codes backed up securely?</span>
@@ -194,7 +122,7 @@
           <UnUiButton
             label="Confirm"
             color="orange"
-            @click="emit('complete')" />
+            @click="completeProcess()" />
           <UnUiButton
             label="Go Back"
             variant="outline"
@@ -208,32 +136,7 @@
       <span class="text-lg"> Loading</span>
     </div>
     <div
-      v-if="alreadySetUpError && !loadingData"
-      class="flex flex-col items-center gap-4">
-      <div class="flex flex-col items-center gap-2">
-        <span class="text-lg"> 2FA is already set up on this account </span>
-        <div class="flex flex-col items-start">
-          <span>
-            To reset 2FA on this account, you need to use your current 2FA
-            calculator.
-          </span>
-          <span>
-            If you lost access to your 2FA calculator, please log into your
-            account with a recovery code.
-          </span>
-        </div>
-      </div>
-      <Un2FAInput
-        v-model="twoFactorCode"
-        class="" />
-      <UnUiButton
-        label="Disable 2FA"
-        color="red"
-        :disabled="!twoFactorCodeValid"
-        @click="showReset2FA()" />
-    </div>
-    <div
-      v-if="!alreadySetUpError && !loadingData"
+      v-if="!loadingData"
       class="flex w-full flex-col items-center gap-8">
       <div
         v-if="!new2FAVerified"

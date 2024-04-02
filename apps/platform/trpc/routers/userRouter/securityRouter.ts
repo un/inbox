@@ -2,11 +2,17 @@ import { usePasskeys } from './../../../utils/auth/passkeys';
 import { z } from 'zod';
 import { router, accountProcedure } from '../../trpc';
 import { and, eq } from '@u22n/database/orm';
-import { accounts, accountCredentials } from '@u22n/database/schema';
+import {
+  accounts,
+  accountCredentials,
+  authenticators,
+  sessions
+} from '@u22n/database/schema';
 import {
   calculatePasswordStrength,
   nanoIdToken,
   strongPasswordSchema,
+  typeIdValidator,
   zodSchemas
 } from '@u22n/utils';
 import { TRPCError } from '@trpc/server';
@@ -17,6 +23,9 @@ import type {
 } from '@simplewebauthn/types';
 import { Argon2id } from 'oslo/password';
 import { usePasskeysDb } from '../../../utils/auth/passkeyDbAdaptor';
+import { decodeHex, encodeHex } from 'oslo/encoding';
+import { TOTPController, createTOTPKeyURI } from 'oslo/otp';
+import { lucia } from '../../../utils/auth';
 
 export const securityRouter = router({
   getSecurityOverview: accountProcedure
@@ -501,6 +510,400 @@ export const securityRouter = router({
           message: 'Something went wrong adding your passkey, please try again'
         });
       }
+
+      return { success: true };
+    }),
+  deletePasskey: accountProcedure
+    .input(
+      z
+        .object({
+          passkeyPublicId: typeIdValidator('accountPasskey'),
+          verificationToken: zodSchemas.nanoIdToken()
+        })
+        .strict()
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { db, account } = ctx;
+      const accountId = account.id;
+
+      const accountData = await db.query.accounts.findFirst({
+        where: eq(accounts.id, accountId),
+        columns: {
+          publicId: true,
+          username: true
+        },
+        with: {
+          accountCredential: {
+            columns: {
+              passwordHash: true,
+              twoFactorSecret: true
+            },
+            with: {
+              authenticators: {
+                columns: {
+                  id: true
+                }
+              }
+            }
+          }
+        }
+      });
+
+      if (!accountData) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'User not found'
+        });
+      }
+
+      if (!input.verificationToken) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'VerificationToken is required'
+        });
+      }
+      const authStorage = useStorage('auth');
+
+      const storedVerificationToken = await authStorage.getItem(
+        `authVerificationToken: ${accountData.publicId}`
+      );
+
+      if (input.verificationToken !== storedVerificationToken) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'VerificationToken is invalid'
+        });
+      }
+
+      const hasPassword = !!accountData.accountCredential.passwordHash;
+      const hasOtherPassKeys =
+        accountData.accountCredential.authenticators.length > 1;
+
+      if (!hasPassword && !hasOtherPassKeys) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'You must have at least one passkey, or a password set.'
+        });
+      }
+
+      await db
+        .delete(authenticators)
+        .where(eq(authenticators.publicId, input.passkeyPublicId));
+
+      return { success: true };
+    }),
+  disable2FA: accountProcedure
+    .input(
+      z
+        .object({
+          verificationToken: zodSchemas.nanoIdToken(),
+          twoFactorCode: z.string()
+        })
+        .strict()
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { account, db } = ctx;
+      const accountId = account.id;
+
+      const accountData = await db.query.accounts.findFirst({
+        where: eq(accounts.id, accountId),
+        columns: {
+          publicId: true
+        },
+        with: {
+          accountCredential: {
+            columns: {
+              twoFactorSecret: true,
+              recoveryCode: true
+            }
+          }
+        }
+      });
+
+      if (!accountData) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'User not found'
+        });
+      }
+
+      if (!input.verificationToken) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'VerificationToken is required'
+        });
+      }
+      const authStorage = useStorage('auth');
+
+      const storedVerificationToken = await authStorage.getItem(
+        `authVerificationToken: ${accountData.publicId}`
+      );
+
+      if (input.verificationToken !== storedVerificationToken) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'VerificationToken is invalid'
+        });
+      }
+      if (accountData.accountCredential.twoFactorSecret) {
+        const secret = decodeHex(accountData.accountCredential.twoFactorSecret);
+        const isValid = await new TOTPController().verify(
+          input.twoFactorCode,
+          secret
+        );
+        if (!isValid) {
+          throw new TRPCError({
+            code: 'UNAUTHORIZED',
+            message: 'Invalid 2FA code'
+          });
+        }
+      }
+
+      await db
+        .update(accountCredentials)
+        .set({ twoFactorSecret: null, recoveryCode: null })
+        .where(eq(accountCredentials.accountId, accountId));
+
+      return { success: true };
+    }),
+  createTwoFactorSecret: accountProcedure
+    .input(z.object({ verificationToken: zodSchemas.nanoIdToken() }).strict())
+    .mutation(async ({ ctx, input }) => {
+      const { account, db } = ctx;
+      const accountId = account.id;
+
+      const accountData = await db.query.accounts.findFirst({
+        where: eq(accounts.id, accountId),
+        columns: {
+          publicId: true,
+          username: true
+        },
+        with: {
+          accountCredential: {
+            columns: {
+              twoFactorSecret: true,
+              recoveryCode: true
+            }
+          }
+        }
+      });
+
+      if (!accountData) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'User not found'
+        });
+      }
+
+      if (!input.verificationToken) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'VerificationToken is required'
+        });
+      }
+      const authStorage = useStorage('auth');
+
+      const storedVerificationToken = await authStorage.getItem(
+        `authVerificationToken: ${accountData.publicId}`
+      );
+
+      if (input.verificationToken !== storedVerificationToken) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'VerificationToken is invalid'
+        });
+      }
+
+      const newSecret = crypto.getRandomValues(new Uint8Array(20));
+      await db
+        .update(accountCredentials)
+        .set({ twoFactorSecret: encodeHex(newSecret) })
+        .where(eq(accountCredentials.accountId, accountId));
+      const uri = createTOTPKeyURI(
+        'UnInbox.com',
+        accountData.username,
+        newSecret
+      );
+      return { uri };
+    }),
+  verifyTwoFactor: accountProcedure
+    .input(
+      z
+        .object({
+          twoFactorCode: z.string()
+        })
+        .strict()
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { account, db } = ctx;
+      const accountId = account.id;
+
+      const existingData = await db.query.accounts.findFirst({
+        where: eq(accounts.id, accountId),
+        with: {
+          accountCredential: {
+            columns: {
+              twoFactorSecret: true,
+              recoveryCode: true,
+              twoFactorEnabled: true
+            }
+          }
+        }
+      });
+
+      if (!existingData) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'User not found'
+        });
+      }
+
+      if (!existingData.accountCredential.twoFactorSecret) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message:
+            'Two Factor Authentication (2FA) is not set up for this account'
+        });
+      }
+
+      const secret = decodeHex(existingData.accountCredential.twoFactorSecret);
+      const isValid = await new TOTPController().verify(
+        input.twoFactorCode,
+        secret
+      );
+      if (!isValid) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'Invalid Two Factor Authentication (2FA) code'
+        });
+      }
+
+      // generate and return the recovery codes
+      const recoveryCode = nanoIdToken();
+      const hashedRecoveryCode = await new Argon2id().hash(recoveryCode);
+
+      await db
+        .update(accountCredentials)
+        .set({ recoveryCode: hashedRecoveryCode, twoFactorEnabled: true })
+        .where(eq(accountCredentials.accountId, accountId));
+
+      return { recoveryCode: recoveryCode };
+    }),
+  deleteSession: accountProcedure
+    .input(
+      z
+        .object({
+          sessionPublicId: typeIdValidator('accountSession'),
+          verificationToken: zodSchemas.nanoIdToken()
+        })
+        .strict()
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { db, account } = ctx;
+      const accountId = account.id;
+
+      const accountData = await db.query.accounts.findFirst({
+        where: eq(accounts.id, accountId),
+        columns: {
+          id: true,
+          publicId: true
+        }
+      });
+
+      if (!accountData) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'User not found'
+        });
+      }
+
+      if (!input.verificationToken) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'VerificationToken is required'
+        });
+      }
+      const authStorage = useStorage('auth');
+
+      const storedVerificationToken = await authStorage.getItem(
+        `authVerificationToken: ${accountData.publicId}`
+      );
+
+      if (input.verificationToken !== storedVerificationToken) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'VerificationToken is invalid'
+        });
+      }
+
+      const sessionQuery = await db.query.sessions.findFirst({
+        where: and(
+          eq(sessions.publicId, input.sessionPublicId),
+          eq(sessions.accountId, accountData.id)
+        ),
+        columns: {
+          sessionToken: true
+        }
+      });
+
+      if (!sessionQuery) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Session not found'
+        });
+      }
+
+      await lucia.invalidateSession(sessionQuery.sessionToken);
+
+      return { success: true };
+    }),
+  deleteAllSessions: accountProcedure
+    .input(
+      z
+        .object({
+          verificationToken: zodSchemas.nanoIdToken()
+        })
+        .strict()
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { db, account } = ctx;
+      const accountId = account.id;
+
+      const accountData = await db.query.accounts.findFirst({
+        where: eq(accounts.id, accountId),
+        columns: {
+          id: true,
+          publicId: true
+        }
+      });
+
+      if (!accountData) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'User not found'
+        });
+      }
+
+      if (!input.verificationToken) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'VerificationToken is required'
+        });
+      }
+      const authStorage = useStorage('auth');
+
+      const storedVerificationToken = await authStorage.getItem(
+        `authVerificationToken: ${accountData.publicId}`
+      );
+
+      if (input.verificationToken !== storedVerificationToken) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'VerificationToken is invalid'
+        });
+      }
+
+      await lucia.invalidateUserSessions(accountData.id);
 
       return { success: true };
     })

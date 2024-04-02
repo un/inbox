@@ -27,6 +27,13 @@ export const errorHandler: TRPCLink<TrpcPlatformRouter> = () => {
             navigateTo('/redirect');
             return;
           }
+          if (
+            err.data?.code === 'UNAUTHORIZED' &&
+            err.message === 'You are not logged in, redirecting...'
+          ) {
+            navigateTo('/');
+            return;
+          }
 
           const toast = useToast();
           toast.add({
