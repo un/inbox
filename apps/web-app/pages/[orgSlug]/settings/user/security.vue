@@ -20,6 +20,8 @@
     RegistrationResponseJSON
   } from '@simplewebauthn/types';
   import type { SettingsSecurityPasswordReset } from '#build/components';
+  import type { TypeId } from '@u22n/utils';
+  import { navigateTo } from '#app';
   const { $trpc } = useNuxtApp();
   const toast = useToast();
   const verificationToken = ref<string | null>(null);
@@ -48,8 +50,8 @@
   });
 
   const passwordEnabled = ref(false);
-  const recoveryCodeSet = ref(false);
   const twoFactorEnabled = ref(false);
+  const recoveryCodeSet = ref(false);
 
   const canDisablePassword = computed(() => {
     if ((data.value?.passkeys.length ?? 0) > 0) {
@@ -73,6 +75,7 @@
   const verificationPasswordValidationMessage = ref('');
   const passkeyVerificationData = ref<AuthenticationResponseJSON | null>(null);
 
+  //* Verification Code Functions
   async function getVerificationToken(): Promise<void> {
     if (!verificationPasswordInput.value && !passkeyVerificationData.value) {
       return;
@@ -89,8 +92,6 @@
   }
 
   async function getPasskeyChallenge(): Promise<void> {
-    console.log('🔥 get passkey');
-
     const { data: passkeyData } =
       await $trpc.account.security.generatePasskeyVerificationChallenge.useQuery(
         {}
@@ -118,7 +119,7 @@
       if (!passkeyDataAuthentication) {
         throw new Error('No passkey data returned');
       }
-
+      passkeyVerificationData.value = passkeyDataAuthentication;
       await getVerificationToken();
     } catch (e) {
       toast.add({
@@ -132,61 +133,56 @@
     }
   }
 
-  async function doAction() {
-    if (!verificationToken.value) {
-      verificationModalOpen.value = true;
-      return;
-    }
-  }
-
-  // watch(passwordEnabled, (newValue) => {
-  //   if (newValue === false) {
-  //     disablePassword({ confirm: false });
-  //   }
-  //   if (newValue === true) {
-  //     resetPassword({ confirm: false });
-  //   }
-  // });
-
+  //* Actual security functions
   const showDisablePasswordModal = ref(false);
   async function disablePassword({ confirm }: { confirm?: boolean }) {
-    if (!passwordEnabled.value || !canDisablePassword.value) {
+    if (passwordEnabled.value == false && !canDisablePassword.value) {
+      passwordEnabled.value = true;
       return;
     }
     if (!verificationToken.value) {
       verificationModalOpen.value = true;
+      setTimeout(() => {
+        passwordEnabled.value = !passwordEnabled.value;
+      }, 500);
       return;
     }
     if (!confirm) {
       showDisablePasswordModal.value = true;
     }
     if (confirm) {
-      const result = await $trpc.account.security.disablePassword.mutate({
-        verificationToken: verificationToken.value
-      });
-      if (result.success) {
-        toast.add({
-          title: 'Password Disabled',
-          description: 'You will no longer be able to sign in with passwords.',
-          color: 'green',
-          timeout: 5000,
-          icon: 'i-ph-check-circle'
+      if (!passwordEnabled.value) {
+        const result = await $trpc.account.security.disablePassword.mutate({
+          verificationToken: verificationToken.value
         });
-        showDisablePasswordModal.value = false;
-      } else {
-        toast.add({
-          title: 'Password Error',
-          description: 'Something went wrong when disabling your password.',
-          color: 'red',
-          timeout: 5000,
-          icon: 'i-ph-warning-circle'
-        });
+        if (result.success) {
+          toast.add({
+            title: 'Password Disabled',
+            description:
+              'You will no longer be able to sign in with passwords.',
+            color: 'green',
+            timeout: 5000,
+            icon: 'i-ph-check-circle'
+          });
+          showDisablePasswordModal.value = false;
+        } else {
+          toast.add({
+            title: 'Password Error',
+            description: 'Something went wrong when disabling your password.',
+            color: 'red',
+            timeout: 5000,
+            icon: 'i-ph-warning-circle'
+          });
+        }
+      }
+      if (passwordEnabled.value) {
+        resetPassword();
       }
     }
   }
 
   const showResetPasswordModal = ref(false);
-  async function resetPassword({ confirm }: { confirm?: boolean }) {
+  async function resetPassword() {
     if (!verificationToken.value) {
       verificationModalOpen.value = true;
       return;
@@ -194,22 +190,73 @@
     showResetPasswordModal.value = true;
   }
 
+  // 2FA
   const showDisable2FAModal = ref(false);
+  const disable2FALoading = ref(false);
   const showReset2FAModal = ref(false);
+  const twoFactorDisableCode = ref('');
   async function disable2FA({ confirm }: { confirm?: boolean }) {
+    if (!verificationToken.value) {
+      verificationModalOpen.value = true;
+      setTimeout(() => {
+        twoFactorEnabled.value = !twoFactorEnabled.value;
+      }, 500);
+      return;
+    }
+    if (confirm) {
+      if (!twoFactorEnabled.value) {
+        disable2FALoading.value = true;
+        const reset2FAMutation =
+          $trpc.account.security.disable2FA.useMutation();
+        await reset2FAMutation.mutate({
+          verificationToken: verificationToken.value,
+          twoFactorCode: twoFactorDisableCode.value
+        });
+        if (reset2FAMutation.error.value) {
+          toast.add({
+            id: '2fa_disabled',
+            title: 'Failed to disable Two Factor Authentication (2FA)',
+            description: `Something went wrong. Check the errors`,
+            icon: 'i-ph-warning-octagon',
+            color: 'red',
+            timeout: 5000
+          });
+
+          disable2FALoading.value = false;
+          return;
+        }
+        toast.add({
+          id: '2fa_disabled',
+          title: 'Two Factor Authentication (2FA) has been disabled',
+          description: `Please reconfigure your Two Factor Authentication (2FA) immediately.`,
+          icon: 'i-ph-warning-octagon',
+          color: 'orange',
+          timeout: 5000
+        });
+        showDisable2FAModal.value = false;
+        disable2FALoading.value = false;
+        twoFactorEnabled.value = false;
+        return;
+      }
+      if (twoFactorEnabled.value) {
+        reset2FA();
+        return;
+      }
+    }
+    if (!confirm) {
+      showDisable2FAModal.value = true;
+    }
+  }
+
+  async function reset2FA() {
     if (!verificationToken.value) {
       verificationModalOpen.value = true;
       return;
     }
-    if (!confirm) {
-      //open password disable modal
-    }
-    if (confirm) {
-      //disable password
-      //if user has passkeys, dont do anything else
-      // if user dosnt have passkeys, prompt for new 2FA
-    }
+    showReset2FAModal.value = true;
   }
+
+  // Passkeys
   const passkeyNewButtonLoading = ref(false);
   async function addPasskey({ confirm }: { confirm?: boolean }) {
     if (!verificationToken.value) {
@@ -242,7 +289,7 @@
     const setNewPasskey = await $trpc.account.security.addNewPasskey.mutate({
       verificationToken: verificationToken.value,
       registrationResponseRaw: newPasskeyData,
-      nickname: 'Primary'
+      nickname: 'Passkey'
     });
     if (!setNewPasskey.success) {
       toast.add({
@@ -266,49 +313,145 @@
       icon: 'i-ph-check-circle'
     });
   }
-  async function removePasskey({ confirm }: { confirm?: boolean }) {
-    if (!passwordEnabled.value || !canDisablePassword.value) {
+  const showConfirmPasskeyDeleteModal = ref(false);
+  const passkeyPublicIdToDelete = ref<TypeId<'accountPasskey'> | null>(null);
+  async function deletePasskey({
+    confirm,
+    passkeyPublicId
+  }: {
+    confirm?: boolean;
+    passkeyPublicId: TypeId<'accountPasskey'>;
+  }) {
+    if (!verificationToken.value) {
+      verificationModalOpen.value = true;
       return;
     }
+    if (!canDeletePasskeys.value) {
+      toast.add({
+        id: 'passkey_error',
+        title: 'Passkey error',
+        description:
+          'You need to have at least 1 passkey, or password login enabled.',
+        color: 'red',
+        timeout: 5000,
+        icon: 'i-ph-warning-circle'
+      });
+      return;
+    }
+    if (!confirm) {
+      passkeyPublicIdToDelete.value = passkeyPublicId;
+      showConfirmPasskeyDeleteModal.value = true;
+    }
+    if (confirm) {
+      const result = await $trpc.account.security.deletePasskey.mutate({
+        verificationToken: verificationToken.value,
+        passkeyPublicId: passkeyPublicId
+      });
+      if (!result.success) {
+        toast.add({
+          id: 'passkey_error',
+          title: 'Passkey error',
+          description: 'Couldnt delete the passkey, please try again.',
+          color: 'red',
+          timeout: 5000,
+          icon: 'i-ph-warning-circle'
+        });
+        showConfirmPasskeyDeleteModal.value = false;
+        return;
+      }
+      refreshSecurityData();
+      toast.add({
+        title: 'Passkey Deleted',
+        description: 'Deleted successfully.',
+        color: 'green',
+        timeout: 5000,
+        icon: 'i-ph-check-circle'
+      });
+      showConfirmPasskeyDeleteModal.value = false;
+    }
+  }
+
+  // Sessions
+  const showConfirmSessionDeleteModal = ref(false);
+  const sessionPublicIdToDelete = ref<TypeId<'accountSession'> | null>(null);
+  async function deleteSession({
+    confirm,
+    sessionPublicId
+  }: {
+    confirm?: boolean;
+    sessionPublicId: TypeId<'accountSession'>;
+  }) {
     if (!verificationToken.value) {
       verificationModalOpen.value = true;
       return;
     }
     if (!confirm) {
-      //open password disable modal
+      sessionPublicIdToDelete.value = sessionPublicId;
+      showConfirmSessionDeleteModal.value = true;
     }
     if (confirm) {
-      //disable password
+      const result = await $trpc.account.security.deleteSession.mutate({
+        verificationToken: verificationToken.value,
+        sessionPublicId: sessionPublicId
+      });
+      if (!result.success) {
+        toast.add({
+          id: 'session_error',
+          title: 'Session error',
+          description: 'Couldnt delete the session, please try again.',
+          color: 'red',
+          timeout: 5000,
+          icon: 'i-ph-warning-circle'
+        });
+        showConfirmSessionDeleteModal.value = false;
+        return;
+      }
+      refreshSecurityData();
+      toast.add({
+        title: 'Session Deleted',
+        description: 'Deleted successfully.',
+        color: 'green',
+        timeout: 5000,
+        icon: 'i-ph-check-circle'
+      });
+      showConfirmSessionDeleteModal.value = false;
     }
   }
-  async function deleteSession({ confirm }: { confirm?: boolean }) {
-    if (!passwordEnabled.value || !canDisablePassword.value) {
-      return;
-    }
-    if (!verificationToken.value) {
-      verificationModalOpen.value = true;
-      return;
-    }
-    if (!confirm) {
-      //open password disable modal
-    }
-    if (confirm) {
-      //disable password
-    }
-  }
+  const showConfirmSessionDeleteAllModal = ref(false);
   async function deleteAllSessions({ confirm }: { confirm?: boolean }) {
-    if (!passwordEnabled.value || !canDisablePassword.value) {
-      return;
-    }
     if (!verificationToken.value) {
       verificationModalOpen.value = true;
       return;
     }
     if (!confirm) {
-      //open password disable modal
+      showConfirmSessionDeleteAllModal.value = true;
     }
     if (confirm) {
-      //disable password
+      const result = await $trpc.account.security.deleteAllSessions.mutate({
+        verificationToken: verificationToken.value
+      });
+      if (!result.success) {
+        toast.add({
+          id: 'session_error',
+          title: 'Session error',
+          description: 'Couldnt delete the sessions, please try again.',
+          color: 'red',
+          timeout: 5000,
+          icon: 'i-ph-warning-circle'
+        });
+        showConfirmSessionDeleteAllModal.value = false;
+        return;
+      }
+      refreshSecurityData();
+      toast.add({
+        title: 'Sessions Deleted',
+        description: 'Deleted successfully.',
+        color: 'green',
+        timeout: 5000,
+        icon: 'i-ph-check-circle'
+      });
+      await navigateTo('/');
+      showConfirmSessionDeleteAllModal.value = false;
     }
   }
 </script>
@@ -340,16 +483,18 @@
               <UnUiToggle
                 v-model="passwordEnabled"
                 disabled
-                label="Disable Password" />
+                label="Disable Password"
+                @click="disablePassword({})" />
             </UnUiTooltip>
             <UnUiToggle
               v-if="canDisablePassword"
               v-model="passwordEnabled"
-              label="Disable Password" />
+              label="Disable Password"
+              @click="disablePassword({})" />
             <UnUiButton
               :label="passwordEnabled ? 'Reset Password' : 'Set Password'"
               size="xs"
-              @click="resetPassword({})" />
+              @click="resetPassword()" />
           </div>
         </div>
         <div class="grid grid-cols-2 items-center justify-between gap-12">
@@ -357,20 +502,33 @@
           <div class="flex flex-row items-center gap-4">
             <UnUiTooltip
               v-if="!canDisablePassword"
-              text="Enable your passkeys to disable your password">
+              text="Enable your passkeys to disable your 2FA">
               <UnUiToggle
-                v-model="passwordEnabled"
+                v-model="twoFactorEnabled"
                 disabled
-                label="Disable Password" />
+                label="Disable 2FA" />
             </UnUiTooltip>
+            <UnUiTooltip
+              v-if="passwordEnabled && canDisablePassword"
+              text="Disable password to disable 2FA">
+              <UnUiToggle
+                v-if="canDisablePassword"
+                v-model="twoFactorEnabled"
+                :disabled="passwordEnabled"
+                label="Disable 2FA" />
+            </UnUiTooltip>
+
             <UnUiToggle
-              v-if="canDisablePassword"
+              v-if="!passwordEnabled"
               v-model="twoFactorEnabled"
-              label="Disable Password" />
+              :disabled="passwordEnabled"
+              label="Disable 2FA"
+              @click="disable2FA({})" />
+
             <UnUiButton
               label="Reset 2FA"
               size="xs"
-              @click="resetPassword({})" />
+              @click="reset2FA()" />
           </div>
         </div>
         <div class="grid grid-cols-2 items-center justify-between gap-12">
@@ -378,6 +536,7 @@
           <div class="flex flex-row items-center gap-4">
             <UnUiTooltip text="Disable Password & 2FA first">
               <UnUiToggle
+                v-model="recoveryCodeSet"
                 disabled
                 label="Disable Recovery" />
             </UnUiTooltip>
@@ -385,8 +544,7 @@
               <UnUiButton
                 label="Reset Recovery Code"
                 disabled
-                size="xs"
-                @click="resetPassword({})" />
+                size="xs" />
             </UnUiTooltip>
           </div>
         </div>
@@ -405,7 +563,9 @@
                 </span>
 
                 <span class="text-xs">
-                  Created: {{ passkey.createdAt.toLocaleDateString() }}
+                  <UnUiTooltip :text="passkey.createdAt">
+                    Created: {{ passkey.createdAt.toLocaleDateString() }}
+                  </UnUiTooltip>
                 </span>
               </div>
               <UnUiButton
@@ -413,7 +573,13 @@
                 square
                 color="red"
                 icon="i-ph-trash"
-                class="h-full" />
+                class="h-full"
+                @click="
+                  deletePasskey({
+                    confirm: false,
+                    passkeyPublicId: passkey.publicId
+                  })
+                " />
             </div>
           </template>
           <UnUiButton
@@ -446,7 +612,13 @@
                 square
                 color="red"
                 icon="i-ph-trash"
-                class="h-full" />
+                class="h-full"
+                @click="
+                  deleteSession({
+                    confirm: false,
+                    sessionPublicId: session.publicId
+                  })
+                " />
             </div>
           </template>
           <UnUiButton
@@ -454,10 +626,10 @@
             color="red"
             icon="i-ph-trash"
             trailing
-            label="Log out of all devices" />
+            label="Log out of all devices"
+            @click="deleteAllSessions({ confirm: false })" />
         </div>
       </div>
-      {{ data }}
       <UnUiModal v-model="verificationModalOpen">
         <template #header>
           <div class="flex flex-row items-center gap-2">
@@ -563,40 +735,147 @@
         <div class="flex flex-col gap-4">
           <SettingsSecurityPasswordReset
             :verification-token="verificationToken!"
+            @complete="passwordEnabled = true"
             @close="showResetPasswordModal = false" />
         </div>
       </UnUiModal>
-      <!--       
-      <UnUiModal v-model="showReset2FAModal">
+      <UnUiModal v-model="showDisable2FAModal">
         <template #header>
-          <span class="">Are you sure you want to reset 2FA?</span>
+          <span class="">Are you sure you want to disable 2FA?</span>
         </template>
-
-        <div class="flex flex-col gap-2">
-          <span class="">
-            This will temporarily disable two factor authentication on your
-            account.
-          </span>
-          <span class="">
-            If you don't immediately re-configure two factor authentication, you
-            wont be able to log back in to your account.
-          </span>
-          <span class=""> Are you sure you want to do this? </span>
-        </div>
+        <span class="">
+          This will disable two factor authentication on your account.
+        </span>
+        <span>
+          To reset 2FA on this account, you need to use your current 2FA
+          calculator.
+        </span>
+        <span>
+          If you lost access to your 2FA calculator, please log out and back in
+          with your recovery code.
+        </span>
+        <Un2FAInput
+          v-model="twoFactorDisableCode"
+          class="" />
 
         <template #footer>
           <div class="flex flex-row gap-2">
             <UnUiButton
               label="Disable 2FA"
               color="red"
-              @click="reset2FA()" />
+              :loading="disable2FALoading"
+              :disabled="disable2FALoading"
+              @click="disable2FA({ confirm: true })" />
             <UnUiButton
               label="Cancel"
               variant="outline"
-              @click="showReset2FAModal = false" />
+              @click="showDisable2FAModal = false" />
           </div>
         </template>
-      </UnUiModal> -->
+      </UnUiModal>
+
+      <UnUiModal
+        v-model="showReset2FAModal"
+        fullscreen>
+        <template #header>
+          <div class="flex flex-row items-center gap-2">
+            <span class="text-red-9 text-2xl leading-none">
+              <UnUiIcon
+                name="i-ph-warning-octagon"
+                size="xl" />
+            </span>
+            <span class="text-lg font-semibold leading-none"> Reset 2FA </span>
+          </div>
+        </template>
+        <div class="flex flex-col gap-4">
+          <SettingsSecurityTotpReset
+            :verification-token="verificationToken!"
+            @complete="twoFactorEnabled = true"
+            @close="showReset2FAModal = false" />
+        </div>
+      </UnUiModal>
+
+      <UnUiModal v-model="showConfirmPasskeyDeleteModal">
+        <template #header>
+          <span class="">Confirm</span>
+        </template>
+        <span class="">Are you sure you want to delete this Passkey?</span>
+        <template #footer>
+          <div class="flex flex-row gap-2">
+            <UnUiButton
+              label="Yes, delete it"
+              color="red"
+              @click="
+                deletePasskey({
+                  confirm: true,
+                  passkeyPublicId: passkeyPublicIdToDelete!
+                })
+              " />
+            <UnUiButton
+              label="Cancel"
+              variant="outline"
+              @click="showConfirmPasskeyDeleteModal = false" />
+          </div>
+        </template>
+      </UnUiModal>
+
+      <UnUiModal v-model="showConfirmSessionDeleteModal">
+        <template #header>
+          <span class="">Confirm</span>
+        </template>
+        <div class="flex flex-col gap-2">
+          <span class="">Are you sure you want to delete this Session?</span>
+          <span class="">
+            If this is for the currently logged in device, you'll need to log
+            back in again!
+          </span>
+        </div>
+        <template #footer>
+          <div class="flex flex-row gap-2">
+            <UnUiButton
+              label="Yes, delete it"
+              color="red"
+              @click="
+                deleteSession({
+                  confirm: true,
+                  sessionPublicId: sessionPublicIdToDelete!
+                })
+              " />
+            <UnUiButton
+              label="Cancel"
+              variant="outline"
+              @click="showConfirmSessionDeleteModal = false" />
+          </div>
+        </template>
+      </UnUiModal>
+
+      <UnUiModal v-model="showConfirmSessionDeleteAllModal">
+        <template #header>
+          <span class="">Confirm</span>
+        </template>
+        <div class="flex flex-col gap-2">
+          <span class="">
+            Are you sure you want to delete all sessions for your account?
+          </span>
+          <span class="">You'll need to log back in on all devices!</span>
+        </div>
+        <template #footer>
+          <div class="flex flex-row gap-2">
+            <UnUiButton
+              label="Yes, delete it"
+              color="red"
+              @click="
+                deleteAllSessions({
+                  confirm: true
+                })
+              " />
+            <UnUiButton
+              label="Cancel"
+              variant="outline"
+              @click="showConfirmSessionDeleteAllModal = false" />
+          </div>
+        </template>
+      </UnUiModal>
     </div>
   </div>
 </template>

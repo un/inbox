@@ -1,27 +1,18 @@
 <script setup lang="ts">
-  import { startRegistration } from '@simplewebauthn/browser';
-  import type { RegistrationResponseJSON } from '@simplewebauthn/types';
   import { z } from 'zod';
   import {
-    navigateTo,
     definePageMeta,
-    useRuntimeConfig,
     useNuxtApp,
     useToast,
     ref,
     computed,
-    watch,
-    watchDebounced,
-    useCookie,
-    type Ref,
-    onNuxtReady
+    watchDebounced
   } from '#imports';
 
   const { $trpc } = useNuxtApp();
   definePageMeta({ guest: true });
-  const emit = defineEmits(['close']);
+  const emit = defineEmits(['close', 'complete']);
   const buttonLoading = ref(false);
-  const passwordCreated = ref(false);
 
   type Props = {
     verificationToken: string;
@@ -115,6 +106,7 @@
     });
 
     await new Promise((resolve) => setTimeout(resolve, 1000));
+    emit('complete');
     emit('close');
   }
 </script>
