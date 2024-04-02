@@ -81,7 +81,7 @@ export const passwordRouter = router({
         turnstileToken: z.string(),
         // we allow min length of 2 for username if we plan to provide them in the future
         username: zodSchemas.username(2),
-        password: strongPasswordSchema.optional(),
+        password: z.string().min(8),
         twoFactorCode: zodSchemas.nanoIdToken(),
         recoveryCode: z.string().optional()
       })
@@ -237,7 +237,7 @@ export const passwordRouter = router({
     .input(
       z
         .object({
-          oldPassword: strongPasswordSchema,
+          oldPassword: z.string().min(8),
           newPassword: strongPasswordSchema,
           otp: zodSchemas.nanoIdToken(),
           invalidateAllSessions: z.boolean().default(false)

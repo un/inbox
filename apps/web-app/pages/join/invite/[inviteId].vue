@@ -17,7 +17,6 @@
 
   const { $trpc } = useNuxtApp();
 
-  const turnstile = ref();
   const turnstileToken = ref();
   const inviteId = useRoute().params.inviteId;
   const joinButtonLoading = ref(false);
@@ -181,11 +180,12 @@
           @click="joinOrg()" />
       </div>
 
-      <NuxtTurnstile
-        v-if="pageReady && turnstileEnabled"
-        ref="turnstile"
-        v-model="turnstileToken"
-        class="hover:(mb-0 scale-100) fixed bottom-5 mb-[-30px] scale-50" />
+      <div v-if="pageReady && turnstileEnabled">
+        <!-- This should be invisible, we will be using invisible challenges -->
+        <NuxtTurnstile
+          v-model="turnstileToken"
+          class="hidden" />
+      </div>
     </div>
   </div>
 </template>

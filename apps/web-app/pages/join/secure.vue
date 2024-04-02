@@ -435,16 +435,18 @@
         <UnUiAlert
           v-show="turnstileError"
           icon="i-ph-warning-circle"
-          title="Waiting for human verification!"
+          title="Waiting for automatic captcha!"
           description="This is an automated process and should complete within a few seconds. If it doesn't, please refresh the page."
           color="orange"
           variant="solid" />
       </div>
 
-      <NuxtTurnstile
-        v-if="pageReady && turnstileEnabled"
-        v-model="turnstileToken"
-        class="hover:(mb-0 scale-100) fixed bottom-5 mb-[-30px] scale-50" />
+      <div v-if="pageReady && turnstileEnabled">
+        <!-- This should be invisible, we will be using invisible challenges -->
+        <NuxtTurnstile
+          v-model="turnstileToken"
+          class="hidden" />
+      </div>
     </div>
     <UnUiModal
       v-model="howToAddPasskeyDialogOpen"
