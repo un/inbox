@@ -55,7 +55,7 @@ async function generateRegistrationOptions(options: RegistrationOptions) {
     authenticatorSelection: {
       residentKey: 'preferred',
       userVerification: 'preferred',
-      authenticatorAttachment
+      authenticatorAttachment: 'cross-platform'
     }
   });
 
@@ -105,11 +105,26 @@ async function verifyRegistrationResponse({
 
 async function generateAuthenticationOptions({
   authChallengeId,
-  credentials = []
+  accountId
 }: {
   authChallengeId: string;
-  credentials?: PublicKeyCredentialDescriptorFuture[];
+  accountId?: number;
 }) {
+  const credentials: PublicKeyCredentialDescriptorFuture[] = [];
+
+  if (accountId) {
+    const accountPasskeys =
+      await usePasskeysDb.listAuthenticatorsByAccountCredentialId(accountId);
+
+    for (const passkey of accountPasskeys) {
+      credentials.push({
+        id: passkey.credentialID,
+        type: 'public-key',
+        transports: passkey.transports
+      });
+    }
+  }
+
   const authenticationOptions = await webAuthnGenerateAuthenticationOptions({
     rpID: runtimeConfig.auth.passkeys.rpID,
     userVerification: 'preferred',

@@ -6,6 +6,8 @@ const typeIdLength = 26;
 
 export const idTypes = {
   account: 'a',
+  accountSession: 'as',
+  accountPasskey: 'ap',
   org: 'o',
   orgInvitations: 'oi',
   orgMembers: 'om',

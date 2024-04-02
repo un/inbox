@@ -102,6 +102,7 @@ export const authenticators = mysqlTable(
   'authenticators',
   {
     id: serial('id').primaryKey(),
+    publicId: publicId('accountPasskey', 'public_id').notNull(),
     accountCredentialId: foreignKey('account_credential_id').notNull(),
     nickname: varchar('nickname', { length: 64 }).notNull(),
     credentialID: varchar('credential_id', { length: 255 }).notNull(), //Uint8Array
@@ -149,6 +150,7 @@ export const sessions = mysqlTable(
   'sessions',
   {
     id: serial('id').primaryKey(),
+    publicId: publicId('accountSession', 'public_id').notNull(),
     accountId: foreignKey('account_id').notNull(),
     accountPublicId: publicId('account', 'account_public_id').notNull(),
     sessionToken: varchar('session_token', { length: 255 }).notNull(),
