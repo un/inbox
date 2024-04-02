@@ -3,6 +3,7 @@ import { db } from '@u22n/database';
 import { eq, inArray, lte } from '@u22n/database/orm';
 import { sessions, accounts } from '@u22n/database/schema';
 import { useStorage } from '#imports';
+import { typeIdGenerator } from '@u22n/utils';
 
 //! Enable debug logging
 const debug = false;
@@ -124,8 +125,10 @@ export class UnInboxDBAdapter implements Adapter {
     const sessionStorage = useStorage('sessions');
     const accountId = session.attributes.account.id;
     const accountPublicId = session.attributes.account.publicId;
+    const sessionPublicId = typeIdGenerator('accountSession');
 
     await db.insert(sessions).values({
+      publicId: sessionPublicId,
       sessionToken: session.id,
       accountPublicId: accountPublicId,
       accountId: accountId,

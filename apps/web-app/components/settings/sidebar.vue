@@ -21,6 +21,11 @@
       label: 'Personal Addresses',
       to: `/${orgSlug}/settings/user/addresses`,
       icon: 'i-ph-envelope-open'
+    },
+    {
+      label: 'Security',
+      to: `/${orgSlug}/settings/user/security`,
+      icon: 'i-ph-lock'
     }
   ];
   const orgSetupLinks = computed(() => [

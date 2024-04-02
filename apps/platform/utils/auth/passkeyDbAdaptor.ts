@@ -3,6 +3,7 @@ import { db } from '@u22n/database';
 import { accountCredentials, authenticators } from '@u22n/database/schema';
 import type { AuthenticatorTransportFuture } from '@simplewebauthn/types';
 import { isoBase64URL } from '@simplewebauthn/server/helpers';
+import { typeIdGenerator } from '@u22n/utils';
 
 //! Enable debug logging
 const debug = false;
@@ -50,7 +51,10 @@ async function createAuthenticator(
   const b64ID = isoBase64URL.fromBuffer(authenticator.credentialID);
   const b64PK = isoBase64URL.fromBuffer(authenticator.credentialPublicKey);
 
+  const passkeyPublicId = typeIdGenerator('accountPasskey');
+
   await passkeyDb.insert(authenticators).values({
+    publicId: passkeyPublicId,
     accountCredentialId: authenticator.accountCredentialId,
     nickname: nickname,
     credentialID: b64ID,
@@ -102,6 +106,7 @@ async function getAuthenticator(credentialId: string) {
     where: eq(authenticators.credentialID, credentialId),
     columns: {
       id: true,
+      publicId: true,
       accountCredentialId: true,
       nickname: true,
       credentialID: true,
@@ -131,16 +136,17 @@ async function deleteAuthenticator(credentialId: Uint8Array) {
   return dbDeleteResult.rowsAffected > 0;
 }
 
-async function listAuthenticatorsByaccountCredentialId(
+async function listAuthenticatorsByAccountCredentialId(
   accountCredentialId: number
 ) {
-  log('passkey: listAuthenticatorsByaccountCredentialId', {
+  log('passkey: listAuthenticatorsByAccountCredentialId', {
     accountCredentialId
   });
   const dbQuery = await db.query.authenticators.findMany({
     where: eq(authenticators.accountCredentialId, accountCredentialId),
     columns: {
       id: true,
+      publicId: true,
       accountCredentialId: true,
       nickname: true,
       credentialID: true,
@@ -171,6 +177,7 @@ async function listAuthenticatorsByAccountId(accountId: number) {
       authenticators: {
         columns: {
           id: true,
+          publicId: true,
           accountCredentialId: true,
           nickname: true,
           credentialID: true,
@@ -199,6 +206,6 @@ export const usePasskeysDb = {
   updateAuthenticatorCounter,
   getAuthenticator,
   deleteAuthenticator,
-  listAuthenticatorsByaccountCredentialId,
+  listAuthenticatorsByAccountCredentialId,
   listAuthenticatorsByAccountId
 };
