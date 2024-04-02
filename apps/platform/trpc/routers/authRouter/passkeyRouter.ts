@@ -1,9 +1,5 @@
 import { z } from 'zod';
-import {
-  router,
-  accountProcedure,
-  publicRateLimitedProcedure
-} from '../../trpc';
+import { router, publicRateLimitedProcedure } from '../../trpc';
 import { eq } from '@u22n/database/orm';
 import { accountCredentials, accounts } from '@u22n/database/schema';
 import { TRPCError } from '@trpc/server';

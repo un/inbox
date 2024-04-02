@@ -16,7 +16,8 @@ import {
   zodSchemas
 } from '@u22n/utils';
 import { TRPCError } from '@trpc/server';
-import { useStorage, getCookie, setCookie } from '#imports';
+import { useStorage } from '#imports';
+import { getCookie, setCookie } from 'h3';
 import type {
   AuthenticationResponseJSON,
   RegistrationResponseJSON
@@ -30,7 +31,7 @@ import { lucia } from '../../../utils/auth';
 export const securityRouter = router({
   getSecurityOverview: accountProcedure
     .input(z.object({}).strict())
-    .query(async ({ ctx, input }) => {
+    .query(async ({ ctx }) => {
       const { db, account } = ctx;
       const accountId = account.id;
 
