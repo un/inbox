@@ -1,16 +1,7 @@
 <script setup lang="ts">
   import { z } from 'zod';
-  import { useFileDialog } from '@vueuse/core';
-  import {
-    useRuntimeConfig,
-    useNuxtApp,
-    useToast,
-    ref,
-    refreshNuxtData,
-    useRoute,
-    watch,
-    computed
-  } from '#imports';
+
+  import { useNuxtApp, useToast, ref, watch, computed } from '#imports';
   import {
     startAuthentication,
     startRegistration
@@ -258,7 +249,7 @@
 
   // Passkeys
   const passkeyNewButtonLoading = ref(false);
-  async function addPasskey({ confirm }: { confirm?: boolean }) {
+  async function addPasskey() {
     if (!verificationToken.value) {
       verificationModalOpen.value = true;
       return;
@@ -563,7 +554,7 @@
                 </span>
 
                 <span class="text-xs">
-                  <UnUiTooltip :text="passkey.createdAt">
+                  <UnUiTooltip :text="passkey.createdAt.toString()">
                     Created: {{ passkey.createdAt.toLocaleDateString() }}
                   </UnUiTooltip>
                 </span>
@@ -587,7 +578,7 @@
             size="xl"
             color="green"
             icon="i-ph-plus"
-            @click="addPasskey({})" />
+            @click="addPasskey()" />
         </div>
       </div>
       <div class="flex flex-col gap-4">
