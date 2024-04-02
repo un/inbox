@@ -1,0 +1,4 @@
+version: STSv1
+mode: enforce
+mx: *.e.uninbox.com
+max_age: 86400
