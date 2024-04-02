@@ -28,7 +28,7 @@ async function generateRegistrationOptions(options: RegistrationOptions) {
     accountPublicId,
     username,
     userDisplayName,
-    authenticatorAttachment,
+    // authenticatorAttachment,
     accountId
   } = options;
 
@@ -55,7 +55,7 @@ async function generateRegistrationOptions(options: RegistrationOptions) {
     authenticatorSelection: {
       residentKey: 'preferred',
       userVerification: 'preferred',
-      authenticatorAttachment
+      authenticatorAttachment: 'platform'
     }
   });
 
