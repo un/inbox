@@ -33,6 +33,7 @@ export function calculatePasswordStrength(password: string) {
 
 export const strongPasswordSchema = z
   .string()
+  .min(8, { message: 'Minimum 8 characters required' })
   .refine((password) => calculatePasswordStrength(password).allowed, {
     message: 'Password is too weak',
     path: ['password']

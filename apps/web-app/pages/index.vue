@@ -206,7 +206,11 @@
               label="Password"
               password
               placeholder=""
-              :schema="z.string()" />
+              :schema="
+                z.string().min(8, {
+                  message: 'Password can\'t be less than 8 characters'
+                })
+              " />
             <div class="flex flex-col gap-2">
               <span class="text-sm"
                 >Enter the 6-digit code from your 2FA app</span

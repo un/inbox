@@ -100,7 +100,6 @@ const turnstileTokenValidation = standaloneMiddleware<{
   return opts.next();
 });
 
-// Placeholder for the actual rate limits, to be defined later
 const publicRateLimits = {
   checkUsernameAvailability: [30, '1h'],
   checkPasswordStrength: [30, '1h'],
