@@ -20,8 +20,10 @@ import {
 import { typeIdGenerator, typeIdValidator, type TypeId } from '@u22n/utils';
 import { isAccountAdminOfOrg } from '../../../../utils/account';
 import { TRPCError } from '@trpc/server';
+import { emailIdentityExternalRouter } from './emailIdentityExternalRouter';
 
 export const emailIdentityRouter = router({
+  external: emailIdentityExternalRouter,
   checkEmailAvailability: orgProcedure
     .input(
       z.object({
@@ -110,7 +112,6 @@ export const emailIdentityRouter = router({
       } = input;
 
       const emailUsername = input.emailUsername.toLowerCase();
-      const newPublicId = typeIdGenerator('emailRoutingRules');
 
       const isAdmin = await isAccountAdminOfOrg(org);
       if (!isAdmin) {
@@ -204,9 +205,9 @@ export const emailIdentityRouter = router({
       });
 
       // create email routing rule
-
+      const newRoutingRulePublicId = typeIdGenerator('emailRoutingRules');
       const insertEmailRoutingRule = await db.insert(emailRoutingRules).values({
-        publicId: newPublicId,
+        publicId: newRoutingRulePublicId,
         orgId: orgId,
         createdBy: org.memberId,
         name: emailUsername,
@@ -220,7 +221,11 @@ export const emailIdentityRouter = router({
       const routingRuleInsertValues: InsertRoutingRuleDestination[] = [];
       if (orgMemberObjects.length > 0) {
         orgMemberObjects.forEach((orgMemberObject) => {
+          const newRoutingRuleDestinationPublicId = typeIdGenerator(
+            'emailRoutingRuleDestinations'
+          );
           routingRuleInsertValues.push({
+            publicId: newRoutingRuleDestinationPublicId,
             orgId: orgId,
             ruleId: +insertEmailRoutingRule.insertId,
             orgMemberId: orgMemberObject.id
@@ -229,7 +234,11 @@ export const emailIdentityRouter = router({
       }
       if (userGroupObjects.length > 0) {
         userGroupObjects.forEach((userGroupObject) => {
+          const newRoutingRuleDestinationPublicId = typeIdGenerator(
+            'emailRoutingRuleDestinations'
+          );
           routingRuleInsertValues.push({
+            publicId: newRoutingRuleDestinationPublicId,
             orgId: orgId,
             ruleId: +insertEmailRoutingRule.insertId,
             groupId: userGroupObject.id
@@ -252,7 +261,7 @@ export const emailIdentityRouter = router({
           username: emailUsername,
           domainName: domainResponse.domain,
           domainId: domainResponse.id,
-          routingRuleId: +insertEmailRoutingRule.insertId,
+          routingRuleId: Number(insertEmailRoutingRule.insertId),
           sendName: sendName,
           isCatchAll: catchAll
         });

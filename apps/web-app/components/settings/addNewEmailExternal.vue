@@ -15,63 +15,71 @@
 
   const { $trpc } = useNuxtApp();
 
-  const newIdentityUsernameValue = ref('');
-  const newIdentityUsernameValid = ref<boolean | 'remote' | null>(null);
-  const newIdentityUsernameValidationMessage = ref('');
+  const newIdentityEmailValue = ref('');
+  const newIdentityEmailValid = ref<boolean | 'remote' | null>(null);
+  const newIdentityEmailValidationMessage = ref('');
   const newIdentitySendNameValue = ref('');
   const newIdentitySendNameValid = ref<boolean | 'remote' | null>(null);
-  const newIdentityCatchAll = ref(false);
+
+  const smtpHost = ref('');
+  const smtpHostValid = ref(false);
+  const smtpPort = ref('');
+  const smtpPortValid = ref(false);
+  const smtpUsername = ref('');
+  const smtpUsernameValid = ref(false);
+  const smtpPassword = ref('');
+  const smtpPasswordValid = ref(false);
+  type SmtpEncryptionMethods = 'none' | 'ssl' | 'tls' | 'starttls';
+  const smtpEncryptionMethods: SmtpEncryptionMethods[] = [
+    'none',
+    'ssl',
+    'tls',
+    'starttls'
+  ];
+  const smtpEncryptionMethod = ref<SmtpEncryptionMethods>(
+    smtpEncryptionMethods[0] as SmtpEncryptionMethods
+  );
+  type SmtpAuthMethods = 'plain' | 'login';
+  const smtpAuthMethods: SmtpAuthMethods[] = ['plain', 'login'];
+  const smtpAuthMethod = ref<SmtpAuthMethods>(
+    smtpAuthMethods[0] as SmtpAuthMethods
+  );
+
+  const smtpValid = ref(false);
+  const smtpValidationLoading = ref(false);
 
   const buttonLabel = ref('Create New Email Address');
   const buttonLoading = ref(false);
-  const emit = defineEmits(['close', 'openExternal']);
+  const emit = defineEmits(['close', 'openInternal']);
+
+  const smtpFormValid = computed(() => {
+    return (
+      smtpHostValid.value === true &&
+      smtpPortValid.value === true &&
+      smtpUsernameValid.value === true &&
+      smtpPasswordValid.value === true
+    );
+  });
 
   const formValid = computed(() => {
     if (isPro.value === false) {
       return (
-        newIdentityUsernameValid.value === true &&
+        smtpValid.value === true &&
+        newIdentityEmailValid.value === true &&
         newIdentitySendNameValid.value === true &&
-        selectedDomain.value?.domainPublicId &&
         (selectedOrgGroups.value.length > 0 ||
           selectedOrgMembers.value.length > 0) &&
         !multipleDestinationsSelected.value
       );
     }
     return (
-      newIdentityUsernameValid.value === true &&
+      smtpValid.value === true &&
+      newIdentityEmailValid.value === true &&
       newIdentitySendNameValid.value === true &&
-      selectedDomain.value?.domainPublicId &&
       (selectedOrgGroups.value.length > 0 ||
         selectedOrgMembers.value.length > 0)
     );
   });
-
-  // get list of domains
-  interface OrgDomains {
-    domainPublicId: string;
-    domain: string;
-  }
-
-  const orgDomains = ref<OrgDomains[]>([]);
-
-  const { data: orgDomainsData, pending: orgDomainsPending } =
-    await $trpc.org.mail.domains.getOrgDomains.useLazyQuery(
-      {},
-      { server: false }
-    );
-
-  watch(orgDomainsData, (newOrgDomainsData) => {
-    if (newOrgDomainsData?.domainData) {
-      for (const domain of newOrgDomainsData.domainData) {
-        orgDomains.value.push({
-          domainPublicId: domain.publicId,
-          domain: domain.domain
-        });
-      }
-    }
-  });
-
-  const selectedDomain = ref<OrgDomains | undefined>(undefined);
 
   // get list of groups
   const { data: orgGroupsData, pending: orgGroupPending } =
@@ -149,26 +157,22 @@
 
   async function checkEmailAvailability() {
     if (
-      newIdentityUsernameValid.value === 'remote' ||
-      newIdentityUsernameValidationMessage.value === 'Select domain'
+      newIdentityEmailValid.value === 'remote' ||
+      newIdentityEmailValidationMessage.value === 'Select domain'
     ) {
-      if (!selectedDomain.value?.domain) {
-        newIdentityUsernameValid.value = false;
-        newIdentityUsernameValidationMessage.value = 'Select domain';
-        return;
+      const { data, error } =
+        await $trpc.org.mail.emailIdentities.external.checkExternalAvailability.useQuery(
+          {
+            emailAddress: newIdentityEmailValue.value
+          }
+        );
+      if (error) {
+        newIdentityEmailValid.value = false;
+        newIdentityEmailValidationMessage.value = 'Email already in use';
       }
-      const { available } =
-        await $trpc.org.mail.emailIdentities.checkEmailAvailability.query({
-          domainPublicId: selectedDomain.value?.domainPublicId as string,
-          emailUsername: newIdentityUsernameValue.value
-        });
-      if (!available) {
-        newIdentityUsernameValid.value = false;
-        newIdentityUsernameValidationMessage.value = 'Email already in use';
-      }
-      if (available) {
-        newIdentityUsernameValid.value = true;
-        newIdentityUsernameValidationMessage.value = '';
+      if (data.value?.available === true) {
+        newIdentityEmailValid.value = true;
+        newIdentityEmailValidationMessage.value = '';
       }
       return;
     }
@@ -176,7 +180,7 @@
   }
 
   watchDebounced(
-    newIdentityUsernameValue,
+    newIdentityEmailValue,
     async () => {
       await checkEmailAvailability();
     },
@@ -185,9 +189,24 @@
       maxWait: 5000
     }
   );
-  watch(selectedDomain, () => {
-    checkEmailAvailability();
-  });
+
+  async function testSmtpConnection() {
+    smtpValidationLoading.value = true;
+    const result =
+      await $trpc.org.mail.emailIdentities.external.validateExternalSmtpCredentials.mutate(
+        {
+          host: smtpHost.value,
+          port: Number(smtpPort.value),
+          username: smtpUsername.value,
+          password: smtpPassword.value,
+          encryption: smtpEncryptionMethod.value || 'none',
+          authMethod: smtpAuthMethod.value || 'plain'
+        }
+      );
+    smtpValid.value = result.valid;
+    smtpValidationLoading.value = false;
+    return;
+  }
 
   async function createNewEmailIdentity() {
     buttonLoading.value = true;
@@ -200,23 +219,29 @@
     const selectedOrgMembersPublicIds: string[] = selectedOrgMembers.value.map(
       (member) => member.publicId as string
     );
-    const createNewEmailIdentityTrpc =
-      $trpc.org.mail.emailIdentities.createNewEmailIdentity.useMutation();
-    await createNewEmailIdentityTrpc.mutate({
-      emailUsername: newIdentityUsernameValue.value,
-      domainPublicId: selectedDomain.value?.domainPublicId as string,
+    const createNewExternalEmailIdentityTrpc =
+      $trpc.org.mail.emailIdentities.external.createNewExternalIdentity.useMutation();
+    await createNewExternalEmailIdentityTrpc.mutate({
+      emailAddress: newIdentityEmailValue.value,
       sendName: newIdentitySendNameValue.value,
+      smtp: {
+        host: smtpHost.value,
+        port: Number(smtpPort.value),
+        username: smtpUsername.value,
+        password: smtpPassword.value,
+        encryption: smtpEncryptionMethod.value || 'none',
+        authMethod: smtpAuthMethod.value || 'plain'
+      },
       routeToGroupsPublicIds: selectedGroupsPublicIds,
-      routeToOrgMemberPublicIds: selectedOrgMembersPublicIds,
-      catchAll: newIdentityCatchAll.value
+      routeToOrgMemberPublicIds: selectedOrgMembersPublicIds
     });
-    if (createNewEmailIdentityTrpc.status.value === 'error') {
+    if (createNewExternalEmailIdentityTrpc.status.value === 'error') {
       buttonLoading.value = false;
       buttonLabel.value = 'Create New Email Address';
       toast.add({
         id: 'email_add_fail',
         title: 'Email Creation Failed',
-        description: `${newIdentityUsernameValue.value}@${selectedDomain.value?.domain} email address could not be created.`,
+        description: `${newIdentityEmailValue.value} email address could not be created.`,
         color: 'red',
         icon: 'i-ph-warning-circle',
         timeout: 5000
@@ -228,7 +253,7 @@
     toast.add({
       id: 'address_added',
       title: 'Address Added',
-      description: `${newIdentityUsernameValue.value}@${selectedDomain.value?.domain} has been added successfully.`,
+      description: `${newIdentityEmailValue.value} has been added successfully.`,
       icon: 'i-ph-thumbs-up',
       timeout: 5000
     });
@@ -237,15 +262,14 @@
     }, 1000);
   }
 
-  function openExternalIdentity() {
-    emit('openExternal');
-    emit('close');
-  }
-
   const multipleDestinationsSelected = computed(() => {
     return selectedOrgGroups.value.length + selectedOrgMembers.value.length > 1;
   });
 
+  function openInternalIdentity() {
+    emit('openInternal');
+    emit('close');
+  }
   const eeStore = useEEStore();
   const { isPro } = storeToRefs(eeStore);
 </script>
@@ -260,82 +284,98 @@
           </span>
         </div>
 
-        <div
-          class="items-top grid grid-cols-1 grid-rows-2 gap-4 md:grid-cols-2 md:grid-rows-1">
+        <div class="items-top grid grid-cols-2 gap-4">
           <UnUiInput
-            v-model:value="newIdentityUsernameValue"
-            v-model:valid="newIdentityUsernameValid"
-            :validation-message="newIdentityUsernameValidationMessage"
+            v-model:value="newIdentityEmailValue"
+            v-model:valid="newIdentityEmailValid"
+            :validation-message="newIdentityEmailValidationMessage"
             :remote-validation="true"
-            label="Address"
-            :schema="
-              z
-                .string()
-                .min(1)
-                .max(32)
-                .regex(/^[a-zA-Z0-9]*$/, {
-                  message: 'Only letters and numbers'
-                })
-            "
+            label="Full Email Address"
+            :schema="z.string().email()"
             width="full" />
-          <div class="flex flex-col gap-1">
-            <span class="text-base-12 text-sm font-medium">Domain</span>
-            <span v-if="orgDomainsPending">
-              <UnUiIcon name="i-svg-spinners:3-dots-fade" /> Loading Domains
-            </span>
-            <div v-if="!orgDomainsPending">
-              <span v-if="orgDomainsData?.domainData?.length === 0">
-                No Domains Found
-              </span>
-              <NuxtUiSelectMenu
-                v-model="selectedDomain"
-                searchable
-                searchable-placeholder="Search a domain..."
-                placeholder="Select a domain"
-                :options="orgDomains"
-                class="w-full">
-                <template
-                  v-if="selectedDomain"
-                  #label>
-                  <UnUiIcon
-                    name="i-ph-check"
-                    class="h-4 w-4" />
 
-                  {{ selectedDomain.domain }}
-                </template>
-                <template #option="{ option }">
-                  {{ option.domain }}
-                </template>
-              </NuxtUiSelectMenu>
+          <UnUiInput
+            v-model:value="newIdentitySendNameValue"
+            v-model:valid="newIdentitySendNameValid"
+            label="Send Name"
+            :schema="z.string().trim().min(2).max(64)"
+            :helper="`The name that will appear in the 'From' field of emails sent from this address`"
+            width="full" />
+        </div>
+      </div>
+      <NuxtUiDivider />
+      <div class="flex w-full flex-col justify-center gap-4">
+        <div class="border-b-1 border-base-6 w-full">
+          <span class="text-base-11 text-sm font-medium uppercase">
+            SMTP Settings
+          </span>
+        </div>
+
+        <div class="items-top grid grid-cols-2 gap-4">
+          <UnUiInput
+            v-model:value="smtpHost"
+            v-model:valid="smtpHostValid"
+            label="Host"
+            :schema="z.string().includes('.').min(4).max(64)"
+            width="full" />
+
+          <UnUiInput
+            v-model:value="smtpPort"
+            v-model:valid="smtpPortValid"
+            label="Port"
+            number
+            :schema="z.number()"
+            width="full" />
+          <UnUiInput
+            v-model:value="smtpUsername"
+            v-model:valid="smtpUsernameValid"
+            label="Username"
+            :schema="z.string().trim().min(1).max(64)"
+            width="full" />
+          <UnUiInput
+            v-model:value="smtpPassword"
+            v-model:valid="smtpPasswordValid"
+            label="Password"
+            :schema="z.string().trim().min(1).max(64)"
+            width="full" />
+          <div class="text-primary-12 flex flex-col gap-1 leading-4">
+            <div>
+              <label
+                id="input-label-Encryption"
+                class="min-w-fit text-sm font-medium">
+                Encryption
+              </label>
             </div>
-          </div>
-        </div>
 
-        <div class="flex flex-col gap-1">
-          <span class="text-base-12 text-sm font-medium">CatchAll</span>
-          <div class="flex flex-row justify-between">
-            <span class="text- text-base-11 text-sm">
-              Emails sent to unknown addresses will be delivered here
-            </span>
-            <UnUiTooltip
-              :text="
-                isPro
-                  ? 'Receives all mail sent to unknown addresses'
-                  : 'CatchAll is not available on your current billing plan'
-              ">
-              <UnUiToggle
-                v-model="newIdentityCatchAll"
-                :label="`Catch-all ${isPro ? '' : ' (Disabled)'}`"
-                :disabled="!isPro" />
-            </UnUiTooltip>
+            <NuxtUiInputMenu
+              v-model="smtpEncryptionMethod"
+              label="Encryption Method"
+              :options="smtpEncryptionMethods" />
+          </div>
+
+          <div class="text-primary-12 flex flex-col gap-1 leading-4">
+            <div>
+              <label
+                id="input-label-auth"
+                class="min-w-fit text-sm font-medium">
+                Auth Method
+              </label>
+            </div>
+            <NuxtUiInputMenu
+              v-model="smtpAuthMethod"
+              label="Authentication Method"
+              :options="smtpAuthMethods" />
           </div>
         </div>
-        <UnUiInput
-          v-model:value="newIdentitySendNameValue"
-          v-model:valid="newIdentitySendNameValid"
-          label="Send Name"
-          :schema="z.string().trim().min(2).max(64)"
-          :helper="`The name that will appear in the 'From' field of emails sent from this address`" />
+        <UnUiButton
+          icon="i-ph-link"
+          :label="smtpValid ? 'Success... Retest' : 'Test SMTP Connection'"
+          :color="smtpValid ? 'green' : 'amber'"
+          :loading="smtpValidationLoading"
+          :disabled="!smtpFormValid"
+          block
+          class="mt-2"
+          @click="testSmtpConnection" />
       </div>
       <NuxtUiDivider />
       <div class="flex flex-col gap-4">
@@ -474,10 +514,10 @@
       <div class="grid grid-cols-2 gap-4">
         <UnUiButton
           icon="i-ph-link"
-          label="Add external email instead"
+          label="Add internal email instead"
           variant="outline"
           class="mt-2"
-          @click="openExternalIdentity()" />
+          @click="openInternalIdentity()" />
         <UnUiButton
           icon="i-ph-plus"
           :label="buttonLabel"

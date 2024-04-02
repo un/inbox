@@ -76,6 +76,11 @@
     addNewModalOpen.value = false;
     refresh();
   };
+  const addNewExternalModalOpen = ref(false);
+  const closeExternalModal = () => {
+    addNewExternalModalOpen.value = false;
+    refresh();
+  };
 
   // TODO: set the destinations column to be an avatar list of users and groups
 </script>
@@ -98,7 +103,17 @@
           </template>
           <SettingsAddNewEmail
             lazy
+            @open-external="addNewExternalModalOpen = true"
             @close="closeModal()" />
+        </UnUiModal>
+        <UnUiModal v-model="addNewExternalModalOpen">
+          <template #header>
+            <span class="">Add new external email address</span>
+          </template>
+          <SettingsAddNewEmailExternal
+            lazy
+            @open-internal="addNewModalOpen = true"
+            @close="closeExternalModal()" />
         </UnUiModal>
       </div>
     </div>

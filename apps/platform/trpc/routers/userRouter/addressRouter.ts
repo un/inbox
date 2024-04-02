@@ -206,8 +206,11 @@ export const addressRouter = router({
           description: 'This route helps deliver @uninbox emails to users',
           createdBy: accountOrgMembership.id
         });
-
+      const newRoutingRuleDestinationPublicId = typeIdGenerator(
+        'emailRoutingRuleDestinations'
+      );
       await db.insert(emailRoutingRulesDestinations).values({
+        publicId: newRoutingRuleDestinationPublicId,
         orgId: orgId,
         ruleId: +routingRuleInsertResponse.insertId,
         orgMemberId: accountOrgMembership.id

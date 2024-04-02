@@ -23,6 +23,7 @@
     validationMessage?: string | null;
     remoteValidation?: boolean | null;
     password?: boolean;
+    number?: boolean;
   };
 
   const props = withDefaults(defineProps<Props>(), {
@@ -37,7 +38,8 @@
     valid: null,
     validationMessage: null,
     remoteValidation: false,
-    password: false
+    password: false,
+    number: false
   });
 
   const inputClasses = useUtils().cva('', {
@@ -79,7 +81,9 @@
     return props.locked ? !editModeEnabled.value : props.disabled;
   });
   const computedType = computed(() => {
-    return props.password ? 'password' : 'text';
+    if (props.number) return 'number';
+    if (props.password) return 'password';
+    return 'text';
   });
 
   const computedBorderColor = computed(() => {
@@ -186,7 +190,7 @@
         v-if="props.helper"
         :text="props.helper"
         ><UnUiIcon
-          name="ph:question"
+          name="i-ph-info"
           class="cursor-help"
       /></UnUiTooltip>
     </div>

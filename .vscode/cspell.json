@@ -26,6 +26,7 @@
     "Ratelimiter",
     "RPID",
     "simplewebauthn",
+    "starttls",
     "superjson",
     "tinyint",
     "tiptap",
