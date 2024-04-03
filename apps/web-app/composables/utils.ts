@@ -47,7 +47,8 @@ function useParticipantData(
   const avatarProfilePublicId =
     participant.orgMember?.profile.publicId ||
     participant.group?.publicId ||
-    participant.contact?.publicId;
+    participant.contact?.publicId ||
+    null;
   if (!typePublicId || !avatarProfilePublicId) return null;
 
   const participantData: ConvoParticipantEntry = {

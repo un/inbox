@@ -344,7 +344,7 @@
         <!-- <span>TAGS</span> -->
       </div>
 
-      <div class="flex hidden h-fit flex-row gap-4 overflow-hidden">
+      <div class="hidden h-fit flex-row gap-4 overflow-hidden">
         <UnUiButton
           icon="i-heroicons-pencil-square"
           size="sm"
@@ -435,10 +435,11 @@
               </template>
             </ConvosUpload>
             <UnUiButton
-              label="Note"
+              label="Comment"
               icon="i-ph-note"
-              :disabled="actionLoading"
-              variant="outline" />
+              variant="outline"
+              :disabled="!formValid || actionLoading"
+              @click="createNewReply('comment')" />
             <UnUiButton
               label="Send"
               icon="i-ph-envelope"

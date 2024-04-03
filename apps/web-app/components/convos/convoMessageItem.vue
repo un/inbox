@@ -44,11 +44,16 @@
     return props.entry.author.publicId == participantPublicId.value;
   });
 
-  const tempColor = 'message';
+  const messageType = computed(() => {
+    return props.entry.type;
+  });
+
   const typeClasses = computed(() => {
-    switch (tempColor) {
+    switch (messageType.value) {
       case 'message':
-        return 'bg-base-2 dark:bg-base-2';
+        return 'bg-base-2';
+      case 'comment':
+        return 'bg-base-4';
       default:
         return 'bg-base-1';
     }
@@ -112,12 +117,24 @@
           size="lg"
           class="rounded-full shadow-md" />
       </div>
+      <div
+        v-else
+        class="hidden flex-row items-center gap-1 md:visible md:flex">
+        <UnUiAvatar
+          :public-id="null"
+          :avatar-timestamp="null"
+          :alt="undefined"
+          type="org"
+          size="lg"
+          class="rounded-full shadow-md" />
+      </div>
       <div class="flex w-full flex-col gap-4 p-0 lg:gap-2">
         <div
           class="flex w-full flex-col items-center justify-between gap-2 overflow-visible pl-2 md:max-h-4 md:flex-row">
           <!-- mobile -->
           <div class="flex w-full flex-row items-end gap-2 md:hidden">
             <UnUiAvatar
+              v-if="author"
               :public-id="author.avatarProfilePublicId"
               :avatar-timestamp="author.avatarTimestamp"
               :alt="author.name"
@@ -125,12 +142,26 @@
               :color="author.color"
               size="md"
               class="rounded-full shadow-md" />
+            <UnUiAvatar
+              v-else
+              :public-id="null"
+              :avatar-timestamp="null"
+              :alt="undefined"
+              type="org"
+              size="md"
+              class="rounded-full shadow-md" />
             <div class="flex w-full flex-col items-start gap-2">
-              <span
-                v-if="author"
-                class="text-sm leading-none">
-                {{ author.name }}
-              </span>
+              <div class="flex flex-row items-center gap-2">
+                <span
+                  v-if="author"
+                  class="text-sm leading-none">
+                  {{ author.name }}
+                  <UnUiIcon
+                    v-if="messageType === 'comment'"
+                    name="i-ph-chat-circle"
+                    size="xs" />
+                </span>
+              </div>
               <span
                 v-if="props.entry.metadata?.email?.from?.[0]?.email"
                 class="text-base-9 text-xs">
@@ -188,11 +219,17 @@
           </div>
           <!-- desktop -->
           <div class="hidden w-full flex-row items-end gap-2 md:flex">
-            <span
-              v-if="author"
-              class="text-sm leading-none">
-              {{ author.name }}
-            </span>
+            <div class="flex flex-row items-center gap-2">
+              <span
+                v-if="author"
+                class="text-sm leading-none">
+                {{ author.name }}
+              </span>
+              <UnUiIcon
+                v-if="messageType === 'comment'"
+                name="i-ph-chat-circle"
+                size="xs" />
+            </div>
             <span
               v-if="props.entry.metadata?.email?.from?.[0]?.email"
               class="text-base-9 text-xs">

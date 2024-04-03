@@ -767,11 +767,12 @@
         :disabled="!formValid || actionLoading"
         icon="i-ph-note" />
       <UnUiButton
-        label="Post Note"
+        label="Post Comment"
         color="yellow"
         variant="outline"
         :disabled="!formValid || actionLoading"
-        icon="i-ph-note" />
+        icon="i-ph-note"
+        @click="createNewConvo('comment')" />
       <UnUiButton
         label="Send Message"
         variant="outline"
