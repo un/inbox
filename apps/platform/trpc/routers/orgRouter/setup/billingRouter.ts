@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { router, eeProcedure } from '../../../trpc';
 import { eq, and, sql } from '@u22n/database/orm';
-import { orgBilling, orgMembers } from '@u22n/database/schema';
+import { domains, orgBilling, orgMembers, orgs } from '@u22n/database/schema';
 import { isAccountAdminOfOrg } from '../../../../utils/account';
 import { TRPCError } from '@trpc/server';
 import { billingTrpcClient } from '../../../../utils/tRPCServerClients';
@@ -168,6 +168,71 @@ export const billingRouter = router({
     const orgPlan = orgBillingResponse?.plan || 'free';
     return {
       isPro: orgPlan === 'pro'
+    };
+  }),
+  canAddDomain: eeProcedure.input(z.object({})).query(async ({ ctx }) => {
+    const { db, org } = ctx;
+
+    const orgBillingResponse = await db.query.orgBilling.findFirst({
+      where: eq(orgBilling.orgId, org.id),
+      columns: {
+        plan: true
+      }
+    });
+    if (orgBillingResponse) {
+      const orgPlan = orgBillingResponse?.plan || 'free';
+      return {
+        canAddDomain: orgPlan === 'pro'
+      };
+    }
+
+    //for skiff users
+
+    const orgQuery = await db.query.orgs.findFirst({
+      where: eq(orgs.id, org.id),
+      columns: {
+        id: true,
+        metadata: true
+      }
+    });
+
+    if (!orgQuery) {
+      throw new TRPCError({
+        code: 'FORBIDDEN',
+        message: 'User not in org'
+      });
+    }
+    const orgMetadata = orgQuery.metadata;
+
+    // get the bonus where item matches domain
+    const domainBonus = orgMetadata?.bonuses?.find(
+      (bonus) => bonus.item === 'domain'
+    );
+
+    if (!domainBonus || !('count' in domainBonus.bonus)) {
+      return {
+        canAddDomain: false
+      };
+    }
+
+    const allowedDomains: number = domainBonus.bonus.count as number;
+
+    const domainQuery = await db.query.domains.findMany({
+      where: eq(domains.orgId, org.id),
+      columns: {
+        id: true
+      }
+    });
+    const domainCount = domainQuery?.length || 0;
+
+    if (domainCount < allowedDomains) {
+      return {
+        canAddDomain: true
+      };
+    }
+
+    return {
+      canAddDomain: false
     };
   })
 });
