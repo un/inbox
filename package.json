@@ -34,6 +34,7 @@
     "db:check:r": "infisical run --env=local -- turbo run db:generate",
     "db:drop:r": "infisical run --env=local -- turbo run db:drop",
     "ee:dev:r": "infisical run --env=local -- turbo run ee:dev",
+    "ee:check": "infisical run --env=local -- turbo run ee:check",
     "prepare": "husky"
   },
   "keywords": [],
@@ -54,7 +55,7 @@
     "typescript": "^5.4.3"
   },
   "lint-staged": {
-    "*": "prettier --write"
+    "*": "prettier --write --ignore-unknown"
   },
   "packageManager": "pnpm@8.5.1"
 }

@@ -174,6 +174,18 @@ export const sessionRelationships = relations(sessions, ({ one }) => ({
 
 //******************* */
 //* ORG DATA
+export type OrgMetaBonus = {
+  item: 'domain';
+  bonus: { count: number } | { enabled: boolean };
+  bonusReason: string;
+  awardedByName: string;
+  awardedByAccountId: number;
+  awardedAt: Date;
+  note: string;
+};
+export type OrgMetadata = {
+  bonuses?: OrgMetaBonus[];
+};
 
 export const orgs = mysqlTable(
   'orgs',
@@ -184,7 +196,7 @@ export const orgs = mysqlTable(
     slug: varchar('slug', { length: 64 }).notNull(),
     ownerId: foreignKey('owner_id').notNull(),
     name: varchar('name', { length: 64 }).notNull(),
-    metadata: json('metadata').$type<Record<string, unknown>>(),
+    metadata: json('metadata').$type<OrgMetadata>().default({}),
     createdAt: timestamp('created_at').defaultNow().notNull()
   },
   (table) => ({

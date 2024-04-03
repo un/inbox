@@ -67,13 +67,14 @@
   }
 
   const eeStore = useEEStore();
-  const { isPro, isProPending } = storeToRefs(eeStore);
+  const { canAddDomain, canAddDomainPending } = storeToRefs(eeStore);
+  eeStore.getCanAddDomain();
 </script>
 
 <template>
   <div class="flex h-full w-full flex-col items-start">
     <div
-      v-if="isProPending"
+      v-if="canAddDomainPending"
       class="bg-base-3 flex w-full flex-row justify-center gap-4 rounded-xl rounded-tl-2xl p-8">
       <UnUiIcon
         name="i-svg-spinners:3-dots-fade"
@@ -81,7 +82,7 @@
       <span>Checking status</span>
     </div>
     <div
-      v-if="!isProPending && isPro"
+      v-if="!canAddDomainPending && canAddDomain"
       class="flex w-full flex-col gap-4">
       <UnUiInput
         v-model:value="newDomainNameValue"
@@ -103,7 +104,7 @@
       </div>
     </div>
     <div
-      v-if="!isProPending && !isPro"
+      v-if="!canAddDomainPending && !canAddDomain"
       class="flex w-full flex-col gap-4">
       <span class="text-xl font-semibold">Add a new domain</span>
       <span>

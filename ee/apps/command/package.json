@@ -1,0 +1,49 @@
+{
+  "name": "@u22n-ee/command",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=8"
+  },
+  "scripts": {
+    "ee:build": "nuxt build",
+    "ee:dev": "PORT=3810 nuxt dev --host",
+    "ee:generate": "nuxt generate",
+    "ee:preview": "nuxt preview",
+    "ee:precheck": "infisical run --env=local -- nuxt prepare"
+  },
+  "devDependencies": {
+    "@iconify-json/mdi": "^1.1.64",
+    "@iconify-json/ph": "^1.1.11",
+    "@iconify-json/svg-spinners": "^1.1.2",
+    "@nuxt/devtools": "1.0.8",
+    "@nuxtjs/color-mode": "^3.3.2",
+    "@nuxtjs/turnstile": "^0.6.3",
+    "@radix-ui/colors": "^3.0.0",
+    "@types/node": "^20.11.29",
+    "nuxt": "^3.11.1",
+    "nuxt-icon": "^0.6.9",
+    "nuxt-prepare": "^1.1.0",
+    "nuxt-security": "1.1.2",
+    "vue-tsc": "^1.8.27",
+    "windy-radix-palette": "2.0.0-beta.7"
+  },
+  "dependencies": {
+    "@nuxt/ui": "^2.14.2",
+    "@pinia/nuxt": "^0.5.1",
+    "@trpc/client": "^10.45.2",
+    "@trpc/server": "^10.45.2",
+    "@u22n/database": "workspace:*",
+    "@u22n/tsconfig": "^0.0.2",
+    "@u22n/types": "workspace:*",
+    "@u22n/utils": "workspace:*",
+    "@uninbox-ee/types": "workspace:*",
+    "@vueuse/integrations": "^10.9.0",
+    "@vueuse/nuxt": "^10.9.0",
+    "superjson": "^2.2.1",
+    "trpc-nuxt": "^0.10.20",
+    "zod": "^3.22.4"
+  },
+  "packageManager": "pnpm@8.5.1"
+}

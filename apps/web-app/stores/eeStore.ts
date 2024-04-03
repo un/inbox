@@ -9,6 +9,8 @@ export const useEEStore = defineStore(
 
     const isPro = ref<boolean | null>(null);
     const isProPending = ref<boolean>(true);
+    const canAddDomain = ref<boolean | null>(null);
+    const canAddDomainPending = ref<boolean>(true);
 
     async function getIsPro() {
       if (isPro.value !== null) {
@@ -24,12 +26,26 @@ export const useEEStore = defineStore(
       isPro.value = data.value?.isPro || false;
       isProPending.value = false;
     }
+    async function getCanAddDomain() {
+      if (!useEE().config.modules.billing) {
+        canAddDomain.value = true;
+        canAddDomainPending.value = false;
+        return;
+      }
+      const data = await $trpc.org.setup.billing.canAddDomain.query({});
+
+      canAddDomain.value = data.canAddDomain || false;
+      canAddDomainPending.value = false;
+    }
 
     getIsPro(); // Call the function when the code is first loaded
 
     return {
       isPro: isPro,
-      isProPending: isProPending
+      isProPending: isProPending,
+      canAddDomain: canAddDomain,
+      canAddDomainPending: canAddDomainPending,
+      getCanAddDomain
     };
   },
   {
