@@ -2,6 +2,7 @@ import type { DatabaseSession } from 'lucia';
 export type OrgContext = {
   id: number;
   publicId: string;
+  name: string;
   memberId?: number;
   members: {
     id: number;

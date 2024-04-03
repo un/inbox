@@ -29,6 +29,7 @@ import { TRPCError } from '@trpc/server';
 import { useRuntimeConfig } from '#imports';
 import { billingTrpcClient } from '../../../../utils/tRPCServerClients';
 import { addOrgMemberToGroupHandler } from './groupHandler';
+import { sendInviteEmail } from '../../../../utils/mail/transactional';
 
 export const invitesRouter = router({
   createNewInvite: orgProcedure
@@ -74,124 +75,145 @@ export const invitesRouter = router({
       const { newOrgMember, notification, email, groups: groupsInput } = input;
 
       // Insert account profile - save ID
-
-      const orgMemberProfilePublicId = typeIdGenerator('orgMemberProfile');
-      const orgMemberProfileResponse = await db
-        .insert(orgMemberProfiles)
-        .values({
-          publicId: orgMemberProfilePublicId,
-          orgId: orgId,
-          firstName: newOrgMember.firstName,
-          lastName: newOrgMember.lastName || '',
-          title: newOrgMember.title || '',
-          handle: ''
-        });
-      const orgMemberProfileId = +orgMemberProfileResponse.insertId;
-
-      // Insert orgMember - save ID
-      const orgMemberPublicId = typeIdGenerator('orgMembers');
-      const orgMemberResponse = await db.insert(orgMembers).values({
-        publicId: orgMemberPublicId,
-        orgId: orgId,
-        invitedByOrgMemberId: orgMemberId,
-        status: 'invited',
-        role: newOrgMember.role,
-        orgMemberProfileId: orgMemberProfileId
-      });
-
-      // Insert groupMemberships - save ID
-      if (groupsInput) {
-        for (const groupPublicId of groupsInput.groupsPublicIds) {
-          await addOrgMemberToGroupHandler({
-            orgId: org.id,
-            groupPublicId: groupPublicId,
-            orgMemberPublicId: orgMemberPublicId,
-            orgMemberId: org.memberId
-          });
-        }
-      }
-      // Insert Email identities
-      if (email) {
-        const domainResponse = await db.query.domains.findFirst({
-          where: eq(domains.publicId, email.domainPublicId),
-          columns: {
-            id: true,
-            domain: true
-          }
-        });
-        if (!domainResponse) {
-          throw new TRPCError({
-            code: 'UNPROCESSABLE_CONTENT',
-            message: 'Domain not found'
-          });
-        }
-
-        const emailRoutingRulesPublicId = typeIdGenerator('emailRoutingRules');
-        const emailRoutingRulesResponse = await db
-          .insert(emailRoutingRules)
+      return db.transaction(async (db) => {
+        const orgMemberProfilePublicId = typeIdGenerator('orgMemberProfile');
+        const orgMemberProfileResponse = await db
+          .insert(orgMemberProfiles)
           .values({
+            publicId: orgMemberProfilePublicId,
             orgId: orgId,
-            publicId: emailRoutingRulesPublicId,
-            name: `Email routing rule for ${email.emailUsername}@${domainResponse?.domain}`,
-            createdBy: orgMemberId
+            firstName: newOrgMember.firstName,
+            lastName: newOrgMember.lastName || '',
+            title: newOrgMember.title || '',
+            handle: ''
           });
-        const newRoutingRuleDestinationPublicId = typeIdGenerator(
-          'emailRoutingRuleDestinations'
-        );
-        await db.insert(emailRoutingRulesDestinations).values({
-          publicId: newRoutingRuleDestinationPublicId,
+        const orgMemberProfileId = +orgMemberProfileResponse.insertId;
+
+        // Insert orgMember - save ID
+        const orgMemberPublicId = typeIdGenerator('orgMembers');
+        const orgMemberResponse = await db.insert(orgMembers).values({
+          publicId: orgMemberPublicId,
           orgId: orgId,
-          ruleId: +emailRoutingRulesResponse.insertId,
-          orgMemberId: +orgMemberResponse.insertId
+          invitedByOrgMemberId: orgMemberId,
+          status: 'invited',
+          role: newOrgMember.role,
+          orgMemberProfileId: orgMemberProfileId
         });
 
-        const emailIdentityPublicId = typeIdGenerator('emailIdentities');
-        const emailIdentityResponse = await db.insert(emailIdentities).values({
-          publicId: emailIdentityPublicId,
+        // Insert groupMemberships - save ID
+        if (groupsInput) {
+          for (const groupPublicId of groupsInput.groupsPublicIds) {
+            await addOrgMemberToGroupHandler({
+              orgId: org.id,
+              groupPublicId: groupPublicId,
+              orgMemberPublicId: orgMemberPublicId,
+              orgMemberId: org.memberId
+            });
+          }
+        }
+        // Insert Email identities
+        if (email) {
+          const domainResponse = await db.query.domains.findFirst({
+            where: eq(domains.publicId, email.domainPublicId),
+            columns: {
+              id: true,
+              domain: true
+            }
+          });
+          if (!domainResponse) {
+            db.rollback();
+            throw new TRPCError({
+              code: 'UNPROCESSABLE_CONTENT',
+              message: 'Domain not found'
+            });
+          }
+
+          const emailRoutingRulesPublicId =
+            typeIdGenerator('emailRoutingRules');
+          const emailRoutingRulesResponse = await db
+            .insert(emailRoutingRules)
+            .values({
+              orgId: orgId,
+              publicId: emailRoutingRulesPublicId,
+              name: `Email routing rule for ${email.emailUsername}@${domainResponse?.domain}`,
+              createdBy: orgMemberId
+            });
+          const newRoutingRuleDestinationPublicId = typeIdGenerator(
+            'emailRoutingRuleDestinations'
+          );
+          await db.insert(emailRoutingRulesDestinations).values({
+            publicId: newRoutingRuleDestinationPublicId,
+            orgId: orgId,
+            ruleId: +emailRoutingRulesResponse.insertId,
+            orgMemberId: +orgMemberResponse.insertId
+          });
+
+          const emailIdentityPublicId = typeIdGenerator('emailIdentities');
+          const emailIdentityResponse = await db
+            .insert(emailIdentities)
+            .values({
+              publicId: emailIdentityPublicId,
+              orgId: orgId,
+              createdBy: orgMemberId,
+              domainId: domainResponse?.id,
+              username: email.emailUsername,
+              domainName: domainResponse?.domain,
+              routingRuleId: +emailRoutingRulesResponse.insertId,
+              isCatchAll: false,
+              sendName: email.sendName
+            });
+
+          await db.insert(emailIdentitiesAuthorizedOrgMembers).values({
+            orgId: orgId,
+            identityId: +emailIdentityResponse.insertId,
+            default: true,
+            addedBy: orgMemberId,
+            orgMemberId: +orgMemberResponse.insertId
+          });
+        }
+
+        // Insert orgInvitations - save ID
+
+        const newInvitePublicId = typeIdGenerator('orgInvitations');
+        const newInviteToken = nanoIdToken();
+
+        await db.insert(orgInvitations).values({
+          publicId: newInvitePublicId,
           orgId: orgId,
-          createdBy: orgMemberId,
-          domainId: domainResponse?.id,
-          username: email.emailUsername,
-          domainName: domainResponse?.domain,
-          routingRuleId: +emailRoutingRulesResponse.insertId,
-          isCatchAll: false,
-          sendName: email.sendName
+          invitedByOrgMemberId: orgMemberId,
+          orgMemberId: +orgMemberResponse.insertId,
+          role: newOrgMember.role,
+          email: notification?.notificationEmailAddress || null,
+          inviteToken: newInviteToken,
+          invitedOrgMemberProfileId: orgMemberProfileId,
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 Days from now
         });
 
-        await db.insert(emailIdentitiesAuthorizedOrgMembers).values({
-          orgId: orgId,
-          identityId: +emailIdentityResponse.insertId,
-          default: true,
-          addedBy: orgMemberId,
-          orgMemberId: +orgMemberResponse.insertId
+        const res = await sendInviteEmail({
+          to: notification?.notificationEmailAddress || '',
+          invitedName: `${newOrgMember.firstName} ${newOrgMember.lastName}`,
+          invitingOrg: org.name,
+          expiryDate: new Date(
+            Date.now() + 7 * 24 * 60 * 60 * 1000
+          ).toDateString(),
+          inviteUrl: `https://uninbox.com/invite/${newInviteToken}`
         });
-      }
 
-      // Insert orgInvitations - save ID
+        if (!res) {
+          db.rollback();
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Failed to send invite email'
+          });
+        }
 
-      const newInvitePublicId = typeIdGenerator('orgInvitations');
-      const newInviteToken = nanoIdToken();
-
-      await db.insert(orgInvitations).values({
-        publicId: newInvitePublicId,
-        orgId: orgId,
-        invitedByOrgMemberId: orgMemberId,
-        orgMemberId: +orgMemberResponse.insertId,
-        role: newOrgMember.role,
-        email: notification?.notificationEmailAddress || null,
-        inviteToken: newInviteToken,
-        invitedOrgMemberProfileId: orgMemberProfileId,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 Days from now
+        return {
+          success: true,
+          inviteId: newInvitePublicId,
+          inviteToken: newInviteToken,
+          error: null
+        };
       });
-
-      //! FIX: Send email
-
-      return {
-        success: true,
-        inviteId: newInvitePublicId,
-        inviteToken: newInviteToken,
-        error: null
-      };
     }),
   viewInvites: orgProcedure
     .input(z.object({}).strict())
