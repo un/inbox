@@ -1,19 +1,37 @@
 <script setup lang="ts">
-  import { useRoute } from '#imports';
+  import { useRoute, ref, watch } from '#imports';
 
   const orgSlug = useRoute().params.orgSlug as string;
+  const route = useRoute();
+  const isCollapsed = ref(true);
+
+  watch(
+    () => route.path,
+    () => {
+      isCollapsed.value = true;
+    }
+  );
 </script>
 <template>
   <div
-    class="border-r-1 border-base-6 flex h-full max-h-full flex-col gap-2 overflow-y-auto pr-4">
+    class="border-r-1 border-base-6 z-[30] flex h-full max-h-full flex-col gap-2 overflow-y-auto overflow-x-hidden pr-4 lg:w-full lg:pl-12"
+    :class="isCollapsed ? 'w-24 p-4 lg:p-8' : 'w-[385px] p-8'">
+    <div class="flex w-full flex-row justify-end">
+      <UnUiButton
+        square
+        variant="ghost"
+        :icon="isCollapsed ? 'i-ph-arrow-right' : 'i-ph-arrow-left'"
+        class="lg:hidden"
+        @click="isCollapsed = !isCollapsed" />
+    </div>
     <div class="flex grow flex-col gap-0 overflow-hidden">
-      <convos-convo-list />
-
-      <div class="from-base-1 mt-[-48px] h-[48px] bg-gradient-to-t" />
+      <convos-convo-list
+        :class="isCollapsed ? 'collapse lg:visible' : 'visible'" />
     </div>
     <div class="flex flex-row gap-2">
       <UnUiButton
         class="flex-grow justify-center"
+        :class="isCollapsed ? 'collapse lg:visible' : 'visible'"
         :ui="{
           rounded: 'rounded-bl-xl'
         }"

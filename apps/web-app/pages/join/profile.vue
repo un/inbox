@@ -240,7 +240,7 @@
         <div class="flex flex-col items-center gap-2">
           <button
             type="button"
-            class="border-1 border-base-7 bg-base-3 hover:border-base-8 h-[80px] w-[80px] cursor-pointer rounded-lg bg-cover bg-center md:h-[128px] md:w-[128px]"
+            class="border-1 border-base-7 bg-base-3 hover:border-base-8 h-[128px] w-[128px] cursor-pointer rounded-lg bg-cover bg-center"
             :style="imageUrl ? `background-image: url(${imageUrl})` : ''"
             @click="selectAvatar()">
             <div
@@ -255,7 +255,9 @@
                   "
                   size="100%" />
               </div>
-              <p class="lt-md:text-xs text-center text-sm">Upload image</p>
+              <p class="lt-md:text-xs text-center text-sm">
+                Upload profile image
+              </p>
             </div>
           </button>
           <UnUiButton
@@ -265,7 +267,7 @@
             :loading="uploadLoading"
             @click="selectAvatar()" />
         </div>
-        <div class="flex flex-row flex-wrap gap-4">
+        <div class="flex flex-col flex-wrap gap-4 md:flex-row">
           <UnUiInput
             v-model:value="fNameValue"
             v-model:valid="fNameValid"

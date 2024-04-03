@@ -8,10 +8,10 @@
 <template>
   <div class="h-full max-h-full w-full max-w-full overflow-hidden">
     <div
-      class="grid h-full max-h-full w-full grid-cols-4 justify-between overflow-hidden">
-      <SettingsSidebar class="h-full max-h-full" />
+      class="flex h-full max-h-full w-full flex-row justify-between overflow-hidden lg:grid lg:grid-cols-4">
+      <SettingsSidebar class="z-[100] h-full max-h-full" />
       <div
-        class="col-span-3 flex h-full max-h-full w-full flex-col items-center justify-center gap-2 overflow-hidden p-4">
+        class="flex h-full max-h-full w-full flex-col items-center justify-center gap-2 overflow-hidden p-4 pl-20 lg:col-span-3 lg:pl-16">
         <NuxtPage />
       </div>
     </div>

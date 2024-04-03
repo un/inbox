@@ -28,10 +28,10 @@
 </script>
 <template>
   <div
-    class="overflow-none flex h-full max-h-full w-full flex-row items-center">
+    class="overflow-none flex h-full max-h-full w-full flex-col items-center lg:flex-row">
     <layout-navbar class="z-40" />
     <div
-      class="bg-base-1 dark:bg-base-1 -ml-4 h-full max-h-full w-full overflow-hidden">
+      class="bg-base-1 dark:bg-base-1 -ml-12 mt-[72px] h-full max-h-full w-full overflow-hidden md:-ml-4 lg:mt-0">
       <slot />
     </div>
   </div>

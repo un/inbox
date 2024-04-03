@@ -105,7 +105,7 @@ export const useConvoStore = defineStore(
     };
   },
   {
-    share: { enable: true },
+    share: { enable: false },
     persist: false
   }
 );
