@@ -1,11 +1,21 @@
 //https://nitro.unjs.io/config
 import { defineNitroConfig } from 'nitropack/config';
-import type { MailDomains } from './types';
+import type { MailDomains, TransactionalCredentials } from './types';
 
 const mailDomains: MailDomains = JSON.parse(process.env.MAIL_DOMAINS || '');
 if (!mailDomains.free || !mailDomains.premium) {
   throw new Error(
     'MAIL_DOMAIN_PUBLIC or MAIL_DOMAIN_PREMIUM is not set, you must add the domains to your ENV variables'
+  );
+}
+
+const transactionalCredentials: TransactionalCredentials = JSON.parse(
+  process.env.MAILBRIDGE_TRANSACTIONAL_CREDENTIALS || ''
+);
+
+if (!transactionalCredentials.apiUrl || !transactionalCredentials.apiKey) {
+  throw new Error(
+    'MAILBRIDGE_TRANSACTIONAL_CREDENTIALS is not set, you must add the credentials to your ENV variables'
   );
 }
 
@@ -48,6 +58,7 @@ export default defineNitroConfig({
   runtimeConfig: {
     primaryDomain: process.env.PRIMARY_DOMAIN || 'localhost',
     mailDomains: mailDomains,
+    transactionalCredentials: transactionalCredentials,
     auth: {
       baseUrl: process.env.WEBAPP_URL || 'http://localhost:3000',
       secret: process.env.WEBAPP_AUTH_SECRET,

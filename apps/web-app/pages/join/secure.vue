@@ -20,6 +20,7 @@
   const { $trpc } = useNuxtApp();
 
   definePageMeta({ guest: true });
+  const turnstile = ref();
   const turnstileToken = ref();
   const buttonLoading = ref(false);
   const buttonLabel = ref('Create my account');
@@ -123,7 +124,7 @@
   const toast = useToast();
   async function createAccount() {
     if (!accountCreated.value) {
-      if (turnstileEnabled && turnstileToken.value === null) {
+      if (turnstileEnabled && !turnstileToken.value) {
         turnstileError.value = true;
         await new Promise((resolve) => {
           const unwatch = watch(turnstileToken, (newValue) => {
@@ -202,6 +203,31 @@
         buttonLabel.value = 'Try Again!';
         return;
       }
+
+      turnstile.value?.reset();
+      // We need to blank out the token, as testing mode always returns same token
+      // so it gets stuck on watch
+      turnstileToken.value = null;
+
+      toast.add({
+        title: 'Passkey Created',
+        description:
+          'Your passkey has been created. Please wait for a few seconds while we create your account',
+        color: 'green',
+        timeout: 5000,
+        icon: 'i-ph-check-circle'
+      });
+
+      await new Promise((resolve) => {
+        if (!turnstileEnabled) return resolve(null);
+        const unwatch = watch(turnstileToken, (newValue) => {
+          if (newValue !== null) {
+            resolve(newValue);
+            unwatch();
+          }
+        });
+      });
+
       const verifyNewPasskey =
         await $trpc.auth.passkey.signUpWithPasskeyFinish.query({
           username: username.value,
@@ -210,6 +236,7 @@
           registrationResponseRaw: newPasskeyData,
           nickname: 'Primary'
         });
+
       if (!verifyNewPasskey.success) {
         toast.add({
           id: 'passkey_error',
@@ -420,7 +447,12 @@
           :loading="buttonLoading"
           :disabled="!formValid"
           block
-          @click="createAccount()" />
+          @click="
+            createAccount().finally(() => {
+              turnstile?.reset();
+              buttonLoading = false;
+            })
+          " />
       </div>
       <p
         v-if="pageError"
@@ -445,6 +477,7 @@
       <div v-if="pageReady && turnstileEnabled">
         <!-- This should be invisible, we will be using invisible challenges -->
         <NuxtTurnstile
+          ref="turnstile"
           v-model="turnstileToken"
           class="hidden" />
       </div>
