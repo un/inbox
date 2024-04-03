@@ -163,7 +163,7 @@
   <div
     class="flex h-screen w-screen flex-col items-center justify-between p-4 pb-14">
     <div
-      class="flex w-full max-w-48 grow flex-col items-center justify-center gap-8 md:max-w-72">
+      class="flex w-full max-w-72 grow flex-col items-center justify-center gap-8">
       <h1 class="mb-4 flex flex-col gap-1 text-center">
         <span class="text-2xl font-medium">Login to your</span>
         <span class="font-display text-5xl">UnInbox</span>

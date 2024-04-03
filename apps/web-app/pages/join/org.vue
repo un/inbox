@@ -236,10 +236,7 @@
         </p>
       </div>
 
-      <UnUiButtonGroup
-        size="md"
-        orientation="horizontal"
-        class="w-full">
+      <div class="grid w-full grid-rows-2 gap-4 md:grid-cols-2">
         <UnUiButton
           label="Create new organization"
           icon="i-ph-plus"
@@ -252,7 +249,7 @@
           :disabled="orgPath === 'join'"
           class="grow justify-center"
           @click="orgPath = 'join'" />
-      </UnUiButtonGroup>
+      </div>
 
       <div
         v-if="orgPath === 'new'"

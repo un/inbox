@@ -448,7 +448,8 @@
 </script>
 
 <template>
-  <div class="flex h-full w-full flex-col items-start gap-8 p-4">
+  <div
+    class="flex h-full w-full flex-col items-start gap-8 overflow-y-auto p-4">
     <div class="flex w-full flex-row items-center justify-between">
       <span class="font-display text-2xl">Your Account Security</span>
     </div>
@@ -465,7 +466,8 @@
       class="flex w-full flex-col items-start justify-center gap-8 pb-14">
       <div class="flex flex-col gap-4">
         <span class="text-lg font-medium">Legacy Security</span>
-        <div class="grid grid-cols-2 items-center justify-between gap-12">
+        <div
+          class="grid grid-rows-2 items-center justify-between gap-4 lg:grid-cols-2 lg:gap-12">
           <span class="text-base">Password Enabled</span>
           <div class="flex flex-row items-center gap-4">
             <UnUiTooltip
@@ -488,7 +490,8 @@
               @click="resetPassword()" />
           </div>
         </div>
-        <div class="grid grid-cols-2 items-center justify-between gap-12">
+        <div
+          class="grid grid-rows-2 items-center justify-between gap-4 lg:grid-cols-2 lg:gap-12">
           <span class="text-base">Two Factor Authentication</span>
           <div class="flex flex-row items-center gap-4">
             <UnUiTooltip
@@ -522,7 +525,8 @@
               @click="reset2FA()" />
           </div>
         </div>
-        <div class="grid grid-cols-2 items-center justify-between gap-12">
+        <div
+          class="grid grid-rows-2 items-center justify-between gap-4 lg:grid-cols-2 lg:gap-12">
           <span class="text-base">Recovery Code</span>
           <div class="flex flex-row items-center gap-4">
             <UnUiTooltip text="Disable Password & 2FA first">
@@ -542,7 +546,8 @@
       </div>
       <div class="flex flex-col gap-4">
         <span class="text-lg font-medium">Passkeys</span>
-        <div class="flex w-full flex-row items-center justify-between gap-4">
+        <div
+          class="flex w-full flex-col items-center justify-between gap-4 lg:flex-row">
           <template
             v-for="passkey of data?.passkeys"
             :key="passkey.publicId">
@@ -583,7 +588,8 @@
       </div>
       <div class="flex flex-col gap-4">
         <span class="text-lg font-medium">Sessions</span>
-        <div class="flex w-full flex-row items-center justify-between gap-4">
+        <div
+          class="flex w-full flex-col items-center justify-between gap-4 lg:flex-row">
           <template
             v-for="session of data?.sessions"
             :key="session.publicId">

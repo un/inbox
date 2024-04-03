@@ -55,6 +55,7 @@
   const replyToMessageMetadata = ref<ConvoEntryMetadata | undefined>(undefined);
 
   const orgSlug = useRoute().params.orgSlug as string;
+  const route = useRoute();
 
   const convoPublicId = useRoute().params.id as TypeId<'convos'>;
   if (!validateTypeId('convos', convoPublicId)) {
@@ -317,6 +318,15 @@
       timeout: 5000
     });
   }
+
+  const isContextOpen = ref(false);
+
+  watch(
+    () => route.path,
+    () => {
+      isContextOpen.value = true;
+    }
+  );
 </script>
 <template>
   <div
@@ -334,7 +344,7 @@
         <!-- <span>TAGS</span> -->
       </div>
 
-      <div class="flex h-fit flex-row gap-4 overflow-hidden">
+      <div class="flex hidden h-fit flex-row gap-4 overflow-hidden">
         <UnUiButton
           icon="i-heroicons-pencil-square"
           size="sm"
@@ -359,20 +369,16 @@
     </div>
 
     <div
-      class="grid h-full max-h-full w-full max-w-full grid-cols-3 gap-2 overflow-hidden pt-8">
+      class="flex h-full max-h-full w-full max-w-full flex-col-reverse gap-2 overflow-hidden pt-2 lg:grid lg:grid-cols-3 lg:pt-8">
       <!-- Messages Pane -->
       <div
-        class="col-span-2 flex h-full max-h-full flex-col gap-2 overflow-hidden pr-8">
+        class="col-span-2 flex h-full max-h-full flex-col gap-2 overflow-hidden lg:pr-8">
         <div class="flex h-full max-h-full grow flex-col gap-0 overflow-hidden">
-          <div
-            class="from-base-1 z-[20000] mb-[-12px] h-[12px] bg-gradient-to-b" />
           <ConvosConvoMessages
             v-model:reply-to-message-public-id="replyToMessagePublicId"
             v-model:reply-to-message-metadata="replyToMessageMetadata"
             :convo-public-id="convoPublicId"
             :participant-public-id="participantOwnPublicId || ''" />
-          <div
-            class="from-base-1 z-[20000] mt-[-12px] h-[12px] bg-gradient-to-t" />
         </div>
         <div class="flex w-full flex-col justify-items-end gap-2">
           <div class="flex flex-row items-center gap-2">
@@ -413,7 +419,7 @@
             </NuxtUiSelectMenu>
           </div>
           <UnEditor v-model:modelValue="messageEditorData" />
-          <div class="flex min-w-fit flex-row justify-end gap-2">
+          <div class="flex min-w-fit flex-col justify-end gap-2 md:flex-row">
             <ConvosUpload
               v-model:uploadedAttachments="attachmentUploads"
               :max-size="15000000"
@@ -443,11 +449,19 @@
           </div>
         </div>
       </div>
-
+      <UnUiButton
+        label="Show Convo Info"
+        icon="i-ph-info"
+        variant="outline"
+        size="xs"
+        block
+        class="visible lg:hidden"
+        @click="isContextOpen = !isContextOpen" />
       <!-- Context Pane -->
       <div
-        class="border-l-1 border-base-6 flex h-full w-full max-w-full flex-col justify-between gap-8 overflow-hidden border border-b-0 border-r-0 border-t-0 pl-8">
-        <div class="flex w-full max-w-full flex-col gap-8 overflow-hidden">
+        class="border-l-1 border-b-1 border-base-6 hidden h-fit w-full max-w-full flex-col justify-between gap-4 overflow-hidden border border-r-0 border-t-0 lg:visible lg:flex lg:h-full lg:gap-8 lg:border-b-0 lg:pl-8">
+        <div
+          class="flex w-full max-w-full flex-col gap-4 overflow-hidden lg:gap-8">
           <div class="flex w-full max-w-full flex-col gap-4 overflow-hidden">
             <div
               class="flex w-full max-w-full flex-row items-center justify-between overflow-hidden"
@@ -629,13 +643,23 @@
               <div
                 v-for="attachment of attachments"
                 :key="attachment.publicId">
-                <div
-                  class="border-1 border-base-5 bg-base-2 flex flex-row gap-1 rounded border px-2 py-1">
-                  <UnUiIcon
-                    name="i-ph-paperclip"
-                    size="16" />
-                  <span class="truncate text-xs"> {{ attachment.name }}</span>
-                </div>
+                <UnUiButton
+                  :label="attachment.name"
+                  variant="outline"
+                  size="xs"
+                  :icon="
+                    attachment.type === 'image'
+                      ? 'i-ph-image'
+                      : 'i-ph-paperclip'
+                  "
+                  @click="
+                    navigateTo(attachment.url, {
+                      external: true,
+                      open: {
+                        target: '_blank'
+                      }
+                    })
+                  " />
               </div>
             </div>
             <div
@@ -674,6 +698,253 @@
           </UnUiTooltip>
         </div>
       </div>
+
+      <!-- Mobile context -->
+      <NuxtUiSlideover v-model="isContextOpen">
+        <div class="flex w-full max-w-full flex-col gap-4 overflow-hidden p-8">
+          <div class="flex w-full max-w-full flex-col gap-4 overflow-hidden">
+            <UnUiButton
+              label="close"
+              icon="i-ph-x"
+              variant="outline"
+              size="xs"
+              block
+              @click="isContextOpen = false" />
+            <div
+              class="flex w-full max-w-full flex-row items-center justify-between overflow-hidden"
+              @click="convoParticipantsCollapsed = !convoParticipantsCollapsed">
+              <span class="text-base-11 cursor-pointer text-sm font-medium">
+                PARTICIPANTS
+              </span>
+              <UnUiButton
+                :icon="
+                  convoParticipantsCollapsed
+                    ? 'i-heroicons-chevron-down'
+                    : 'i-heroicons-chevron-up'
+                "
+                size="2xs"
+                square
+                variant="ghost" />
+            </div>
+            <div
+              v-if="convoParticipantsCollapsed"
+              class="flex w-full max-w-full flex-row gap-2 overflow-hidden"
+              @click="convoParticipantsCollapsed = !convoParticipantsCollapsed">
+              <NuxtUiAvatarGroup>
+                <template
+                  v-for="participant of participantsAll"
+                  :key="participant.participantPublicId">
+                  <ConvosConvoAvatar
+                    :participant="participant"
+                    size="sm"
+                    :ring="true" />
+                </template>
+              </NuxtUiAvatarGroup>
+            </div>
+            <div
+              v-if="!convoParticipantsCollapsed"
+              class="flex h-fit w-full max-w-full flex-col gap-4 overflow-hidden">
+              <div
+                v-if="participantsAssignedArray.length"
+                class="flex w-full max-w-full flex-col gap-2 overflow-hidden">
+                <span class="text-base-11 text-xs"> ASSIGNED </span>
+                <div
+                  class="flex w-full max-w-full flex-col gap-2 overflow-hidden">
+                  <template
+                    v-for="participant of participantsAssignedArray"
+                    :key="participant.participantPublicId">
+                    <div
+                      class="flex w-full max-w-full flex-row items-center gap-2 overflow-hidden">
+                      <ConvosConvoAvatar
+                        :participant="participant"
+                        size="md" />
+                      <span>{{ participant.name }}</span>
+                    </div>
+                  </template>
+                </div>
+              </div>
+              <div
+                v-if="participantContributorsArray.length"
+                class="flex w-full max-w-full flex-col gap-2 overflow-hidden">
+                <span
+                  class="text-base-11 w-full max-w-full overflow-hidden text-xs">
+                  CONTRIBUTORS
+                </span>
+                <div
+                  class="flex w-full max-w-full flex-col gap-2 overflow-hidden">
+                  <template
+                    v-for="participant of participantContributorsArray"
+                    :key="participant.participantPublicId">
+                    <NuxtUiPopover
+                      v-if="participant.signaturePlainText"
+                      mode="hover">
+                      <div class="flex flex-row items-center gap-2">
+                        <ConvosConvoAvatar
+                          :participant="participant"
+                          size="md" />
+                        <span class="truncate">{{ participant.name }}</span>
+                      </div>
+                      <template #panel>
+                        <div class="flex flex-col gap-2 p-4">
+                          <span class="text-base-11 text-sm"> SIGNATURE </span>
+                          <!-- <span class="text-base-11 text-xs"> PLAIN </span>
+                          <span class="whitespace-pre text-xs">
+                            {{
+                              participant.signaturePlainText.replace(
+                                /\\n/g,
+                                '\n'
+                              )
+                            }}
+                          </span> -->
+                          <!-- <span class="text-base-11 text-xs"> HTML </span> -->
+
+                          <!-- eslint-disable-next-line vue/no-v-html -->
+                          <div v-html="participant.signatureHtml" />
+                        </div>
+                      </template>
+                    </NuxtUiPopover>
+                    <div
+                      v-else
+                      class="flex flex-row items-center gap-2">
+                      <ConvosConvoAvatar
+                        :participant="participant"
+                        size="md" />
+                      <span class="truncate">{{ participant.name }}</span>
+                    </div>
+                  </template>
+                </div>
+              </div>
+              <div
+                v-if="participantCommentersArray.length"
+                class="flex flex-col gap-2">
+                <span class="text-base-11 text-xs"> COMMENTERS </span>
+                <div class="flex flex-col gap-2">
+                  <template
+                    v-for="participant of participantCommentersArray"
+                    :key="participant.participantPublicId">
+                    <div class="flex flex-row items-center gap-2">
+                      <ConvosConvoAvatar
+                        :participant="participant"
+                        size="md" />
+                      <span>{{ participant.name }}</span>
+                    </div>
+                  </template>
+                </div>
+              </div>
+              <div
+                v-if="participantWatchersArray.length"
+                class="flex flex-col gap-2">
+                <span class="text-base-11 text-xs"> WATCHERS </span>
+                <div class="flex flex-col gap-2">
+                  <template
+                    v-for="participant of participantWatchersArray"
+                    :key="participant.participantPublicId">
+                    <div class="flex flex-row items-center gap-2">
+                      <ConvosConvoAvatar
+                        :participant="participant"
+                        size="md" />
+                      <span>{{ participant.name }}</span>
+                    </div>
+                  </template>
+                </div>
+              </div>
+              <div
+                v-if="participantGuestsArray.length"
+                class="flex flex-col gap-2">
+                <span class="text-base-11 text-xs"> GUEST </span>
+                <div class="flex flex-col gap-2">
+                  <template
+                    v-for="participant of participantGuestsArray"
+                    :key="participant.participantPublicId">
+                    <div class="flex flex-row items-center gap-2">
+                      <ConvosConvoAvatar
+                        :participant="participant"
+                        size="md" />
+                      <span>{{ participant.name }}</span>
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="flex w-full max-w-full flex-col gap-4 overflow-hidden">
+            <div
+              class="flex w-full max-w-full flex-row items-center justify-between overflow-hidden"
+              @click="attachmentsCollapsed = !attachmentsCollapsed">
+              <span class="text-base-11 cursor-pointer text-sm font-medium">
+                ATTACHMENTS
+              </span>
+              <UnUiButton
+                :icon="
+                  attachmentsCollapsed
+                    ? 'i-heroicons-chevron-down'
+                    : 'i-heroicons-chevron-up'
+                "
+                size="2xs"
+                square
+                variant="ghost" />
+            </div>
+            <div
+              v-if="attachments.length && attachmentsCollapsed"
+              class="flex max-w-full flex-row flex-wrap gap-2 overflow-hidden">
+              <div
+                v-for="attachment of attachments"
+                :key="attachment.publicId">
+                <UnUiButton
+                  :label="attachment.name"
+                  variant="outline"
+                  size="xs"
+                  :icon="
+                    attachment.type === 'image'
+                      ? 'i-ph-image'
+                      : 'i-ph-paperclip'
+                  "
+                  @click="
+                    navigateTo(attachment.url, {
+                      external: true,
+                      open: {
+                        target: '_blank'
+                      }
+                    })
+                  " />
+              </div>
+            </div>
+            <div
+              v-if="attachments.length && !attachmentsCollapsed"
+              class="flex max-w-full flex-row flex-wrap gap-2 overflow-hidden">
+              <div
+                v-for="attachment of attachments"
+                :key="attachment.publicId">
+                <div
+                  class="border-1 border-base-5 bg-base-2 flex flex-row gap-1 rounded border px-2 py-1">
+                  <UnUiIcon
+                    name="i-ph-paperclip"
+                    size="16" />
+                  <span class="truncate text-xs"> {{ attachment.name }}</span>
+                </div>
+              </div>
+            </div>
+            <div
+              v-if="!attachments.length"
+              class="flex max-w-full flex-row flex-wrap gap-2 overflow-hidden">
+              <span class="text-base-11 text-xs">No attachments</span>
+            </div>
+          </div>
+
+          <div class="flex min-w-fit flex-col justify-self-end">
+            <UnUiTooltip :text="createDate?.toLocaleString()">
+              <span class="text-base-11 text-xs">
+                Started: {{ createdAgo }}
+              </span>
+            </UnUiTooltip>
+            <UnUiTooltip :text="updateDate?.toLocaleString()">
+              <span class="text-base-11 text-xs">
+                Updated: {{ updatedAgo }}
+              </span>
+            </UnUiTooltip>
+          </div>
+        </div>
+      </NuxtUiSlideover>
     </div>
   </div>
 </template>

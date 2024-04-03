@@ -237,7 +237,7 @@
       class="flex w-full flex-col items-center gap-8">
       <div
         v-if="!new2FAVerified"
-        class="grid grid-cols-2 gap-4">
+        class="grid grid-rows-2 gap-4 md:grid-cols-2">
         <div class="flex flex-col items-center gap-4">
           <span class="text-xl font-medium">Step 1</span>
           <div v-if="new2FAStatus === 'pending'">Loading new TOTP</div>
@@ -283,8 +283,10 @@
           be able to recover your your account.
         </span>
         <div
-          class="bg-base-11 dark:bg-base-11 mb-2 mt-2 flex items-center justify-center gap-2 rounded-md p-2">
-          <span class="select-all px-2 font-mono">{{ recoveryCode }}</span>
+          class="bg-base-3 mb-2 mt-2 flex items-center justify-center gap-2 rounded-md p-2">
+          <span class="select-all break-all px-2 font-mono">{{
+            recoveryCode
+          }}</span>
           <span>
             <UnUiButton
               size="xs"
@@ -301,7 +303,7 @@
               " />
           </span>
         </div>
-        <div class="flex flex-row gap-2">
+        <div class="flex flex-col gap-2 md:flex-row">
           <UnUiButton
             label="Download Recovery Code File"
             variant="ghost"

@@ -27,7 +27,8 @@ function generateAvatarUrl({
   if (!avatarTimestamp) {
     return null;
   }
-  const epochTs = avatarTimestamp.getTime() / 1000;
+  const epochTs = new Date(avatarTimestamp).getTime() / 1000;
+
   //@ts-ignore
   const storageBaseUrl = useRuntimeConfig().public.storageUrl;
 

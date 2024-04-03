@@ -91,15 +91,18 @@
   const closeRawHtmlModal = () => {
     showRawHtmlModalVisible.value = false;
   };
+
+  const actionsExpanded = ref(false);
 </script>
 <template>
   <div
     class="flex w-full flex-col gap-2"
     :class="containerClasses">
-    <div class="flex w-full flex-row items-start justify-start gap-2">
+    <div
+      class="flex w-full flex-col items-start justify-start gap-2 md:flex-row">
       <div
         v-if="author"
-        class="flex flex-row items-center gap-1">
+        class="hidden flex-row items-center gap-1 md:visible md:flex">
         <UnUiAvatar
           :public-id="author.avatarProfilePublicId"
           :avatar-timestamp="author.avatarTimestamp"
@@ -109,10 +112,82 @@
           size="lg"
           class="rounded-full shadow-md" />
       </div>
-      <div class="flex w-full flex-col gap-2 p-0">
+      <div class="flex w-full flex-col gap-4 p-0 lg:gap-2">
         <div
-          class="flex max-h-4 w-full flex-row items-center justify-between gap-2 overflow-visible pl-2">
-          <div class="flex w-full flex-row items-end gap-2">
+          class="flex w-full flex-col items-center justify-between gap-2 overflow-visible pl-2 md:max-h-4 md:flex-row">
+          <!-- mobile -->
+          <div class="flex w-full flex-row items-end gap-2 md:hidden">
+            <UnUiAvatar
+              :public-id="author.avatarProfilePublicId"
+              :avatar-timestamp="author.avatarTimestamp"
+              :alt="author.name"
+              :type="author.type"
+              :color="author.color"
+              size="md"
+              class="rounded-full shadow-md" />
+            <div class="flex w-full flex-col items-start gap-2">
+              <span
+                v-if="author"
+                class="text-sm leading-none">
+                {{ author.name }}
+              </span>
+              <span
+                v-if="props.entry.metadata?.email?.from?.[0]?.email"
+                class="text-base-9 text-xs">
+                - via {{ props.entry.metadata?.email.from[0].email }}</span
+              >
+            </div>
+            <div
+              class="flex w-12 flex-row-reverse items-end gap-2 overflow-visible md:hidden">
+              <div>
+                <UnUiButton
+                  size="xs"
+                  square
+                  variant="soft"
+                  icon="i-ph-dots-three-vertical"
+                  @click="actionsExpanded = !actionsExpanded" />
+              </div>
+              <div
+                class="ring-base-6 bg-base-1 flex-row gap-2 rounded-md px-2 py-1 ring-1"
+                :class="actionsExpanded ? 'flex' : 'hidden'">
+                <UnUiTooltip
+                  v-if="entryHasRawHtml"
+                  text="View original message">
+                  <UnUiButton
+                    size="xs"
+                    square
+                    variant="soft"
+                    icon="i-ph-code"
+                    @click="openRawHtmlModal" />
+                </UnUiTooltip>
+                <UnUiTooltip text="Report a bug">
+                  <UnUiButton
+                    size="xs"
+                    square
+                    variant="soft"
+                    icon="i-ph-bug" />
+                </UnUiTooltip>
+                <UnUiCopy
+                  icon="i-ph-hash"
+                  size="xs"
+                  variant="soft"
+                  color="base"
+                  helper="Copy message ID"
+                  :text="props.entry.publicId" />
+                <UnUiTooltip text="Reply">
+                  <UnUiButton
+                    size="xs"
+                    square
+                    variant="soft"
+                    icon="i-ph-arrow-bend-double-up-left"
+                    :color="props.isReplyTo ? 'green' : 'base'"
+                    @click="setAsReplyTo()" />
+                </UnUiTooltip>
+              </div>
+            </div>
+          </div>
+          <!-- desktop -->
+          <div class="hidden w-full flex-row items-end gap-2 md:flex">
             <span
               v-if="author"
               class="text-sm leading-none">
@@ -124,7 +199,8 @@
               - via {{ props.entry.metadata?.email.from[0].email }}</span
             >
           </div>
-          <div class="flex flex-row gap-0">
+          <!-- actions tablet -->
+          <div class="hidden flex-row gap-0 md:flex">
             <UnUiTooltip
               v-if="entryHasRawHtml"
               text="View original message">

@@ -83,7 +83,7 @@
         </button>
       </div>
     </div>
-    <div class="flex w-full flex-col gap-4 overflow-y-auto">
+    <div class="flex w-full flex-col gap-4 overflow-x-auto overflow-y-auto">
       <NuxtUiTable
         :columns="tableColumns"
         :rows="tableRows"

@@ -1,8 +1,16 @@
 <script setup lang="ts">
-  import { computed, useRoute, navigateTo, useNuxtApp } from '#imports';
+  import {
+    computed,
+    useRoute,
+    navigateTo,
+    useNuxtApp,
+    ref,
+    watch
+  } from '#imports';
   import { useEE } from '~/composables/EE';
 
   const { $trpc } = useNuxtApp();
+  const route = useRoute();
   const orgSlug = useRoute().params.orgSlug as string;
 
   const eeBilling = useEE().config.modules.billing;
@@ -73,12 +81,31 @@
       icon: 'i-ph-at'
     }
   ]);
+  const isCollapsed = ref(true);
+
+  watch(
+    () => route.path,
+    () => {
+      isCollapsed.value = true;
+    }
+  );
 </script>
 <template>
   <div
-    class="bg-base-2 border-base-6 flex h-full max-h-full flex-col gap-2 overflow-y-auto rounded-r-xl border-r-2 p-8 pl-12 shadow-md">
+    class="bg-base-2 border-base-6 fixed z-[30] flex h-full max-h-full flex-col gap-2 overflow-y-auto rounded-r-xl border-r-2 pb-12 shadow-md lg:relative lg:w-[385px] lg:pl-12"
+    :class="isCollapsed ? 'w-20 p-4 lg:p-8' : 'w-[385px] p-8'">
+    <div class="flex w-full flex-row justify-end">
+      <UnUiButton
+        square
+        variant="ghost"
+        :icon="isCollapsed ? 'i-ph-arrow-right' : 'i-ph-arrow-left'"
+        class="lg:hidden"
+        @click="isCollapsed = !isCollapsed" />
+    </div>
+
     <div
-      class="flex h-full max-h-full grow flex-col gap-8 overflow-hidden overflow-y-auto">
+      class="flex h-full max-h-full grow flex-col gap-8 overflow-hidden overflow-y-auto"
+      :class="isCollapsed ? 'collapse lg:visible' : ''">
       <div class="flex w-full flex-col gap-2">
         <div class="flex flex-row items-center justify-between">
           <span class="font-display text-base-11">Personal</span>
@@ -128,7 +155,7 @@
           </div>
         </div>
       </div>
-      <div class="px-2">
+      <div class="mb-9 px-2">
         <UnUiButton
           label="Add new organization"
           icon="i-ph-plus"

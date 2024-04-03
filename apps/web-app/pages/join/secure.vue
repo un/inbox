@@ -18,6 +18,7 @@
   } from '#imports';
 
   const { $trpc } = useNuxtApp();
+
   definePageMeta({ guest: true });
   const turnstileToken = ref();
   const buttonLoading = ref(false);
@@ -247,7 +248,7 @@
 <template>
   <div class="flex h-screen w-full flex-col items-center justify-between p-4">
     <div
-      class="flex w-full max-w-72 grow flex-col items-center justify-center gap-8 pb-14 md:max-w-xl">
+      class="flex w-full max-w-xl grow flex-col items-center justify-center gap-8 pb-14">
       <h1 class="mb-4 flex flex-col gap-2 text-center">
         <span class="text-2xl font-medium leading-none">Let's make your</span>
         <span class="font-display text-5xl leading-none">UnInbox</span>
@@ -290,9 +291,10 @@
 
       <div class="flex w-full flex-col gap-4">
         <p class="">How do you want to secure your account?</p>
-        <div class="grid w-full grid-cols-9 justify-items-center gap-8">
+        <div
+          class="grid w-full grid-rows-9 justify-items-center gap-8 md:grid-cols-9">
           <button
-            class="bg-base-3 col-span-4 flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded border-2 p-4"
+            class="bg-base-3 row-span-4 flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded border-2 p-4 md:col-span-4"
             :class="
               secureType === 'passkey' ? 'border-green-9' : 'border-base-9'
             "
@@ -308,10 +310,9 @@
           </button>
           <UnUiDivider
             label="OR"
-            orientation="vertical"
             class="w-fit" />
           <button
-            class="bg-base-3 col-span-4 flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded border-2 p-4"
+            class="bg-base-3 row-span-4 flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded border-2 p-4 md:col-span-4"
             :class="
               secureType === 'password' ? 'border-green-9' : 'border-base-9'
             "
