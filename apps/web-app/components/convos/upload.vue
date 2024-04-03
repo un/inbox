@@ -3,7 +3,7 @@
  * example usage:
  * <ConvosUpload
       v-model:uploadedAttachments="attachments"
-      :org-slug="orgSlug">
+      :org-shortcode="orgShortcode">
       <template #default="{ openFileDialog, loading }">
         <UnUiButton
           :loading="loading"
@@ -17,7 +17,7 @@
   import { useFileDialog } from '@vueuse/core';
 
   type Props = {
-    orgSlug: string;
+    orgShortcode: string;
     maxSize: number;
     currentSize: number;
   };
@@ -84,7 +84,7 @@
         {
           method: 'get',
           params: {
-            orgSlug: props.orgSlug,
+            orgShortcode: props.orgShortcode,
             filename: fileName
           },
           credentials: 'include'

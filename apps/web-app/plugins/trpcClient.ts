@@ -72,7 +72,7 @@ export default defineNuxtPlugin(() => {
         maxURLLength: 2083,
         headers() {
           return {
-            'org-slug': route.params.orgSlug || ''
+            'org-shortcode': route.params.orgShortcode || ''
           };
         },
         fetch: (input, init) =>

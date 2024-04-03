@@ -101,7 +101,7 @@
 
   const route = useRoute();
 
-  const orgSlug = route.params.orgSlug as string;
+  const orgShortcode = route.params.orgShortcode as string;
 
   async function createGroup() {
     if (!newGroupColorValue.value) return;
@@ -249,7 +249,7 @@
         <UnUiButton
           icon="i-ph-credit-card"
           label="Go to billing"
-          @click="navigateTo(`/${orgSlug}/settings/org/setup/billing`)" />
+          @click="navigateTo(`/${orgShortcode}/settings/org/setup/billing`)" />
       </div>
     </div>
     <div

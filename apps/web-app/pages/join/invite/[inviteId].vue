@@ -73,10 +73,10 @@
       });
       return;
     }
-    const orgSlugCookie = useCookie('un-org-slug', {
+    const orgShortcodeCookie = useCookie('un-org-shortcode', {
       expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
     });
-    orgSlugCookie.value = joinOrgResponse!.orgSlug as string;
+    orgShortcodeCookie.value = joinOrgResponse!.orgShortcode as string;
 
     joinButtonLoading.value = false;
     joinButtonLabel.value = 'All Done!';
@@ -88,7 +88,7 @@
       timeout: 5000
     });
     setTimeout(() => {
-      navigateTo(`/${inviteQuery.value?.orgSlug}`);
+      navigateTo(`/${inviteQuery.value?.orgShortcode}`);
     }, 1000);
   }
 

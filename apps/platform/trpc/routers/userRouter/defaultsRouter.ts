@@ -18,7 +18,7 @@ export const defaultsRouter = router({
             with: {
               org: {
                 columns: {
-                  slug: true
+                  shortcode: true
                 }
               }
             }
@@ -52,7 +52,8 @@ export const defaultsRouter = router({
         accountResponse.accountCredential.twoFactorEnabled;
 
       return {
-        defaultOrgSlug: accountResponse?.orgMemberships[0]?.org?.slug || '',
+        defaultOrgShortcode:
+          accountResponse?.orgMemberships[0]?.org?.shortcode || '',
         twoFactorEnabledCorrectly: userHasPasskeys
           ? true
           : twoFactorEnabledCorrectly

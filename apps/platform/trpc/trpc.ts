@@ -32,36 +32,38 @@ const isAccountAuthenticated = trpcContext.middleware(({ next, ctx }) => {
 });
 
 // It is not unstable - only the API might change in the future: https://trpc.io/docs/faq#unstable
-const hasOrgSlug = isAccountAuthenticated.unstable_pipe(({ next, ctx }) => {
-  if (!ctx.org) {
-    throw new TRPCError({
-      code: 'BAD_REQUEST',
-      message: 'Invalid organization selected, redirecting...'
-    });
-  }
-
-  const accountId = ctx.account?.id;
-  const orgMembership = ctx.org?.members.find(
-    (member) => member.accountId === accountId
-  );
-
-  if (!accountId || !orgMembership) {
-    throw new TRPCError({
-      code: 'UNAUTHORIZED',
-      message: 'You are not a member of this organization, redirecting...'
-    });
-  }
-
-  return next({
-    ctx: {
-      ...ctx,
-      org: {
-        ...ctx.org,
-        memberId: orgMembership.id
-      }
+const hasOrgShortcode = isAccountAuthenticated.unstable_pipe(
+  ({ next, ctx }) => {
+    if (!ctx.org) {
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: 'Invalid organization selected, redirecting...'
+      });
     }
-  });
-});
+
+    const accountId = ctx.account?.id;
+    const orgMembership = ctx.org?.members.find(
+      (member) => member.accountId === accountId
+    );
+
+    if (!accountId || !orgMembership) {
+      throw new TRPCError({
+        code: 'UNAUTHORIZED',
+        message: 'You are not a member of this organization, redirecting...'
+      });
+    }
+
+    return next({
+      ctx: {
+        ...ctx,
+        org: {
+          ...ctx.org,
+          memberId: orgMembership.id
+        }
+      }
+    });
+  }
+);
 
 const isEeEnabled = trpcContext.middleware(({ next }) => {
   if (!useRuntimeConfig().billing?.enabled) {
@@ -166,7 +168,7 @@ export const publicRateLimitedProcedure = Object.entries(
 export const accountProcedure = trpcContext.procedure.use(
   isAccountAuthenticated
 );
-export const orgProcedure = trpcContext.procedure.use(hasOrgSlug);
+export const orgProcedure = trpcContext.procedure.use(hasOrgShortcode);
 export const eeProcedure = orgProcedure.use(isEeEnabled);
 
 export const router = trpcContext.router;

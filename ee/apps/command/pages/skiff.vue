@@ -3,7 +3,7 @@
 
   const { $trpc } = await useNuxtApp();
 
-  const orgSlug = ref<string>('');
+  const orgShortcode = ref<string>('');
   const orgPublicId = ref<string>('');
   const orgId = ref<number>();
   const functionResult = ref({});
@@ -13,7 +13,7 @@
 
   async function getOrgData() {
     const { data } = await $trpc.orgs.getOrgData.useQuery({
-      orgSlug: orgSlug.value
+      orgShortcode: orgShortcode.value
     });
     orgData.value = data.value || {};
     orgId.value = data?.value?.org?.id;
@@ -48,9 +48,9 @@
     <span>Active org id: {{ orgId }}</span>
     <div class="flex flex-row gap-4">
       <NuxtUiInput
-        v-model="orgSlug"
-        label="orgSlug"
-        placeholder="OrgSlug" />
+        v-model="orgShortcode"
+        label="orgShortcode"
+        placeholder="OrgShortcode" />
       <NuxtUiInput
         v-model="orgPublicId"
         disabled

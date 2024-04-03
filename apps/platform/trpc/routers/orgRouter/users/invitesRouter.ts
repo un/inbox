@@ -23,7 +23,7 @@ import {
   typeIdValidator,
   zodSchemas
 } from '@u22n/utils';
-import { refreshOrgSlugCache } from '../../../../utils/orgSlug';
+import { refreshOrgShortcodeCache } from '../../../../utils/orgShortcode';
 import { isAccountAdminOfOrg } from '../../../../utils/account';
 import { TRPCError } from '@trpc/server';
 import { useRuntimeConfig } from '#imports';
@@ -297,7 +297,7 @@ export const invitesRouter = router({
               publicId: true,
               avatarTimestamp: true,
               name: true,
-              slug: true
+              shortcode: true
             }
           }
         }
@@ -330,7 +330,7 @@ export const invitesRouter = router({
         orgPublicId: queryInvitesResponse.org.publicId,
         orgAvatarTimestamp: queryInvitesResponse.org.avatarTimestamp,
         orgName: queryInvitesResponse.org.name,
-        orgSlug: queryInvitesResponse.org.slug,
+        orgShortcode: queryInvitesResponse.org.shortcode,
         loggedIn: userLoggedIn
       };
     }),
@@ -367,7 +367,7 @@ export const invitesRouter = router({
           },
           org: {
             columns: {
-              slug: true
+              shortcode: true
             }
           }
         }
@@ -452,11 +452,11 @@ export const invitesRouter = router({
         });
       }
 
-      await refreshOrgSlugCache(+queryInvitesResponse.orgId);
+      await refreshOrgShortcodeCache(+queryInvitesResponse.orgId);
 
       return {
         success: true,
-        orgSlug: queryInvitesResponse.org.slug
+        orgShortcode: queryInvitesResponse.org.shortcode
       };
     }),
   invalidateInvite: orgProcedure

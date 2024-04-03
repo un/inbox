@@ -41,7 +41,7 @@ export const addressRouter = router({
                 publicId: true,
                 avatarTimestamp: true,
                 name: true,
-                slug: true
+                shortcode: true
               }
             },
             emailIdentity: {
@@ -119,7 +119,7 @@ export const addressRouter = router({
               columns: {
                 name: true,
                 publicId: true,
-                slug: true
+                shortcode: true
               }
             },
             emailIdentity: {

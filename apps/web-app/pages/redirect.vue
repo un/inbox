@@ -4,20 +4,20 @@
   const { $trpc } = useNuxtApp();
 
   onMounted(async () => {
-    const { defaultOrgSlug, twoFactorEnabledCorrectly } =
+    const { defaultOrgShortcode, twoFactorEnabledCorrectly } =
       await $trpc.account.defaults.redirectionData.query({});
 
     if (!twoFactorEnabledCorrectly) {
       return navigateTo(`/join/2fa`);
     }
 
-    if (!defaultOrgSlug) {
+    if (!defaultOrgShortcode) {
       return navigateTo(`/join/org`);
     }
-    // We need to redirect to the index page of [orgSlug] due to this nuxt issue https://github.com/nuxt/nuxt/issues/25214
+    // We need to redirect to the index page of [orgShortcode] due to this nuxt issue https://github.com/nuxt/nuxt/issues/25214
     // the index page will reload nuxt, then redirect to the convos view - we should not directly navigate to convos page!!!
     setTimeout(() => {
-      navigateTo(`/${defaultOrgSlug}`);
+      navigateTo(`/${defaultOrgShortcode}`);
     }, 500);
   });
 </script>

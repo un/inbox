@@ -163,9 +163,7 @@
             <div class="h-[32px] w-[32px]">
               <UnUiIcon
                 :name="
-                  uploadLoading
-                    ? 'i-svg-spinners-3-dots-fade'
-                    : 'i-ph-image-square'
+                  uploadLoading ? 'i-svg-spinners-90-ring' : 'i-ph-image-square'
                 "
                 size="100%" />
             </div>

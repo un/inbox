@@ -17,15 +17,15 @@ import { validateTypeId } from '@u22n/utils';
 
 /**
  * provides a proxy to attachments after verifying the account has access to the attachment
- * path: storageServer/attachment/[orgSlug]/[attachmentId]/[filename.ext]
+ * path: storageServer/attachment/[orgShortcode]/[attachmentId]/[filename.ext]
  */
 export default eventHandler({
   async handler(event) {
-    const orgSlug = getRouterParam(event, 'orgSlug');
+    const orgShortcode = getRouterParam(event, 'orgShortcode');
     const attachmentPublicId = getRouterParam(event, 'attachmentId');
     const filename = getRouterParam(event, 'filename');
 
-    if (!orgSlug || !attachmentPublicId || !filename) {
+    if (!orgShortcode || !attachmentPublicId || !filename) {
       return 'Missing required parameters';
     }
 
@@ -50,7 +50,7 @@ export default eventHandler({
     }
 
     const orgQueryResponse = await db.query.orgs.findFirst({
-      where: eq(orgs.slug, orgSlug),
+      where: eq(orgs.shortcode, orgShortcode),
       columns: {
         id: true,
         publicId: true

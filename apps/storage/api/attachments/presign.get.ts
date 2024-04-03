@@ -17,7 +17,7 @@ import {
 import { typeIdGenerator } from '@u22n/utils';
 
 const bodySchema = z.object({
-  orgSlug: z.string(),
+  orgShortcode: z.string(),
   filename: z.string()
 });
 /**
@@ -38,7 +38,7 @@ export default eventHandler({
     const accountId = event.context.account.id;
 
     const orgQueryResponse = await db.query.orgs.findFirst({
-      where: eq(orgs.slug, data.orgSlug),
+      where: eq(orgs.shortcode, data.orgShortcode),
       columns: {
         id: true,
         publicId: true

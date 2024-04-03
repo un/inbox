@@ -12,9 +12,9 @@ import { typeIdGenerator } from '@u22n/utils';
 import { TRPCError } from '@trpc/server';
 import { blockedUsernames, reservedUsernames } from '../../../utils/signup';
 
-async function validateOrgSlug(
+async function validateOrgShortcode(
   db: DBType,
-  slug: string
+  shortcode: string
 ): Promise<{
   available: boolean;
   error: string | null;
@@ -22,20 +22,20 @@ async function validateOrgSlug(
   const orgId = await db
     .select({ id: orgs.id })
     .from(orgs)
-    .where(eq(orgs.slug, slug));
+    .where(eq(orgs.shortcode, shortcode));
   if (orgId.length !== 0) {
     return {
       available: false,
       error: 'Already taken'
     };
   }
-  if (blockedUsernames.includes(slug.toLowerCase())) {
+  if (blockedUsernames.includes(shortcode.toLowerCase())) {
     return {
       available: false,
-      error: 'Org slug not allowed'
+      error: 'Org shortcode not allowed'
     };
   }
-  if (reservedUsernames.includes(slug.toLowerCase())) {
+  if (reservedUsernames.includes(shortcode.toLowerCase())) {
     return {
       available: false,
       error:
@@ -49,10 +49,10 @@ async function validateOrgSlug(
 }
 
 export const crudRouter = router({
-  checkSlugAvailability: accountProcedure
+  checkShortcodeAvailability: accountProcedure
     .input(
       z.object({
-        slug: z
+        shortcode: z
           .string()
           .min(5)
           .max(64)
@@ -62,14 +62,14 @@ export const crudRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      return await validateOrgSlug(ctx.db, input.slug);
+      return await validateOrgShortcode(ctx.db, input.shortcode);
     }),
 
   createNewOrg: accountProcedure
     .input(
       z.object({
         orgName: z.string().min(3).max(32),
-        orgSlug: z
+        orgShortcode: z
           .string()
           .min(5)
           .max(64)
@@ -87,7 +87,7 @@ export const crudRouter = router({
       const insertOrgResponse = await db.insert(orgs).values({
         ownerId: accountId,
         name: input.orgName,
-        slug: input.orgSlug,
+        shortcode: input.orgShortcode,
         publicId: newPublicId
       });
       const orgId = +insertOrgResponse.insertId;
@@ -166,19 +166,19 @@ export const crudRouter = router({
               publicId: true,
               avatarTimestamp: true,
               name: true,
-              slug: true
+              shortcode: true
             }
           }
         }
       });
 
-      const adminOrgSlugs = orgMembersQuery
+      const adminOrgShortcodes = orgMembersQuery
         .filter((orgMember) => orgMember.role === 'admin')
-        .map((orgMember) => orgMember.org.slug);
+        .map((orgMember) => orgMember.org.shortcode);
 
       return {
         userOrgs: orgMembersQuery,
-        adminOrgSlugs: adminOrgSlugs
+        adminOrgShortcodes: adminOrgShortcodes
       };
     })
 });

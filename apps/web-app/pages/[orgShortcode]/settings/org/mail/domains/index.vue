@@ -2,7 +2,7 @@
   import { navigateTo, ref, useNuxtApp, useRoute, watch } from '#imports';
 
   const { $trpc } = useNuxtApp();
-  const orgSlug = useRoute().params.orgSlug as string;
+  const orgShortcode = useRoute().params.orgShortcode as string;
 
   const {
     data: orgDomainsQuery,
@@ -67,7 +67,7 @@
   );
 
   function select(row: (typeof tableRows.value)[number]) {
-    navigateTo(`/${orgSlug}/settings/org/mail/domains/${row.domainId}`);
+    navigateTo(`/${orgShortcode}/settings/org/mail/domains/${row.domainId}`);
   }
 
   function rowStatusColor(

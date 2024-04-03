@@ -4,9 +4,9 @@
   import { useRealtime } from '~/composables/realtime';
   import { useConvoEntryStore } from '~/stores/convoEntryStore';
   import { useConvoStore } from '~/stores/convoStore';
-  const orgSlug = useRoute().params.orgSlug;
+  const orgShortcode = useRoute().params.orgShortcode;
   const realtime = await useRealtime();
-  await realtime.connect({ orgSlug: orgSlug as string });
+  await realtime.connect({ orgShortcode: orgShortcode as string });
 
   const convoStore = useConvoStore();
   const convoEntryStore = useConvoEntryStore();

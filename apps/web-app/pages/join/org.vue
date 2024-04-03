@@ -27,10 +27,10 @@
   const orgNameValid = ref<boolean | 'remote' | null>(null);
   const orgNameValue = ref('');
   const orgNameValidationMessage = ref('');
-  const orgSlugValid = ref<boolean | 'remote' | null>(null);
-  const orgSlugValue = ref('');
-  const orgSlugTempValue = ref('');
-  const orgSlugValidationMessage = ref('');
+  const orgShortcodeValid = ref<boolean | 'remote' | null>(null);
+  const orgShortcodeValue = ref('');
+  const orgShortcodeTempValue = ref('');
+  const orgShortcodeValidationMessage = ref('');
 
   if (process.client) {
     useCookie('un-join-username', { expires: new Date() }).value = '';
@@ -39,12 +39,12 @@
   watchDebounced(
     orgNameValue,
     async () => {
-      if (orgSlugTempValue.value === orgSlugValue.value) {
+      if (orgShortcodeTempValue.value === orgShortcodeValue.value) {
         const newValue = orgNameValue.value
           .toLowerCase()
           .replace(/[^a-z0-9]/g, '');
-        orgSlugValue.value = newValue;
-        orgSlugTempValue.value = newValue;
+        orgShortcodeValue.value = newValue;
+        orgShortcodeTempValue.value = newValue;
       }
     },
     {
@@ -54,18 +54,18 @@
   );
 
   watchDebounced(
-    orgSlugValue,
+    orgShortcodeValue,
     async () => {
-      if (orgSlugValid.value === 'remote') {
+      if (orgShortcodeValid.value === 'remote') {
         const { available, error } =
-          await $trpc.org.crud.checkSlugAvailability.query({
-            slug: orgSlugValue.value
+          await $trpc.org.crud.checkShortcodeAvailability.query({
+            shortcode: orgShortcodeValue.value
           });
         if (!available) {
-          orgSlugValid.value = false;
-          orgSlugValidationMessage.value = error || 'Not available';
+          orgShortcodeValid.value = false;
+          orgShortcodeValidationMessage.value = error || 'Not available';
         }
-        available && (orgSlugValid.value = true);
+        available && (orgShortcodeValid.value = true);
       }
     },
     {
@@ -86,7 +86,7 @@
     if (orgPath.value === 'join' && inviteCodeValid.value === true) return true;
     if (
       orgPath.value === 'new' &&
-      (orgNameValid.value && orgSlugValid.value) === true
+      (orgNameValid.value && orgShortcodeValid.value) === true
     ) {
       return true;
     }
@@ -109,7 +109,7 @@
     const createNewOrgTrpc = $trpc.org.crud.createNewOrg.useMutation();
     await createNewOrgTrpc.mutate({
       orgName: orgNameValue.value,
-      orgSlug: orgSlugValue.value
+      orgShortcode: orgShortcodeValue.value
     });
     if (createNewOrgTrpc.status.value === 'error') {
       newButtonLoading.value = false;
@@ -125,10 +125,10 @@
       return;
     }
 
-    const orgSlugCookie = useCookie('un-join-org-slug', {
+    const orgShortcodeCookie = useCookie('un-join-org-shortcode', {
       expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
     });
-    orgSlugCookie.value = orgSlugValue.value as string;
+    orgShortcodeCookie.value = orgShortcodeValue.value as string;
     toast.remove('creating_org');
     toast.add({
       id: 'created_org',
@@ -161,10 +161,10 @@
       });
       return;
     }
-    const orgSlugCookie = useCookie('un-join-org-slug', {
+    const orgShortcodeCookie = useCookie('un-join-org-shortcode', {
       expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
     });
-    orgSlugCookie.value = joinOrgResponse!.orgSlug as string;
+    orgShortcodeCookie.value = joinOrgResponse!.orgShortcode as string;
     toast.add({
       id: 'joined_org',
       title: 'Organization joined',
@@ -263,13 +263,13 @@
           placeholder=""
           :schema="z.string().trim()" />
         <UnUiInput
-          v-model:value="orgSlugValue"
-          v-model:valid="orgSlugValid"
-          v-model:validationMessage="orgSlugValidationMessage"
+          v-model:value="orgShortcodeValue"
+          v-model:valid="orgShortcodeValid"
+          v-model:validationMessage="orgShortcodeValidationMessage"
           width="full"
           locked
           remote-validation
-          label="Organization Slug"
+          label="Organization Shortcode"
           placeholder=""
           :schema="
             z

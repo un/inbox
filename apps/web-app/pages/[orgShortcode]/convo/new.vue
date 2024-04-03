@@ -17,7 +17,7 @@
   import type { TypeId } from '@u22n/utils';
 
   const { $trpc } = useNuxtApp();
-  const orgSlug = useRoute().params.orgSlug as string;
+  const orgShortcode = useRoute().params.orgShortcode as string;
   const attachmentUploads = ref<ConvoAttachmentUpload[]>([]);
   const currentTotalUploadSize = computed(() => {
     return attachmentUploads.value.reduce((acc, attachment) => {
@@ -471,7 +471,7 @@
       timeout: 5000
     });
     setTimeout(() => {
-      navigateTo(`/${orgSlug}/convo/${createNewConvo?.publicId}`);
+      navigateTo(`/${orgShortcode}/convo/${createNewConvo?.publicId}`);
     }, 1500);
   }
 </script>
@@ -750,7 +750,7 @@
         v-model:uploadedAttachments="attachmentUploads"
         :max-size="15000000"
         :current-size="currentTotalUploadSize"
-        :org-slug="orgSlug">
+        :org-shortcode="orgShortcode">
         <template #default="{ openFileDialog, loading }">
           <UnUiButton
             label="Upload"

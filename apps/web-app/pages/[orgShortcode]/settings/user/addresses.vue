@@ -12,7 +12,7 @@
 
   const { $trpc } = useNuxtApp();
   const route = useRoute();
-  const orgSlug = route.params.orgSlug as string;
+  const orgShortcode = route.params.orgShortcode as string;
   const hasAddresses = ref(false);
   const publicAddressesAvailable = ref<string[]>([]);
   const premiumAddressesAvailable = ref<string[]>([]);
@@ -237,7 +237,7 @@
           We suggest creating a separate organization for personal addresses.
           <nuxt-link
             class="text text-base-11 inline-flex flex-row items-center gap-1 text-sm leading-none"
-            :to="`/${orgSlug}/settings/org/new`">
+            :to="`/${orgShortcode}/settings/org/new`">
             <span>Create a new organization here</span>
             <UnUiIcon
               name="i-ph-arrow-right"

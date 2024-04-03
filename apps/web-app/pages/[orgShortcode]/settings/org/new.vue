@@ -20,24 +20,24 @@
   const orgNameValid = ref<boolean | 'remote' | null>(null);
   const orgNameValue = ref('');
   const orgNameValidationMessage = ref('');
-  const orgSlugValid = ref<boolean | 'remote' | null>(null);
-  const orgSlugValue = ref('');
-  const orgSlugTempValue = ref('');
-  const orgSlugValidationMessage = ref('');
+  const orgShortcodeValid = ref<boolean | 'remote' | null>(null);
+  const orgShortcodeValue = ref('');
+  const orgShortcodeTempValue = ref('');
+  const orgShortcodeValidationMessage = ref('');
 
   const formValid = computed(() => {
-    return orgNameValid.value && orgSlugValid.value;
+    return orgNameValid.value && orgShortcodeValid.value;
   });
 
   watchDebounced(
     orgNameValue,
     async () => {
-      if (orgSlugTempValue.value === orgSlugValue.value) {
+      if (orgShortcodeTempValue.value === orgShortcodeValue.value) {
         const newValue = orgNameValue.value
           .toLowerCase()
           .replace(/[^a-z0-9]/g, '');
-        orgSlugValue.value = newValue;
-        orgSlugTempValue.value = newValue;
+        orgShortcodeValue.value = newValue;
+        orgShortcodeTempValue.value = newValue;
       }
     },
     {
@@ -46,17 +46,18 @@
     }
   );
   watchDebounced(
-    orgSlugValue,
+    orgShortcodeValue,
     async () => {
-      if (orgSlugValid.value === 'remote') {
-        const { available } = await $trpc.org.crud.checkSlugAvailability.query({
-          slug: orgSlugValue.value
-        });
+      if (orgShortcodeValid.value === 'remote') {
+        const { available } =
+          await $trpc.org.crud.checkShortcodeAvailability.query({
+            shortcode: orgShortcodeValue.value
+          });
         if (!available) {
-          orgSlugValid.value = false;
-          orgSlugValidationMessage.value = 'Not available';
+          orgShortcodeValid.value = false;
+          orgShortcodeValidationMessage.value = 'Not available';
         }
-        available && (orgSlugValid.value = true);
+        available && (orgShortcodeValid.value = true);
       }
     },
     {
@@ -74,7 +75,7 @@
     const createNewOrgTrpc = $trpc.org.crud.createNewOrg.useMutation();
     await createNewOrgTrpc.mutate({
       orgName: orgNameValue.value,
-      orgSlug: orgSlugValue.value
+      orgShortcode: orgShortcodeValue.value
     });
     if (createNewOrgTrpc.status.value === 'error') {
       newButtonLoading.value = false;
@@ -103,7 +104,7 @@
       timeout: 5000
     });
     setTimeout(() => {
-      navigateTo(`/${orgSlugValue.value}/settings/org/`);
+      navigateTo(`/${orgShortcodeValue.value}/settings/org/`);
     }, 2000);
   }
 </script>
@@ -126,12 +127,12 @@
         placeholder=""
         :schema="z.string().trim().min(2).max(32)" />
       <UnUiInput
-        v-model:value="orgSlugValue"
-        v-model:valid="orgSlugValid"
-        v-model:validationMessage="orgSlugValidationMessage"
+        v-model:value="orgShortcodeValue"
+        v-model:valid="orgShortcodeValid"
+        v-model:validationMessage="orgShortcodeValidationMessage"
         locked
         remote-validation
-        label="Organization Slug"
+        label="Organization Shortcode"
         placeholder=""
         :schema="
           z

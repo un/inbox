@@ -1,7 +1,7 @@
 <script setup lang="ts">
   import { useRoute, ref, watch } from '#imports';
 
-  const orgSlug = useRoute().params.orgSlug as string;
+  const orgShortcode = useRoute().params.orgShortcode as string;
   const route = useRoute();
   const isCollapsed = ref(true);
 
@@ -38,7 +38,7 @@
         label="New"
         icon="i-ph-plus"
         variant="outline"
-        :to="`/${orgSlug}/convo/new`" />
+        :to="`/${orgShortcode}/convo/new`" />
     </div>
   </div>
 </template>
