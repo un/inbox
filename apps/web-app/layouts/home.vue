@@ -5,8 +5,10 @@
   import { useConvoEntryStore } from '~/stores/convoEntryStore';
   import { useConvoStore } from '~/stores/convoStore';
   const orgShortcode = useRoute().params.orgShortcode;
-  const realtime = await useRealtime();
-  await realtime.connect({ orgShortcode: orgShortcode as string });
+  const realtime = useRealtime();
+  await realtime
+    .connect({ orgShortcode: orgShortcode as string })
+    .catch(() => {});
 
   const convoStore = useConvoStore();
   const convoEntryStore = useConvoEntryStore();

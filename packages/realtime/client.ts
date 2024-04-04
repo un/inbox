@@ -18,8 +18,8 @@ export default class RealtimeClient {
       wsHost: this.config.host,
       wsPort: Number(this.config.port),
       cluster: 'default',
-      forceTLS: this.config.authEndpoint.startsWith('https'),
-      enabledTransports: ['ws', 'wss'],
+      forceTLS: false,
+      enabledTransports: ['ws'],
       userAuthentication: {
         customHandler: async (params, callback) => {
           const res = await fetch(this.config.authEndpoint, {
@@ -65,14 +65,14 @@ export default class RealtimeClient {
     event: T,
     callback: (data: z.infer<EventDataMap[T]>) => Promise<void>
   ) {
-    if (!this.client) throw new Error('Client not connected');
+    if (!this.client) return;
     this.client.bind(event, (e: unknown) =>
       callback(eventDataMaps[event].parse(e))
     );
   }
 
   public off<const T extends keyof EventDataMap>(event: T) {
-    if (!this.client) throw new Error('Client not connected');
+    if (!this.client) return;
     this.client.unbind(event);
   }
 
@@ -80,7 +80,7 @@ export default class RealtimeClient {
     event: T,
     callback: (data: z.infer<EventDataMap[T]>) => Promise<void>
   ) {
-    if (!this.client) throw new Error('Client not connected');
+    if (!this.client) return;
     this.client
       .subscribe('broadcasts')
       .bind(event, (e: unknown) => callback(eventDataMaps[event].parse(e)));
