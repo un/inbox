@@ -218,7 +218,7 @@ export const addressRouter = router({
 
       const newEmailIdentityPublicId = typeIdGenerator('emailIdentities');
       const fwdDomain = mailDomains.fwd[0];
-      const newForwardingAddress = `${nanoIdToken}@${fwdDomain}`;
+      const newForwardingAddress = `${nanoIdToken()}@${fwdDomain}`;
       const insertEmailIdentityResponse = await db
         .insert(emailIdentities)
         .values({
