@@ -28,9 +28,10 @@
   const usernameValid = ref<boolean | 'remote' | null>(null);
   const usernameValue = ref('');
   const usernameValidationMessage = ref('');
+  const termsAccepted = ref(false);
 
   const formValid = computed(() => {
-    return usernameValid.value === true;
+    return usernameValid.value === true && termsAccepted.value === true;
   });
 
   //functions
@@ -145,6 +146,25 @@
         placeholder=""
         :remote-validation="true"
         :schema="zodSchemas.username()" />
+      <div class="flex flex-row gap-2">
+        <NuxtUiCheckbox
+          v-model="termsAccepted"
+          :disabled="!usernameValid" />
+        <span class="text-sm">
+          I agree to the UnInbox
+          <a
+            href="https://legal.u22n.com/uninbox/terms"
+            target="_blank">
+            Terms of Service
+          </a>
+          and
+          <a
+            href="https://legal.u22n.com/uninbox/privacy"
+            target="_blank">
+            Privacy Policy </a
+          >.
+        </span>
+      </div>
 
       <div class="mt-3 flex w-full flex-col gap-2">
         <UnUiButton
