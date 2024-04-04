@@ -85,11 +85,29 @@
     passwordInput,
     async () => {
       if (passwordInput.value === '') return;
+      passwordStats.value.allowed = null;
+
+      if (turnstileEnabled && !turnstileToken.value) {
+        await new Promise((resolve) => {
+          const unwatch = watch(turnstileToken, (newValue) => {
+            if (newValue !== null) {
+              resolve(newValue);
+              unwatch();
+            }
+          });
+        });
+      }
+
       const res = await $trpc.auth.signup.checkPasswordStrength.query({
         password: passwordInput.value,
         turnstileToken: turnstileToken.value
       });
       passwordStats.value = res;
+
+      turnstile.value?.reset();
+      // We need to blank out the token, as testing mode always returns same token
+      // so it gets stuck on watch
+      turnstileToken.value = null;
     },
     {
       debounce: 600,
@@ -396,7 +414,7 @@
             label="Password"
             password
             placeholder="" />
-          <div v-if="passwordInput !== ''">
+          <div v-if="passwordInput !== '' && passwordStats.allowed !== null">
             <p class="text-sm">
               Your password is
               <span

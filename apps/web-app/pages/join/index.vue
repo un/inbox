@@ -16,6 +16,7 @@
 
   const { $trpc } = useNuxtApp();
   definePageMeta({ guest: true });
+  const turnstile = ref();
   const turnstileToken = ref();
   const buttonLoading = ref(false);
   const turnstileEnabled = useRuntimeConfig().public.turnstileEnabled;
@@ -39,10 +40,7 @@
   }
 
   async function checkUsername() {
-    if (
-      (turnstileEnabled && !turnstileToken.value) ||
-      !zodSchemas.username().safeParse(usernameValue.value).success
-    ) {
+    if (!zodSchemas.username().safeParse(usernameValue.value).success) {
       return;
     }
     const { available, error } =
@@ -61,7 +59,21 @@
     usernameValue,
     async () => {
       if (usernameValid.value === 'remote') {
+        if (turnstileEnabled && !turnstileToken.value) {
+          await new Promise((resolve) => {
+            const unwatch = watch(turnstileToken, (newValue) => {
+              if (newValue !== null) {
+                resolve(newValue);
+                unwatch();
+              }
+            });
+          });
+        }
         await checkUsername();
+        turnstile.value?.reset();
+        // We need to blank out the token, as testing mode always returns same token
+        // so it gets stuck on watch
+        turnstileToken.value = null;
       }
     },
     {
@@ -69,9 +81,6 @@
       maxWait: 5000
     }
   );
-
-  // Make sure to check the username if the check was skipped due to token not being available
-  watch(turnstileToken, checkUsername, { once: true });
 
   const pageReady: Ref<boolean> = ref(false);
   onNuxtReady(() => {
@@ -154,8 +163,9 @@
       <div v-if="pageReady && turnstileEnabled">
         <!-- This should be invisible, we will be using invisible challenges -->
         <NuxtTurnstile
+          ref="turnstile"
           v-model="turnstileToken"
-          class="hidden" />
+          class="" />
       </div>
     </div>
   </div>
