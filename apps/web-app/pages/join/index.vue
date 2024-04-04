@@ -179,6 +179,12 @@
           variant="ghost"
           block
           @click="navigateTo('/')" />
+        <UnUiButton
+          label="Sign up for EU only datahosting"
+          variant="ghost"
+          size="sm"
+          block
+          @click="navigateTo('/eu')" />
       </div>
       <div v-if="pageReady && turnstileEnabled">
         <!-- This should be invisible, we will be using invisible challenges -->
