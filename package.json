@@ -35,6 +35,7 @@
     "db:drop:r": "infisical run --env=local -- turbo run db:drop",
     "ee:dev:r": "infisical run --env=local -- turbo run ee:dev",
     "ee:check": "infisical run --env=local -- turbo run ee:check",
+    "ee:build:all": "dotenv -e .env.local -- turbo run build --cache-dir=.turbo",
     "prepare": "husky"
   },
   "keywords": [],
