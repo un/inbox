@@ -1,5 +1,5 @@
 import { db } from '@u22n/database';
-import { simpleParser } from 'mailparser';
+import { simpleParser, type EmailAddress } from 'mailparser';
 // @ts-expect-error, not typed yet
 import { authenticate } from 'mailauth';
 import { and, eq, inArray } from '@u22n/database/orm';
@@ -59,6 +59,7 @@ export default eventHandler(async (event) => {
 
   let orgId: number = 0;
   let orgPublicId: string | null = null;
+  let forwardedEmailAddress: string | null = null;
   const [orgIdStr, mailserverId] = event.context.params!.mailServer!.split('/');
   if (!orgIdStr || !mailserverId) {
     console.error('⛔ no orgId or mailserverId found', {
@@ -67,7 +68,7 @@ export default eventHandler(async (event) => {
     return;
   }
 
-  if (orgIdStr === '0' || mailserverId === 'root') {
+  if (orgIdStr === '0' && mailserverId === 'root') {
     // handle for root emails
     // get the email identity for the root email
     const [rootEmailUsername, rootEmailDomain] = payloadEmailTo.split('@');
@@ -103,6 +104,43 @@ export default eventHandler(async (event) => {
     }
     orgId = rootEmailIdentity.orgId;
     orgPublicId = rootEmailIdentity.org.publicId;
+  } else if (orgIdStr === '0' && mailserverId === 'fwd') {
+    // handle for fwd emails
+    // get the email identity for the root email
+    const fwdEmailAddress = payloadEmailTo;
+
+    if (!fwdEmailAddress) {
+      console.error('⛔ invalid forwarding email address', {
+        payloadPostalEmailId
+      });
+      return;
+    }
+    const fwdEmailIdentity = await db.query.emailIdentities.findFirst({
+      where: eq(emailIdentities.forwardingAddress, fwdEmailAddress),
+      columns: {
+        id: true,
+        username: true,
+        domainName: true,
+        orgId: true
+      },
+      with: {
+        org: {
+          columns: {
+            publicId: true
+          }
+        }
+      }
+    });
+    if (!fwdEmailIdentity) {
+      console.error('⛔ no email identity found for fwd email', {
+        payloadPostalEmailId
+      });
+
+      return;
+    }
+    orgId = fwdEmailIdentity.orgId;
+    orgPublicId = fwdEmailIdentity.org.publicId;
+    forwardedEmailAddress = fwdEmailAddress;
   } else {
     orgId = Number(orgIdStr);
 
@@ -129,7 +167,7 @@ export default eventHandler(async (event) => {
         }
       }
     });
-    // prelimary checks
+    // preliminary checks
     if (!mailServer || +mailServer.orgId !== orgId) {
       console.error('⛔ mailserver not found or does not belong to this org', {
         orgId,
@@ -208,8 +246,36 @@ export default eventHandler(async (event) => {
   const subject =
     parsedEmail.subject?.replace(/^(RE:|FW:)\s*/i, '').trim() || '';
   const messageId = parsedEmail.messageId?.replace(/^<|>$/g, '') || '';
-  const messageBodyHtml = (parsedEmail.html as string).replace(/\n/g, '') || '';
+  const messageBodyHtml = parsedEmail.html
+    ? (parsedEmail.html as string).replace(/\n/g, '')
+    : parsedEmail.textAsHtml
+      ? (parsedEmail.textAsHtml as string).replace(/\n/g, '')
+      : '';
   const attachments = parsedEmail.attachments || [];
+  const emailHeaders = Object.fromEntries(parsedEmail.headers);
+  if (forwardedEmailAddress) {
+    const forwardedForHeader = emailHeaders['x-forwarded-for'] as string;
+    const forwardedToAddress =
+      forwardedForHeader?.split(' ')[0]?.trim() || null;
+
+    //find if the forwardedToAddress exists in the messageFrom, messageTo or messageCc arrays, if it does, push the forwardingAddress to the respective array so we can look it up in case the to address is not a registered identity
+    if (forwardedToAddress) {
+      const forwardingAddressObject: EmailAddress = {
+        address: forwardedEmailAddress,
+        name: ''
+      };
+
+      if (messageTo.some((email) => email.address === forwardedToAddress)) {
+        messageTo.push(forwardingAddressObject);
+      }
+      if (messageFrom.some((email) => email.address === forwardedToAddress)) {
+        messageFrom.push(forwardingAddressObject);
+      }
+      if (messageCc?.some((email) => email.address === forwardedToAddress)) {
+        messageCc.push(forwardingAddressObject);
+      }
+    }
+  }
 
   // Check if we have already processed this incoming email by checking the message ID + orgID
   const alreadyProcessedMessageWithThisId =
@@ -276,6 +342,7 @@ export default eventHandler(async (event) => {
     );
     return;
   }
+
   // check the from contact and update their signature if it is null
   if (messageFromPlatformObject[0]?.type === 'contact') {
     const contact = await db.query.contacts.findFirst({
@@ -314,12 +381,18 @@ export default eventHandler(async (event) => {
   ];
 
   // extract the IDs of all the entries in messageAddressIds where the type = 'emailIdentity'
-  const emailIdentityIds = messageAddressIds
-    .filter((a) => a.type === 'emailIdentity')
-    .map((a) => a.id);
-  const contactIds = messageAddressIds
-    .filter((a) => a.type === 'contact')
-    .map((a) => a.id);
+  const emailIdentityIds = Array.from(
+    new Set(
+      messageAddressIds
+        .filter((a) => a.type === 'emailIdentity')
+        .map((a) => a.id)
+    )
+  );
+  const contactIds = Array.from(
+    new Set(
+      messageAddressIds.filter((a) => a.type === 'contact').map((a) => a.id)
+    )
+  );
 
   // if theres no email identity ids, then we assume that this email has no destination, so we need to send the bounce message
   if (!emailIdentityIds.length) {
@@ -331,7 +404,7 @@ export default eventHandler(async (event) => {
 
   // get the routing rule destinations for each of the email addresses, then get the users and contacts within those routing rules
 
-  const routingRulegroupIds: number[] = [];
+  const routingRuleGroupIds: number[] = [];
   const routingRuleOrgMemberIds: number[] = [];
   const emailIdentityResponse = await db.query.emailIdentities.findMany({
     where: and(
@@ -360,7 +433,7 @@ export default eventHandler(async (event) => {
   emailIdentityResponse.forEach((emailIdentity) => {
     emailIdentity.routingRules.destinations.forEach((destination) => {
       if (destination.groupId) {
-        routingRulegroupIds.push(destination.groupId);
+        routingRuleGroupIds.push(destination.groupId);
       } else if (destination.orgMemberId) {
         routingRuleOrgMemberIds.push(destination.orgMemberId);
       }
@@ -478,7 +551,7 @@ export default eventHandler(async (event) => {
       );
       const existingConvoParticipantsgroupIds =
         existingMessage.convo.participants.map((p) => p.groupId);
-      const missingUserGroups = routingRulegroupIds.filter(
+      const missingUserGroups = routingRuleGroupIds.filter(
         (c) => !existingConvoParticipantsgroupIds.includes(c)
       );
 
@@ -564,9 +637,9 @@ export default eventHandler(async (event) => {
         }))
       );
     }
-    if (routingRulegroupIds.length) {
+    if (routingRuleGroupIds.length) {
       convoParticipantsToAdd.push(
-        ...routingRulegroupIds.map((groupId) => ({
+        ...routingRuleGroupIds.map((groupId) => ({
           convoId: convoId || 0,
           groupId: groupId || 0,
           orgId: orgId || 0,

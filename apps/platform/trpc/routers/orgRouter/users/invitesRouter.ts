@@ -30,6 +30,7 @@ import { useRuntimeConfig } from '#imports';
 import { billingTrpcClient } from '../../../../utils/tRPCServerClients';
 import { addOrgMemberToGroupHandler } from './groupHandler';
 import { sendInviteEmail } from '../../../../utils/mail/transactional';
+import type { MailDomains } from '../../../../types';
 
 export const invitesRouter = router({
   createNewInvite: orgProcedure
@@ -149,6 +150,9 @@ export const invitesRouter = router({
           });
 
           const emailIdentityPublicId = typeIdGenerator('emailIdentities');
+          const mailDomains = useRuntimeConfig().mailDomains as MailDomains;
+          const fwdDomain = mailDomains.fwd[0];
+          const newForwardingAddress = `${nanoIdToken()}@${fwdDomain}`;
           const emailIdentityResponse = await db
             .insert(emailIdentities)
             .values({
@@ -158,7 +162,8 @@ export const invitesRouter = router({
               domainId: domainResponse?.id,
               username: email.emailUsername,
               domainName: domainResponse?.domain,
-              routingRuleId: +emailRoutingRulesResponse.insertId,
+              routingRuleId: Number(emailRoutingRulesResponse.insertId),
+              forwardingAddress: newForwardingAddress,
               isCatchAll: false,
               sendName: email.sendName
             });

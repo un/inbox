@@ -15,13 +15,15 @@ export async function parseAddressIds(input: {
   orgId: number;
 }): Promise<MessageParseAddressPlatformObject[] | []> {
   const parsedAddressIds: MessageParseAddressPlatformObject[] = [];
+
   for (const addressObject of input.addresses) {
     if (!addressObject.address) {
-      return [];
+      continue;
     }
+
     const [emailUsername, emailDomain] = addressObject.address.split('@');
     if (!emailDomain || !emailUsername) {
-      return [];
+      continue;
     }
     // check if email is existing contact
     const contactQuery = await db.query.contacts.findFirst({
@@ -56,7 +58,7 @@ export async function parseAddressIds(input: {
           })
           .where(eq(contacts.id, contactQuery.id));
       }
-      break;
+      continue;
     }
 
     // check if address is an existing email identity or a catch-all identity
@@ -84,9 +86,10 @@ export async function parseAddressIds(input: {
         contactType: null,
         ref: input.addressType
       });
-      break;
+      continue;
     }
 
+    // check if is catch all
     const emailIdentityCatchAllQuery =
       input.addressType === 'from'
         ? null
@@ -116,7 +119,39 @@ export async function parseAddressIds(input: {
         contactType: null,
         ref: input.addressType
       });
-      break;
+      continue;
+    }
+
+    // check if its a forwarding address
+    const emailIdentityFwdQuery =
+      input.addressType === 'from'
+        ? null
+        : await db.query.emailIdentities.findFirst({
+            where: and(
+              eq(emailIdentities.orgId, input.orgId),
+              eq(emailIdentities.forwardingAddress, addressObject.address)
+            ),
+            columns: {
+              id: true,
+              publicId: true,
+              username: true,
+              domainName: true
+            }
+          });
+
+    if (emailIdentityFwdQuery && emailIdentityFwdQuery.id !== null) {
+      parsedAddressIds.push({
+        id: emailIdentityFwdQuery.id,
+        type: 'emailIdentity',
+        publicId: emailIdentityFwdQuery.publicId,
+        email:
+          emailIdentityFwdQuery.username +
+          '@' +
+          emailIdentityFwdQuery.domainName,
+        contactType: null,
+        ref: input.addressType
+      });
+      continue;
     }
 
     // if the address is not a known contact or email identity, then maybe its a global contact with a reputation, so we need to create the contact for the org, or create the whole contact+reputation
@@ -164,7 +199,7 @@ export async function parseAddressIds(input: {
       contactType: 'unknown',
       ref: input.addressType
     });
-    break;
+    continue;
   }
   return parsedAddressIds;
 }
