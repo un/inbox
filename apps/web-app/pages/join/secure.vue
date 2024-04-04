@@ -229,7 +229,7 @@
       });
 
       const verifyNewPasskey =
-        await $trpc.auth.passkey.signUpWithPasskeyFinish.query({
+        await $trpc.auth.passkey.signUpWithPasskeyFinish.mutate({
           username: username.value,
           turnstileToken: turnstileToken.value,
           publicId,
