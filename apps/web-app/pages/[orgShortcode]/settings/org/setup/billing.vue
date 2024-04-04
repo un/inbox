@@ -267,7 +267,7 @@
             </div>
             <div class="w-full text-center">
               <NuxtLink
-                to="https://uninbox.com/pricing"
+                to="https://uninbox.com/#pricing"
                 target="_blank">
                 See all plan features
               </NuxtLink>
