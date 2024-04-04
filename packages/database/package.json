@@ -19,6 +19,7 @@
     "db:studio": "pnpm drizzle-kit studio --port 3333  --config=drizzle.config.ts",
     "db:studio:r": "drizzle-kit studio --port 3333  --config=drizzle.config.ts",
     "db:seed:r": "tsx dbSeed.ts",
+    "db:migrate": "tsx migrate.ts",
     "db:clean:r": "infisical run --env=local -- tsx dbClean.ts"
   },
   "dependencies": {
