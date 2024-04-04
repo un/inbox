@@ -5,22 +5,22 @@ import { orgs } from '@u22n/database/schema';
 import type { OrgContext } from '@u22n/types';
 import { useStorage } from '#imports';
 
-export const validateOrgSlug = async (
+export const validateOrgShortcode = async (
   event: H3Event
 ): Promise<OrgContext | null> => {
-  const orgSlug = getHeader(event, 'org-slug');
-  if (!orgSlug) {
+  const orgShortcode = getHeader(event, 'org-shortcode');
+  if (!orgShortcode) {
     return null;
   }
 
-  const cachedSlugOrgContext: OrgContext | null =
-    await useStorage('org-context').getItem(orgSlug);
-  if (cachedSlugOrgContext) {
-    return cachedSlugOrgContext;
+  const cachedShortcodeOrgContext: OrgContext | null =
+    await useStorage('org-context').getItem(orgShortcode);
+  if (cachedShortcodeOrgContext) {
+    return cachedShortcodeOrgContext;
   }
 
   const orgLookupResult = await db.query.orgs.findFirst({
-    where: eq(orgs.slug, orgSlug),
+    where: eq(orgs.shortcode, orgShortcode),
     columns: { id: true, publicId: true, name: true },
     with: {
       members: {
@@ -44,14 +44,14 @@ export const validateOrgSlug = async (
     name: orgLookupResult.name
   };
 
-  await useStorage('org-context').setItem(orgSlug, orgContext);
+  await useStorage('org-context').setItem(orgShortcode, orgContext);
   return orgContext;
 };
 
-export async function refreshOrgSlugCache(orgId: number): Promise<void> {
+export async function refreshOrgShortcodeCache(orgId: number): Promise<void> {
   const orgLookupResult = await db.query.orgs.findFirst({
     where: eq(orgs.id, orgId),
-    columns: { id: true, publicId: true, slug: true, name: true },
+    columns: { id: true, publicId: true, shortcode: true, name: true },
     with: {
       members: {
         columns: {
@@ -72,5 +72,8 @@ export async function refreshOrgSlugCache(orgId: number): Promise<void> {
     members: orgLookupResult.members,
     name: orgLookupResult.name
   };
-  await useStorage('org-context').setItem(orgLookupResult.slug, orgContext);
+  await useStorage('org-context').setItem(
+    orgLookupResult.shortcode,
+    orgContext
+  );
 }

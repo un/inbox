@@ -10,27 +10,27 @@ export const orgRouter = router({
   getOrgData: accountProcedure
     .input(
       z.object({
-        orgSlug: z.string(),
+        orgShortcode: z.string(),
         orgPublicId: typeIdValidator('org').optional()
       })
     )
     .query(async ({ input }) => {
       //const { config, db } = ctx;
 
-      if (!input.orgSlug) {
+      if (!input.orgShortcode) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
-          message: 'must provide either org slug or public id'
+          message: 'must provide either org shortcode or public id'
         });
       }
 
       const orgDataQuery = await db.query.orgs.findFirst({
-        where: eq(orgs.slug, input.orgSlug),
+        where: eq(orgs.shortcode, input.orgShortcode),
         columns: {
           id: true,
           publicId: true,
           name: true,
-          slug: true,
+          shortcode: true,
           avatarTimestamp: true,
           createdAt: true,
           metadata: true,

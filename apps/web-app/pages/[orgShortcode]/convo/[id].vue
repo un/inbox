@@ -54,12 +54,12 @@
   const replyToMessagePublicId = ref('');
   const replyToMessageMetadata = ref<ConvoEntryMetadata | undefined>(undefined);
 
-  const orgSlug = useRoute().params.orgSlug as string;
+  const orgShortcode = useRoute().params.orgShortcode as string;
   const route = useRoute();
 
   const convoPublicId = useRoute().params.id as TypeId<'convos'>;
   if (!validateTypeId('convos', convoPublicId)) {
-    await navigateTo(`/${orgSlug}/convo/404`);
+    await navigateTo(`/${orgShortcode}/convo/404`);
   }
 
   const { data: convoDetails, status: convoDetailsStatus } =
@@ -117,10 +117,10 @@
     if (convoDetailsStatus.value === 'idle') return;
     if (convoDetailsStatus.value === 'success') {
       if (!convoDetails.value?.data) {
-        navigateTo(`/${orgSlug}/convo/404`);
+        navigateTo(`/${orgShortcode}/convo/404`);
       }
       if (!convoDetails.value?.data?.participants) {
-        navigateTo(`/${orgSlug}/convo/404`);
+        navigateTo(`/${orgShortcode}/convo/404`);
       }
     }
 
@@ -424,7 +424,7 @@
               v-model:uploadedAttachments="attachmentUploads"
               :max-size="15000000"
               :current-size="currentTotalUploadSize"
-              :org-slug="orgSlug">
+              :org-shortcode="orgShortcode">
               <template #default="{ openFileDialog, loading }">
                 <UnUiButton
                   :loading="loading"

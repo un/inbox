@@ -26,7 +26,7 @@
   );
 
   const currentPath = ref(useRouter().currentRoute.value.path as string);
-  const orgSlug = useRoute().params.orgSlug as string;
+  const orgShortcode = useRoute().params.orgShortcode as string;
   const router = useRouter();
   router.beforeEach((to) => {
     currentPath.value = to.path;
@@ -35,12 +35,12 @@
   const navLinks = [
     {
       label: 'Conversations',
-      to: `/${orgSlug}/convo`,
+      to: `/${orgShortcode}/convo`,
       icon: 'i-ph-chat-circle'
     },
     {
       label: 'Contacts',
-      // to: `/${orgSlug}/screener`,
+      // to: `/${orgShortcode}/screener`,
       icon: 'i-ph-address-book',
       tooltip: 'Manage your contacts',
       disabled: true,
@@ -48,7 +48,7 @@
     },
     {
       label: 'Group Convos',
-      // to: `/${orgSlug}/convo`,
+      // to: `/${orgShortcode}/convo`,
       tooltip: 'Separate your group and personal conversations',
       icon: 'i-ph-chats-circle',
 
@@ -57,7 +57,7 @@
     },
     {
       label: 'Screener',
-      // to: `/${orgSlug}/screener`,
+      // to: `/${orgShortcode}/screener`,
       tooltip: 'Set who can or cant email you',
       icon: 'i-ph-hand',
       disabled: true,
@@ -65,7 +65,7 @@
     },
     {
       label: 'Feed',
-      // to: `/${orgSlug}/feed`,
+      // to: `/${orgShortcode}/feed`,
       tooltip:
         'All your newsletters, marketing messages, and product updates in one place',
       icon: 'i-ph-newspaper',
@@ -74,7 +74,7 @@
     },
     {
       label: 'Codes',
-      // to: `/${orgSlug}/codes`,
+      // to: `/${orgShortcode}/codes`,
       tooltip: 'Easily copy your login or verification codes',
       icon: 'i-ph-password',
       disabled: true,
@@ -86,7 +86,7 @@
 
   const { data: orgMemberProfile } =
     $trpc.account.profile.getOrgMemberProfile.useLazyQuery(
-      { orgSlug: orgSlug },
+      { orgShortcode: orgShortcode },
       { server: false, queryKey: 'getOrgMemberSingleProfileNav' }
     );
 
@@ -97,19 +97,20 @@
     );
 
   watch(accountOrgs, (newUserOrgs) => {
-    const userOrgSlugs = newUserOrgs?.userOrgs.map(
-      (userOrg) => userOrg.org.slug
+    const userOrgShortcodes = newUserOrgs?.userOrgs.map(
+      (userOrg) => userOrg.org.shortcode
     );
 
-    if (!userOrgSlugs?.includes(orgSlug)) {
+    if (!userOrgShortcodes?.includes(orgShortcode)) {
       navigateTo(`/redirect`);
     }
   });
 
   const currentOrgProfile = computed(() => {
     if (accountOrgs.value && accountOrgs.value.userOrgs.length > 0) {
-      return accountOrgs.value.userOrgs.find((org) => org.org.slug === orgSlug)
-        ?.org;
+      return accountOrgs.value.userOrgs.find(
+        (org) => org.org.shortcode === orgShortcode
+      )?.org;
     }
     return null;
   });
@@ -119,7 +120,7 @@
     label: string;
     publicId: string;
     avatarTimestamp: Date | null;
-    slug: string;
+    shortcode: string;
     click: () => void;
   }
   const userOrgsButtons = ref<OrgButtons[]>([]);
@@ -133,9 +134,9 @@
           label: org.org.name,
           publicId: org.org.publicId,
           avatarTimestamp: org.org.avatarTimestamp,
-          slug: org.org.slug,
+          shortcode: org.org.shortcode,
           click: () => {
-            navigateTo(`/${org.org.slug}`);
+            navigateTo(`/${org.org.shortcode}`);
           }
         });
       }
@@ -159,7 +160,7 @@
         label: 'Settings',
         icon: 'i-ph-gear',
         click: () => {
-          navigateTo(`/${orgSlug}/settings`);
+          navigateTo(`/${orgShortcode}/settings`);
         }
       },
       {
@@ -375,7 +376,7 @@
             </div>
           </div>
           <UnUiIcon
-            v-if="item.slug === orgSlug"
+            v-if="item.shortcode === orgShortcode"
             name="i-ph-check"
             class="ms-auto h-4 w-4 flex-shrink-0" />
         </template>

@@ -89,7 +89,7 @@ export default eventHandler({
         where: eq(orgs.publicId, publicId),
         columns: {
           id: true,
-          slug: true,
+          shortcode: true,
           avatarTimestamp: true
         },
         with: {

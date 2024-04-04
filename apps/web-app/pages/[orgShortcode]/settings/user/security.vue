@@ -457,7 +457,7 @@
       v-if="status !== 'success'"
       class="bg-base-3 flex w-full flex-row justify-center gap-4 rounded-xl rounded-tl-2xl p-8">
       <UnUiIcon
-        name="i-svg-spinners-3-dots-fade"
+        name="i-svg-spinners-90-ring"
         size="24" />
       <span>Loading your profiles</span>
     </div>

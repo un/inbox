@@ -319,7 +319,7 @@
       <div class="flex w-full flex-col gap-4">
         <p class="">How do you want to secure your account?</p>
         <div
-          class="grid w-full grid-rows-9 justify-items-center gap-8 md:grid-cols-9">
+          class="grid w-full grid-cols-1 grid-rows-9 justify-items-center gap-8 md:grid-cols-9 md:grid-rows-1">
           <button
             class="bg-base-3 row-span-4 flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded border-2 p-4 md:col-span-4"
             :class="

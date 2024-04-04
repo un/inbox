@@ -12,7 +12,7 @@ export default class RealtimeClient {
       authEndpoint: string;
     }
   ) {}
-  public async connect({ orgSlug }: { orgSlug: string }) {
+  public async connect({ orgShortcode }: { orgShortcode: string }) {
     if (this.client) return;
     const client = new Pusher(this.config.appKey, {
       wsHost: this.config.host,
@@ -27,7 +27,7 @@ export default class RealtimeClient {
             method: 'POST',
             credentials: 'include',
             headers: {
-              'org-slug': `${orgSlug}`
+              'org-shortcode': `${orgShortcode}`
             }
           });
           if (!res.ok) {

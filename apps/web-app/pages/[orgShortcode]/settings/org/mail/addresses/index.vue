@@ -3,7 +3,7 @@
 
   const { $trpc } = useNuxtApp();
 
-  const orgSlug = useRoute().params.orgSlug as string;
+  const orgShortcode = useRoute().params.orgShortcode as string;
 
   const {
     data: orgEmailIdentities,
@@ -68,7 +68,7 @@
     }
   });
   function select(row: (typeof tableRows.value)[number]) {
-    navigateTo(`/${orgSlug}/settings/org/mail/addresses/${row.publicId}`);
+    navigateTo(`/${orgShortcode}/settings/org/mail/addresses/${row.publicId}`);
   }
 
   const addNewModalOpen = ref(false);

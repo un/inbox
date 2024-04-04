@@ -193,7 +193,7 @@ export const orgs = mysqlTable(
     id: serial('id').primaryKey(),
     publicId: publicId('org', 'public_id').notNull(),
     avatarTimestamp: timestamp('avatar_timestamp'),
-    slug: varchar('slug', { length: 64 }).notNull(),
+    shortcode: varchar('shortcode', { length: 64 }).notNull(),
     ownerId: foreignKey('owner_id').notNull(),
     name: varchar('name', { length: 64 }).notNull(),
     metadata: json('metadata').$type<OrgMetadata>().default({}),
@@ -201,7 +201,7 @@ export const orgs = mysqlTable(
   },
   (table) => ({
     publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
-    slugIndex: uniqueIndex('slug_idx').on(table.slug)
+    shortcodeIndex: uniqueIndex('shortcode_idx').on(table.shortcode)
   })
 );
 export const orgsRelations = relations(orgs, ({ one, many }) => ({
