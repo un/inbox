@@ -760,12 +760,12 @@
             @click="openFileDialog" />
         </template>
       </ConvosUpload>
-      <UnUiButton
+      <!-- <UnUiButton
         label="Save Draft"
         color="amber"
         variant="outline"
         :disabled="!formValid || actionLoading"
-        icon="i-ph-note" />
+        icon="i-ph-note" /> -->
       <UnUiButton
         label="Post Comment"
         color="yellow"
