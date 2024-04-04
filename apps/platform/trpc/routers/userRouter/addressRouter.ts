@@ -14,7 +14,7 @@ import {
 import { orgMembers } from '@u22n/database/schema';
 import { useRuntimeConfig } from '#imports';
 import type { MailDomains } from '../../../types';
-import { typeIdGenerator, typeIdValidator } from '@u22n/utils';
+import { nanoIdToken, typeIdGenerator, typeIdValidator } from '@u22n/utils';
 
 export const addressRouter = router({
   getPersonalAddresses: accountProcedure
@@ -217,6 +217,8 @@ export const addressRouter = router({
       });
 
       const newEmailIdentityPublicId = typeIdGenerator('emailIdentities');
+      const fwdDomain = mailDomains.fwd[0];
+      const newForwardingAddress = `${nanoIdToken}@${fwdDomain}`;
       const insertEmailIdentityResponse = await db
         .insert(emailIdentities)
         .values({
@@ -224,10 +226,11 @@ export const addressRouter = router({
           orgId: orgId,
           username: username,
           domainName: emailIdentityDomain,
-          routingRuleId: +routingRuleInsertResponse.insertId,
           sendName: sendName,
           isCatchAll: false,
           personalEmailIdentityId: null,
+          routingRuleId: Number(routingRuleInsertResponse.insertId),
+          forwardingAddress: newForwardingAddress,
           createdBy: accountOrgMembership.id
         });
 

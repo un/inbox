@@ -17,10 +17,17 @@ import {
   groupMembers,
   emailIdentitiesAuthorizedOrgMembers
 } from '@u22n/database/schema';
-import { typeIdGenerator, typeIdValidator, type TypeId } from '@u22n/utils';
+import { useRuntimeConfig } from '#imports';
+import {
+  typeIdGenerator,
+  typeIdValidator,
+  type TypeId,
+  nanoIdToken
+} from '@u22n/utils';
 import { isAccountAdminOfOrg } from '../../../../utils/account';
 import { TRPCError } from '@trpc/server';
 import { emailIdentityExternalRouter } from './emailIdentityExternalRouter';
+import type { MailDomains } from '../../../../types';
 
 export const emailIdentityRouter = router({
   external: emailIdentityExternalRouter,
@@ -250,8 +257,11 @@ export const emailIdentityRouter = router({
         .insert(emailRoutingRulesDestinations)
         .values(routingRuleInsertValues);
 
-      const emailIdentityPublicId = typeIdGenerator('emailIdentities');
       // create address
+      const emailIdentityPublicId = typeIdGenerator('emailIdentities');
+      const mailDomains = useRuntimeConfig().mailDomains as MailDomains;
+      const fwdDomain = mailDomains.fwd[0];
+      const newForwardingAddress = `${nanoIdToken()}@${fwdDomain}`;
       const insertEmailIdentityResponse = await db
         .insert(emailIdentities)
         .values({
@@ -262,6 +272,7 @@ export const emailIdentityRouter = router({
           domainName: domainResponse.domain,
           domainId: domainResponse.id,
           routingRuleId: Number(insertEmailRoutingRule.insertId),
+          forwardingAddress: newForwardingAddress,
           sendName: sendName,
           isCatchAll: catchAll
         });
@@ -348,7 +359,8 @@ export const emailIdentityRouter = router({
             username: true,
             domainName: true,
             sendName: true,
-            isCatchAll: true
+            isCatchAll: true,
+            forwardingAddress: true
           },
           with: {
             domain: {

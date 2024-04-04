@@ -55,6 +55,14 @@
         </div>
         <div class="flex flex-col gap-2">
           <span class="text-base-12 text-sm font-medium uppercase">
+            Forwarding Address
+          </span>
+          <span class="">
+            {{ emailIdentityData?.emailIdentityData?.forwardingAddress }}
+          </span>
+        </div>
+        <div class="flex flex-col gap-2">
+          <span class="text-base-12 text-sm font-medium uppercase">
             Send Name
           </span>
           <span class="">
