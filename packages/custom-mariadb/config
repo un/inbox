@@ -1,2 +1,0 @@
-[mariadb]
-innodb-log-file-size=256MB
