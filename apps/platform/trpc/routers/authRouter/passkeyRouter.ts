@@ -49,7 +49,7 @@ export const passkeyRouter = router({
         nickname: z.string().min(3).max(32).default('Passkey')
       })
     )
-    .query(async ({ input, ctx }) => {
+    .mutation(async ({ input, ctx }) => {
       const { db } = ctx;
       const registrationResponse =
         input.registrationResponseRaw as RegistrationResponseJSON;
