@@ -46,6 +46,10 @@
       "dependsOn": [],
       "cache": false
     },
+    "ee:build": {
+      "dependsOn": ["^build"],
+      "outputs": [".output/**", ".nuxt/**"]
+    },
     "cloud": {
       "cache": false
     }
