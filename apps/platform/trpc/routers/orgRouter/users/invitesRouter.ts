@@ -196,12 +196,12 @@ export const invitesRouter = router({
 
         const res = await sendInviteEmail({
           to: notification?.notificationEmailAddress || '',
-          invitedName: `${newOrgMember.firstName} ${newOrgMember.lastName}`,
+          invitedName: `${newOrgMember.firstName} ${newOrgMember.lastName || ''}`,
           invitingOrg: org.name,
           expiryDate: new Date(
             Date.now() + 7 * 24 * 60 * 60 * 1000
           ).toDateString(),
-          inviteUrl: `https://uninbox.com/invite/${newInviteToken}`
+          inviteUrl: `https://app.uninbox.com/join/invite/${newInviteToken}`
         });
 
         if (!res) {
