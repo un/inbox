@@ -11,7 +11,7 @@
     "ee:dev": "PORT=3810 nuxt dev --host",
     "ee:generate": "nuxt generate",
     "ee:preview": "nuxt preview",
-    "ee:precheck": "infisical run --env=local -- nuxt prepare"
+    "ee:precheck": "infisical run --env=remote -- nuxt prepare"
   },
   "devDependencies": {
     "@iconify-json/mdi": "^1.1.64",
