@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { router, protectedProcedure } from '../trpc';
 import { and, eq } from '@u22n/database/orm';
-import { postalServers } from '@u22n/database/schema';
+import { orgs, postalServers } from '@u22n/database/schema';
 import { typeIdValidator } from '@u22n/utils';
 import type { PostalConfig } from '../../types';
 import { postalDB } from '../../postal-db';
@@ -49,6 +49,14 @@ export const domainRouter = router({
         }
       });
       console.log('🔥 precheck', { postalDbOrgQuery });
+
+      const orgShortCode = await db.query.orgs.findFirst({
+        where: eq(orgs.id, orgId),
+        columns: {
+          shortcode: true
+        }
+      });
+      console.log('🔥', { orgShortCode });
 
       const postalServerIdResponse = await db.query.postalServers.findFirst({
         where: and(
