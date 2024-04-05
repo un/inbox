@@ -509,7 +509,7 @@ export const sendMailRouter = router({
           (server) =>
             server.url === orgPostalServerResponse.orgPostalConfigs.host
         );
-        postalServerUrl = `https://${postalServerConfigItem?.controlPanelSubDomain}.${postalServerConfigItem?.url}/api/v1/send/message`;
+        postalServerUrl = `https://${postalServerConfigItem?.url}/api/v1/send/message`;
       }
 
       //* Attachments
