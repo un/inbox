@@ -47,6 +47,18 @@ export const domainRouter = router({
           id: true
         }
       });
+      console.log('🔥 precheck', { postalDbOrgQuery });
+
+      const postalServerIdResponse = await db.query.postalServers.findFirst({
+        where: and(
+          eq(postalServers.orgId, orgId),
+          eq(postalServers.type, 'email')
+        ),
+        columns: {
+          publicId: true
+        }
+      });
+      console.log('🔥', { postalServerIdResponse });
 
       if (!postalDbOrgQuery || !postalDbOrgQuery.id) {
         return {
@@ -67,17 +79,6 @@ export const domainRouter = router({
         dkimSelector,
         verificationToken
       });
-
-      const postalServerIdResponse = await db.query.postalServers.findFirst({
-        where: and(
-          eq(postalServers.orgId, orgId),
-          eq(postalServers.type, 'email')
-        ),
-        columns: {
-          publicId: true
-        }
-      });
-      console.log('🔥', { postalServerIdResponse });
 
       if (!postalServerIdResponse) {
         return {
