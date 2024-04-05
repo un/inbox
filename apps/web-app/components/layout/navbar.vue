@@ -192,30 +192,59 @@
       {
         label: 'Documentation',
         icon: 'i-ph-book',
-        disabled: false
+        disabled: false,
+        click: () => {
+          navigateTo(`https://guide.uninbox.com/`, {
+            external: true,
+            open: { target: '_blank' }
+          });
+        }
       },
       {
         label: 'Support',
         icon: 'i-ph-question',
-        disabled: false
+        disabled: false,
+        click: () => {
+          showSupportModal.value = true;
+        }
       },
       {
         label: 'Roadmap',
         icon: 'i-ph-map-trifold',
-        disabled: false
+        disabled: false,
+        click: () => {
+          navigateTo(`https://guide.uninbox.com/`, {
+            external: true,
+            open: { target: '_blank' }
+          });
+        }
       },
       {
         label: 'Changelog',
         icon: 'i-ph-megaphone',
-        disabled: false
+        disabled: false,
+        click: () => {
+          navigateTo(`https://guide.uninbox.com/`, {
+            external: true,
+            open: { target: '_blank' }
+          });
+        }
       },
       {
         label: 'Status',
         icon: 'i-ph-activity',
-        disabled: false
+        disabled: false,
+        click: () => {
+          navigateTo(`https://guide.uninbox.com/`, {
+            external: true,
+            open: { target: '_blank' }
+          });
+        }
       }
     ]
   ];
+
+  const showSupportModal = ref(false);
 
   const showLogoutModal = ref(false);
   const closeModal = () => {
@@ -269,6 +298,47 @@
             size="xl"
             color="red"
             @click="useLogout()" />
+        </div>
+      </div>
+    </UnUiModal>
+    <UnUiModal v-model="showSupportModal">
+      <template #header>
+        <span class="">Support</span>
+      </template>
+      <div class="flex w-full flex-col gap-4">
+        <p>We're still setting up our full support systems</p>
+        <p>You can either email our team</p>
+        <div class="flex flex-row gap-2">
+          <span>support@uninbox.com</span>
+          <UnUiCopy
+            icon="i-ph-envelope"
+            size="xs"
+            variant="soft"
+            color="base"
+            helper="Copy Email Address"
+            text="support@uninbox.com"
+            >Email
+          </UnUiCopy>
+        </div>
+
+        <p>Or via one of these methods here:</p>
+        <div class="flex w-full flex-row gap-4">
+          <UnUiButton
+            label="Github issues"
+            @click="
+              navigateTo(`https://github.com/un/inbox/`, {
+                external: true,
+                open: { target: '_blank' }
+              })
+            " />
+          <UnUiButton
+            label="Join community on discord"
+            @click="
+              navigateTo(`https://discord.gg/U6tJCqgRm9`, {
+                external: true,
+                open: { target: '_blank' }
+              })
+            " />
         </div>
       </div>
     </UnUiModal>

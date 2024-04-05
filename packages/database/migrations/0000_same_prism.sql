@@ -13,7 +13,7 @@ CREATE TABLE `accounts` (
 	`public_id` char(28) NOT NULL,
 	`username` varchar(32) NOT NULL,
 	`metadata` json,
-	`created_at` timestamp DEFAULT (now()),
+	`created_at` timestamp,
 	`last_login_at` timestamp,
 	CONSTRAINT `accounts_id` PRIMARY KEY(`id`),
 	CONSTRAINT `public_id_idx` UNIQUE(`public_id`),
@@ -31,7 +31,7 @@ CREATE TABLE `authenticators` (
 	`credential_device_type` varchar(32) NOT NULL,
 	`credential_backed_up` boolean NOT NULL,
 	`transports` json,
-	`created_at` timestamp NOT NULL DEFAULT (now()),
+	`created_at` timestamp NOT NULL,
 	CONSTRAINT `authenticators_id` PRIMARY KEY(`id`),
 	CONSTRAINT `credential_id_idx` UNIQUE(`credential_id`)
 );
@@ -45,7 +45,7 @@ CREATE TABLE `contact_global_reputations` (
 	`marketing` tinyint NOT NULL DEFAULT 0,
 	`product` tinyint NOT NULL DEFAULT 0,
 	`message_count` mediumint NOT NULL DEFAULT 0,
-	`last_updated` timestamp NOT NULL DEFAULT (now()),
+	`last_updated` timestamp NOT NULL,
 	CONSTRAINT `contact_global_reputations_id` PRIMARY KEY(`id`),
 	CONSTRAINT `email_address_idx` UNIQUE(`email_address`)
 );
@@ -64,7 +64,7 @@ CREATE TABLE `contacts` (
 	`signature_html` text,
 	`type` enum('person','product','newsletter','marketing','unknown') NOT NULL,
 	`screener_status` enum('pending','approve','reject'),
-	`created_at` timestamp NOT NULL DEFAULT (now()),
+	`created_at` timestamp NOT NULL,
 	CONSTRAINT `contacts_id` PRIMARY KEY(`id`),
 	CONSTRAINT `public_id_idx` UNIQUE(`public_id`),
 	CONSTRAINT `email_org_unique_idx` UNIQUE(`email_username`,`email_domain`,`org_id`)
@@ -81,7 +81,7 @@ CREATE TABLE `convo_attachments` (
 	`size` int unsigned NOT NULL,
 	`public` boolean NOT NULL DEFAULT false,
 	`convo_participant_id` bigint unsigned NOT NULL,
-	`created_at` timestamp NOT NULL DEFAULT (now()),
+	`created_at` timestamp NOT NULL,
 	CONSTRAINT `convo_attachments_id` PRIMARY KEY(`id`),
 	CONSTRAINT `public_id_idx` UNIQUE(`public_id`)
 );
@@ -100,7 +100,7 @@ CREATE TABLE `convo_entries` (
 	`metadata` json DEFAULT ('{}'),
 	`email_message_id` varchar(255),
 	`visibility` enum('private','internal_participants','org','all_participants') NOT NULL,
-	`created_at` timestamp NOT NULL DEFAULT (now()),
+	`created_at` timestamp NOT NULL,
 	CONSTRAINT `convo_entries_id` PRIMARY KEY(`id`),
 	CONSTRAINT `public_id_idx` UNIQUE(`public_id`)
 );
@@ -110,7 +110,7 @@ CREATE TABLE `convo_entry_private_visibility_participants` (
 	`org_id` bigint unsigned NOT NULL,
 	`entry_id` bigint unsigned NOT NULL,
 	`convo_member_id` bigint unsigned NOT NULL,
-	`created_at` timestamp NOT NULL DEFAULT (now()),
+	`created_at` timestamp NOT NULL,
 	CONSTRAINT `convo_entry_private_visibility_participants_id` PRIMARY KEY(`id`)
 );
 --> statement-breakpoint
@@ -131,7 +131,7 @@ CREATE TABLE `convo_entry_replies` (
 	`org_id` bigint unsigned NOT NULL,
 	`convo_message_source_id` bigint unsigned NOT NULL,
 	`convo_message_reply_id` bigint unsigned,
-	`created_at` timestamp NOT NULL DEFAULT (now()),
+	`created_at` timestamp NOT NULL,
 	CONSTRAINT `convo_entry_replies_id` PRIMARY KEY(`id`)
 );
 --> statement-breakpoint
@@ -165,7 +165,7 @@ CREATE TABLE `convo_participants` (
 	`notifications` enum('active','muted','off') NOT NULL DEFAULT 'active',
 	`last_read_at` timestamp,
 	`active` boolean NOT NULL DEFAULT true,
-	`created_at` timestamp NOT NULL DEFAULT (now()),
+	`created_at` timestamp NOT NULL,
 	CONSTRAINT `convo_participants_id` PRIMARY KEY(`id`),
 	CONSTRAINT `public_id_idx` UNIQUE(`public_id`),
 	CONSTRAINT `org_member_to_convo_idx` UNIQUE(`convo_id`,`org_member_id`),
@@ -187,7 +187,7 @@ CREATE TABLE `convo_subjects` (
 	`public_id` char(29) NOT NULL,
 	`convo_id` bigint unsigned NOT NULL,
 	`subject` varchar(256) NOT NULL,
-	`created_at` timestamp NOT NULL DEFAULT (now()),
+	`created_at` timestamp NOT NULL,
 	CONSTRAINT `convo_subjects_id` PRIMARY KEY(`id`),
 	CONSTRAINT `public_id_idx` UNIQUE(`public_id`)
 );
@@ -197,7 +197,7 @@ CREATE TABLE `convos` (
 	`org_id` bigint unsigned NOT NULL,
 	`public_id` char(28) NOT NULL,
 	`last_updated_at` timestamp NOT NULL,
-	`created_at` timestamp NOT NULL DEFAULT (now()),
+	`created_at` timestamp NOT NULL,
 	CONSTRAINT `convos_id` PRIMARY KEY(`id`),
 	CONSTRAINT `public_id_idx` UNIQUE(`public_id`)
 );
@@ -224,7 +224,7 @@ CREATE TABLE `domains` (
 	`last_dns_check_at` timestamp,
 	`disabled_at` timestamp,
 	`verified_at` timestamp,
-	`created_at` timestamp NOT NULL DEFAULT (now()),
+	`created_at` timestamp NOT NULL,
 	CONSTRAINT `domains_id` PRIMARY KEY(`id`),
 	CONSTRAINT `public_id_idx` UNIQUE(`public_id`),
 	CONSTRAINT `domain_idx` UNIQUE(`domain`),
@@ -245,7 +245,7 @@ CREATE TABLE `email_identities` (
 	`personal_email_identity_id` bigint unsigned,
 	`external_credentials_id` bigint unsigned,
 	`forwarding_address` varchar(128),
-	`created_at` timestamp NOT NULL DEFAULT (now()),
+	`created_at` timestamp NOT NULL,
 	CONSTRAINT `email_identities_id` PRIMARY KEY(`id`),
 	CONSTRAINT `public_id_idx` UNIQUE(`public_id`),
 	CONSTRAINT `email_idx` UNIQUE(`username`,`domain_name`)
@@ -259,7 +259,7 @@ CREATE TABLE `email_identities_authorized_org_members` (
 	`group_id` bigint unsigned,
 	`default` boolean NOT NULL DEFAULT false,
 	`added_by` bigint unsigned NOT NULL,
-	`created_at` timestamp NOT NULL DEFAULT (now()),
+	`created_at` timestamp NOT NULL,
 	CONSTRAINT `email_identities_authorized_org_members_id` PRIMARY KEY(`id`),
 	CONSTRAINT `org_member_to_identity_idx` UNIQUE(`identity_id`,`org_member_id`),
 	CONSTRAINT `group_to_identity_idx` UNIQUE(`identity_id`,`group_id`)
@@ -271,7 +271,7 @@ CREATE TABLE `email_identities_personal` (
 	`account_id` bigint unsigned NOT NULL,
 	`org_id` bigint unsigned NOT NULL,
 	`email_identity_id` bigint unsigned NOT NULL,
-	`created_at` timestamp NOT NULL DEFAULT (now()),
+	`created_at` timestamp NOT NULL,
 	CONSTRAINT `email_identities_personal_id` PRIMARY KEY(`id`),
 	CONSTRAINT `public_id_idx` UNIQUE(`public_id`)
 );
@@ -288,7 +288,7 @@ CREATE TABLE `email_identity_external` (
 	`port` smallint NOT NULL,
 	`auth_method` enum('plain','login') NOT NULL,
 	`encryption` enum('ssl','tls','starttls','none') NOT NULL DEFAULT 'none',
-	`created_at` timestamp NOT NULL DEFAULT (now()),
+	`created_at` timestamp NOT NULL,
 	CONSTRAINT `email_identity_external_id` PRIMARY KEY(`id`),
 	CONSTRAINT `public_id_idx` UNIQUE(`public_id`)
 );
@@ -300,7 +300,7 @@ CREATE TABLE `email_routing_rules` (
 	`name` varchar(128) NOT NULL,
 	`description` text,
 	`created_by` bigint unsigned NOT NULL,
-	`created_at` timestamp NOT NULL DEFAULT (now()),
+	`created_at` timestamp NOT NULL,
 	CONSTRAINT `email_routing_rules_id` PRIMARY KEY(`id`),
 	CONSTRAINT `public_id_idx` UNIQUE(`public_id`)
 );
@@ -312,7 +312,7 @@ CREATE TABLE `email_routing_rules_destinations` (
 	`rule_id` bigint unsigned NOT NULL,
 	`group_id` bigint unsigned,
 	`org_member_id` bigint unsigned,
-	`created_at` timestamp NOT NULL DEFAULT (now()),
+	`created_at` timestamp NOT NULL,
 	CONSTRAINT `email_routing_rules_destinations_id` PRIMARY KEY(`id`)
 );
 --> statement-breakpoint
@@ -326,7 +326,7 @@ CREATE TABLE `group_members` (
 	`added_by` bigint unsigned NOT NULL,
 	`role` enum('member','admin') NOT NULL DEFAULT 'member',
 	`notifications` enum('active','muted','off') NOT NULL DEFAULT 'active',
-	`created_at` timestamp NOT NULL DEFAULT (now()),
+	`created_at` timestamp NOT NULL,
 	CONSTRAINT `group_members_id` PRIMARY KEY(`id`),
 	CONSTRAINT `org_member_to_group_idx` UNIQUE(`group_id`,`org_member_id`)
 );
@@ -339,7 +339,7 @@ CREATE TABLE `groups` (
 	`name` varchar(128) NOT NULL,
 	`color` enum('red','orange','amber','yellow','lime','green','emerald','teal','cyan','sky','blue','indigo','violet','purple','fuchsia','pink','rose'),
 	`description` text,
-	`created_at` timestamp NOT NULL DEFAULT (now()),
+	`created_at` timestamp NOT NULL,
 	CONSTRAINT `groups_id` PRIMARY KEY(`id`),
 	CONSTRAINT `public_id_idx` UNIQUE(`public_id`)
 );
@@ -366,7 +366,7 @@ CREATE TABLE `org_invitations` (
 	`invited_org_member_profile_id` bigint unsigned,
 	`email` varchar(128),
 	`invite_token` varchar(64),
-	`invited_at` timestamp NOT NULL DEFAULT (now()),
+	`invited_at` timestamp NOT NULL,
 	`expires_at` timestamp,
 	`accepted_at` timestamp,
 	CONSTRAINT `org_invitations_id` PRIMARY KEY(`id`),
@@ -386,7 +386,7 @@ CREATE TABLE `org_member_profiles` (
 	`handle` varchar(64),
 	`title` varchar(64),
 	`blurb` text,
-	`created_at` timestamp NOT NULL DEFAULT (now()),
+	`created_at` timestamp NOT NULL,
 	CONSTRAINT `org_member_profiles_id` PRIMARY KEY(`id`),
 	CONSTRAINT `public_id_idx` UNIQUE(`public_id`)
 );
@@ -400,7 +400,7 @@ CREATE TABLE `org_members` (
 	`status` enum('invited','active','removed') NOT NULL,
 	`role` enum('member','admin') NOT NULL,
 	`org_member_profile_id` bigint unsigned NOT NULL,
-	`added_at` timestamp NOT NULL DEFAULT (now()),
+	`added_at` timestamp NOT NULL,
 	`removed_at` timestamp,
 	CONSTRAINT `org_members_id` PRIMARY KEY(`id`),
 	CONSTRAINT `public_id_idx` UNIQUE(`public_id`),
@@ -414,7 +414,7 @@ CREATE TABLE `org_modules` (
 	`enabled` boolean NOT NULL DEFAULT false,
 	`last_modified_by_org_member` bigint unsigned NOT NULL,
 	`last_modified_at` timestamp,
-	`created_at` timestamp NOT NULL DEFAULT (now()),
+	`created_at` timestamp NOT NULL,
 	CONSTRAINT `org_modules_id` PRIMARY KEY(`id`),
 	CONSTRAINT `org_module_idx` UNIQUE(`org_id`,`module`)
 );
@@ -436,7 +436,7 @@ CREATE TABLE `orgs` (
 	`owner_id` bigint unsigned NOT NULL,
 	`name` varchar(64) NOT NULL,
 	`metadata` json DEFAULT ('{}'),
-	`created_at` timestamp NOT NULL DEFAULT (now()),
+	`created_at` timestamp NOT NULL,
 	CONSTRAINT `orgs_id` PRIMARY KEY(`id`),
 	CONSTRAINT `public_id_idx` UNIQUE(`public_id`),
 	CONSTRAINT `shortcode_idx` UNIQUE(`shortcode`)
@@ -448,7 +448,7 @@ CREATE TABLE `pending_attachments` (
 	`org_id` bigint unsigned NOT NULL,
 	`org_public_id` char(28) NOT NULL,
 	`filename` varchar(256) NOT NULL,
-	`created_at` timestamp NOT NULL DEFAULT (now()),
+	`created_at` timestamp NOT NULL,
 	CONSTRAINT `pending_attachments_id` PRIMARY KEY(`id`),
 	CONSTRAINT `public_id_idx` UNIQUE(`public_id`)
 );
@@ -474,7 +474,7 @@ CREATE TABLE `sessions` (
 	`device` varchar(255) NOT NULL,
 	`os` varchar(255) NOT NULL,
 	`expires_at` timestamp NOT NULL,
-	`created_at` timestamp NOT NULL DEFAULT (now()),
+	`created_at` timestamp NOT NULL,
 	CONSTRAINT `sessions_id` PRIMARY KEY(`id`),
 	CONSTRAINT `session_token_idx` UNIQUE(`session_token`)
 );

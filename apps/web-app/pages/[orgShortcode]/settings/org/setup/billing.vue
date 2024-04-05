@@ -1,5 +1,11 @@
 <script setup lang="ts">
-  import { definePageMeta, navigateTo, ref, useNuxtApp } from '#imports';
+  import {
+    definePageMeta,
+    navigateTo,
+    onMounted,
+    ref,
+    useNuxtApp
+  } from '#imports';
 
   definePageMeta({
     middleware: 'ee'
@@ -79,6 +85,27 @@
     });
     goToPortalButtonLoading.value = false;
   }
+
+  // CAL
+  onMounted(() => {
+    const script = document.createElement('script');
+    script.setAttribute('src', '/calcom.js');
+    document.head.appendChild(script);
+    // @ts-expect-error - cal loaded via ghetto script tag
+    window.Cal('init', { origin: 'https://cal.com' });
+    // @ts-expect-error - cal loaded via ghetto script tag
+    window.Cal('inline', {
+      elementOrSelector: '#my-cal-inline',
+      calLink: 'mc/unboarding',
+      layout: 'month_view'
+    });
+    // @ts-expect-error - cal loaded via ghetto script tag
+    window.Cal('ui', {
+      styles: { branding: { brandColor: '#000000' } },
+      hideEventTypeDetails: false,
+      layout: 'month_view'
+    });
+  });
 </script>
 
 <template>
@@ -275,12 +302,26 @@
           </div>
         </div>
 
-        <div v-if="orgBillingOverview?.currentPlan !== 'free'">
+        <div
+          v-if="orgBillingOverview?.currentPlan !== 'free'"
+          class="flex flex-col gap-8">
           <UnUiButton
             label="Manage Billing"
             variant="solid"
             :loading="goToPortalButtonLoading || pendingAction"
             @click="goToBillingPortal()" />
+          <div class="flex flex-col gap-8">
+            <span class="text-base-11 text-xl font-medium"
+              >Jump on a free unboarding call!</span
+            >
+            <!-- Cal inline embed code begins -->
+
+            <div
+              id="my-cal-inline"
+              style="width: 100%; height: 100%; overflow: scroll"></div>
+
+            <!-- Cal inline embed code ends -->
+          </div>
         </div>
       </div>
     </div>

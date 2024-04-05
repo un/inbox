@@ -50,7 +50,7 @@ export const accounts = mysqlTable(
     publicId: publicId('account', 'public_id').notNull(),
     username: varchar('username', { length: 32 }).notNull(),
     metadata: json('metadata').$type<Record<string, unknown>>(),
-    createdAt: timestamp('created_at').defaultNow(),
+    createdAt: timestamp('created_at').$defaultFn(() => new Date()),
     lastLoginAt: timestamp('last_login_at')
   },
   (table) => ({
@@ -126,7 +126,9 @@ export const authenticators = mysqlTable(
           | 'usb'
         )[]
       >(),
-    createdAt: timestamp('created_at').defaultNow().notNull()
+    createdAt: timestamp('created_at')
+      .notNull()
+      .$defaultFn(() => new Date())
   },
   (table) => ({
     accountCredentialIdIndex: index('provider_account_id_idx').on(
@@ -157,7 +159,9 @@ export const sessions = mysqlTable(
     device: varchar('device', { length: 255 }).notNull(),
     os: varchar('os', { length: 255 }).notNull(),
     expiresAt: timestamp('expires_at').notNull(),
-    createdAt: timestamp('created_at').defaultNow().notNull()
+    createdAt: timestamp('created_at')
+      .notNull()
+      .$defaultFn(() => new Date())
   },
   (table) => ({
     accountIdIndex: index('account_id_idx').on(table.accountId),
@@ -197,7 +201,9 @@ export const orgs = mysqlTable(
     ownerId: foreignKey('owner_id').notNull(),
     name: varchar('name', { length: 64 }).notNull(),
     metadata: json('metadata').$type<OrgMetadata>().default({}),
-    createdAt: timestamp('created_at').defaultNow().notNull()
+    createdAt: timestamp('created_at')
+      .notNull()
+      .$defaultFn(() => new Date())
   },
   (table) => ({
     publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
@@ -232,7 +238,9 @@ export const orgInvitations = mysqlTable(
     invitedOrgMemberProfileId: foreignKey('invited_org_member_profile_id'),
     email: varchar('email', { length: 128 }),
     inviteToken: varchar('invite_token', { length: 64 }),
-    invitedAt: timestamp('invited_at').defaultNow().notNull(),
+    invitedAt: timestamp('invited_at')
+      .notNull()
+      .$defaultFn(() => new Date()),
     expiresAt: timestamp('expires_at'),
     acceptedAt: timestamp('accepted_at')
   },
@@ -280,7 +288,9 @@ export const orgModules = mysqlTable(
       'last_modified_by_org_member'
     ).notNull(),
     lastModifiedAt: timestamp('last_modified_at'),
-    createdAt: timestamp('created_at').defaultNow().notNull()
+    createdAt: timestamp('created_at')
+      .notNull()
+      .$defaultFn(() => new Date())
   },
   (table) => ({
     orgIdIndex: index('org_id_idx').on(table.orgId),
@@ -339,7 +349,9 @@ export const orgMembers = mysqlTable(
     status: mysqlEnum('status', ['invited', 'active', 'removed']).notNull(),
     role: mysqlEnum('role', ['member', 'admin']).notNull(),
     orgMemberProfileId: foreignKey('org_member_profile_id').notNull(),
-    addedAt: timestamp('added_at').defaultNow().notNull(),
+    addedAt: timestamp('added_at')
+      .notNull()
+      .$defaultFn(() => new Date()),
     removedAt: timestamp('removed_at')
   },
   (table) => ({
@@ -382,7 +394,9 @@ export const orgMemberProfiles = mysqlTable(
     handle: varchar('handle', { length: 64 }),
     title: varchar('title', { length: 64 }),
     blurb: text('blurb'),
-    createdAt: timestamp('created_at').defaultNow().notNull()
+    createdAt: timestamp('created_at')
+      .notNull()
+      .$defaultFn(() => new Date())
   },
   (table) => ({
     publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
@@ -414,7 +428,9 @@ export const groups = mysqlTable(
     name: varchar('name', { length: 128 }).notNull(),
     color: mysqlEnum('color', [...uiColors]),
     description: text('description'),
-    createdAt: timestamp('created_at').defaultNow().notNull()
+    createdAt: timestamp('created_at')
+      .notNull()
+      .$defaultFn(() => new Date())
   },
   (table) => ({
     publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
@@ -446,7 +462,9 @@ export const groupMembers = mysqlTable(
     notifications: mysqlEnum('notifications', ['active', 'muted', 'off'])
       .notNull()
       .default('active'),
-    createdAt: timestamp('created_at').defaultNow().notNull()
+    createdAt: timestamp('created_at')
+      .notNull()
+      .$defaultFn(() => new Date())
   },
   (table) => ({
     groupIdIndex: index('group_id_idx').on(table.groupId),
@@ -515,7 +533,9 @@ export const domains = mysqlTable(
     lastDnsCheckAt: timestamp('last_dns_check_at'),
     disabledAt: timestamp('disabled_at'),
     verifiedAt: timestamp('verified_at'),
-    createdAt: timestamp('created_at').defaultNow().notNull()
+    createdAt: timestamp('created_at')
+      .notNull()
+      .$defaultFn(() => new Date())
   },
   (table) => ({
     publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
@@ -603,7 +623,9 @@ export const contacts = mysqlTable(
       'approve',
       'reject'
     ]),
-    createdAt: timestamp('created_at').defaultNow().notNull()
+    createdAt: timestamp('created_at')
+      .notNull()
+      .$defaultFn(() => new Date())
   },
   (table) => ({
     publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
@@ -640,7 +662,9 @@ export const contactGlobalReputations = mysqlTable(
     marketing: tinyint('marketing').notNull().default(0),
     product: tinyint('product').notNull().default(0),
     messageCount: mediumint('message_count').notNull().default(0),
-    lastUpdated: timestamp('last_updated').defaultNow().notNull()
+    lastUpdated: timestamp('last_updated')
+      .notNull()
+      .$defaultFn(() => new Date())
   },
   (table) => ({
     emailAddressIndex: uniqueIndex('email_address_idx').on(table.emailAddress)
@@ -666,7 +690,9 @@ export const emailRoutingRules = mysqlTable(
     name: varchar('name', { length: 128 }).notNull(),
     description: text('description'),
     createdBy: foreignKey('created_by').notNull(),
-    createdAt: timestamp('created_at').defaultNow().notNull()
+    createdAt: timestamp('created_at')
+      .notNull()
+      .$defaultFn(() => new Date())
   },
   (table) => ({
     orgIdIndex: index('org_id_idx').on(table.orgId),
@@ -699,7 +725,9 @@ export const emailRoutingRulesDestinations = mysqlTable(
     ruleId: foreignKey('rule_id').notNull(),
     groupId: foreignKey('group_id'),
     orgMemberId: foreignKey('org_member_id'),
-    createdAt: timestamp('created_at').defaultNow().notNull()
+    createdAt: timestamp('created_at')
+      .notNull()
+      .$defaultFn(() => new Date())
   },
   (table) => ({
     orgIdIndex: index('org_id_idx').on(table.orgId)
@@ -744,7 +772,9 @@ export const emailIdentities = mysqlTable(
     personalEmailIdentityId: foreignKey('personal_email_identity_id'),
     externalCredentialsId: foreignKey('external_credentials_id'),
     forwardingAddress: varchar('forwarding_address', { length: 128 }),
-    createdAt: timestamp('created_at').defaultNow().notNull()
+    createdAt: timestamp('created_at')
+      .notNull()
+      .$defaultFn(() => new Date())
   },
   (table) => ({
     //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit : !domainId && !catchAll - cant be catchall on root domains || catchAll && domainId - Single domain can only have one catch all email address
@@ -793,7 +823,9 @@ export const emailIdentitiesAuthorizedOrgMembers = mysqlTable(
     groupId: foreignKey('group_id'),
     default: boolean('default').notNull().default(false),
     addedBy: foreignKey('added_by').notNull(),
-    createdAt: timestamp('created_at').defaultNow().notNull()
+    createdAt: timestamp('created_at')
+      .notNull()
+      .$defaultFn(() => new Date())
   },
   (table) => ({
     //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit : orgMemberId//groupId, orgMemberId//default, groupId//default
@@ -840,7 +872,9 @@ export const emailIdentitiesPersonal = mysqlTable(
     accountId: foreignKey('account_id').notNull(),
     orgId: foreignKey('org_id').notNull(),
     emailIdentityId: foreignKey('email_identity_id').notNull(),
-    createdAt: timestamp('created_at').defaultNow().notNull()
+    createdAt: timestamp('created_at')
+      .notNull()
+      .$defaultFn(() => new Date())
   },
   (table) => ({
     publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
@@ -890,7 +924,9 @@ export const emailIdentityExternal = mysqlTable(
     encryption: mysqlEnum('encryption', ['ssl', 'tls', 'starttls', 'none'])
       .default('none')
       .notNull(),
-    createdAt: timestamp('created_at').defaultNow().notNull()
+    createdAt: timestamp('created_at')
+      .notNull()
+      .$defaultFn(() => new Date())
   },
   (table) => ({
     publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
@@ -922,7 +958,9 @@ export const convos = mysqlTable(
     orgId: foreignKey('org_id').notNull(),
     publicId: publicId('convos', 'public_id').notNull(),
     lastUpdatedAt: timestamp('last_updated_at').notNull(),
-    createdAt: timestamp('created_at').defaultNow().notNull()
+    createdAt: timestamp('created_at')
+      .notNull()
+      .$defaultFn(() => new Date())
   },
   (table) => ({
     orgIdIndex: index('org_id_idx').on(table.orgId),
@@ -949,7 +987,9 @@ export const convoSubjects = mysqlTable(
     publicId: publicId('convoSubjects', 'public_id').notNull(),
     convoId: foreignKey('convo_id').notNull(),
     subject: varchar('subject', { length: 256 }).notNull(),
-    createdAt: timestamp('created_at').defaultNow().notNull()
+    createdAt: timestamp('created_at')
+      .notNull()
+      .$defaultFn(() => new Date())
   },
   (table) => ({
     orgIdIndex: index('org_id_idx').on(table.orgId),
@@ -994,7 +1034,9 @@ export const convoParticipants = mysqlTable(
       .default('active'),
     lastReadAt: timestamp('last_read_at'),
     active: boolean('active').notNull().default(true),
-    createdAt: timestamp('created_at').defaultNow().notNull()
+    createdAt: timestamp('created_at')
+      .notNull()
+      .$defaultFn(() => new Date())
   },
   (table) => ({
     //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit : orgMemberId//groupId
@@ -1092,7 +1134,9 @@ export const convoAttachments = mysqlTable(
     size: int('size', { unsigned: true }).notNull(),
     public: boolean('public').notNull().default(false),
     convoParticipantId: foreignKey('convo_participant_id').notNull(),
-    createdAt: timestamp('created_at').defaultNow().notNull()
+    createdAt: timestamp('created_at')
+      .notNull()
+      .$defaultFn(() => new Date())
   },
   (table) => ({
     orgIdIndex: index('org_id_idx').on(table.orgId),
@@ -1132,7 +1176,9 @@ export const pendingAttachments = mysqlTable(
     orgId: foreignKey('org_id').notNull(),
     orgPublicId: publicId('org', 'org_public_id').notNull(),
     filename: varchar('filename', { length: 256 }).notNull(),
-    createdAt: timestamp('created_at').defaultNow().notNull()
+    createdAt: timestamp('created_at')
+      .notNull()
+      .$defaultFn(() => new Date())
   },
   (table) => ({
     publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
@@ -1208,7 +1254,9 @@ export const convoEntries = mysqlTable(
       'org',
       'all_participants'
     ]).notNull(),
-    createdAt: timestamp('created_at').defaultNow().notNull()
+    createdAt: timestamp('created_at')
+      .notNull()
+      .$defaultFn(() => new Date())
   },
   (table) => ({
     orgIdIndex: index('org_id_idx').on(table.orgId),
@@ -1262,7 +1310,9 @@ export const convoEntryReplies = mysqlTable(
     orgId: foreignKey('org_id').notNull(),
     entrySourceId: foreignKey('convo_message_source_id').notNull(),
     entryReplyId: foreignKey('convo_message_reply_id'),
-    createdAt: timestamp('created_at').defaultNow().notNull()
+    createdAt: timestamp('created_at')
+      .notNull()
+      .$defaultFn(() => new Date())
   },
   () => ({
     //TODO: Add indexes
@@ -1292,7 +1342,9 @@ export const convoEntryPrivateVisibilityParticipants = mysqlTable(
     orgId: foreignKey('org_id').notNull(),
     entryId: foreignKey('entry_id').notNull(),
     convoMemberId: foreignKey('convo_member_id').notNull(),
-    createdAt: timestamp('created_at').defaultNow().notNull()
+    createdAt: timestamp('created_at')
+      .notNull()
+      .$defaultFn(() => new Date())
   },
   (table) => ({
     entryIdIndex: index('entry_id_idx').on(table.entryId)

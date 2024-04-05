@@ -157,11 +157,44 @@
   onNuxtReady(() => {
     pageReady.value = true;
   });
+
+  const showBetaModal = ref(false);
 </script>
 
 <template>
   <div
     class="flex h-screen w-screen flex-col items-center justify-between p-4 pb-14">
+    <UnUiModal v-model="showBetaModal">
+      <template #header>
+        <span class="">Beta Software</span>
+      </template>
+      <div class="flex w-full flex-col gap-4">
+        <p>UnInbox is still in early access beta</p>
+        <p>
+          This means there'll be a few bugs and issues, and the design may have
+          some inconsistencies or weaknesses
+        </p>
+        <p>
+          Please help us build a better email by reporting any issues you find
+          and provide feedback to help us improve the product
+        </p>
+
+        <div class="mt-4 flex w-full flex-row justify-center gap-4">
+          <UnUiButton
+            label="I'll come back later"
+            size="lg"
+            variant="outline"
+            icon="i-ph-x"
+            @click="showBetaModal = false" />
+          <UnUiButton
+            label="I understand, let me in!"
+            size="lg"
+            color="green"
+            icon="i-ph-check"
+            @click="navigateTo('/join')" />
+        </div>
+      </div>
+    </UnUiModal>
     <div
       class="flex w-full max-w-72 grow flex-col items-center justify-center gap-8">
       <h1 class="mb-4 flex flex-col gap-1 text-center">
@@ -233,7 +266,7 @@
         variant="soft"
         block
         size="lg"
-        @click="navigateTo('/join')" />
+        @click="showBetaModal = true" />
       <!-- Not implemented yet -->
       <UnUiButton
         label="Recover my account"
