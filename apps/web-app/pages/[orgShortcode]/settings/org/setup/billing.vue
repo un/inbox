@@ -311,9 +311,18 @@
             :loading="goToPortalButtonLoading || pendingAction"
             @click="goToBillingPortal()" />
           <div class="flex flex-col gap-8">
-            <span class="text-base-11 text-xl font-medium"
+            <span class="text-base-11 font-medium"
               >Jump on a free unboarding call!</span
             >
+            <UnUiButton
+              label="Schedule a call"
+              variant="outline"
+              @click="
+                navigateTo('https://cal.com/mc/unboarding', {
+                  external: true,
+                  open: { target: '_blank' }
+                })
+              " />
             <!-- Cal inline embed code begins -->
 
             <div

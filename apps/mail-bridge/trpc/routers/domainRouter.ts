@@ -40,7 +40,6 @@ export const domainRouter = router({
           forwardingAddress: 'forwardingAddress@localmode.local'
         };
       }
-      console.log('🔥', { input });
 
       const postalDbOrgQuery = await postalDB.query.organizations.findFirst({
         where: eq(organizations.name, postalOrgId),
@@ -48,7 +47,6 @@ export const domainRouter = router({
           id: true
         }
       });
-      console.log('🔥 precheck', { postalDbOrgQuery });
 
       const orgShortCode = await db.query.orgs.findFirst({
         where: eq(orgs.id, orgId),
@@ -56,7 +54,6 @@ export const domainRouter = router({
           shortcode: true
         }
       });
-      console.log('🔥', { orgShortCode });
 
       const postalServerIdResponse = await db.query.postalServers.findFirst({
         where: and(
@@ -69,7 +66,6 @@ export const domainRouter = router({
           publicId: true
         }
       });
-      console.log('🔥', { postalServerIdResponse });
 
       if (!postalDbOrgQuery || !postalDbOrgQuery.id) {
         return {
@@ -77,19 +73,12 @@ export const domainRouter = router({
         };
       }
       const internalPostalOrgId = postalDbOrgQuery.id;
-      console.log('🔥 creating domain');
 
       const { domainId, dkimPublicKey, dkimSelector, verificationToken } =
         await createDomain({
           domain: domainName,
           orgId: internalPostalOrgId
         });
-      console.log('🔥', {
-        domainId,
-        dkimPublicKey,
-        dkimSelector,
-        verificationToken
-      });
 
       if (!postalServerIdResponse) {
         return {
@@ -103,7 +92,6 @@ export const domainRouter = router({
           id: true
         }
       });
-      console.log('🔥', { postalServerQuery });
 
       if (!postalServerQuery || !postalServerQuery.id) {
         return {
@@ -123,7 +111,6 @@ export const domainRouter = router({
             id: true
           }
         });
-      console.log('🔥', { postalServerEndpointQuery });
 
       if (!postalServerEndpointQuery || !postalServerEndpointQuery.id) {
         return {
@@ -132,7 +119,6 @@ export const domainRouter = router({
       }
 
       const endpointId = postalServerEndpointQuery.id;
-      console.log('🔥', { endpointId });
 
       const { token } = await setMailServerRouteForDomain({
         username: '*',
@@ -141,7 +127,6 @@ export const domainRouter = router({
         orgId: internalPostalOrgId,
         serverId: internalPostalServerId
       });
-      console.log('🔥', { token });
 
       return {
         orgId: orgId,
