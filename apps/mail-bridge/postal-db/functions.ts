@@ -493,7 +493,7 @@ export async function setMailServerRoutingHttpEndpoint(
   const [{ insertId }] = await postalDB.insert(httpEndpoints).values({
     name: `uninbox-mail-bridge-http-${input.serverPublicId}`,
     url: endpointUrl,
-    encoding: 'BodyAsJson',
+    encoding: 'BodyAsJSON',
     format: 'RawMessage',
     stripReplies: 0,
     serverId: input.serverId,
