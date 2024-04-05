@@ -108,7 +108,7 @@ export const useConvoEntryStore = defineStore(
     };
   },
   {
-    share: { enable: true },
+    share: { enable: false },
     persist: false
   }
 );

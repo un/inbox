@@ -62,11 +62,14 @@ function useParticipantData(
       null,
     name:
       participant.group?.name ||
-      participant.contact?.name ||
       participant.orgMember?.profile.firstName +
         ' ' +
         participant.orgMember?.profile.lastName ||
-      '',
+      participant.contact?.setName ||
+      participant.contact?.name ||
+      (participant.contact?.emailUsername && participant.contact?.emailDomain)
+        ? `${participant.contact?.emailUsername}@${participant.contact?.emailDomain}`
+        : '',
     color: participant.group?.color || null,
     type: participant.orgMember
       ? 'orgMember'
