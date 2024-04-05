@@ -54,12 +54,19 @@ export const domainRouter = router({
         };
       }
       const internalPostalOrgId = postalDbOrgQuery.id;
+      console.log('🔥 creating domain');
 
       const { domainId, dkimPublicKey, dkimSelector, verificationToken } =
         await createDomain({
           domain: domainName,
           orgId: internalPostalOrgId
         });
+      console.log('🔥', {
+        domainId,
+        dkimPublicKey,
+        dkimSelector,
+        verificationToken
+      });
 
       const postalServerIdResponse = await db.query.postalServers.findFirst({
         where: and(
@@ -70,6 +77,7 @@ export const domainRouter = router({
           publicId: true
         }
       });
+      console.log('🔥', { postalServerIdResponse });
 
       if (!postalServerIdResponse) {
         return {
@@ -83,6 +91,7 @@ export const domainRouter = router({
           id: true
         }
       });
+      console.log('🔥', { postalServerQuery });
 
       if (!postalServerQuery || !postalServerQuery.id) {
         return {
@@ -102,6 +111,7 @@ export const domainRouter = router({
             id: true
           }
         });
+      console.log('🔥', { postalServerEndpointQuery });
 
       if (!postalServerEndpointQuery || !postalServerEndpointQuery.id) {
         return {
@@ -110,6 +120,8 @@ export const domainRouter = router({
       }
 
       const endpointId = postalServerEndpointQuery.id;
+      console.log('🔥', { endpointId });
+
       const { token } = await setMailServerRouteForDomain({
         username: '*',
         domainId: domainId,
@@ -117,6 +129,7 @@ export const domainRouter = router({
         orgId: internalPostalOrgId,
         serverId: internalPostalServerId
       });
+      console.log('🔥', { token });
 
       return {
         orgId: orgId,
