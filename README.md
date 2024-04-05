@@ -27,7 +27,7 @@
 
 ## :construction: Current Status
 
-`UnInbox` is currently under heavy development. The initial public release is expected in March 2024
+`UnInbox` is currently in public beta. We are working on more features and infrastructure to make UnInbox better. Please join our Discord community to get the latest updates and to provide feedback. Join the beta at [app.uninbox.com](https://app.uninbox.com).
 
 ---
 
