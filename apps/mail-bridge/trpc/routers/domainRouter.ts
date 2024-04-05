@@ -40,6 +40,7 @@ export const domainRouter = router({
           forwardingAddress: 'forwardingAddress@localmode.local'
         };
       }
+      console.log('🔥', { input });
 
       const postalDbOrgQuery = await postalDB.query.organizations.findFirst({
         where: eq(organizations.name, postalOrgId),
@@ -55,6 +56,8 @@ export const domainRouter = router({
           eq(postalServers.type, 'email')
         ),
         columns: {
+          id: true,
+          orgId: true,
           publicId: true
         }
       });
