@@ -35,9 +35,10 @@ export default defineEventHandler(async (event) => {
       console.error('🔥postal verify webhook', { publicKeys });
       console.error('🔥 signature', { signature });
       console.error('🔥', { validPostalSignature });
-
+      event.context.fromPostal = true;
       // sendNoContent(event, 401);
+    } else {
+      event.context.fromPostal = validPostalSignature;
     }
-    event.context.fromPostal = validPostalSignature;
   }
 });

@@ -13,7 +13,9 @@ export async function validatePostalWebhookSignature(
       '-----BEGIN PUBLIC KEY-----\r\n' +
       (await chunkSplit(postalWebhookPK, 64, '\r\n')) +
       '-----END PUBLIC KEY-----';
+
     const verifier = crypto.createVerify('SHA1');
+
     verifier.update(jsonToRubyString(body));
 
     // if verification passes for any key, return true
