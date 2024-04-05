@@ -15,9 +15,13 @@ export default defineEventHandler(async (event) => {
     const signature = getHeader(event, 'x-postal-signature') || '';
     //TODO: need to support multiple public keys from multiple servers, and return true if any match
     const postalConfig: PostalConfig = useRuntimeConfig().postal;
+    console.log('🔥 signature', { signature });
+
     const publicKeys = postalConfig.servers.map(
       (server) => server.webhookPubKey
     );
+    console.log('🔥postal verify webhook', { publicKeys });
+
     const validPostalSignature = await validatePostalWebhookSignature(
       body,
       signature,
