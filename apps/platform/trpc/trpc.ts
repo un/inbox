@@ -7,7 +7,7 @@ import superjson from 'superjson';
 import type { Context } from './createContext';
 import { z } from 'zod';
 import { useRuntimeConfig } from '#imports';
-import verifyTurnstileToken from '../utils/turnstile';
+// import verifyTurnstileToken from '../utils/turnstile';
 import { type Duration, Ratelimit, NoopRatelimit } from '@unkey/ratelimit';
 import { getRequestIP } from 'h3';
 
@@ -79,25 +79,27 @@ const isEeEnabled = trpcContext.middleware(({ next }) => {
 const turnstileTokenValidation = standaloneMiddleware<{
   input: { turnstileToken?: string }; // defaults to 'unknown' if not defined
 }>().create(async (opts) => {
-  if (!useRuntimeConfig().turnstile.secretKey) return opts.next();
-  if (!opts.input.turnstileToken) {
-    if (process.env.NODE_ENV === 'development') return opts.next();
-    throw new TRPCError({
-      code: 'FORBIDDEN',
-      message: 'Missing Turnstile Verification Token'
-    });
-  }
+  // Will fix later
 
-  const success = await verifyTurnstileToken({
-    response: opts.input.turnstileToken,
-    secretKey: useRuntimeConfig().turnstile.secretKey
-  });
+  // if (!useRuntimeConfig().turnstile.secretKey) return opts.next();
+  // if (!opts.input.turnstileToken) {
+  //   if (process.env.NODE_ENV === 'development') return opts.next();
+  //   throw new TRPCError({
+  //     code: 'FORBIDDEN',
+  //     message: 'Missing Turnstile Verification Token'
+  //   });
+  // }
 
-  if (!success)
-    throw new TRPCError({
-      code: 'BAD_REQUEST',
-      message: 'Invalid Turnstile Verification Token'
-    });
+  // const success = await verifyTurnstileToken({
+  //   response: opts.input.turnstileToken,
+  //   secretKey: useRuntimeConfig().turnstile.secretKey
+  // });
+
+  // if (!success)
+  //   throw new TRPCError({
+  //     code: 'BAD_REQUEST',
+  //     message: 'Invalid Turnstile Verification Token'
+  //   });
 
   return opts.next();
 });
