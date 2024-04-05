@@ -51,25 +51,32 @@ function useParticipantData(
     null;
   if (!typePublicId || !avatarProfilePublicId) return null;
 
+  const avatarTimestampProp = participant.orgMember?.profile.avatarTimestamp
+    ? participant.orgMember?.profile.avatarTimestamp
+    : participant.group?.avatarTimestamp
+      ? participant.group?.avatarTimestamp
+      : participant.contact?.avatarTimestamp
+        ? participant.contact?.avatarTimestamp
+        : null;
+
+  const nameProp = participant.group?.name
+    ? participant.group?.name
+    : participant.orgMember?.profile.firstName
+      ? `${participant.orgMember?.profile.firstName} ${participant.orgMember?.profile.lastName || ''}`
+      : participant.contact?.setName
+        ? participant.contact?.setName
+        : participant.contact?.name
+          ? participant.contact?.name
+          : participant.contact?.emailUsername
+            ? `${participant.contact?.emailUsername}@${participant.contact?.emailDomain}`
+            : 'unnamed';
+
   const participantData: ConvoParticipantEntry = {
     participantPublicId: participant.publicId,
     typePublicId: typePublicId,
     avatarProfilePublicId: avatarProfilePublicId,
-    avatarTimestamp:
-      participant.orgMember?.profile.avatarTimestamp ||
-      participant.group?.avatarTimestamp ||
-      participant.contact?.avatarTimestamp ||
-      null,
-    name:
-      participant.group?.name ||
-      participant.orgMember?.profile.firstName +
-        ' ' +
-        participant.orgMember?.profile.lastName ||
-      participant.contact?.setName ||
-      participant.contact?.name ||
-      (participant.contact?.emailUsername && participant.contact?.emailDomain)
-        ? `${participant.contact?.emailUsername}@${participant.contact?.emailDomain}`
-        : '',
+    avatarTimestamp: avatarTimestampProp,
+    name: nameProp,
     color: participant.group?.color || null,
     type: participant.orgMember
       ? 'orgMember'

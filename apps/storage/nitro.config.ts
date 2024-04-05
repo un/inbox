@@ -21,8 +21,7 @@ export default defineNitroConfig({
       cors: true,
       headers: {
         'Access-Control-Allow-Methods': 'GET, POST',
-        'Access-Control-Allow-Origin': process.env.WEBAPP_URL!,
-        'Access-Control-Allow-Credentials': 'true'
+        'Access-Control-Allow-Origin': '*'
       },
       proxy: {
         to: `${process.env.STORAGE_S3_ENDPOINT}/${process.env.STORAGE_S3_BUCKET_AVATARS}/**`
