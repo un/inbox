@@ -55,7 +55,8 @@ export const accounts = mysqlTable(
     passwordHash: varchar('password_hash', { length: 255 }),
     twoFactorSecret: varchar('two_factor_secret', { length: 255 }),
     twoFactorEnabled: boolean('two_factor_enabled').notNull().default(false),
-    recoveryCode: varchar('recovery_code', { length: 256 })
+    recoveryCode: varchar('recovery_code', { length: 256 }),
+    preAccount: boolean('pre_account').notNull().default(true)
   },
   (table) => ({
     publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),

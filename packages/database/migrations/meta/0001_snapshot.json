@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "da778b0c-e090-444c-b03f-ea74c467786a",
+  "id": "24f67ddc-c57e-4fa8-bd3f-145bc4362f22",
   "prevId": "1a2695c0-9032-4d96-acca-f16f8e3d98b0",
   "tables": {
     "account_credentials": {
@@ -140,6 +140,14 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
+        },
+        "pre_account": {
+          "name": "pre_account",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": true
         }
       },
       "indexes": {
