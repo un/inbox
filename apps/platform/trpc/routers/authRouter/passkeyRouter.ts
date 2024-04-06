@@ -203,7 +203,7 @@ export const passkeyRouter = router({
       }
 
       const account = await db.query.accounts.findFirst({
-        where: eq(accounts.id, passkeyVerification.accountCredentialId),
+        where: eq(accounts.id, passkeyVerification.accountId),
         columns: {
           id: true,
           publicId: true,
