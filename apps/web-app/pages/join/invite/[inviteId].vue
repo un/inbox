@@ -89,12 +89,6 @@
       <h1 class="mb-4 flex flex-col gap-2 text-center">
         <span class="text-2xl font-medium leading-none">Welcome to</span>
         <span class="font-display text-5xl leading-none">UnInbox</span>
-        <div>
-          <NuxtUiBadge
-            label="Beta"
-            size="md"
-            color="amber" />
-        </div>
       </h1>
       <div
         v-if="status === 'pending' || status === 'idle'"

@@ -9,12 +9,7 @@
     <div
       class="flex w-full max-w-72 grow flex-col items-center justify-center gap-8">
       <span class="font-display text-5xl">UnInbox</span>
-      <div>
-        <NuxtUiBadge
-          label="Beta"
-          size="md"
-          color="amber" />
-      </div>
+      <div></div>
       <span class="text-xl font-medium"
         >EU Only hosting will release after the 15th of april</span
       >
