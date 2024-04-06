@@ -346,12 +346,6 @@
       <div class="flex flex-row items-center justify-between pl-2 pr-2">
         <span class="font-display leading-none">UnInbox</span>
         <div class="flex flex-row items-center gap-4">
-          <div>
-            <UnUiBadge
-              size="sm"
-              color="amber"
-              label="Beta" />
-          </div>
           <UnUiButton
             square
             size="lg"

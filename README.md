@@ -27,7 +27,7 @@
 
 ## :construction: Current Status
 
-`UnInbox` is currently in public beta. We are working on more features and infrastructure to make UnInbox better. Please join our Discord community to get the latest updates and to provide feedback. Join the beta at [app.uninbox.com](https://app.uninbox.com).
+`UnInbox` is Live! We are working on more features and infrastructure to make UnInbox better. Please join our Discord community to get the latest updates and to provide feedback. Join at [app.uninbox.com](https://app.uninbox.com).
 
 ---
 
