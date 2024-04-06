@@ -24,21 +24,23 @@
         class="lg:hidden"
         @click="isCollapsed = !isCollapsed" />
     </div>
-    <div class="flex grow flex-col gap-0 overflow-hidden">
-      <convos-convo-list
-        :class="isCollapsed ? 'collapse lg:visible' : 'visible'" />
-    </div>
-    <div class="flex flex-row gap-2">
-      <UnUiButton
-        class="flex-grow justify-center"
-        :class="isCollapsed ? 'collapse lg:visible' : 'visible'"
-        :ui="{
-          rounded: 'rounded-bl-xl'
-        }"
-        label="New"
-        icon="i-ph-plus"
-        variant="outline"
-        :to="`/${orgShortcode}/convo/new`" />
+    <div class="flex h-full max-h-full flex-col-reverse gap-2 md:flex-col">
+      <div class="flex grow flex-col gap-0 overflow-hidden">
+        <convos-convo-list
+          :class="isCollapsed ? 'collapse lg:visible' : 'visible'" />
+      </div>
+      <div class="flex flex-row gap-2">
+        <UnUiButton
+          class="flex-grow justify-center"
+          :class="isCollapsed ? 'collapse lg:visible' : 'visible'"
+          :ui="{
+            rounded: 'rounded-bl-xl'
+          }"
+          label="New"
+          icon="i-ph-plus"
+          variant="outline"
+          :to="`/${orgShortcode}/convo/new`" />
+      </div>
     </div>
   </div>
 </template>
