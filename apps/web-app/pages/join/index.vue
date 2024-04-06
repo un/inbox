@@ -3,11 +3,9 @@
   import {
     navigateTo,
     definePageMeta,
-    useRuntimeConfig,
     useNuxtApp,
     ref,
     computed,
-    watch,
     watchDebounced,
     useCookie,
     type Ref,
@@ -16,13 +14,8 @@
 
   const { $trpc } = useNuxtApp();
   definePageMeta({ guest: true });
-  const turnstile = ref();
-  const turnstileToken = ref();
+
   const buttonLoading = ref(false);
-  const turnstileEnabled = useRuntimeConfig().public.turnstileEnabled;
-  if (!turnstileEnabled) {
-    turnstileToken.value = '';
-  }
 
   //Form Fields
   const usernameValid = ref<boolean | 'remote' | null>(null);
@@ -46,7 +39,6 @@
     }
     const { available, error } =
       await $trpc.auth.signup.checkUsernameAvailability.query({
-        turnstileToken: turnstileToken.value,
         username: usernameValue.value
       });
     if (!available) {
@@ -60,21 +52,7 @@
     usernameValue,
     async () => {
       if (usernameValid.value === 'remote') {
-        if (turnstileEnabled && !turnstileToken.value) {
-          await new Promise((resolve) => {
-            const unwatch = watch(turnstileToken, (newValue) => {
-              if (newValue !== null) {
-                resolve(newValue);
-                unwatch();
-              }
-            });
-          });
-        }
         await checkUsername();
-        turnstile.value?.reset();
-        // We need to blank out the token, as testing mode always returns same token
-        // so it gets stuck on watch
-        turnstileToken.value = null;
       }
     },
     {
@@ -185,13 +163,6 @@
           size="sm"
           block
           @click="navigateTo('/eu')" />
-      </div>
-      <div v-if="pageReady && turnstileEnabled">
-        <!-- This should be invisible, we will be using invisible challenges -->
-        <NuxtTurnstile
-          ref="turnstile"
-          v-model="turnstileToken"
-          class="" />
       </div>
     </div>
   </div>

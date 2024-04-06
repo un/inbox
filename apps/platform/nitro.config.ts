@@ -84,9 +84,6 @@ export default defineNitroConfig({
       url: process.env.WEBAPP_STORAGE_URL || '',
       key: process.env.WEBAPP_STORAGE_KEY || ''
     },
-    turnstile: {
-      secretKey: process.env.WEBAPP_TURNSTILE_SECRET_KEY || ''
-    },
     unkey: {
       rootKey: process.env.UNKEY_ROOT_KEY || null
     },

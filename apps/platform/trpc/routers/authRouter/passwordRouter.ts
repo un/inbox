@@ -78,7 +78,6 @@ export const passwordRouter = router({
   signInWithPassword: publicRateLimitedProcedure.signInWithPassword
     .input(
       z.object({
-        turnstileToken: z.string(),
         // we allow min length of 2 for username if we plan to provide them in the future
         username: zodSchemas.username(2),
         password: z.string().min(8),

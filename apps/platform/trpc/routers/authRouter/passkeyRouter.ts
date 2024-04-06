@@ -160,12 +160,9 @@ export const passkeyRouter = router({
 
   verifyPasskey: publicRateLimitedProcedure.verifyPasskey
     .input(
-      z
-        .object({
-          turnstileToken: z.string(),
-          verificationResponseRaw: z.any()
-        })
-        .strict()
+      z.object({
+        verificationResponseRaw: z.any()
+      })
     )
     .mutation(async ({ ctx, input }) => {
       const { db } = ctx;

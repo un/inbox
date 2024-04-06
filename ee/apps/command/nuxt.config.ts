@@ -23,7 +23,6 @@ export default defineNuxtConfig({
     '@vueuse/nuxt',
     'nuxt-security',
     'nuxt-prepare',
-    '@nuxtjs/turnstile',
     '@nuxt/ui'
   ],
   // ssr: false,

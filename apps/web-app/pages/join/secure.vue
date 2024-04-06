@@ -5,12 +5,10 @@
   import {
     navigateTo,
     definePageMeta,
-    useRuntimeConfig,
     useNuxtApp,
     useToast,
     ref,
     computed,
-    watch,
     watchDebounced,
     useCookie,
     type Ref,
@@ -20,14 +18,12 @@
   const { $trpc } = useNuxtApp();
 
   definePageMeta({ guest: true });
-  const turnstile = ref();
-  const turnstileToken = ref();
+
   const buttonLoading = ref(false);
   const buttonLabel = ref('Create my account');
   const howToAddPasskeyDialogOpen = ref(false);
   const instructionSet = ref<'ios' | 'android' | ''>('');
   const pageError = ref(false);
-  const turnstileError = ref(false);
 
   const accountCreated = ref(false);
   const passkeyCreated = ref(false);
@@ -37,11 +33,6 @@
     (await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable())
       ? 'platform'
       : 'cross-platform';
-
-  const turnstileEnabled = useRuntimeConfig().public.turnstileEnabled;
-  if (!turnstileEnabled) {
-    turnstileToken.value = '';
-  }
 
   const username = ref('');
   if (process.client) {
@@ -87,27 +78,11 @@
       if (passwordInput.value === '') return;
       passwordStats.value.allowed = null;
 
-      if (turnstileEnabled && !turnstileToken.value) {
-        await new Promise((resolve) => {
-          const unwatch = watch(turnstileToken, (newValue) => {
-            if (newValue !== null) {
-              resolve(newValue);
-              unwatch();
-            }
-          });
-        });
-      }
-
       const res = await $trpc.auth.signup.checkPasswordStrength.query({
-        password: passwordInput.value,
-        turnstileToken: turnstileToken.value
+        password: passwordInput.value
       });
-      passwordStats.value = res;
 
-      turnstile.value?.reset();
-      // We need to blank out the token, as testing mode always returns same token
-      // so it gets stuck on watch
-      turnstileToken.value = null;
+      passwordStats.value = res;
     },
     {
       debounce: 600,
@@ -142,19 +117,6 @@
   const toast = useToast();
   async function createAccount() {
     if (!accountCreated.value) {
-      if (turnstileEnabled && !turnstileToken.value) {
-        turnstileError.value = true;
-        await new Promise((resolve) => {
-          const unwatch = watch(turnstileToken, (newValue) => {
-            if (newValue !== null) {
-              resolve(newValue);
-              unwatch();
-              turnstileError.value = false;
-            }
-          });
-        });
-      }
-
       buttonLoading.value = true;
       buttonLabel.value = 'Creating your account';
     }
@@ -164,8 +126,7 @@
     if (secureType.value === 'password') {
       const signUp = await $trpc.auth.password.signUpWithPassword.mutate({
         username: username.value,
-        password: passwordInput.value,
-        turnstileToken: turnstileToken.value
+        password: passwordInput.value
       });
 
       if (!signUp.success) {
@@ -199,7 +160,6 @@
       const { options, publicId } =
         await $trpc.auth.passkey.signUpWithPasskeyStart.query({
           username: username.value,
-          turnstileToken: turnstileToken.value,
           authenticatorType: passkeyType
         });
       // start registration
@@ -222,11 +182,6 @@
         return;
       }
 
-      turnstile.value?.reset();
-      // We need to blank out the token, as testing mode always returns same token
-      // so it gets stuck on watch
-      turnstileToken.value = null;
-
       toast.add({
         title: 'Passkey Created',
         description:
@@ -236,20 +191,9 @@
         icon: 'i-ph-check-circle'
       });
 
-      await new Promise((resolve) => {
-        if (!turnstileEnabled) return resolve(null);
-        const unwatch = watch(turnstileToken, (newValue) => {
-          if (newValue !== null) {
-            resolve(newValue);
-            unwatch();
-          }
-        });
-      });
-
       const verifyNewPasskey =
         await $trpc.auth.passkey.signUpWithPasskeyFinish.mutate({
           username: username.value,
-          turnstileToken: turnstileToken.value,
           publicId,
           registrationResponseRaw: newPasskeyData,
           nickname: 'Primary'
@@ -467,7 +411,6 @@
           block
           @click="
             createAccount().finally(() => {
-              turnstile?.reset();
               buttonLoading = false;
             })
           " />
@@ -482,23 +425,7 @@
         tip: if you have any issues during this process, reach out to our
         support team
       </p>
-      <div class="h-0 max-h-0 w-full max-w-full">
-        <UnUiAlert
-          v-show="turnstileError"
-          icon="i-ph-warning-circle"
-          title="Waiting for automatic captcha!"
-          description="This is an automated process and should complete within a few seconds. If it doesn't, please refresh the page."
-          color="orange"
-          variant="solid" />
-      </div>
-
-      <div v-if="pageReady && turnstileEnabled">
-        <!-- This should be invisible, we will be using invisible challenges -->
-        <NuxtTurnstile
-          ref="turnstile"
-          v-model="turnstileToken"
-          class="hidden" />
-      </div>
+      <div class="h-0 max-h-0 w-full max-w-full"></div>
     </div>
     <UnUiModal
       v-model="howToAddPasskeyDialogOpen"

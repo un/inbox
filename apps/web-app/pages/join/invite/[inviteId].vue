@@ -2,11 +2,9 @@
   import {
     navigateTo,
     definePageMeta,
-    useRuntimeConfig,
     useNuxtApp,
     useToast,
     ref,
-    watch,
     useRoute,
     useCookie,
     type Ref,
@@ -17,35 +15,20 @@
 
   const { $trpc } = useNuxtApp();
 
-  const turnstileToken = ref();
   const inviteId = useRoute().params.inviteId;
   const joinButtonLoading = ref(false);
   const joinButtonLabel = ref('Join organization');
-  const turnstileEnabled = useRuntimeConfig().public.turnstileEnabled;
-  if (!turnstileEnabled) {
-    turnstileToken.value = '';
-  }
 
-  const queryVariables = ref({
-    turnstileToken: turnstileToken.value,
-    inviteToken: inviteId as string
-  });
   const {
     data: inviteQuery,
     error,
     execute,
     status
-  } = await $trpc.org.users.invites.validateInvite.useLazyQuery(
-    queryVariables.value,
-    { server: false, immediate: false }
-  );
-  watch(turnstileToken, () => {
-    if (!turnstileToken.value) return;
-
-    if (status.value === 'success') return;
-    queryVariables.value.turnstileToken = turnstileToken.value;
-    execute();
+  } = await $trpc.org.users.invites.validateInvite.useLazyQuery({
+    inviteToken: inviteId as string
   });
+
+  execute();
 
   const inviteCookie = useCookie('un-invite-code', {
     expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
@@ -178,13 +161,6 @@
           icon="i-ph-users-three"
           block
           @click="joinOrg()" />
-      </div>
-
-      <div v-if="pageReady && turnstileEnabled">
-        <!-- This should be invisible, we will be using invisible challenges -->
-        <NuxtTurnstile
-          v-model="turnstileToken"
-          class="hidden" />
       </div>
     </div>
   </div>
