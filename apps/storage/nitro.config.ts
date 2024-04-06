@@ -20,7 +20,7 @@ export default defineNitroConfig({
     '/avatar/**': {
       cors: true,
       headers: {
-        'Access-Control-Allow-Methods': 'GET, POST',
+        'Access-Control-Allow-Methods': '*',
         'Access-Control-Allow-Origin': '*'
       },
       proxy: {
@@ -30,8 +30,8 @@ export default defineNitroConfig({
     '/api/**': {
       cors: true,
       headers: {
-        'Access-Control-Allow-Methods': 'GET, POST',
-        'Access-Control-Allow-Origin': process.env.WEBAPP_URL!,
+        'Access-Control-Allow-Methods': '*',
+        'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Credentials': 'true'
       }
     }
