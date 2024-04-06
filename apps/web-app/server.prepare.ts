@@ -47,9 +47,6 @@ export default defineNuxtPrepareHandler(async () => {
     billingConfig.key = billingKey;
   }
 
-  const turnstileKey = process.env.WEBAPP_TURNSTILE_SECRET_KEY || null;
-  console.info('✅ Turnstile is', turnstileKey ? 'enabled' : 'disabled');
-
   const unPlatformUrl = process.env.PLATFORM_URL;
   if (!unPlatformUrl) {
     throw new Error(
@@ -64,8 +61,7 @@ export default defineNuxtPrepareHandler(async () => {
       billing: billingConfig,
       public: {
         mailDomains: mailDomains,
-        ee: eeConfig,
-        turnstileEnabled: !!turnstileKey
+        ee: eeConfig
       }
     }
   };

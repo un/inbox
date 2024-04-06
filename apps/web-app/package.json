@@ -20,7 +20,6 @@
     "@iconify-json/svg-spinners": "^1.1.2",
     "@nuxt/devtools": "1.0.8",
     "@nuxtjs/color-mode": "^3.3.2",
-    "@nuxtjs/turnstile": "^0.6.3",
     "@pinia-plugin-persistedstate/nuxt": "^1.2.0",
     "@radix-ui/colors": "^3.0.0",
     "@simplewebauthn/types": "^9.0.1",
