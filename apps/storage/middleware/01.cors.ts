@@ -21,7 +21,8 @@ const corsEventHandler = <
 };
 
 export default corsEventHandler(() => {}, {
-  origin: process.env.WEBAPP_URL ? [process.env.WEBAPP_URL] : '*',
+  // allow all origins, methods, and credentials (for now)
+  origin: '*',
   methods: '*',
   credentials: true
 });

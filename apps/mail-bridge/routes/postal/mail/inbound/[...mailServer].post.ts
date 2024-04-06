@@ -312,7 +312,7 @@ export default eventHandler(async (event) => {
     MessageParseAddressPlatformObject[],
     MessageParseAddressPlatformObject[],
     MessageParseAddressPlatformObject[] | []
-  ] = await Promise.all([
+  ] = await Promise.allSettled([
     parseAddressIds({
       addresses: messageTo,
       addressType: 'to',
@@ -326,7 +326,19 @@ export default eventHandler(async (event) => {
     messageCc
       ? parseAddressIds({ addresses: messageCc, addressType: 'cc', orgId })
       : Promise.resolve([])
-  ]);
+  ]).then((res) => {
+    return res.map((r) => {
+      if (r.status === 'fulfilled') {
+        return r.value;
+      }
+      console.error('⛔ error parsing email addresses', r.reason);
+      return [];
+    }) as [
+      MessageParseAddressPlatformObject[],
+      MessageParseAddressPlatformObject[],
+      MessageParseAddressPlatformObject[] | []
+    ];
+  });
 
   if (
     !messageToPlatformObject ||
@@ -824,11 +836,21 @@ export default eventHandler(async (event) => {
       publicId: string;
       signedUrl: string;
     };
+
+    // TODO: remove this once fixed
+    // eslint-disable-next-line no-console
+    console.log(
+      'Presign Url:',
+      `${useRuntimeConfig().storage.url}/api/attachments/internalPresign`,
+      '  ',
+      'Key:',
+      useRuntimeConfig().storage.key
+    );
+
     const preUpload: PreSignedData = await fetch(
       `${useRuntimeConfig().storage.url}/api/attachments/internalPresign`,
       {
         method: 'post',
-
         headers: {
           'Content-Type': 'application/json',
           Authorization: useRuntimeConfig().storage.key
@@ -836,7 +858,8 @@ export default eventHandler(async (event) => {
         body: JSON.stringify({
           orgPublicId: orgPublicId,
           filename: input.fileName
-        })
+        }),
+        credentials: 'include'
       }
     ).then((res: Response) => res.json() as Promise<PreSignedData>);
     if (!preUpload || !preUpload.publicId || !preUpload.signedUrl) {
@@ -875,7 +898,7 @@ export default eventHandler(async (event) => {
   }
 
   if (attachments.length) {
-    await Promise.all(
+    const attachmentPromises = await Promise.allSettled(
       attachments.map((attachment) => {
         return uploadAndAttachAttachment({
           orgId: orgId,
@@ -889,6 +912,11 @@ export default eventHandler(async (event) => {
         });
       })
     );
+    attachmentPromises.forEach((promise) => {
+      if (promise.status === 'rejected') {
+        console.error('Error uploading attachment:', promise.reason);
+      }
+    });
   }
 
   await db.insert(convoEntryRawHtmlEmails).values({

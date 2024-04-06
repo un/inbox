@@ -23,6 +23,8 @@ const bodySchema = z.object({
 export default eventHandler({
   onRequest: [authorizedService],
   async handler(event) {
+    // eslint-disable-next-line no-console
+    console.log('Presigning attachment');
     const inputValidation = await readValidatedBody(event, (body) =>
       bodySchema.safeParse(body)
     );
@@ -30,6 +32,9 @@ export default eventHandler({
       setResponseStatus(event, 400);
       return send(event, 'Invalid input');
     }
+    // eslint-disable-next-line no-console
+    console.log('File to be uploaded:', inputValidation.data);
+
     const { orgPublicId, filename } = inputValidation.data;
     const attachmentPublicId = typeIdGenerator('convoAttachments');
 

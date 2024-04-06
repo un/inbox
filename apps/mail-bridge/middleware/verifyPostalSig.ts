@@ -6,7 +6,6 @@ import {
   readBody,
   getHeader,
   useRuntimeConfig,
-  sendNoContent,
   getHeaders
 } from '#imports';
 
@@ -38,6 +37,8 @@ export default defineEventHandler(async (event) => {
       event.context.fromPostal = true;
       // sendNoContent(event, 401);
     } else {
+      // eslint-disable-next-line no-console
+      console.log('Mail Bridge: Valid postal signature');
       event.context.fromPostal = validPostalSignature;
     }
   }

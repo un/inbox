@@ -31,7 +31,7 @@ export default defineNitroConfig({
       cors: true,
       headers: {
         'Access-Control-Allow-Methods': 'GET, POST',
-        'Access-Control-Allow-Origin': process.env.WEBAPP_URL!,
+        'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Credentials': 'true'
       }
     }
