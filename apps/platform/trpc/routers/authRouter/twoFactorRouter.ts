@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { router, accountProcedure } from '../../trpc';
 import { eq } from '@u22n/database/orm';
-import { accountCredentials, accounts } from '@u22n/database/schema';
+import { accounts } from '@u22n/database/schema';
 import { decodeHex, encodeHex } from 'oslo/encoding';
 import { TOTPController, createTOTPKeyURI } from 'oslo/otp';
 import { TRPCError } from '@trpc/server';
@@ -18,15 +18,9 @@ export const twoFactorRouter = router({
       const existingData = await db.query.accounts.findFirst({
         where: eq(accounts.id, accountId),
         columns: {
-          username: true
-        },
-        with: {
-          accountCredential: {
-            columns: {
-              twoFactorSecret: true,
-              twoFactorEnabled: true
-            }
-          }
+          username: true,
+          twoFactorSecret: true,
+          twoFactorEnabled: true
         }
       });
 
@@ -37,7 +31,7 @@ export const twoFactorRouter = router({
         });
       }
 
-      if (existingData.accountCredential.twoFactorEnabled) {
+      if (existingData.twoFactorEnabled) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message:
@@ -46,9 +40,9 @@ export const twoFactorRouter = router({
       }
       const newSecret = crypto.getRandomValues(new Uint8Array(20));
       await db
-        .update(accountCredentials)
+        .update(accounts)
         .set({ twoFactorSecret: encodeHex(newSecret) })
-        .where(eq(accountCredentials.accountId, accountId));
+        .where(eq(accounts.id, accountId));
       const uri = createTOTPKeyURI(
         'UnInbox.com',
         existingData.username,
@@ -71,14 +65,10 @@ export const twoFactorRouter = router({
 
       const existingData = await db.query.accounts.findFirst({
         where: eq(accounts.id, accountId),
-        with: {
-          accountCredential: {
-            columns: {
-              twoFactorSecret: true,
-              recoveryCode: true,
-              twoFactorEnabled: true
-            }
-          }
+        columns: {
+          twoFactorSecret: true,
+          recoveryCode: true,
+          twoFactorEnabled: true
         }
       });
 
@@ -89,7 +79,7 @@ export const twoFactorRouter = router({
         });
       }
 
-      if (!existingData.accountCredential.twoFactorSecret) {
+      if (!existingData.twoFactorSecret) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message:
@@ -97,7 +87,7 @@ export const twoFactorRouter = router({
         });
       }
 
-      if (existingData.accountCredential.recoveryCode) {
+      if (existingData.recoveryCode) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message:
@@ -105,7 +95,7 @@ export const twoFactorRouter = router({
         });
       }
 
-      const secret = decodeHex(existingData.accountCredential.twoFactorSecret);
+      const secret = decodeHex(existingData.twoFactorSecret);
       const isValid = await new TOTPController().verify(
         input.twoFactorCode,
         secret
@@ -122,9 +112,9 @@ export const twoFactorRouter = router({
       const hashedRecoveryCode = await new Argon2id().hash(recoveryCode);
 
       await db
-        .update(accountCredentials)
+        .update(accounts)
         .set({ recoveryCode: hashedRecoveryCode, twoFactorEnabled: true })
-        .where(eq(accountCredentials.accountId, accountId));
+        .where(eq(accounts.id, accountId));
 
       return { recoveryCode: recoveryCode };
     }),
@@ -136,13 +126,9 @@ export const twoFactorRouter = router({
 
       const existingData = await db.query.accounts.findFirst({
         where: eq(accounts.id, accountId),
-        with: {
-          accountCredential: {
-            columns: {
-              twoFactorSecret: true,
-              recoveryCode: true
-            }
-          }
+        columns: {
+          twoFactorSecret: true,
+          recoveryCode: true
         }
       });
 
@@ -153,13 +139,13 @@ export const twoFactorRouter = router({
         });
       }
 
-      if (!existingData.accountCredential.twoFactorSecret) {
+      if (!existingData.twoFactorSecret) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message: '2FA is not set up for this account'
         });
       }
-      const secret = decodeHex(existingData.accountCredential.twoFactorSecret);
+      const secret = decodeHex(existingData.twoFactorSecret);
       const isValid = await new TOTPController().verify(
         input.twoFactorCode,
         secret
@@ -173,9 +159,9 @@ export const twoFactorRouter = router({
 
       // No need to check if twoFactorSecret exists
       await db
-        .update(accountCredentials)
+        .update(accounts)
         .set({ twoFactorSecret: null, recoveryCode: null })
-        .where(eq(accountCredentials.accountId, accountId));
+        .where(eq(accounts.id, accountId));
       return {};
     })
 });

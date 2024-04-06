@@ -13,6 +13,11 @@ export const defaultsRouter = router({
 
       const accountResponse = await db.query.accounts.findFirst({
         where: eq(accounts.id, accountId),
+        columns: {
+          twoFactorSecret: true,
+          passwordHash: true,
+          twoFactorEnabled: true
+        },
         with: {
           orgMemberships: {
             with: {
@@ -23,18 +28,9 @@ export const defaultsRouter = router({
               }
             }
           },
-          accountCredential: {
+          authenticators: {
             columns: {
-              twoFactorSecret: true,
-              passwordHash: true,
-              twoFactorEnabled: true
-            },
-            with: {
-              authenticators: {
-                columns: {
-                  id: true
-                }
-              }
+              id: true
             }
           }
         }
@@ -44,12 +40,10 @@ export const defaultsRouter = router({
         throw new Error('User not found');
       }
 
-      const userHasPasskeys =
-        accountResponse.accountCredential.authenticators.length > 0;
+      const userHasPasskeys = accountResponse.authenticators.length > 0;
 
       const twoFactorEnabledCorrectly =
-        accountResponse.accountCredential.passwordHash &&
-        accountResponse.accountCredential.twoFactorEnabled;
+        accountResponse.passwordHash && accountResponse.twoFactorEnabled;
 
       return {
         defaultOrgShortcode:

@@ -2,12 +2,7 @@ import { usePasskeys } from './../../../utils/auth/passkeys';
 import { z } from 'zod';
 import { router, accountProcedure } from '../../trpc';
 import { and, eq } from '@u22n/database/orm';
-import {
-  accounts,
-  accountCredentials,
-  authenticators,
-  sessions
-} from '@u22n/database/schema';
+import { accounts, authenticators, sessions } from '@u22n/database/schema';
 import {
   calculatePasswordStrength,
   nanoIdToken,
@@ -38,24 +33,18 @@ export const securityRouter = router({
       const accountObjectQuery = await db.query.accounts.findFirst({
         where: eq(accounts.id, accountId),
         columns: {
-          publicId: true
+          publicId: true,
+          passwordHash: true,
+          recoveryCode: true,
+          twoFactorEnabled: true,
+          twoFactorSecret: true
         },
         with: {
-          accountCredential: {
+          authenticators: {
             columns: {
-              passwordHash: true,
-              recoveryCode: true,
-              twoFactorEnabled: true,
-              twoFactorSecret: true
-            },
-            with: {
-              authenticators: {
-                columns: {
-                  publicId: true,
-                  createdAt: true,
-                  nickname: true
-                }
-              }
+              publicId: true,
+              createdAt: true,
+              nickname: true
             }
           },
           sessions: {
@@ -77,10 +66,10 @@ export const securityRouter = router({
       }
 
       return {
-        passwordSet: !!accountObjectQuery.accountCredential.passwordHash,
-        recoveryCodeSet: !!accountObjectQuery.accountCredential.recoveryCode,
-        twoFactorEnabled: accountObjectQuery.accountCredential.twoFactorEnabled,
-        passkeys: accountObjectQuery.accountCredential.authenticators || [],
+        passwordSet: !!accountObjectQuery.passwordHash,
+        recoveryCodeSet: !!accountObjectQuery.recoveryCode,
+        twoFactorEnabled: accountObjectQuery.twoFactorEnabled,
+        passkeys: accountObjectQuery.authenticators || [],
         sessions: accountObjectQuery.sessions || []
       };
     }),
@@ -89,14 +78,14 @@ export const securityRouter = router({
     .query(async ({ ctx }) => {
       const { event, account } = ctx;
 
-      const accountCredentialsQuery =
-        await ctx.db.query.accountCredentials.findFirst({
-          where: eq(accountCredentials.accountId, account.id),
-          columns: {
-            id: true
-          }
-        });
-      if (!accountCredentialsQuery) {
+      const accountQuery = await ctx.db.query.accounts.findFirst({
+        where: eq(accounts.id, account.id),
+        columns: {
+          id: true
+        }
+      });
+
+      if (!accountQuery) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message: 'Account credentials not found'
@@ -114,7 +103,7 @@ export const securityRouter = router({
 
       const passkeyOptions = await usePasskeys.generateAuthenticationOptions({
         authChallengeId: authChallengeId,
-        accountId: accountCredentialsQuery.id
+        accountId: accountQuery.id
       });
 
       return { options: passkeyOptions };
@@ -173,22 +162,21 @@ export const securityRouter = router({
       }
 
       if (input.password) {
-        const accountCredentialsQuery =
-          await db.query.accountCredentials.findFirst({
-            where: eq(accountCredentials.accountId, accountId),
-            columns: {
-              passwordHash: true
-            }
-          });
+        const accountQuery = await db.query.accounts.findFirst({
+          where: eq(accounts.id, accountId),
+          columns: {
+            passwordHash: true
+          }
+        });
 
-        if (!accountCredentialsQuery) {
+        if (!accountQuery) {
           throw new TRPCError({
             code: 'NOT_FOUND',
             message: 'User not found'
           });
         }
 
-        if (!accountCredentialsQuery.passwordHash) {
+        if (!accountQuery.passwordHash) {
           throw new TRPCError({
             code: 'METHOD_NOT_SUPPORTED',
             message: 'Password verification is not enabled'
@@ -196,7 +184,7 @@ export const securityRouter = router({
         }
 
         const validPassword = await new Argon2id().verify(
-          accountCredentialsQuery.passwordHash,
+          accountQuery.passwordHash,
           input.password
         );
         if (!validPassword) {
@@ -241,15 +229,9 @@ export const securityRouter = router({
         where: eq(accounts.id, accountId),
         columns: {
           publicId: true,
-          username: true
-        },
-        with: {
-          accountCredential: {
-            columns: {
-              passwordHash: true,
-              twoFactorSecret: true
-            }
-          }
+          username: true,
+          passwordHash: true,
+          twoFactorSecret: true
         }
       });
 
@@ -280,11 +262,11 @@ export const securityRouter = router({
       }
 
       await db
-        .update(accountCredentials)
+        .update(accounts)
         .set({
           passwordHash: null
         })
-        .where(eq(accountCredentials.accountId, accountId));
+        .where(eq(accounts.id, accountId));
 
       return { success: true };
     }),
@@ -305,15 +287,9 @@ export const securityRouter = router({
         where: eq(accounts.id, accountId),
         columns: {
           publicId: true,
-          username: true
-        },
-        with: {
-          accountCredential: {
-            columns: {
-              passwordHash: true,
-              twoFactorSecret: true
-            }
-          }
+          username: true,
+          passwordHash: true,
+          twoFactorSecret: true
         }
       });
 
@@ -346,11 +322,11 @@ export const securityRouter = router({
       const passwordHash = await new Argon2id().hash(input.newPassword);
 
       await db
-        .update(accountCredentials)
+        .update(accounts)
         .set({
           passwordHash
         })
-        .where(eq(accountCredentials.accountId, accountId));
+        .where(eq(accounts.id, accountId));
 
       return { success: true };
     }),
@@ -387,6 +363,7 @@ export const securityRouter = router({
           message: 'VerificationToken is required'
         });
       }
+
       const authStorage = useStorage('auth');
 
       const storedVerificationToken = await authStorage.getItem(
@@ -474,15 +451,14 @@ export const securityRouter = router({
         });
       }
 
-      const accountCredentialQuery =
-        await db.query.accountCredentials.findFirst({
-          where: eq(accountCredentials.accountId, account.id),
-          columns: {
-            id: true
-          }
-        });
+      const accountQuery = await db.query.accounts.findFirst({
+        where: eq(accounts.id, account.id),
+        columns: {
+          id: true
+        }
+      });
 
-      if (!accountCredentialQuery || !accountCredentialQuery.id) {
+      if (!accountQuery || !accountQuery.id) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message: 'User account not found'
@@ -491,7 +467,7 @@ export const securityRouter = router({
 
       const insertPasskey = await usePasskeysDb.createAuthenticator(
         {
-          accountCredentialId: accountCredentialQuery.id,
+          accountId: accountQuery.id,
           credentialID: passkeyVerification.registrationInfo.credentialID,
           credentialPublicKey:
             passkeyVerification.registrationInfo.credentialPublicKey,
@@ -531,20 +507,14 @@ export const securityRouter = router({
         where: eq(accounts.id, accountId),
         columns: {
           publicId: true,
-          username: true
+          username: true,
+          passwordHash: true,
+          twoFactorSecret: true
         },
         with: {
-          accountCredential: {
+          authenticators: {
             columns: {
-              passwordHash: true,
-              twoFactorSecret: true
-            },
-            with: {
-              authenticators: {
-                columns: {
-                  id: true
-                }
-              }
+              id: true
             }
           }
         }
@@ -576,9 +546,8 @@ export const securityRouter = router({
         });
       }
 
-      const hasPassword = !!accountData.accountCredential.passwordHash;
-      const hasOtherPassKeys =
-        accountData.accountCredential.authenticators.length > 1;
+      const hasPassword = !!accountData.passwordHash;
+      const hasOtherPassKeys = accountData.authenticators.length > 1;
 
       if (!hasPassword && !hasOtherPassKeys) {
         throw new TRPCError({
@@ -609,15 +578,9 @@ export const securityRouter = router({
       const accountData = await db.query.accounts.findFirst({
         where: eq(accounts.id, accountId),
         columns: {
-          publicId: true
-        },
-        with: {
-          accountCredential: {
-            columns: {
-              twoFactorSecret: true,
-              recoveryCode: true
-            }
-          }
+          publicId: true,
+          twoFactorSecret: true,
+          recoveryCode: true
         }
       });
 
@@ -646,8 +609,8 @@ export const securityRouter = router({
           message: 'VerificationToken is invalid'
         });
       }
-      if (accountData.accountCredential.twoFactorSecret) {
-        const secret = decodeHex(accountData.accountCredential.twoFactorSecret);
+      if (accountData.twoFactorSecret) {
+        const secret = decodeHex(accountData.twoFactorSecret);
         const isValid = await new TOTPController().verify(
           input.twoFactorCode,
           secret
@@ -661,9 +624,9 @@ export const securityRouter = router({
       }
 
       await db
-        .update(accountCredentials)
+        .update(accounts)
         .set({ twoFactorSecret: null, recoveryCode: null })
-        .where(eq(accountCredentials.accountId, accountId));
+        .where(eq(accounts.id, accountId));
 
       return { success: true };
     }),
@@ -677,15 +640,9 @@ export const securityRouter = router({
         where: eq(accounts.id, accountId),
         columns: {
           publicId: true,
-          username: true
-        },
-        with: {
-          accountCredential: {
-            columns: {
-              twoFactorSecret: true,
-              recoveryCode: true
-            }
-          }
+          username: true,
+          twoFactorSecret: true,
+          recoveryCode: true
         }
       });
 
@@ -717,9 +674,9 @@ export const securityRouter = router({
 
       const newSecret = crypto.getRandomValues(new Uint8Array(20));
       await db
-        .update(accountCredentials)
+        .update(accounts)
         .set({ twoFactorSecret: encodeHex(newSecret) })
-        .where(eq(accountCredentials.accountId, accountId));
+        .where(eq(accounts.id, accountId));
       const uri = createTOTPKeyURI(
         'UnInbox.com',
         accountData.username,
@@ -741,14 +698,10 @@ export const securityRouter = router({
 
       const existingData = await db.query.accounts.findFirst({
         where: eq(accounts.id, accountId),
-        with: {
-          accountCredential: {
-            columns: {
-              twoFactorSecret: true,
-              recoveryCode: true,
-              twoFactorEnabled: true
-            }
-          }
+        columns: {
+          twoFactorSecret: true,
+          recoveryCode: true,
+          twoFactorEnabled: true
         }
       });
 
@@ -759,7 +712,7 @@ export const securityRouter = router({
         });
       }
 
-      if (!existingData.accountCredential.twoFactorSecret) {
+      if (!existingData.twoFactorSecret) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message:
@@ -767,7 +720,7 @@ export const securityRouter = router({
         });
       }
 
-      const secret = decodeHex(existingData.accountCredential.twoFactorSecret);
+      const secret = decodeHex(existingData.twoFactorSecret);
       const isValid = await new TOTPController().verify(
         input.twoFactorCode,
         secret
@@ -784,9 +737,9 @@ export const securityRouter = router({
       const hashedRecoveryCode = await new Argon2id().hash(recoveryCode);
 
       await db
-        .update(accountCredentials)
+        .update(accounts)
         .set({ recoveryCode: hashedRecoveryCode, twoFactorEnabled: true })
-        .where(eq(accountCredentials.accountId, accountId));
+        .where(eq(accounts.id, accountId));
 
       return { recoveryCode: recoveryCode };
     }),
