@@ -113,7 +113,9 @@ export default defineNuxtConfig({
   security: {
     headers: {
       crossOriginEmbedderPolicy:
-        process.env.NODE_ENV === 'development' ? 'unsafe-none' : 'require-corp',
+        process.env.NODE_ENV === 'development'
+          ? 'unsafe-none'
+          : 'credentialless',
       contentSecurityPolicy: {
         'img-src': ["'self'", 'data:', process.env.WEBAPP_STORAGE_URL || '']
       }

@@ -262,9 +262,7 @@
         <UnUiTooltip
           text="Secure your account"
           class="w-full">
-          <div
-            class="bg-base-9 h-2 w-full rounded"
-            @click="navigateTo('/join/secure')" />
+          <div class="bg-base-9 h-2 w-full rounded" />
         </UnUiTooltip>
         <UnUiTooltip
           text="Set up your organization"
