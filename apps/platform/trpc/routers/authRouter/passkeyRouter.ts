@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { router, publicRateLimitedProcedure } from '../../trpc';
 import { eq } from '@u22n/database/orm';
-import { accountCredentials, accounts } from '@u22n/database/schema';
+import { accounts } from '@u22n/database/schema';
 import { TRPCError } from '@trpc/server';
 import type {
   RegistrationResponseJSON,
@@ -29,8 +29,17 @@ export const passkeyRouter = router({
         authenticatorType: z.enum(['platform', 'cross-platform'])
       })
     )
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
+      const { db } = ctx;
       const { username, authenticatorType } = input;
+      const { available, error } = await validateUsername(db, input.username);
+      if (!available) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: error || "Username isn't available"
+        });
+      }
+
       const publicId = typeIdGenerator('account');
       const passkeyOptions = await usePasskeys.generateRegistrationOptions({
         userDisplayName: username,
@@ -53,10 +62,12 @@ export const passkeyRouter = router({
       const { db } = ctx;
       const registrationResponse =
         input.registrationResponseRaw as RegistrationResponseJSON;
+
       const passkeyVerification = await usePasskeys.verifyRegistrationResponse({
         registrationResponse: registrationResponse,
         publicId: input.publicId
       });
+
       if (
         !passkeyVerification.verified ||
         !passkeyVerification.registrationInfo
@@ -67,23 +78,23 @@ export const passkeyRouter = router({
         });
       }
 
-      // making sure someone doesn't bypass the client side validation
-      const { available, error } = await validateUsername(db, input.username);
-      if (!available) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: error || "Username isn't available"
-        });
-      }
+      const accountId = await db.transaction(async (tx) => {
+        try {
+          // making sure someone doesn't bypass the client side validation
+          const { available, error } = await validateUsername(
+            tx,
+            input.username
+          );
+          if (!available) {
+            throw new TRPCError({
+              code: 'FORBIDDEN',
+              message: error || "Username isn't available"
+            });
+          }
 
-      const accountId = await db
-        .transaction(async (tx) => {
           const newAccount = await tx.insert(accounts).values({
             username: input.username,
             publicId: input.publicId
-          });
-          await tx.insert(accountCredentials).values({
-            accountId: Number(newAccount.insertId)
           });
 
           if (!passkeyVerification.registrationInfo) {
@@ -95,7 +106,7 @@ export const passkeyRouter = router({
 
           const insertPasskey = await usePasskeysDb.createAuthenticator(
             {
-              accountCredentialId: Number(newAccount.insertId),
+              accountId: Number(newAccount.insertId),
               credentialID: passkeyVerification.registrationInfo.credentialID,
               credentialPublicKey:
                 passkeyVerification.registrationInfo.credentialPublicKey,
@@ -111,23 +122,20 @@ export const passkeyRouter = router({
           );
 
           if (!insertPasskey.credentialID) {
-            tx.rollback();
             throw new TRPCError({
               code: 'INTERNAL_SERVER_ERROR',
               message:
                 'Something went wrong adding your passkey, please try again'
             });
           }
+
           return Number(newAccount.insertId);
-        })
-        .catch((err) => {
+        } catch (err) {
+          tx.rollback();
           console.error(err);
-          throw new TRPCError({
-            code: 'INTERNAL_SERVER_ERROR',
-            message:
-              'Something went wrong adding your passkey, please try again'
-          });
-        });
+          throw err;
+        }
+      });
 
       const cookie = await createLuciaSessionCookie(ctx.event, {
         accountId,
@@ -177,6 +185,7 @@ export const passkeyRouter = router({
           message: 'Challenge not found, try again'
         });
       }
+
       const passkeyVerification =
         await usePasskeys.verifyAuthenticationResponse({
           authenticationResponse: verificationResponse,
@@ -193,32 +202,21 @@ export const passkeyRouter = router({
         });
       }
 
-      const accountCredentialQuery =
-        await db.query.accountCredentials.findFirst({
-          where: eq(
-            accountCredentials.id,
-            passkeyVerification.accountCredentialId
-          ),
-          columns: {
-            id: true
-          },
-          with: {
-            account: {
-              columns: {
-                id: true,
-                publicId: true,
-                username: true
-              }
-            }
-          }
-        });
-      if (!accountCredentialQuery) {
+      const account = await db.query.accounts.findFirst({
+        where: eq(accounts.id, passkeyVerification.accountId),
+        columns: {
+          id: true,
+          publicId: true,
+          username: true
+        }
+      });
+
+      if (!account) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
-          message: 'Account account not found'
+          message: 'Account not found, please contact support'
         });
       }
-      const account = accountCredentialQuery.account;
 
       const { device, os } = UAParser(getHeader(ctx.event, 'User-Agent'));
       const userDevice =

@@ -110,7 +110,7 @@ export const authenticators = mysqlTable(
     id: serial('id').primaryKey(),
     publicId: publicId('accountPasskey', 'public_id').notNull(),
     accountCredentialId: foreignKey('account_credential_id').notNull(),
-    accountId: foreignKey('account_id'),
+    accountId: foreignKey('account_id').notNull(),
     nickname: varchar('nickname', { length: 64 }).notNull(),
     credentialID: varchar('credential_id', { length: 255 }).notNull(), //Uint8Array
     credentialPublicKey: varchar('credential_public_key', {

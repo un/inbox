@@ -173,7 +173,7 @@ async function verifyAuthenticationResponse({
   });
   return {
     result: verificationResult,
-    accountCredentialId: authenticator.accountCredentialId
+    accountId: authenticator.accountId
   };
 }
 

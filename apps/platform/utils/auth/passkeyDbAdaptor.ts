@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm';
 import { db } from '@u22n/database';
-import { accountCredentials, authenticators } from '@u22n/database/schema';
+import { accounts, authenticators } from '@u22n/database/schema';
 import type { AuthenticatorTransportFuture } from '@simplewebauthn/types';
 import { isoBase64URL } from '@simplewebauthn/server/helpers';
 import { typeIdGenerator } from '@u22n/utils';
@@ -19,7 +19,7 @@ async function transformDbToAuthAuthenticator(
   dbQuery: typeof authenticators.$inferInsert
 ): Promise<Authenticator> {
   return {
-    accountCredentialId: dbQuery.accountCredentialId,
+    accountId: dbQuery.accountId,
     credentialID: isoBase64URL.toBuffer(dbQuery.credentialID),
     credentialPublicKey: isoBase64URL.toBuffer(dbQuery.credentialPublicKey),
     counter: Number(dbQuery.counter),
@@ -32,7 +32,7 @@ async function transformDbToAuthAuthenticator(
 //* Passkey DB
 export type CredentialDeviceType = 'singleDevice' | 'multiDevice';
 export interface Authenticator {
-  accountCredentialId: number;
+  accountId: number;
   credentialID: Uint8Array;
   credentialPublicKey: Uint8Array;
   counter: number;
@@ -55,7 +55,10 @@ async function createAuthenticator(
 
   await passkeyDb.insert(authenticators).values({
     publicId: passkeyPublicId,
-    accountCredentialId: authenticator.accountCredentialId,
+    accountId: authenticator.accountId,
+    // TODO: remove once table has been migrated
+    // Just keeping for data parity
+    accountCredentialId: authenticator.accountId,
     nickname: nickname,
     credentialID: b64ID,
     credentialPublicKey: b64PK,
@@ -107,6 +110,8 @@ async function getAuthenticator(credentialId: string) {
     columns: {
       id: true,
       publicId: true,
+      accountId: true,
+      // TODO: remove once table has been migrated
       accountCredentialId: true,
       nickname: true,
       credentialID: true,
@@ -136,17 +141,17 @@ async function deleteAuthenticator(credentialId: Uint8Array) {
   return dbDeleteResult.rowsAffected > 0;
 }
 
-async function listAuthenticatorsByAccountCredentialId(
-  accountCredentialId: number
-) {
+async function listAuthenticatorsByAccountCredentialId(accountId: number) {
   log('passkey: listAuthenticatorsByAccountCredentialId', {
-    accountCredentialId
+    accountId
   });
   const dbQuery = await db.query.authenticators.findMany({
-    where: eq(authenticators.accountCredentialId, accountCredentialId),
+    where: eq(authenticators.accountId, accountId),
     columns: {
       id: true,
       publicId: true,
+      accountId: true,
+      // TODO: remove once table has been migrated
       accountCredentialId: true,
       nickname: true,
       credentialID: true,
@@ -168,8 +173,8 @@ async function listAuthenticatorsByAccountCredentialId(
 }
 async function listAuthenticatorsByAccountId(accountId: number) {
   log('passkey: listAuthenticatorsByAccountId', { accountId });
-  const dbQuery = await db.query.accountCredentials.findFirst({
-    where: eq(accountCredentials.accountId, accountId),
+  const dbQuery = await db.query.accounts.findFirst({
+    where: eq(accounts.id, accountId),
     columns: {
       id: true
     },
@@ -178,8 +183,10 @@ async function listAuthenticatorsByAccountId(accountId: number) {
         columns: {
           id: true,
           publicId: true,
-          accountCredentialId: true,
           nickname: true,
+          // TODO: remove once table has been migrated
+          accountCredentialId: true,
+          accountId: true,
           credentialID: true,
           credentialPublicKey: true,
           counter: true,
