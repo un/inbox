@@ -25,7 +25,6 @@ export default defineNuxtConfig({
     '@vueuse/nuxt',
     'nuxt-security',
     'nuxt-prepare',
-    '@nuxtjs/turnstile',
     '@pinia/nuxt',
     '@pinia-plugin-persistedstate/nuxt',
     '@nuxt/ui'
@@ -71,9 +70,6 @@ export default defineNuxtConfig({
         appKey: process.env.REALTIME_APP_KEY || '',
         authEndpoint: `${process.env.PLATFORM_URL}/realtime/auth`
       }
-    },
-    turnstile: {
-      secretKey: process.env.WEBAPP_TURNSTILE_SECRET_KEY || ''
     }
   },
 
@@ -114,10 +110,6 @@ export default defineNuxtConfig({
     storesDirs: []
   },
 
-  //* Nuxt-Security
-  turnstile: {
-    siteKey: process.env.WEBAPP_TURNSTILE_SITE_KEY || ''
-  },
   security: {
     headers: {
       crossOriginEmbedderPolicy:

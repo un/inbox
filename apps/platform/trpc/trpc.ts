@@ -1,13 +1,7 @@
-import {
-  TRPCError,
-  initTRPC,
-  experimental_standaloneMiddleware as standaloneMiddleware
-} from '@trpc/server';
+import { TRPCError, initTRPC } from '@trpc/server';
 import superjson from 'superjson';
 import type { Context } from './createContext';
-import { z } from 'zod';
 import { useRuntimeConfig } from '#imports';
-// import verifyTurnstileToken from '../utils/turnstile';
 import { type Duration, Ratelimit, NoopRatelimit } from '@unkey/ratelimit';
 import { getRequestIP } from 'h3';
 
@@ -75,35 +69,6 @@ const isEeEnabled = trpcContext.middleware(({ next }) => {
   return next();
 });
 
-//TODO: check when standalone middleware is no longer experimental or fix inputs in standard middleware
-const turnstileTokenValidation = standaloneMiddleware<{
-  input: { turnstileToken?: string }; // defaults to 'unknown' if not defined
-}>().create(async (opts) => {
-  // Will fix later
-
-  // if (!useRuntimeConfig().turnstile.secretKey) return opts.next();
-  // if (!opts.input.turnstileToken) {
-  //   if (process.env.NODE_ENV === 'development') return opts.next();
-  //   throw new TRPCError({
-  //     code: 'FORBIDDEN',
-  //     message: 'Missing Turnstile Verification Token'
-  //   });
-  // }
-
-  // const success = await verifyTurnstileToken({
-  //   response: opts.input.turnstileToken,
-  //   secretKey: useRuntimeConfig().turnstile.secretKey
-  // });
-
-  // if (!success)
-  //   throw new TRPCError({
-  //     code: 'BAD_REQUEST',
-  //     message: 'Invalid Turnstile Verification Token'
-  //   });
-
-  return opts.next();
-});
-
 const publicRateLimits = {
   checkUsernameAvailability: [30, '1h'],
   checkPasswordStrength: [30, '1h'],
@@ -150,21 +115,18 @@ function createRatelimiter({
 }
 
 export const publicProcedure = trpcContext.procedure;
-const limitedProcedure = trpcContext.procedure
-  .input(z.object({ turnstileToken: z.string() }))
-  .use(turnstileTokenValidation);
 
 export const publicRateLimitedProcedure = Object.entries(
   publicRateLimits
 ).reduce(
   (acc, [key, [limit, duration]]) => {
     // @ts-expect-error, we know this is a valid key
-    acc[key] = limitedProcedure.use(
+    acc[key] = trpcContext.procedure.use(
       createRatelimiter({ limit, duration, namespace: `public.${key}` })
     );
     return acc;
   },
-  {} as Record<keyof typeof publicRateLimits, typeof limitedProcedure>
+  {} as Record<keyof typeof publicRateLimits, typeof publicProcedure>
 );
 
 export const accountProcedure = trpcContext.procedure.use(

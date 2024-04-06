@@ -5,7 +5,6 @@
   import {
     navigateTo,
     definePageMeta,
-    useRuntimeConfig,
     useNuxtApp,
     useToast,
     ref,
@@ -17,8 +16,7 @@
 
   const { $trpc } = useNuxtApp();
   definePageMeta({ guest: true });
-  const turnstileToken = ref();
-  const errorMessage = ref(false);
+
   const passkeyLocation = ref('');
   const immediatePasskeyPrompt = ref(false);
 
@@ -48,11 +46,6 @@
     return !formValid.value;
   });
 
-  const turnstileEnabled = useRuntimeConfig().public.turnstileEnabled;
-  if (!turnstileEnabled) {
-    turnstileToken.value = '';
-  }
-
   if (process.client) {
     passkeyLocation.value = localStorage.getItem('passkeyLocation') || '';
     immediatePasskeyPrompt.value = JSON.parse(
@@ -77,7 +70,6 @@
   async function doPasswordLogin() {
     const passwordVerification =
       await $trpc.auth.password.signInWithPassword.mutate({
-        turnstileToken: turnstileToken.value,
         username: usernameValue.value,
         password: passwordInput.value,
         twoFactorCode: twoFactorCode.value
@@ -88,19 +80,6 @@
   }
 
   async function doPasskeyLogin() {
-    if (turnstileEnabled && !turnstileToken.value) {
-      errorMessage.value = true;
-
-      await new Promise((resolve) => {
-        const unwatch = watch(turnstileToken, (newValue) => {
-          if (newValue !== null) {
-            resolve(newValue);
-            unwatch();
-            errorMessage.value = false;
-          }
-        });
-      });
-    }
     const toast = useToast();
     if (timeoutId !== null) {
       clearTimeout(timeoutId);
@@ -108,13 +87,7 @@
     }
 
     const passkeyOptions =
-      await $trpc.auth.passkey.generatePasskeyChallenge.query({
-        turnstileToken: turnstileToken.value
-      });
-
-    if (turnstileEnabled) {
-      turnstileToken.value?.reset?.();
-    }
+      await $trpc.auth.passkey.generatePasskeyChallenge.query({});
 
     if (!passkeyOptions.options) {
       toast.add({
@@ -135,7 +108,6 @@
       }
 
       const verifyPasskey = await $trpc.auth.passkey.verifyPasskey.mutate({
-        turnstileToken: turnstileToken.value,
         verificationResponseRaw: passkeyData
       });
       if (verifyPasskey.success) {
@@ -273,21 +245,7 @@
         variant="ghost"
         block
         @click="navigateTo('/')" />
-      <div class="h-0 max-h-0 w-full max-w-full">
-        <UnUiAlert
-          v-show="errorMessage"
-          icon="i-ph-warning-circle"
-          title="Waiting for automatic captcha!"
-          description="This is an automated process and should complete within a few seconds. If it doesn't, please refresh the page."
-          color="orange"
-          variant="solid" />
-      </div>
-    </div>
-    <div v-if="pageReady && turnstileEnabled">
-      <!-- This should be invisible, we will be using invisible challenges -->
-      <NuxtTurnstile
-        v-model="turnstileToken"
-        class="hidden" />
+      <div class="h-0 max-h-0 w-full max-w-full"></div>
     </div>
   </div>
 </template>
