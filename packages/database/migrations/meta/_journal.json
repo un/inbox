@@ -8,6 +8,13 @@
       "when": 1712317971225,
       "tag": "0000_same_prism",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1712396354988,
+      "tag": "0001_modern_sentinels",
+      "breakpoints": true
     }
   ]
 }

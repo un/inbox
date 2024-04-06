@@ -51,7 +51,11 @@ export const accounts = mysqlTable(
     username: varchar('username', { length: 32 }).notNull(),
     metadata: json('metadata').$type<Record<string, unknown>>(),
     createdAt: timestamp('created_at').$defaultFn(() => new Date()),
-    lastLoginAt: timestamp('last_login_at')
+    lastLoginAt: timestamp('last_login_at'),
+    passwordHash: varchar('password_hash', { length: 255 }),
+    twoFactorSecret: varchar('two_factor_secret', { length: 255 }),
+    twoFactorEnabled: boolean('two_factor_enabled').notNull().default(false),
+    recoveryCode: varchar('recovery_code', { length: 256 })
   },
   (table) => ({
     publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
@@ -60,6 +64,7 @@ export const accounts = mysqlTable(
 );
 
 export const accountsRelations = relations(accounts, ({ one, many }) => ({
+  authenticators: many(authenticators),
   accountCredential: one(accountCredentials, {
     fields: [accounts.id],
     references: [accountCredentials.accountId]
@@ -104,6 +109,7 @@ export const authenticators = mysqlTable(
     id: serial('id').primaryKey(),
     publicId: publicId('accountPasskey', 'public_id').notNull(),
     accountCredentialId: foreignKey('account_credential_id').notNull(),
+    accountId: foreignKey('account_id'),
     nickname: varchar('nickname', { length: 64 }).notNull(),
     credentialID: varchar('credential_id', { length: 255 }).notNull(), //Uint8Array
     credentialPublicKey: varchar('credential_public_key', {
@@ -141,6 +147,10 @@ export const authenticators = mysqlTable(
 export const authenticatorRelationships = relations(
   authenticators,
   ({ one }) => ({
+    account: one(accounts, {
+      fields: [authenticators.accountId],
+      references: [accounts.id]
+    }),
     accountCredentials: one(accountCredentials, {
       fields: [authenticators.accountCredentialId],
       references: [accountCredentials.id]
