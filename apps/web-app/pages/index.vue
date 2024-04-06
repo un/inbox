@@ -151,7 +151,7 @@
           and provide feedback to help us improve the product
         </p>
 
-        <div class="mt-4 flex w-full flex-row justify-center gap-4">
+        <div class="mt-4 flex w-full flex-col justify-center gap-4 md:flex-row">
           <UnUiButton
             label="I'll come back later"
             size="lg"

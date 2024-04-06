@@ -204,7 +204,9 @@
         <UnUiTooltip
           text="Set up your organization"
           class="w-full">
-          <div class="bg-base-5 h-2 w-full rounded" />
+          <div
+            class="bg-base-5 h-2 w-full rounded"
+            @click="navigateTo('/join/org')" />
         </UnUiTooltip>
         <UnUiTooltip
           text="Create your profile"

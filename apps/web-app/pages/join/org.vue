@@ -213,16 +213,12 @@
         <UnUiTooltip
           text="Set up your organization"
           class="w-full">
-          <div
-            class="bg-base-9 h-2 w-full rounded"
-            @click="navigateTo('/join/org')" />
+          <div class="bg-base-9 h-2 w-full rounded" />
         </UnUiTooltip>
         <UnUiTooltip
           text="Create your profile"
           class="w-full">
-          <div
-            class="bg-base-5 h-2 w-full rounded"
-            @click="navigateTo('/join/profile')" />
+          <div class="bg-base-5 h-2 w-full rounded" />
         </UnUiTooltip>
       </div>
 
@@ -230,6 +226,10 @@
         <p class="text-center">
           With an organization you can share conversations, notes and email
           identities between members and groups.
+        </p>
+        <p class="text-center text-sm">
+          If you're planning on using UnInbox alone, you'll still need an
+          organization to manage all the settings.
         </p>
         <p class="text-center text-sm">
           Tip: You can be a member of multiple organizations.

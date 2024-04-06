@@ -22,13 +22,21 @@
       </div>
 
       <!-- !!! REPLACE VIDEO -->
-      <iframe
-        title="UnInbox Unboarding Video"
-        class="aspect-video w-full"
-        src="https://www.youtube.com/embed/6ZfuNTqbHE8"
-        frameborder="0"
-        allowfullscreen></iframe>
+      <span class="font-display text-xl"
+        >Ooops! The video is still being produced, check the user guide
+        instead.</span
+      >
 
+      <UnUiButton
+        label="Visit user guide"
+        icon="i-ph-question"
+        block
+        @click="
+          navigateTo('https://guide.uninbox.com', {
+            external: true,
+            open: { target: '_blank' }
+          })
+        " />
       <UnUiButton
         label="Take me to my account"
         icon="i-ph-thumbs-up"
