@@ -50,12 +50,14 @@
 
   const typeClasses = computed(() => {
     switch (messageType.value) {
-      case 'message':
+      case 'author':
         return 'bg-blue-10 text-base-1 rounded-2xl px-4';
+      case 'message':
+        return 'bg-base-5 text-base-12 rounded-2xl px-4';
       case 'comment':
-        return 'bg-base-4';
+        return 'bg-base-4 rounded-2xl px-4';
       default:
-        return 'bg-base-1';
+        return 'bg-base-1 rounded-2xl px-4';
     }
   });
   const containerClasses = computed(() => {

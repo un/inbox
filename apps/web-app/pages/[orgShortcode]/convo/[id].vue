@@ -311,12 +311,6 @@
     }
     actionLoading.value = false;
     messageEditorData.value = emptyTiptapEditorContent;
-    toast.add({
-      title: 'Reply Added',
-      description: `Loading...`,
-      icon: 'i-ph-thumbs-up',
-      timeout: 5000
-    });
   }
 
   const isContextOpen = ref(false);
@@ -330,9 +324,9 @@
 </script>
 <template>
   <div
-    class="flex h-full max-h-full w-full max-w-full flex-col gap-2 overflow-hidden p-4">
+    class="flex h-full max-h-full w-full max-w-full flex-col overflow-hidden">
     <div
-      class="border-base-6 flex w-full max-w-full flex-row items-center justify-between gap-2 border-b-2 pb-4">
+      class="border-base-7 flex w-full max-w-full flex-row items-center justify-between border-b p-4">
       <div class="flex flex-row gap-2">
         <template
           v-for="subject of convoDetails?.data?.subjects"
@@ -369,10 +363,10 @@
     </div>
 
     <div
-      class="flex h-full max-h-full w-full max-w-full flex-col-reverse gap-2 overflow-hidden pt-2 lg:grid lg:grid-cols-3 lg:pt-8">
+      class="flex h-full max-h-full w-full max-w-full flex-col-reverse overflow-hidden lg:grid lg:grid-cols-3">
       <!-- Messages Pane -->
       <div
-        class="col-span-2 flex h-full max-h-full flex-col gap-2 overflow-hidden lg:pr-4">
+        class="col-span-2 flex h-full max-h-full flex-col overflow-hidden px-0">
         <div class="flex h-full max-h-full grow flex-col gap-0 overflow-hidden">
           <ConvosConvoMessages
             v-model:reply-to-message-public-id="replyToMessagePublicId"
@@ -380,7 +374,8 @@
             :convo-public-id="convoPublicId"
             :participant-public-id="participantOwnPublicId || ''" />
         </div>
-        <div class="flex w-full flex-col justify-items-end gap-2">
+        <div
+          class="border-base-7 flex w-full flex-col justify-items-end gap-2 border-t p-4 pt-2">
           <div class="flex flex-row items-center gap-2">
             <span class="text-base-11 text-xs font-medium"> REPLY </span>
             <NuxtUiSelectMenu
@@ -460,7 +455,7 @@
         @click="isContextOpen = !isContextOpen" />
       <!-- Context Pane -->
       <div
-        class="border-l-1 border-b-1 border-base-6 hidden h-fit w-full max-w-full flex-col justify-between gap-4 overflow-hidden border border-r-0 border-t-0 lg:visible lg:flex lg:h-full lg:gap-8 lg:border-b-0 lg:pl-8">
+        class="border-l-1 border-b-1 border-base-6 hidden h-fit w-full max-w-full flex-col justify-between gap-4 overflow-hidden border border-r-0 border-t-0 p-4 lg:visible lg:flex lg:h-full lg:gap-8 lg:border-b-0">
         <div
           class="flex w-full max-w-full flex-col gap-4 overflow-hidden lg:gap-8">
           <div class="flex w-full max-w-full flex-col gap-4 overflow-hidden">
