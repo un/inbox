@@ -49,15 +49,16 @@
   });
 
   const typeClasses = computed(() => {
+    if (userIsAuthor.value) {
+      return 'bg-blue-10 text-white';
+    }
     switch (messageType.value) {
-      case 'author':
-        return 'bg-blue-10 text-base-1 rounded-2xl px-4';
       case 'message':
-        return 'bg-base-5 text-base-12 rounded-2xl px-4';
+        return 'bg-base-5 text-base-12';
       case 'comment':
-        return 'bg-base-4 rounded-2xl px-4';
+        return 'bg-base-4 text-base-12 ';
       default:
-        return 'bg-base-1 rounded-2xl px-4';
+        return 'bg-base-1';
     }
   });
   const containerClasses = computed(() => {
@@ -106,7 +107,8 @@
     class="flex w-full flex-col gap-2"
     :class="containerClasses">
     <div
-      class="flex w-full flex-col items-start justify-start gap-2 md:flex-row">
+      class="flex w-full flex-col items-start justify-start gap-2"
+      :class="userIsAuthor ? 'md:flex-row-reverse' : 'md:flex-row'">
       <div
         v-if="author"
         class="hidden flex-row items-center gap-1 md:visible md:flex">
@@ -132,9 +134,10 @@
       </div>
       <div class="flex w-full flex-col gap-4 p-0 lg:gap-2">
         <div
-          class="flex w-full flex-col items-center justify-between gap-2 overflow-visible pl-2 md:max-h-4 md:flex-row">
+          class="flex w-full flex-col items-center justify-between gap-2 overflow-visible pl-2 md:max-h-4 md:flex-row"
+          :class="userIsAuthor ? 'md:flex-row-reverse ' : 'md:flex-row'">
           <!-- mobile -->
-          <div class="flex w-full flex-row items-end gap-2 md:hidden">
+          <div class="flex w-full items-end justify-center gap-2 md:hidden">
             <UnUiAvatar
               v-if="author"
               :public-id="author.avatarProfilePublicId"
@@ -153,7 +156,9 @@
               size="md"
               class="rounded-full" />
             <div class="flex w-full flex-col items-start gap-2">
-              <div class="flex flex-row items-center gap-2">
+              <div
+                class="flex items-center gap-2"
+                :class="userIsAuthor ? 'flex-row-reverse ' : 'flex-row '">
                 <span
                   v-if="author"
                   class="text-sm leading-none">
@@ -220,8 +225,14 @@
             </div>
           </div>
           <!-- desktop -->
-          <div class="hidden w-full flex-row items-end gap-2 md:flex">
-            <div class="flex flex-row items-center gap-2">
+          <div
+            class="hidden w-full flex-row gap-2 md:flex"
+            :class="
+              userIsAuthor
+                ? 'items-end justify-end'
+                : 'items-start justify-start'
+            ">
+            <div class="flex items-center gap-2">
               <span
                 v-if="author"
                 class="text-sm leading-none">
@@ -277,7 +288,7 @@
         </div>
         <!-- eslint-disable vue/no-v-html -->
         <div
-          class="rounded-br-x w-full overflow-hidden p-2"
+          class="w-full overflow-hidden rounded-2xl p-2 px-4"
           :class="convoBubbleClasses"
           v-html="convoEntryBody" />
         <div class="flex flex-row justify-end">

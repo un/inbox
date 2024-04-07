@@ -63,7 +63,7 @@
         @click="refreshUserConvos()" /> -->
       <div
         v-if="!orgMemberHasConvos"
-        class="flex w-full flex-row items-center justify-center gap-4 p-4">
+        class="flex w-full flex-col items-center justify-center gap-4 p-4">
         <img
           alt="Inbox Zero"
           src="public/inbox-zero.svg"
