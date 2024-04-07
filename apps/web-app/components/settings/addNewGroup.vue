@@ -233,7 +233,7 @@
   <div class="flex h-full w-full flex-col items-start">
     <div
       v-if="isProPending"
-      class="bg-base-3 flex w-full flex-row justify-center gap-4 rounded-xl rounded-tl-2xl p-8">
+      class="bg-base-3 flex w-full flex-row justify-center gap-4 rounded-xl rounded-tl-2xl p-4">
       <UnUiIcon
         name="i-svg-spinners:3-dots-fade"
         size="24" />

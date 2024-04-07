@@ -46,12 +46,13 @@
   <div class="h-full max-h-full w-full max-w-full overflow-hidden">
     <div
       v-if="convoQueryPending"
-      class="bg-base-3 flex w-full flex-row justify-center gap-4 rounded-xl rounded-tl-2xl p-8">
+      class="bg-base-3 flex w-full flex-row justify-center gap-4 rounded-xl rounded-tl-2xl p-4">
       <UnUiIcon
         name="i-svg-spinners:3-dots-fade"
         size="24" />
       <span>Loading conversations</span>
     </div>
+
     <div
       v-if="!convoQueryPending"
       class="mb-[48px] flex max-h-full flex-col items-start gap-4 overflow-hidden">
@@ -62,11 +63,18 @@
         @click="refreshUserConvos()" /> -->
       <div
         v-if="!orgMemberHasConvos"
-        class="bg-base-3 flex w-full flex-row justify-center gap-4 rounded-xl rounded-tl-2xl p-8">
-        <UnUiIcon
-          name="i-ph-chat-circle"
-          size="24" />
-        <span>No conversations found</span>
+        class="flex w-full flex-col items-center justify-center gap-4 p-4">
+        <img
+          alt="Inbox Zero"
+          src="public/inbox-zero.svg"
+          class="w-full" />
+        <div
+          class="bg-base-3 flex w-full flex-row items-center justify-center gap-4 rounded-xl rounded-tl-2xl p-4">
+          <UnUiIcon
+            name="i-ph-hands-praying"
+            size="24" />
+          <span>Enjoy your UnInbox Zero</span>
+        </div>
       </div>
       <div
         v-if="orgMemberHasConvos"
@@ -90,7 +98,7 @@
         </DynamicScroller>
         <div
           v-if="orgMemberHasMoreConvos && pauseConvoLoading"
-          class="bg-base-3 flex w-full flex-row justify-center gap-4 rounded-xl rounded-tl-2xl p-8">
+          class="bg-base-3 flex w-full flex-row justify-center gap-4 rounded-xl rounded-tl-2xl p-4">
           <UnUiIcon
             name="i-svg-spinners:3-dots-fade"
             size="24" />

@@ -157,7 +157,7 @@
       >
     </div>
     <div
-      class="bg-base-1 text-base-12 flex flex-row items-center gap-2 rounded-md px-2.5 py-1.5 text-sm shadow-sm ring-2 ring-inset"
+      class="bg-base-1 text-base-12 border-base-7 flex flex-row items-center gap-2 rounded-md border px-2.5 py-1.5 text-sm"
       :class="[
         inputClasses({
           disabled: computedDisabled

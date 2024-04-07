@@ -37,11 +37,11 @@
       size="lg" />
     <NuxtUiPopover
       v-if="props.avatars.length + 1 > props.limit"
-      class="-mb-4 -ml-4"
+      class="-mb-2 -ml-4"
       :popper="{ placement: 'right' }"
       mode="hover">
       <div
-        class="rounded-2 font-display bg-base-3 flex h-[32px] w-[32px] items-center justify-center text-sm shadow backdrop-blur-2xl">
+        class="font-display bg-base-3 flex h-6 w-6 items-center justify-center rounded-full text-xs backdrop-blur-2xl">
         + {{ props.avatars.length - props.limit + 1 }}
       </div>
 

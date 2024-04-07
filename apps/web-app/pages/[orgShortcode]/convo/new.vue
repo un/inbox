@@ -464,15 +464,7 @@
       return;
     }
 
-    toast.add({
-      title: 'Conversation created',
-      description: `Redirecting to new conversation...`,
-      icon: 'i-ph-thumbs-up',
-      timeout: 5000
-    });
-    setTimeout(() => {
-      navigateTo(`/${orgShortcode}/convo/${createNewConvo?.publicId}`);
-    }, 1500);
+    navigateTo(`/${orgShortcode}/convo/${createNewConvo?.publicId}`);
   }
 </script>
 <template>
@@ -753,10 +745,10 @@
         :org-shortcode="orgShortcode">
         <template #default="{ openFileDialog, loading }">
           <UnUiButton
-            label="Upload"
+            label="Attachment"
             variant="outline"
             :loading="loading"
-            icon="i-ph-upload"
+            icon="i-ph-paperclip"
             @click="openFileDialog" />
         </template>
       </ConvosUpload>

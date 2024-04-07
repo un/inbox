@@ -92,8 +92,8 @@
 </script>
 <template>
   <div
-    class="bg-base-2 border-base-6 fixed z-[30] flex h-full max-h-full flex-col gap-2 overflow-y-auto rounded-r-xl border-r-2 pb-12 shadow-md lg:relative lg:w-[385px] lg:pl-12"
-    :class="isCollapsed ? 'w-20 p-4 lg:p-8' : 'w-[385px] p-8'">
+    class="bg-base-2 border-base-6 fixed z-[30] flex h-full max-h-full flex-col gap-2 overflow-y-auto border-r px-4 pb-12 lg:relative lg:w-[385px]"
+    :class="isCollapsed ? 'w-20 p-4' : 'w-[385px] p-4'">
     <div class="flex w-full flex-row justify-end">
       <UnUiButton
         square

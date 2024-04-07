@@ -449,13 +449,13 @@
 
 <template>
   <div
-    class="flex h-full w-full flex-col items-start gap-8 overflow-y-auto p-4">
+    class="flex h-full w-full flex-col items-start gap-8 overflow-y-auto p-2">
     <div class="flex w-full flex-row items-center justify-between">
       <span class="font-display text-2xl">Your Account Security</span>
     </div>
     <div
       v-if="status !== 'success'"
-      class="bg-base-3 flex w-full flex-row justify-center gap-4 rounded-xl rounded-tl-2xl p-8">
+      class="bg-base-3 flex w-full flex-row justify-center gap-4 rounded-xl rounded-tl-2xl p-4">
       <UnUiIcon
         name="i-svg-spinners-90-ring"
         size="24" />

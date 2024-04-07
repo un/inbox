@@ -1,19 +1,42 @@
 <script setup lang="ts">
   import { navigateTo, useRoute } from '#imports';
+  import { breakpointsTailwind, useBreakpoints } from '@vueuse/core';
+
+  const breakpoints = useBreakpoints(breakpointsTailwind);
+  const isMobile = breakpoints.smaller('lg'); // only smaller than lg
 
   const orgShortcode = useRoute().params.orgShortcode as string;
 </script>
 <template>
   <div
-    class="col-span-2 flex h-full w-full flex-col items-center justify-center gap-2 pl-4">
-    <div class="col-span-2 pl-4">Select a conversation from the left, or</div>
-    <button
-      class="border-1 border-base-7 bg-base-3 flex w-full max-w-80 flex-row items-center justify-center gap-4 rounded p-2"
-      @click="navigateTo(`/${orgShortcode}/convo/new`)">
-      <UnUiIcon
-        name="i-ph-plus"
-        size="20" />
-      <p class="text-sm">Start new</p>
-    </button>
+    class="flex h-full max-h-full w-full flex-col items-center justify-center overflow-hidden p-4">
+    <div
+      v-if="!isMobile"
+      class="flex flex-col gap-2">
+      <span class="">Select a conversation from the left, or</span>
+      <div>
+        <UnUiButton
+          class="w-full"
+          label="Start new conversation"
+          icon="i-ph-plus"
+          @click="navigateTo(`/${orgShortcode}/convo/new`)" />
+      </div>
+    </div>
+    <div
+      v-if="isMobile"
+      class="h-full w-full">
+      <div class="flex h-full max-h-full flex-col-reverse gap-2 lg:flex-col">
+        <div class="flex grow flex-col gap-0 overflow-hidden">
+          <convos-convo-list />
+        </div>
+
+        <UnUiButton
+          label="New"
+          block
+          icon="i-ph-plus"
+          variant="outline"
+          :to="`/${orgShortcode}/convo/new`" />
+      </div>
+    </div>
   </div>
 </template>

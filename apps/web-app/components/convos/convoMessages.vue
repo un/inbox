@@ -63,9 +63,8 @@
     :loading="convoEntriesStatus === 'pending'"
     @click="convoEntriesRefresh()" /> -->
   <div
-    class="flex h-full max-h-full w-full max-w-full flex-col-reverse overflow-y-scroll">
-    <div
-      class="mb-[24px] mt-[24px] flex w-full flex-col-reverse items-start gap-12">
+    class="flex h-full max-h-full w-full max-w-full flex-col-reverse overflow-y-scroll px-4">
+    <div class="mb-6 mt-6 flex w-full flex-col-reverse items-start gap-12">
       <div
         v-for="entry of entriesArray"
         :key="entry.publicId"

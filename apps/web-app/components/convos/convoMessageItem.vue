@@ -49,11 +49,14 @@
   });
 
   const typeClasses = computed(() => {
+    if (userIsAuthor.value) {
+      return 'bg-blue-10 text-white';
+    }
     switch (messageType.value) {
       case 'message':
-        return 'bg-base-2';
+        return 'bg-base-5 text-base-12';
       case 'comment':
-        return 'bg-base-4';
+        return 'bg-base-4 text-base-12 ';
       default:
         return 'bg-base-1';
     }
@@ -104,7 +107,8 @@
     class="flex w-full flex-col gap-2"
     :class="containerClasses">
     <div
-      class="flex w-full flex-col items-start justify-start gap-2 md:flex-row">
+      class="flex w-full flex-col items-start justify-start gap-2"
+      :class="userIsAuthor ? 'md:flex-row-reverse' : 'md:flex-row'">
       <div
         v-if="author"
         class="hidden flex-row items-center gap-1 md:visible md:flex">
@@ -115,7 +119,7 @@
           :type="author.type"
           :color="author.color"
           size="lg"
-          class="rounded-full shadow-md" />
+          class="rounded-full" />
       </div>
       <div
         v-else
@@ -126,13 +130,14 @@
           :alt="undefined"
           type="org"
           size="lg"
-          class="rounded-full shadow-md" />
+          class="rounded-full" />
       </div>
       <div class="flex w-full flex-col gap-4 p-0 lg:gap-2">
         <div
-          class="flex w-full flex-col items-center justify-between gap-2 overflow-visible pl-2 md:max-h-4 md:flex-row">
+          class="flex w-full flex-col items-center justify-between gap-2 overflow-visible pl-2 md:max-h-4 md:flex-row"
+          :class="userIsAuthor ? 'md:flex-row-reverse ' : 'md:flex-row'">
           <!-- mobile -->
-          <div class="flex w-full flex-row items-end gap-2 md:hidden">
+          <div class="flex w-full items-end justify-center gap-2 md:hidden">
             <UnUiAvatar
               v-if="author"
               :public-id="author.avatarProfilePublicId"
@@ -141,7 +146,7 @@
               :type="author.type"
               :color="author.color"
               size="md"
-              class="rounded-full shadow-md" />
+              class="rounded-full" />
             <UnUiAvatar
               v-else
               :public-id="null"
@@ -149,9 +154,11 @@
               :alt="undefined"
               type="org"
               size="md"
-              class="rounded-full shadow-md" />
+              class="rounded-full" />
             <div class="flex w-full flex-col items-start gap-2">
-              <div class="flex flex-row items-center gap-2">
+              <div
+                class="flex items-center gap-2"
+                :class="userIsAuthor ? 'flex-row-reverse ' : 'flex-row '">
                 <span
                   v-if="author"
                   class="text-sm leading-none">
@@ -218,8 +225,14 @@
             </div>
           </div>
           <!-- desktop -->
-          <div class="hidden w-full flex-row items-end gap-2 md:flex">
-            <div class="flex flex-row items-center gap-2">
+          <div
+            class="hidden w-full flex-row gap-2 md:flex"
+            :class="
+              userIsAuthor
+                ? 'items-end justify-end'
+                : 'items-start justify-start'
+            ">
+            <div class="flex items-center gap-2">
               <span
                 v-if="author"
                 class="text-sm leading-none">
@@ -237,7 +250,7 @@
             >
           </div>
           <!-- actions tablet -->
-          <div class="hidden flex-row gap-0 md:flex">
+          <div class="hidden flex-row gap-1 md:flex">
             <UnUiTooltip
               v-if="entryHasRawHtml"
               text="View original message">
@@ -275,7 +288,7 @@
         </div>
         <!-- eslint-disable vue/no-v-html -->
         <div
-          class="rounded-br-x w-full overflow-hidden rounded-bl-xl p-2 shadow-md"
+          class="w-full overflow-hidden rounded-2xl p-2 px-4"
           :class="convoBubbleClasses"
           v-html="convoEntryBody" />
         <div class="flex flex-row justify-end">

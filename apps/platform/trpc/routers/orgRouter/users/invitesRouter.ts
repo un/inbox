@@ -194,22 +194,24 @@ export const invitesRouter = router({
           expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 Days from now
         });
 
-        const res = await sendInviteEmail({
-          to: notification?.notificationEmailAddress || '',
-          invitedName: `${newOrgMember.firstName} ${newOrgMember.lastName || ''}`,
-          invitingOrg: org.name,
-          expiryDate: new Date(
-            Date.now() + 7 * 24 * 60 * 60 * 1000
-          ).toDateString(),
-          inviteUrl: `https://app.uninbox.com/join/invite/${newInviteToken}`
-        });
-
-        if (!res) {
-          db.rollback();
-          throw new TRPCError({
-            code: 'INTERNAL_SERVER_ERROR',
-            message: 'Failed to send invite email'
+        if (notification?.notificationEmailAddress) {
+          const res = await sendInviteEmail({
+            to: notification?.notificationEmailAddress || '',
+            invitedName: `${newOrgMember.firstName} ${newOrgMember.lastName || ''}`,
+            invitingOrg: org.name,
+            expiryDate: new Date(
+              Date.now() + 7 * 24 * 60 * 60 * 1000
+            ).toDateString(),
+            inviteUrl: `https://app.uninbox.com/join/invite/${newInviteToken}`
           });
+
+          if (!res) {
+            db.rollback();
+            throw new TRPCError({
+              code: 'INTERNAL_SERVER_ERROR',
+              message: 'Failed to send invite email'
+            });
+          }
         }
 
         return {
