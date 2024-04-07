@@ -19,10 +19,6 @@
   import { type ConvoEntryMetadata } from '@u22n/database/schema';
   import { stringify } from 'superjson';
   import { validateTypeId, type TypeId } from '@u22n/utils';
-  import { breakpointsTailwind, useBreakpoints } from '@vueuse/core';
-
-  const breakpoints = useBreakpoints(breakpointsTailwind);
-  const isMobile = breakpoints.smaller('lg'); // only smaller than lg
 
   const { $trpc } = useNuxtApp();
 

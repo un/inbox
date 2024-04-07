@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { useRoute, ref, watch } from '#imports';
+  import { useRoute } from '#imports';
 
   const orgShortcode = useRoute().params.orgShortcode as string;
 </script>
