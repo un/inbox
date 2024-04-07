@@ -62,12 +62,12 @@
         @click="refreshUserConvos()" /> -->
 
       <div>
-        <img
-          src="/inbox-zero.svg"
-          class="w-full" />
         <div
           v-if="!orgMemberHasConvos"
           class="bg-base-3 flex w-full flex-row items-center justify-center gap-4 rounded-xl rounded-tl-2xl p-4">
+          <img
+            src="/inbox-zero.svg"
+            class="w-full" />
           <UnUiIcon
             name="i-ph-hands-praying"
             size="24" />

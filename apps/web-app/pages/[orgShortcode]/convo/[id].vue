@@ -372,7 +372,7 @@
       class="flex h-full max-h-full w-full max-w-full flex-col-reverse gap-2 overflow-hidden pt-2 lg:grid lg:grid-cols-3 lg:pt-8">
       <!-- Messages Pane -->
       <div
-        class="col-span-2 flex h-full max-h-full flex-col gap-2 overflow-hidden lg:pr-8">
+        class="col-span-2 flex h-full max-h-full flex-col gap-2 overflow-hidden lg:pr-4">
         <div class="flex h-full max-h-full grow flex-col gap-0 overflow-hidden">
           <ConvosConvoMessages
             v-model:reply-to-message-public-id="replyToMessagePublicId"

@@ -51,7 +51,7 @@
   const typeClasses = computed(() => {
     switch (messageType.value) {
       case 'message':
-        return 'bg-base-2';
+        return 'bg-blue-10 text-base-1 rounded-2xl px-4';
       case 'comment':
         return 'bg-base-4';
       default:
@@ -115,7 +115,7 @@
           :type="author.type"
           :color="author.color"
           size="lg"
-          class="rounded-full shadow-md" />
+          class="rounded-full" />
       </div>
       <div
         v-else
@@ -126,7 +126,7 @@
           :alt="undefined"
           type="org"
           size="lg"
-          class="rounded-full shadow-md" />
+          class="rounded-full" />
       </div>
       <div class="flex w-full flex-col gap-4 p-0 lg:gap-2">
         <div
@@ -141,7 +141,7 @@
               :type="author.type"
               :color="author.color"
               size="md"
-              class="rounded-full shadow-md" />
+              class="rounded-full" />
             <UnUiAvatar
               v-else
               :public-id="null"
@@ -149,7 +149,7 @@
               :alt="undefined"
               type="org"
               size="md"
-              class="rounded-full shadow-md" />
+              class="rounded-full" />
             <div class="flex w-full flex-col items-start gap-2">
               <div class="flex flex-row items-center gap-2">
                 <span
@@ -237,7 +237,7 @@
             >
           </div>
           <!-- actions tablet -->
-          <div class="hidden flex-row gap-0 md:flex">
+          <div class="hidden flex-row gap-1 md:flex">
             <UnUiTooltip
               v-if="entryHasRawHtml"
               text="View original message">
@@ -275,7 +275,7 @@
         </div>
         <!-- eslint-disable vue/no-v-html -->
         <div
-          class="rounded-br-x w-full overflow-hidden p-2 shadow-md"
+          class="rounded-br-x w-full overflow-hidden p-2"
           :class="convoBubbleClasses"
           v-html="convoEntryBody" />
         <div class="flex flex-row justify-end">
