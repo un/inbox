@@ -76,6 +76,9 @@ export default defineNuxtConfig({
   // Styling
   css: ['@/assets/css/main.css'],
   app: {
+    head: {
+      title: 'UnInbox'
+    },
     pageTransition: { name: 'page', mode: 'out-in', duration: 100 },
     layoutTransition: { name: 'layout', mode: 'out-in', duration: 100 }
   },
