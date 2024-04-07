@@ -43,7 +43,7 @@
   });
 </script>
 <template>
-  <div class="flex h-full max-h-full w-full max-w-full overflow-hidden">
+  <div class="h-full max-h-full w-full max-w-full overflow-hidden">
     <div
       v-if="convoQueryPending"
       class="bg-base-3 flex w-full flex-row justify-center gap-4 rounded-xl rounded-tl-2xl p-4">
@@ -52,29 +52,26 @@
         size="24" />
       <span>Loading conversations</span>
     </div>
+    <img
+      v-if="!orgMemberHasConvos"
+      src="public/inbox-zero.svg"
+      class="w-full" />
     <div
       v-if="!convoQueryPending"
-      class="mb-[48px] flex max-h-full flex-col items-center gap-4 overflow-hidden">
+      class="mb-[48px] flex max-h-full flex-col items-start gap-4 overflow-hidden">
       <!-- <UnUiButton
         label="Refresh"
         icon="i-ph-arrow-clockwise"
         :loading="userConvosStatus === 'pending'"
         @click="refreshUserConvos()" /> -->
-
-      <div>
-        <div
-          v-if="!orgMemberHasConvos"
-          class="bg-base-3 flex w-full flex-row items-center justify-center gap-4 rounded-xl rounded-tl-2xl p-4">
-          <img
-            src="/inbox-zero.svg"
-            class="w-full" />
-          <UnUiIcon
-            name="i-ph-hands-praying"
-            size="24" />
-          <span>Enjoy your UnInbox Zero</span>
-        </div>
+      <div
+        v-if="!orgMemberHasConvos"
+        class="bg-base-3 flex w-full flex-row items-center justify-center gap-4 rounded-xl rounded-tl-2xl p-4">
+        <UnUiIcon
+          name="i-ph-hands-praying"
+          size="24" />
+        <span>Enjoy your UnInbox Zero</span>
       </div>
-
       <div
         v-if="orgMemberHasConvos"
         ref="infiniteContainer"
