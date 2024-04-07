@@ -60,8 +60,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/database
       '@u22n/mailtools':
-        specifier: ^0.0.1
-        version: 0.0.1
+        specifier: ^0.1.1
+        version: 0.1.1
       '@u22n/realtime':
         specifier: workspace:^
         version: link:../../packages/realtime
@@ -3444,8 +3444,8 @@ packages:
       '@nuxt/kit': 3.11.1
       '@nuxt/schema': 3.11.1
       execa: 7.2.0
-      nuxt: 3.11.1(@types/node@20.11.29)(@upstash/redis@1.28.4)(eslint@8.57.0)(typescript@5.4.3)(vite@5.2.7)(vue-tsc@1.8.27)
-      vite: 5.2.7(@types/node@20.11.29)
+      nuxt: 3.11.1(@types/node@20.12.2)(eslint@8.57.0)(typescript@5.4.3)(vite@5.2.7)(vue-tsc@1.8.27)
+      vite: 5.2.7(@types/node@20.12.2)
     transitivePeerDependencies:
       - rollup
       - supports-color
@@ -3490,7 +3490,7 @@ packages:
       launch-editor: 2.6.1
       local-pkg: 0.5.0
       magicast: 0.3.3
-      nuxt: 3.11.1(@types/node@20.11.29)(@upstash/redis@1.28.4)(eslint@8.57.0)(typescript@5.4.3)(vite@5.2.7)(vue-tsc@1.8.27)
+      nuxt: 3.11.1(@types/node@20.12.2)(eslint@8.57.0)(typescript@5.4.3)(vite@5.2.7)(vue-tsc@1.8.27)
       nypm: 0.3.8
       ohash: 1.1.3
       pacote: 17.0.6
@@ -3503,7 +3503,7 @@ packages:
       simple-git: 3.23.0
       sirv: 2.0.4
       unimport: 3.7.1(rollup@4.13.0)
-      vite: 5.2.7(@types/node@20.11.29)
+      vite: 5.2.7(@types/node@20.12.2)
       vite-plugin-inspect: 0.8.3(@nuxt/kit@3.11.1)(vite@5.2.7)
       vite-plugin-vue-inspector: 4.0.2(vite@5.2.7)
       which: 3.0.1
@@ -3712,6 +3712,7 @@ packages:
       - vls
       - vti
       - vue-tsc
+    dev: true
 
   /@nuxt/vite-builder@3.11.1(@types/node@20.12.2)(eslint@8.57.0)(typescript@5.4.3)(vue-tsc@1.8.27)(vue@3.4.21):
     resolution: {integrity: sha512-8DVK2Jb9xgfnvTfKr5mL3UDdAIrd3q3F4EmoVsXVKJe8NTt9LW38QdGwGViIQm9wzLDDEo0mgWF+n7WoGEH0xQ==}
@@ -3773,7 +3774,6 @@ packages:
       - vls
       - vti
       - vue-tsc
-    dev: true
 
   /@nuxtjs/color-mode@3.3.2:
     resolution: {integrity: sha512-BLpBfrYZngV2QWFQ4HNEFwAXa3Pno43Ge+2XHcZJTTa1Z4KzRLvOwku8yiyV3ovIaaXKGwduBdv3Z5Ocdp0/+g==}
@@ -5357,6 +5357,7 @@ packages:
     resolution: {integrity: sha512-P99thMkD/1YkCvAtOd6/zGedKNA0p2fj4ZpjCzcNiSCBWgm3cNRTBfa/qjFnsKkkojxu4vVLtWpesnZ9+ap+gA==}
     dependencies:
       undici-types: 5.26.5
+    dev: true
 
   /@types/node@20.12.2:
     resolution: {integrity: sha512-zQ0NYO87hyN6Xrclcqp7f8ZbXNbRfoGWNcMvHTPQp9UUrwI0mI7XBz+cu7/W6/VClYo2g63B0cjull/srU7LgQ==}
@@ -5512,20 +5513,16 @@ packages:
       eslint-visitor-keys: 3.4.3
     dev: true
 
-  /@u22n/mailtools@0.0.1:
-    resolution: {integrity: sha512-OavyWPXIdhxuaTtDPBRaj9+Kji5x5wa9HPZ6+GtaRBeHqBFMIW/SbhjIzRVo5n2D/lDtoWHqwRzkGPkBU0iOwg==}
+  /@u22n/mailtools@0.1.1:
+    resolution: {integrity: sha512-NsVyshM9GAwOnjMHWS63ABrjogXBCaZq+GjvgnrpE45+9XJOCvJ357aiyNp+jYhyxsHJ4a9HUMzX1Bb2v1K5IQ==}
     dependencies:
-      '@u22n/tsconfig': 0.0.1
+      '@u22n/tsconfig': 0.0.2
       autolinker: 4.0.0
       cheerio: 1.0.0-rc.12
       email-validator: 2.0.4
       html-entities: 2.5.2
       htmlparser2: 9.1.0
       is-valid-domain: 0.1.6
-    dev: false
-
-  /@u22n/tsconfig@0.0.1:
-    resolution: {integrity: sha512-pn3tZ6ItSu+O3qtoSI+GYLzDnCKLAHMZRocGtq5N9MqEBeFjSUfLcc3ZsnLPCOi1GWhIj7oFCmCOq5/clUsjag==}
     dev: false
 
   /@u22n/tsconfig@0.0.2:
@@ -5623,7 +5620,7 @@ packages:
       '@babel/core': 7.24.1
       '@babel/plugin-transform-typescript': 7.24.1(@babel/core@7.24.1)
       '@vue/babel-plugin-jsx': 1.2.1(@babel/core@7.24.1)
-      vite: 5.1.6(@types/node@20.11.29)
+      vite: 5.1.6(@types/node@20.12.2)
       vue: 3.4.21(typescript@5.4.3)
     transitivePeerDependencies:
       - supports-color
@@ -5635,7 +5632,7 @@ packages:
       vite: ^5.0.0
       vue: ^3.2.25
     dependencies:
-      vite: 5.1.6(@types/node@20.11.29)
+      vite: 5.1.6(@types/node@20.12.2)
       vue: 3.4.21(typescript@5.4.3)
 
   /@volar/language-core@1.11.1:
@@ -5883,7 +5880,7 @@ packages:
       '@vueuse/core': 10.9.0(vue@3.4.21)
       '@vueuse/metadata': 10.9.0
       local-pkg: 0.5.0
-      nuxt: 3.11.1(@types/node@20.11.29)(@upstash/redis@1.28.4)(eslint@8.57.0)(typescript@5.4.3)(vite@5.2.7)(vue-tsc@1.8.27)
+      nuxt: 3.11.1(@types/node@20.12.2)(eslint@8.57.0)(typescript@5.4.3)(vite@5.2.7)(vue-tsc@1.8.27)
       vue-demi: 0.14.7(vue@3.4.21)
     transitivePeerDependencies:
       - '@vue/composition-api'
@@ -9817,6 +9814,7 @@ packages:
       - vti
       - vue-tsc
       - xml2js
+    dev: true
 
   /nuxt@3.11.1(@types/node@20.12.2)(eslint@8.57.0)(typescript@5.4.3)(vite@5.2.7)(vue-tsc@1.8.27):
     resolution: {integrity: sha512-CsncE1dxP0cmOYT+PBdjMD0bOK8eZizG5tgNWUOJAAAtU45sO38maoBumYYL2kUpT/SC/dMP+831DAcVPvi9pQ==}
@@ -9928,7 +9926,6 @@ packages:
       - vti
       - vue-tsc
       - xml2js
-    dev: true
 
   /nypm@0.3.8:
     resolution: {integrity: sha512-IGWlC6So2xv6V4cIDmoV0SwwWx7zLG086gyqkyumteH2fIgCAM4nDVFB2iDRszDvmdSVW9xb1N+2KjQ6C7d4og==}
@@ -12470,6 +12467,7 @@ packages:
       - sugarss
       - supports-color
       - terser
+    dev: true
 
   /vite-node@1.4.0(@types/node@20.12.2):
     resolution: {integrity: sha512-VZDAseqjrHgNd4Kh8icYHWzTKSCZMhia7GyHfhtzLW33fZlG9SwsB6CEhgyVOWkJfJ2pFLrp/Gj1FSfAiqH9Lw==}
@@ -12490,7 +12488,6 @@ packages:
       - sugarss
       - supports-color
       - terser
-    dev: true
 
   /vite-plugin-checker@0.6.4(eslint@8.57.0)(typescript@5.4.3)(vite@5.1.6)(vue-tsc@1.8.27):
     resolution: {integrity: sha512-2zKHH5oxr+ye43nReRbC2fny1nyARwhxdm0uNYp/ERy4YvU9iZpNOsueoi/luXw5gnpqRSvjcEPxXbS153O2wA==}
@@ -12536,7 +12533,7 @@ packages:
       strip-ansi: 6.0.1
       tiny-invariant: 1.3.3
       typescript: 5.4.3
-      vite: 5.1.6(@types/node@20.11.29)
+      vite: 5.1.6(@types/node@20.12.2)
       vscode-languageclient: 7.0.0
       vscode-languageserver: 7.0.0
       vscode-languageserver-textdocument: 1.0.11
@@ -12563,7 +12560,7 @@ packages:
       perfect-debounce: 1.0.0
       picocolors: 1.0.0
       sirv: 2.0.4
-      vite: 5.2.7(@types/node@20.11.29)
+      vite: 5.2.7(@types/node@20.12.2)
     transitivePeerDependencies:
       - rollup
       - supports-color
@@ -12582,7 +12579,7 @@ packages:
       '@vue/compiler-dom': 3.4.21
       kolorist: 1.8.0
       magic-string: 0.30.8
-      vite: 5.2.7(@types/node@20.11.29)
+      vite: 5.2.7(@types/node@20.12.2)
     transitivePeerDependencies:
       - supports-color
 
@@ -12620,6 +12617,7 @@ packages:
       rollup: 4.13.0
     optionalDependencies:
       fsevents: 2.3.3
+    dev: true
 
   /vite@5.1.6(@types/node@20.12.2):
     resolution: {integrity: sha512-yYIAZs9nVfRJ/AiOLCA91zzhjsHUgMjB+EigzFb6W2XTLO8JixBCKCjvhKZaye+NKYHCrkv3Oh50dH9EdLU2RA==}
@@ -12655,9 +12653,8 @@ packages:
       rollup: 4.13.0
     optionalDependencies:
       fsevents: 2.3.3
-    dev: true
 
-  /vite@5.2.7(@types/node@20.11.29):
+  /vite@5.2.7(@types/node@20.12.2):
     resolution: {integrity: sha512-k14PWOKLI6pMaSzAuGtT+Cf0YmIx12z9YGon39onaJNy8DLBfBJrzg9FQEmkAM5lpHBZs9wksWAsyF/HkpEwJA==}
     engines: {node: ^18.0.0 || >=20.0.0}
     hasBin: true
@@ -12685,7 +12682,7 @@ packages:
       terser:
         optional: true
     dependencies:
-      '@types/node': 20.11.29
+      '@types/node': 20.12.2
       esbuild: 0.20.2
       postcss: 8.4.38
       rollup: 4.13.2
