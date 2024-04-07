@@ -464,15 +464,7 @@
       return;
     }
 
-    toast.add({
-      title: 'Conversation created',
-      description: `Redirecting to new conversation...`,
-      icon: 'i-ph-thumbs-up',
-      timeout: 5000
-    });
-    setTimeout(() => {
-      navigateTo(`/${orgShortcode}/convo/${createNewConvo?.publicId}`);
-    }, 1500);
+    navigateTo(`/${orgShortcode}/convo/${createNewConvo?.publicId}`);
   }
 </script>
 <template>

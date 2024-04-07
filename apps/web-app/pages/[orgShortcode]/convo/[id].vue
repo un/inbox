@@ -19,6 +19,10 @@
   import { type ConvoEntryMetadata } from '@u22n/database/schema';
   import { stringify } from 'superjson';
   import { validateTypeId, type TypeId } from '@u22n/utils';
+  import { breakpointsTailwind, useBreakpoints } from '@vueuse/core';
+
+  const breakpoints = useBreakpoints(breakpointsTailwind);
+  const isMobile = breakpoints.smaller('lg'); // only smaller than lg
 
   const { $trpc } = useNuxtApp();
 
@@ -328,6 +332,11 @@
     <div
       class="border-base-7 flex w-full max-w-full flex-row items-center justify-between border-b p-4">
       <div class="flex flex-row gap-2">
+        <UnUiButton
+          icon="i-ph-arrow-left"
+          square
+          variant="soft"
+          @click="navigateTo(`/${orgShortcode}/convo`)" />
         <template
           v-for="subject of convoDetails?.data?.subjects"
           :key="subject.publicId">
@@ -445,14 +454,15 @@
           </div>
         </div>
       </div>
-      <UnUiButton
-        label="Show Convo Info"
-        icon="i-ph-info"
-        variant="outline"
-        size="xs"
-        block
-        class="visible lg:hidden"
-        @click="isContextOpen = !isContextOpen" />
+      <div class="visible px-4 pt-2 lg:hidden">
+        <UnUiButton
+          label="Show Convo Info"
+          icon="i-ph-info"
+          variant="outline"
+          size="xs"
+          block
+          @click="isContextOpen = !isContextOpen" />
+      </div>
       <!-- Context Pane -->
       <div
         class="border-l-1 border-b-1 border-base-6 hidden h-fit w-full max-w-full flex-col justify-between gap-4 overflow-hidden border border-r-0 border-t-0 p-4 lg:visible lg:flex lg:h-full lg:gap-8 lg:border-b-0">

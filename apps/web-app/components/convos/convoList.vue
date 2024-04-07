@@ -52,10 +52,7 @@
         size="24" />
       <span>Loading conversations</span>
     </div>
-    <img
-      v-if="!orgMemberHasConvos"
-      src="public/inbox-zero.svg"
-      class="w-full" />
+
     <div
       v-if="!convoQueryPending"
       class="mb-[48px] flex max-h-full flex-col items-start gap-4 overflow-hidden">
@@ -66,11 +63,18 @@
         @click="refreshUserConvos()" /> -->
       <div
         v-if="!orgMemberHasConvos"
-        class="bg-base-3 flex w-full flex-row items-center justify-center gap-4 rounded-xl rounded-tl-2xl p-4">
-        <UnUiIcon
-          name="i-ph-hands-praying"
-          size="24" />
-        <span>Enjoy your UnInbox Zero</span>
+        class="flex w-full flex-row items-center justify-center gap-4 p-4">
+        <img
+          alt="Inbox Zero"
+          src="public/inbox-zero.svg"
+          class="w-full" />
+        <div
+          class="bg-base-3 flex w-full flex-row items-center justify-center gap-4 rounded-xl rounded-tl-2xl p-4">
+          <UnUiIcon
+            name="i-ph-hands-praying"
+            size="24" />
+          <span>Enjoy your UnInbox Zero</span>
+        </div>
       </div>
       <div
         v-if="orgMemberHasConvos"

@@ -266,7 +266,7 @@
       title: 'Logged out',
       description: 'You have been logged out',
       color: 'green',
-      timeout: 5000
+      timeout: 1000
     });
   }
 
