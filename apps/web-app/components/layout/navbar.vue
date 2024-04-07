@@ -280,7 +280,7 @@
 </script>
 <template>
   <div
-    class="bg-base-1 border-base-7 fixed z-[40] flex w-full flex-col gap-4 rounded-b-xl border-r-2 p-4 shadow-xl transition-all duration-300 lg:relative lg:h-full lg:max-h-full lg:w-[320px] lg:justify-between lg:rounded-r-xl lg:p-8"
+    class="bg-base-2 border-base-7 fixed z-[40] flex w-full flex-col gap-4 border-r p-4 transition-all duration-300 lg:relative lg:h-full lg:max-h-full lg:w-[320px] lg:justify-between"
     :class="isCollapsed ? 'h-[72px] overflow-hidden' : 'h-fit'">
     <UnUiModal v-model="showLogoutModal">
       <template #header>

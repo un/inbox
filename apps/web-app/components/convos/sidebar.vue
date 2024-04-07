@@ -14,8 +14,8 @@
 </script>
 <template>
   <div
-    class="border-r-1 border-base-6 z-[30] flex h-full max-h-full flex-col gap-2 overflow-y-auto overflow-x-hidden pr-4 lg:w-full lg:pl-12"
-    :class="isCollapsed ? 'w-24 p-4 lg:p-8' : 'w-[385px] p-8'">
+    class="border-r-1 border-base-6 z-[30] flex h-full max-h-full flex-col gap-2 overflow-y-auto overflow-x-hidden pr-4 lg:w-full"
+    :class="isCollapsed ? 'w-24 p-4' : 'w-[385px] p-4'">
     <div class="flex w-full flex-row justify-end">
       <UnUiButton
         square
@@ -33,9 +33,6 @@
         <UnUiButton
           class="flex-grow justify-center"
           :class="isCollapsed ? 'collapse lg:visible' : 'visible'"
-          :ui="{
-            rounded: 'rounded-bl-xl'
-          }"
           label="New"
           icon="i-ph-plus"
           variant="outline"

@@ -753,10 +753,10 @@
         :org-shortcode="orgShortcode">
         <template #default="{ openFileDialog, loading }">
           <UnUiButton
-            label="Upload"
+            label="Attachment"
             variant="outline"
             :loading="loading"
-            icon="i-ph-upload"
+            icon="i-ph-paperclip"
             @click="openFileDialog" />
         </template>
       </ConvosUpload>

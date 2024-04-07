@@ -702,7 +702,7 @@
 
       <!-- Mobile context -->
       <NuxtUiSlideover v-model="isContextOpen">
-        <div class="flex w-full max-w-full flex-col gap-4 overflow-hidden p-8">
+        <div class="flex w-full max-w-full flex-col gap-4 overflow-hidden p-4">
           <div class="flex w-full max-w-full flex-col gap-4 overflow-hidden">
             <UnUiButton
               label="close"

@@ -275,7 +275,7 @@
         </div>
         <!-- eslint-disable vue/no-v-html -->
         <div
-          class="rounded-br-x w-full overflow-hidden rounded-bl-xl p-2 shadow-md"
+          class="rounded-br-x w-full overflow-hidden p-2 shadow-md"
           :class="convoBubbleClasses"
           v-html="convoEntryBody" />
         <div class="flex flex-row justify-end">

@@ -181,7 +181,7 @@
             </div>
             <div class="row grid grid-cols-2 flex-wrap justify-center gap-8">
               <div
-                class="min-w-xs border-base-7 bg-base-2 flex flex-col gap-8 rounded-xl border-2 p-8">
+                class="min-w-xs border-base-7 bg-base-2 flex flex-col gap-8 rounded-xl border-2 p-4">
                 <span class="font-display text-xl leading-none">
                   Free Plan
                 </span>
@@ -235,7 +235,7 @@
                   :disabled="true" />
               </div>
               <div
-                class="min-w-xs border-base-7 bg-base-2 flex flex-col gap-8 rounded-xl border-2 p-8">
+                class="min-w-xs border-base-7 bg-base-2 flex flex-col gap-8 rounded-xl border-2 p-4">
                 <span class="font-display text-xl leading-none">
                   Pro Plan
                 </span>

@@ -13,26 +13,26 @@ export default defineAppConfig({
       color: {
         white: {
           solid:
-            'shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-700 text-gray-900 dark:text-white bg-white hover:bg-gray-50 disabled:bg-white dark:bg-gray-900 dark:hover:bg-gray-800/50 dark:disabled:bg-gray-900 focus-visible:ring-2 focus-visible:ring-primary-500 dark:focus-visible:ring-primary-400',
+            'shadow-none ring-1 ring-inset ring-gray-300 dark:ring-gray-700 text-gray-900 dark:text-white bg-white hover:bg-gray-50 disabled:bg-white dark:bg-gray-900 dark:hover:bg-gray-800/50 dark:disabled:bg-gray-900 focus-visible:ring-2 focus-visible:ring-primary-500 dark:focus-visible:ring-primary-400',
           ghost:
             'text-gray-900 dark:text-white hover:bg-white dark:hover:bg-gray-900 focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-primary-500 dark:focus-visible:ring-primary-400'
         },
         gray: {
           solid:
-            'shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-700 text-gray-700 dark:text-gray-200 bg-gray-50 hover:bg-gray-100 disabled:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700/50 dark:disabled:bg-gray-800 focus-visible:ring-2 focus-visible:ring-primary-500 dark:focus-visible:ring-primary-400',
+            'shadow-none ring-1 ring-inset ring-gray-300 dark:ring-gray-700 text-gray-700 dark:text-gray-200 bg-gray-50 hover:bg-gray-100 disabled:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700/50 dark:disabled:bg-gray-800 focus-visible:ring-2 focus-visible:ring-primary-500 dark:focus-visible:ring-primary-400',
           ghost:
             'text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800 focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-primary-500 dark:focus-visible:ring-primary-400',
           link: 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 underline-offset-4 hover:underline focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-primary-500 dark:focus-visible:ring-primary-400'
         },
         black: {
           solid:
-            'shadow-sm text-white dark:text-gray-900 bg-gray-900 hover:bg-gray-800 disabled:bg-gray-900 dark:bg-white dark:hover:bg-gray-100 dark:disabled:bg-white focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-primary-500 dark:focus-visible:ring-primary-400',
+            'shadow-none text-white dark:text-gray-900 bg-gray-900 hover:bg-gray-800 disabled:bg-gray-900 dark:bg-white dark:hover:bg-gray-100 dark:disabled:bg-white focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-primary-500 dark:focus-visible:ring-primary-400',
           link: 'text-gray-900 dark:text-white underline-offset-4 hover:underline focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-primary-500 dark:focus-visible:ring-primary-400'
         }
       },
       variant: {
         solid:
-          'shadow-sm text-white dark:text-white bg-{color}-9 hover:bg-{color}-10 active:brightness-105 disabled:bg-{color}-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-{color}-5 dark:focus-visible:outline-{color}-4 dark:bg-{color}-9 dark:hover:bg-{color}-10 dark:active:brightness-105 dark:disabled:bg-{color}-3 dark:focus-visible:outline-{color}-5 dark:focus-visible:outline-{color}-4',
+          'shadow-none text-white dark:text-white bg-{color}-9 hover:bg-{color}-10 active:brightness-105 disabled:bg-{color}-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-{color}-5 dark:focus-visible:outline-{color}-4 dark:bg-{color}-9 dark:hover:bg-{color}-10 dark:active:brightness-105 dark:disabled:bg-{color}-3 dark:focus-visible:outline-{color}-5 dark:focus-visible:outline-{color}-4',
         outline:
           'ring-1 ring-inset ring-{color}-8 active:ring-{color}-9 active:bg-{color}-5 text-{color}-11 hover:bg-{color}-3 disabled:bg-transparent disabled:text-{color}-3 disabled:ring-{color}-3 focus-visible:ring-2 focus-visible:ring-{color}-9 dark:ring-{color}-8 dark:active:ring-{color}-9 dark:active:bg-{color}-5 dark:text-{color}-11 dark:hover:bg-{color}-3 dark:disabled:bg-transparent dark:disabled:text-{color}-3 dark:disabled:ring-{color}-3 dark:focus-visible:ring-{color}-9 ',
         soft: 'text-{color}-11 bg-{color}-3 hover:bg-{color}-4 active:bg-{color}-5 disabled:bg-{color}-1 disabled:text-{color}-3 dark:text-{color}-11 dark:bg-{color}-3 dark:hover:bg-{color}-5 dark:active:bg-{color}-5 dark:disabled:bg-{color}-1 dark:disabled:text-{color}-3 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-{color}-5 dark:focus-visible:ring-{color}-5 ',
@@ -256,16 +256,16 @@ export default defineAppConfig({
       color: {
         white: {
           outline:
-            'shadow-sm bg-base-2 dark:bg-base-2 text-base-12 dark:text-base-12 ring-1 ring-inset ring-base-7 dark:ring-base-7 focus:ring-2 focus:ring-base-9 dark:focus:ring-base-9'
+            'shadow-none bg-base-2 dark:bg-base-2 text-base-12 dark:text-base-12 ring-1 ring-inset ring-base-7 dark:ring-base-7 focus:ring-2 focus:ring-base-9 dark:focus:ring-base-9'
         },
         gray: {
           outline:
-            'shadow-sm bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white ring-1 ring-inset ring-gray-300 dark:ring-gray-700 focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400'
+            'shadow-none bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white ring-1 ring-inset ring-gray-300 dark:ring-gray-700 focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400'
         }
       },
       variant: {
         outline:
-          'shadow-sm bg-transparent text-base-12 dark:text-base-12 ring-1 ring-inset ring-{color}-7 dark:ring-{color}-7 focus:ring-2 focus:ring-{color}-8 dark:focus:ring-{color}-8',
+          'shadow-none bg-transparent text-base-12 dark:text-base-12 ring-1 ring-inset ring-{color}-7 dark:ring-{color}-7 focus:ring-2 focus:ring-{color}-8 dark:focus:ring-{color}-8',
         none: 'bg-transparent focus:ring-0 focus:shadow-none'
       },
       icon: {
@@ -451,16 +451,16 @@ export default defineAppConfig({
       color: {
         white: {
           outline:
-            'shadow-sm bg-base-2 dark:bg-base-2 text-base-12 dark:text-base-12 ring-1 ring-inset ring-base-7 dark:ring-base-7 focus:ring-2 focus:ring-base-9 dark:focus:ring-base-9'
+            'shadow-none bg-base-2 dark:bg-base-2 text-base-12 dark:text-base-12 ring-1 ring-inset ring-base-7 dark:ring-base-7 focus:ring-2 focus:ring-base-9 dark:focus:ring-base-9'
         },
         gray: {
           outline:
-            'shadow-sm bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white ring-1 ring-inset ring-gray-300 dark:ring-gray-700 focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400'
+            'shadow-none bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white ring-1 ring-inset ring-gray-300 dark:ring-gray-700 focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400'
         }
       },
       variant: {
         outline:
-          'shadow-sm bg-transparent text-base-12 dark:text-base-12 ring-1 ring-inset ring-{color}-7 dark:ring-{color}-7 focus:ring-2 focus:ring-{color}-8 dark:focus:ring-{color}-8',
+          'shadow-none bg-transparent text-base-12 dark:text-base-12 ring-1 ring-inset ring-{color}-7 dark:ring-{color}-7 focus:ring-2 focus:ring-{color}-8 dark:focus:ring-{color}-8',
         none: 'bg-transparent focus:ring-0 focus:shadow-none'
       },
       icon: {
