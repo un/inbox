@@ -90,8 +90,21 @@ function useParticipantData(
   return participantData;
 }
 
+function isArcBrowser() {
+  return getComputedStyle(document.documentElement).getPropertyValue(
+    '--arc-palette-title'
+  )
+    ? true
+    : false;
+}
+
 export const useUtils = () => {
-  return { cva, generateAvatarUrl, convos: { useParticipantData } };
+  return {
+    cva,
+    generateAvatarUrl,
+    isArcBrowser,
+    convos: { useParticipantData }
+  };
 };
 
 // TODO: Fix exporting types under namespace UseUtilTypes
