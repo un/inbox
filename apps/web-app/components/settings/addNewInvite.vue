@@ -261,10 +261,9 @@
       icon: 'i-ph-thumbs-up',
       timeout: 5000
     });
-    setTimeout(() => {
-      emit('refresh');
-      emit('close');
-    }, 1000);
+
+    emit('refresh');
+    emit('close');
   }
 </script>
 

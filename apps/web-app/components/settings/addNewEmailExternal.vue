@@ -257,9 +257,8 @@
       icon: 'i-ph-thumbs-up',
       timeout: 5000
     });
-    setTimeout(() => {
-      emit('close');
-    }, 1000);
+
+    emit('close');
   }
 
   const multipleDestinationsSelected = computed(() => {
