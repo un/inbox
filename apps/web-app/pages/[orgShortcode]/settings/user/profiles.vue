@@ -8,9 +8,14 @@
     ref,
     refreshNuxtData,
     useRoute,
-    watch
+    watch,
+    navigateTo
   } from '#imports';
   import { useUtils } from '~/composables/utils';
+  import { breakpointsTailwind, useBreakpoints } from '@vueuse/core';
+
+  const breakpoints = useBreakpoints(breakpointsTailwind);
+  const isMobile = breakpoints.smaller('lg'); // only smaller than lg
 
   const { $trpc } = useNuxtApp();
   const uploadLoading = ref(false);
@@ -157,7 +162,15 @@
 <template>
   <div class="flex h-full w-full flex-col items-start gap-8 p-4">
     <div class="flex w-full flex-row items-center justify-between">
-      <span class="font-display text-2xl">Your Profile</span>
+      <div class="flex flex-row gap-2">
+        <UnUiButton
+          v-if="isMobile"
+          icon="i-ph-arrow-left"
+          square
+          variant="soft"
+          @click="navigateTo(`/${orgShortcode}/settings`)" />
+        <span class="font-display text-2xl">Your Profile</span>
+      </div>
     </div>
     <div
       v-if="pending"
