@@ -469,16 +469,28 @@
 </script>
 <template>
   <div class="flex h-full max-h-full w-full max-w-full flex-col gap-4 p-4">
-    <div class="z-20000 from-base-1 mb-[-24px] h-[24px] bg-gradient-to-b" />
     <UnUiAlert
       v-if="
         orgEmailIdentities.length === 0 &&
         userEmailIdentitiesStatus === 'success'
       "
       icon="i-ph-warning-octagon"
-      color="orange"
-      description="You don't have an email identity assigned to you. Please contact your organization administrator. If you want to use a free @uninbox email address, please go to Settings > Personal Addresses > Claim Address."
-      title="Email sending disabled!" />
+      color="amber"
+      title="Email sending disabled!"
+      :actions="[
+        {
+          variant: 'solid',
+          color: 'base',
+          label: 'Claim my @uninbox email address',
+          click: () => navigateTo(`/${orgShortcode}/settings/user/addresses`)
+        }
+      ]">
+      <template #description>
+        You don't have an email identity assigned to you.<br />
+        Please contact your organization administrator or claim your free
+        address.
+      </template>
+    </UnUiAlert>
     <div class="flex flex-col gap-2">
       <span class="text-sm font-medium">Participants</span>
       <div class="flex flex-col gap-1">
