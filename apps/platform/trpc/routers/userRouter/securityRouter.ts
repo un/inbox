@@ -335,7 +335,8 @@ export const securityRouter = router({
   generateNewPasskeyChallenge: accountProcedure
     .input(
       z.object({
-        verificationToken: zodSchemas.nanoIdToken()
+        verificationToken: zodSchemas.nanoIdToken(),
+        authenticatorType: z.enum(['platform', 'cross-platform'])
       })
     )
     .query(async ({ ctx, input }) => {
@@ -381,7 +382,7 @@ export const securityRouter = router({
         userDisplayName: accountData.username,
         username: accountData.username,
         accountPublicId: accountData.publicId,
-        authenticatorAttachment: 'cross-platform'
+        authenticatorAttachment: input.authenticatorType
       });
       return { options: passkeyOptions };
     }),
