@@ -58,13 +58,15 @@
       hasAddresses.value = true;
       tableRows.value = [];
       newResults.identities.forEach((identity) => {
-        const truncatedForwarding = 'forwardingAddress';
+        const truncatedForwarding = identity.emailIdentity.forwardingAddress
+          ? `${identity.emailIdentity.forwardingAddress.slice(0, 10)}...`
+          : 'ERROR';
         tableRows.value.push({
           address: `${identity.emailIdentity.username}@${identity.emailIdentity.domainName}`,
           sendName: identity.emailIdentity.sendName,
           forwarding: {
             truncated: truncatedForwarding,
-            address: 'forwardingAddress'
+            address: identity.emailIdentity.forwardingAddress
           },
           org: identity.org,
           avatarTimestamp: identity.org.avatarTimestamp,
@@ -423,7 +425,7 @@
             <template #forwarding-data="{ row }">
               <div class="flex flex-row items-center gap-2">
                 <UnUiCopy :text="row.forwarding.address" />
-                <span>{{ row.forwarding.address }}</span>
+                <span>{{ row.forwarding.truncated }}</span>
               </div>
             </template>
             <template #org-data="{ row }">
