@@ -137,9 +137,8 @@
       icon: 'i-ph-thumbs-up',
       timeout: 5000
     });
-    setTimeout(() => {
-      editSendNameModalOpen.value = false;
-    }, 1000);
+
+    editSendNameModalOpen.value = false;
   }
 
   const preClaimModalOpen = ref(false);

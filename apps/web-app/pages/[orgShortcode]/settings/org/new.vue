@@ -109,9 +109,8 @@
       icon: 'i-ph-thumbs-up',
       timeout: 5000
     });
-    setTimeout(() => {
-      navigateTo(`/${orgShortcodeValue.value}/settings/org/`);
-    }, 2000);
+
+    navigateTo(`/${orgShortcodeValue.value}/settings/org/`);
   }
 </script>
 

@@ -156,9 +156,8 @@
       icon: 'i-ph-thumbs-up',
       timeout: 5000
     });
-    setTimeout(() => {
-      navigateTo('/unboarding');
-    }, 1000);
+
+    navigateTo('/unboarding');
   }
 </script>
 
