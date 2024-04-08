@@ -60,8 +60,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/database
       '@u22n/mailtools':
-        specifier: ^0.1.1
-        version: 0.1.1
+        specifier: ^0.1.2
+        version: 0.1.2
       '@u22n/realtime':
         specifier: workspace:^
         version: link:../../packages/realtime
@@ -5650,8 +5650,8 @@ packages:
       eslint-visitor-keys: 3.4.3
     dev: true
 
-  /@u22n/mailtools@0.1.1:
-    resolution: {integrity: sha512-NsVyshM9GAwOnjMHWS63ABrjogXBCaZq+GjvgnrpE45+9XJOCvJ357aiyNp+jYhyxsHJ4a9HUMzX1Bb2v1K5IQ==}
+  /@u22n/mailtools@0.1.2:
+    resolution: {integrity: sha512-z5NSp+rur0tVaHDjPrUB/Fo/UwymGIxs0egzsNmMKcVh44BjgIqY2E4J9JF0KOzkMbFR6i2xJp+ic10Y6yUefQ==}
     dependencies:
       '@u22n/tsconfig': 0.0.2
       autolinker: 4.0.0
