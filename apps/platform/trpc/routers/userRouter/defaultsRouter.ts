@@ -47,7 +47,7 @@ export const defaultsRouter = router({
 
       return {
         defaultOrgShortcode:
-          accountResponse?.orgMemberships[0]?.org?.shortcode || '',
+          accountResponse?.orgMemberships[0]?.org?.shortcode || null,
         twoFactorEnabledCorrectly: userHasPasskeys
           ? true
           : twoFactorEnabledCorrectly
