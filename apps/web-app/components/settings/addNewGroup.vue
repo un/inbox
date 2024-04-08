@@ -177,9 +177,8 @@
     }
     buttonLoading.value = false;
     buttonLabel.value = 'Done... Redirecting';
-    setTimeout(() => {
-      emit('close');
-    }, 1000);
+
+    emit('close');
   }
 
   async function checkEmailAvailability() {

@@ -73,9 +73,8 @@
       icon: 'i-ph-thumbs-up',
       timeout: 5000
     });
-    setTimeout(() => {
-      navigateTo(`/${inviteQuery.value?.orgShortcode}`);
-    }, 1000);
+
+    navigateTo(`/${inviteQuery.value?.orgShortcode}`);
   }
 
   const pageReady: Ref<boolean> = ref(false);
