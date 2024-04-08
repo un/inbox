@@ -162,7 +162,7 @@
               label="Username"
               helper="Can only contain letters and numbers."
               placeholder=""
-              :schema="zodSchemas.username()" />
+              :schema="zodSchemas.username(2)" />
             <UnUiInput
               v-model:value="passwordInput"
               v-model:valid="passwordValid"
