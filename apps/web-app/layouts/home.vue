@@ -28,6 +28,7 @@
   ) {
     showClaimEmailIdentityModal.value = true;
   }
+
   const realtime = useRealtime();
 
   realtime.connect({ orgShortcode: orgShortcode as string });
