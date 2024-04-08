@@ -49,7 +49,8 @@ export const addressRouter = router({
                 publicId: true,
                 sendName: true,
                 username: true,
-                domainName: true
+                domainName: true,
+                forwardingAddress: true
               }
             }
           }
