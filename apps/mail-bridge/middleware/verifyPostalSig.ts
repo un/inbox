@@ -6,7 +6,8 @@ import {
   readBody,
   getHeader,
   useRuntimeConfig,
-  sendNoContent
+  sendNoContent,
+  getHeaders
 } from '#imports';
 
 export default defineEventHandler(async (event) => {
@@ -28,6 +29,13 @@ export default defineEventHandler(async (event) => {
 
     event.context.fromPostal = validPostalSignature;
     if (!validPostalSignature) {
+      const allHeaders = getHeaders(event);
+      console.error('🔥 Failed postal webhook call with these headers', {
+        allHeaders
+      });
+      console.error('🔥postal verify webhook', { publicKeys });
+      console.error('🔥 signature', { signature });
+      console.error('🔥', { validPostalSignature });
       return sendNoContent(event, 401);
     }
   }

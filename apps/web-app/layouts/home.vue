@@ -1,6 +1,6 @@
 <script setup lang="ts">
   // put in the handlers for the realtime client
-  import { useRoute, useNuxtApp, ref, navigateTo, watch } from '#imports';
+  import { useRoute, useNuxtApp, ref, navigateTo } from '#imports';
   import { useRealtime } from '~/composables/realtime';
   import { useConvoEntryStore } from '~/stores/convoEntryStore';
   import { useConvoStore } from '~/stores/convoStore';
@@ -28,6 +28,7 @@
   ) {
     showClaimEmailIdentityModal.value = true;
   }
+
   const realtime = useRealtime();
 
   realtime.connect({ orgShortcode: orgShortcode as string });

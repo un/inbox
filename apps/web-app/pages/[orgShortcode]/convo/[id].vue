@@ -315,19 +315,6 @@
     messageEditorData.value = emptyTiptapEditorContent;
   }
 
-  async function openAttachment(
-    attachmentPublicId: TypeId<'convoAttachments'>,
-    filename: string
-  ) {
-    const attachmentUrl = `${useRuntimeConfig().public.storageUrl}/attachment/${orgShortcode}/${attachmentPublicId}/${filename}`;
-    return navigateTo(attachmentUrl, {
-      external: true,
-      open: {
-        target: '_blank'
-      }
-    });
-  }
-
   const isContextOpen = ref(false);
 
   watch(
