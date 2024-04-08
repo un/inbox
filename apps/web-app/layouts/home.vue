@@ -4,6 +4,11 @@
   import { useRealtime } from '~/composables/realtime';
   import { useConvoEntryStore } from '~/stores/convoEntryStore';
   import { useConvoStore } from '~/stores/convoStore';
+  import { breakpointsTailwind, useBreakpoints } from '@vueuse/core';
+
+  const breakpoints = useBreakpoints(breakpointsTailwind);
+  const isMobile = breakpoints.smaller('lg'); // only smaller than lg
+
   const orgShortcode = useRoute().params.orgShortcode;
 
   const convoStore = useConvoStore();
@@ -30,10 +35,15 @@
 <template>
   <div
     class="overflow-none flex h-full max-h-full w-full flex-col items-center lg:flex-row">
-    <layout-navbar class="z-40" />
+    <layout-navbar
+      v-if="!isMobile"
+      class="z-40" />
     <div
-      class="bg-base-1 dark:bg-base-1 mt-[72px] h-full max-h-full w-full overflow-hidden lg:mt-0">
+      class="bg-base-1 dark:bg-base-1 h-full max-h-full w-full overflow-hidden lg:mt-0">
       <slot />
     </div>
+    <layout-mobile-nav
+      v-if="isMobile"
+      class="bottom-0 z-40" />
   </div>
 </template>
