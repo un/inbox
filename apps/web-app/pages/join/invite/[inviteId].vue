@@ -17,16 +17,19 @@
 
   const inviteId = useRoute().params.inviteId;
   const joinButtonLoading = ref(false);
-  const joinButtonLabel = ref('Join organization');
+  const joinButtonLabel = ref('Join Organization');
 
   const {
     data: inviteQuery,
     error,
     execute,
     status
-  } = await $trpc.org.users.invites.validateInvite.useLazyQuery({
-    inviteToken: inviteId as string
-  });
+  } = await $trpc.org.users.invites.validateInvite.useLazyQuery(
+    {
+      inviteToken: inviteId as string
+    },
+    { server: false }
+  );
 
   execute();
 
@@ -138,7 +141,7 @@
         </div>
       </div>
 
-      <div class="mt-3 w-full">
+      <div class="mt-3 flex w-full flex-col gap-4">
         <UnUiSkeleton
           v-if="status !== 'success'"
           class="h-8 w-full rounded-md" />
@@ -155,6 +158,12 @@
           icon="i-ph-users-three"
           block
           @click="joinOrg()" />
+        <span
+          v-if="status === 'success' && inviteQuery?.loggedIn"
+          class="text-center text-sm">
+          If you want to create a new user, please log out and revisit this
+          page.
+        </span>
       </div>
     </div>
   </div>
