@@ -9,6 +9,7 @@
   } from '#imports';
   import type { UiColor } from '@u22n/types/ui';
   import type { TypeId } from '@u22n/utils';
+  const orgShortcode = useRoute().params.orgShortcode as string;
 
   const { $trpc } = useNuxtApp();
   const route = useRoute();
@@ -185,12 +186,12 @@
   <div class="flex h-full w-full flex-col items-start gap-8 p-4">
     <div class="flex w-full flex-row items-center justify-between">
       <div class="flex flex-row items-center gap-4">
-        <UnUiTooltip text="Back to groups">
-          <UnUiIcon
-            name="i-ph-arrow-left"
-            size="32"
-            @click="navigateTo('./')" />
-        </UnUiTooltip>
+        <UnUiButton
+          icon="i-ph-arrow-left"
+          square
+          variant="soft"
+          @click="navigateTo(`/${orgShortcode}/settings/org/users/groups`)" />
+
         <UnUiAvatar
           v-if="groupData?.group"
           :color="groupData?.group?.color || ('base' as UiColor)"

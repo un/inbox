@@ -1,7 +1,14 @@
 <script setup lang="ts">
   import { z } from 'zod';
 
-  import { useNuxtApp, useToast, ref, watch, computed } from '#imports';
+  import {
+    useNuxtApp,
+    useToast,
+    ref,
+    watch,
+    computed,
+    useRoute
+  } from '#imports';
   import { useUtils } from '~/composables/utils';
   import {
     startAuthentication,
@@ -14,6 +21,12 @@
   import type { SettingsSecurityPasswordReset } from '#build/components';
   import type { TypeId } from '@u22n/utils';
   import { navigateTo } from '#app';
+  import { breakpointsTailwind, useBreakpoints } from '@vueuse/core';
+
+  const breakpoints = useBreakpoints(breakpointsTailwind);
+  const isMobile = breakpoints.smaller('lg'); // only smaller than lg
+  const orgShortcode = useRoute().params.orgShortcode as string;
+
   const { $trpc } = useNuxtApp();
   const toast = useToast();
   const verificationToken = ref<string | null>(null);
@@ -461,9 +474,17 @@
 
 <template>
   <div
-    class="flex h-full w-full flex-col items-start gap-8 overflow-y-auto p-2">
+    class="flex h-full w-full flex-col items-start gap-8 overflow-y-auto px-4 py-2">
     <div class="flex w-full flex-row items-center justify-between">
-      <span class="font-display text-2xl">Your Account Security</span>
+      <div class="flex flex-row gap-2">
+        <UnUiButton
+          v-if="isMobile"
+          icon="i-ph-arrow-left"
+          square
+          variant="soft"
+          @click="navigateTo(`/${orgShortcode}/settings`)" />
+        <span class="font-display text-2xl">Your Account Security</span>
+      </div>
     </div>
     <div
       v-if="status !== 'success'"

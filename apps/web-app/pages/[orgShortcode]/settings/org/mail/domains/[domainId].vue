@@ -9,6 +9,8 @@
   } from '#imports';
   import { useTimeAgo } from '@vueuse/core';
 
+  const orgShortcode = useRoute().params.orgShortcode as string;
+
   const { $trpc } = useNuxtApp();
 
   const showDnsRefreshMessage = ref(false);
@@ -222,12 +224,12 @@
   <div class="flex h-full w-full flex-col items-start gap-8 p-4">
     <div class="flex w-full flex-row items-center justify-between">
       <div class="flex flex-row items-center gap-4">
-        <UnUiTooltip text="Back to domains">
-          <UnUiIcon
-            name="i-ph-arrow-left"
-            class="text-base-11 text-2xl"
-            @click="navigateTo('./')" />
-        </UnUiTooltip>
+        <UnUiButton
+          icon="i-ph-arrow-left"
+          square
+          variant="soft"
+          @click="navigateTo(`/${orgShortcode}/settings/org/mail/domains/`)" />
+
         <div class="flex flex-col gap-1">
           <span
             v-if="!domainPending"
