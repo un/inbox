@@ -73,14 +73,12 @@
         </div>
       </div>
       <div class="flex flex-row items-center gap-4">
-        <button
-          class="border-1 border-base-7 bg-base-3 flex max-w-80 flex-row items-center justify-center gap-2 rounded p-2"
-          @click="navigateTo('./invites')">
+        <UnUiButton @click="navigateTo('./invites')">
           <UnUiIcon
             name="i-ph-plus"
             size="20" />
           <p class="text-sm">Invite</p>
-        </button>
+        </UnUiButton>
       </div>
     </div>
     <div class="flex w-full flex-col gap-4 overflow-x-auto overflow-y-auto">
