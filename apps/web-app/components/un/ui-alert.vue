@@ -13,7 +13,17 @@
   });
 </script>
 <template>
-  <NuxtUiAlert
-    v-bind="$props"
-    class="w-full" />
+  <div>
+    <NuxtUiAlert
+      v-bind="$props"
+      class="w-full">
+      <template
+        v-if="$slots.description"
+        #description>
+        <slot
+          class="flex flex-col gap-8 p-4"
+          name="description"></slot>
+      </template>
+    </NuxtUiAlert>
+  </div>
 </template>
