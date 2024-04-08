@@ -1,5 +1,9 @@
 <script setup lang="ts">
   import { navigateTo, ref, useNuxtApp, useRoute, watch } from '#imports';
+  import { breakpointsTailwind, useBreakpoints } from '@vueuse/core';
+
+  const breakpoints = useBreakpoints(breakpointsTailwind);
+  const isMobile = breakpoints.smaller('lg'); // only smaller than lg
 
   const { $trpc } = useNuxtApp();
 
@@ -88,14 +92,28 @@
 <template>
   <div class="flex h-full w-full flex-col items-start gap-8 p-4">
     <div class="flex w-full flex-row items-center justify-between">
-      <div class="flex flex-col gap-1">
-        <span class="font-display text-2xl">Addresses</span>
-        <span class="text-sm">Manage your organization's email addresses</span>
+      <div class="flex flex-row items-center gap-2">
+        <div>
+          <UnUiButton
+            v-if="isMobile"
+            icon="i-ph-arrow-left"
+            square
+            variant="soft"
+            @click="navigateTo(`/${orgShortcode}/settings`)" />
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <span class="font-display text-2xl">Addresses</span>
+          <span class="text-sm">
+            Manage your organization's email addresses
+          </span>
+        </div>
       </div>
 
       <div class="flex flex-row items-center gap-4">
         <UnUiButton
           label="Add new"
+          icon="i-ph-plus"
           @click="addNewModalOpen = true" />
         <UnUiModal v-model="addNewModalOpen">
           <template #header>

@@ -2,6 +2,8 @@
   import { navigateTo, useNuxtApp, useRoute } from '#imports';
   import type { UiColor } from '@u22n/types/ui';
 
+  const orgShortcode = useRoute().params.orgShortcode as string;
+
   const { $trpc } = useNuxtApp();
 
   const route = useRoute();
@@ -22,13 +24,15 @@
   <div
     class="flex h-full w-full flex-col items-start gap-8 overflow-y-auto p-2">
     <div class="flex w-full flex-row items-center justify-between">
-      <div class="flex flex-row items-center gap-4">
-        <UnUiTooltip text="Back to Email Address list">
-          <UnUiIcon
-            name="i-ph-arrow-left"
-            size="32"
-            @click="navigateTo('./')" />
-        </UnUiTooltip>
+      <div class="flex flex-row items-center gap-2">
+        <UnUiButton
+          icon="i-ph-arrow-left"
+          square
+          variant="soft"
+          @click="
+            navigateTo(`/${orgShortcode}/settings/org/mail/addresses/`)
+          " />
+
         <div class="flex flex-col gap-1">
           <span class="font-display text-2xl">Edit Email Address</span>
         </div>

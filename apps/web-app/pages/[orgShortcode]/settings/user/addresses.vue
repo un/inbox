@@ -6,9 +6,14 @@
     ref,
     watch,
     useRoute,
-    storeToRefs
+    storeToRefs,
+    navigateTo
   } from '#imports';
   import { useEEStore } from '~/stores/eeStore';
+  import { breakpointsTailwind, useBreakpoints } from '@vueuse/core';
+
+  const breakpoints = useBreakpoints(breakpointsTailwind);
+  const isMobile = breakpoints.smaller('lg'); // only smaller than lg
 
   const { $trpc } = useNuxtApp();
   const route = useRoute();
@@ -209,7 +214,15 @@
 <template>
   <div class="flex h-full w-full flex-col items-start gap-8 p-4">
     <div class="flex w-full flex-row items-center justify-between">
-      <span class="font-display text-2xl"> Your Personal Addresses </span>
+      <div class="flex flex-row gap-2">
+        <UnUiButton
+          v-if="isMobile"
+          icon="i-ph-arrow-left"
+          square
+          variant="soft"
+          @click="navigateTo(`/${orgShortcode}/settings`)" />
+        <span class="font-display text-2xl"> Your Personal Addresses </span>
+      </div>
     </div>
     <UnUiModal v-model="preClaimModalOpen">
       <template #header>

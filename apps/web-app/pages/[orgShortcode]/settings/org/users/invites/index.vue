@@ -1,5 +1,10 @@
 <script setup lang="ts">
-  import { ref, useNuxtApp, watch } from '#imports';
+  import { ref, useNuxtApp, watch, useRoute, navigateTo } from '#imports';
+  import { breakpointsTailwind, useBreakpoints } from '@vueuse/core';
+
+  const breakpoints = useBreakpoints(breakpointsTailwind);
+  const isMobile = breakpoints.smaller('lg'); // only smaller than lg
+  const orgShortcode = useRoute().params.orgShortcode as string;
 
   const { $trpc } = useNuxtApp();
 
@@ -124,6 +129,13 @@
   <div class="flex h-full w-full flex-col items-start gap-8 p-4">
     <div class="flex w-full flex-row items-center justify-between">
       <div class="flex flex-row items-center gap-4">
+        <UnUiButton
+          v-if="isMobile"
+          icon="i-ph-arrow-left"
+          square
+          variant="soft"
+          @click="navigateTo(`/${orgShortcode}/settings`)" />
+
         <div class="flex flex-col gap-1">
           <span class="font-display text-2xl">Invites</span>
           <span class="text-sm">Manage your org invitations</span>
@@ -132,6 +144,7 @@
       <div class="flex flex-row items-center gap-4">
         <UnUiButton
           label="Add new"
+          icon="i-ph-plus"
           @click="addNewModalOpen = true" />
         <UnUiModal v-model="addNewModalOpen">
           <template #header>
