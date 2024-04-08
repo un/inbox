@@ -13,6 +13,7 @@
     useState
   } from '#imports';
   const colorMode = useColorMode();
+
   const toggleColorMode = () => {
     colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark';
   };
@@ -30,56 +31,6 @@
   router.beforeEach((to) => {
     currentPath.value = to.path;
   });
-
-  const navLinks = [
-    {
-      label: 'Conversations',
-      to: `/${orgShortcode}/convo`,
-      icon: 'i-ph-chat-circle'
-    },
-    {
-      label: 'Contacts',
-      // to: `/${orgShortcode}/screener`,
-      icon: 'i-ph-address-book',
-      tooltip: 'Manage your contacts',
-      disabled: true,
-      badge: 'Soon'
-    },
-    {
-      label: 'Group Convos',
-      // to: `/${orgShortcode}/convo`,
-      tooltip: 'Separate your group and personal conversations',
-      icon: 'i-ph-chats-circle',
-
-      disabled: true,
-      badge: 'Soon'
-    },
-    {
-      label: 'Screener',
-      // to: `/${orgShortcode}/screener`,
-      tooltip: 'Set who can or cant email you',
-      icon: 'i-ph-hand',
-      disabled: true,
-      badge: 'Soon'
-    },
-    {
-      label: 'Feed',
-      // to: `/${orgShortcode}/feed`,
-      tooltip:
-        'All your newsletters, marketing messages, and product updates in one place',
-      icon: 'i-ph-newspaper',
-      disabled: true,
-      badge: 'Soon'
-    },
-    {
-      label: 'Codes',
-      // to: `/${orgShortcode}/codes`,
-      tooltip: 'Easily copy your login or verification codes',
-      icon: 'i-ph-password',
-      disabled: true,
-      badge: 'Soon'
-    }
-  ];
 
   const { $trpc } = useNuxtApp();
 
@@ -103,15 +54,6 @@
     if (!userOrgShortcodes?.includes(orgShortcode)) {
       navigateTo(`/redirect`);
     }
-  });
-
-  const currentOrgProfile = computed(() => {
-    if (accountOrgs.value && accountOrgs.value.userOrgs.length > 0) {
-      return accountOrgs.value.userOrgs.find(
-        (org) => org.org.shortcode === orgShortcode
-      )?.org;
-    }
-    return null;
   });
 
   interface OrgButtons {
@@ -271,7 +213,7 @@
 </script>
 <template>
   <div
-    class="bg-base-2 border-base-7 flex h-full max-h-full w-[320px] flex-col justify-between gap-4 border-r p-4 transition-all duration-300">
+    class="bg-base-2 border-base-7 grid w-full grid-cols-2 gap-4 p-4 transition-all duration-300">
     <UnUiModal v-model="showLogoutModal">
       <template #header>
         <span class="">Logout</span>
@@ -332,135 +274,115 @@
         </div>
       </div>
     </UnUiModal>
-    <div class="flex flex-col gap-4">
-      <div class="flex flex-row items-center justify-between pl-2 pr-2">
-        <span class="font-display leading-none">UnInbox</span>
+    <UnUiButton
+      block
+      square
+      icon="i-ph-chat-circle"
+      variant="ghost"
+      size="xl"
+      @click="navigateTo(`/${orgShortcode}/convo`)" />
+
+    <NuxtUiDropdown
+      :items="userMenuItems"
+      :ui="{
+        // width: 'w-52',
+        item: {
+          disabled: 'cursor-text select-text',
+          base: 'group flex items-center gap-4'
+        }
+      }"
+      :popper="{ placement: 'top-start' }">
+      <div class="flex w-full flex-row items-center justify-center">
+        <UnUiAvatar
+          v-if="orgMemberProfile"
+          :public-id="orgMemberProfile?.profile?.publicId"
+          :avatar-timestamp="orgMemberProfile?.profile?.avatarTimestamp || null"
+          :type="'orgMember'"
+          :alt="
+            orgMemberProfile?.profile?.firstName +
+            ' ' +
+            orgMemberProfile?.profile?.lastName
+          " />
       </div>
-      <UnUiVerticalNavigation :links="navLinks">
-        <template #default="{ link }">
-          <UnUiTooltip
-            v-if="link.tooltip"
-            :text="link.tooltip"
-            :popper="{ placement: 'right-start' }">
-            <span class="text-base-12 truncate">{{ link.label }}</span>
-          </UnUiTooltip>
-        </template>
-        <template #badge="{ link }">
-          <div class="relative ml-4 flex flex-1 items-end justify-end truncate">
-            <UnUiBadge
-              v-if="link.badge"
-              size="xs"
-              variant="soft"
-              :label="link.badge" />
-          </div>
-        </template>
-      </UnUiVerticalNavigation>
-    </div>
-    <div class="flex w-full flex-col place-self-end">
-      <NuxtUiDropdown
-        :items="userMenuItems"
-        :ui="{
-          // width: 'w-52',
-          item: {
-            disabled: 'cursor-text select-text',
-            base: 'group w-full flex items-center gap-4'
-          }
-        }"
-        :popper="{ placement: 'top-start' }">
-        <div
-          class="flex w-full max-w-[240px] flex-row items-center justify-between gap-2 p-2">
+
+      <template #account>
+        <div class="flex flex-col gap-2 text-left">
+          <p>Signed in as</p>
           <div class="flex w-full flex-row items-center gap-2 overflow-hidden">
             <UnUiAvatar
-              v-if="currentOrgProfile"
-              :public-id="currentOrgProfile?.publicId"
-              :avatar-timestamp="currentOrgProfile?.avatarTimestamp || null"
-              :type="'org'"
-              :alt="currentOrgProfile?.name"
-              size="xs" />
-            <span class="truncate text-sm">{{ currentOrgProfile?.name }}</span>
-          </div>
-          <UnUiIcon name="i-ph-caret-up" />
-        </div>
-        <template #account>
-          <div class="flex flex-col gap-2 text-left">
-            <p>Signed in as</p>
-            <div
-              class="flex w-full flex-row items-center gap-2 overflow-hidden">
-              <UnUiAvatar
-                v-if="orgMemberProfile"
-                :public-id="orgMemberProfile?.profile?.publicId"
-                :avatar-timestamp="
-                  orgMemberProfile?.profile?.avatarTimestamp || null
-                "
-                :type="'orgMember'"
-                :alt="
-                  orgMemberProfile?.profile?.firstName +
-                  ' ' +
-                  orgMemberProfile?.profile?.lastName
-                " />
-              <span class="truncate text-sm">{{
+              v-if="orgMemberProfile"
+              :public-id="orgMemberProfile?.profile?.publicId"
+              :avatar-timestamp="
+                orgMemberProfile?.profile?.avatarTimestamp || null
+              "
+              :type="'orgMember'"
+              :alt="
                 orgMemberProfile?.profile?.firstName +
                 ' ' +
                 orgMemberProfile?.profile?.lastName
-              }}</span>
-            </div>
+              " />
+            <span class="truncate text-sm">{{
+              orgMemberProfile?.profile?.firstName +
+              ' ' +
+              orgMemberProfile?.profile?.lastName
+            }}</span>
           </div>
-        </template>
-        <template #org="{ item }">
-          <div class="flex max-w-full flex-row items-center gap-2">
-            <UnUiAvatar
-              :public-id="item.publicId"
-              :avatar-timestamp="item.avatarTimestamp"
-              :type="'org'"
-              :alt="item.label"
-              size="sm" />
-            <div class="text-left">
-              <p class="truncate font-medium">
-                {{ item.label }}
-              </p>
-            </div>
+        </div>
+      </template>
+      <template #org="{ item }">
+        <div class="flex max-w-full flex-row items-center gap-2">
+          <UnUiAvatar
+            :public-id="item.publicId"
+            :avatar-timestamp="item.avatarTimestamp"
+            :type="'org'"
+            :alt="item.label"
+            size="sm" />
+          <div class="text-left">
+            <p class="truncate font-medium">
+              {{ item.label }}
+            </p>
           </div>
-          <UnUiIcon
-            v-if="item.shortcode === orgShortcode"
-            name="i-ph-check"
-            class="ms-auto h-4 w-4 flex-shrink-0" />
-        </template>
-        <template #darkmode>
-          <span class="truncate">{{ colorModeLabel }}</span>
-          <UnUiIcon
-            :name="colorModeIcon"
-            class="ms-auto h-4 w-4 flex-shrink-0" />
-        </template>
-        <template #helpmenu="{ item }">
-          <NuxtUiDropdown
-            :items="helpMenuItems"
-            mode="hover"
-            :ui="{ item: { disabled: 'cursor-text select-text' } }"
-            :popper="{ offsetDistance: -5, placement: 'right-start' }"
-            class="w-full">
-            <div class="flex w-full flex-row items-center justify-between">
-              <span class="truncate">{{ item.label }}</span>
-              <UnUiIcon
-                :name="item.icon"
-                class="ms-auto h-4 w-4 flex-shrink-0" />
-            </div>
-            <!-- eslint-disable vue/no-template-shadow -->
-            <template #item="{ item }">
-              <!-- eslint-enable -->
-              <span class="truncate">{{ item.label }}</span>
-              <UnUiIcon
-                :name="item.icon"
-                class="ms-auto h-4 w-4 flex-shrink-0" />
-            </template>
-          </NuxtUiDropdown>
-        </template>
-        <template #item="{ item }">
-          <span class="truncate">{{ item.label }}</span>
-          <UnUiIcon
-            :name="item.icon"
-            class="ms-auto h-4 w-4 flex-shrink-0" />
-        </template>
-      </NuxtUiDropdown>
-    </div>
+        </div>
+        <UnUiIcon
+          v-if="item.shortcode === orgShortcode"
+          name="i-ph-check"
+          class="ms-auto h-4 w-4 flex-shrink-0" />
+      </template>
+      <template #darkmode>
+        <span class="truncate">{{ colorModeLabel }}</span>
+        <UnUiIcon
+          :name="colorModeIcon"
+          class="ms-auto h-4 w-4 flex-shrink-0" />
+      </template>
+      <template #helpmenu="{ item }">
+        <NuxtUiDropdown
+          :items="helpMenuItems"
+          mode="hover"
+          :ui="{ item: { disabled: 'cursor-text select-text' } }"
+          :popper="{ offsetDistance: -5, placement: 'right-start' }"
+          class="w-full">
+          <div class="flex w-full flex-row items-center justify-between">
+            <span class="truncate">{{ item.label }}</span>
+            <UnUiIcon
+              :name="item.icon"
+              class="ms-auto h-4 w-4 flex-shrink-0" />
+          </div>
+          <!-- eslint-disable vue/no-template-shadow -->
+          <template #item="{ item }">
+            <!-- eslint-enable -->
+            <span class="truncate">{{ item.label }}</span>
+            <UnUiIcon
+              :name="item.icon"
+              class="ms-auto h-4 w-4 flex-shrink-0" />
+          </template>
+        </NuxtUiDropdown>
+      </template>
+      <template #item="{ item }">
+        <span class="truncate">{{ item.label }}</span>
+        <UnUiIcon
+          :name="item.icon"
+          class="ms-auto h-4 w-4 flex-shrink-0" />
+      </template>
+    </NuxtUiDropdown>
   </div>
 </template>
