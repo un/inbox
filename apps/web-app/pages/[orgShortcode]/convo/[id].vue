@@ -7,7 +7,8 @@
     useNuxtApp,
     useRoute,
     useToast,
-    watch
+    watch,
+    useRuntimeConfig
   } from '#imports';
   import { useUtils } from '~/composables/utils';
   import { useTimeAgo } from '@vueuse/core';
@@ -24,7 +25,7 @@
 
   type AttachmentEntry = {
     name: string;
-    publicId: string;
+    publicId: TypeId<'convoAttachments'>;
     type: string;
     url: string;
   };
@@ -161,6 +162,7 @@
       convoDetails.value.data.attachments
     ) {
       for (const attachment of convoDetails.value.data.attachments) {
+        const attachmentUrl = `${useRuntimeConfig().public.storageUrl}/attachment/${orgShortcode}/${attachment.publicId}/${attachment.fileName}`;
         const splitFileName = attachment.fileName.split('.');
         const newFileName =
           (splitFileName[0]?.substring(0, 10) ?? '') +
@@ -170,7 +172,7 @@
           name: newFileName,
           publicId: attachment.publicId,
           type: attachment.type,
-          url: attachment.publicId
+          url: attachmentUrl
         });
       }
     }
@@ -311,6 +313,19 @@
     }
     actionLoading.value = false;
     messageEditorData.value = emptyTiptapEditorContent;
+  }
+
+  async function openAttachment(
+    attachmentPublicId: TypeId<'convoAttachments'>,
+    filename: string
+  ) {
+    const attachmentUrl = `${useRuntimeConfig().public.storageUrl}/attachment/${orgShortcode}/${attachmentPublicId}/${filename}`;
+    return navigateTo(attachmentUrl, {
+      external: true,
+      open: {
+        target: '_blank'
+      }
+    });
   }
 
   const isContextOpen = ref(false);
