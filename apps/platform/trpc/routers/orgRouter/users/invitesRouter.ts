@@ -289,6 +289,16 @@ export const invitesRouter = router({
     .query(async ({ ctx, input }) => {
       const db = ctx.db;
       const userLoggedIn = ctx.account?.id ? true : false;
+      let username;
+      if (ctx.account?.id) {
+        const queryUserResponse = await db.query.accounts.findFirst({
+          where: eq(accounts.id, ctx.account.id),
+          columns: {
+            username: true
+          }
+        });
+        username = queryUserResponse?.username;
+      }
 
       const queryInvitesResponse = await db.query.orgInvitations.findFirst({
         where: eq(orgInvitations.inviteToken, input.inviteToken),
@@ -338,7 +348,8 @@ export const invitesRouter = router({
         orgAvatarTimestamp: queryInvitesResponse.org.avatarTimestamp,
         orgName: queryInvitesResponse.org.name,
         orgShortcode: queryInvitesResponse.org.shortcode,
-        loggedIn: userLoggedIn
+        loggedIn: userLoggedIn,
+        username: username
       };
     }),
   redeemInvite: accountProcedure
