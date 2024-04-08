@@ -340,6 +340,7 @@
             {{ subject.subject }}
           </span>
         </template>
+
         <!-- <span>TAGS</span> -->
       </div>
 
@@ -419,8 +420,52 @@
             </NuxtUiSelectMenu>
           </div>
           <UnEditor v-model:modelValue="messageEditorData" />
-          <div class="flex min-w-fit flex-col justify-end gap-2 md:flex-row">
+          <div
+            v-if="attachmentUploads.length > 0"
+            class="flex h-fit w-full max-w-full flex-row justify-between gap-2">
+            <div class="flex w-full grow flex-row flex-wrap gap-2">
+              <div
+                v-for="attachment in attachmentUploads"
+                :key="attachment.attachmentPublicId">
+                <UnUiTooltip text="click to remove">
+                  <UnUiButton
+                    variant="soft"
+                    color="amber"
+                    size="xs"
+                    :label="attachment.fileName"
+                    icon="i-ph-paperclip"
+                    @click="
+                      attachmentUploads = attachmentUploads.filter(
+                        (item) =>
+                          item.attachmentPublicId !==
+                          attachment.attachmentPublicId
+                      )
+                    " />
+                </UnUiTooltip>
+              </div>
+            </div>
+            <div class="w-fit">
+              <ConvosUpload
+                v-model:uploadedAttachments="attachmentUploads"
+                :max-size="15000000"
+                :current-size="currentTotalUploadSize"
+                :org-shortcode="orgShortcode">
+                <template #default="{ openFileDialog, loading }">
+                  <UnUiButton
+                    label="Upload more"
+                    size="xs"
+                    variant="outline"
+                    :loading="loading"
+                    icon="i-ph-plus"
+                    @click="openFileDialog" />
+                </template>
+              </ConvosUpload>
+            </div>
+          </div>
+          <div
+            class="flex min-w-fit flex-col items-center justify-end gap-2 md:flex-row">
             <ConvosUpload
+              v-if="attachmentUploads.length === 0"
               v-model:uploadedAttachments="attachmentUploads"
               :max-size="15000000"
               :current-size="currentTotalUploadSize"
