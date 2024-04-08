@@ -34,7 +34,7 @@
     "windy-radix-palette": "2.0.0-beta.7"
   },
   "dependencies": {
-    "@nuxt/ui": "^2.14.2",
+    "@nuxt/ui": "^2.15.1",
     "@pinia/nuxt": "^0.5.1",
     "@simplewebauthn/browser": "^9.0.1",
     "@simplewebauthn/server": "^9.0.3",
