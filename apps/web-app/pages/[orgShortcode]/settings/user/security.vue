@@ -2,6 +2,7 @@
   import { z } from 'zod';
 
   import { useNuxtApp, useToast, ref, watch, computed } from '#imports';
+  import { useUtils } from '~/composables/utils';
   import {
     startAuthentication,
     startRegistration
@@ -18,6 +19,16 @@
   const verificationToken = ref<string | null>(null);
   const verificationModalOpen = ref(false);
   let timeoutId: NodeJS.Timeout | null = null;
+  // check if the users device can directly support passkeys
+  const isArc = ref(useUtils().isArcBrowser());
+  const passkeyType = await (async () => {
+    if (isArc.value === true) {
+      return 'cross-platform';
+    }
+    return (await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable())
+      ? 'platform'
+      : 'cross-platform';
+  })();
 
   const {
     data,
@@ -257,7 +268,8 @@
     passkeyNewButtonLoading.value = true;
     const { options } =
       await $trpc.account.security.generateNewPasskeyChallenge.query({
-        verificationToken: verificationToken.value
+        verificationToken: verificationToken.value,
+        authenticatorType: passkeyType
       });
     // start registration
 
