@@ -10,13 +10,12 @@
   const isMobile = breakpoints.smaller('lg'); // only smaller than lg
 
   const orgShortcode = useRoute().params.orgShortcode;
-  const realtime = useRealtime();
-  await realtime
-    .connect({ orgShortcode: orgShortcode as string })
-    .catch(() => {});
 
   const convoStore = useConvoStore();
   const convoEntryStore = useConvoEntryStore();
+  const realtime = useRealtime();
+
+  realtime.connect({ orgShortcode: orgShortcode as string });
 
   realtime.on('convo:new', async (convo) => {
     await convoStore.fetchAndAddSingleConvo({ convoPublicId: convo.publicId });

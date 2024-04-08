@@ -7,7 +7,8 @@
     useNuxtApp,
     useRoute,
     useToast,
-    watch
+    watch,
+    useRuntimeConfig
   } from '#imports';
   import { useUtils } from '~/composables/utils';
   import { useTimeAgo } from '@vueuse/core';
@@ -24,7 +25,7 @@
 
   type AttachmentEntry = {
     name: string;
-    publicId: string;
+    publicId: TypeId<'convoAttachments'>;
     type: string;
     url: string;
   };
@@ -161,6 +162,7 @@
       convoDetails.value.data.attachments
     ) {
       for (const attachment of convoDetails.value.data.attachments) {
+        const attachmentUrl = `${useRuntimeConfig().public.storageUrl}/attachment/${orgShortcode}/${attachment.publicId}/${attachment.fileName}`;
         const splitFileName = attachment.fileName.split('.');
         const newFileName =
           (splitFileName[0]?.substring(0, 10) ?? '') +
@@ -170,7 +172,7 @@
           name: newFileName,
           publicId: attachment.publicId,
           type: attachment.type,
-          url: attachment.publicId
+          url: attachmentUrl
         });
       }
     }
@@ -313,6 +315,19 @@
     messageEditorData.value = emptyTiptapEditorContent;
   }
 
+  async function openAttachment(
+    attachmentPublicId: TypeId<'convoAttachments'>,
+    filename: string
+  ) {
+    const attachmentUrl = `${useRuntimeConfig().public.storageUrl}/attachment/${orgShortcode}/${attachmentPublicId}/${filename}`;
+    return navigateTo(attachmentUrl, {
+      external: true,
+      open: {
+        target: '_blank'
+      }
+    });
+  }
+
   const isContextOpen = ref(false);
 
   watch(
@@ -340,6 +355,7 @@
             {{ subject.subject }}
           </span>
         </template>
+
         <!-- <span>TAGS</span> -->
       </div>
 
@@ -419,8 +435,52 @@
             </NuxtUiSelectMenu>
           </div>
           <UnEditor v-model:modelValue="messageEditorData" />
-          <div class="flex min-w-fit flex-col justify-end gap-2 md:flex-row">
+          <div
+            v-if="attachmentUploads.length > 0"
+            class="flex h-fit w-full max-w-full flex-row justify-between gap-2">
+            <div class="flex w-full grow flex-row flex-wrap gap-2">
+              <div
+                v-for="attachment in attachmentUploads"
+                :key="attachment.attachmentPublicId">
+                <UnUiTooltip text="click to remove">
+                  <UnUiButton
+                    variant="soft"
+                    color="amber"
+                    size="xs"
+                    :label="attachment.fileName"
+                    icon="i-ph-paperclip"
+                    @click="
+                      attachmentUploads = attachmentUploads.filter(
+                        (item) =>
+                          item.attachmentPublicId !==
+                          attachment.attachmentPublicId
+                      )
+                    " />
+                </UnUiTooltip>
+              </div>
+            </div>
+            <div class="w-fit">
+              <ConvosUpload
+                v-model:uploadedAttachments="attachmentUploads"
+                :max-size="15000000"
+                :current-size="currentTotalUploadSize"
+                :org-shortcode="orgShortcode">
+                <template #default="{ openFileDialog, loading }">
+                  <UnUiButton
+                    label="Upload more"
+                    size="xs"
+                    variant="outline"
+                    :loading="loading"
+                    icon="i-ph-plus"
+                    @click="openFileDialog" />
+                </template>
+              </ConvosUpload>
+            </div>
+          </div>
+          <div
+            class="flex min-w-fit flex-col items-center justify-end gap-2 md:flex-row">
             <ConvosUpload
+              v-if="attachmentUploads.length === 0"
               v-model:uploadedAttachments="attachmentUploads"
               :max-size="15000000"
               :current-size="currentTotalUploadSize"

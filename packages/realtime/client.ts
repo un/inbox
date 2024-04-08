@@ -42,13 +42,14 @@ export default class RealtimeClient {
     });
 
     client.signin();
+    this.client = client;
     return new Promise<void>((resolve, reject) => {
       client.bind('pusher:signin_success', () => {
-        this.client = client;
         client.unbind('pusher:signin_success');
         resolve();
       });
       client.bind('pusher:error', (e: unknown) => {
+        this.client = null;
         reject(e);
       });
     });

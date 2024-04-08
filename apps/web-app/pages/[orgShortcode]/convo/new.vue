@@ -725,32 +725,56 @@
         label="Topic"
         :schema="z.string().trim().min(1).max(128)" />
     </div>
+    <span class="text-sm font-medium">Message</span>
+    <UnEditor
+      v-model:modelValue="messageEditorData"
+      class="min-h-[150px] overflow-hidden" />
 
     <div
-      class="flex h-full max-h-full w-full flex-col justify-items-end gap-2 overflow-hidden">
-      <span class="text-sm font-medium">Message</span>
-      <UnEditor
-        v-model:modelValue="messageEditorData"
-        class="min-h-[150px] overflow-hidden" />
-    </div>
-    <div
-      class="flex w-full max-w-full grow flex-row items-center justify-end gap-2">
-      <div
-        class="flex w-full max-w-full grow flex-row justify-end gap-2 overflow-scroll">
+      v-if="attachmentUploads.length > 0"
+      class="flex w-full max-w-full flex-row justify-between gap-2">
+      <div class="flex w-full grow flex-row flex-wrap gap-2">
         <div
           v-for="attachment in attachmentUploads"
-          :key="attachment.attachmentPublicId"
-          class="w-fit">
+          :key="attachment.attachmentPublicId">
           <UnUiTooltip text="click to remove">
-            <div
-              class="border-1 border-base-9 text-base-11 hover:border-red-9 hover:bg-base-12 hover:text-red-9 flex flex-row gap-1 rounded-md border px-2 py-1">
-              <UnUiIcon name="i-ph-paperclip" />
-              <span class="truncate text-xs"> {{ attachment.fileName }}</span>
-            </div>
+            <UnUiButton
+              variant="soft"
+              color="amber"
+              size="xs"
+              :label="attachment.fileName"
+              icon="i-ph-paperclip"
+              @click="
+                attachmentUploads = attachmentUploads.filter(
+                  (item) =>
+                    item.attachmentPublicId !== attachment.attachmentPublicId
+                )
+              " />
           </UnUiTooltip>
         </div>
       </div>
+
       <ConvosUpload
+        v-model:uploadedAttachments="attachmentUploads"
+        :max-size="15000000"
+        :current-size="currentTotalUploadSize"
+        :org-shortcode="orgShortcode">
+        <template #default="{ openFileDialog, loading }">
+          <UnUiButton
+            label="Upload more"
+            size="xs"
+            variant="outline"
+            :loading="loading"
+            icon="i-ph-plus"
+            @click="openFileDialog" />
+        </template>
+      </ConvosUpload>
+    </div>
+
+    <div
+      class="flex w-full max-w-full grow flex-row items-center justify-end gap-2">
+      <ConvosUpload
+        v-if="attachmentUploads.length === 0"
         v-model:uploadedAttachments="attachmentUploads"
         :max-size="15000000"
         :current-size="currentTotalUploadSize"
