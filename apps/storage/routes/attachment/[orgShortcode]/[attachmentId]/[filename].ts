@@ -11,8 +11,7 @@ import {
   setResponseStatus,
   send,
   sendProxy,
-  useRuntimeConfig,
-  getRouterParams
+  useRuntimeConfig
 } from '#imports';
 import { validateTypeId } from '@u22n/utils';
 
