@@ -617,5 +617,84 @@ export const emailIdentityRouter = router({
         emailIdentities: emailIdentities,
         defaultEmailIdentity: defaultEmailIdentityPublicId
       };
+    }),
+  userHasEmailIdentities: orgProcedure
+    .input(z.object({}).strict())
+    .query(async ({ ctx }) => {
+      if (!ctx.account || !ctx.org) {
+        throw new TRPCError({
+          code: 'UNPROCESSABLE_CONTENT',
+          message: 'Account or Organization is not defined'
+        });
+      }
+      const { db, org } = ctx;
+      const orgId = org?.id;
+      const orgMemberId = org?.memberId || 0;
+      // search for user org group memberships, get id of org group
+
+      const userOrgGroupMembershipQuery = await db.query.groupMembers.findMany({
+        where: eq(groupMembers.orgMemberId, orgMemberId),
+        columns: {
+          groupId: true
+        },
+        with: {
+          group: {
+            columns: {
+              id: true,
+              orgId: true
+            }
+          }
+        }
+      });
+
+      const orgGroupIds = userOrgGroupMembershipQuery.filter(
+        (userOrgGroupMembership) => userOrgGroupMembership.group.orgId === orgId
+      );
+
+      const userGroupIds = orgGroupIds.map(
+        (orgGroupIds) => orgGroupIds.group.id
+      );
+      const uniqueUserGroupIds = [...new Set(userGroupIds)];
+
+      if (!uniqueUserGroupIds.length) {
+        uniqueUserGroupIds.push(0);
+      }
+
+      // search email routingRulesDestinations for orgMemberId or orgGroupId
+
+      const authorizedEmailIdentities =
+        await db.query.emailIdentitiesAuthorizedOrgMembers.findMany({
+          where: or(
+            eq(emailIdentitiesAuthorizedOrgMembers.orgMemberId, orgMemberId),
+            inArray(
+              emailIdentitiesAuthorizedOrgMembers.groupId,
+              uniqueUserGroupIds || [0]
+            )
+          ),
+          columns: {
+            orgMemberId: true,
+            groupId: true,
+            default: true
+          },
+          with: {
+            emailIdentity: {
+              columns: {
+                publicId: true,
+                username: true,
+                domainName: true,
+                sendName: true
+              }
+            }
+          }
+        });
+
+      if (!authorizedEmailIdentities.length) {
+        return {
+          hasIdentity: false
+        };
+      }
+      return {
+        hasIdentity: true
+      };
     })
 });
