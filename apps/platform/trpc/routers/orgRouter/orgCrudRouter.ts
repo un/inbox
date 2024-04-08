@@ -57,7 +57,7 @@ export const crudRouter = router({
           .min(5)
           .max(64)
           .regex(/^[a-z0-9]*$/, {
-            message: 'Only small letters and numbers'
+            message: 'Only lowercase letters and numbers'
           })
       })
     )
@@ -74,7 +74,7 @@ export const crudRouter = router({
           .min(5)
           .max(64)
           .regex(/^[a-z0-9]*$/, {
-            message: 'Only small letters and numbers'
+            message: 'Only lowercase letters and numbers'
           })
       })
     )
