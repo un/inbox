@@ -1,5 +1,12 @@
 <script setup lang="ts">
-  import { ref, useNuxtApp, watch, useRoute, navigateTo } from '#imports';
+  import {
+    ref,
+    useNuxtApp,
+    watch,
+    useRoute,
+    navigateTo,
+    useRuntimeConfig
+  } from '#imports';
   import { breakpointsTailwind, useBreakpoints } from '@vueuse/core';
 
   const breakpoints = useBreakpoints(breakpointsTailwind);
@@ -32,6 +39,10 @@
       key: 'code',
       label: 'Invite Code',
       sortable: true
+    },
+    {
+      key: 'link',
+      label: 'Invite link'
     },
     {
       key: 'email',
@@ -76,6 +87,7 @@
         };
         newTableRows.push({
           code: invite.inviteToken,
+          link: `${useRuntimeConfig().public.siteUrl}/join/invite/${invite.inviteToken}`,
           truncatedCode: invite.inviteToken
             ? invite.inviteToken.substring(0, 8) + '...'
             : '',
@@ -183,12 +195,17 @@
           <template #code-data="{ row }">
             <div
               class="flex w-full flex-row items-center justify-between gap-2">
-              <UnUiTooltip :text="row.code">
-                <span class="">{{ row.truncatedCode }}</span>
-              </UnUiTooltip>
               <UnUiCopy
                 v-if="row.code"
                 :text="row.code" />
+            </div>
+          </template>
+          <template #link-data="{ row }">
+            <div
+              class="flex w-full flex-row items-center justify-between gap-2">
+              <UnUiCopy
+                v-if="row.link"
+                :text="row.link" />
             </div>
           </template>
           <template #email-data="{ row }">
