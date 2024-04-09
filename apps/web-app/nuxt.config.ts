@@ -25,6 +25,7 @@ export default defineNuxtConfig({
     '@vueuse/nuxt',
     'nuxt-security',
     'nuxt-prepare',
+    '@vite-pwa/nuxt',
     '@pinia/nuxt',
     '@pinia-plugin-persistedstate/nuxt',
     '@nuxt/ui'
@@ -111,6 +112,47 @@ export default defineNuxtConfig({
   //* Pinia
   pinia: {
     storesDirs: []
+  },
+
+  pwa: {
+    client: {
+      registerPlugin: true
+    },
+    pwaAssets: {
+      image: 'assets/logo.svg',
+      disabled: false,
+      htmlPreset: '2023',
+      preset: 'minimal-2023',
+      includeHtmlHeadLinks: true
+    },
+    manifest: {
+      name: 'UnInbox',
+      short_name: 'UnInbox',
+      theme_color: '#ffffff',
+      description:
+        "Uninbox is an open-source, self hostable email service by Unproprietary Corporation. It's Modern email for teams and professionals. A replacement for outdated email technology and tools.",
+      icons: [
+        {
+          src: 'pwa-192x192.png',
+          sizes: '192x192',
+          type: 'image/png'
+        },
+        {
+          src: 'pwa-512x512.png',
+          sizes: '512x512',
+          type: 'image/png'
+        },
+        {
+          src: 'pwa-512x512.png',
+          sizes: '512x512',
+          type: 'image/png',
+          purpose: 'any maskable'
+        }
+      ]
+    },
+    devOptions: {
+      enabled: false
+    }
   },
 
   security: {
