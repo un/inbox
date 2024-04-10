@@ -2,13 +2,26 @@ import { z } from 'zod';
 import humanFormat from 'human-format';
 import { zxcvbn, zxcvbnOptions } from '@zxcvbn-ts/core';
 import { dictionary, adjacencyGraphs } from '@zxcvbn-ts/language-common';
+import { haveIBeenPwned } from '@zxcvbn-ts/matcher-pwned';
 
 zxcvbnOptions.setOptions({
   dictionary,
   graphs: adjacencyGraphs
 });
 
-export function calculatePasswordStrength(password: string) {
+export async function calculatePasswordStrength(password: string) {
+  const pawned = await haveIBeenPwned(password, {
+    universalFetch: fetch
+  });
+
+  if (pawned) {
+    return {
+      score: 0,
+      crackTime: 'a few moments',
+      allowed: false
+    };
+  }
+
   const { score, crackTimesSeconds } = zxcvbn(password);
   return {
     score,
@@ -34,7 +47,10 @@ export function calculatePasswordStrength(password: string) {
 export const strongPasswordSchema = z
   .string()
   .min(8, { message: 'Minimum 8 characters required' })
-  .refine((password) => calculatePasswordStrength(password).allowed, {
-    message: 'Password is too weak',
-    path: ['password']
-  });
+  .refine(
+    async (password) => (await calculatePasswordStrength(password)).allowed,
+    {
+      message: 'Password is too weak',
+      path: ['password']
+    }
+  );

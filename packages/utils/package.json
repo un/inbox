@@ -13,13 +13,14 @@
     "pnpm": ">=8"
   },
   "dependencies": {
+    "@zxcvbn-ts/core": "^3.0.4",
+    "@zxcvbn-ts/language-common": "^3.0.4",
+    "@zxcvbn-ts/matcher-pwned": "^3.0.4",
     "drizzle-orm": "^0.30.3",
+    "human-format": "^1.2.0",
     "nanoid": "^5.0.6",
     "typeid-js": "^0.5.0",
-    "zod": "^3.22.4",
-    "human-format": "^1.2.0",
-    "@zxcvbn-ts/core": "^3.0.4",
-    "@zxcvbn-ts/language-common": "^3.0.4"
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@u22n/tsconfig": "^0.0.2"

@@ -7,7 +7,8 @@ import {
 } from '../../trpc';
 import { eq } from '@u22n/database/orm';
 import { accounts } from '@u22n/database/schema';
-import { strongPasswordSchema, typeIdGenerator, zodSchemas } from '@u22n/utils';
+import { typeIdGenerator, zodSchemas } from '@u22n/utils';
+import { strongPasswordSchema } from '@u22n/utils/password';
 import { TRPCError } from '@trpc/server';
 import { createError, setCookie } from 'h3';
 import { lucia } from '../../../utils/auth';

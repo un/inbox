@@ -579,6 +579,9 @@ importers:
       '@zxcvbn-ts/language-common':
         specifier: ^3.0.4
         version: 3.0.4
+      '@zxcvbn-ts/matcher-pwned':
+        specifier: ^3.0.4
+        version: 3.0.4
       drizzle-orm:
         specifier: ^0.30.3
         version: 0.30.3(@planetscale/database@1.16.0)(mysql2@3.9.2)
@@ -6043,6 +6046,12 @@ packages:
 
   /@zxcvbn-ts/language-common@3.0.4:
     resolution: {integrity: sha512-viSNNnRYtc7ULXzxrQIVUNwHAPSXRtoIwy/Tq4XQQdIknBzw4vz36lQLF6mvhMlTIlpjoN/Z1GFu/fwiAlUSsw==}
+    dev: false
+
+  /@zxcvbn-ts/matcher-pwned@3.0.4:
+    resolution: {integrity: sha512-7BY6/IfY0Eb9HjTQGbDPIMceiBR6jZtQTOQfA3X3XREAZZ29GQ2XAm9dwZ76wF35XOajszGoXQ+L/fYh8DpkMg==}
+    dependencies:
+      '@zxcvbn-ts/core': 3.0.4
     dev: false
 
   /abbrev@1.1.1:
