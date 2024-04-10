@@ -454,7 +454,7 @@
                 :org-shortcode="orgShortcode">
                 <template #default="{ openFileDialog, loading }">
                   <UnUiButton
-                    label="Upload more"
+                    square
                     size="xs"
                     variant="outline"
                     :loading="loading"
@@ -464,8 +464,7 @@
               </ConvosUpload>
             </div>
           </div>
-          <div
-            class="flex min-w-fit flex-col items-center justify-end gap-2 md:flex-row">
+          <div class="flex min-w-fit flex-row items-center justify-end gap-2">
             <ConvosUpload
               v-if="attachmentUploads.length === 0"
               v-model:uploadedAttachments="attachmentUploads"

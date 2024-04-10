@@ -5,7 +5,8 @@
   "main": "index.js",
   "exports": {
     ".": "./index.ts",
-    "./extensions": "./extensions.ts"
+    "./extensions": "./extensions.ts",
+    "./vue": "./vue.ts"
   },
   "scripts": {
     "check": "tsc --noEmit"

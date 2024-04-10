@@ -726,9 +726,10 @@
         :schema="z.string().trim().min(1).max(128)" />
     </div>
     <span class="text-sm font-medium">Message</span>
+
     <UnEditor
       v-model:modelValue="messageEditorData"
-      class="min-h-[150px] overflow-hidden" />
+      class="min-h-full overflow-hidden" />
 
     <div
       v-if="attachmentUploads.length > 0"
@@ -761,7 +762,7 @@
         :org-shortcode="orgShortcode">
         <template #default="{ openFileDialog, loading }">
           <UnUiButton
-            label="Upload more"
+            square
             size="xs"
             variant="outline"
             :loading="loading"
@@ -795,14 +796,14 @@
         :disabled="!formValid || actionLoading"
         icon="i-ph-note" /> -->
       <UnUiButton
-        label="Post Comment"
+        label="Comment"
         color="yellow"
         variant="outline"
         :disabled="!formValid || actionLoading"
         icon="i-ph-note"
         @click="createNewConvo('comment')" />
       <UnUiButton
-        label="Send Message"
+        label="Send"
         variant="outline"
         :disabled="!formValid || actionLoading"
         icon="i-ph-envelope"
