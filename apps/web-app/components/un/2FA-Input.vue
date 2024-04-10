@@ -1,41 +1,31 @@
 <script setup lang="ts">
-  import { OTPInput } from 'vue-input-otp';
-  import Slot from '../settings/otpSlot.vue';
+  import { PinInputInput, PinInputRoot } from 'radix-vue';
   import { useVModel } from '@vueuse/core';
 
   const props = defineProps<{
-    modelValue: string;
+    modelValue: string[];
   }>();
 
   const emit = defineEmits<{
-    (e: 'update:modelValue', value: string): void;
+    (e: 'update:modelValue', value: string[]): void;
   }>();
 
-  const optInput = useVModel(props, 'modelValue', emit);
+  const otpInput = useVModel(props, 'modelValue', emit);
 </script>
 <template>
   <div>
-    <OTPInput
-      v-slot="{ slots }"
-      v-model="optInput"
-      :maxlength="6"
-      container-class="group flex items-center has-[:disabled]:opacity-30">
-      <div class="flex">
-        <Slot
-          v-for="(slot, idx) in slots.slice(0, 3)"
-          v-bind="slot"
-          :key="idx" />
-      </div>
-      <!-- Fake Dash. Inspired by Stripe's MFA input. -->
-      <div class="flex w-10 items-center justify-center">
-        <div class="bg-base-9 h-1 w-3 rounded-full" />
-      </div>
-      <div class="flex">
-        <Slot
-          v-for="(slot, idx) in slots.slice(3)"
-          v-bind="slot"
-          :key="idx" />
-      </div>
-    </OTPInput>
+    <PinInputRoot
+      id="pin-input"
+      v-model="otpInput"
+      :max-length="6"
+      placeholder="_"
+      class="mt-1 flex items-center justify-between gap-2 p-2"
+      type="number">
+      <PinInputInput
+        v-for="(id, index) in 6"
+        :key="id"
+        :index="index"
+        class="text-green-10 placeholder:text-mauve-6 bg-base-1 focus:outline-gray-7 border-base-7 h-9 w-9 rounded border text-center font-semibold shadow-md focus:outline focus:outline-2 focus:outline-offset-2" />
+    </PinInputRoot>
   </div>
 </template>

@@ -1,7 +1,7 @@
 <template>
   <div
-    class="bg-base-1 dark:bg-base-1 selection:bg-base-11 selection:text-base-1 h-screen max-h-screen">
-    <NuxtLayout class="h-screen max-h-screen">
+    class="bg-base-1 dark:bg-base-1 selection:bg-base-11 selection:text-base-1 h-svh">
+    <NuxtLayout class="h-svh">
       <NuxtPage />
     </NuxtLayout>
     <NuxtUiNotifications>

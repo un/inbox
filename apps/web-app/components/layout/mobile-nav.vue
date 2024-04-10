@@ -290,8 +290,7 @@
           disabled: 'cursor-text select-text',
           base: 'group flex items-center gap-4'
         }
-      }"
-      :popper="{ placement: 'top-start' }">
+      }">
       <div class="flex w-full flex-row items-center justify-center">
         <UnUiAvatar
           v-if="orgMemberProfile"
@@ -357,9 +356,7 @@
       <template #helpmenu="{ item }">
         <NuxtUiDropdown
           :items="helpMenuItems"
-          mode="hover"
           :ui="{ item: { disabled: 'cursor-text select-text' } }"
-          :popper="{ offsetDistance: -5, placement: 'right-start' }"
           class="w-full">
           <div class="flex w-full flex-row items-center justify-between">
             <span class="truncate">{{ item.label }}</span>

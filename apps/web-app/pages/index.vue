@@ -29,7 +29,7 @@
   const passwordInput = ref('');
   const passwordValid = ref<boolean | null>(null);
   const passwordValidationMessage = ref('');
-  const twoFactorCode = ref('');
+  const twoFactorCode = ref<string[]>([]);
 
   const formValid = computed(() => {
     return (
@@ -72,7 +72,7 @@
       await $trpc.auth.password.signInWithPassword.mutate({
         username: usernameValue.value,
         password: passwordInput.value,
-        twoFactorCode: twoFactorCode.value
+        twoFactorCode: twoFactorCode.value.join('')
       });
     if (passwordVerification.success) {
       navigateTo('/redirect');
@@ -93,7 +93,7 @@
       toast.add({
         title: 'Server error',
         description:
-          'We couldnt generate a secure login for you, please check your internet connection.',
+          "We couldn't generate a secure login for you, please check your internet connection.",
         color: 'red',
         timeout: 5000,
         icon: 'i-ph-warning-circle'
@@ -113,12 +113,14 @@
       if (verifyPasskey.success) {
         navigateTo('/redirect');
       }
-    } catch (e) {
+    } catch (error: any) {
       toast.add({
         title: 'Passkey error',
         description:
-          'Something went wrong when getting your passkey, please try again.',
-        color: 'red',
+          error.name === 'NotAllowedError'
+            ? 'Passkey operation was either cancelled or timed out'
+            : 'Something went wrong when getting your passkey, please try again.',
+        color: error.name === 'NotAllowedError' ? 'yellow' : 'red',
         timeout: 5000,
         icon: 'i-ph-warning-circle'
       });
@@ -132,8 +134,7 @@
 </script>
 
 <template>
-  <div
-    class="flex h-screen w-screen flex-col items-center justify-between p-4 pb-14">
+  <div class="flex h-full w-full flex-col items-center justify-between p-4">
     <div
       class="flex w-full max-w-72 grow flex-col items-center justify-center gap-8">
       <h1 class="mb-4 flex flex-col gap-1 text-center">
@@ -149,7 +150,7 @@
           size="lg"
           @click="doPasskeyLogin()" />
         <UnUiDivider label="or" />
-        <div class="-mt-2 flex w-full flex-col gap-2">
+        <div class="flex w-full flex-col gap-2">
           <div
             class="duration-800 flex w-full flex-col gap-2 overflow-hidden transition-[max-height] ease-in-out"
             :class="showPasswordFields ? 'max-h-96' : 'max-h-0'">
@@ -181,6 +182,7 @@
               <span class="text-sm"
                 >Enter the 6-digit code from your 2FA app</span
               >
+
               <Un2FAInput v-model="twoFactorCode" />
             </div>
           </div>

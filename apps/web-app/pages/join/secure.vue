@@ -9,6 +9,7 @@
     useToast,
     ref,
     computed,
+    watch,
     watchDebounced,
     useCookie,
     type Ref,
@@ -78,11 +79,14 @@
   const passwordConfirmationValid = ref<boolean | null>(null);
   const passwordConfirmationValidationMessage = ref('');
 
+  watch(passwordInput, () => {
+    passwordStats.value.allowed = null;
+  });
+
   watchDebounced(
     passwordInput,
     async () => {
       if (passwordInput.value === '') return;
-      passwordStats.value.allowed = null;
 
       const res = await $trpc.auth.signup.checkPasswordStrength.query({
         password: passwordInput.value
@@ -91,8 +95,8 @@
       passwordStats.value = res;
     },
     {
-      debounce: 600,
-      maxWait: 5000
+      debounce: 750,
+      maxWait: 10000
     }
   );
 
@@ -108,8 +112,8 @@
       passwordConfirmationValid.value = false;
     },
     {
-      debounce: 600,
-      maxWait: 5000
+      debounce: 750,
+      maxWait: 10000
     }
   );
 
@@ -173,13 +177,15 @@
       let newPasskeyData: RegistrationResponseJSON;
       try {
         newPasskeyData = await startRegistration(options);
-      } catch (error) {
+      } catch (error: any) {
         toast.add({
           id: 'passkey_error',
           title: 'Passkey error',
           description:
-            'Something went wrong when creating your passkey, please try again or switch to password mode.',
-          color: 'red',
+            error.name === 'NotAllowedError'
+              ? 'Passkey operation was either cancelled or timed out'
+              : 'Something went wrong when creating your passkey, please try again or switch to password mode.',
+          color: error.name === 'NotAllowedError' ? 'yellow' : 'red',
           timeout: 5000,
           icon: 'i-ph-warning-circle'
         });
@@ -230,7 +236,6 @@
       });
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 1000));
     navigateTo(secureType.value === 'passkey' ? '/join/org' : '/join/2fa');
   }
 
@@ -241,10 +246,10 @@
 </script>
 
 <template>
-  <div class="flex h-screen w-full flex-col items-center justify-between p-4">
+  <div class="flex h-full w-full flex-col items-center justify-between p-4">
     <div
       class="flex w-full max-w-xl grow flex-col items-center justify-center gap-8 pb-14">
-      <h1 class="mb-4 flex flex-col gap-2 text-center">
+      <h1 class="flex flex-col gap-2 text-center">
         <span class="text-2xl font-medium leading-none">Let's make your</span>
         <span class="font-display text-5xl leading-none">UnInbox</span>
       </h1>
@@ -278,30 +283,26 @@
 
       <div class="flex w-full flex-col gap-4">
         <p class="">How do you want to secure your account?</p>
-        <div
-          class="grid w-full grid-cols-1 grid-rows-9 justify-items-center gap-8 md:grid-cols-9 md:grid-rows-1">
+        <div class="flex w-full gap-4">
           <button
             class="bg-base-3 row-span-4 flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded border-2 p-4 md:col-span-4"
             :class="
-              secureType === 'passkey' ? 'border-green-9' : 'border-base-9'
+              secureType === 'passkey' ? 'border-green-9' : 'border-base-4'
             "
             @click="switchSecureType('passkey')">
             <UnUiIcon
               name="i-mdi-fingerprint"
               class="text-base-9 text-5xl" />
             <p class="font-medium">Passkey</p>
-            <p class="text-sm">Fingerprint, Face ID, etc</p>
+            <p class="text-balance text-sm">Fingerprint, Face ID, etc</p>
             <UnUiBadge
               label="Most Secure"
               color="green" />
           </button>
-          <UnUiDivider
-            label="OR"
-            class="w-fit" />
           <button
             class="bg-base-3 row-span-4 flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded border-2 p-4 md:col-span-4"
             :class="
-              secureType === 'password' ? 'border-green-9' : 'border-base-9'
+              secureType === 'password' ? 'border-green-9' : 'border-base-4'
             "
             @click="switchSecureType('password')">
             <UnUiIcon
@@ -317,10 +318,10 @@
       </div>
       <div
         v-if="secureType === 'passkey'"
-        class="flex w-full flex-col gap-4">
+        class="flex w-full flex-col items-center justify-center gap-4">
         <div>
           <span class="font-semibold">What are passkeys?</span>
-          <p class="">
+          <p class="text-balance">
             Passkeys are the new replacement for passwords, designed to give you
             access to an app in an easier and more secure way.
           </p>
@@ -346,8 +347,8 @@
       </div>
       <div
         v-if="secureType === 'password'"
-        class="w-full">
-        <div class="mx-auto flex w-2/3 flex-col gap-2">
+        class="flex w-full flex-col items-center justify-center">
+        <form class="mx-auto flex w-full flex-col gap-2 px-4 md:w-3/4">
           <UnUiInput
             v-model:value="passwordInput"
             :valid="passwordStats.allowed"
@@ -377,7 +378,11 @@
             </p>
             <div class="flex flex-row items-center gap-1">
               <UnUiIcon
-                name="i-ph-check-circle-fill"
+                :name="
+                  passwordStats.score && passwordStats.score >= 3
+                    ? 'i-mdi-check-circle'
+                    : 'i-mdi-close-circle'
+                "
                 :class="
                   passwordStats.score && passwordStats.score >= 3
                     ? 'text-green-9'
@@ -398,7 +403,7 @@
             password
             placeholder=""
             :schema="z.string()" />
-        </div>
+        </form>
       </div>
       <div class="mt-3 w-full">
         <UnUiButton
@@ -419,8 +424,8 @@
         Something went wrong, please try again or contact our support team if it
         persists
       </p>
-      <p class="text-center text-sm">
-        tip: if you have any issues during this process, reach out to our
+      <p class="text-gray-12 text-center text-sm font-medium">
+        Tip: If you have any issues during this process, reach out to our
         support team
       </p>
       <div class="h-0 max-h-0 w-full max-w-full"></div>

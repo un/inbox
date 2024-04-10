@@ -26,7 +26,7 @@
   const manualCode = ref('');
 
   // verification Step
-  const twoFactorCode = ref('');
+  const twoFactorCode = ref<string[]>([]);
   const recoveryCode = ref('');
 
   const {
@@ -57,7 +57,7 @@
 
   async function verify2FA() {
     const verifyTotp = $trpc.account.security.verifyTwoFactor.useMutation();
-    await verifyTotp.mutate({ twoFactorCode: twoFactorCode.value });
+    await verifyTotp.mutate({ twoFactorCode: twoFactorCode.value.join('') });
     if (verifyTotp.error.value) {
       toast.add({
         id: '2fa_error',

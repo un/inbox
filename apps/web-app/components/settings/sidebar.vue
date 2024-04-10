@@ -76,7 +76,7 @@
 </script>
 <template>
   <div
-    class="bg-base-1 border-base-6 z-[30] flex h-full max-h-full w-full flex-col gap-2 overflow-y-auto border-r px-4 py-2 pb-12">
+    class="bg-base-1 border-base-6 z-[30] flex h-full max-h-full w-full flex-col gap-2 overflow-y-auto border-r px-4 py-2 md:pb-12">
     <div
       class="flex h-full max-h-full grow flex-col gap-8 overflow-hidden overflow-y-auto">
       <div class="flex w-full flex-col gap-2">

@@ -63,7 +63,6 @@
     "superjson": "^2.2.1",
     "trpc-nuxt": "^0.10.20",
     "ua-parser-js": "2.0.0-beta.2",
-    "vue-input-otp": "^0.0.11",
     "vue-virtual-scroller": "2.0.0-beta.8",
     "zod": "^3.22.4"
   },

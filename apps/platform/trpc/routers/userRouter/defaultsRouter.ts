@@ -14,6 +14,7 @@ export const defaultsRouter = router({
       const accountResponse = await db.query.accounts.findFirst({
         where: eq(accounts.id, accountId),
         columns: {
+          username: true,
           twoFactorSecret: true,
           passwordHash: true,
           twoFactorEnabled: true
@@ -50,7 +51,8 @@ export const defaultsRouter = router({
           accountResponse?.orgMemberships[0]?.org?.shortcode || null,
         twoFactorEnabledCorrectly: userHasPasskeys
           ? true
-          : twoFactorEnabledCorrectly
+          : twoFactorEnabledCorrectly,
+        username: accountResponse.username
       };
     }),
   getIds: orgProcedure.input(z.object({}).strict()).query(async ({ ctx }) => {

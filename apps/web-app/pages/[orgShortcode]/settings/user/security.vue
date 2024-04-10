@@ -209,7 +209,7 @@
   const showDisable2FAModal = ref(false);
   const disable2FALoading = ref(false);
   const showReset2FAModal = ref(false);
-  const twoFactorDisableCode = ref('');
+  const twoFactorDisableCode = ref<string[]>([]);
   async function disable2FA({ confirm }: { confirm?: boolean }) {
     if (!verificationToken.value) {
       verificationModalOpen.value = true;
@@ -225,7 +225,7 @@
           $trpc.account.security.disable2FA.useMutation();
         await reset2FAMutation.mutate({
           verificationToken: verificationToken.value,
-          twoFactorCode: twoFactorDisableCode.value
+          twoFactorCode: twoFactorDisableCode.value.join('')
         });
         if (reset2FAMutation.error.value) {
           toast.add({
@@ -784,9 +784,7 @@
           If you lost access to your 2FA calculator, please log out and back in
           with your recovery code.
         </span>
-        <Un2FAInput
-          v-model="twoFactorDisableCode"
-          class="" />
+        <Un2FAInput v-model="twoFactorDisableCode" />
 
         <template #footer>
           <div class="flex flex-row gap-2">

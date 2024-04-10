@@ -32,10 +32,6 @@
   const orgShortcodeTempValue = ref('');
   const orgShortcodeValidationMessage = ref('');
 
-  if (process.client) {
-    useCookie('un-join-username', { expires: new Date() }).value = '';
-  }
-
   watchDebounced(
     orgNameValue,
     async () => {

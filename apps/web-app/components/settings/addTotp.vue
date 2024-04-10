@@ -37,12 +37,12 @@
 
   // creation step
   const qrUri = ref('');
-  const qrCode = useQRCode(qrUri, { width: 200, height: 200 });
+  const qrCode = useQRCode(qrUri, { width: 200, height: 200, margin: 5 });
 
   const manualCode = ref('');
 
   // verification Step
-  const twoFactorCode = ref('');
+  const twoFactorCode = ref<string[]>([]);
   const recoveryCode = ref('');
 
   const twoFactorCodeValid = computed(() => {
@@ -77,7 +77,7 @@
   async function verify2FA() {
     const verifyTotp =
       $trpc.auth.twoFactorAuthentication.verifyTwoFactor.useMutation();
-    await verifyTotp.mutate({ twoFactorCode: twoFactorCode.value });
+    await verifyTotp.mutate({ twoFactorCode: twoFactorCode.value.join('') });
     if (verifyTotp.error.value) {
       toast.add({
         id: '2fa_error',
@@ -109,7 +109,9 @@
     disable2FALoading.value = true;
     const reset2FAMutation =
       $trpc.auth.twoFactorAuthentication.disableTwoFactor.useMutation();
-    await reset2FAMutation.mutate({ twoFactorCode: twoFactorCode.value });
+    await reset2FAMutation.mutate({
+      twoFactorCode: twoFactorCode.value.join('')
+    });
     if (reset2FAMutation.error.value) {
       disable2FALoading.value = false;
       return;
@@ -124,12 +126,13 @@
     });
     await getNew2FA({});
     showResetTotpModal.value = false;
-    twoFactorCode.value = '';
+    twoFactorCode.value = [];
     alreadySetUpError.value = false;
   }
 
   function download() {
     const element = document.createElement('a');
+    element.style.display = 'none';
     element.setAttribute(
       'href',
       'data:text/plain;charset=utf-8,' + encodeURIComponent(recoveryCode.value)
@@ -237,7 +240,7 @@
       class="flex w-full flex-col items-center gap-8">
       <div
         v-if="!new2FAVerified"
-        class="grid grid-rows-2 gap-4 md:grid-cols-2">
+        class="flex flex-col gap-4 md:flex-row">
         <div class="flex flex-col items-center gap-4">
           <span class="text-xl font-medium">Step 1</span>
           <div v-if="new2FAStatus === 'pending'">Loading new TOTP</div>
@@ -252,7 +255,7 @@
                 class="rounded-lg p-2 shadow-xl" />
             </div>
             <UnUiButton
-              label="Or copy the code for manual entry"
+              label="Copy for manual entry"
               size="xs"
               :variant="copied && text === manualCode ? 'solid' : 'outline'"
               :color="copied && text === manualCode ? 'teal' : 'primary'"
@@ -261,7 +264,7 @@
         </div>
         <div class="flex flex-col items-center gap-4">
           <span class="text-xl font-medium">Step 2</span>
-          <span class="">
+          <span class="px-2 text-center">
             Enter the 6-digit code from your 2FA app to generate your recovery
             codes
           </span>
@@ -269,6 +272,8 @@
             <Un2FAInput v-model="twoFactorCode" />
             <UnUiButton
               label="Verify Code"
+              size="lg"
+              :disabled="!twoFactorCodeValid"
               @click="verify2FA()" />
           </div>
         </div>
