@@ -6,6 +6,7 @@ import {
   defineEventHandler,
   handleCors
 } from 'h3';
+import { useRuntimeConfig } from '#imports';
 
 const corsEventHandler = <
   TRequest extends EventHandlerRequest,
@@ -20,8 +21,9 @@ const corsEventHandler = <
   });
 };
 
+const webAppUrl = useRuntimeConfig().webapp.url;
 export default corsEventHandler(() => {}, {
-  origin: process.env.WEBAPP_URL ? [process.env.WEBAPP_URL] : '*',
+  origin: webAppUrl,
   methods: '*',
   credentials: true
 });
