@@ -25,6 +25,7 @@
     "ratelimit",
     "Ratelimiter",
     "RPID",
+    "Shortcode",
     "simplewebauthn",
     "starttls",
     "superjson",
