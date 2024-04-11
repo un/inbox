@@ -10,8 +10,8 @@ import {
   getRouterParam,
   setResponseStatus,
   send,
-  sendProxy,
-  useRuntimeConfig
+  useRuntimeConfig,
+  sendWebResponse
 } from '#imports';
 import { validateTypeId } from '@u22n/utils';
 
@@ -90,11 +90,12 @@ export default eventHandler({
     });
     const url = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
 
-    return sendProxy(event, url, {
-      headers: {
-        'Access-Control-Allow-Origin': useRuntimeConfig().webapp.url,
-        'Access-Control-Allow-Methods': 'GET'
-      }
-    });
+    const res = await fetch(url);
+    res.headers.set(
+      'Access-Control-Allow-Origin',
+      useRuntimeConfig().webapp.url
+    );
+    res.headers.set('Access-Control-Allow-Methods', 'GET');
+    return sendWebResponse(event, res);
   }
 });
