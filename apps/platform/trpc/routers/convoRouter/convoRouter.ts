@@ -1196,7 +1196,8 @@ export const convoRouter = router({
             columns: {
               publicId: true,
               fileName: true,
-              type: true
+              type: true,
+              inline: true
             }
           }
         }

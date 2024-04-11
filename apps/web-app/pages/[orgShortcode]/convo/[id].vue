@@ -28,6 +28,7 @@
     publicId: TypeId<'convoAttachments'>;
     type: string;
     url: string;
+    inline: boolean;
   };
 
   const attachments = ref<AttachmentEntry[]>([]);
@@ -172,7 +173,8 @@
           name: newFileName,
           publicId: attachment.publicId,
           type: attachment.type,
-          url: attachmentUrl
+          url: attachmentUrl,
+          inline: attachment.inline
         });
       }
     }
@@ -961,7 +963,9 @@
               v-if="attachments.length && !attachmentsCollapsed"
               class="flex max-w-full flex-row flex-wrap gap-2 overflow-hidden">
               <div
-                v-for="attachment of attachments"
+                v-for="attachment of attachments.filter(
+                  (attachment) => !attachment.inline
+                )"
                 :key="attachment.publicId">
                 <div
                   class="border-1 border-base-5 bg-base-2 flex flex-row gap-1 rounded border px-2 py-1">

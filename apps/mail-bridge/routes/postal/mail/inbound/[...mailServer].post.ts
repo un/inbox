@@ -976,7 +976,7 @@ async function uploadAndAttachAttachment(
   });
 
   return {
-    attachmentUrl: `${useRuntimeConfig().public.storageUrl}/attachment/${orgShortcode}/${attachmentPublicId}/${input.fileName}`,
+    attachmentUrl: `${useRuntimeConfig().storage.url}/attachment/${orgShortcode}/${attachmentPublicId}/${input.fileName}`,
     cid: input.cid,
     inline: input.inline
   };
