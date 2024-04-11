@@ -24,7 +24,7 @@ export const tipTapExtensions: AnyExtension[] = [
     autolink: true,
     openOnClick: true,
     HTMLAttributes: {
-      class: 'href-link'
+      class: 'text-blue-12'
     }
   }),
   Placeholder,
