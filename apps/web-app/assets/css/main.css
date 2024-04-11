@@ -30,3 +30,7 @@
   src: url('/fonts/Inter-italic.var.woff2?v=3.19') format('woff2');
   font-named-instance: 'Italic';
 }
+
+.href-link {
+  @apply text-blue-500 underline;
+}

@@ -94,6 +94,42 @@
             class="h-4 w-4"
             size="26" />
         </ToolbarToggleItem>
+        <ToolbarToggleItem
+          class="text-mauve-11 hover:bg-green-3 hover:text-grass-11 focus:shadow-green-7 data-[state=on]:bg-green-5 data-[state=on]:text-grass-11 ml-0.5 inline-flex h-[25px] flex-shrink-0 flex-grow-0 basis-auto items-center justify-center rounded bg-white px-[5px] text-[13px] leading-none outline-none first:ml-0 focus:relative"
+          value="underline"
+          aria-label="Underline"
+          :disabled="!editor.can().chain().focus().toggleUnderline().run()"
+          :pressed="editor.isActive('underline')"
+          @click="editor.chain().focus().toggleUnderline().run()">
+          <UnUiIcon
+            name="i-ph-text-underline"
+            class="h-4 w-4"
+            size="26" />
+        </ToolbarToggleItem>
+        <ToolbarToggleItem
+          class="text-mauve-11 hover:bg-green-3 hover:text-grass-11 focus:shadow-green-7 data-[state=on]:bg-green-5 data-[state=on]:text-grass-11 ml-0.5 inline-flex h-[25px] flex-shrink-0 flex-grow-0 basis-auto items-center justify-center rounded bg-white px-[5px] text-[13px] leading-none outline-none first:ml-0 focus:relative"
+          value="superscript"
+          aria-label="Superscript"
+          :disabled="!editor.can().chain().focus().toggleSuperscript().run()"
+          :pressed="editor.isActive('superscript')"
+          @click="editor.chain().focus().toggleSuperscript().run()">
+          <UnUiIcon
+            name="i-mdi-format-superscript"
+            class="h-4 w-4"
+            size="26" />
+        </ToolbarToggleItem>
+        <ToolbarToggleItem
+          class="text-mauve-11 hover:bg-green-3 hover:text-grass-11 focus:shadow-green-7 data-[state=on]:bg-green-5 data-[state=on]:text-grass-11 ml-0.5 inline-flex h-[25px] flex-shrink-0 flex-grow-0 basis-auto items-center justify-center rounded bg-white px-[5px] text-[13px] leading-none outline-none first:ml-0 focus:relative"
+          value="subscript"
+          aria-label="subscript"
+          :disabled="!editor.can().chain().focus().toggleSubscript().run()"
+          :pressed="editor.isActive('subscript')"
+          @click="editor.chain().focus().toggleSubscript().run()">
+          <UnUiIcon
+            name="i-ph-text-subscript"
+            class="h-4 w-4"
+            size="26" />
+        </ToolbarToggleItem>
       </ToolbarToggleGroup>
     </ToolbarRoot>
 
