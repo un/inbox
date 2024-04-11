@@ -10,8 +10,9 @@ import {
   getRouterParam,
   setResponseStatus,
   send,
-  sendProxy,
-  useRuntimeConfig
+  useRuntimeConfig,
+  appendCorsHeaders,
+  sendStream
 } from '#imports';
 import { validateTypeId } from '@u22n/utils';
 
@@ -62,7 +63,7 @@ export default eventHandler({
     }
 
     if (!attachmentQueryResponse.public) {
-      const accountId = event.context.account.id;
+      const accountId = event.context.account?.id;
       if (!accountId) {
         setResponseStatus(event, 401);
         return send(event, 'Unauthorized');
@@ -89,7 +90,12 @@ export default eventHandler({
       Key: `${orgPublicId}/${attachmentPublicId}/${filename}`
     });
     const url = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
-
-    return sendProxy(event, url);
+    const request = await fetch(url);
+    appendCorsHeaders(event, {
+      origin: useRuntimeConfig().webapp.url,
+      methods: ['GET'],
+      credentials: true
+    });
+    return sendStream(event, request.body!);
   }
 });

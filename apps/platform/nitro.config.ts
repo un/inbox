@@ -56,6 +56,9 @@ export default defineNitroConfig({
     autoImport: false
   },
   runtimeConfig: {
+    webapp: {
+      url: process.env.WEBAPP_URL || 'http://localhost:3000'
+    },
     primaryDomain: process.env.PRIMARY_DOMAIN || 'localhost',
     mailDomains: mailDomains,
     transactionalCredentials: transactionalCredentials,

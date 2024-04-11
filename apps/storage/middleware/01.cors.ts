@@ -4,6 +4,7 @@ import {
   type EventHandlerResponse,
   type H3CorsOptions,
   defineEventHandler,
+  getRequestURL,
   handleCors
 } from 'h3';
 import { useRuntimeConfig } from '#imports';
@@ -16,6 +17,9 @@ const corsEventHandler = <
   options: H3CorsOptions
 ): EventHandler<EventHandlerRequest, TResponse> => {
   return defineEventHandler((event) => {
+    if (!getRequestURL(event).pathname.startsWith('/api')) {
+      return handler(event);
+    }
     handleCors(event, options);
     return handler(event);
   });

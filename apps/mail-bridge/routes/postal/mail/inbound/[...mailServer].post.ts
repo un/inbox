@@ -794,6 +794,30 @@ export default eventHandler(async (event) => {
     return;
   }
 
+  const convoEntryBody = tiptapHtml.generateJSON(
+    parsedEmailMessage.parsedMessageHtml,
+    tipTapExtensions
+  );
+
+  const convoEntryBodyPlainText = tiptapCore.generateText(
+    convoEntryBody,
+    tipTapExtensions
+  );
+
+  const insertNewConvoEntry = await db.insert(convoEntries).values({
+    orgId: orgId,
+    publicId: typeIdGenerator('convoEntries'),
+    convoId: convoId!,
+    visibility: 'all_participants',
+    type: 'message',
+    metadata: convoEntryMetadata,
+    author: fromAddressParticipantId!,
+    body: convoEntryBody,
+    bodyPlainText: convoEntryBodyPlainText,
+    replyToId: replyToId,
+    subjectId: subjectId
+  });
+
   const uploadedAttachments = await Promise.allSettled(
     attachments.map((attachment) =>
       uploadAndAttachAttachment(
@@ -835,27 +859,17 @@ export default eventHandler(async (event) => {
     uploadedAttachments
   );
 
-  const convoEntryBody = tiptapHtml.generateJSON(
+  const convoEntryBodyWithAttachments = tiptapHtml.generateJSON(
     parsedEmailMessageHtmlWithAttachments,
     tipTapExtensions
   );
-  const convoEntryBodyPlainText = tiptapCore.generateText(
-    convoEntryBody,
-    tipTapExtensions
-  );
-  const insertNewConvoEntry = await db.insert(convoEntries).values({
-    orgId: orgId,
-    publicId: typeIdGenerator('convoEntries'),
-    convoId: convoId!,
-    visibility: 'all_participants',
-    type: 'message',
-    metadata: convoEntryMetadata,
-    author: fromAddressParticipantId!,
-    body: convoEntryBody,
-    bodyPlainText: convoEntryBodyPlainText,
-    replyToId: replyToId,
-    subjectId: subjectId
-  });
+
+  await db
+    .update(convoEntries)
+    .set({
+      body: convoEntryBodyWithAttachments
+    })
+    .where(eq(convoEntries.id, Number(insertNewConvoEntry.insertId)));
 
   if (replyToId) {
     await db.insert(convoEntryReplies).values({
@@ -962,7 +976,7 @@ async function uploadAndAttachAttachment(
   });
 
   return {
-    attachmentUrl: `${useRuntimeConfig().public.storageUrl}/attachment/${orgShortcode}/${attachmentPublicId}/${input.fileName}`,
+    attachmentUrl: `${useRuntimeConfig().storage.url}/attachment/${orgShortcode}/${attachmentPublicId}/${input.fileName}`,
     cid: input.cid,
     inline: input.inline
   };

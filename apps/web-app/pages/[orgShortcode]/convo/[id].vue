@@ -161,7 +161,9 @@
       convoDetails.value.data &&
       convoDetails.value.data.attachments
     ) {
-      for (const attachment of convoDetails.value.data.attachments) {
+      for (const attachment of convoDetails.value.data.attachments.filter(
+        (_) => !_.inline
+      )) {
         const attachmentUrl = `${useRuntimeConfig().public.storageUrl}/attachment/${orgShortcode}/${attachment.publicId}/${attachment.fileName}`;
         const splitFileName = attachment.fileName.split('.');
         const newFileName =
