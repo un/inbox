@@ -364,7 +364,7 @@
                     .string()
                     .min(1)
                     .max(32)
-                    .regex(/^[a-zA-Z0-9]*$/, {
+                    .regex(/^[a-zA-Z0-9._-]*$/, {
                       message: 'Only letters and numbers'
                     })
                 "
