@@ -126,7 +126,7 @@
           :pressed="editor.isActive('subscript')"
           @click="editor.chain().focus().toggleSubscript().run()">
           <UnUiIcon
-            name="i-ph-text-subscript"
+            name="i-mdi-format-subscript"
             class="h-4 w-4"
             size="26" />
         </ToolbarToggleItem>
