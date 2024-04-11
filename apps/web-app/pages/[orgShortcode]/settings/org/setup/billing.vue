@@ -3,7 +3,9 @@
     definePageMeta,
     navigateTo,
     onMounted,
+    onUnmounted,
     ref,
+    watch,
     useNuxtApp,
     useRoute
   } from '#imports';
@@ -36,6 +38,7 @@
   const loadingButton = ref('');
   const pendingAction = ref(false);
   const currentPlan = ref(orgBillingOverview?.value?.currentPlan);
+  const calStatus = ref<'loading' | 'loaded' | 'showing'>('loading');
 
   async function subscribeToPlan(plan: 'starter' | 'pro') {
     loadingButton.value = plan;
@@ -72,6 +75,27 @@
     return;
   }
 
+  declare const Cal: Function;
+  watch(orgBillingOverview, () => {
+    if (
+      orgBillingOverview.value?.currentPlan !== 'free' &&
+      calStatus.value === 'loaded'
+    ) {
+      calStatus.value = 'showing';
+      Cal('init', { origin: 'https://cal.com' });
+      Cal('inline', {
+        elementOrSelector: '#my-cal-inline',
+        calLink: 'mc/unboarding',
+        layout: 'month_view'
+      });
+      Cal('ui', {
+        cssVarPerTheme: { branding: { brandColor: '#000000' } },
+        hideEventTypeDetails: false,
+        layout: 'month_view'
+      });
+    }
+  });
+
   const goToPortalButtonLoading = ref(false);
   async function goToBillingPortal() {
     goToPortalButtonLoading.value = true;
@@ -92,25 +116,17 @@
     goToPortalButtonLoading.value = false;
   }
 
+  const script = document.createElement('script');
   // CAL
   onMounted(() => {
-    const script = document.createElement('script');
     script.setAttribute('src', '/calcom.js');
     document.head.appendChild(script);
-    // @ts-expect-error - cal loaded via ghetto script tag
-    window.Cal('init', { origin: 'https://cal.com' });
-    // @ts-expect-error - cal loaded via ghetto script tag
-    window.Cal('inline', {
-      elementOrSelector: '#my-cal-inline',
-      calLink: 'mc/unboarding',
-      layout: 'month_view'
+    script.addEventListener('load', () => (calStatus.value = 'loaded'), {
+      once: true
     });
-    // @ts-expect-error - cal loaded via ghetto script tag
-    window.Cal('ui', {
-      styles: { branding: { brandColor: '#000000' } },
-      hideEventTypeDetails: false,
-      layout: 'month_view'
-    });
+  });
+  onUnmounted(() => {
+    script.remove();
   });
 </script>
 
@@ -327,22 +343,9 @@
             <span class="text-base-11 font-medium"
               >Jump on a free unboarding call!</span
             >
-            <UnUiButton
-              label="Schedule a call"
-              variant="outline"
-              @click="
-                navigateTo('https://cal.com/mc/unboarding', {
-                  external: true,
-                  open: { target: '_blank' }
-                })
-              " />
-            <!-- Cal inline embed code begins -->
-
             <div
               id="my-cal-inline"
-              style="width: 100%; height: 100%; overflow: scroll"></div>
-
-            <!-- Cal inline embed code ends -->
+              class="h-full w-full overflow-auto" />
           </div>
         </div>
       </div>
