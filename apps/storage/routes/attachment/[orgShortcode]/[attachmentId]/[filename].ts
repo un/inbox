@@ -11,7 +11,8 @@ import {
   setResponseStatus,
   send,
   useRuntimeConfig,
-  sendWebResponse
+  appendCorsHeaders,
+  sendStream
 } from '#imports';
 import { validateTypeId } from '@u22n/utils';
 
@@ -89,13 +90,11 @@ export default eventHandler({
       Key: `${orgPublicId}/${attachmentPublicId}/${filename}`
     });
     const url = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
-
-    const res = await fetch(url);
-    res.headers.set(
-      'Access-Control-Allow-Origin',
-      useRuntimeConfig().webapp.url
-    );
-    res.headers.set('Access-Control-Allow-Methods', 'GET');
-    return sendWebResponse(event, res);
+    const request = await fetch(url);
+    appendCorsHeaders(event, {
+      origin: useRuntimeConfig().webapp.url,
+      methods: ['GET']
+    });
+    return sendStream(event, request.body!);
   }
 });
