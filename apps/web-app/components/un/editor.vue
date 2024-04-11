@@ -51,15 +51,15 @@
 
 <template>
   <div
-    class="border-1 border-base-6 bg-base-1 flex h-full max-h-full w-full flex-col rounded-md border px-2 py-1">
+    class="border-1 border-base-6 bg-base-1 flex h-full max-h-full w-full flex-col rounded-md border p-0">
     <ToolbarRoot
-      class="border-base-4 bg-base-1 flex w-full !min-w-max max-w-[610px] items-center rounded-md border p-1"
+      class="border-base-7 bg-base-1 flex w-full items-center border-b p-1"
       aria-label="Formatting options">
       <ToolbarToggleGroup
         type="multiple"
         aria-label="Text formatting">
         <ToolbarToggleItem
-          class="text-mauve-11 hover:bg-green-3 hover:text-grass-11 focus:shadow-green-7 data-[state=on]:bg-green-5 data-[state=on]:text-grass-11 ml-0.5 inline-flex h-[25px] flex-shrink-0 flex-grow-0 basis-auto items-center justify-center rounded bg-white px-[5px] text-[13px] leading-none outline-none first:ml-0 focus:relative"
+          class="text-base-11 hover:bg-green-3 hover:text-grass-11 focus:shadow-green-7 data-[state=on]:bg-green-5 data-[state=on]:text-grass-11 bg-base-1 ml-0.5 inline-flex h-[25px] flex-shrink-0 flex-grow-0 basis-auto items-center justify-center rounded px-[5px] text-[13px] leading-none outline-none first:ml-0 focus:relative"
           value="bold"
           aria-label="Bold"
           :disabled="!editor.can().chain().focus().toggleBold().run()"
@@ -71,7 +71,7 @@
             size="26" />
         </ToolbarToggleItem>
         <ToolbarToggleItem
-          class="text-mauve-11 hover:bg-green-3 hover:text-grass-11 focus:shadow-green-7 data-[state=on]:bg-green-5 data-[state=on]:text-grass-11 ml-0.5 inline-flex h-[25px] flex-shrink-0 flex-grow-0 basis-auto items-center justify-center rounded bg-white px-[5px] text-[13px] leading-none outline-none first:ml-0 focus:relative"
+          class="text-base-11 hover:bg-green-3 hover:text-grass-11 focus:shadow-green-7 data-[state=on]:bg-green-5 data-[state=on]:text-grass-11 bg-base-1 ml-0.5 inline-flex h-[25px] flex-shrink-0 flex-grow-0 basis-auto items-center justify-center rounded px-[5px] text-[13px] leading-none outline-none first:ml-0 focus:relative"
           value="italic"
           aria-label="Italic"
           :disabled="!editor.can().chain().focus().toggleItalic().run()"
@@ -83,7 +83,7 @@
             size="26" />
         </ToolbarToggleItem>
         <ToolbarToggleItem
-          class="text-mauve-11 hover:bg-green-3 hover:text-grass-11 focus:shadow-green-7 data-[state=on]:bg-green-5 data-[state=on]:text-grass-11 ml-0.5 inline-flex h-[25px] flex-shrink-0 flex-grow-0 basis-auto items-center justify-center rounded bg-white px-[5px] text-[13px] leading-none outline-none first:ml-0 focus:relative"
+          class="text-base-11 hover:bg-green-3 hover:text-grass-11 focus:shadow-green-7 data-[state=on]:bg-green-5 data-[state=on]:text-grass-11 bg-base-1 ml-0.5 inline-flex h-[25px] flex-shrink-0 flex-grow-0 basis-auto items-center justify-center rounded px-[5px] text-[13px] leading-none outline-none first:ml-0 focus:relative"
           value="strikethrough"
           aria-label="Strike through"
           :disabled="!editor.can().chain().focus().toggleStrike().run()"
@@ -95,7 +95,7 @@
             size="26" />
         </ToolbarToggleItem>
         <ToolbarToggleItem
-          class="text-mauve-11 hover:bg-green-3 hover:text-grass-11 focus:shadow-green-7 data-[state=on]:bg-green-5 data-[state=on]:text-grass-11 ml-0.5 inline-flex h-[25px] flex-shrink-0 flex-grow-0 basis-auto items-center justify-center rounded bg-white px-[5px] text-[13px] leading-none outline-none first:ml-0 focus:relative"
+          class="text-base-11 hover:bg-green-3 hover:text-grass-11 focus:shadow-green-7 data-[state=on]:bg-green-5 data-[state=on]:text-grass-11 bg-base-1 ml-0.5 inline-flex h-[25px] flex-shrink-0 flex-grow-0 basis-auto items-center justify-center rounded px-[5px] text-[13px] leading-none outline-none first:ml-0 focus:relative"
           value="underline"
           aria-label="Underline"
           :disabled="!editor.can().chain().focus().toggleUnderline().run()"
@@ -107,26 +107,26 @@
             size="26" />
         </ToolbarToggleItem>
         <ToolbarToggleItem
-          class="text-mauve-11 hover:bg-green-3 hover:text-grass-11 focus:shadow-green-7 data-[state=on]:bg-green-5 data-[state=on]:text-grass-11 ml-0.5 inline-flex h-[25px] flex-shrink-0 flex-grow-0 basis-auto items-center justify-center rounded bg-white px-[5px] text-[13px] leading-none outline-none first:ml-0 focus:relative"
+          class="text-base-11 hover:bg-green-3 hover:text-grass-11 focus:shadow-green-7 data-[state=on]:bg-green-5 data-[state=on]:text-grass-11 bg-base-1 ml-0.5 inline-flex h-[25px] flex-shrink-0 flex-grow-0 basis-auto items-center justify-center rounded px-[5px] text-[13px] leading-none outline-none first:ml-0 focus:relative"
           value="superscript"
           aria-label="Superscript"
           :disabled="!editor.can().chain().focus().toggleSuperscript().run()"
           :pressed="editor.isActive('superscript')"
           @click="editor.chain().focus().toggleSuperscript().run()">
           <UnUiIcon
-            name="i-mdi-format-superscript"
+            name="i-ph-text-superscript"
             class="h-4 w-4"
             size="26" />
         </ToolbarToggleItem>
         <ToolbarToggleItem
-          class="text-mauve-11 hover:bg-green-3 hover:text-grass-11 focus:shadow-green-7 data-[state=on]:bg-green-5 data-[state=on]:text-grass-11 ml-0.5 inline-flex h-[25px] flex-shrink-0 flex-grow-0 basis-auto items-center justify-center rounded bg-white px-[5px] text-[13px] leading-none outline-none first:ml-0 focus:relative"
+          class="text-base-11 hover:bg-green-3 hover:text-grass-11 focus:shadow-green-7 data-[state=on]:bg-green-5 data-[state=on]:text-grass-11 bg-base-1 ml-0.5 inline-flex h-[25px] flex-shrink-0 flex-grow-0 basis-auto items-center justify-center rounded px-[5px] text-[13px] leading-none outline-none first:ml-0 focus:relative"
           value="subscript"
           aria-label="subscript"
           :disabled="!editor.can().chain().focus().toggleSubscript().run()"
           :pressed="editor.isActive('subscript')"
           @click="editor.chain().focus().toggleSubscript().run()">
           <UnUiIcon
-            name="i-mdi-format-subscript"
+            name="i-ph-text-subscript"
             class="h-4 w-4"
             size="26" />
         </ToolbarToggleItem>
@@ -135,6 +135,6 @@
 
     <EditorContent
       :editor="editor"
-      class="h-full min-h-8 flex-1" />
+      class="h-full min-h-8 flex-1 px-2 py-1" />
   </div>
 </template>
