@@ -12,8 +12,6 @@ export const subscriptionsRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      console.info('🤑 called to update org user count', { input });
-
       const { db } = ctx;
       const { orgId } = input;
 
@@ -29,8 +27,6 @@ export const subscriptionsRouter = router({
         }
       });
       if (!orgSubscriptionQuery?.id) {
-        console.error('🔥 didnt find billing details');
-
         return { error: 'Org is not subscribed to a plan' };
       }
 
@@ -42,20 +38,17 @@ export const subscriptionsRouter = router({
         );
 
       const totalOrgUsers = activeOrgMembersCount[0]?.count || 1;
-      console.info('🗣️', { totalOrgUsers });
 
       if (orgSubscriptionQuery.stripeSubscriptionId) {
         const stripeGetSubscriptionResult =
           await useStripe().sdk.subscriptions.retrieve(
             orgSubscriptionQuery.stripeSubscriptionId
           );
-        console.info('🤑', { stripeGetSubscriptionResult });
 
         if (
           stripeGetSubscriptionResult &&
           stripeGetSubscriptionResult.items &&
-          stripeGetSubscriptionResult.items.data &&
-          stripeGetSubscriptionResult.items.data.length === 0
+          stripeGetSubscriptionResult.items.data
         ) {
           await useStripe().sdk.subscriptions.update(
             orgSubscriptionQuery.stripeSubscriptionId,
@@ -81,7 +74,7 @@ export const subscriptionsRouter = router({
         }
       }
 
-      console.info('🚀', { updated: true });
+      console.info('🚀 Updated billing details 🎉', { orgId, totalOrgUsers });
 
       return {
         updated: true
