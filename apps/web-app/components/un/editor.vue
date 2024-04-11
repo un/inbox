@@ -34,6 +34,14 @@
     }
   });
 
+  const resetEditor = () => {
+    editor.commands.clearContent(true);
+  };
+
+  defineExpose({
+    resetEditor
+  });
+
   onUnmounted(() => {
     editor.destroy();
   });
