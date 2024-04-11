@@ -15,6 +15,13 @@
       "when": 1712397681848,
       "tag": "0001_cold_hiroim",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1712838755820,
+      "tag": "0002_condemned_spot",
+      "breakpoints": true
     }
   ]
 }
