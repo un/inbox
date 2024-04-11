@@ -93,7 +93,8 @@ export default eventHandler({
     const request = await fetch(url);
     appendCorsHeaders(event, {
       origin: useRuntimeConfig().webapp.url,
-      methods: ['GET']
+      methods: ['GET'],
+      credentials: true
     });
     return sendStream(event, request.body!);
   }
