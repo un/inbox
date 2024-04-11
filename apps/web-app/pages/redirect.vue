@@ -1,27 +1,25 @@
 <script setup lang="ts">
-  import { navigateTo, useNuxtApp, onMounted } from '#imports';
+  import { navigateTo, useNuxtApp, onMounted, useCookie } from '#imports';
 
   const { $trpc } = useNuxtApp();
 
   onMounted(async () => {
-    const { defaultOrgShortcode, twoFactorEnabledCorrectly } =
+    const { defaultOrgShortcode, twoFactorEnabledCorrectly, username } =
       await $trpc.account.defaults.redirectionData.query({});
 
-    // TODO: This causes a redirect loop, will remove later
+    const usernameCookie = useCookie('un-join-username', {
+      maxAge: 3600
+    });
 
-    // const usernameCookie = useCookie('un-join-username', {
-    //   maxAge: 3600
-    // });
-
-    // if (
-    //   process.client && // running in client
-    //   !usernameCookie.value && // doesn't have a username cookie
-    //   username && // has username set
-    //   Boolean(defaultOrgShortcode) && // has a default org
-    //   !twoFactorEnabledCorrectly // 2fa is not enabled correctly
-    // ) {
-    //   usernameCookie.value = username;
-    // }
+    if (
+      process.client && // running in client
+      !usernameCookie.value && // doesn't have a username cookie
+      username && // has username set
+      Boolean(defaultOrgShortcode) && // has a default org
+      !twoFactorEnabledCorrectly // 2fa is not enabled correctly
+    ) {
+      usernameCookie.value = username;
+    }
 
     if (!twoFactorEnabledCorrectly) {
       return navigateTo(`/join/2fa`);
