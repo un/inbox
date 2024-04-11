@@ -28,7 +28,6 @@
     publicId: TypeId<'convoAttachments'>;
     type: string;
     url: string;
-    inline: boolean;
   };
 
   const attachments = ref<AttachmentEntry[]>([]);
@@ -162,7 +161,9 @@
       convoDetails.value.data &&
       convoDetails.value.data.attachments
     ) {
-      for (const attachment of convoDetails.value.data.attachments) {
+      for (const attachment of convoDetails.value.data.attachments.filter(
+        (_) => !_.inline
+      )) {
         const attachmentUrl = `${useRuntimeConfig().public.storageUrl}/attachment/${orgShortcode}/${attachment.publicId}/${attachment.fileName}`;
         const splitFileName = attachment.fileName.split('.');
         const newFileName =
@@ -173,8 +174,7 @@
           name: newFileName,
           publicId: attachment.publicId,
           type: attachment.type,
-          url: attachmentUrl,
-          inline: attachment.inline
+          url: attachmentUrl
         });
       }
     }
@@ -963,9 +963,7 @@
               v-if="attachments.length && !attachmentsCollapsed"
               class="flex max-w-full flex-row flex-wrap gap-2 overflow-hidden">
               <div
-                v-for="attachment of attachments.filter(
-                  (attachment) => !attachment.inline
-                )"
+                v-for="attachment of attachments"
                 :key="attachment.publicId">
                 <div
                   class="border-1 border-base-5 bg-base-2 flex flex-row gap-1 rounded border px-2 py-1">

@@ -11,7 +11,10 @@ export const tipTapExtensions: AnyExtension[] = [
   ExtensionTextStyle,
   ExtensionColor,
   Image.configure({
-    inline: true
+    inline: true,
+    HTMLAttributes: {
+      crossorigin: 'use-credentials'
+    }
   }),
   Link.configure({
     linkOnPaste: true,

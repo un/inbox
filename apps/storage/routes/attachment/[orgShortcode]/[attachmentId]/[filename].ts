@@ -62,7 +62,7 @@ export default eventHandler({
     }
 
     if (!attachmentQueryResponse.public) {
-      const accountId = event.context.account.id;
+      const accountId = event.context.account?.id;
       if (!accountId) {
         setResponseStatus(event, 401);
         return send(event, 'Unauthorized');
@@ -90,6 +90,11 @@ export default eventHandler({
     });
     const url = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
 
-    return sendProxy(event, url);
+    return sendProxy(event, url, {
+      headers: {
+        'Access-Control-Allow-Origin': useRuntimeConfig().webapp.url,
+        'Access-Control-Allow-Methods': 'GET'
+      }
+    });
   }
 });
