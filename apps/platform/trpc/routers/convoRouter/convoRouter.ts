@@ -992,7 +992,7 @@ export const convoRouter = router({
       }
 
       //* send notifications
-      await sendRealtimeNotification({
+      sendRealtimeNotification({
         newConvo: false,
         convoId: Number(convoEntryToReplyToQueryResponse.convoId),
         convoEntryId: Number(insertConvoEntryResponse.insertId)

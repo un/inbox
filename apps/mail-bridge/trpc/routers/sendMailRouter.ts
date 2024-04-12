@@ -711,7 +711,7 @@ export const sendMailRouter = router({
           console.error('🚨 error sending email', e);
         })) as PostalResponse;
 
-      if (sendMailPostalResponse.status === 'success') {
+      if (sendMailPostalResponse?.status === 'success') {
         const transformedMessages = Object.entries(
           sendMailPostalResponse.data.messages
         ).map(([recipient, { id, token }]) => ({

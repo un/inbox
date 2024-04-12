@@ -73,22 +73,25 @@ export async function sendRealtimeNotification({
   }
 
   if (newConvo || !convoEntryPublicId) {
-    await realtime.emit({
-      event: 'convo:new',
-      orgMemberPublicIds: orgMembersForNotificationPublicIds,
-      data: {
-        publicId: convoPublicId
-      }
-    });
-    return;
+    await realtime
+      .emit({
+        event: 'convo:new',
+        orgMemberPublicIds: orgMembersForNotificationPublicIds,
+        data: {
+          publicId: convoPublicId
+        }
+      })
+      .catch(console.error);
   } else {
-    await realtime.emit({
-      event: 'convo:entry:new',
-      orgMemberPublicIds: orgMembersForNotificationPublicIds,
-      data: {
-        convoPublicId,
-        convoEntryPublicId
-      }
-    });
+    await realtime
+      .emit({
+        event: 'convo:entry:new',
+        orgMemberPublicIds: orgMembersForNotificationPublicIds,
+        data: {
+          convoPublicId,
+          convoEntryPublicId
+        }
+      })
+      .catch(console.error);
   }
 }

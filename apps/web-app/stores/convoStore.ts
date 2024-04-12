@@ -76,6 +76,26 @@ export const useConvoStore = defineStore(
       orgMemberConvos.value.unshift(newConvo.value);
     }
 
+    async function fetchAndReplaceSingleConvo({
+      convoPublicId
+    }: {
+      convoPublicId: TypeId<'convos'>;
+    }) {
+      const { data: newConvo } =
+        await $trpc.convos.getOrgMemberSpecificConvo.useQuery({
+          convoPublicId
+        });
+      if (!newConvo.value || !('publicId' in newConvo.value)) return;
+
+      // replace the existing convo data with the new one
+      const convoIndex = orgMemberConvos.value.findIndex(
+        (convo) => convo.publicId === convoPublicId
+      );
+      if (convoIndex === -1) return;
+      // replace the data of the existing convo
+      orgMemberConvos.value.splice(convoIndex, 1, newConvo.value);
+    }
+
     async function refreshConvoInList({
       convoPublicId
     }: {
@@ -85,10 +105,11 @@ export const useConvoStore = defineStore(
         (convo) => convo.publicId === convoPublicId
       );
 
-      if (convoIndex === -1) return;
-
-      orgMemberConvos.value.splice(convoIndex, 1);
-      await fetchAndAddSingleConvo({ convoPublicId });
+      if (convoIndex === -1) {
+        await fetchAndAddSingleConvo({ convoPublicId });
+        return;
+      }
+      await fetchAndReplaceSingleConvo({ convoPublicId });
     }
 
     return {
