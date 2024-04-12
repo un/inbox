@@ -801,6 +801,7 @@ export const convoRouter = router({
 
       // get the email identity the user wants to email from
       let emailIdentityId: number | null = null;
+
       if (sendAsEmailIdentityPublicId) {
         const sendAsEmailIdentityResponse =
           await db.query.emailIdentities.findFirst({

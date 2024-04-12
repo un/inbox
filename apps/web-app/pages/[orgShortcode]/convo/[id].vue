@@ -20,6 +20,7 @@
   import { type ConvoEntryMetadata } from '@u22n/database/schema';
   import { stringify } from 'superjson';
   import { validateTypeId, type TypeId } from '@u22n/utils';
+  import type { UnEditor } from '#components';
 
   const { $trpc } = useNuxtApp();
 
@@ -95,6 +96,7 @@
   const messageEditorData = ref<tiptapVue3.JSONContent>(
     emptyTiptapEditorContent
   );
+  const editor = ref<null | InstanceType<typeof UnEditor>>(null);
   const actionLoading = ref(false);
   const isTextPresent = computed(() => {
     const contentArray = messageEditorData.value?.content;
@@ -294,7 +296,12 @@
 
     const createConvoReplyTrpc = $trpc.convos.replyToConvo.useMutation();
     await createConvoReplyTrpc.mutate({
-      sendAsEmailIdentityPublicId: selectedOrgEmailIdentities.value?.publicId,
+      ...(convoHasContactParticipants.value
+        ? {
+            sendAsEmailIdentityPublicId:
+              selectedOrgEmailIdentities.value?.publicId
+          }
+        : {}),
       replyToMessagePublicId: replyToMessagePublicId.value,
       messageType: type,
       message: stringify(messageEditorData.value),
@@ -314,6 +321,8 @@
       return;
     }
     actionLoading.value = false;
+    attachmentUploads.value = [];
+    editor.value?.resetEditor();
     messageEditorData.value = emptyTiptapEditorContent;
   }
 
@@ -389,6 +398,11 @@
           <div class="flex flex-row items-center gap-2">
             <span class="text-base-11 text-xs font-medium"> REPLY </span>
             <NuxtUiSelectMenu
+              v-if="
+                convoHasContactParticipants &&
+                Array.isArray(selectedOrgEmailIdentities) &&
+                selectedOrgEmailIdentities.length > 0
+              "
               v-model="selectedOrgEmailIdentities"
               searchable
               :disabled="orgEmailIdentities.length === 0"
@@ -401,11 +415,12 @@
                 ring: 'ring-0 ring-base-11 dark:ring-base-11',
                 color: {}
               }">
-              <template
-                v-if="selectedOrgEmailIdentities"
-                #label>
+              <template #label>
                 <div
-                  v-if="selectedOrgEmailIdentities"
+                  v-if="
+                    Array.isArray(selectedOrgEmailIdentities) &&
+                    selectedOrgEmailIdentities.length > 0
+                  "
                   class="flex flex-wrap gap-3">
                   <span class="text-base-9 dark:text-base-9">
                     via {{ selectedOrgEmailIdentities.sendName }}
@@ -423,7 +438,9 @@
               <template #option-empty=""> No email identities found </template>
             </NuxtUiSelectMenu>
           </div>
-          <UnEditor v-model:modelValue="messageEditorData" />
+          <UnEditor
+            ref="editor"
+            v-model:modelValue="messageEditorData" />
           <div
             v-if="attachmentUploads.length > 0"
             class="flex h-fit w-full max-w-full flex-row justify-between gap-2">
