@@ -1,7 +1,27 @@
+<script setup lang="ts">
+  import { navigateTo } from '#imports';
+</script>
 <template>
   <div
     class="bg-base-1 dark:bg-base-1 selection:bg-base-11 selection:text-base-1 h-svh">
     <NuxtLayout class="h-svh">
+      <UnUiAlert
+        title="We're on live on Product Hunt today! Upvote us to show your support and help spread the word!"
+        icon="i-ph-rocket"
+        :actions="[
+          {
+            variant: 'solid',
+            color: 'base',
+            label: 'Upvote us',
+            click: () =>
+              navigateTo('https://unn.sh/ph', {
+                external: true,
+                open: { target: '_blank' }
+              })
+          }
+        ]"
+        class="text-base-1"
+        color="amber" />
       <NuxtPage />
     </NuxtLayout>
     <NuxtUiNotifications>
