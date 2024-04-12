@@ -27,7 +27,7 @@ export const zodSchemas = {
       .max(32, {
         message: "Too Long, Ain't nobody typing that 😂"
       })
-      .regex(/^[a-zA-Z0-9]*$/, {
+      .regex(/^[a-zA-Z0-9._-]*$/, {
         message: 'Only letters and numbers'
       })
 };
