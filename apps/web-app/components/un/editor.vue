@@ -61,7 +61,7 @@
   <div
     class="border-1 border-base-6 bg-base-1 flex h-full max-h-full w-full flex-col rounded-md border p-0">
     <ToolbarRoot
-      class="border-base-7 bg-base-1 flex w-full items-center border-b p-1"
+      class="border-base-7 bg-base-1 flex w-full items-center rounded-t-md border-b p-1"
       aria-label="Formatting options">
       <ToolbarToggleGroup
         type="multiple"
