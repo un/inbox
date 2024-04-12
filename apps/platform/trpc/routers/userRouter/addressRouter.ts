@@ -70,9 +70,14 @@ export const addressRouter = router({
       const accountObject = await db.query.accounts.findFirst({
         where: eq(accounts.id, accountId),
         columns: {
-          username: true
+          username: true,
+          metadata: true
         }
       });
+
+      const hasUninBonus = accountObject?.metadata?.bonuses?.some(
+        (bonus) => bonus.item === 'unin'
+      );
 
       return {
         identities: accountsEmailIdentitiesPersonal,
@@ -80,6 +85,7 @@ export const addressRouter = router({
           free: availableFreeDomains,
           premium: availablePremiumDomains
         },
+        hasUninBonus: hasUninBonus,
         username: accountObject?.username
       };
     }),

@@ -43,13 +43,27 @@ const foreignKey = customType<{ data: number }>({
 
 //******************* */
 //* Account tables
+
+export type AccountMetaBonus = {
+  item: 'unin';
+  bonus: { enabled: boolean };
+  bonusReason: string;
+  awardedByName: string;
+  awardedByAccountId: number;
+  awardedAt: Date;
+  note: string;
+};
+export type AccountMetadata = {
+  bonuses?: AccountMetaBonus[];
+};
+
 export const accounts = mysqlTable(
   'accounts',
   {
     id: serial('id').primaryKey(),
     publicId: publicId('account', 'public_id').notNull(),
     username: varchar('username', { length: 32 }).notNull(),
-    metadata: json('metadata').$type<Record<string, unknown>>(),
+    metadata: json('metadata').$type<AccountMetadata>(),
     createdAt: timestamp('created_at').$defaultFn(() => new Date()),
     lastLoginAt: timestamp('last_login_at'),
     passwordHash: varchar('password_hash', { length: 255 }),
