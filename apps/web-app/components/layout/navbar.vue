@@ -355,6 +355,23 @@
           </div>
         </template>
       </UnUiVerticalNavigation>
+      <div
+        class="bg-base-6 border-base-2 flex flex-col items-center gap-2 rounded p-2">
+        <span class="text-sm font-semibold"> We are live on Product Hunt </span>
+        <UnUiButton
+          label="Support us"
+          color="green"
+          icon="i-ph-rocket"
+          variant="solid"
+          size="lg"
+          class="w-fit"
+          @click="
+            navigateTo('https://unn.sh/ph', {
+              external: true,
+              open: { target: '_blank' }
+            })
+          " />
+      </div>
     </div>
     <div class="flex w-full flex-col place-self-end">
       <NuxtUiDropdown
