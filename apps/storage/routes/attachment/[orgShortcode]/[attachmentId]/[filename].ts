@@ -24,11 +24,12 @@ export default eventHandler({
   async handler(event) {
     const orgShortcode = getRouterParam(event, 'orgShortcode');
     const attachmentPublicId = getRouterParam(event, 'attachmentId');
-    const filename = getRouterParam(event, 'filename');
+    const filenameEncoded = getRouterParam(event, 'filename');
 
-    if (!orgShortcode || !attachmentPublicId || !filename) {
+    if (!orgShortcode || !attachmentPublicId || !filenameEncoded) {
       return 'Missing required parameters';
     }
+    const filename = decodeURIComponent(filenameEncoded);
 
     if (!validateTypeId('convoAttachments', attachmentPublicId)) {
       return `Invalid attachment id`;
