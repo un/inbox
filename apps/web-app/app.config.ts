@@ -756,6 +756,28 @@ export default defineAppConfig({
           color: 'white'
         }
       }
+    },
+    //alert
+    alert: {
+      variant: {
+        solid: 'bg-{color}-9 dark:bg-{color}-9 text-base-1 dark:text-base-1',
+        outline:
+          'text-{color}-9 dark:text-{color}-9 ring-1 ring-inset ring-{color}-9 dark:ring-{color}-9',
+        soft: 'bg-{color}-50 dark:bg-{color}-9 dark:bg-opacity-10 text-{color}-9 dark:text-{color}-9',
+        subtle:
+          'bg-{color}-50 dark:bg-{color}-9 dark:bg-opacity-10 text-{color}-9 dark:text-{color}-9 ring-1 ring-inset ring-{color}-9 dark:ring-{color}-9 ring-opacity-25 dark:ring-opacity-25'
+      },
+      default: {
+        color: 'white',
+        variant: 'solid',
+        icon: null,
+        closeButton: null,
+        actionButton: {
+          size: 'xs',
+          color: 'primary',
+          variant: 'link'
+        }
+      }
     }
   }
 });
