@@ -14,8 +14,10 @@
 </script>
 <template>
   <NuxtUiPopover v-bind="$props">
-    <template #panel>
-      <slot name="panel"> </slot>
+    <template #panel="{ close }">
+      <slot
+        name="panel"
+        v-bind="{ close }" />
     </template>
     <slot />
   </NuxtUiPopover>

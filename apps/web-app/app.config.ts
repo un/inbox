@@ -778,6 +778,12 @@ export default defineAppConfig({
           variant: 'link'
         }
       }
+    },
+
+    //popover
+    popover: {
+      background: 'bg-white dark:bg-gray-3',
+      ring: 'ring-1 ring-gray-4 dark:ring-gray-6'
     }
   }
 });
