@@ -52,7 +52,7 @@
 <template>
   <button
     class="flex w-full max-w-full flex-col justify-between gap-0 rounded-lg">
-    <div class="flex h-fit w-full flex-row items-center gap-4">
+    <div class="flex h-fit w-full flex-row items-start gap-4">
       <UnUiAvatarPlus
         :avatars="participantArray"
         :primary="author"
@@ -73,11 +73,12 @@
             : {{ props.convo.entries[0]?.bodyPlainText ?? '' }}
           </span>
         </div>
-      </div>
-    </div>
-    <div class="flex w-full flex-row items-center justify-end gap-1">
-      <div class="text-base-11 min-w-fit overflow-hidden text-right text-xs">
-        <span class="">{{ timeAgo }}</span>
+        <div class="mt-1 flex w-full flex-row items-center justify-end gap-1">
+          <div
+            class="text-base-11 min-w-fit overflow-hidden text-right text-xs">
+            <span class="">{{ timeAgo }}</span>
+          </div>
+        </div>
       </div>
     </div>
   </button>

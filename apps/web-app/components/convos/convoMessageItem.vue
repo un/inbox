@@ -1,8 +1,10 @@
 <script setup lang="ts">
-  import { useTimeAgo } from '@vueuse/core';
+  import { useClipboard, useTimeAgo } from '@vueuse/core';
   import { tiptapHtml } from '@u22n/tiptap';
   import { tipTapExtensions } from '@u22n/tiptap/extensions';
   import { computed, inject, ref, useNuxtApp } from '#imports';
+  import type { VerticalNavigationLink } from '#ui/types';
+  import type { ComputedRef } from 'vue';
 
   const { $trpc } = useNuxtApp();
 
@@ -101,6 +103,41 @@
   };
 
   const actionsExpanded = ref(false);
+
+  const { copy } = useClipboard();
+
+  const actionLinks: ComputedRef<VerticalNavigationLink[]> = computed(() =>
+    [
+      {
+        label: 'Reply',
+        icon: 'i-ph-arrow-bend-double-up-left',
+        badge: props.isReplyTo
+          ? {
+              color: 'green',
+              label: 'Replying',
+              variant: 'subtle',
+              size: 'xs'
+            }
+          : undefined,
+        click: setAsReplyTo
+      },
+      entryHasRawHtml.value &&
+        ({
+          label: 'View original message',
+          icon: 'i-ph-code',
+          click: openRawHtmlModal
+        } as VerticalNavigationLink | false),
+      {
+        label: 'Copy message ID',
+        icon: 'i-ph-hash',
+        click: copy(props.entry.publicId)
+      },
+      {
+        label: 'Report a bug',
+        icon: 'i-ph-bug'
+      }
+    ].filter((link): link is VerticalNavigationLink => Boolean(link))
+  );
 </script>
 <template>
   <div
@@ -134,8 +171,8 @@
       </div>
       <div class="flex w-full flex-col gap-4 p-0 lg:gap-2">
         <div
-          class="flex w-full flex-col items-center justify-between gap-2 overflow-visible pl-2 md:max-h-4 md:flex-row"
-          :class="userIsAuthor ? 'md:flex-row-reverse ' : 'md:flex-row'">
+          class="flex w-full flex-col items-center justify-start gap-2 overflow-visible pl-2 md:max-h-4 md:flex-row"
+          :class="userIsAuthor ? 'md:flex-row-reverse' : 'md:flex-row'">
           <!-- mobile -->
           <div class="flex w-full items-end justify-center gap-2 md:hidden">
             <UnUiAvatar
@@ -226,7 +263,7 @@
           </div>
           <!-- desktop -->
           <div
-            class="hidden w-full flex-row gap-2 md:flex"
+            class="hidden flex-row gap-2 md:flex"
             :class="
               userIsAuthor
                 ? 'items-end justify-end'
@@ -251,39 +288,23 @@
           </div>
           <!-- actions tablet -->
           <div class="hidden flex-row gap-1 md:flex">
-            <UnUiTooltip
-              v-if="entryHasRawHtml"
-              text="View original message">
+            <UnUiPopover
+              :popper="{ placement: 'bottom' }"
+              :ui="{ container: 'z-50', strategy: 'override' }">
               <UnUiButton
                 size="xs"
                 square
-                variant="soft"
-                icon="i-ph-code"
-                @click="openRawHtmlModal" />
-            </UnUiTooltip>
-            <UnUiTooltip text="Report a bug">
-              <UnUiButton
-                size="xs"
-                square
-                variant="soft"
-                icon="i-ph-bug" />
-            </UnUiTooltip>
-            <UnUiCopy
-              icon="i-ph-hash"
-              size="xs"
-              variant="soft"
-              color="base"
-              helper="Copy message ID"
-              :text="props.entry.publicId" />
-            <UnUiTooltip text="Reply">
-              <UnUiButton
-                size="xs"
-                square
-                variant="soft"
-                icon="i-ph-arrow-bend-double-up-left"
-                :color="props.isReplyTo ? 'green' : 'base'"
-                @click="setAsReplyTo()" />
-            </UnUiTooltip>
+                variant="ghost"
+                icon="i-ph-dots-three" />
+
+              <template #panel="{ close }">
+                <div class="p-1">
+                  <UnUiVerticalNavigation
+                    :links="actionLinks"
+                    @click="close" />
+                </div>
+              </template>
+            </UnUiPopover>
           </div>
         </div>
         <!-- eslint-disable vue/no-v-html -->
