@@ -19,6 +19,7 @@
   const route = useRoute();
   const orgShortcode = route.params.orgShortcode as string;
   const hasAddresses = ref(false);
+  const hasUninBonus = ref(false);
   const publicAddressesAvailable = ref<string[]>([]);
   const premiumAddressesAvailable = ref<string[]>([]);
 
@@ -88,6 +89,9 @@
       newResults.available.premium.forEach((domain) => {
         premiumAddressesAvailable.value.push(`${username}@${domain}`);
       });
+    }
+    if (newResults?.hasUninBonus) {
+      hasUninBonus.value = true;
     }
   });
 
@@ -174,7 +178,12 @@
       });
       return;
     }
-    if (isInPremiumAvailableArray && !isPro.value) {
+    if (
+      isInPremiumAvailableArray &&
+      !isPro.value &&
+      isInPremiumAvailableArray &&
+      !hasUninBonus.value
+    ) {
       return;
     }
     const claimPersonalAddressTrpc =
@@ -372,17 +381,33 @@
                   </span>
                 </div>
                 <UnUiButton
+                  v-if="!hasUninBonus"
                   label="Claim"
                   :disabled="!isPro"
                   size="md"
                   @click="preClaim(address)" />
+                <UnUiButton
+                  v-if="hasUninBonus"
+                  label="Claim Bonus"
+                  :disabled="!hasUninBonus"
+                  color="green"
+                  size="md"
+                  @click="preClaim(address)" />
               </div>
               <span
-                v-if="!isPro"
+                v-if="!isPro && !hasUninBonus"
                 class="text-sm">
                 This email address is only available to claim when your
                 organization is subscribed to a plan.
               </span>
+              <div
+                v-if="hasUninBonus"
+                class="flex flex-col text-sm">
+                <span> Thanks for celebrating our launch with us! </span>
+                <span>
+                  You can now claim your free @unin.me email address.
+                </span>
+              </div>
             </div>
           </template>
         </div>
