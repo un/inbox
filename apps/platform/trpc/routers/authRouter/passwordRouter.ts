@@ -78,24 +78,24 @@ export const passwordRouter = router({
         // we allow min length of 2 for username if we plan to provide them in the future
         username: zodSchemas.username(2),
         password: z.string().min(8),
-        twoFactorCode: zodSchemas.nanoIdToken(),
+        twoFactorCode: z.string().min(6).max(6).optional(),
         recoveryCode: z.string().optional()
       })
     )
     .mutation(async ({ ctx, input }) => {
       const { db } = ctx;
 
-      if (
-        !(input.password && input.twoFactorCode) &&
-        !(input.password && input.recoveryCode) &&
-        !(input.twoFactorCode && input.recoveryCode)
-      ) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message:
-            'You need to provide 2 of the following: Password, 2FA Code, Recovery Code'
-        });
-      }
+      // if (
+      //   !(input.password && input.twoFactorCode) &&
+      //   !(input.password && input.recoveryCode) &&
+      //   !(input.twoFactorCode && input.recoveryCode)
+      // ) {
+      //   throw new TRPCError({
+      //     code: 'BAD_REQUEST',
+      //     message:
+      //       'You need to provide 2 of the following: Password, 2FA Code, Recovery Code'
+      //   });
+      // }
 
       const userResponse = await db.query.accounts.findFirst({
         where: eq(accounts.username, input.username),
@@ -105,6 +105,7 @@ export const passwordRouter = router({
           username: true,
           passwordHash: true,
           twoFactorSecret: true,
+          twoFactorEnabled: true,
           recoveryCode: true
         }
       });
@@ -112,7 +113,18 @@ export const passwordRouter = router({
       if (!userResponse) {
         throw new TRPCError({
           code: 'NOT_FOUND',
-          message: 'User not found'
+          message: 'Incorrect username or password'
+        });
+      }
+
+      if (
+        userResponse.twoFactorEnabled &&
+        Boolean(userResponse.twoFactorSecret) &&
+        !input.twoFactorCode
+      ) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: '2FA code is required'
         });
       }
 
@@ -140,14 +152,12 @@ export const passwordRouter = router({
 
       // verify otp if provided
       let otpValid = false;
-      if (input.twoFactorCode) {
-        if (!userResponse.twoFactorSecret) {
-          throw new TRPCError({
-            code: 'METHOD_NOT_SUPPORTED',
-            message: '2FA sign-in is not enabled'
-          });
-        }
-        const secret = decodeHex(userResponse.twoFactorSecret);
+      if (
+        input.twoFactorCode &&
+        userResponse.twoFactorEnabled &&
+        Boolean(userResponse.twoFactorSecret)
+      ) {
+        const secret = decodeHex(userResponse.twoFactorSecret!);
         otpValid = await new TOTPController().verify(
           input.twoFactorCode,
           secret
@@ -158,6 +168,10 @@ export const passwordRouter = router({
             message: 'Invalid 2FA code'
           });
         }
+      }
+      if (!userResponse.twoFactorEnabled || !userResponse.twoFactorSecret) {
+        // If 2FA is not enabled, we can consider it as valid, user will be redirected to setup 2FA afterwards
+        otpValid = true;
       }
 
       // verify recovery code if provided

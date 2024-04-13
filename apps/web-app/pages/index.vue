@@ -32,11 +32,7 @@
   const twoFactorCode = ref<string[]>([]);
 
   const formValid = computed(() => {
-    return (
-      usernameValid.value === true &&
-      passwordValid.value === true &&
-      twoFactorCode.value.length === 6
-    );
+    return usernameValid.value === true && passwordValid.value === true;
   });
 
   const disablePasswordButton = computed(() => {
@@ -72,7 +68,10 @@
       await $trpc.auth.password.signInWithPassword.mutate({
         username: usernameValue.value,
         password: passwordInput.value,
-        twoFactorCode: twoFactorCode.value.join('')
+        twoFactorCode:
+          twoFactorCode.value.length > 0
+            ? twoFactorCode.value.join('')
+            : undefined
       });
     if (passwordVerification.success) {
       navigateTo('/redirect');
@@ -179,11 +178,13 @@
                 })
               " />
             <div class="flex flex-col gap-2">
-              <span class="text-sm"
-                >Enter the 6-digit code from your 2FA app</span
-              >
-
+              <span class="text-sm">
+                Enter the 6-digit code from your 2FA app
+              </span>
               <Un2FAInput v-model="twoFactorCode" />
+              <span class="text-sm font-medium">
+                Tip: If you haven't setup 2FA yet, you can just leave this blank
+              </span>
             </div>
           </div>
           <UnUiButton
@@ -204,7 +205,7 @@
         @click="navigateTo('/join')" />
       <!-- Not implemented yet -->
       <UnUiButton
-        label="Recover my account"
+        label="Recover my account (Yet to be Implemented)"
         variant="ghost"
         block
         @click="navigateTo('/')" />
