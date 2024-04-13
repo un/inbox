@@ -78,7 +78,7 @@
   const toast = useToast();
   async function setPassword() {
     buttonLoading.value = true;
-    const setPassword = await $trpc.account.security.setPassword.mutate({
+    const setPassword = await $trpc.account.security.resetPassword.mutate({
       newPassword: passwordInput.value,
       verificationToken: props.verificationToken
     });
@@ -87,7 +87,8 @@
       toast.add({
         id: 'password_error',
         title: 'Password error',
-        description: 'Something went wrong when signing Up, please try again.',
+        description:
+          'Something went wrong when setting up password, please try again.',
         color: 'red',
         timeout: 5000,
         icon: 'i-ph-warning-circle'
@@ -104,10 +105,7 @@
       timeout: 5000,
       icon: 'i-ph-check-circle'
     });
-
-    await new Promise((resolve) => setTimeout(resolve, 1000));
     emit('complete');
-    emit('close');
   }
 </script>
 
