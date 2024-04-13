@@ -66,11 +66,16 @@ export const securityRouter = router({
       return {
         passwordSet: !!accountObjectQuery.passwordHash,
         recoveryCodeSet: !!accountObjectQuery.recoveryCode,
+        legacySecurityEnabled:
+          Boolean(accountObjectQuery.passwordHash) &&
+          accountObjectQuery.twoFactorEnabled &&
+          Boolean(accountObjectQuery.twoFactorSecret),
         twoFactorEnabled: accountObjectQuery.twoFactorEnabled,
         passkeys: accountObjectQuery.authenticators || [],
         sessions: accountObjectQuery.sessions || []
       };
     }),
+
   generatePasskeyVerificationChallenge: accountProcedure
     .input(z.object({}))
     .query(async ({ ctx }) => {
@@ -106,12 +111,21 @@ export const securityRouter = router({
 
       return { options: passkeyOptions };
     }),
+
   getVerificationToken: accountProcedure
     .input(
-      z.object({
-        password: strongPasswordSchema.optional(),
-        verificationResponseRaw: z.any()
-      })
+      z
+        .object({
+          password: z.string().min(8),
+          twoFactorCode: z.string()
+        })
+        .or(
+          z
+            .object({
+              verificationResponseRaw: z.any()
+            })
+            .strict()
+        )
     )
     .query(async ({ ctx, input }) => {
       const { db, account } = ctx;
@@ -131,7 +145,7 @@ export const securityRouter = router({
         });
       }
 
-      if (input.verificationResponseRaw) {
+      if ('verificationResponseRaw' in input) {
         const verificationResponse =
           input.verificationResponseRaw as AuthenticationResponseJSON;
 
@@ -157,13 +171,13 @@ export const securityRouter = router({
             message: 'Passkey verification failed'
           });
         }
-      }
-
-      if (input.password) {
+      } else if ('password' in input) {
         const accountQuery = await db.query.accounts.findFirst({
           where: eq(accounts.id, accountId),
           columns: {
-            passwordHash: true
+            passwordHash: true,
+            twoFactorSecret: true,
+            twoFactorEnabled: true
           }
         });
 
@@ -185,12 +199,34 @@ export const securityRouter = router({
           accountQuery.passwordHash,
           input.password
         );
+
         if (!validPassword) {
           throw new TRPCError({
             code: 'UNAUTHORIZED',
             message: 'Password verification failed'
           });
         }
+
+        // We check if 2FA is enabled and if so, we verify the 2FA code
+        // this is for older accounts which were affected by the 2FA bug
+        if (accountQuery.twoFactorEnabled && accountQuery.twoFactorSecret) {
+          const secret = decodeHex(accountQuery.twoFactorSecret);
+          const isValid = await new TOTPController().verify(
+            input.twoFactorCode,
+            secret
+          );
+          if (!isValid) {
+            throw new TRPCError({
+              code: 'UNAUTHORIZED',
+              message: 'Invalid 2FA code'
+            });
+          }
+        }
+      } else {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Invalid input'
+        });
       }
 
       const authStorage = useStorage('auth');
@@ -213,7 +249,8 @@ export const securityRouter = router({
       })
     )
     .query(({ input }) => calculatePasswordStrength(input.password)),
-  disablePassword: accountProcedure
+
+  disableLegacySecurity: accountProcedure
     .input(
       z.object({
         verificationToken: zodSchemas.nanoIdToken()
@@ -246,6 +283,7 @@ export const securityRouter = router({
           message: 'VerificationToken is required'
         });
       }
+
       const authStorage = useStorage('auth');
 
       const storedVerificationToken = await authStorage.getItem(
@@ -262,13 +300,16 @@ export const securityRouter = router({
       await db
         .update(accounts)
         .set({
-          passwordHash: null
+          passwordHash: null,
+          twoFactorSecret: null,
+          twoFactorEnabled: false
         })
         .where(eq(accounts.id, accountId));
 
       return { success: true };
     }),
-  setPassword: accountProcedure
+
+  resetPassword: accountProcedure
     .input(
       z
         .object({
@@ -284,10 +325,64 @@ export const securityRouter = router({
       const accountData = await db.query.accounts.findFirst({
         where: eq(accounts.id, accountId),
         columns: {
+          publicId: true
+        }
+      });
+
+      if (!accountData) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'User not found'
+        });
+      }
+
+      if (!input.verificationToken) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'VerificationToken is required'
+        });
+      }
+
+      const authStorage = useStorage('auth');
+
+      const storedVerificationToken = await authStorage.getItem(
+        `authVerificationToken: ${accountData.publicId}`
+      );
+
+      if (input.verificationToken !== storedVerificationToken) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'VerificationToken is invalid'
+        });
+      }
+
+      const passwordHash = await new Argon2id().hash(input.newPassword);
+
+      await db
+        .update(accounts)
+        .set({
+          passwordHash
+        })
+        .where(eq(accounts.id, accountId));
+
+      return { success: true };
+    }),
+
+  resetTwoFactorSecret: accountProcedure
+    .input(
+      z.object({
+        verificationToken: zodSchemas.nanoIdToken()
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { account, db } = ctx;
+      const accountId = account.id;
+
+      const accountData = await db.query.accounts.findFirst({
+        where: eq(accounts.id, accountId),
+        columns: {
           publicId: true,
-          username: true,
-          passwordHash: true,
-          twoFactorSecret: true
+          username: true
         }
       });
 
@@ -317,16 +412,194 @@ export const securityRouter = router({
         });
       }
 
-      const passwordHash = await new Argon2id().hash(input.newPassword);
+      const newSecret = crypto.getRandomValues(new Uint8Array(20));
+      await db
+        .update(accounts)
+        .set({ twoFactorSecret: encodeHex(newSecret), twoFactorEnabled: false })
+        .where(eq(accounts.id, accountId));
+      const uri = createTOTPKeyURI(
+        'UnInbox.com',
+        accountData.username,
+        newSecret
+      );
+      return { uri };
+    }),
+
+  completeTwoFactorReset: accountProcedure
+    .input(
+      z.object({
+        verificationToken: zodSchemas.nanoIdToken(),
+        code: z.string().min(6).max(6)
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { account, db } = ctx;
+      const accountId = account.id;
+
+      const accountData = await db.query.accounts.findFirst({
+        where: eq(accounts.id, accountId),
+        columns: {
+          publicId: true,
+          username: true,
+          twoFactorSecret: true
+        }
+      });
+
+      if (!accountData) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'User not found'
+        });
+      }
+
+      if (!accountData.twoFactorSecret) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: '2FA is not enabled'
+        });
+      }
+
+      if (!input.verificationToken) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'VerificationToken is required'
+        });
+      }
+      const authStorage = useStorage('auth');
+
+      const storedVerificationToken = await authStorage.getItem(
+        `authVerificationToken: ${accountData.publicId}`
+      );
+
+      if (input.verificationToken !== storedVerificationToken) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'VerificationToken is invalid'
+        });
+      }
+
+      const secret = decodeHex(accountData.twoFactorSecret);
+      const isValid = await new TOTPController().verify(input.code, secret);
+
+      if (!isValid) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'Invalid 2FA code'
+        });
+      }
 
       await db
         .update(accounts)
-        .set({
-          passwordHash
-        })
+        .set({ twoFactorEnabled: true })
         .where(eq(accounts.id, accountId));
 
       return { success: true };
+    }),
+
+  disableRecoveryCode: accountProcedure
+    .input(
+      z.object({
+        verificationToken: zodSchemas.nanoIdToken()
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { account, db } = ctx;
+      const accountId = account.id;
+
+      const accountData = await db.query.accounts.findFirst({
+        where: eq(accounts.id, accountId),
+        columns: {
+          publicId: true,
+          username: true
+        }
+      });
+
+      if (!accountData) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'User not found'
+        });
+      }
+
+      if (!input.verificationToken) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'VerificationToken is required'
+        });
+      }
+      const authStorage = useStorage('auth');
+
+      const storedVerificationToken = await authStorage.getItem(
+        `authVerificationToken: ${accountData.publicId}`
+      );
+
+      if (input.verificationToken !== storedVerificationToken) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'VerificationToken is invalid'
+        });
+      }
+
+      await db
+        .update(accounts)
+        .set({ recoveryCode: null })
+        .where(eq(accounts.id, accountId));
+
+      return { success: true };
+    }),
+
+  resetRecoveryCode: accountProcedure
+    .input(
+      z.object({
+        verificationToken: zodSchemas.nanoIdToken()
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { account, db } = ctx;
+      const accountId = account.id;
+
+      const accountData = await db.query.accounts.findFirst({
+        where: eq(accounts.id, accountId),
+        columns: {
+          publicId: true,
+          username: true
+        }
+      });
+
+      if (!accountData) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'User not found'
+        });
+      }
+
+      if (!input.verificationToken) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'VerificationToken is required'
+        });
+      }
+      const authStorage = useStorage('auth');
+
+      const storedVerificationToken = await authStorage.getItem(
+        `authVerificationToken: ${accountData.publicId}`
+      );
+
+      if (input.verificationToken !== storedVerificationToken) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'VerificationToken is invalid'
+        });
+      }
+
+      const newRecoveryCode = nanoIdToken();
+
+      await db
+        .update(accounts)
+        .set({ recoveryCode: newRecoveryCode })
+        .where(eq(accounts.id, accountId));
+
+      return { recoveryCode: newRecoveryCode };
     }),
 
   //* passkeys
@@ -384,6 +657,7 @@ export const securityRouter = router({
       });
       return { options: passkeyOptions };
     }),
+
   addNewPasskey: accountProcedure
     .input(
       z
@@ -489,6 +763,7 @@ export const securityRouter = router({
 
       return { success: true };
     }),
+
   deletePasskey: accountProcedure
     .input(
       z
@@ -561,187 +836,7 @@ export const securityRouter = router({
 
       return { success: true };
     }),
-  disable2FA: accountProcedure
-    .input(
-      z
-        .object({
-          verificationToken: zodSchemas.nanoIdToken(),
-          twoFactorCode: z.string()
-        })
-        .strict()
-    )
-    .mutation(async ({ ctx, input }) => {
-      const { account, db } = ctx;
-      const accountId = account.id;
 
-      const accountData = await db.query.accounts.findFirst({
-        where: eq(accounts.id, accountId),
-        columns: {
-          publicId: true,
-          twoFactorSecret: true,
-          recoveryCode: true
-        }
-      });
-
-      if (!accountData) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'User not found'
-        });
-      }
-
-      if (!input.verificationToken) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'VerificationToken is required'
-        });
-      }
-      const authStorage = useStorage('auth');
-
-      const storedVerificationToken = await authStorage.getItem(
-        `authVerificationToken: ${accountData.publicId}`
-      );
-
-      if (input.verificationToken !== storedVerificationToken) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'VerificationToken is invalid'
-        });
-      }
-      if (accountData.twoFactorSecret) {
-        const secret = decodeHex(accountData.twoFactorSecret);
-        const isValid = await new TOTPController().verify(
-          input.twoFactorCode,
-          secret
-        );
-        if (!isValid) {
-          throw new TRPCError({
-            code: 'UNAUTHORIZED',
-            message: 'Invalid 2FA code'
-          });
-        }
-      }
-
-      await db
-        .update(accounts)
-        .set({ twoFactorSecret: null, recoveryCode: null })
-        .where(eq(accounts.id, accountId));
-
-      return { success: true };
-    }),
-  createTwoFactorSecret: accountProcedure
-    .input(z.object({ verificationToken: zodSchemas.nanoIdToken() }).strict())
-    .mutation(async ({ ctx, input }) => {
-      const { account, db } = ctx;
-      const accountId = account.id;
-
-      const accountData = await db.query.accounts.findFirst({
-        where: eq(accounts.id, accountId),
-        columns: {
-          publicId: true,
-          username: true,
-          twoFactorSecret: true,
-          recoveryCode: true
-        }
-      });
-
-      if (!accountData) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'User not found'
-        });
-      }
-
-      if (!input.verificationToken) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'VerificationToken is required'
-        });
-      }
-      const authStorage = useStorage('auth');
-
-      const storedVerificationToken = await authStorage.getItem(
-        `authVerificationToken: ${accountData.publicId}`
-      );
-
-      if (input.verificationToken !== storedVerificationToken) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'VerificationToken is invalid'
-        });
-      }
-
-      const newSecret = crypto.getRandomValues(new Uint8Array(20));
-      await db
-        .update(accounts)
-        .set({ twoFactorSecret: encodeHex(newSecret) })
-        .where(eq(accounts.id, accountId));
-      const uri = createTOTPKeyURI(
-        'UnInbox.com',
-        accountData.username,
-        newSecret
-      );
-      return { uri };
-    }),
-  verifyTwoFactor: accountProcedure
-    .input(
-      z
-        .object({
-          twoFactorCode: z.string()
-        })
-        .strict()
-    )
-    .mutation(async ({ ctx, input }) => {
-      const { account, db } = ctx;
-      const accountId = account.id;
-
-      const existingData = await db.query.accounts.findFirst({
-        where: eq(accounts.id, accountId),
-        columns: {
-          twoFactorSecret: true,
-          recoveryCode: true,
-          twoFactorEnabled: true
-        }
-      });
-
-      if (!existingData) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'User not found'
-        });
-      }
-
-      if (!existingData.twoFactorSecret) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message:
-            'Two Factor Authentication (2FA) is not set up for this account'
-        });
-      }
-
-      const secret = decodeHex(existingData.twoFactorSecret);
-      const isValid = await new TOTPController().verify(
-        input.twoFactorCode,
-        secret
-      );
-      if (!isValid) {
-        throw new TRPCError({
-          code: 'UNAUTHORIZED',
-          message: 'Invalid Two Factor Authentication (2FA) code'
-        });
-      }
-
-      // generate and return the recovery codes
-      const recoveryCode = nanoIdToken();
-      const hashedRecoveryCode = await new Argon2id().hash(recoveryCode);
-
-      await db
-        .update(accounts)
-        .set({ recoveryCode: hashedRecoveryCode, twoFactorEnabled: true })
-        .where(eq(accounts.id, accountId));
-
-      return { recoveryCode: recoveryCode };
-    }),
   deleteSession: accountProcedure
     .input(
       z
