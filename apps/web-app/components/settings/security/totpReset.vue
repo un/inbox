@@ -16,8 +16,6 @@
 
   const loadingData = ref(true);
   const new2FAVerified = ref(false);
-  const showConfirmCopiedModal = ref(false);
-  const savedRecoveryCode = ref(false);
 
   // creation step
   const qrUri = ref('');
@@ -25,21 +23,19 @@
 
   const manualCode = ref('');
 
-  // verification Step
   const twoFactorCode = ref<string[]>([]);
-  const recoveryCode = ref('');
 
   const {
     data: new2FAData,
     status: new2FAStatus,
     mutate: getNew2FA
-  } = $trpc.account.security.createTwoFactorSecret.useMutation();
+  } = $trpc.account.security.resetTwoFactorSecret.useMutation();
 
   watch(new2FAStatus, (status) => {
     if (status === 'error') {
       loadingData.value = false;
       toast.add({
-        id: '2fa_already_setup',
+        id: '2fa_error',
         title: 'Something went wrong',
         description: `Something went wrong when setting up Two Factor Authentication (2FA) on your account, please contact support.`,
         icon: 'i-ph-warning-octagon',
@@ -56,8 +52,12 @@
   });
 
   async function verify2FA() {
-    const verifyTotp = $trpc.account.security.verifyTwoFactor.useMutation();
-    await verifyTotp.mutate({ twoFactorCode: twoFactorCode.value.join('') });
+    const verifyTotp =
+      $trpc.account.security.completeTwoFactorReset.useMutation();
+    await verifyTotp.mutate({
+      code: twoFactorCode.value.join(''),
+      verificationToken: props.verificationToken
+    });
     if (verifyTotp.error.value) {
       toast.add({
         id: '2fa_error',
@@ -70,7 +70,6 @@
       new2FAVerified.value = false;
       return;
     }
-    recoveryCode.value = verifyTotp.data?.value?.recoveryCode || '';
     new2FAVerified.value = true;
     toast.add({
       id: '2fa_verification_success',
@@ -79,24 +78,7 @@
       icon: 'i-ph-thumbs-up',
       timeout: 5000
     });
-  }
-
-  function download() {
-    const element = document.createElement('a');
-    element.setAttribute(
-      'href',
-      'data:text/plain;charset=utf-8,' + encodeURIComponent(recoveryCode.value)
-    );
-    element.setAttribute('download', `uninbox-recovery-code.txt`);
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
-  }
-
-  function completeProcess() {
-    showConfirmCopiedModal.value = false;
     emit('complete');
-    emit('close');
   }
 
   onMounted(async () => {
@@ -106,34 +88,13 @@
 
 <template>
   <div class="flex w-full flex-col items-start">
-    <UnUiModal v-model="showConfirmCopiedModal">
-      <template #header>
-        <span class="">Are your codes backed up securely?</span>
-      </template>
-      <div class="flex flex-col gap-2">
-        <span class="">
-          If you ever lose your password or your 2FA device, you will need these
-          codes to recover your account.
-        </span>
-        <span class=""> Are you sure they're backed up safely? </span>
-      </div>
-      <template #footer>
-        <div class="flex flex-row gap-2">
-          <UnUiButton
-            label="Confirm"
-            color="orange"
-            @click="completeProcess()" />
-          <UnUiButton
-            label="Go Back"
-            variant="outline"
-            @click="showConfirmCopiedModal = false" />
-        </div>
-      </template>
-    </UnUiModal>
     <div
       v-if="loadingData"
-      class="flex flex-col items-center gap-2">
-      <span class="text-lg"> Loading</span>
+      class="bg-base-3 flex w-full flex-row justify-center gap-4 rounded-xl rounded-tl-2xl p-4">
+      <UnUiIcon
+        name="i-svg-spinners-90-ring"
+        size="24" />
+      <span>Loading 2FA</span>
     </div>
     <div
       v-if="!loadingData"
@@ -174,51 +135,6 @@
               label="Verify Code"
               @click="verify2FA()" />
           </div>
-        </div>
-      </div>
-      <div
-        v-if="new2FAVerified"
-        class="flex flex-col items-center gap-4">
-        <span class="text-xl font-medium">Step 3</span>
-        <span class="w-fit text-balance text-center font-medium">
-          Save your recovery code. Keep it in a safe and secure place as It can
-          be used to gain access to your account. If you lose it, you will not
-          be able to recover your your account.
-        </span>
-        <div
-          class="bg-base-11 dark:bg-base-11 mb-2 mt-2 flex items-center justify-center gap-2 rounded-md p-2">
-          <span class="select-all px-2 font-mono">{{ recoveryCode }}</span>
-          <span>
-            <UnUiButton
-              size="xs"
-              variant="ghost"
-              class="h-10 w-10"
-              :icon="
-                copied && text === recoveryCode ? 'i-ph-check' : 'i-ph-copy'
-              "
-              @click="
-                () => {
-                  copy(recoveryCode);
-                  savedRecoveryCode = true;
-                }
-              " />
-          </span>
-        </div>
-        <div class="flex flex-row gap-2">
-          <UnUiButton
-            label="Download Recovery Code File"
-            variant="ghost"
-            icon="i-ph-download"
-            @click="
-              () => {
-                download();
-                savedRecoveryCode = true;
-              }
-            " />
-          <UnUiButton
-            label="I've saved my recovery code"
-            :disabled="!savedRecoveryCode"
-            @click="showConfirmCopiedModal = true" />
         </div>
       </div>
     </div>
