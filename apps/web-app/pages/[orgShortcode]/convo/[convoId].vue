@@ -479,7 +479,7 @@
             <div class="w-fit">
               <ConvosUpload
                 v-model:uploadedAttachments="attachmentUploads"
-                :max-size="15000000"
+                :max-size="20000000"
                 :current-size="currentTotalUploadSize"
                 :org-shortcode="orgShortcode">
                 <template #default="{ openFileDialog, loading }">

@@ -55,10 +55,10 @@
       totalSize > props.maxSize ||
       totalSize + props.currentSize > props.maxSize
     ) {
-      console.error('Total file size exceeds 15MB');
+      console.error('Total file size exceeds 20MB');
       toast.add({
         title: 'Attachments too large',
-        description: 'Your attachments must be less than 15MB in total',
+        description: 'Your attachments must be less than 20MB in total',
         icon: 'i-ph-warning',
         color: 'red',
         timeout: 5000
