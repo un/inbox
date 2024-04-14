@@ -162,8 +162,8 @@
             </NuxtUiAvatarGroup>
           </div>
 
-          <div v-if="!row.members">
-            <span class="text-xs">No Members</span>
+          <div v-else>
+            <span class="text-base-11 text-xs">No Members</span>
           </div>
         </template>
       </NuxtUiTable>
