@@ -260,9 +260,7 @@
         <UnUiTooltip
           text="Choose your username"
           class="w-full">
-          <div
-            class="bg-base-5 h-2 w-full rounded"
-            @click="navigateTo('/join')" />
+          <div class="bg-base-5 h-2 w-full rounded" />
         </UnUiTooltip>
         <UnUiTooltip
           text="Secure your account"
