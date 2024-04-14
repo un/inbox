@@ -45,7 +45,7 @@
       }, 500);
     }
     setTimeout(() => {
-      navigateTo(`/${defaultOrgShortcode}?error=2fa`);
+      navigateTo(`/${defaultOrgShortcode}`);
     }, 500);
   });
 </script>
