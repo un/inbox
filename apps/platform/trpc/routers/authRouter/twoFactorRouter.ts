@@ -160,7 +160,11 @@ export const twoFactorRouter = router({
       // No need to check if twoFactorSecret exists
       await db
         .update(accounts)
-        .set({ twoFactorSecret: null, recoveryCode: null })
+        .set({
+          twoFactorEnabled: false,
+          twoFactorSecret: null,
+          recoveryCode: null
+        })
         .where(eq(accounts.id, accountId));
       return {};
     })
