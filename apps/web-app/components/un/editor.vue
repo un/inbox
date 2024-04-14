@@ -26,7 +26,7 @@
     extensions: tipTapExtensions,
     editorProps: {
       attributes: {
-        class: `max-h-full w-full focus:outline-none p-0 overflow-hidden h-full *:max-w-prose ${props.class}`
+        class: `max-h-full w-full overflow-y-auto focus:outline-none p-0   h-full *:max-w-prose ${props.class}`
       }
     },
     onUpdate: () => {
@@ -59,7 +59,7 @@
 
 <template>
   <div
-    class="border-1 border-base-6 bg-base-1 flex h-full max-h-full w-full flex-col rounded-md border p-0">
+    class="border-1 border-base-6 bg-base-1 flex h-full max-h-full w-full flex-col overflow-hidden rounded-md border p-0">
     <ToolbarRoot
       class="border-base-7 bg-base-1 flex w-full items-center rounded-t-md border-b p-1"
       aria-label="Formatting options">
@@ -143,6 +143,6 @@
 
     <EditorContent
       :editor="editor"
-      class="h-full min-h-8 flex-1 px-2 py-1" />
+      class="h-full min-h-8 flex-1 py-1 pl-2 pr-0" />
   </div>
 </template>

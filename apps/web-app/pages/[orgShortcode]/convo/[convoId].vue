@@ -348,16 +348,19 @@
     class="flex h-full max-h-full w-full max-w-full flex-col overflow-hidden">
     <div
       class="border-base-7 flex w-full max-w-full flex-row items-center justify-between border-b p-4">
-      <div class="flex flex-row gap-2">
-        <UnUiButton
-          icon="i-ph-arrow-left"
-          square
-          variant="soft"
-          @click="navigateTo(`/${orgShortcode}/convo`)" />
+      <div class="flex flex-row items-center gap-2">
+        <div>
+          <UnUiButton
+            icon="i-ph-arrow-left"
+            square
+            variant="soft"
+            @click="navigateTo(`/${orgShortcode}/convo`)" />
+        </div>
         <template
           v-for="subject of convoDetails?.data?.subjects"
           :key="subject.publicId">
-          <span class="bg-base-2 text-md truncate rounded-xl px-3 py-2">
+          <span
+            class="bg-base-2 text-md break-word max-w-full overflow-clip rounded-xl px-3 py-2">
             {{ subject.subject }}
           </span>
         </template>
@@ -408,8 +411,8 @@
             <NuxtUiSelectMenu
               v-if="
                 convoHasContactParticipants &&
-                Array.isArray(selectedOrgEmailIdentities) &&
-                selectedOrgEmailIdentities.length > 0
+                selectedOrgEmailIdentities &&
+                selectedOrgEmailIdentities.publicId
               "
               v-model="selectedOrgEmailIdentities"
               searchable
@@ -426,8 +429,8 @@
               <template #label>
                 <div
                   v-if="
-                    Array.isArray(selectedOrgEmailIdentities) &&
-                    selectedOrgEmailIdentities.length > 0
+                    selectedOrgEmailIdentities &&
+                    selectedOrgEmailIdentities.publicId
                   "
                   class="flex flex-wrap gap-3">
                   <span class="text-base-9 dark:text-base-9">

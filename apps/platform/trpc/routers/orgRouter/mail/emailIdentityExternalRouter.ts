@@ -92,7 +92,7 @@ export const emailIdentityExternalRouter = router({
     .input(
       z.object({
         emailAddress: z.string().email(),
-        sendName: z.string().min(3).max(255),
+        sendName: z.string().min(2).max(255),
         smtp: z.object({
           host: z.string(),
           port: z.number(),

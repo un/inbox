@@ -93,7 +93,7 @@ export const emailIdentityRouter = router({
       z.object({
         emailUsername: z.string().min(1).max(255),
         domainPublicId: typeIdValidator('domains'),
-        sendName: z.string().min(3).max(255),
+        sendName: z.string().min(2).max(255),
         catchAll: z.boolean().optional().default(false),
         routeToOrgMemberPublicIds: z
           .array(typeIdValidator('orgMembers'))
