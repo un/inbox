@@ -400,8 +400,8 @@
             <NuxtUiSelectMenu
               v-if="
                 convoHasContactParticipants &&
-                Array.isArray(selectedOrgEmailIdentities) &&
-                selectedOrgEmailIdentities.length > 0
+                selectedOrgEmailIdentities &&
+                selectedOrgEmailIdentities.publicId
               "
               v-model="selectedOrgEmailIdentities"
               searchable
@@ -418,8 +418,8 @@
               <template #label>
                 <div
                   v-if="
-                    Array.isArray(selectedOrgEmailIdentities) &&
-                    selectedOrgEmailIdentities.length > 0
+                    selectedOrgEmailIdentities &&
+                    selectedOrgEmailIdentities.publicId
                   "
                   class="flex flex-wrap gap-3">
                   <span class="text-base-9 dark:text-base-9">
