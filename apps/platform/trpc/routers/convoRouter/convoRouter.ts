@@ -124,10 +124,7 @@ export const convoRouter = router({
 
       // get the authors publicId for the notifications
       const authorOrgMemberObject = await db.query.orgMembers.findFirst({
-        where: and(
-          eq(orgMembers.orgId, orgId),
-          eq(orgMembers.id, accountOrgMemberId)
-        ),
+        where: eq(orgMembers.id, accountOrgMemberId),
         columns: {
           publicId: true
         }
@@ -146,7 +143,10 @@ export const convoRouter = router({
         participantsOrgMembersPublicIds.length
       ) {
         const orgMemberResponses = await db.query.orgMembers.findMany({
-          where: inArray(orgMembers.publicId, participantsOrgMembersPublicIds),
+          where: and(
+            eq(orgMembers.orgId, orgId),
+            inArray(orgMembers.publicId, participantsOrgMembersPublicIds)
+          ),
           columns: {
             id: true,
             publicId: true
@@ -196,7 +196,10 @@ export const convoRouter = router({
       // validate the publicIds of Groups and get the IDs
       if (participantsGroupsPublicIds && participantsGroupsPublicIds.length) {
         const groupResponses = await db.query.groups.findMany({
-          where: inArray(groups.publicId, participantsGroupsPublicIds),
+          where: and(
+            eq(groups.orgId, orgId),
+            inArray(groups.publicId, participantsGroupsPublicIds)
+          ),
           columns: {
             id: true,
             publicId: true
@@ -249,7 +252,10 @@ export const convoRouter = router({
         participantsContactsPublicIds.length > 0
       ) {
         const contactResponses = await db.query.contacts.findMany({
-          where: inArray(contacts.publicId, participantsContactsPublicIds),
+          where: and(
+            eq(contacts.orgId, orgId),
+            inArray(contacts.publicId, participantsContactsPublicIds)
+          ),
           columns: {
             id: true,
             publicId: true
@@ -456,10 +462,7 @@ export const convoRouter = router({
 
           //get the groups members and add to convo separately
           const groupMembersQuery = await db.query.groupMembers.findMany({
-            where: and(
-              eq(groupMembers.orgId, orgId),
-              eq(groupMembers.groupId, groupId.id)
-            ),
+            where: eq(groupMembers.groupId, groupId.id),
             columns: {
               orgMemberId: true
             },
@@ -500,7 +503,6 @@ export const convoRouter = router({
                       id: true
                     },
                     where: and(
-                      eq(convoParticipants.orgId, orgId),
                       eq(
                         convoParticipants.convoId,
                         Number(insertConvoResponse.insertId)
@@ -557,7 +559,10 @@ export const convoRouter = router({
       let authorEmailIdentityId: number | null = null;
       if (sendAsEmailIdentityPublicId) {
         const emailIdentityResponse = await db.query.emailIdentities.findFirst({
-          where: eq(emailIdentities.publicId, sendAsEmailIdentityPublicId),
+          where: and(
+            eq(emailIdentities.orgId, orgId),
+            eq(emailIdentities.publicId, sendAsEmailIdentityPublicId)
+          ),
           columns: {
             id: true,
             publicId: true
@@ -753,7 +758,10 @@ export const convoRouter = router({
 
       const convoEntryToReplyToQueryResponse =
         await db.query.convoEntries.findFirst({
-          where: eq(convoEntries.publicId, input.replyToMessagePublicId),
+          where: and(
+            eq(convoEntries.orgId, orgId),
+            eq(convoEntries.publicId, input.replyToMessagePublicId)
+          ),
           columns: {
             id: true,
             orgId: true,
@@ -981,12 +989,9 @@ export const convoRouter = router({
         pendingAttachmentsToRemoveFromPending.length > 0
       ) {
         db.delete(pendingAttachments).where(
-          and(
-            eq(pendingAttachments.orgId, orgId),
-            inArray(
-              pendingAttachments.publicId,
-              pendingAttachmentsToRemoveFromPending
-            )
+          inArray(
+            pendingAttachments.publicId,
+            pendingAttachmentsToRemoveFromPending
           )
         );
       }
@@ -1273,6 +1278,7 @@ export const convoRouter = router({
     .query(async ({ ctx, input }) => {
       const { db, org } = ctx;
       const { cursorLastUpdatedAt, cursorLastPublicId } = input;
+      const orgId = org.id;
 
       const orgMemberId = org.memberId;
 
@@ -1292,10 +1298,14 @@ export const convoRouter = router({
         where: and(
           or(
             and(
+              eq(convos.orgId, orgId),
               eq(convos.lastUpdatedAt, inputLastUpdatedAt),
               lt(convos.publicId, inputLastPublicId)
             ),
-            lt(convos.lastUpdatedAt, inputLastUpdatedAt)
+            and(
+              eq(convos.orgId, orgId),
+              lt(convos.lastUpdatedAt, inputLastUpdatedAt)
+            )
           ),
           inArray(
             convos.id,

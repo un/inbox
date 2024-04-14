@@ -286,6 +286,7 @@ export const convoEntryRouter = router({
       // get the entries
       const convoEntryQuery = await db.query.convoEntries.findFirst({
         where: and(
+          eq(convoEntries.orgId, orgId),
           eq(convoEntries.convoId, convoDetails.id),
           eq(convoEntries.publicId, convoEntryPublicId)
         ),
