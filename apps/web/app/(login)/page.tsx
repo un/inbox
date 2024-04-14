@@ -1,10 +1,13 @@
-import { Button, Flex, Box, Heading, Separator, Badge } from '@radix-ui/themes';
+import { Flex, Box, Heading, Separator, Badge, Button } from '@radix-ui/themes';
 import PasskeyLoginButton from './PasskeyLogin';
+import PasswordLoginButton from './PasswordLogin';
+import Link from 'next/link';
+import RecoveryButton from './RecoveryButton';
 
 export default function Page() {
   return (
     <Flex
-      className="h-full"
+      height="100%"
       align="center"
       justify="center">
       <Box className="text-center">
@@ -18,7 +21,7 @@ export default function Page() {
           className="font-display text-5xl">
           UnInbox
         </Heading>
-        <Box className="py-6">
+        <Box py="6">
           <PasskeyLoginButton />
           <Flex
             align="center"
@@ -34,13 +37,22 @@ export default function Page() {
               color="grass"
             />
           </Flex>
+          <PasswordLoginButton />
+        </Box>
+        <Flex
+          py="8"
+          gap="4"
+          align="center"
+          justify="center"
+          direction="column">
           <Button
             size="3"
-            className="w-full cursor-pointer font-semibold"
-            variant="surface">
-            Login With Password
+            className="w-fit cursor-pointer font-semibold"
+            variant="ghost">
+            <Link href="/join">Create an Account</Link>
           </Button>
-        </Box>
+          <RecoveryButton />
+        </Flex>
       </Box>
     </Flex>
   );

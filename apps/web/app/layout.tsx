@@ -2,9 +2,10 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import localFont from 'next/font/local';
 import { cn } from '@/lib/utils';
-import { Theme } from '@radix-ui/themes';
+import { Theme, ThemePanel } from '@radix-ui/themes';
 import { ThemeProvider } from 'next-themes';
 import { TRPCReactProvider } from '@/lib/trpc';
+import Toaster from '@/components/toaster';
 
 import './globals.css';
 
@@ -25,7 +26,7 @@ export const metadata: Metadata = {
   description: 'Open Source Email service'
 };
 
-function RootLayout({
+export default function RootLayout({
   children
 }: Readonly<{
   children: React.ReactNode;
@@ -45,12 +46,16 @@ function RootLayout({
           <Theme
             className="flex h-full flex-col"
             radius="medium">
-            <TRPCReactProvider>{children}</TRPCReactProvider>
+            <TRPCReactProvider>
+              {process.env.NODE_ENV === 'development' && (
+                <ThemePanel defaultOpen={false} />
+              )}
+              <Toaster />
+              {children}
+            </TRPCReactProvider>
           </Theme>
         </ThemeProvider>
       </body>
     </html>
   );
 }
-
-export default RootLayout;

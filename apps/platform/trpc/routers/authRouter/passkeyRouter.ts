@@ -210,6 +210,18 @@ export const passkeyRouter = router({
           id: true,
           publicId: true,
           username: true
+        },
+        with: {
+          orgMemberships: {
+            with: {
+              org: {
+                columns: {
+                  shortcode: true,
+                  id: true
+                }
+              }
+            }
+          }
         }
       });
 
@@ -241,6 +253,9 @@ export const passkeyRouter = router({
         .set({ lastLoginAt: new Date() })
         .where(eq(accounts.id, account.id));
 
-      return { success: true };
+      const defaultOrg = account.orgMemberships.sort((a, b) => a.id - b.id)[0]
+        ?.org.shortcode;
+
+      return { success: true, defaultOrg };
     })
 });

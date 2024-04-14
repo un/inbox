@@ -5,7 +5,7 @@ import { loggerLink, httpBatchLink } from '@trpc/client';
 import { createTRPCReact } from '@trpc/react-query';
 import { useState } from 'react';
 import SuperJSON from 'superjson';
-
+import { useParams } from 'next/navigation';
 import type { TrpcPlatformRouter } from '@u22n/platform/trpc';
 
 const createQueryClient = () => new QueryClient();
@@ -24,6 +24,7 @@ export const api = createTRPCReact<TrpcPlatformRouter>();
 
 export function TRPCReactProvider(props: { children: React.ReactNode }) {
   const queryClient = getQueryClient();
+  const params = useParams();
 
   const [trpcClient] = useState(() =>
     api.createClient({
@@ -38,7 +39,9 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
           url: getBaseUrl() + '/trpc',
           headers: () => {
             const headers = new Headers();
-            headers.set('x-trpc-source', 'nextjs-react');
+            if (typeof params.orgShortCode === 'string') {
+              headers.set('org-shortcode', params.orgShortCode as string);
+            }
             return headers;
           },
           fetch: (input, init) =>
@@ -60,8 +63,7 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
 }
 
 function getBaseUrl() {
-  process.env.PUBLIC_PLATFORM_URL = 'http://localhost:3300';
-
-  if (process.env.PUBLIC_PLATFORM_URL) return process.env.PUBLIC_PLATFORM_URL;
+  if (process.env.NEXT_PUBLIC_PLATFORM_URL)
+    return process.env.NEXT_PUBLIC_PLATFORM_URL;
   throw new Error('PLATFORM_URL is not set');
 }

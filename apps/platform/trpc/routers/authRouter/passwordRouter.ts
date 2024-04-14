@@ -97,7 +97,20 @@ export const passwordRouter = router({
           username: true,
           passwordHash: true,
           twoFactorSecret: true,
-          twoFactorEnabled: true
+          twoFactorEnabled: true,
+          recoveryCode: true
+        },
+        with: {
+          orgMemberships: {
+            with: {
+              org: {
+                columns: {
+                  shortcode: true,
+                  id: true
+                }
+              }
+            }
+          }
         }
       });
 
@@ -192,7 +205,11 @@ export const passwordRouter = router({
           .set({ lastLoginAt: new Date() })
           .where(eq(accounts.id, userResponse.id));
 
-        return { success: true };
+        const defaultOrg = userResponse.orgMemberships.sort(
+          (a, b) => a.id - b.id
+        )[0]?.org.shortcode;
+
+        return { success: true, defaultOrg };
       }
 
       throw new TRPCError({
