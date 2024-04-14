@@ -16,7 +16,7 @@ const inter = Inter({
 });
 
 const calSans = localFont({
-  src: './fonts/CalSans-SemiBold.woff2',
+  src: '../fonts/CalSans-SemiBold.woff2',
   weight: '600',
   variable: '--font-cal-sans'
 });
@@ -34,7 +34,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className="h-full font-sans antialiased"
+      className="h-full w-full font-sans antialiased"
       suppressHydrationWarning>
       <body className={cn(inter.variable, calSans.variable, 'h-full')}>
         <ThemeProvider
@@ -44,7 +44,7 @@ export default function RootLayout({
           defaultTheme="system"
           disableTransitionOnChange>
           <Theme
-            className="flex h-full flex-col"
+            className="flex h-full w-full flex-col"
             radius="medium">
             <TRPCReactProvider>
               {process.env.NODE_ENV === 'development' && (

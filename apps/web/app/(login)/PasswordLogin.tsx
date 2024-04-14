@@ -16,6 +16,7 @@ import {
 import { Eye, EyeOff, Key, KeyRound, User } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { zodSchemas } from '@u22n/utils';
 
 export default function PasswordLoginButton() {
   const [username, setUsername] = useState('');
@@ -27,7 +28,8 @@ export default function PasswordLoginButton() {
   const dialogCloseRef = useRef<HTMLButtonElement | null>(null);
   const router = useRouter();
 
-  const loginValid = username.length >= 2 && password.length >= 8;
+  const loginValid =
+    zodSchemas.username(2).safeParse(username).success && password.length >= 8;
   const otpValid = otp.length === 6 || noOtp;
 
   const signInWithPassword = api.auth.password.signInWithPassword.useMutation();
@@ -183,7 +185,7 @@ export default function PasswordLoginButton() {
                   as="span"
                   size="1"
                   weight="medium">
-                  I don't have 2FA on my account yet
+                  I don&apos;t have 2FA on my account yet
                 </Text>
               </Flex>
             </Text>

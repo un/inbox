@@ -8,7 +8,15 @@ import SuperJSON from 'superjson';
 import { useParams } from 'next/navigation';
 import type { TrpcPlatformRouter } from '@u22n/platform/trpc';
 
-const createQueryClient = () => new QueryClient();
+const createQueryClient = () =>
+  new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+        refetchOnWindowFocus: false
+      }
+    }
+  });
 
 let clientQueryClientSingleton: QueryClient | undefined = undefined;
 const getQueryClient = () => {
