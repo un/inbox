@@ -205,7 +205,7 @@
         @click="navigateTo('/join')" />
       <!-- Not implemented yet -->
       <UnUiButton
-        label="Recover my account (Yet to be Implemented)"
+        label="Recover my account"
         variant="ghost"
         block
         @click="navigateTo('/')" />

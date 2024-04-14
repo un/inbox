@@ -1,3 +1,4 @@
+import { userInvites } from './../../../../mail-bridge/postal-db/schema';
 import { z } from 'zod';
 import { router, accountProcedure, orgProcedure } from '../../trpc';
 import { and, eq } from '@u22n/database/orm';
@@ -28,30 +29,28 @@ export const defaultsRouter = router({
                 }
               }
             }
-          },
-          authenticators: {
-            columns: {
-              id: true
-            }
           }
         }
       });
 
       if (!accountResponse) {
-        throw new Error('User not found');
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'User not found'
+        });
       }
 
-      const userHasPasskeys = accountResponse.authenticators.length > 0;
+      const twoFactorEnabledCorrectly = accountResponse.passwordHash
+        ? accountResponse.passwordHash && accountResponse.twoFactorEnabled
+        : true;
 
-      const twoFactorEnabledCorrectly =
-        accountResponse.passwordHash && accountResponse.twoFactorEnabled;
+      const userHasOrgMembership = accountResponse.orgMemberships.length > 0;
 
       return {
         defaultOrgShortcode:
           accountResponse?.orgMemberships[0]?.org?.shortcode || null,
-        twoFactorEnabledCorrectly: userHasPasskeys
-          ? true
-          : twoFactorEnabledCorrectly,
+        twoFactorEnabledCorrectly: twoFactorEnabledCorrectly,
+        userHasOrgMembership: userHasOrgMembership,
         username: accountResponse.username
       };
     }),

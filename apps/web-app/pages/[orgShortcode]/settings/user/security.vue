@@ -27,6 +27,9 @@
   const breakpoints = useBreakpoints(breakpointsTailwind);
   const isMobile = breakpoints.smaller('lg'); // only smaller than lg
   const orgShortcode = useRoute().params.orgShortcode as string;
+  const urlParams = useRoute().query;
+
+  const has2FAError = urlParams['2fa'] === 'error';
 
   const { $trpc } = useNuxtApp();
   const toast = useToast();
@@ -69,7 +72,10 @@
   const legacySecurity = ref(false);
 
   const canDisableLegacySecurity = computed(() => {
-    if ((data.value?.passkeys.length ?? 0) > 0) {
+    if (hasPasskeys.value) {
+      return true;
+    }
+    if (passwordEnabled.value && !twoFactorEnabled.value) {
       return true;
     }
     return false;
@@ -493,6 +499,14 @@
         <span class="font-display text-2xl">Your Account Security</span>
       </div>
     </div>
+    <div class="w-full">
+      <UnUiAlert
+        v-if="has2FAError"
+        title="Your account is not secure - 2FA Error!"
+        description="You need to enable 2FA to secure your account, otherwise you may get locked out or be susceptible to a hacker."
+        color="red"
+        icon="i-ph-warning-octagon" />
+    </div>
     <div
       v-if="status !== 'success'"
       class="bg-base-3 flex w-full flex-row justify-center gap-4 rounded-xl rounded-tl-2xl p-4">
@@ -507,17 +521,19 @@
       <div class="flex flex-col gap-2">
         <div class="flex gap-4">
           <span class="text-lg font-medium">Use Password & 2FA</span>
-          <UnUiToggle
-            :model-value="legacySecurity"
-            :disabled="!canDisableLegacySecurity"
-            :loading="legacyLoading"
-            label="Use Password & 2FA"
-            @click="
-              toggleLegacySecurity().finally(() => {
-                legacyLoading = false;
-                refreshSecurityData();
-              })
-            " />
+          <UnUiTooltip text="Add a passkey to disable password signin">
+            <UnUiToggle
+              :model-value="legacySecurity"
+              :disabled="!canDisableLegacySecurity"
+              :loading="legacyLoading"
+              label="Use Password & 2FA"
+              @click="
+                toggleLegacySecurity().finally(() => {
+                  legacyLoading = false;
+                  refreshSecurityData();
+                })
+              " />
+          </UnUiTooltip>
         </div>
         <div
           v-if="legacySecurity"
@@ -560,9 +576,11 @@
           label="Reset Recovery Code"
           class="w-fit" />
       </div>
-      <div class="flex flex-col gap-4">
+      <div class="flex flex-col gap-2">
         <span class="text-lg font-medium">Passkeys</span>
-        <div class="flex w-full flex-row items-center justify-between gap-4">
+        <div
+          v-if="data?.passkeys?.length !== 0"
+          class="flex w-full flex-row items-center justify-between gap-4">
           <template
             v-for="passkey of data?.passkeys"
             :key="passkey.publicId">
@@ -601,7 +619,7 @@
           icon="i-ph-plus"
           @click="addPasskey()" />
       </div>
-      <div class="flex flex-col gap-4">
+      <div class="flex flex-col gap-2">
         <span class="text-lg font-medium">Sessions</span>
         <div class="flex w-full flex-row flex-wrap items-center gap-4">
           <template
