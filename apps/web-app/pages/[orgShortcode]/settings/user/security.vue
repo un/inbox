@@ -49,15 +49,14 @@
     status,
     refresh: refreshSecurityData
   } = $trpc.account.security.getSecurityOverview.useQuery({});
+
   watch(status, (newStatus) => {
     if (newStatus === 'success') {
+      passwordEnabled.value = data.value?.passwordSet ?? false;
+      twoFactorEnabled.value = data.value?.twoFactorEnabled ?? false;
       recoveryCodeSet.value = data.value?.recoveryCodeSet ?? false;
       legacySecurity.value = data.value?.legacySecurityEnabled ?? false;
     }
-  });
-
-  const hasPassword = computed(() => {
-    return data.value?.passwordSet ?? false;
   });
 
   const hasPasskeys = computed(() => {
@@ -586,7 +585,7 @@
             v-for="session of data?.sessions"
             :key="session.publicId">
             <div
-              class="bg-base-3 flex flex-row items-center gap-4 rounded-xl p-3">
+              class="bg-base-3 flex flex-row flex-wrap items-center gap-4 rounded-xl p-3">
               <div class="flex flex-col gap-0">
                 <span class="text-sm font-medium">
                   {{ session.device }} - {{ session.os }}
@@ -672,7 +671,7 @@
             </div>
           </div>
           <UnUiDivider
-            v-if="hasPassword && hasPasskeys"
+            v-if="legacySecurity && hasPasskeys"
             label="or" />
           <div v-if="hasPasskeys">
             <UnUiButton
