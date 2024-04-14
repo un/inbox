@@ -779,7 +779,15 @@ export default defineAppConfig({
         }
       }
     },
-
+    //slideover
+    slideover: {
+      wrapper: 'fixed inset-0 flex z-50',
+      overlay: {
+        base: 'fixed inset-0 transition-opacity',
+        background: 'bg-base-5/75 dark:bg-base-5/75'
+      },
+      background: 'bg-white dark:bg-base-2'
+    },
     //popover
     popover: {
       background: 'bg-white dark:bg-gray-3',
