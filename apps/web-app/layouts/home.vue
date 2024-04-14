@@ -1,6 +1,12 @@
 <script setup lang="ts">
   // put in the handlers for the realtime client
-  import { useRoute, useNuxtApp, ref, navigateTo } from '#imports';
+  import {
+    useRoute,
+    useNuxtApp,
+    ref,
+    navigateTo,
+    refreshNuxtData
+  } from '#imports';
   import { useRealtime } from '~/composables/realtime';
   import { useConvoEntryStore } from '~/stores/convoEntryStore';
   import { useConvoStore } from '~/stores/convoStore';
@@ -11,6 +17,7 @@
   const isMobile = breakpoints.smaller('lg'); // only smaller than lg
 
   const orgShortcode = useRoute().params.orgShortcode;
+  const convoId = useRoute().params.convoId;
 
   const convoStore = useConvoStore();
   const convoEntryStore = useConvoEntryStore();
@@ -45,6 +52,10 @@
     await convoStore.refreshConvoInList({
       convoPublicId: convoEntry.convoPublicId
     });
+    // refresh the convo data if it is currently open
+    if (convoId && convoId === convoEntry.convoPublicId) {
+      await refreshNuxtData(`convoDetails-${convoEntry.convoPublicId}`);
+    }
     return;
   });
 

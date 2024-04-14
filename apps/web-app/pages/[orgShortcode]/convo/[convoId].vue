@@ -59,7 +59,7 @@
   const orgShortcode = useRoute().params.orgShortcode as string;
   const route = useRoute();
 
-  const convoPublicId = useRoute().params.id as TypeId<'convos'>;
+  const convoPublicId = useRoute().params.convoId as TypeId<'convos'>;
   if (!validateTypeId('convos', convoPublicId)) {
     await navigateTo(`/${orgShortcode}/convo/404`);
   }
@@ -141,6 +141,13 @@
     ).value;
 
     const convoParticipants = convoDetails.value?.data?.participants || [];
+    participantArray.value = [];
+    participantsAssignedArray.value = [];
+    participantContributorsArray.value = [];
+    participantCommentersArray.value = [];
+    participantWatchersArray.value = [];
+    participantGuestsArray.value = [];
+
     for (const participant of convoParticipants) {
       const participantData = useUtils().convos.useParticipantData(participant);
       if (!participantData) continue;
@@ -163,6 +170,7 @@
       convoDetails.value.data &&
       convoDetails.value.data.attachments
     ) {
+      attachments.value = [];
       for (const attachment of convoDetails.value.data.attachments.filter(
         (_) => !_.inline
       )) {
