@@ -465,6 +465,18 @@
         recoveryCodeStep.value === 'complete' ? true : false;
     }
   }
+
+  async function resetPassword() {
+    if (!(await waitForVerification())) return;
+    showResetPasswordModal.value = true;
+    await until(showResetPasswordModal.value).toBe(false);
+  }
+
+  async function reset2FA() {
+    if (!(await waitForVerification())) return;
+    showReset2FAModal.value = true;
+    await until(showReset2FAModal.value).toBe(false);
+  }
 </script>
 
 <template>
@@ -512,8 +524,20 @@
           class="flex flex-col gap-2">
           <div>You are currently using password and 2FA for your account.</div>
           <div class="flex flex-wrap gap-2">
-            <UnUiButton label="Reset Password" />
-            <UnUiButton label="Reset 2FA" />
+            <UnUiButton
+              label="Reset Password"
+              @click="
+                resetPassword().finally(() => {
+                  refreshSecurityData();
+                })
+              " />
+            <UnUiButton
+              label="Reset 2FA"
+              @click="
+                reset2FA().finally(() => {
+                  refreshSecurityData();
+                })
+              " />
           </div>
         </div>
       </div>
@@ -579,8 +603,7 @@
       </div>
       <div class="flex flex-col gap-4">
         <span class="text-lg font-medium">Sessions</span>
-        <div
-          class="flex w-full flex-col items-center justify-between gap-4 lg:flex-row">
+        <div class="flex w-full flex-row flex-wrap items-center gap-4">
           <template
             v-for="session of data?.sessions"
             :key="session.publicId">
@@ -745,7 +768,7 @@
         <div class="flex flex-col gap-4">
           <SettingsSecurityPasswordReset
             :verification-token="verificationToken!"
-            @complete="passwordEnabled = true" />
+            @complete="showResetPasswordModal = false" />
         </div>
       </UnUiModal>
 
@@ -763,8 +786,7 @@
         <div class="flex flex-col gap-4">
           <SettingsSecurityTotpReset
             :verification-token="verificationToken!"
-            @complete="twoFactorEnabled = true"
-            @close="showReset2FAModal = false" />
+            @complete="showReset2FAModal = false" />
         </div>
       </UnUiModal>
 
