@@ -169,7 +169,7 @@
           size="lg"
           class="rounded-full" />
       </div>
-      <div class="flex w-full flex-col gap-4 p-0 lg:gap-2">
+      <div class="flex w-full flex-col gap-4 overflow-hidden p-0 lg:gap-2">
         <div
           class="flex w-full flex-col items-center justify-start gap-2 overflow-visible pl-2 md:max-h-4 md:flex-row"
           :class="userIsAuthor ? 'md:flex-row-reverse' : 'md:flex-row'">
@@ -309,7 +309,7 @@
         </div>
         <!-- eslint-disable vue/no-v-html -->
         <div
-          class="w-full overflow-hidden rounded-2xl p-2 px-4"
+          class="w-full max-w-full overflow-clip break-words rounded-2xl p-2 px-4"
           :class="convoBubbleClasses"
           v-html="convoEntryBody" />
         <div class="flex flex-row justify-end">
