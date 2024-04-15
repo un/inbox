@@ -593,10 +593,9 @@ export const securityRouter = router({
       }
 
       const newRecoveryCode = nanoIdToken();
-
       await db
         .update(accounts)
-        .set({ recoveryCode: newRecoveryCode })
+        .set({ recoveryCode: await new Argon2id().hash(newRecoveryCode) })
         .where(eq(accounts.id, accountId));
 
       return { recoveryCode: newRecoveryCode };

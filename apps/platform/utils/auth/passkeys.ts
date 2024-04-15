@@ -54,8 +54,7 @@ async function generateRegistrationOptions(options: RegistrationOptions) {
     })),
     authenticatorSelection: {
       residentKey: 'preferred',
-      userVerification: 'preferred',
-      authenticatorAttachment: authenticatorAttachment || 'cross-platform'
+      userVerification: 'preferred'
     }
   });
 

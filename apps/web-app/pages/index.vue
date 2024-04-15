@@ -203,12 +203,11 @@
         block
         size="lg"
         @click="navigateTo('/join')" />
-      <!-- Not implemented yet -->
       <UnUiButton
         label="Recover my account"
         variant="ghost"
         block
-        @click="navigateTo('/')" />
+        @click="navigateTo('/recovery')" />
       <div class="h-0 max-h-0 w-full max-w-full"></div>
     </div>
   </div>

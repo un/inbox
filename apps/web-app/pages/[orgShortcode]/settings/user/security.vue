@@ -8,7 +8,8 @@
     watch,
     computed,
     until,
-    useRoute
+    useRoute,
+    useCookie
   } from '#imports';
   import { useUtils } from '~/composables/utils';
   import {
@@ -28,8 +29,8 @@
   const isMobile = breakpoints.smaller('lg'); // only smaller than lg
   const orgShortcode = useRoute().params.orgShortcode as string;
   const urlParams = useRoute().query;
-
-  const has2FAError = urlParams['2fa'] === 'error';
+  const has2FAError = urlParams['error'] === '2fa';
+  const verificationCookie = useCookie('authVerificationToken');
 
   const { $trpc } = useNuxtApp();
   const toast = useToast();
@@ -165,6 +166,11 @@
   }
 
   async function waitForVerification() {
+    if (verificationCookie.value) {
+      verificationToken.value = verificationCookie.value;
+      return true;
+    }
+
     if (verificationToken.value) {
       return true;
     }
@@ -475,13 +481,23 @@
   async function resetPassword() {
     if (!(await waitForVerification())) return;
     showResetPasswordModal.value = true;
-    await until(showResetPasswordModal.value).toBe(false);
+    await until(showResetPasswordModal).toBe(false);
   }
 
   async function reset2FA() {
     if (!(await waitForVerification())) return;
     showReset2FAModal.value = true;
-    await until(showReset2FAModal.value).toBe(false);
+    await until(showReset2FAModal).toBe(false);
+  }
+
+  async function resetRecoveryCode() {
+    if (!(await waitForVerification())) return;
+    showRecoveryCodeModal.value = true;
+    await until(recoveryCodeStep).toMatch(
+      (v) => v === 'complete' || v === 'close'
+    );
+    recoveryLoading.value = false;
+    showRecoveryCodeModal.value = false;
   }
 </script>
 
@@ -502,8 +518,8 @@
     <div class="w-full">
       <UnUiAlert
         v-if="has2FAError"
-        title="Your account is not secure - 2FA Error!"
-        description="You need to enable 2FA to secure your account, otherwise you may get locked out or be susceptible to a hacker."
+        title="Your account is not secure"
+        description="You need to reset your Password and 2FA because you either recovered your account or you didn't setup 2FA properly. If you don't do it now you will loose access to your account permanently."
         color="red"
         icon="i-ph-warning-octagon" />
     </div>
@@ -574,7 +590,12 @@
         <UnUiButton
           v-if="recoveryCodeSet"
           label="Reset Recovery Code"
-          class="w-fit" />
+          class="w-fit"
+          @click="
+            resetRecoveryCode().finally(() => {
+              refreshSecurityData();
+            })
+          " />
       </div>
       <div class="flex flex-col gap-2">
         <span class="text-lg font-medium">Passkeys</span>
@@ -660,7 +681,9 @@
           @click="deleteAllSessions({ confirm: false })" />
       </div>
 
-      <UnUiModal v-model="verificationModalOpen">
+      <UnUiModal
+        v-model="verificationModalOpen"
+        prevent-close>
         <template #header>
           <div class="flex flex-row items-center gap-2">
             <span class="text-red-9 text-2xl leading-none">
@@ -733,7 +756,9 @@
         </template>
       </UnUiModal>
 
-      <UnUiModal v-model="showEnableLegacySecurityModal">
+      <UnUiModal
+        v-model="showEnableLegacySecurityModal"
+        prevent-close>
         <template #header>
           <div class="flex flex-row items-center gap-2">
             <span class="text-red-9 text-2xl leading-none">
@@ -747,8 +772,10 @@
           </div>
         </template>
         <div class="flex flex-col gap-4">
+          <span class=""> </span>
           <span class="">
-            You are going to enable password and 2FA for your account.
+            Please enter your new password, and follow the 2FA prompts on the
+            next screen.
           </span>
           <div>
             <div
@@ -770,7 +797,9 @@
         </div>
       </UnUiModal>
 
-      <UnUiModal v-model="showResetPasswordModal">
+      <UnUiModal
+        v-model="showResetPasswordModal"
+        prevent-close>
         <template #header>
           <div class="flex flex-row items-center gap-2">
             <span class="text-red-9 text-2xl leading-none">
@@ -790,7 +819,9 @@
         </div>
       </UnUiModal>
 
-      <UnUiModal v-model="showReset2FAModal">
+      <UnUiModal
+        v-model="showReset2FAModal"
+        prevent-close>
         <template #header>
           <div class="flex flex-row items-center gap-2">
             <span class="text-red-9 text-2xl leading-none">
@@ -808,7 +839,9 @@
         </div>
       </UnUiModal>
 
-      <UnUiModal v-model="showRecoveryCodeModal">
+      <UnUiModal
+        v-model="showRecoveryCodeModal"
+        prevent-close>
         <template #header>
           <div class="flex flex-row items-center gap-2">
             <span class="text-red-9 text-2xl leading-none">
@@ -829,7 +862,9 @@
         </div>
       </UnUiModal>
 
-      <UnUiModal v-model="showConfirmPasskeyDeleteModal">
+      <UnUiModal
+        v-model="showConfirmPasskeyDeleteModal"
+        prevent-close>
         <template #header>
           <span class="">Confirm</span>
         </template>
@@ -853,7 +888,9 @@
         </template>
       </UnUiModal>
 
-      <UnUiModal v-model="showConfirmSessionDeleteModal">
+      <UnUiModal
+        v-model="showConfirmSessionDeleteModal"
+        prevent-close>
         <template #header>
           <span class="">Confirm</span>
         </template>
@@ -883,7 +920,9 @@
         </template>
       </UnUiModal>
 
-      <UnUiModal v-model="showConfirmSessionDeleteAllModal">
+      <UnUiModal
+        v-model="showConfirmSessionDeleteAllModal"
+        prevent-close>
         <template #header>
           <span class="">Confirm</span>
         </template>

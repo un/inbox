@@ -1,9 +1,7 @@
 <script setup lang="ts">
-  import { navigateTo, useNuxtApp, onMounted, useCookie, ref } from '#imports';
+  import { navigateTo, useNuxtApp, onMounted, useCookie } from '#imports';
 
   const { $trpc } = useNuxtApp();
-
-  const data = ref<any>(null);
 
   onMounted(async () => {
     const {
@@ -37,9 +35,11 @@
       }, 500);
     }
 
+    const authVerificationToken = useCookie('authVerificationToken');
+
     // We need to redirect to the index page of [orgShortcode] due to this nuxt issue https://github.com/nuxt/nuxt/issues/25214
     // the index page will reload nuxt, then redirect to the convos view - we should not directly navigate to convos page!!!
-    if (!twoFactorEnabledCorrectly) {
+    if (!twoFactorEnabledCorrectly || authVerificationToken.value) {
       setTimeout(() => {
         navigateTo(`/${defaultOrgShortcode}?error=2fa`);
       }, 500);

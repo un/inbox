@@ -7,7 +7,7 @@ import {
 } from '../../trpc';
 import { eq } from '@u22n/database/orm';
 import { accounts } from '@u22n/database/schema';
-import { typeIdGenerator, zodSchemas } from '@u22n/utils';
+import { nanoIdToken, typeIdGenerator, zodSchemas } from '@u22n/utils';
 import { strongPasswordSchema } from '@u22n/utils/password';
 import { TRPCError } from '@trpc/server';
 import { createError, setCookie } from 'h3';
@@ -16,6 +16,7 @@ import { validateUsername } from './signupRouter';
 import { createLuciaSessionCookie } from '../../../utils/session';
 import { decodeHex } from 'oslo/encoding';
 import { TOTPController } from 'oslo/otp';
+import { useStorage } from '#imports';
 
 export const passwordRouter = router({
   signUpWithPassword: publicRateLimitedProcedure.signUpWithPassword
@@ -78,24 +79,11 @@ export const passwordRouter = router({
         // we allow min length of 2 for username if we plan to provide them in the future
         username: zodSchemas.username(2),
         password: z.string().min(8),
-        twoFactorCode: z.string().min(6).max(6).optional(),
-        recoveryCode: z.string().optional()
+        twoFactorCode: z.string().min(6).max(6).optional()
       })
     )
     .mutation(async ({ ctx, input }) => {
       const { db } = ctx;
-
-      // if (
-      //   !(input.password && input.twoFactorCode) &&
-      //   !(input.password && input.recoveryCode) &&
-      //   !(input.twoFactorCode && input.recoveryCode)
-      // ) {
-      //   throw new TRPCError({
-      //     code: 'BAD_REQUEST',
-      //     message:
-      //       'You need to provide 2 of the following: Password, 2FA Code, Recovery Code'
-      //   });
-      // }
 
       const userResponse = await db.query.accounts.findFirst({
         where: eq(accounts.username, input.username),
@@ -105,8 +93,7 @@ export const passwordRouter = router({
           username: true,
           passwordHash: true,
           twoFactorSecret: true,
-          twoFactorEnabled: true,
-          recoveryCode: true
+          twoFactorEnabled: true
         }
       });
 
@@ -169,50 +156,23 @@ export const passwordRouter = router({
           });
         }
       }
+
       if (!userResponse.twoFactorEnabled || !userResponse.twoFactorSecret) {
         // If 2FA is not enabled, we can consider it as valid, user will be redirected to setup 2FA afterwards
         otpValid = true;
-      }
-
-      // verify recovery code if provided
-      let recoveryCodeValid = false;
-
-      if (input.recoveryCode) {
-        if (!userResponse.recoveryCode) {
-          throw new TRPCError({
-            code: 'METHOD_NOT_SUPPORTED',
-            message: 'Recovery code sign-in is not enabled'
-          });
-        }
-
-        const isRecoveryCodeValid = await new Argon2id().verify(
-          userResponse.recoveryCode,
-          input.recoveryCode
+        const authStorage = useStorage('auth');
+        const token = nanoIdToken();
+        authStorage.setItem(
+          `authVerificationToken: ${userResponse.publicId}`,
+          token
         );
-        if (isRecoveryCodeValid) {
-          // Remove the used recovery code from the database
-          await db
-            .update(accounts)
-            .set({
-              recoveryCode: null
-            })
-            .where(eq(accounts.id, userResponse.id));
-          recoveryCodeValid = isRecoveryCodeValid;
-        }
-
-        if (!recoveryCodeValid) {
-          throw new TRPCError({
-            code: 'UNAUTHORIZED',
-            message: 'Invalid recovery code'
-          });
-        }
+        setCookie(ctx.event, 'authVerificationToken', token, {
+          maxAge: 5 * 60,
+          httpOnly: false
+        });
       }
 
-      if (
-        (validPassword && otpValid) ||
-        (validPassword && recoveryCodeValid) ||
-        (otpValid && recoveryCodeValid)
-      ) {
+      if (validPassword && otpValid) {
         const { id: accountId, username, publicId } = userResponse;
 
         const cookie = await createLuciaSessionCookie(ctx.event, {
@@ -229,9 +189,11 @@ export const passwordRouter = router({
 
         return { success: true };
       }
+
       throw new TRPCError({
         code: 'UNAUTHORIZED',
-        message: 'Something went wrong, please contact support'
+        message:
+          'Something went wrong, you should never see this message. Please report to team immediately.'
       });
     }),
 

@@ -11,7 +11,7 @@
 
   if (has2FAError) {
     reloadNuxtApp({
-      path: `/${orgShortcode}/settings/user/security?2fa=error`,
+      path: `/${orgShortcode}/settings/user/security?error=2fa`,
       force: true,
       ttl: 5000
     });
