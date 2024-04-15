@@ -1059,6 +1059,7 @@ export const convoParticipants = mysqlTable(
       .default('active'),
     lastReadAt: timestamp('last_read_at'),
     active: boolean('active').notNull().default(true),
+    hidden: boolean('hidden').notNull().default(false),
     createdAt: timestamp('created_at')
       .notNull()
       .$defaultFn(() => new Date())

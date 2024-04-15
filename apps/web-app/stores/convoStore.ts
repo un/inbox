@@ -72,57 +72,73 @@ export const useConvoStore = defineStore(
           convoPublicId
         });
       if (!newConvo.value || !('publicId' in newConvo.value)) return;
-      //! send push notification
-      orgMemberConvos.value.unshift(newConvo.value);
-    }
+      const convoLastUpdatedAt = new Date(newConvo.value.lastUpdatedAt);
 
-    async function fetchAndReplaceSingleConvo({
-      convoPublicId
-    }: {
-      convoPublicId: TypeId<'convos'>;
-    }) {
-      const { data: newConvo } =
-        await $trpc.convos.getOrgMemberSpecificConvo.useQuery({
-          convoPublicId
-        });
-      if (!newConvo.value || !('publicId' in newConvo.value)) return;
-
-      // replace the existing convo data with the new one
-      const convoIndex = orgMemberConvos.value.findIndex(
-        (convo) => convo.publicId === convoPublicId
-      );
-      if (convoIndex === -1) return;
-      // replace the data of the existing convo
-      orgMemberConvos.value.splice(convoIndex, 1, newConvo.value);
-    }
-
-    async function refreshConvoInList({
-      convoPublicId
-    }: {
-      convoPublicId: TypeId<'convos'>;
-    }) {
-      const convoIndex = orgMemberConvos.value.findIndex(
+      // check if convo already exist in the list
+      const convoIndexInList = orgMemberConvos.value.findIndex(
         (convo) => convo.publicId === convoPublicId
       );
 
-      if (convoIndex === -1) {
-        await fetchAndAddSingleConvo({ convoPublicId });
+      //not in list
+      if (convoIndexInList === -1) {
+        const insertIndex = orgMemberConvos.value.findIndex(
+          (convo) => new Date(convo.lastUpdatedAt) < convoLastUpdatedAt
+        );
+        if (insertIndex === -1) {
+          orgMemberConvos.value.unshift(newConvo.value);
+        } else {
+          orgMemberConvos.value.splice(insertIndex, 0, newConvo.value);
+        }
         return;
       }
-      await fetchAndReplaceSingleConvo({ convoPublicId });
+      //in list
+      if (convoIndexInList !== -1) {
+        const existingConvoIndex = orgMemberConvos.value.findIndex(
+          (convo) => convo.publicId === convoPublicId
+        );
+        const insertIndex = orgMemberConvos.value.findIndex(
+          (convo) => new Date(convo.lastUpdatedAt) < convoLastUpdatedAt
+        );
+        orgMemberConvos.value.splice(existingConvoIndex, 1);
+        orgMemberConvos.value.splice(insertIndex - 1, 0, newConvo.value);
+      }
+
+      // //! send push notification
+    }
+
+    async function hideConvoFromList({
+      convoPublicId
+    }: {
+      convoPublicId: TypeId<'convos'>;
+    }) {
+      const convoIndex = orgMemberConvos.value.findIndex(
+        (convo) => convo.publicId === convoPublicId
+      );
+
+      if (convoIndex === -1) return;
+      orgMemberConvos.value.splice(convoIndex, 1);
+    }
+
+    async function unhideConvoFromList({
+      convoPublicId
+    }: {
+      convoPublicId: TypeId<'convos'>;
+    }) {
+      await fetchAndAddSingleConvo({ convoPublicId });
     }
 
     return {
       getConvoList,
       fetchAndAddSingleConvo,
-      refreshConvoInList,
       orgMemberConvos,
       orgMemberHasConvos,
       orgMemberHasMoreConvos,
       convosListCursor,
       pauseConvoLoading,
       convoQueryParams,
-      convoQueryPending
+      convoQueryPending,
+      hideConvoFromList,
+      unhideConvoFromList
     };
   },
   {

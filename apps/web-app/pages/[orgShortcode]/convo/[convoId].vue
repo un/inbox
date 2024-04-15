@@ -53,6 +53,9 @@
   const updateDate = ref<Date | null>(null);
   const createdAgo = ref('');
   const updatedAgo = ref('');
+
+  const convoIsHidden = ref(false);
+
   const replyToMessagePublicId = ref('');
   const replyToMessageMetadata = ref<ConvoEntryMetadata | undefined>(undefined);
 
@@ -71,50 +74,6 @@
       },
       { server: false, queryKey: `convoDetails-${convoPublicId}` }
     );
-
-  //* new reply fields
-  const convoHasContactParticipants = computed(() => {
-    return participantArray.value.some(
-      (participant) => participant.type === 'contact'
-    );
-  });
-  const attachmentUploads = ref<ConvoAttachmentUpload[]>([]);
-  const currentTotalUploadSize = computed(() => {
-    return attachmentUploads.value.reduce((acc, attachment) => {
-      return acc + attachment.size;
-    }, 0);
-  });
-  interface OrgEmailIdentities {
-    publicId: string;
-    address: string;
-    sendName: string | null;
-  }
-  const orgEmailIdentities = ref<OrgEmailIdentities[]>([]);
-  const selectedOrgEmailIdentities = ref<OrgEmailIdentities | undefined>(
-    undefined
-  );
-  const messageEditorData = ref<tiptapVue3.JSONContent>(
-    emptyTiptapEditorContent
-  );
-  const editor = ref<null | InstanceType<typeof UnEditor>>(null);
-  const actionLoading = ref(false);
-  const isTextPresent = computed(() => {
-    const contentArray = messageEditorData.value?.content;
-    if (!contentArray) return false;
-    if (contentArray.length === 0) return false;
-    if (
-      contentArray[0] &&
-      (!contentArray[0].content || contentArray[0].content.length === 0)
-    )
-      return false;
-    return true;
-  });
-
-  const formValid = computed(() => {
-    return convoHasContactParticipants.value
-      ? selectedOrgEmailIdentities.value && isTextPresent.value
-      : isTextPresent.value;
-  });
 
   watch(convoDetails, () => {
     if (convoDetailsStatus.value === 'idle') return;
@@ -149,6 +108,9 @@
     participantGuestsArray.value = [];
 
     for (const participant of convoParticipants) {
+      if (participant.publicId === convoDetails.value?.ownParticipantPublicId) {
+        convoIsHidden.value = participant.hidden;
+      }
       const participantData = useUtils().convos.useParticipantData(participant);
       if (!participantData) continue;
 
@@ -193,6 +155,53 @@
   });
   provide('convoParticipants', participantArray);
   provide('participantPublicId', participantOwnPublicId);
+
+  //*
+  //*
+  //* new reply fields
+  //*
+  const convoHasContactParticipants = computed(() => {
+    return participantArray.value.some(
+      (participant) => participant.type === 'contact'
+    );
+  });
+  const attachmentUploads = ref<ConvoAttachmentUpload[]>([]);
+  const currentTotalUploadSize = computed(() => {
+    return attachmentUploads.value.reduce((acc, attachment) => {
+      return acc + attachment.size;
+    }, 0);
+  });
+  interface OrgEmailIdentities {
+    publicId: string;
+    address: string;
+    sendName: string | null;
+  }
+  const orgEmailIdentities = ref<OrgEmailIdentities[]>([]);
+  const selectedOrgEmailIdentities = ref<OrgEmailIdentities | undefined>(
+    undefined
+  );
+  const messageEditorData = ref<tiptapVue3.JSONContent>(
+    emptyTiptapEditorContent
+  );
+  const editor = ref<null | InstanceType<typeof UnEditor>>(null);
+  const actionLoading = ref(false);
+  const isTextPresent = computed(() => {
+    const contentArray = messageEditorData.value?.content;
+    if (!contentArray) return false;
+    if (contentArray.length === 0) return false;
+    if (
+      contentArray[0] &&
+      (!contentArray[0].content || contentArray[0].content.length === 0)
+    )
+      return false;
+    return true;
+  });
+
+  const formValid = computed(() => {
+    return convoHasContactParticipants.value
+      ? selectedOrgEmailIdentities.value && isTextPresent.value
+      : isTextPresent.value;
+  });
 
   // Get email identities
 
@@ -332,6 +341,7 @@
     attachmentUploads.value = [];
     editor.value?.resetEditor();
     messageEditorData.value = emptyTiptapEditorContent;
+    convoIsHidden.value = false;
   }
 
   const isContextOpen = ref(false);
@@ -342,6 +352,34 @@
       isContextOpen.value = true;
     }
   );
+
+  async function hideConvo() {
+    const hideConvoTrpc = $trpc.convos.hideConvo.useMutation();
+    await hideConvoTrpc.mutate({
+      convoPublicId: convoPublicId,
+      unhide: convoIsHidden.value
+    });
+    convoIsHidden.value = !convoIsHidden.value;
+    toast.remove('hide_convo');
+    toast.add({
+      id: 'hide_convo',
+      title: convoIsHidden.value
+        ? 'Conversation hidden'
+        : 'Conversation unhidden',
+      icon: convoIsHidden.value ? 'i-ph-eye-slash' : 'i-ph-eye',
+      color: 'green',
+
+      timeout: 10000,
+      actions: [
+        {
+          label: 'Undo',
+          click: () => {
+            hideConvo();
+          }
+        }
+      ]
+    });
+  }
 </script>
 <template>
   <div
@@ -368,27 +406,17 @@
         <!-- <span>TAGS</span> -->
       </div>
 
-      <div class="hidden h-fit flex-row gap-4 overflow-hidden">
-        <UnUiButton
-          icon="i-heroicons-pencil-square"
-          size="sm"
-          square
-          variant="soft" />
-        <UnUiButton
-          icon="i-ph-bell-simple-slash"
-          size="sm"
-          square
-          variant="soft" />
-        <UnUiButton
-          icon="i-ph-alarm"
-          size="sm"
-          square
-          variant="soft" />
-        <UnUiButton
-          icon="i-ph-trash"
-          size="sm"
-          square
-          variant="soft" />
+      <div class="h-fit flex-row gap-4 overflow-hidden">
+        <UnUiTooltip
+          :text="convoIsHidden ? 'Show conversation' : 'Hide conversation'">
+          <UnUiButton
+            :icon="convoIsHidden ? 'i-ph-eye' : 'i-ph-eye-slash'"
+            :color="convoIsHidden ? 'green' : 'base'"
+            size="sm"
+            square
+            variant="soft"
+            @click="hideConvo()" />
+        </UnUiTooltip>
       </div>
     </div>
 

@@ -70,7 +70,8 @@ export const convoRouter = router({
             size: z.number(),
             type: z.string()
           })
-        )
+        ),
+        hide: z.boolean().default(false)
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -583,6 +584,7 @@ export const convoRouter = router({
           publicId: authorConvoParticipantPublicId,
           orgMemberId: accountOrgMemberId,
           emailIdentityId: authorEmailIdentityId,
+          hidden: input.hide,
           role: 'assigned'
         });
 
@@ -728,7 +730,8 @@ export const convoRouter = router({
             type: z.string()
           })
         ),
-        messageType: z.enum(['message', 'draft', 'comment'])
+        messageType: z.enum(['message', 'draft', 'comment']),
+        hide: z.boolean().default(false)
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -786,7 +789,8 @@ export const convoRouter = router({
                     groupId: true,
                     contactId: true,
                     emailIdentityId: true,
-                    role: true
+                    role: true,
+                    hidden: true
                   }
                 }
               }
@@ -1038,6 +1042,15 @@ export const convoRouter = router({
           seenAt: new Date()
         })
         .onDuplicateKeyUpdate({ set: { seenAt: new Date() } });
+
+      if (input.hide) {
+        await db
+          .update(convoParticipants)
+          .set({
+            hidden: true
+          })
+          .where(eq(convoParticipants.id, authorConvoParticipantId));
+      }
       return {
         status: 'success',
         publicId: newConvoEntryPublicId
@@ -1140,7 +1153,8 @@ export const convoRouter = router({
               lastReadAt: true,
               notifications: true,
               active: true,
-              role: true
+              role: true,
+              hidden: true
             },
             with: {
               emailIdentity: {
@@ -1271,6 +1285,7 @@ export const convoRouter = router({
   getOrgMemberConvos: orgProcedure
     .input(
       z.object({
+        includeHidden: z.boolean().default(false),
         cursorLastUpdatedAt: z.date().optional(),
         cursorLastPublicId: typeIdValidator('convos').optional()
       })
@@ -1313,14 +1328,17 @@ export const convoRouter = router({
               .select({ id: convoParticipants.convoId })
               .from(convoParticipants)
               .where(
-                or(
-                  eq(convoParticipants.orgMemberId, orgMemberId),
-                  inArray(
-                    convoParticipants.groupId,
-                    db
-                      .select({ id: groupMembers.groupId })
-                      .from(groupMembers)
-                      .where(eq(groupMembers.orgMemberId, orgMemberId))
+                and(
+                  eq(convoParticipants.hidden, input.includeHidden),
+                  or(
+                    eq(convoParticipants.orgMemberId, orgMemberId),
+                    inArray(
+                      convoParticipants.groupId,
+                      db
+                        .select({ id: groupMembers.groupId })
+                        .from(groupMembers)
+                        .where(eq(groupMembers.orgMemberId, orgMemberId))
+                    )
                   )
                 )
               )
@@ -1335,7 +1353,9 @@ export const convoRouter = router({
           participants: {
             columns: {
               role: true,
-              publicId: true
+              publicId: true,
+              hidden: true,
+              notifications: true
             },
             with: {
               orgMember: {
@@ -1447,6 +1467,7 @@ export const convoRouter = router({
         }
       };
     }),
+  // used for data store
   getOrgMemberSpecificConvo: orgProcedure
     .input(
       z.object({
@@ -1475,7 +1496,9 @@ export const convoRouter = router({
           participants: {
             columns: {
               role: true,
-              publicId: true
+              publicId: true,
+              hidden: true,
+              notifications: true
             },
             with: {
               orgMember: {
@@ -1573,5 +1596,71 @@ export const convoRouter = router({
       }
 
       return convoQuery;
+    }),
+  hideConvo: orgProcedure
+    .input(
+      z.object({
+        convoPublicId: typeIdValidator('convos'),
+        unhide: z.boolean().default(false)
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { db, org } = ctx;
+      const { convoPublicId } = input;
+      const orgMemberId = org.memberId;
+
+      const convoQuery = await db.query.convos.findFirst({
+        columns: {
+          id: true
+        },
+        where: and(
+          eq(convos.publicId, convoPublicId),
+          eq(convos.orgId, org.id)
+        ),
+        with: {
+          participants: {
+            columns: {
+              id: true
+            },
+            where: eq(convoParticipants.orgMemberId, orgMemberId),
+            with: {
+              orgMember: {
+                columns: {
+                  publicId: true
+                }
+              }
+            }
+          }
+        }
+      });
+
+      if (!convoQuery) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Conversation not found'
+        });
+      }
+
+      const orgMemberConvoParticipant = convoQuery.participants[0];
+      if (!orgMemberConvoParticipant) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Conversation not found'
+        });
+      }
+
+      await db
+        .update(convoParticipants)
+        .set({
+          hidden: !input.unhide
+        })
+        .where(eq(convoParticipants.id, orgMemberConvoParticipant.id));
+      realtime.emit({
+        orgMemberPublicIds: [orgMemberConvoParticipant.orgMember!.publicId],
+        event: 'convo:hidden',
+        data: { publicId: convoPublicId, hidden: !input.unhide }
+      });
+
+      return { success: true };
     })
 });

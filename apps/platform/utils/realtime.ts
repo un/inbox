@@ -1,7 +1,7 @@
 import { useRuntimeConfig } from '#imports';
 import { db } from '@u22n/database';
-import { eq } from '@u22n/database/orm';
-import { convoEntries, convos } from '@u22n/database/schema';
+import { eq, inArray } from '@u22n/database/orm';
+import { convoEntries, convoParticipants, convos } from '@u22n/database/schema';
 import RealtimeServer from '@u22n/realtime/server';
 import type { TypeId } from '@u22n/utils';
 
@@ -33,7 +33,9 @@ export async function sendRealtimeNotification({
     with: {
       participants: {
         columns: {
-          orgMemberId: true
+          id: true,
+          orgMemberId: true,
+          hidden: true
         },
         with: {
           orgMember: {
@@ -52,11 +54,23 @@ export async function sendRealtimeNotification({
 
   const convoPublicId = convoQuery.publicId;
   const orgMembersForNotificationPublicIds: TypeId<'orgMembers'>[] = [];
+  const orgMembersToUnhide: {
+    participantId: number;
+    orgMemberPublicId: TypeId<'orgMembers'>;
+  }[] = [];
+
   let convoEntryPublicId: TypeId<'convoEntries'> | null = null;
 
   convoQuery.participants.forEach((participant) => {
     if (participant.orgMember) {
       orgMembersForNotificationPublicIds.push(participant.orgMember.publicId);
+
+      if (participant.hidden) {
+        orgMembersToUnhide.push({
+          participantId: participant.id,
+          orgMemberPublicId: participant.orgMember.publicId
+        });
+      }
     }
   });
 
@@ -93,5 +107,30 @@ export async function sendRealtimeNotification({
         }
       })
       .catch(console.error);
+    if (orgMembersToUnhide.length > 0) {
+      const participantIds = orgMembersToUnhide.map(
+        (orgMember) => orgMember.participantId
+      );
+      await db
+        .update(convoParticipants)
+        .set({
+          hidden: false
+        })
+        .where(inArray(convoParticipants.id, participantIds));
+
+      const orgMemberPublicIds = orgMembersToUnhide.map(
+        (orgMember) => orgMember.orgMemberPublicId
+      );
+      await realtime
+        .emit({
+          event: 'convo:hidden',
+          orgMemberPublicIds: orgMemberPublicIds,
+          data: {
+            publicId: convoPublicId,
+            hidden: false
+          }
+        })
+        .catch(console.error);
+    }
   }
 }
