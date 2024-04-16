@@ -15,6 +15,7 @@ import {
   uniqueIndex,
   varchar,
   text,
+  mediumtext,
   customType
 } from 'drizzle-orm/mysql-core';
 import { relations } from 'drizzle-orm';
@@ -127,9 +128,7 @@ export const authenticators = mysqlTable(
     accountId: foreignKey('account_id').notNull(),
     nickname: varchar('nickname', { length: 64 }).notNull(),
     credentialID: varchar('credential_id', { length: 255 }).notNull(), //Uint8Array
-    credentialPublicKey: varchar('credential_public_key', {
-      length: 255
-    }).notNull(), //Uint8Array
+    credentialPublicKey: text('credential_public_key').notNull(), //Uint8Array
     counter: bigint('counter', { unsigned: true, mode: 'bigint' }).notNull(), //bigint
     credentialDeviceType: varchar('credential_device_type', {
       length: 32
@@ -1399,7 +1398,7 @@ export const convoEntryRawHtmlEmails = mysqlTable(
     orgId: foreignKey('org_id').notNull(),
     entryId: foreignKey('entry_id').notNull(),
     headers: json('headers').notNull(),
-    html: text('html').notNull(),
+    html: mediumtext('html').notNull(),
     wipeDate: timestamp('wipe_date').notNull(),
     keep: boolean('keep').notNull().default(false),
     wiped: boolean('wiped').notNull().default(false)
