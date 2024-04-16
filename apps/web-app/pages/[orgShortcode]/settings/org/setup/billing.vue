@@ -58,21 +58,18 @@
     loadingButton.value = '';
   }
 
-  async function watchStripeData() {
+  function watchStripeData() {
     let hasChanged = false;
     const initialPlan = currentPlan.value;
 
-    while (hasChanged === false) {
+    const intervalId = setInterval(async () => {
       await refreshBillingOverview();
       if (orgBillingOverview?.value?.currentPlan !== initialPlan) {
         hasChanged = true;
         pendingAction.value = false;
-        return;
-      } else {
-        await new Promise((resolve) => setTimeout(resolve, 3000));
+        clearInterval(intervalId);
       }
-    }
-    return;
+    }, 3000);
   }
 
   declare const Cal: Function;
