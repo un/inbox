@@ -355,20 +355,6 @@
           </div>
         </template>
       </UnUiVerticalNavigation>
-
-      <a
-        href="https://unn.sh/ph"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="flex items-center gap-1.5 rounded bg-[#ff6154] bg-opacity-10 px-2.5 py-1.5 text-sm">
-        <UnUiIcon
-          name="i-ph-rocket"
-          class="text-base-10 text-xl" />
-        <span class="text-base-12"
-          >Support us on
-          <span class="font-medium text-[#ff6154]">Product Hunt</span></span
-        >
-      </a>
     </div>
     <div class="flex w-full flex-col place-self-end">
       <NuxtUiDropdown

@@ -12,7 +12,11 @@
   };
   const props = defineProps<Props>();
 
-  const timeAgo = useTimeAgo(props.convo.lastUpdatedAt || new Date());
+  const lastUpdatedAt = computed(() => {
+    return props.convo.lastUpdatedAt || new Date();
+  });
+
+  const timeAgo = useTimeAgo(lastUpdatedAt);
 
   const participantArray = ref<ConvoParticipantEntry[]>([]);
   const author = ref<ConvoParticipantEntry>();

@@ -10,6 +10,7 @@
   import { useRealtime } from '~/composables/realtime';
   import { useConvoEntryStore } from '~/stores/convoEntryStore';
   import { useConvoStore } from '~/stores/convoStore';
+  import { useHiddenConvoStore } from '~/stores/convoHiddenStore';
   import { breakpointsTailwind, useBreakpoints } from '@vueuse/core';
 
   const { $trpc } = useNuxtApp();
@@ -20,6 +21,7 @@
   const convoId = useRoute().params.convoId;
 
   const convoStore = useConvoStore();
+  const hiddenConvoStore = useHiddenConvoStore();
   const convoEntryStore = useConvoEntryStore();
   const showClaimEmailIdentityModal = ref(false);
 
@@ -44,12 +46,26 @@
     await convoStore.fetchAndAddSingleConvo({ convoPublicId: convo.publicId });
     return;
   });
+  realtime.on('convo:hidden', async (convo) => {
+    if (convo.hidden) {
+      await convoStore.hideConvoFromList({ convoPublicId: convo.publicId });
+      await hiddenConvoStore.hideHiddenConvoFromList({
+        convoPublicId: convo.publicId
+      });
+      return;
+    }
+    await hiddenConvoStore.unhideHiddenConvoFromList({
+      convoPublicId: convo.publicId
+    });
+    await convoStore.unhideConvoFromList({ convoPublicId: convo.publicId });
+    return;
+  });
   realtime.on('convo:entry:new', async (convoEntry) => {
     await convoEntryStore.addConvoSingleEntry({
       convoPublicId: convoEntry.convoPublicId,
       convoEntryPublicId: convoEntry.convoEntryPublicId
     });
-    await convoStore.refreshConvoInList({
+    await convoStore.fetchAndAddSingleConvo({
       convoPublicId: convoEntry.convoPublicId
     });
     // refresh the convo data if it is currently open

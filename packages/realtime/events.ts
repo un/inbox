@@ -7,6 +7,10 @@ export const eventDataMaps = {
   'convo:new': z.object({
     publicId: typeIdValidator('convos')
   }),
+  'convo:hidden': z.object({
+    publicId: typeIdValidator('convos'),
+    hidden: z.boolean()
+  }),
   'convo:entry:new': z.object({
     convoPublicId: typeIdValidator('convos'),
     convoEntryPublicId: typeIdValidator('convoEntries')
