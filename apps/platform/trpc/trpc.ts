@@ -78,6 +78,7 @@ const publicRateLimits = {
   verifyPasskey: [30, '1h'],
   signUpWithPassword: [10, '1h'],
   signInWithPassword: [20, '1h'],
+  recoverAccount: [10, '1h'],
   validateInvite: [10, '1h']
 } satisfies Record<string, [number, Duration]>;
 

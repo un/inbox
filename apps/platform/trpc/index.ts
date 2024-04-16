@@ -4,6 +4,7 @@ import { createContext } from './createContext';
 import { passkeyRouter } from './routers/authRouter/passkeyRouter';
 import { passwordRouter } from './routers/authRouter/passwordRouter';
 import { signupRouter } from './routers/authRouter/signupRouter';
+import { recoveryRouter } from './routers/authRouter/recoveryRouter';
 import { profileRouter } from './routers/userRouter/profileRouter';
 import { crudRouter } from './routers/orgRouter/orgCrudRouter';
 import { invitesRouter } from './routers/orgRouter/users/invitesRouter';
@@ -26,7 +27,8 @@ const trpcPlatformAuthRouter = router({
   signup: signupRouter,
   passkey: passkeyRouter,
   password: passwordRouter,
-  twoFactorAuthentication: twoFactorRouter
+  twoFactorAuthentication: twoFactorRouter,
+  recovery: recoveryRouter
 });
 
 const trpcPlatformAccountRouter = router({
