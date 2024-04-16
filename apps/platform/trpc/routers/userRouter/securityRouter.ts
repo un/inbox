@@ -9,7 +9,7 @@ import {
   strongPasswordSchema
 } from '@u22n/utils/password';
 import { TRPCError } from '@trpc/server';
-import { useStorage } from '#imports';
+import { useStorage, useRuntimeConfig } from '#imports';
 import { getCookie, setCookie } from 'h3';
 import type {
   AuthenticationResponseJSON,
@@ -101,7 +101,8 @@ export const securityRouter = router({
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
-        maxAge: 60 * 5
+        maxAge: 60 * 5,
+        domain: useRuntimeConfig().primaryDomain
       });
 
       const passkeyOptions = await usePasskeys.generateAuthenticationOptions({

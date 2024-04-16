@@ -20,6 +20,7 @@ import { setCookie, getCookie, getHeader } from 'h3';
 import { lucia } from '../../../utils/auth';
 import { validateUsername } from './signupRouter';
 import { createLuciaSessionCookie } from '../../../utils/session';
+import { useRuntimeConfig } from '#imports';
 
 export const passkeyRouter = router({
   signUpWithPasskeyStart: publicRateLimitedProcedure.signUpPasskeyStart
@@ -157,7 +158,8 @@ export const passkeyRouter = router({
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
-        maxAge: 60 * 5
+        maxAge: 60 * 5,
+        domain: useRuntimeConfig().primaryDomain
       });
       const passkeyOptions = await usePasskeys.generateAuthenticationOptions({
         authChallengeId: authChallengeId

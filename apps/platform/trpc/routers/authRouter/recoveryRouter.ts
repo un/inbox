@@ -9,7 +9,7 @@ import { setCookie } from 'h3';
 import { createLuciaSessionCookie } from '../../../utils/session';
 import { decodeHex } from 'oslo/encoding';
 import { TOTPController } from 'oslo/otp';
-import { useStorage } from '#imports';
+import { useStorage, useRuntimeConfig } from '#imports';
 
 export const recoveryRouter = router({
   recoverAccount: publicRateLimitedProcedure.recoverAccount
@@ -144,7 +144,9 @@ export const recoveryRouter = router({
         );
         setCookie(ctx.event, 'authVerificationToken', token, {
           maxAge: 5 * 60,
-          httpOnly: false
+          httpOnly: false,
+          domain: useRuntimeConfig().primaryDomain,
+          sameSite: 'lax'
         });
 
         await db
