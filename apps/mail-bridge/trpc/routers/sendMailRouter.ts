@@ -110,8 +110,9 @@ export const sendMailRouter = router({
       const contactConvoParticipants = convoResponse.participants.filter(
         (participant) => participant.contactId
       );
+      // we only include participants that are not in the convo as part of a group
       const orgMemberParticipants = convoResponse.participants.filter(
-        (participant) => participant.orgMemberId
+        (participant) => participant.orgMemberId && !participant.groupId
       );
       const groupParticipants = convoResponse.participants.filter(
         (participant) => participant.groupId
@@ -146,6 +147,11 @@ export const sendMailRouter = router({
           emailMessageId: true
         },
         with: {
+          author: {
+            columns: {
+              orgMemberId: true
+            }
+          },
           subject: {
             columns: {
               subject: true
@@ -185,6 +191,17 @@ export const sendMailRouter = router({
         return {
           success: false
         };
+      }
+
+      // remove the author from the array of orgMemberParticipants
+      if (convoEntryResponse.author?.orgMemberId) {
+        orgMemberParticipants.splice(
+          orgMemberParticipants.findIndex(
+            (participant) =>
+              participant.orgMemberId === convoEntryResponse.author?.orgMemberId
+          ),
+          1
+        );
       }
 
       const sendAsEmailIdentity = await db.query.emailIdentities.findFirst({
@@ -599,6 +616,16 @@ export const sendMailRouter = router({
           }
         : {};
 
+      // remove duplicates in the CC metadata if they exist in the TO metadata or from metadata
+      const convoMetadataCcAddressesFiltered = convoMetadataCcAddresses.filter(
+        (ccAddress) => {
+          return (
+            ccAddress.email !== convoMetadataToAddress?.email &&
+            ccAddress.email !== convoMetadataFromAddress.email
+          );
+        }
+      );
+
       // If there is external email credentials then the identity is external, use their smtp server instead of postal's
       if (sendAsEmailIdentity.externalCredentialsId) {
         const auth = sendAsEmailIdentity.externalCredentials!; // it should be defined here
@@ -636,7 +663,7 @@ export const sendMailRouter = router({
             email: {
               to: [convoMetadataToAddress!],
               from: [convoMetadataFromAddress],
-              cc: convoMetadataCcAddresses,
+              cc: convoMetadataCcAddressesFiltered,
               messageId: sentEmail.messageId,
               postalMessages: [] // Not sure about this one
             }
@@ -724,7 +751,7 @@ export const sendMailRouter = router({
           email: {
             to: [convoMetadataToAddress!],
             from: [convoMetadataFromAddress],
-            cc: convoMetadataCcAddresses,
+            cc: convoMetadataCcAddressesFiltered,
             messageId: sendMailPostalResponse.data.message_id,
             postalMessages: transformedMessages.map((message) => ({
               ...message,
