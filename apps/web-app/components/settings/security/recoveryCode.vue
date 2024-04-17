@@ -98,7 +98,7 @@
       <span class="w-fit text-balance text-center font-medium">
         Save your recovery code. Keep it in a safe and secure place as It can be
         used to gain access to your account. If you lose it, you will not be
-        able to recover your your account.
+        able to recover your account.
       </span>
       <div
         class="bg-base-11 dark:bg-base-11 mb-2 mt-2 flex items-center justify-center gap-2 rounded-md p-2">
