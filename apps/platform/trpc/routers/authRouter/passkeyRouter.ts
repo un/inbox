@@ -26,13 +26,12 @@ export const passkeyRouter = router({
   signUpWithPasskeyStart: publicRateLimitedProcedure.signUpPasskeyStart
     .input(
       z.object({
-        username: zodSchemas.username(),
-        authenticatorType: z.enum(['platform', 'cross-platform'])
+        username: zodSchemas.username()
       })
     )
     .query(async ({ input, ctx }) => {
       const { db } = ctx;
-      const { username, authenticatorType } = input;
+      const { username } = input;
       const { available, error } = await validateUsername(db, input.username);
       if (!available) {
         throw new TRPCError({
@@ -45,8 +44,7 @@ export const passkeyRouter = router({
       const passkeyOptions = await usePasskeys.generateRegistrationOptions({
         userDisplayName: username,
         username: username,
-        accountPublicId: publicId,
-        authenticatorAttachment: authenticatorType
+        accountPublicId: publicId
       });
       return { publicId, options: passkeyOptions };
     }),

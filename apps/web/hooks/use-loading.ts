@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 
 export default function useLoading<T>(fn: () => Promise<T>) {
   const [loading, setLoading] = useState(false);

@@ -45,8 +45,9 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
         httpBatchLink({
           transformer: SuperJSON,
           url: getBaseUrl() + '/trpc',
-          headers: () => {
-            const headers = new Headers();
+          headers: async () => {
+            let headers = new Headers();
+
             if (typeof params.orgShortCode === 'string') {
               headers.set('org-shortcode', params.orgShortCode as string);
             }

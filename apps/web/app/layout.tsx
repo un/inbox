@@ -52,6 +52,7 @@ export default function RootLayout({
               )}
               <Toaster />
               {children}
+              <div id="modal-root" />
             </TRPCReactProvider>
           </Theme>
         </ThemeProvider>

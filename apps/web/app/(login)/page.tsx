@@ -3,8 +3,20 @@ import PasskeyLoginButton from './PasskeyLogin';
 import PasswordLoginButton from './PasswordLogin';
 import Link from 'next/link';
 import RecoveryButton from './RecoveryButton';
+import { isAuthenticated, serverApi } from '@/lib/trpc.server';
+import { redirect } from 'next/navigation';
 
-export default function Page() {
+export default async function Page() {
+  if (await isAuthenticated()) {
+    const redirectData = await serverApi.account.defaults.redirectionData
+      .query({})
+      .catch((e) => null);
+
+    if (redirectData) {
+      redirect(redirectData.defaultOrgShortcode || '/join/org');
+    }
+  }
+
   return (
     <Flex
       height="100%"

@@ -6,7 +6,8 @@ import {
   Spinner,
   Text,
   TextField,
-  Tooltip
+  Tooltip,
+  Checkbox
 } from '@radix-ui/themes';
 import Stepper from './Stepper';
 import { Check, Plus, Info } from 'lucide-react';
@@ -17,6 +18,7 @@ import { toast } from 'sonner';
 import { zodSchemas } from '@u22n/utils';
 import { useCookies } from 'next-client-cookies';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function Page() {
   const username = useRef('');
@@ -29,6 +31,7 @@ export default function Page() {
     error: null
   });
   const [hasData, setHasData] = useState(false);
+  const [agree, setAgree] = useState(false);
   const cookies = useCookies();
   const router = useRouter();
 
@@ -36,12 +39,10 @@ export default function Page() {
 
   const checkUsername = useDebounceCallback(
     async (username: string) => {
-      console.log('Checking username:', username);
-
       const parsed = zodSchemas.username().safeParse(username);
       if (!parsed.success) {
         setUsernameData({
-          error: parsed.error.issues[0]?.message || null,
+          error: parsed.error.issues[0]?.message ?? null,
           available: false
         });
         setHasData(true);
@@ -54,7 +55,7 @@ export default function Page() {
         .then((data) => {
           setUsernameData(data);
         })
-        .catch((error) => {
+        .catch((error: Error) => {
           toast.error(error.message);
         })
         .finally(() => setUsernameLoading(false));
@@ -118,7 +119,7 @@ export default function Page() {
             username.current = e.target.value;
             setHasData(false);
             if (!username.current) return;
-            checkUsername(username.current);
+            void checkUsername(username.current);
           }}
           color={
             hasData ? (usernameData.available ? 'green' : 'red') : undefined
@@ -136,7 +137,11 @@ export default function Page() {
             align="center"
             gap="1">
             <Spinner loading />
-            <Text weight="bold">Checking...</Text>
+            <Text
+              weight="bold"
+              size="2">
+              Checking...
+            </Text>
           </Flex>
         )}
 
@@ -147,31 +152,70 @@ export default function Page() {
             {usernameData.available ? (
               <Check
                 size={16}
-                className="stroke-green-500"
+                className="stroke-green-11"
               />
             ) : (
               <Plus
                 size={16}
-                className="rotate-45 stroke-red-500"
+                className="stroke-red-11 rotate-45"
               />
             )}
 
             <Text
               className={
-                !usernameData.available ? 'text-red-500' : 'text-green-500'
+                !usernameData.available ? 'text-red-11' : 'text-green-11'
               }
               weight="bold"
-              size="3">
+              size="2">
               {usernameData.available ? 'Looks good!' : usernameData.error}
             </Text>
           </Flex>
         )}
       </Flex>
 
+      <Text
+        as="label"
+        size="2"
+        className="mx-auto py-3">
+        <Flex
+          as="span"
+          gap="2">
+          <Checkbox
+            size="1"
+            checked={agree}
+            onCheckedChange={(e) => setAgree(!!e)}
+            disabled={!usernameData.available}
+          />
+          <span>
+            I agree to the UnInbox{' '}
+            <a
+              href="https://legal.u22n.com/uninbox/terms"
+              target="_blank"
+              className="underline">
+              Terms of Service
+            </a>{' '}
+            and{' '}
+            <a
+              href="https://legal.u22n.com/uninbox/privacy"
+              target="_blank"
+              className="underline">
+              Privacy Policy
+            </a>
+            .
+          </span>
+        </Flex>
+      </Text>
+
       <Button
-        disabled={!usernameData.available}
+        disabled={!usernameData.available || !agree}
         onClick={nextStep}>
         I like it!
+      </Button>
+      <Button
+        variant="ghost"
+        my="2"
+        className="mx-auto w-fit p-2">
+        <Link href="/">Sign in instead</Link>
       </Button>
     </Flex>
   );
