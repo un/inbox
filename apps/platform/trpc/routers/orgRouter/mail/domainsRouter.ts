@@ -352,7 +352,10 @@ export const domainsRouter = router({
           domainReceivingMode = 'native';
         }
 
-        if (anyValidRecords && domainStatus === 'pending') {
+        if (
+          anyValidRecords &&
+          (domainStatus === 'pending' || domainStatus === 'unverified')
+        ) {
           domainStatus = 'active';
         }
 
