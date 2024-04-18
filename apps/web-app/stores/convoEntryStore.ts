@@ -101,10 +101,24 @@ export const useConvoEntryStore = defineStore(
       return;
     }
 
+    function removeConvo({
+      convoPublicId
+    }: {
+      convoPublicId: TypeId<'convos'>;
+    }) {
+      const index = convosEntries.value.findIndex(
+        (convo) => convo.publicId === convoPublicId
+      );
+      if (index > -1) {
+        convosEntries.value.splice(index, 1);
+      }
+    }
+
     return {
       convosEntries,
       getConvoEntries,
-      addConvoSingleEntry
+      addConvoSingleEntry,
+      removeConvo
     };
   },
   {

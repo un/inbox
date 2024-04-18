@@ -131,6 +131,19 @@ export const useHiddenConvoStore = defineStore(
       await fetchAndAddSingleHiddenConvo({ convoPublicId });
     }
 
+    function removeConvo({
+      convoPublicId
+    }: {
+      convoPublicId: TypeId<'convos'>;
+    }) {
+      const index = orgMemberHiddenConvos.value.findIndex(
+        (convo) => convo.publicId === convoPublicId
+      );
+      if (index > -1) {
+        orgMemberHiddenConvos.value.splice(index, 1);
+      }
+    }
+
     return {
       getHiddenConvoList,
       fetchAndAddSingleHiddenConvo,
@@ -142,7 +155,8 @@ export const useHiddenConvoStore = defineStore(
       hiddenConvoQueryParams,
       hiddenConvoQueryPending,
       hideHiddenConvoFromList,
-      unhideHiddenConvoFromList
+      unhideHiddenConvoFromList,
+      removeConvo
     };
   },
   {

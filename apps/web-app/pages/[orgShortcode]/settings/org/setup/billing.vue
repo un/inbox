@@ -59,13 +59,11 @@
   }
 
   function watchStripeData() {
-    let hasChanged = false;
     const initialPlan = currentPlan.value;
 
     const intervalId = setInterval(async () => {
       await refreshBillingOverview();
       if (orgBillingOverview?.value?.currentPlan !== initialPlan) {
-        hasChanged = true;
         pendingAction.value = false;
         clearInterval(intervalId);
       }

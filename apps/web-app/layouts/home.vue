@@ -5,7 +5,8 @@
     useNuxtApp,
     ref,
     navigateTo,
-    refreshNuxtData
+    refreshNuxtData,
+    useToast
   } from '#imports';
   import { useRealtime } from '~/composables/realtime';
   import { useConvoEntryStore } from '~/stores/convoEntryStore';
@@ -18,7 +19,6 @@
   const isMobile = breakpoints.smaller('lg'); // only smaller than lg
 
   const orgShortcode = useRoute().params.orgShortcode;
-  const convoId = useRoute().params.convoId;
 
   const convoStore = useConvoStore();
   const hiddenConvoStore = useHiddenConvoStore();
@@ -39,6 +39,7 @@
   }
 
   const realtime = useRealtime();
+  const toast = useToast();
 
   realtime.connect({ orgShortcode: orgShortcode as string });
 
@@ -60,6 +61,30 @@
     await convoStore.unhideConvoFromList({ convoPublicId: convo.publicId });
     return;
   });
+  realtime.on('convo:deleted', async (convoEntry) => {
+    convoEntryStore.removeConvo({
+      convoPublicId: convoEntry.publicId
+    });
+    convoStore.removeConvo({
+      convoPublicId: convoEntry.publicId
+    });
+    hiddenConvoStore.removeConvo({
+      convoPublicId: convoEntry.publicId
+    });
+
+    const currentPathConvoId = useRoute().params.convoId;
+    if (currentPathConvoId && currentPathConvoId === convoEntry.publicId) {
+      toast.add({
+        id: 'deleted_convo',
+        title: 'This conversation has been deleted',
+        icon: 'i-ph-trash',
+        color: 'red',
+        timeout: 10000
+      });
+      navigateTo(`/${orgShortcode}/convo/404?error=convo_deleted`);
+    }
+    return;
+  });
   realtime.on('convo:entry:new', async (convoEntry) => {
     await convoEntryStore.addConvoSingleEntry({
       convoPublicId: convoEntry.convoPublicId,
@@ -69,7 +94,8 @@
       convoPublicId: convoEntry.convoPublicId
     });
     // refresh the convo data if it is currently open
-    if (convoId && convoId === convoEntry.convoPublicId) {
+    const currentPathConvoId = useRoute().params.convoId;
+    if (currentPathConvoId && currentPathConvoId === convoEntry.convoPublicId) {
       await refreshNuxtData(`convoDetails-${convoEntry.convoPublicId}`);
     }
     return;

@@ -27,7 +27,9 @@ import {
   convoSeenTimestamps,
   convoEntrySeenTimestamps,
   convoParticipantGroupMembers,
-  emailIdentities
+  emailIdentities,
+  convoEntryPrivateVisibilityParticipants,
+  convoEntryRawHtmlEmails
 } from '@u22n/database/schema';
 import { typeIdValidator, type TypeId, typeIdGenerator } from '@u22n/utils';
 import { TRPCError } from '@trpc/server';
@@ -35,6 +37,7 @@ import { tipTapExtensions } from '@u22n/tiptap/extensions';
 import { tiptapCore, type tiptapVue3 } from '@u22n/tiptap';
 import { convoEntryRouter } from './entryRouter';
 import { realtime, sendRealtimeNotification } from '../../../utils/realtime';
+import { useRuntimeConfig } from '#imports';
 
 export const convoRouter = router({
   entries: convoEntryRouter,
@@ -1662,5 +1665,212 @@ export const convoRouter = router({
       });
 
       return { success: true };
+    }),
+  deleteConvo: orgProcedure
+    .input(
+      z.object({
+        convoPublicId: typeIdValidator('convos')
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.account || !ctx.org) {
+        throw new TRPCError({
+          code: 'UNPROCESSABLE_CONTENT',
+          message: 'account or Organization is not defined'
+        });
+      }
+      const { db, org } = ctx;
+      if (!org?.memberId) {
+        throw new TRPCError({
+          code: 'UNPROCESSABLE_CONTENT',
+          message: 'account is not a member of the organization'
+        });
+      }
+
+      const accountOrgMemberId = org?.memberId;
+      const orgId = org?.id;
+      const orgPublicId = org.publicId;
+      const { convoPublicId } = input;
+
+      const convoQueryResponse = await db.query.convos.findFirst({
+        where: and(eq(convos.publicId, convoPublicId), eq(convos.orgId, orgId)),
+        columns: {
+          id: true,
+          orgId: true
+        },
+        with: {
+          participants: {
+            columns: {
+              id: true,
+              orgMemberId: true
+            },
+            with: {
+              orgMember: {
+                columns: {
+                  publicId: true
+                }
+              }
+            }
+          },
+          entries: {
+            columns: {
+              id: true
+            }
+          }
+        }
+      });
+
+      if (!convoQueryResponse) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Conversation not found'
+        });
+      }
+
+      const userInConvo = convoQueryResponse.participants.find(
+        (participant) => participant.orgMemberId === accountOrgMemberId
+      );
+
+      if (!userInConvo) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message:
+            'You are not a participant in this conversation and can not delete it'
+        });
+      }
+
+      //? convoSubjects
+      await db
+        .delete(convoSubjects)
+        .where(eq(convoSubjects.convoId, convoQueryResponse.id));
+      //? convoParticipants
+      await db
+        .delete(convoParticipants)
+        .where(eq(convoParticipants.convoId, convoQueryResponse.id));
+      //? convoParticipantGroupMembers
+      const convoParticipantIds = convoQueryResponse.participants.map(
+        (participant) => participant.id
+      );
+      await db
+        .delete(convoParticipantGroupMembers)
+        .where(
+          inArray(
+            convoParticipantGroupMembers.convoParticipantId,
+            convoParticipantIds
+          )
+        );
+      //? convoEntries
+      const convoEntriesIds = convoQueryResponse.entries.map(
+        (entry) => entry.id
+      );
+      await db
+        .delete(convoEntries)
+        .where(inArray(convoEntries.id, convoEntriesIds));
+      //? convoEntryReplies
+      await db
+        .delete(convoEntryReplies)
+        .where(
+          or(
+            inArray(convoEntryReplies.entryReplyId, convoEntriesIds),
+            inArray(convoEntryReplies.entrySourceId, convoEntriesIds)
+          )
+        );
+      //? convoEntryPrivateVisibilityParticipants
+      await db
+        .delete(convoEntryPrivateVisibilityParticipants)
+        .where(
+          inArray(
+            convoEntryPrivateVisibilityParticipants.entryId,
+            convoEntriesIds
+          )
+        );
+      //? convoEntryRawHtmlEmails
+      await db
+        .delete(convoEntryRawHtmlEmails)
+        .where(inArray(convoEntryRawHtmlEmails.entryId, convoEntriesIds));
+      //? convoSeenTimestamps
+      await db
+        .delete(convoSeenTimestamps)
+        .where(eq(convoSeenTimestamps.convoId, convoQueryResponse.id));
+      //? convoEntrySeenTimestamps
+      await db
+        .delete(convoEntrySeenTimestamps)
+        .where(inArray(convoEntrySeenTimestamps.convoEntryId, convoEntriesIds));
+
+      type AttachmentsToDelete = {
+        orgPublicId: TypeId<'org'>;
+        attachmentPublicId: TypeId<'convoAttachments'>;
+        filename: string;
+      }[];
+
+      // convoAttachments - also delete from s3
+      const attachmentsQuery = await db.query.convoAttachments.findMany({
+        where: eq(convoAttachments.convoId, convoQueryResponse.id),
+        columns: {
+          publicId: true,
+          fileName: true
+        }
+      });
+
+      if (attachmentsQuery.length !== 0) {
+        const attachmentsToDelete: AttachmentsToDelete = [];
+        attachmentsQuery.forEach((attachment) => {
+          attachmentsToDelete.push({
+            orgPublicId: typeIdValidator('org').parse(orgPublicId),
+            attachmentPublicId: attachment.publicId,
+            filename: attachment.fileName
+          });
+        });
+
+        const deleteStorageResponse = await $fetch(
+          `${useRuntimeConfig().storage.url}/api/attachments/deleteAttachments`,
+          {
+            method: 'post',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: useRuntimeConfig().storage.key
+            },
+            body: {
+              attachments: attachmentsToDelete.map(
+                (attachment) =>
+                  `${attachment.orgPublicId}/${attachment.attachmentPublicId}/${attachment.filename}`
+              )
+            }
+          }
+        );
+
+        if (!deleteStorageResponse) {
+          console.error('🔥 Failed to delete attachments from storage', {
+            attachmentsToDelete
+          });
+        }
+      }
+
+      await db
+        .delete(convoAttachments)
+        .where(eq(convoAttachments.convoId, convoQueryResponse.id));
+
+      await db.delete(convos).where(eq(convos.id, convoQueryResponse.id));
+
+      const orgMemberPublicIdsForNotifications: TypeId<'orgMembers'>[] = [];
+
+      for (const participant of convoQueryResponse.participants) {
+        if (participant.orgMember?.publicId) {
+          orgMemberPublicIdsForNotifications.push(
+            participant.orgMember.publicId
+          );
+        }
+      }
+      if (orgMemberPublicIdsForNotifications.length > 0) {
+        await realtime.emit({
+          orgMemberPublicIds: orgMemberPublicIdsForNotifications,
+          event: 'convo:deleted',
+          data: { publicId: convoPublicId }
+        });
+      }
+
+      return {
+        success: true
+      };
     })
 });
