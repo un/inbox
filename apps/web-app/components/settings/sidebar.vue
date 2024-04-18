@@ -9,6 +9,9 @@
 
   const { data: currentIds } = $trpc.account.defaults.getIds.useQuery({});
 
+  const { data: isAdmin } =
+    await $trpc.org.users.members.isOrgMemberAdmin.useQuery({});
+
   // Settings Links
 
   const personalLinks = [
@@ -93,7 +96,9 @@
         <UnUiVerticalNavigation :links="personalLinks" />
       </div>
       <div class="border-base-7 w-full border-[1px]" />
-      <div class="flex flex-col gap-4">
+      <div
+        v-if="isAdmin || false"
+        class="flex flex-col gap-4">
         <div class="flex flex-row items-center justify-between">
           <span class="font-display text-base-11">Organization</span>
           <UnUiCopy

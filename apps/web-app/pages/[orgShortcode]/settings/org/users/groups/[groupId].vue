@@ -13,6 +13,12 @@
 
   const { $trpc } = useNuxtApp();
   const route = useRoute();
+  const { data: isAdmin } =
+    await $trpc.org.users.members.isOrgMemberAdmin.useQuery({});
+
+  if (!isAdmin.value) {
+    await navigateTo(`/${orgShortcode}/settings`);
+  }
 
   const groupPublicId = route.params.groupId as string;
   const isNewGroup = route.query.new === 'true';

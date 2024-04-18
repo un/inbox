@@ -6,8 +6,12 @@
   const isMobile = breakpoints.smaller('lg'); // only smaller than lg
 
   const { $trpc } = useNuxtApp();
-
   const orgShortcode = useRoute().params.orgShortcode as string;
+  const { data: isAdmin } =
+    await $trpc.org.users.members.isOrgMemberAdmin.useQuery({});
+  if (!isAdmin.value) {
+    await navigateTo(`/${orgShortcode}/settings`);
+  }
 
   const {
     data: orgEmailIdentities,
