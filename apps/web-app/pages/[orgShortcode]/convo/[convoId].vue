@@ -380,10 +380,91 @@
       ]
     });
   }
+
+  const showDeleteModal = ref(false);
+  const deleteLoading = ref(false);
+  async function deleteConvo() {
+    deleteLoading.value = true;
+    const data = await $trpc.convos.deleteConvo.mutate({
+      convoPublicId: convoPublicId
+    });
+
+    if (!data.success) {
+      toast.add({
+        id: 'delete_convo_fail',
+        title: 'Failed to delete conversation',
+        description: `Something went wrong when deleting this conversation.`,
+        color: 'red',
+        icon: 'i-ph-warning-circle',
+        timeout: 5000
+      });
+      deleteLoading.value = false;
+      return;
+    }
+
+    toast.add({
+      id: 'delete_convo_success',
+      title: 'Conversation deleted',
+      icon: 'i-ph-trash',
+      color: 'green',
+      timeout: 5000
+    });
+    showDeleteModal.value = false;
+    deleteLoading.value = false;
+    navigateTo(`/${orgShortcode}/convo`);
+  }
+
+  async function hideInstead() {
+    showDeleteModal.value = false;
+    hideConvo();
+  }
 </script>
 <template>
   <div
     class="flex h-full max-h-full w-full max-w-full flex-col overflow-hidden">
+    <UnUiModal v-model="showDeleteModal">
+      <template #header>
+        <div class="flex flex-row items-center gap-2">
+          <span class="text-red-9 leading-none">
+            <UnUiIcon
+              name="i-ph-trash"
+              size="24" />
+          </span>
+          <span> Delete Conversation </span>
+        </div>
+      </template>
+
+      <div
+        class="selection:bg-base-9 selection:text-base-1 flex flex-col gap-2">
+        <span>
+          This will permanently and immediately delete this conversation for all
+          the participants.
+        </span>
+        <span> Are you sure you want to delete this conversation? </span>
+        <span class="text-base-11 mt-2 text-xs">
+          TIP: You can hide the conversation instead and it will be moved to the
+          hidden conversations list.
+        </span>
+      </div>
+
+      <template #footer>
+        <div class="flex w-full flex-row justify-end gap-1">
+          <UnUiButton
+            label="Cancel"
+            variant="ghost"
+            @click="showDeleteModal = false" />
+          <UnUiButton
+            label="Hide Instead"
+            variant="soft"
+            @click="hideInstead()" />
+          <UnUiButton
+            label="Delete"
+            :loading="deleteLoading"
+            color="red"
+            @click="deleteConvo()" />
+        </div>
+      </template>
+    </UnUiModal>
     <div
       class="border-base-7 flex w-full max-w-full flex-row items-center justify-between border-b p-4">
       <div class="flex flex-row items-center gap-2">
@@ -406,7 +487,18 @@
         <!-- <span>TAGS</span> -->
       </div>
 
-      <div class="h-fit flex-row gap-4 overflow-hidden">
+      <div class="flex h-fit flex-row gap-1 overflow-hidden">
+        <div>
+          <UnUiTooltip text="Delete conversation">
+            <UnUiButton
+              icon="i-ph-trash"
+              color="red"
+              size="sm"
+              square
+              variant="soft"
+              @click="showDeleteModal = true" />
+          </UnUiTooltip>
+        </div>
         <UnUiTooltip
           :text="convoIsHidden ? 'Show conversation' : 'Hide conversation'">
           <UnUiButton
@@ -646,17 +738,6 @@
                       <template #panel>
                         <div class="flex flex-col gap-2 p-4">
                           <span class="text-base-11 text-sm"> SIGNATURE </span>
-                          <!-- <span class="text-base-11 text-xs"> PLAIN </span>
-                          <span class="whitespace-pre text-xs">
-                            {{
-                              participant.signaturePlainText.replace(
-                                /\\n/g,
-                                '\n'
-                              )
-                            }}
-                          </span> -->
-                          <!-- <span class="text-base-11 text-xs"> HTML </span> -->
-
                           <!-- eslint-disable-next-line vue/no-v-html -->
                           <div v-html="participant.signatureHtml" />
                         </div>
@@ -893,17 +974,6 @@
                       <template #panel>
                         <div class="flex flex-col gap-2 p-4">
                           <span class="text-base-11 text-sm"> SIGNATURE </span>
-                          <!-- <span class="text-base-11 text-xs"> PLAIN </span>
-                          <span class="whitespace-pre text-xs">
-                            {{
-                              participant.signaturePlainText.replace(
-                                /\\n/g,
-                                '\n'
-                              )
-                            }}
-                          </span> -->
-                          <!-- <span class="text-base-11 text-xs"> HTML </span> -->
-
                           <!-- eslint-disable-next-line vue/no-v-html -->
                           <div v-html="participant.signatureHtml" />
                         </div>

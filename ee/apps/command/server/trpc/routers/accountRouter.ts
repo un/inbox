@@ -2,12 +2,7 @@ import { z } from 'zod';
 import { router, accountProcedure } from '../trpc';
 import { eq } from '@u22n/database/orm';
 import { db } from '@u22n/database';
-import {
-  accounts,
-  orgs,
-  type AccountMetadata,
-  type OrgMetadata
-} from '@u22n/database/schema';
+import { accounts, type AccountMetadata } from '@u22n/database/schema';
 import { TRPCError } from '@trpc/server';
 
 export const accountRouter = router({

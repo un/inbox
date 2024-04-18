@@ -11,6 +11,9 @@ export const eventDataMaps = {
     publicId: typeIdValidator('convos'),
     hidden: z.boolean()
   }),
+  'convo:deleted': z.object({
+    publicId: typeIdValidator('convos')
+  }),
   'convo:entry:new': z.object({
     convoPublicId: typeIdValidator('convos'),
     convoEntryPublicId: typeIdValidator('convoEntries')

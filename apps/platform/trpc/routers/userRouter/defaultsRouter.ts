@@ -1,4 +1,3 @@
-import { userInvites } from './../../../../mail-bridge/postal-db/schema';
 import { z } from 'zod';
 import { router, accountProcedure, orgProcedure } from '../../trpc';
 import { and, eq } from '@u22n/database/orm';

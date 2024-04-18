@@ -127,6 +127,19 @@ export const useConvoStore = defineStore(
       await fetchAndAddSingleConvo({ convoPublicId });
     }
 
+    function removeConvo({
+      convoPublicId
+    }: {
+      convoPublicId: TypeId<'convos'>;
+    }) {
+      const index = orgMemberConvos.value.findIndex(
+        (convo) => convo.publicId === convoPublicId
+      );
+      if (index > -1) {
+        orgMemberConvos.value.splice(index, 1);
+      }
+    }
+
     return {
       getConvoList,
       fetchAndAddSingleConvo,
@@ -138,7 +151,8 @@ export const useConvoStore = defineStore(
       convoQueryParams,
       convoQueryPending,
       hideConvoFromList,
-      unhideConvoFromList
+      unhideConvoFromList,
+      removeConvo
     };
   },
   {
