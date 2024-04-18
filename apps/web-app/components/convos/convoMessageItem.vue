@@ -27,10 +27,16 @@
   const timeAgo = useTimeAgo(props.entry.createdAt || new Date());
 
   const convoEntryBody = computed(() => {
+    const emptyBody =
+      '<span class="text-base-11 text-sm">THIS MESSAGE CONTAINS NO VALID TEXT CONTENT</span>';
     if (props.entry.body) {
-      return tiptapHtml.generateHTML(props.entry.body, tipTapExtensions);
+      const htmlBody = tiptapHtml.generateHTML(
+        props.entry.body,
+        tipTapExtensions
+      );
+      return htmlBody !== '<p></p>' ? htmlBody : emptyBody;
     }
-    return '';
+    return emptyBody;
   });
 
   const author = computed(() => {
