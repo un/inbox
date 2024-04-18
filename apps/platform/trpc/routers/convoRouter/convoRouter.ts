@@ -1739,118 +1739,131 @@ export const convoRouter = router({
         });
       }
 
-      //? convoSubjects
-      await db
-        .delete(convoSubjects)
-        .where(eq(convoSubjects.convoId, convoQueryResponse.id));
-      //? convoParticipants
-      await db
-        .delete(convoParticipants)
-        .where(eq(convoParticipants.convoId, convoQueryResponse.id));
-      //? convoParticipantGroupMembers
-      const convoParticipantIds = convoQueryResponse.participants.map(
-        (participant) => participant.id
-      );
-      await db
-        .delete(convoParticipantGroupMembers)
-        .where(
-          inArray(
-            convoParticipantGroupMembers.convoParticipantId,
-            convoParticipantIds
-          )
-        );
-      //? convoEntries
-      const convoEntriesIds = convoQueryResponse.entries.map(
-        (entry) => entry.id
-      );
-      await db
-        .delete(convoEntries)
-        .where(inArray(convoEntries.id, convoEntriesIds));
-      //? convoEntryReplies
-      await db
-        .delete(convoEntryReplies)
-        .where(
-          or(
-            inArray(convoEntryReplies.entryReplyId, convoEntriesIds),
-            inArray(convoEntryReplies.entrySourceId, convoEntriesIds)
-          )
-        );
-      //? convoEntryPrivateVisibilityParticipants
-      await db
-        .delete(convoEntryPrivateVisibilityParticipants)
-        .where(
-          inArray(
-            convoEntryPrivateVisibilityParticipants.entryId,
-            convoEntriesIds
-          )
-        );
-      //? convoEntryRawHtmlEmails
-      await db
-        .delete(convoEntryRawHtmlEmails)
-        .where(inArray(convoEntryRawHtmlEmails.entryId, convoEntriesIds));
-      //? convoSeenTimestamps
-      await db
-        .delete(convoSeenTimestamps)
-        .where(eq(convoSeenTimestamps.convoId, convoQueryResponse.id));
-      //? convoEntrySeenTimestamps
-      await db
-        .delete(convoEntrySeenTimestamps)
-        .where(inArray(convoEntrySeenTimestamps.convoEntryId, convoEntriesIds));
+      await db.transaction(async (db) => {
+        try {
+          //? convoSubjects
+          await db
+            .delete(convoSubjects)
+            .where(eq(convoSubjects.convoId, convoQueryResponse.id));
+          //? convoParticipants
+          await db
+            .delete(convoParticipants)
+            .where(eq(convoParticipants.convoId, convoQueryResponse.id));
+          //? convoParticipantGroupMembers
+          const convoParticipantIds = convoQueryResponse.participants.map(
+            (participant) => participant.id
+          );
 
-      type AttachmentsToDelete = {
-        orgPublicId: TypeId<'org'>;
-        attachmentPublicId: TypeId<'convoAttachments'>;
-        filename: string;
-      }[];
-
-      // convoAttachments - also delete from s3
-      const attachmentsQuery = await db.query.convoAttachments.findMany({
-        where: eq(convoAttachments.convoId, convoQueryResponse.id),
-        columns: {
-          publicId: true,
-          fileName: true
-        }
-      });
-
-      if (attachmentsQuery.length !== 0) {
-        const attachmentsToDelete: AttachmentsToDelete = [];
-        attachmentsQuery.forEach((attachment) => {
-          attachmentsToDelete.push({
-            orgPublicId: typeIdValidator('org').parse(orgPublicId),
-            attachmentPublicId: attachment.publicId,
-            filename: attachment.fileName
-          });
-        });
-
-        const deleteStorageResponse = await $fetch(
-          `${useRuntimeConfig().storage.url}/api/attachments/deleteAttachments`,
-          {
-            method: 'post',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: useRuntimeConfig().storage.key
-            },
-            body: {
-              attachments: attachmentsToDelete.map(
-                (attachment) =>
-                  `${attachment.orgPublicId}/${attachment.attachmentPublicId}/${attachment.filename}`
+          await db
+            .delete(convoParticipantGroupMembers)
+            .where(
+              inArray(
+                convoParticipantGroupMembers.convoParticipantId,
+                convoParticipantIds
               )
+            );
+
+          //? convoEntries
+          const convoEntriesIds = convoQueryResponse.entries.map(
+            (entry) => entry.id
+          );
+
+          await db
+            .delete(convoEntries)
+            .where(inArray(convoEntries.id, convoEntriesIds));
+          //? convoEntryReplies
+          await db
+            .delete(convoEntryReplies)
+            .where(
+              or(
+                inArray(convoEntryReplies.entryReplyId, convoEntriesIds),
+                inArray(convoEntryReplies.entrySourceId, convoEntriesIds)
+              )
+            );
+          //? convoEntryPrivateVisibilityParticipants
+          await db
+            .delete(convoEntryPrivateVisibilityParticipants)
+            .where(
+              inArray(
+                convoEntryPrivateVisibilityParticipants.entryId,
+                convoEntriesIds
+              )
+            );
+          //? convoEntryRawHtmlEmails
+          await db
+            .delete(convoEntryRawHtmlEmails)
+            .where(inArray(convoEntryRawHtmlEmails.entryId, convoEntriesIds));
+          //? convoSeenTimestamps
+          await db
+            .delete(convoSeenTimestamps)
+            .where(eq(convoSeenTimestamps.convoId, convoQueryResponse.id));
+          //? convoEntrySeenTimestamps
+          await db
+            .delete(convoEntrySeenTimestamps)
+            .where(
+              inArray(convoEntrySeenTimestamps.convoEntryId, convoEntriesIds)
+            );
+
+          type AttachmentsToDelete = {
+            orgPublicId: TypeId<'org'>;
+            attachmentPublicId: TypeId<'convoAttachments'>;
+            filename: string;
+          }[];
+
+          // convoAttachments - also delete from s3
+          const attachmentsQuery = await db.query.convoAttachments.findMany({
+            where: eq(convoAttachments.convoId, convoQueryResponse.id),
+            columns: {
+              publicId: true,
+              fileName: true
+            }
+          });
+
+          if (attachmentsQuery.length !== 0) {
+            const attachmentsToDelete: AttachmentsToDelete =
+              attachmentsQuery.map((attachment) => ({
+                orgPublicId: typeIdValidator('org').parse(orgPublicId),
+                attachmentPublicId: attachment.publicId,
+                filename: attachment.fileName
+              }));
+
+            const deleteStorageResponse = await $fetch(
+              `${useRuntimeConfig().storage.url}/api/attachments/deleteAttachments`,
+              {
+                method: 'post',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: useRuntimeConfig().storage.key
+                },
+                body: {
+                  attachments: attachmentsToDelete.map(
+                    (attachment) =>
+                      `${attachment.orgPublicId}/${attachment.attachmentPublicId}/${attachment.filename}`
+                  )
+                }
+              }
+            );
+
+            if (!deleteStorageResponse) {
+              console.error('🔥 Failed to delete attachments from storage', {
+                attachmentsToDelete
+              });
             }
           }
-        );
 
-        if (!deleteStorageResponse) {
-          console.error('🔥 Failed to delete attachments from storage', {
-            attachmentsToDelete
+          await db
+            .delete(convoAttachments)
+            .where(eq(convoAttachments.convoId, convoQueryResponse.id));
+          await db.delete(convos).where(eq(convos.id, convoQueryResponse.id));
+        } catch (error) {
+          console.error('🔥 Failed to delete convo', error);
+          db.rollback();
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Failed to delete conversation'
           });
         }
-      }
-
-      await db
-        .delete(convoAttachments)
-        .where(eq(convoAttachments.convoId, convoQueryResponse.id));
-
-      await db.delete(convos).where(eq(convos.id, convoQueryResponse.id));
+      });
 
       const orgMemberPublicIdsForNotifications: TypeId<'orgMembers'>[] = [];
 
