@@ -55,7 +55,7 @@
     );
 
   const domainStatus = ref<'unverified' | 'pending' | 'active' | 'disabled'>(
-    'unverified'
+    'pending'
   );
   const incomingForwardingModeEnabled = ref(false);
   const incomingNativeModeEnabled = ref(false);
@@ -102,7 +102,7 @@
 
     (data) => {
       if (!data) return;
-      if (data.dnsStatus?.verification) {
+      if (data.dnsStatus && data.dnsStatus.verification === true) {
         if (
           mail.value[0]?.status === 'disabled' ||
           mail.value[1]?.status === 'disabled'
@@ -111,8 +111,10 @@
         } else {
           domainStatus.value = 'active';
         }
-      } else {
+      } else if (data.dnsStatus && data.dnsStatus.verification === false) {
         domainStatus.value = 'unverified';
+      } else {
+        domainStatus.value = 'pending';
       }
     },
     { deep: true }
