@@ -33,7 +33,7 @@
   },
   "devDependencies": {
     "@faker-js/faker": "^8.4.1",
-    "drizzle-kit": "^0.20.14",
+    "drizzle-kit": "^0.20.15",
     "tsx": "^4.7.1"
   }
 }
