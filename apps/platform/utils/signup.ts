@@ -187,6 +187,7 @@ export const blockedUsernames = [
   'db',
   'deals',
   'debug',
+  'default',
   'delete',
   'department',
   'departments',
