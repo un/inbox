@@ -18,8 +18,14 @@
   const breakpoints = useBreakpoints(breakpointsTailwind);
   const isMobile = breakpoints.smaller('lg'); // only smaller than lg
   const orgShortcode = useRoute().params.orgShortcode as string;
-
   const { $trpc } = useNuxtApp();
+  const { data: isAdmin } =
+    await $trpc.org.users.members.isOrgMemberAdmin.useQuery({});
+
+  if (!isAdmin.value) {
+    await navigateTo(`/${orgShortcode}/settings`);
+  }
+
   const uploadLoading = ref(false);
   const buttonLoading = ref(false);
   const buttonLabel = ref('Save profile');

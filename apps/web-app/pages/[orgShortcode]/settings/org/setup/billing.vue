@@ -20,6 +20,12 @@
   });
 
   const { $trpc } = useNuxtApp();
+  const { data: isAdmin } =
+    await $trpc.org.users.members.isOrgMemberAdmin.useQuery({});
+
+  if (!isAdmin.value) {
+    await navigateTo(`/${orgShortcode}/settings`);
+  }
 
   const {
     data: orgBillingOverview,

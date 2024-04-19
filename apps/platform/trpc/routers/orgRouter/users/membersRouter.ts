@@ -5,6 +5,30 @@ import { orgs, orgMembers } from '@u22n/database/schema';
 import { TRPCError } from '@trpc/server';
 
 export const orgMembersRouter = router({
+  isOrgMemberAdmin: orgProcedure
+    .input(z.object({}).strict())
+    .query(async ({ ctx }) => {
+      if (!ctx.account || !ctx.org) {
+        throw new TRPCError({
+          code: 'UNPROCESSABLE_CONTENT',
+          message: 'Account or Organization is not defined'
+        });
+      }
+      const { org } = ctx;
+
+      const accountOrgMembership = org.members.find(
+        (member) => member.accountId === ctx.account.id
+      );
+
+      if (!accountOrgMembership) {
+        throw new TRPCError({
+          code: 'UNPROCESSABLE_CONTENT',
+          message: 'Account is not a member of this organization'
+        });
+      }
+
+      return accountOrgMembership?.role === 'admin';
+    }),
   getOrgMembers: orgProcedure
     .input(z.object({}).strict())
     .query(async ({ ctx }) => {
