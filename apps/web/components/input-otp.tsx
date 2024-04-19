@@ -52,7 +52,7 @@ const InputOTPSlot = forwardRef<
       width="40px"
       height="40px"
       className={cn(
-        'relative items-center justify-center border-y border-r border-gray-500 text-sm transition-all first:rounded-l-md first:border-l last:rounded-r-md',
+        'border-gray-9 relative items-center justify-center border-y border-r font-bold transition-all first:rounded-l-md first:border-l last:rounded-r-md',
         isActive && 'ring-ring ring-offset-background z-10 ring-2',
         className
       )}
@@ -68,7 +68,7 @@ const InputOTPSlot = forwardRef<
           <Box
             height="16px"
             width="1px"
-            className="animate-caret-blink bg-gray-500 duration-1000"
+            className="animate-caret-blink bg-gray-9 duration-1000"
           />
         </Flex>
       )}

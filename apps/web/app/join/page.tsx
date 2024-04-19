@@ -11,62 +11,58 @@ import {
 } from '@radix-ui/themes';
 import Stepper from './Stepper';
 import { Check, Plus, Info } from 'lucide-react';
-import { useDebounceCallback } from 'usehooks-ts';
+import { useDebounce } from '@uidotdev/usehooks';
 import { api } from '@/lib/trpc';
-import { useState, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { zodSchemas } from '@u22n/utils';
 import { useCookies } from 'next-client-cookies';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import useLoading from '@/hooks/use-loading';
 
 export default function Page() {
-  const username = useRef('');
-  const [usernameLoading, setUsernameLoading] = useState(false);
-  const [usernameData, setUsernameData] = useState<{
-    available: boolean;
-    error: string | null;
-  }>({
-    available: false,
-    error: null
-  });
-  const [hasData, setHasData] = useState(false);
+  const [username, setUsername] = useState<string>();
   const [agree, setAgree] = useState(false);
   const cookies = useCookies();
   const router = useRouter();
-
   const checkUsernameApi = api.useUtils().auth.signup.checkUsernameAvailability;
+  const debouncedUsername = useDebounce(username, 1000);
 
-  const checkUsername = useDebounceCallback(
-    async (username: string) => {
-      const parsed = zodSchemas.username().safeParse(username);
-      if (!parsed.success) {
-        setUsernameData({
-          error: parsed.error.issues[0]?.message ?? null,
-          available: false
-        });
-        setHasData(true);
-        return;
-      }
+  const {
+    loading: usernameLoading,
+    data: usernameData,
+    error: usernameError,
+    run: checkUsername
+  } = useLoading(async (signal) => {
+    if (!debouncedUsername) return;
+    const parsed = zodSchemas.username().safeParse(debouncedUsername);
+    if (!parsed.success) {
+      return {
+        error: parsed.error.issues[0]?.message ?? null,
+        available: false
+      };
+    }
+    return await checkUsernameApi.fetch(
+      { username: debouncedUsername },
+      { signal }
+    );
+  });
 
-      setUsernameLoading(true);
-      await checkUsernameApi
-        .fetch({ username })
-        .then((data) => {
-          setUsernameData(data);
-        })
-        .catch((error: Error) => {
-          toast.error(error.message);
-        })
-        .finally(() => setUsernameLoading(false));
-      setHasData(true);
-    },
-    1000,
-    { maxWait: 7500 }
-  );
+  useEffect(() => {
+    if (typeof debouncedUsername === 'undefined') return;
+    checkUsername({ clearData: true, clearError: true });
+  }, [debouncedUsername]);
+
+  useEffect(() => {
+    if (usernameError) {
+      toast.error(usernameError.message);
+    }
+  }, [usernameError]);
 
   function nextStep() {
-    cookies.set('un-join-username', username.current);
+    if (!username) return;
+    cookies.set('un-join-username', username);
     router.push('/join/secure');
   }
 
@@ -115,14 +111,13 @@ export default function Page() {
 
         <TextField.Root
           className="w-full"
-          onChange={(e) => {
-            username.current = e.target.value;
-            setHasData(false);
-            if (!username.current) return;
-            void checkUsername(username.current);
-          }}
+          onChange={(e) => setUsername(e.target.value)}
           color={
-            hasData ? (usernameData.available ? 'green' : 'red') : undefined
+            usernameData
+              ? usernameData.available
+                ? 'green'
+                : 'red'
+              : undefined
           }>
           <TextField.Slot />
           <TextField.Slot>
@@ -132,7 +127,7 @@ export default function Page() {
           </TextField.Slot>
         </TextField.Root>
 
-        {!hasData && usernameLoading && (
+        {!usernameData && usernameLoading && (
           <Flex
             align="center"
             gap="1">
@@ -145,31 +140,38 @@ export default function Page() {
           </Flex>
         )}
 
-        {hasData && !usernameLoading && (
+        {usernameData && !usernameLoading && (
           <Flex
             align="center"
             gap="1">
             {usernameData.available ? (
               <Check
                 size={16}
-                className="stroke-green-11"
+                className="stroke-green-10"
               />
             ) : (
               <Plus
                 size={16}
-                className="stroke-red-11 rotate-45"
+                className="stroke-red-10 rotate-45"
               />
             )}
 
             <Text
-              className={
-                !usernameData.available ? 'text-red-11' : 'text-green-11'
-              }
+              color={!usernameData.available ? 'red' : 'green'}
               weight="bold"
               size="2">
               {usernameData.available ? 'Looks good!' : usernameData.error}
             </Text>
           </Flex>
+        )}
+
+        {usernameError && !usernameLoading && (
+          <Text
+            color="red"
+            weight="bold"
+            size="2">
+            {usernameError.message}
+          </Text>
         )}
       </Flex>
 
@@ -184,7 +186,7 @@ export default function Page() {
             size="1"
             checked={agree}
             onCheckedChange={(e) => setAgree(!!e)}
-            disabled={!usernameData.available}
+            disabled={!usernameData?.available}
           />
           <span>
             I agree to the UnInbox{' '}
@@ -207,7 +209,7 @@ export default function Page() {
       </Text>
 
       <Button
-        disabled={!usernameData.available || !agree}
+        disabled={!usernameData?.available || !agree}
         onClick={nextStep}>
         I like it!
       </Button>

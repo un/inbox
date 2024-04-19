@@ -13,17 +13,17 @@ import {
   Tooltip,
   Checkbox
 } from '@radix-ui/themes';
-import { Eye, EyeOff, Key, KeyRound, User } from 'lucide-react';
+import { KeyRound, User } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { zodSchemas } from '@u22n/utils';
+import TogglePasswordBox from '@/components/toggle-password';
 
 export default function PasswordLoginButton() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [otp, setOTP] = useState('');
   const [noOtp, setNoOtp] = useState(false);
-  const [passwordShown, setPasswordShown] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const dialogCloseRef = useRef<HTMLButtonElement | null>(null);
   const router = useRouter();
@@ -70,7 +70,6 @@ export default function PasswordLoginButton() {
         setPassword('');
         setOTP('');
         setNoOtp(false);
-        setPasswordShown(false);
         setCurrentStep(0);
       }}>
       <Dialog.Trigger>
@@ -107,37 +106,15 @@ export default function PasswordLoginButton() {
                 </TextField.Slot>
               </TextField.Root>
             </label>
-            <label>
-              <Text
-                as="div"
-                size="2"
-                mb="1"
-                weight="bold">
-                Password
-              </Text>
-              <TextField.Root
-                type={passwordShown ? 'text' : 'password'}
-                placeholder="Password"
-                autoComplete="current-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}>
-                <TextField.Slot>
-                  <Tooltip content="Password length is greater or equal to 8">
-                    <Key
-                      size={16}
-                      className="cursor-help"
-                    />
-                  </Tooltip>
-                </TextField.Slot>
-                <TextField.Slot>
-                  <Button
-                    variant="ghost"
-                    onClick={() => setPasswordShown(!passwordShown)}>
-                    {passwordShown ? <Eye size={16} /> : <EyeOff size={16} />}
-                  </Button>
-                </TextField.Slot>
-              </TextField.Root>
-            </label>
+            <TogglePasswordBox
+              passwordValue={password}
+              setPasswordValue={setPassword}
+              textFieldProps={{
+                placeholder: 'Password',
+                autoComplete: 'current-password'
+              }}
+              label="Password"
+            />
           </Flex>
         )}
         {currentStep === 1 && (

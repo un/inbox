@@ -1,14 +1,22 @@
 import { z } from 'zod';
-import { router, accountProcedure } from '../../trpc';
+import {
+  router,
+  accountProcedure,
+  publicRateLimitedProcedure
+} from '../../trpc';
 import { eq } from '@u22n/database/orm';
 import { accounts } from '@u22n/database/schema';
 import { decodeHex, encodeHex } from 'oslo/encoding';
 import { TOTPController, createTOTPKeyURI } from 'oslo/otp';
 import { TRPCError } from '@trpc/server';
-import { nanoIdToken } from '@u22n/utils';
+import { nanoIdToken, zodSchemas } from '@u22n/utils';
 import { Argon2id } from 'oslo/password';
+import { setCookie, useStorage, useRuntimeConfig, getCookie } from '#imports';
 
 export const twoFactorRouter = router({
+  /**
+   * @deprecated remove with Nuxt Webapp
+   */
   createTwoFactorSecret: accountProcedure
     .input(z.object({}).strict())
     .mutation(async ({ ctx }) => {
@@ -51,6 +59,9 @@ export const twoFactorRouter = router({
       return { uri };
     }),
 
+  /**
+   * @deprecated remove with Nuxt Webapp
+   */
   verifyTwoFactor: accountProcedure
     .input(
       z
@@ -118,6 +129,10 @@ export const twoFactorRouter = router({
 
       return { recoveryCode: recoveryCode };
     }),
+
+  /**
+   * @deprecated remove with Nuxt Webapp
+   */
   disableTwoFactor: accountProcedure
     .input(z.object({ twoFactorCode: z.string() }).strict())
     .mutation(async ({ ctx, input }) => {
@@ -167,5 +182,41 @@ export const twoFactorRouter = router({
         })
         .where(eq(accounts.id, accountId));
       return {};
+    }),
+
+  createTwoFactorChallenge: publicRateLimitedProcedure.createTwoFactorChallenge
+    .input(z.object({ username: zodSchemas.username() }))
+    .query(async ({ ctx, input }) => {
+      const authStorage = useStorage('auth');
+      const existingChallenge = getCookie(ctx.event, 'un-2fa-challenge');
+
+      if (existingChallenge) {
+        const existingSecret = await authStorage.getItem(
+          `un2faChallenge:${input.username}-${existingChallenge}`
+        );
+        if (typeof existingSecret === 'string') {
+          return {
+            uri: createTOTPKeyURI(
+              'UnInbox.com',
+              input.username,
+              decodeHex(existingSecret)
+            )
+          };
+        }
+      }
+
+      const newSecret = crypto.getRandomValues(new Uint8Array(20));
+      const uri = createTOTPKeyURI('UnInbox.com', input.username, newSecret);
+      const hexSecret = encodeHex(newSecret);
+      const challengeId = nanoIdToken();
+      await authStorage.setItem(
+        `un2faChallenge:${input.username}-${challengeId}`,
+        hexSecret
+      );
+      setCookie(ctx.event, 'un-2fa-challenge', challengeId, {
+        domain: useRuntimeConfig().primaryDomain,
+        httpOnly: true
+      });
+      return { uri };
     })
 });

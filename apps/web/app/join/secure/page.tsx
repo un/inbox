@@ -9,7 +9,7 @@ import { useQueryState, parseAsStringLiteral } from 'nuqs';
 import useLoading from '@/hooks/use-loading';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
-import { passkeyModal } from './modals';
+import { passkeyModal, passwordModal, recoveryCodeModal } from './modals';
 
 export default function Page() {
   const cookie = useCookies();
@@ -27,16 +27,27 @@ export default function Page() {
   const { ModalRoot: PasskeyModalRoot, openModal: signUpWithPasskey } =
     passkeyModal({ username });
 
+  const { ModalRoot: PasswordModalRoot, openModal: signUpWithPassword } =
+    passwordModal({ username });
+
+  const { ModalRoot: RecoveryCodeModalRoot, openModal: showRecoveryCode } =
+    recoveryCodeModal();
+
   const {
     loading,
     error,
     run: createAccount
   } = useLoading(async () => {
     if (selectedAuth === 'passkey') {
-      await signUpWithPasskey();
+      await signUpWithPasskey({});
     } else {
-      throw new Error('Not Implemented');
+      const { recoveryCode } = await signUpWithPassword({});
+      await showRecoveryCode({
+        recoveryCode,
+        username
+      });
     }
+    cookie.remove('un-join-username');
     toast.success(
       'Your account has been created! Redirecting for Organization Creation'
     );
@@ -93,6 +104,8 @@ export default function Page() {
         Create my account
       </Button>
       <PasskeyModalRoot />
+      <PasswordModalRoot />
+      <RecoveryCodeModalRoot />
     </Flex>
   );
 }

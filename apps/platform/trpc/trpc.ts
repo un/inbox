@@ -71,11 +71,12 @@ const isEeEnabled = trpcContext.middleware(({ next }) => {
 
 const publicRateLimits = {
   checkUsernameAvailability: [30, '1h'],
-  checkPasswordStrength: [30, '1h'],
+  checkPasswordStrength: [50, '1h'],
   generatePasskeyChallenge: [20, '1h'],
   signUpPasskeyStart: [10, '1h'],
   signUpPasskeyFinish: [10, '1h'],
   verifyPasskey: [30, '1h'],
+  createTwoFactorChallenge: [10, '1h'],
   signUpWithPassword: [10, '1h'],
   signInWithPassword: [20, '1h'],
   recoverAccount: [10, '1h'],

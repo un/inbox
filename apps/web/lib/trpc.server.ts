@@ -2,7 +2,7 @@ import 'server-only';
 import type { TrpcPlatformRouter } from '@u22n/platform/trpc';
 import { createTRPCClient, httpBatchLink } from '@trpc/client';
 import SuperJSON from 'superjson';
-import { cookies, headers as nextHeaders } from 'next/headers';
+import { cookies, headers, headers as nextHeaders } from 'next/headers';
 
 export const serverApi = createTRPCClient<TrpcPlatformRouter>({
   links: [
@@ -27,9 +27,9 @@ function getBaseUrl() {
 export async function isAuthenticated() {
   if (!cookies().has('unsession')) return false;
   try {
-    const data = await fetch(`${getBaseUrl()}/auth/status`).then((r) =>
-      r.json()
-    );
+    const data = await fetch(`${getBaseUrl()}/auth/status`, {
+      headers: headers()
+    }).then((r) => r.json());
     const authenticated = data.authStatus === 'authenticated';
     return authenticated;
   } catch (e) {

@@ -1,19 +1,21 @@
 import { useRef, useState, type ReactNode } from 'react';
 
-type AwaitableModalApi<T> = {
+type AwaitableModalApi<ResolveArgs, OpenArgs> = {
   open: boolean;
+  args?: OpenArgs;
   onClose: () => void;
-  onResolve: (data: T) => void;
+  onResolve: (data: ResolveArgs) => void;
 };
 
-export default function useAwaitableModal<T>(
-  renderFn: (args: AwaitableModalApi<T>) => ReactNode
+export default function useAwaitableModal<ResolveArgs, OpenArgs>(
+  renderFn: (args: AwaitableModalApi<ResolveArgs, OpenArgs>) => ReactNode
 ) {
   const [open, setOpen] = useState(false);
 
   const promiseRef = useRef<{
-    resolve: (_: T) => void;
+    resolve: (_: ResolveArgs) => void;
     reject: (res: Error | null) => void;
+    args: OpenArgs;
   } | null>(null);
 
   const ModalRoot = () =>
@@ -26,12 +28,13 @@ export default function useAwaitableModal<T>(
       onResolve: (data) => {
         setOpen(false);
         promiseRef.current?.resolve(data);
-      }
+      },
+      args: promiseRef.current?.args
     });
 
-  const openModal = () =>
-    new Promise<T>((resolve, reject) => {
-      promiseRef.current = { resolve, reject };
+  const openModal = (args: OpenArgs) =>
+    new Promise<ResolveArgs>((resolve, reject) => {
+      promiseRef.current = { resolve, reject, args };
       setOpen(true);
     });
 
