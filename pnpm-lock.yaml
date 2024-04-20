@@ -272,6 +272,9 @@ importers:
       input-otp:
         specifier: ^1.2.4
         version: 1.2.4(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+      itty-time:
+        specifier: ^1.0.5
+        version: 1.0.5
       lucide-react:
         specifier: ^0.368.0
         version: 0.368.0(react@18.2.0)
@@ -6223,6 +6226,9 @@ packages:
 
   iterator.prototype@1.1.2:
     resolution: {integrity: sha512-DR33HMMr8EzwuRL8Y9D3u2BMj8+RqSE850jfGu59kS7tbmPLzGkZmVSfyCFSDxuZiEY6Rzt3T2NA/qU+NwVj1w==}
+
+  itty-time@1.0.5:
+    resolution: {integrity: sha512-UALgwEllyv90TREomg2kovuk2l191AE3stJ5TsKord4IRAUNE5C3KkKf91DyDErfeRpAeJebVFAV/fw/Uwy14A==}
 
   jackspeak@2.3.6:
     resolution: {integrity: sha512-N3yCS/NegsOBokc8GAdM8UcmfsKiSS8cipheD/nivzr700H+nsMOxJjQnvwOcRYVuFkdH0wGUvW2WbXGmrZGbQ==}
@@ -15580,6 +15586,8 @@ snapshots:
       has-symbols: 1.0.3
       reflect.getprototypeof: 1.0.6
       set-function-name: 2.0.2
+
+  itty-time@1.0.5: {}
 
   jackspeak@2.3.6:
     dependencies:

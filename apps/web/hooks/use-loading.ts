@@ -18,5 +18,8 @@ export default function useLoading<T>(fn: (signal: AbortSignal) => Promise<T>) {
       .catch((e: Error) => setError(e))
       .finally(() => setLoading(false));
   };
-  return { loading, error, data, run };
+  const clearData = () => setData(null);
+  const clearError = () => setError(null);
+
+  return { loading, error, data, run, clearData, clearError };
 }

@@ -24,8 +24,11 @@ function getBaseUrl() {
   throw new Error('PLATFORM_URL is not set');
 }
 
-export async function isAuthenticated() {
+// Skip the cookie validation on client with shallow=true
+// it is checked on server anyways and may cause performance issues if checked on client on every request
+export async function isAuthenticated(shallow = false) {
   if (!cookies().has('unsession')) return false;
+  if (shallow) return true;
   try {
     const data = await fetch(`${getBaseUrl()}/auth/status`, {
       headers: headers()

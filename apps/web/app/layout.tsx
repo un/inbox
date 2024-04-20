@@ -23,7 +23,8 @@ const calSans = localFont({
 
 export const metadata: Metadata = {
   title: 'UnInbox',
-  description: 'Open Source Email service'
+  description: 'Open Source Email service',
+  icons: '/logo.png'
 };
 
 export default function RootLayout({

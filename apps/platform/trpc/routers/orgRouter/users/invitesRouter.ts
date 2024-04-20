@@ -26,7 +26,7 @@ import {
 import { refreshOrgShortcodeCache } from '../../../../utils/orgShortcode';
 import { isAccountAdminOfOrg } from '../../../../utils/account';
 import { TRPCError } from '@trpc/server';
-import { useRuntimeConfig } from '#imports';
+import { deleteCookie, useRuntimeConfig } from '#imports';
 import { billingTrpcClient } from '../../../../utils/tRPCServerClients';
 import { addOrgMemberToTeamHandler } from './teamsHandler';
 import { sendInviteEmail } from '../../../../utils/mail/transactional';
@@ -463,6 +463,8 @@ export const invitesRouter = router({
           acceptedAt: new Date()
         })
         .where(eq(orgInvitations.id, queryInvitesResponse.id));
+
+      deleteCookie(ctx.event, 'un-invite-code');
 
       if (useRuntimeConfig().billing.enabled) {
         billingTrpcClient.stripe.subscriptions.updateOrgUserCount.mutate({

@@ -10,7 +10,6 @@ import {
   Text,
   Flex,
   TextField,
-  Tooltip,
   Checkbox
 } from '@radix-ui/themes';
 import { KeyRound, User } from 'lucide-react';

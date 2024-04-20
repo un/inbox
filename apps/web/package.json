@@ -22,6 +22,7 @@
     "@uidotdev/usehooks": "^2.4.1",
     "clsx": "^2.1.0",
     "input-otp": "^1.2.4",
+    "itty-time": "^1.0.5",
     "lucide-react": "^0.368.0",
     "next": "14.2.2",
     "next-client-cookies": "^1.1.1",
