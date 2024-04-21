@@ -464,8 +464,6 @@ export const invitesRouter = router({
         })
         .where(eq(orgInvitations.id, queryInvitesResponse.id));
 
-      deleteCookie(ctx.event, 'un-invite-code');
-
       if (useRuntimeConfig().billing.enabled) {
         billingTrpcClient.stripe.subscriptions.updateOrgUserCount.mutate({
           orgId: +queryInvitesResponse.orgId
