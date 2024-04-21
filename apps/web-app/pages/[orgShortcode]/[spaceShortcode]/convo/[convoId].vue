@@ -59,12 +59,12 @@
   const replyToMessagePublicId = ref('');
   const replyToMessageMetadata = ref<ConvoEntryMetadata | undefined>(undefined);
 
-  const orgShortcode = useRoute().params.orgShortcode as string;
+  const { orgShortcode, spaceShortcode } = useRoute().params;
   const route = useRoute();
 
   const convoPublicId = useRoute().params.convoId as TypeId<'convos'>;
   if (!validateTypeId('convos', convoPublicId)) {
-    await navigateTo(`/${orgShortcode}/convo/404`);
+    await navigateTo(`/${orgShortcode}/${spaceShortcode}/convo/404`);
   }
 
   const { data: convoDetails, status: convoDetailsStatus } =
@@ -79,10 +79,10 @@
     if (convoDetailsStatus.value === 'idle') return;
     if (convoDetailsStatus.value === 'success') {
       if (!convoDetails.value?.data) {
-        navigateTo(`/${orgShortcode}/convo/404`);
+        navigateTo(`/${orgShortcode}/${spaceShortcode}/convo/404`);
       }
       if (!convoDetails.value?.data?.participants) {
-        navigateTo(`/${orgShortcode}/convo/404`);
+        navigateTo(`/${orgShortcode}/${spaceShortcode}/convo/404`);
       }
     }
 
@@ -411,7 +411,7 @@
     });
     showDeleteModal.value = false;
     deleteLoading.value = false;
-    navigateTo(`/${orgShortcode}/convo`);
+    navigateTo(`/${orgShortcode}/${spaceShortcode}/convo`);
   }
 
   async function hideInstead() {
@@ -473,7 +473,7 @@
             icon="i-ph-arrow-left"
             square
             variant="soft"
-            @click="navigateTo(`/${orgShortcode}/convo`)" />
+            @click="navigateTo(`/${orgShortcode}/${spaceShortcode}/convo`)" />
         </div>
         <template
           v-for="subject of convoDetails?.data?.subjects"

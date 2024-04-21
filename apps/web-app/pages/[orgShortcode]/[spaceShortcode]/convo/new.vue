@@ -17,7 +17,7 @@
   import type { TypeId } from '@u22n/utils';
 
   const { $trpc } = useNuxtApp();
-  const orgShortcode = useRoute().params.orgShortcode as string;
+  const { orgShortcode, spaceShortcode } = useRoute().params;
   const attachmentUploads = ref<ConvoAttachmentUpload[]>([]);
   const currentTotalUploadSize = computed(() => {
     return attachmentUploads.value.reduce((acc, attachment) => {
@@ -464,7 +464,9 @@
       return;
     }
 
-    navigateTo(`/${orgShortcode}/convo/${createNewConvo?.publicId}`);
+    navigateTo(
+      `/${orgShortcode}/${spaceShortcode}/convo/${createNewConvo?.publicId}`
+    );
   }
 </script>
 <template>

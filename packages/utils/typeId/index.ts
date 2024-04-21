@@ -8,27 +8,29 @@ export const idTypes = {
   account: 'a',
   accountSession: 'as',
   accountPasskey: 'ap',
-  org: 'o',
-  orgInvitations: 'oi',
-  orgMembers: 'om',
-  orgMemberProfile: 'omp',
-  groups: 'g', // remove after migration of groups to teams: April 2024
-  groupMembers: 'gm', // remove after migration of groups to teams: April 2024
-  teams: 't',
-  teamMembers: 'tm',
-  domains: 'dom',
-  postalServers: 'ps',
   contacts: 'k',
-  emailRoutingRules: 'rr',
-  emailRoutingRuleDestinations: 'rrd',
-  emailIdentities: 'ei',
-  emailIdentitiesPersonal: 'eip',
-  emailIdentitiesExternal: 'eie',
   convos: 'c',
   convoSubjects: 'cs',
   convoParticipants: 'cp',
   convoAttachments: 'ca',
-  convoEntries: 'ce'
+  convoEntries: 'ce',
+  domains: 'dom',
+  emailIdentities: 'ei',
+  emailIdentitiesPersonal: 'eip',
+  emailIdentitiesExternal: 'eie',
+  emailRoutingRules: 'rr',
+  emailRoutingRuleDestinations: 'rrd',
+  groups: 'g', // remove after migration of groups to teams: April 2024
+  groupMembers: 'gm', // remove after migration of groups to teams: April 2024
+  org: 'o',
+  orgInvitations: 'oi',
+  orgMembers: 'om',
+  orgMemberProfile: 'omp',
+  postalServers: 'ps',
+  teams: 't',
+  teamMembers: 'tm',
+  spaces: 's',
+  spaceMembers: 'sm'
 } as const;
 
 type IdType = typeof idTypes;

@@ -29,7 +29,9 @@ import {
   convoParticipantTeamMembers,
   emailIdentities,
   convoEntryPrivateVisibilityParticipants,
-  convoEntryRawHtmlEmails
+  convoEntryRawHtmlEmails,
+  convosToSpaces,
+  spaces
 } from '@u22n/database/schema';
 import { typeIdValidator, type TypeId, typeIdGenerator } from '@u22n/utils';
 import { TRPCError } from '@trpc/server';
@@ -44,6 +46,7 @@ export const convoRouter = router({
   createNewConvo: orgProcedure
     .input(
       z.object({
+        spacePublicId: typeIdValidator('spaces'),
         participantsOrgMembersPublicIds: z.array(typeIdValidator('orgMembers')),
         participantsTeamsPublicIds: z.array(typeIdValidator('teams')),
         participantsContactsPublicIds: z.array(typeIdValidator('contacts')),
@@ -105,6 +108,23 @@ export const convoRouter = router({
         to: convoMessageTo,
         firstMessageType
       } = input;
+
+      const spaceQueryResponse = await db.query.spaces.findFirst({
+        where: and(
+          eq(spaces.orgId, orgId),
+          eq(spaces.publicId, input.spacePublicId)
+        ),
+        columns: {
+          id: true
+        }
+      });
+      if (!spaceQueryResponse) {
+        throw new TRPCError({
+          code: 'UNPROCESSABLE_CONTENT',
+          message: 'Space not found'
+        });
+      }
+      const spaceId = Number(spaceQueryResponse.id);
 
       const message: tiptapVue3.JSONContent = parse(messageString);
       let convoParticipantToPublicId: TypeId<'convoParticipants'>;
@@ -402,6 +422,18 @@ export const convoRouter = router({
         publicId: newConvoPublicId,
         orgId: orgId,
         lastUpdatedAt: newConvoTimestamp
+      });
+
+      await db.insert(convosToSpaces).values({
+        convoId: Number(insertConvoResponse.insertId),
+        orgId: orgId,
+        spaceId: spaceId
+      });
+
+      await db.insert(convosToSpaces).values({
+        convoId: Number(insertConvoResponse.insertId),
+        orgId: orgId,
+        spaceId: spaceId
       });
 
       // create conversationSubject entry

@@ -18,7 +18,7 @@
   const breakpoints = useBreakpoints(breakpointsTailwind);
   const isMobile = breakpoints.smaller('lg'); // only smaller than lg
 
-  const orgShortcode = useRoute().params.orgShortcode;
+  const { orgShortcode, spaceShortcode } = useRoute().params;
 
   const convoStore = useConvoStore();
   const hiddenConvoStore = useHiddenConvoStore();
@@ -81,7 +81,9 @@
         color: 'red',
         timeout: 10000
       });
-      navigateTo(`/${orgShortcode}/convo/404?error=convo_deleted`);
+      navigateTo(
+        `/${orgShortcode}/${spaceShortcode}/convo/404?error=convo_deleted`
+      );
     }
     return;
   });

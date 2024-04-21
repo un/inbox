@@ -15,7 +15,9 @@ import {
   orgInvitations,
   orgMembers,
   orgMemberProfiles,
-  accounts
+  accounts,
+  spaces,
+  spaceMembers
 } from '@u22n/database/schema';
 import {
   nanoIdToken,
@@ -98,8 +100,38 @@ export const invitesRouter = router({
           invitedByOrgMemberId: orgMemberId,
           status: 'invited',
           role: newOrgMember.role,
-          orgMemberProfileId: orgMemberProfileId
+          orgMemberProfileId: orgMemberProfileId,
+          personalSpaceId: 0
         });
+
+        // create personal space
+        const newSpacePublicId = typeIdGenerator('spaces');
+        const newOrgMemberPersonalSpace = await db.insert(spaces).values({
+          orgId: orgId,
+          publicId: newSpacePublicId,
+          name: 'Personal',
+          description: `${newOrgMember.firstName}'s personal space`,
+          shortcode: 'personal',
+          type: 'personal',
+          createdBy: orgMemberId
+        });
+
+        const newSpaceMemberPublicId = typeIdGenerator('spaceMembers');
+        await db.insert(spaceMembers).values({
+          orgId: orgId,
+          publicId: newSpaceMemberPublicId,
+          role: 'admin',
+          addedBy: orgMemberId,
+          orgMemberId: Number(orgMemberResponse.insertId),
+          spaceId: Number(newOrgMemberPersonalSpace.insertId)
+        });
+
+        await db
+          .update(orgMembers)
+          .set({
+            personalSpaceId: Number(newOrgMemberPersonalSpace.insertId)
+          })
+          .where(eq(orgMembers.id, Number(orgMemberResponse.insertId)));
 
         // Insert teamMemberships - save ID
         if (teamsInput) {
@@ -146,7 +178,8 @@ export const invitesRouter = router({
             publicId: newRoutingRuleDestinationPublicId,
             orgId: orgId,
             ruleId: +emailRoutingRulesResponse.insertId,
-            orgMemberId: +orgMemberResponse.insertId
+            orgMemberId: +orgMemberResponse.insertId,
+            spaceId: Number(newOrgMemberPersonalSpace.insertId)
           });
 
           const emailIdentityPublicId = typeIdGenerator('emailIdentities');

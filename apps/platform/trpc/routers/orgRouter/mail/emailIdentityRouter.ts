@@ -71,7 +71,8 @@ export const emailIdentityRouter = router({
       const emailIdentityResponse = await db.query.emailIdentities.findFirst({
         where: and(
           eq(emailIdentities.username, emailUsername),
-          eq(emailIdentities.domainId, domainResponse.id)
+          eq(emailIdentities.domainId, domainResponse.id),
+          eq(emailIdentities.orgId, orgId)
         ),
         columns: {
           id: true
