@@ -59,8 +59,8 @@
       icon: 'i-ph-user-plus'
     },
     {
-      label: 'Groups',
-      to: `/${orgShortcode}/settings/org/users/groups`,
+      label: 'Teams',
+      to: `/${orgShortcode}/settings/org/users/teams`,
       icon: 'i-ph-users-three'
     }
   ]);

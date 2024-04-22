@@ -69,7 +69,7 @@ export const convoEntryRouter = router({
                   id: true
                 }
               },
-              group: {
+              team: {
                 columns: {
                   id: true
                 },
@@ -97,9 +97,9 @@ export const convoEntryRouter = router({
       convoDetails?.participants.forEach((participant) => {
         participant.orgMember?.id &&
           convoParticipantsOrgMemberIds.push(participant.orgMember?.id);
-        participant.group?.members.forEach((groupMember) => {
-          groupMember.orgMemberId &&
-            convoParticipantsOrgMemberIds.push(groupMember.orgMemberId);
+        participant.team?.members.forEach((teamMember) => {
+          teamMember.orgMemberId &&
+            convoParticipantsOrgMemberIds.push(teamMember.orgMemberId);
         });
       });
 
@@ -242,7 +242,7 @@ export const convoEntryRouter = router({
                   id: true
                 }
               },
-              group: {
+              team: {
                 columns: {
                   id: true
                 },
@@ -270,9 +270,9 @@ export const convoEntryRouter = router({
       convoDetails?.participants.forEach((participant) => {
         participant.orgMember?.id &&
           convoParticipantsOrgMemberIds.push(participant.orgMember?.id);
-        participant.group?.members.forEach((groupMember) => {
-          groupMember.orgMemberId &&
-            convoParticipantsOrgMemberIds.push(groupMember.orgMemberId);
+        participant.team?.members.forEach((teamMember) => {
+          teamMember.orgMemberId &&
+            convoParticipantsOrgMemberIds.push(teamMember.orgMemberId);
         });
       });
 
@@ -445,7 +445,7 @@ export const convoEntryRouter = router({
                   id: true
                 }
               },
-              group: {
+              team: {
                 columns: {
                   id: true
                 },
@@ -473,9 +473,9 @@ export const convoEntryRouter = router({
       convoDetails?.participants.forEach((participant) => {
         participant.orgMember?.id &&
           convoParticipantsOrgMemberIds.push(participant.orgMember?.id);
-        participant.group?.members.forEach((groupMember) => {
-          groupMember.orgMemberId &&
-            convoParticipantsOrgMemberIds.push(groupMember.orgMemberId);
+        participant.team?.members.forEach((teamMember) => {
+          teamMember.orgMemberId &&
+            convoParticipantsOrgMemberIds.push(teamMember.orgMemberId);
         });
       });
 

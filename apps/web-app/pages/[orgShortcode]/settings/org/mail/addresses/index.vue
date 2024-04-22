@@ -90,7 +90,7 @@
     refresh();
   };
 
-  // TODO: set the destinations column to be an avatar list of users and groups
+  // TODO: set the destinations column to be an avatar list of users and teams
 </script>
 
 <template>

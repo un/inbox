@@ -273,7 +273,7 @@
                   <div class="flex flex-row items-center gap-2">
                     <UnUiIcon name="i-ph-check-circle-fill" />
                     <span class="text-base-12 text-sm leading-none">
-                      User Groups
+                      User Teams
                     </span>
                   </div>
                   <div class="flex flex-row items-center gap-2">

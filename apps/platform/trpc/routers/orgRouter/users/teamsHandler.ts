@@ -2,24 +2,24 @@ import { TRPCError } from '@trpc/server';
 import { db } from '@u22n/database';
 import { and, eq } from '@u22n/database/orm';
 import {
-  convoParticipantGroupMembers,
+  convoParticipantTeamMembers,
   convoParticipants,
-  groupMembers,
-  groups,
+  teamMembers,
+  teams,
   orgMembers
 } from '@u22n/database/schema';
 import { typeIdGenerator, type TypeId } from '@u22n/utils';
 
-export async function addOrgMemberToGroupHandler({
+export async function addOrgMemberToTeamHandler({
   orgId,
   orgMemberId,
   orgMemberPublicId,
-  groupPublicId
+  teamPublicId
 }: {
   orgId: number;
   orgMemberId: number;
   orgMemberPublicId: TypeId<'orgMembers'>;
-  groupPublicId: TypeId<'groups'>;
+  teamPublicId: TypeId<'teams'>;
 }) {
   const orgMember = await db.query.orgMembers.findFirst({
     columns: {
@@ -36,56 +36,56 @@ export async function addOrgMemberToGroupHandler({
     throw new Error('User not found');
   }
 
-  const groupQuery = await db.query.groups.findFirst({
+  const teamQuery = await db.query.teams.findFirst({
     columns: {
       id: true
     },
-    where: and(eq(orgMembers.orgId, orgId), eq(groups.publicId, groupPublicId))
+    where: and(eq(orgMembers.orgId, orgId), eq(teams.publicId, teamPublicId))
   });
 
-  if (!groupQuery) {
+  if (!teamQuery) {
     throw new TRPCError({
       code: 'NOT_FOUND',
-      message: 'Group not found'
+      message: 'Team not found'
     });
   }
 
-  const newGroupMemberPublicId = typeIdGenerator('groupMembers');
-  const insertGroupMemberResponse = await db.insert(groupMembers).values({
+  const newTeamMemberPublicId = typeIdGenerator('teamMembers');
+  const insertTeamMemberResponse = await db.insert(teamMembers).values({
     orgId: orgId,
-    publicId: newGroupMemberPublicId,
+    publicId: newTeamMemberPublicId,
     orgMemberId: orgMember.id,
-    groupId: groupQuery.id,
+    teamId: teamQuery.id,
     orgMemberProfileId: orgMember.orgMemberProfileId,
     role: 'member',
     notifications: 'active',
     addedBy: orgMemberId
   });
 
-  if (!insertGroupMemberResponse) {
+  if (!insertTeamMemberResponse) {
     throw new TRPCError({
       code: 'INTERNAL_SERVER_ERROR',
-      message: 'Could not add user to group'
+      message: 'Could not add user to team'
     });
   }
 
-  const groupParticipationConvoIdsQuery =
+  const teamParticipationConvoIdsQuery =
     await db.query.convoParticipants.findMany({
       columns: {
         convoId: true
       },
       where: and(
         eq(convoParticipants.orgId, orgId),
-        eq(convoParticipants.groupId, groupQuery.id)
+        eq(convoParticipants.teamId, teamQuery.id)
       )
     });
 
-  const groupParticipationConvoIds = groupParticipationConvoIdsQuery.map(
+  const teamParticipationConvoIds = teamParticipationConvoIdsQuery.map(
     (convo) => convo.convoId
   );
 
-  if (groupParticipationConvoIds.length > 0) {
-    for (const convoId of groupParticipationConvoIds) {
+  if (teamParticipationConvoIds.length > 0) {
+    for (const convoId of teamParticipationConvoIds) {
       const convoParticipantPublicId = typeIdGenerator('convoParticipants');
       let convoParticipantId: number | undefined;
       try {
@@ -96,7 +96,7 @@ export async function addOrgMemberToGroupHandler({
             publicId: convoParticipantPublicId,
             convoId: convoId,
             orgMemberId: orgMember.id,
-            role: 'groupMember',
+            role: 'teamMember',
             notifications: 'active'
           });
         if (insertConvoParticipantResponse) {
@@ -119,13 +119,13 @@ export async function addOrgMemberToGroupHandler({
         }
       }
       if (convoParticipantId) {
-        await db.insert(convoParticipantGroupMembers).values({
+        await db.insert(convoParticipantTeamMembers).values({
           convoParticipantId: Number(convoParticipantId),
-          groupId: groupQuery.id,
+          teamId: teamQuery.id,
           orgId: orgId
         });
       }
     }
   }
-  return newGroupMemberPublicId;
+  return newTeamMemberPublicId;
 }

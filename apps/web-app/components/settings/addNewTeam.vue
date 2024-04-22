@@ -16,13 +16,13 @@
 
   const { $trpc } = useNuxtApp();
 
-  const newGroupNameValue = ref('');
-  const newGroupNameValidationMessage = ref('');
-  const newGroupNameValid = ref<boolean | 'remote' | null>(null);
-  const newGroupColorValue = ref<UiColor>();
-  const newGroupDescriptionValue = ref('');
+  const newTeamNameValue = ref('');
+  const newTeamNameValidationMessage = ref('');
+  const newTeamNameValid = ref<boolean | 'remote' | null>(null);
+  const newTeamColorValue = ref<UiColor>();
+  const newTeamDescriptionValue = ref('');
 
-  const createEmailIdentityForGroup = ref(false);
+  const createEmailIdentityForTeam = ref(false);
 
   const newEmailIdentityUsernameValue = ref('');
   const newEmailIdentityUsernameValid = ref<boolean | 'remote' | null>(null);
@@ -32,17 +32,17 @@
   const newEmailSendNameValidationMessage = ref('');
   const newEmailIdentitySendNameTempValue = ref('');
 
-  const buttonLabel = ref('Create New Group');
+  const buttonLabel = ref('Create New Team');
   const buttonLoading = ref(false);
 
   watchDebounced(
-    newGroupNameValue,
+    newTeamNameValue,
     async () => {
       if (
         newEmailIdentitySendNameValue.value ===
         newEmailIdentitySendNameTempValue.value
       ) {
-        const newValue = newGroupNameValue.value;
+        const newValue = newTeamNameValue.value;
         newEmailIdentitySendNameValue.value = newValue;
         newEmailIdentitySendNameTempValue.value = newValue;
       }
@@ -79,8 +79,8 @@
   });
 
   const formValid = computed(() => {
-    const groupFormFieldsValid =
-      newGroupNameValid.value === true && !!newGroupColorValue.value;
+    const teamFormFieldsValid =
+      newTeamNameValid.value === true && !!newTeamColorValue.value;
     const emailIdentityFormSendNameValid =
       newEmailIdentitySendNameValid.value === true
         ? true
@@ -91,10 +91,10 @@
       selectedDomain.value?.domainPublicId &&
       emailIdentityFormSendNameValid === true;
 
-    if (createEmailIdentityForGroup.value) {
-      return groupFormFieldsValid && emailIdentityFormFieldsValid;
+    if (createEmailIdentityForTeam.value) {
+      return teamFormFieldsValid && emailIdentityFormFieldsValid;
     }
-    return groupFormFieldsValid;
+    return teamFormFieldsValid;
   });
 
   const emit = defineEmits(['close']);
@@ -103,56 +103,55 @@
 
   const orgShortcode = route.params.orgShortcode as string;
 
-  async function createGroup() {
-    if (!newGroupColorValue.value) return;
+  async function createTeam() {
+    if (!newTeamColorValue.value) return;
 
     buttonLoading.value = true;
     buttonLabel.value = 'Creating...';
     const toast = useToast();
-    const createOrgGroupsTrpc =
-      $trpc.org.users.groups.createGroup.useMutation();
-    const createOrgGroupsTrpcResponse = await createOrgGroupsTrpc.mutate({
-      groupName: newGroupNameValue.value,
-      groupDescription: newGroupDescriptionValue.value,
-      groupColor: newGroupColorValue.value
+    const createOrgTeamsTrpc = $trpc.org.users.teams.createTeam.useMutation();
+    const createOrgTeamsTrpcResponse = await createOrgTeamsTrpc.mutate({
+      teamName: newTeamNameValue.value,
+      teamDescription: newTeamDescriptionValue.value,
+      teamColor: newTeamColorValue.value
     });
 
     if (
-      createOrgGroupsTrpc.status.value === 'error' ||
-      !createOrgGroupsTrpcResponse?.newGroupPublicId
+      createOrgTeamsTrpc.status.value === 'error' ||
+      !createOrgTeamsTrpcResponse?.newTeamPublicId
     ) {
       buttonLoading.value = false;
-      buttonLabel.value = 'Create New Group';
+      buttonLabel.value = 'Create New Team';
       toast.add({
-        id: 'group_created',
-        title: 'Group Creation Failed',
-        description: `${newGroupNameValue.value} group could not be created.`,
+        id: 'team_created',
+        title: 'Team Creation Failed',
+        description: `${newTeamNameValue.value} team could not be created.`,
         color: 'red',
         icon: 'i-ph-warning-circle',
         timeout: 5000
       });
       return;
     }
-    const newGroupPublicId = createOrgGroupsTrpcResponse?.newGroupPublicId;
+    const newTeamPublicId = createOrgTeamsTrpcResponse?.newTeamPublicId;
 
-    if (createEmailIdentityForGroup.value) {
+    if (createEmailIdentityForTeam.value) {
       const createNewEmailIdentityTrpc =
         $trpc.org.mail.emailIdentities.createNewEmailIdentity.useMutation();
       await createNewEmailIdentityTrpc.mutate({
         emailUsername: newEmailIdentityUsernameValue.value,
         domainPublicId: selectedDomain.value?.domainPublicId as string,
         sendName: newEmailIdentitySendNameValue.value,
-        routeToGroupsPublicIds: [newGroupPublicId],
+        routeToTeamsPublicIds: [newTeamPublicId],
         routeToOrgMemberPublicIds: [],
         catchAll: false
       });
       if (createNewEmailIdentityTrpc.status.value === 'error') {
         buttonLoading.value = false;
-        buttonLabel.value = 'Create New Group';
+        buttonLabel.value = 'Create New Team';
         toast.add({
-          id: 'group_created',
-          title: 'Group Creation Failed',
-          description: `${newGroupNameValue.value} group could not be created.`,
+          id: 'team_created',
+          title: 'Team Creation Failed',
+          description: `${newTeamNameValue.value} team could not be created.`,
           icon: 'i-ph-thumbs-up',
           timeout: 5000
         });
@@ -160,17 +159,17 @@
       } else {
         toast.add({
           id: 'Email Identity Created',
-          title: 'Group Created Successfully',
-          description: `${newGroupNameValue.value} group with email ${newEmailIdentityUsernameValue.value}@${selectedDomain.value?.domain} created successfully.`,
+          title: 'Team Created Successfully',
+          description: `${newTeamNameValue.value} team with email ${newEmailIdentityUsernameValue.value}@${selectedDomain.value?.domain} created successfully.`,
           icon: 'i-ph-thumbs-up',
           timeout: 5000
         });
       }
     } else {
       toast.add({
-        id: 'group_created',
-        title: 'Group Created Successfully',
-        description: `${newGroupNameValue.value} group has been created successfully`,
+        id: 'team_created',
+        title: 'Team Created Successfully',
+        description: `${newTeamNameValue.value} team has been created successfully`,
         icon: 'i-ph-thumbs-up',
         timeout: 5000
       });
@@ -242,7 +241,7 @@
       v-if="!isProPending && !isPro"
       class="flex flex-col gap-4">
       <span>
-        Sorry, your current billing plan does not support adding groups.
+        Sorry, your current billing plan does not support adding teams.
       </span>
       <div>
         <UnUiButton
@@ -257,82 +256,82 @@
       <div
         class="grid w-full grid-cols-1 grid-rows-2 gap-4 md:grid-cols-2 md:grid-rows-1">
         <UnUiInput
-          v-model:value="newGroupNameValue"
-          v-model:valid="newGroupNameValid"
-          v-model:validationMessage="newGroupNameValidationMessage"
-          label="Group Name"
+          v-model:value="newTeamNameValue"
+          v-model:valid="newTeamNameValid"
+          v-model:validationMessage="newTeamNameValidationMessage"
+          label="Team Name"
           :schema="z.string().trim().min(2)"
           width="full" />
         <UnUiInput
-          v-model:value="newGroupDescriptionValue"
+          v-model:value="newTeamDescriptionValue"
           label="Description"
           :schema="z.string().trim().optional()"
           width="full" />
       </div>
       <div class="flex flex-col gap-1">
-        <span class="text-sm">Group Color</span>
+        <span class="text-sm">Team Color</span>
         <div class="flex flex-row gap-2">
           <div
             class="bg-red-9 h-8 w-8 cursor-pointer rounded p-2 text-white"
-            @click="newGroupColorValue = 'red'">
+            @click="newTeamColorValue = 'red'">
             <UnUiIcon
-              v-if="newGroupColorValue === 'red'"
+              v-if="newTeamColorValue === 'red'"
               name="i-ph-check-bold"
               size="24" />
           </div>
           <div
             class="bg-pink-9 h-8 w-8 cursor-pointer rounded p-2 text-white"
-            @click="newGroupColorValue = 'pink'">
+            @click="newTeamColorValue = 'pink'">
             <UnUiIcon
-              v-if="newGroupColorValue === 'pink'"
+              v-if="newTeamColorValue === 'pink'"
               name="i-ph-check-bold"
               size="24" />
           </div>
           <div
             class="bg-purple-9 h-8 w-8 cursor-pointer rounded p-2 text-white"
-            @click="newGroupColorValue = 'purple'">
+            @click="newTeamColorValue = 'purple'">
             <UnUiIcon
-              v-if="newGroupColorValue === 'purple'"
+              v-if="newTeamColorValue === 'purple'"
               name="i-ph-check-bold"
               size="24" />
           </div>
           <div
             class="bg-blue-9 h-8 w-8 cursor-pointer rounded p-2 text-white"
-            @click="newGroupColorValue = 'blue'">
+            @click="newTeamColorValue = 'blue'">
             <UnUiIcon
-              v-if="newGroupColorValue === 'blue'"
+              v-if="newTeamColorValue === 'blue'"
               name="i-ph-check-bold"
               size="24" />
           </div>
           <div
             class="bg-cyan-9 h-8 w-8 cursor-pointer rounded p-2 text-white"
-            @click="newGroupColorValue = 'cyan'">
+            @click="newTeamColorValue = 'cyan'">
             <UnUiIcon
-              v-if="newGroupColorValue === 'cyan'"
+              v-if="newTeamColorValue === 'cyan'"
               name="i-ph-check-bold"
               size="24" />
           </div>
           <div
             class="bg-green-9 h-8 w-8 cursor-pointer rounded p-2 text-white"
-            @click="newGroupColorValue = 'green'">
+            @click="newTeamColorValue = 'green'">
             <UnUiIcon
-              v-if="newGroupColorValue === 'green'"
+              v-if="newTeamColorValue === 'green'"
               name="i-ph-check-bold"
               size="24" />
           </div>
           <div
             class="bg-orange-9 h-8 w-8 cursor-pointer rounded p-2 text-white"
-            @click="newGroupColorValue = 'orange'">
+            @click="newTeamColorValue = 'orange'">
             <UnUiIcon
-              v-if="newGroupColorValue === 'orange'"
+              v-if="newTeamColorValue === 'orange'"
               name="i-ph-check-bold"
               size="24" />
           </div>
           <div
             class="bg-yellow-9 h-8 w-8 cursor-pointer rounded p-2 text-white"
-            @click="newGroupColorValue = 'yellow'">
+            @click="newTeamColorValue = 'yellow'">
             <UnUiIcon
-              v-if="newGroupColorValue === 'yellow'"
+              v-if="newTeamColorValue === 'yellow'"
               name="i-ph-check-bold"
               size="24" />
           </div>
@@ -342,12 +341,12 @@
         class="grid w-full grid-cols-1 grid-rows-2 gap-4 md:grid-cols-2 md:grid-rows-1">
         <span class="text-sm">Add Email Address</span>
         <UnUiToggle
-          v-model="createEmailIdentityForGroup"
-          @click="createEmailIdentityForGroup = !createEmailIdentityForGroup" />
+          v-model="createEmailIdentityForTeam"
+          @click="createEmailIdentityForTeam = !createEmailIdentityForTeam" />
       </div>
-      <NuxtUiDivider v-if="createEmailIdentityForGroup" />
+      <NuxtUiDivider v-if="createEmailIdentityForTeam" />
       <div
-        v-if="createEmailIdentityForGroup"
+        v-if="createEmailIdentityForTeam"
         class="flex h-full w-full flex-col items-start gap-8">
         <div class="flex w-full flex-col gap-8">
           <div class="flex w-full flex-col gap-4">
@@ -417,7 +416,7 @@
         :label="buttonLabel"
         :loading="buttonLoading"
         :disabled="!formValid"
-        @click="createGroup()" />
+        @click="createTeam()" />
     </div>
   </div>
 </template>

@@ -211,7 +211,7 @@
       <div class="flex flex-col gap-2">
         <p class="text-center">
           With an organization you can share conversations, notes and email
-          identities between members and groups.
+          identities between members and teams.
         </p>
         <p class="text-center text-sm">
           If you're planning on using UnInbox alone, you'll still need an

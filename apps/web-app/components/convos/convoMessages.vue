@@ -41,6 +41,7 @@
   );
 
   useInfiniteScroll(
+    //@ts-expect-error - correct type not exported by vueUse
     el,
     () => {
       // load more

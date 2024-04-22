@@ -10,11 +10,11 @@ import {
 import {
   orgMembers,
   domains,
-  groups,
+  teams,
   emailRoutingRules,
   emailRoutingRulesDestinations,
   emailIdentities,
-  groupMembers,
+  teamMembers,
   emailIdentitiesAuthorizedOrgMembers
 } from '@u22n/database/schema';
 import { useRuntimeConfig } from '#imports';
@@ -98,7 +98,7 @@ export const emailIdentityRouter = router({
         routeToOrgMemberPublicIds: z
           .array(typeIdValidator('orgMembers'))
           .optional(),
-        routeToGroupsPublicIds: z.array(typeIdValidator('groups')).optional()
+        routeToTeamsPublicIds: z.array(typeIdValidator('teams')).optional()
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -115,7 +115,7 @@ export const emailIdentityRouter = router({
         sendName,
         catchAll,
         routeToOrgMemberPublicIds,
-        routeToGroupsPublicIds
+        routeToTeamsPublicIds
       } = input;
 
       const emailUsername = input.emailUsername.toLowerCase();
@@ -128,10 +128,10 @@ export const emailIdentityRouter = router({
         });
       }
 
-      if (!routeToOrgMemberPublicIds && !routeToGroupsPublicIds) {
+      if (!routeToOrgMemberPublicIds && !routeToTeamsPublicIds) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
-          message: 'Must route to at least one user or group'
+          message: 'Must route to at least one user or team'
         });
       }
 
@@ -185,11 +185,11 @@ export const emailIdentityRouter = router({
         });
       });
 
-      const userGroupObjects: { id: number; hasDefault: boolean }[] = [];
-      const userGroupIdsResponse =
-        routeToGroupsPublicIds && routeToGroupsPublicIds.length > 0
-          ? await db.query.groups.findMany({
-              where: inArray(groups.publicId, routeToGroupsPublicIds),
+      const userTeamObjects: { id: number; hasDefault: boolean }[] = [];
+      const userTeamIdsResponse =
+        routeToTeamsPublicIds && routeToTeamsPublicIds.length > 0
+          ? await db.query.teams.findMany({
+              where: inArray(teams.publicId, routeToTeamsPublicIds),
               columns: {
                 id: true
               },
@@ -202,10 +202,10 @@ export const emailIdentityRouter = router({
               }
             })
           : [];
-      userGroupIdsResponse.forEach((userGroup) => {
-        userGroupObjects.push({
-          id: userGroup.id,
-          hasDefault: userGroup.authorizedEmailIdentities.some(
+      userTeamIdsResponse.forEach((userTeam) => {
+        userTeamObjects.push({
+          id: userTeam.id,
+          hasDefault: userTeam.authorizedEmailIdentities.some(
             (identity) => identity.default
           )
         });
@@ -239,8 +239,8 @@ export const emailIdentityRouter = router({
           });
         });
       }
-      if (userGroupObjects.length > 0) {
-        userGroupObjects.forEach((userGroupObject) => {
+      if (userTeamObjects.length > 0) {
+        userTeamObjects.forEach((userTeamObject) => {
           const newRoutingRuleDestinationPublicId = typeIdGenerator(
             'emailRoutingRuleDestinations'
           );
@@ -248,7 +248,7 @@ export const emailIdentityRouter = router({
             publicId: newRoutingRuleDestinationPublicId,
             orgId: orgId,
             ruleId: +insertEmailRoutingRule.insertId,
-            groupId: userGroupObject.id
+            teamId: userTeamObject.id
           });
         });
       }
@@ -295,14 +295,14 @@ export const emailIdentityRouter = router({
         });
       }
 
-      if (userGroupObjects.length > 0) {
-        userGroupObjects.forEach((userGroupObject) => {
+      if (userTeamObjects.length > 0) {
+        userTeamObjects.forEach((userTeamObject) => {
           emailIdentityAuthorizedOrgMembersObjects.push({
             orgId: orgId,
             identityId: +insertEmailIdentityResponse.insertId,
             addedBy: org.memberId,
-            groupId: userGroupObject.id,
-            default: !userGroupObject.hasDefault
+            teamId: userTeamObject.id,
+            default: !userTeamObject.hasDefault
           });
         });
       }
@@ -373,7 +373,7 @@ export const emailIdentityRouter = router({
             authorizedOrgMembers: {
               columns: {
                 orgMemberId: true,
-                groupId: true,
+                teamId: true,
                 default: true
               },
               with: {
@@ -391,7 +391,7 @@ export const emailIdentityRouter = router({
                     }
                   }
                 },
-                group: {
+                team: {
                   columns: {
                     publicId: true,
                     name: true,
@@ -410,7 +410,7 @@ export const emailIdentityRouter = router({
               with: {
                 destinations: {
                   with: {
-                    group: {
+                    team: {
                       columns: {
                         publicId: true,
                         avatarTimestamp: true,
@@ -482,7 +482,7 @@ export const emailIdentityRouter = router({
             with: {
               destinations: {
                 with: {
-                  group: {
+                  team: {
                     columns: {
                       publicId: true,
                       name: true,
@@ -526,15 +526,15 @@ export const emailIdentityRouter = router({
       const { db, org } = ctx;
       const orgId = org?.id;
       const orgMemberId = org?.memberId || 0;
-      // search for user org group memberships, get id of org group
+      // search for user org team memberships, get id of org team
 
-      const userOrgGroupMembershipQuery = await db.query.groupMembers.findMany({
-        where: eq(groupMembers.orgMemberId, orgMemberId),
+      const userOrgTeamMembershipQuery = await db.query.teamMembers.findMany({
+        where: eq(teamMembers.orgMemberId, orgMemberId),
         columns: {
-          groupId: true
+          teamId: true
         },
         with: {
-          group: {
+          team: {
             columns: {
               id: true,
               orgId: true
@@ -543,33 +543,31 @@ export const emailIdentityRouter = router({
         }
       });
 
-      const orgGroupIds = userOrgGroupMembershipQuery.filter(
-        (userOrgGroupMembership) => userOrgGroupMembership.group.orgId === orgId
+      const orgTeamIds = userOrgTeamMembershipQuery.filter(
+        (userOrgTeamMembership) => userOrgTeamMembership.team.orgId === orgId
       );
 
-      const userGroupIds = orgGroupIds.map(
-        (orgGroupIds) => orgGroupIds.group.id
-      );
-      const uniqueUserGroupIds = [...new Set(userGroupIds)];
+      const userTeamIds = orgTeamIds.map((orgTeamIds) => orgTeamIds.team.id);
+      const uniqueUserTeamIds = [...new Set(userTeamIds)];
 
-      if (!uniqueUserGroupIds.length) {
-        uniqueUserGroupIds.push(0);
+      if (!uniqueUserTeamIds.length) {
+        uniqueUserTeamIds.push(0);
       }
 
-      // search email routingRulesDestinations for orgMemberId or orgGroupId
+      // search email routingRulesDestinations for orgMemberId or orgTeamId
 
       const authorizedEmailIdentities =
         await db.query.emailIdentitiesAuthorizedOrgMembers.findMany({
           where: or(
             eq(emailIdentitiesAuthorizedOrgMembers.orgMemberId, orgMemberId),
             inArray(
-              emailIdentitiesAuthorizedOrgMembers.groupId,
-              uniqueUserGroupIds || [0]
+              emailIdentitiesAuthorizedOrgMembers.teamId,
+              uniqueUserTeamIds || [0]
             )
           ),
           columns: {
             orgMemberId: true,
-            groupId: true,
+            teamId: true,
             default: true
           },
           with: {
@@ -630,15 +628,15 @@ export const emailIdentityRouter = router({
       const { db, org } = ctx;
       const orgId = org?.id;
       const orgMemberId = org?.memberId || 0;
-      // search for user org group memberships, get id of org group
+      // search for user org team memberships, get id of org team
 
-      const userOrgGroupMembershipQuery = await db.query.groupMembers.findMany({
-        where: eq(groupMembers.orgMemberId, orgMemberId),
+      const userOrgTeamMembershipQuery = await db.query.teamMembers.findMany({
+        where: eq(teamMembers.orgMemberId, orgMemberId),
         columns: {
-          groupId: true
+          teamId: true
         },
         with: {
-          group: {
+          team: {
             columns: {
               id: true,
               orgId: true
@@ -647,33 +645,31 @@ export const emailIdentityRouter = router({
         }
       });
 
-      const orgGroupIds = userOrgGroupMembershipQuery.filter(
-        (userOrgGroupMembership) => userOrgGroupMembership.group.orgId === orgId
+      const orgTeamIds = userOrgTeamMembershipQuery.filter(
+        (userOrgTeamMembership) => userOrgTeamMembership.team.orgId === orgId
       );
 
-      const userGroupIds = orgGroupIds.map(
-        (orgGroupIds) => orgGroupIds.group.id
-      );
-      const uniqueUserGroupIds = [...new Set(userGroupIds)];
+      const userTeamIds = orgTeamIds.map((orgTeamIds) => orgTeamIds.team.id);
+      const uniqueUserTeamIds = [...new Set(userTeamIds)];
 
-      if (!uniqueUserGroupIds.length) {
-        uniqueUserGroupIds.push(0);
+      if (!uniqueUserTeamIds.length) {
+        uniqueUserTeamIds.push(0);
       }
 
-      // search email routingRulesDestinations for orgMemberId or orgGroupId
+      // search email routingRulesDestinations for orgMemberId or orgTeamId
 
       const authorizedEmailIdentities =
         await db.query.emailIdentitiesAuthorizedOrgMembers.findMany({
           where: or(
             eq(emailIdentitiesAuthorizedOrgMembers.orgMemberId, orgMemberId),
             inArray(
-              emailIdentitiesAuthorizedOrgMembers.groupId,
-              uniqueUserGroupIds || [0]
+              emailIdentitiesAuthorizedOrgMembers.teamId,
+              uniqueUserTeamIds || [0]
             )
           ),
           columns: {
             orgMemberId: true,
-            groupId: true,
+            teamId: true,
             default: true
           },
           with: {
