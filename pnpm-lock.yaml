@@ -245,6 +245,9 @@ importers:
       '@tanstack/react-query':
         specifier: ^5.29.2
         version: 5.29.2(react@18.2.0)
+      '@tanstack/react-table':
+        specifier: ^8.16.0
+        version: 8.16.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@trpc/client':
         specifier: 11.0.0-rc.334
         version: 11.0.0-rc.334(@trpc/server@11.0.0-rc.334)
@@ -254,9 +257,6 @@ importers:
       '@trpc/server':
         specifier: 11.0.0-rc.334
         version: 11.0.0-rc.334
-      '@types/qrcode-svg':
-        specifier: ^1.1.4
-        version: 1.1.4
       '@u22n/platform':
         specifier: workspace:^
         version: link:../platform
@@ -284,6 +284,9 @@ importers:
       next-client-cookies:
         specifier: ^1.1.1
         version: 1.1.1(next@14.2.2(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react@18.2.0)
+      next-runtime-env:
+        specifier: ^3.2.1
+        version: 3.2.1(next@14.2.2(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react@18.2.0)
       next-themes:
         specifier: ^0.3.0
         version: 0.3.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -293,9 +296,9 @@ importers:
       postcss-import:
         specifier: ^16.1.0
         version: 16.1.0(postcss@8.4.38)
-      qrcode-svg:
-        specifier: ^1.1.0
-        version: 1.1.0
+      qrcode:
+        specifier: ^1.5.3
+        version: 1.5.3
       react:
         specifier: ^18
         version: 18.2.0
@@ -305,6 +308,9 @@ importers:
       react-image-crop:
         specifier: ^11.0.5
         version: 11.0.5(react@18.2.0)
+      react-resizable-panels:
+        specifier: ^2.0.18
+        version: 2.0.18(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       server-only:
         specifier: ^0.0.1
         version: 0.0.1
@@ -323,10 +329,16 @@ importers:
       zod:
         specifier: ^3.22.4
         version: 3.22.4
+      zustand:
+        specifier: ^4.5.2
+        version: 4.5.2(@types/react@18.2.77)(react@18.2.0)
     devDependencies:
       '@types/node':
         specifier: ^20
         version: 20.12.2
+      '@types/qrcode':
+        specifier: ^1.5.5
+        version: 1.5.5
       '@types/react':
         specifier: ^18
         version: 18.2.77
@@ -3732,6 +3744,17 @@ packages:
     peerDependencies:
       react: ^18.0.0
 
+  '@tanstack/react-table@8.16.0':
+    resolution: {integrity: sha512-rKRjnt8ostqN2fercRVOIH/dq7MAmOENCMvVlKx6P9Iokhh6woBGnIZEkqsY/vEJf1jN3TqLOb34xQGLVRuhAg==}
+    engines: {node: '>=12'}
+    peerDependencies:
+      react: '>=16.8'
+      react-dom: '>=16.8'
+
+  '@tanstack/table-core@8.16.0':
+    resolution: {integrity: sha512-dCG8vQGk4js5v88/k83tTedWOwjGnIyONrKpHpfmSJB8jwFHl8GSu1sBBxbtACVAPtAQgwNxl0rw1d3RqRM1Tg==}
+    engines: {node: '>=12'}
+
   '@tanstack/virtual-core@3.2.0':
     resolution: {integrity: sha512-P5XgYoAw/vfW65byBbJQCw+cagdXDT/qH6wmABiLt4v4YBT2q2vqCOhihe+D1Nt325F/S/0Tkv6C5z0Lv+VBQQ==}
 
@@ -3987,8 +4010,8 @@ packages:
   '@types/prop-types@15.7.12':
     resolution: {integrity: sha512-5zvhXYtRNRluoE/jAp4GVsSduVUzNWKkOZrCDBWYtE7biZywwdC2AcEzg+cSMLFRfVgeAFqpfNabiPjxFddV1Q==}
 
-  '@types/qrcode-svg@1.1.4':
-    resolution: {integrity: sha512-gh+atEBHXpU5iO72Tg4q03YdGKoY0zH1Yr4mGl+NSzFpyPuJcgurs8F3aRpH0Gs93GFuB1rDoQj6U4Xshn72PA==}
+  '@types/qrcode@1.5.5':
+    resolution: {integrity: sha512-CdfBi/e3Qk+3Z/fXYShipBT13OJ2fDO2Q2w5CIP5anLTLIndQG9z6P1cnm+8zCWSpm5dnxMFd/uREtb0EXuQzg==}
 
   '@types/react-dom@18.2.25':
     resolution: {integrity: sha512-o/V48vf4MQh7juIKZU2QGDfli6p1+OOi5oXx36Hffpc9adsHeXjVp8rHuPkjd8VT8sOJ2Zp05HR7CdpGTIUFUA==}
@@ -6773,6 +6796,12 @@ packages:
       next: '>= 13.0.0'
       react: '>= 16.8.0'
 
+  next-runtime-env@3.2.1:
+    resolution: {integrity: sha512-vyuTpUMwnGUA9GjOGXNnuosqFQOa52IcKmu4mnTaQi4EqeFoCy3aYUxSF6mLaKkQ5yNC8yLa/gFjny74czpc9Q==}
+    peerDependencies:
+      next: ^14
+      react: ^18
+
   next-themes@0.3.0:
     resolution: {integrity: sha512-/QHIrsYpd6Kfk7xakK4svpDI5mmXP0gfvCoJdGpZQ2TOrQZmsW0QxjaiLn8wbIKjtm4BTSqLoix4lxYYOnLJ/w==}
     peerDependencies:
@@ -7647,10 +7676,6 @@ packages:
     resolution: {integrity: sha512-pMpnA0qRdFp32b1sJl1wOJNxZLQ2cbQx+k6tjNtZ8CpvVhNqEPRgivZ2WOUev2YMajecdH7ctUPDvEe87nariQ==}
     engines: {node: '>=6.0.0'}
 
-  qrcode-svg@1.1.0:
-    resolution: {integrity: sha512-XyQCIXux1zEIA3NPb0AeR8UMYvXZzWEhgdBgBjH9gO7M48H9uoHzviNz8pXw3UzrAcxRRRn9gxHewAVK7bn9qw==}
-    hasBin: true
-
   qrcode@1.5.3:
     resolution: {integrity: sha512-puyri6ApkEHYiVl4CFzo1tDkAZ+ATcnbJrJ6RiBM1Fhctdn/ix9MTE3hRph33omisEbC/2fcfemsseiKgBPKZg==}
     engines: {node: '>=10.13.0'}
@@ -7716,6 +7741,12 @@ packages:
     peerDependenciesMeta:
       '@types/react':
         optional: true
+
+  react-resizable-panels@2.0.18:
+    resolution: {integrity: sha512-rKagCW6C8tTjWRq5jNsASsi4TB2a+IixL9++0G1+kPgAgvULPVf7kE0VbHysC3wdvcGYMa70O46C9YpG7CCkeA==}
+    peerDependencies:
+      react: ^16.14.0 || ^17.0.0 || ^18.0.0
+      react-dom: ^16.14.0 || ^17.0.0 || ^18.0.0
 
   react-style-singleton@2.2.1:
     resolution: {integrity: sha512-ZWj0fHEMyWkHzKYUr2Bs/4zU6XLmq9HsgBURm7g5pAVfyn49DgUiNgY2d4lXRlYSiCif9YBGpQleewkcqddc7g==}
@@ -8635,6 +8666,11 @@ packages:
       '@types/react':
         optional: true
 
+  use-sync-external-store@1.2.0:
+    resolution: {integrity: sha512-eEgnFxGQ1Ife9bzYs6VLi8/4X6CObHMw9Qr9tPY43iKwsPw8xE8+EFsf/2cFZ5S3esXgpWgtSCtLNS41F+sKPA==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0
+
   util-deprecate@1.0.2:
     resolution: {integrity: sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==}
 
@@ -8711,34 +8747,6 @@ packages:
     resolution: {integrity: sha512-KPvLEuafPG13T7JJuQbSm5PwSxKFnVS965+MP1we2xGw9BPkkc/+LPix5MMWenpKWqtjr0ws8THrR+KuoDC8hg==}
     peerDependencies:
       vite: ^3.0.0-0 || ^4.0.0-0 || ^5.0.0-0
-
-  vite@5.1.6:
-    resolution: {integrity: sha512-yYIAZs9nVfRJ/AiOLCA91zzhjsHUgMjB+EigzFb6W2XTLO8JixBCKCjvhKZaye+NKYHCrkv3Oh50dH9EdLU2RA==}
-    engines: {node: ^18.0.0 || >=20.0.0}
-    hasBin: true
-    peerDependencies:
-      '@types/node': ^18.0.0 || >=20.0.0
-      less: '*'
-      lightningcss: ^1.21.0
-      sass: '*'
-      stylus: '*'
-      sugarss: '*'
-      terser: ^5.4.0
-    peerDependenciesMeta:
-      '@types/node':
-        optional: true
-      less:
-        optional: true
-      lightningcss:
-        optional: true
-      sass:
-        optional: true
-      stylus:
-        optional: true
-      sugarss:
-        optional: true
-      terser:
-        optional: true
 
   vite@5.2.8:
     resolution: {integrity: sha512-OyZR+c1CE8yeHw5V5t59aXsUPPVTHMDjEZz8MgguLL/Q7NblxhZUlTu9xSPqlsUO/y+X7dlU05jdhvyycD55DA==}
@@ -9029,6 +9037,21 @@ packages:
 
   zod@3.22.4:
     resolution: {integrity: sha512-iC+8Io04lddc+mVqQ9AZ7OQ2MrUKGN+oIQyq1vemgt46jwCwLfhq7/pwnBnNXXXZb8VTVLKwp9EDkx+ryxIWmg==}
+
+  zustand@4.5.2:
+    resolution: {integrity: sha512-2cN1tPkDVkwCy5ickKrI7vijSjPksFRfqS6237NzT0vqSsztTNnQdHw9mmN7uBdk3gceVXU0a+21jFzFzAc9+g==}
+    engines: {node: '>=12.7.0'}
+    peerDependencies:
+      '@types/react': '>=16.8'
+      immer: '>=9.0.6'
+      react: '>=16.8'
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      immer:
+        optional: true
+      react:
+        optional: true
 
 snapshots:
 
@@ -12665,6 +12688,14 @@ snapshots:
       '@tanstack/query-core': 5.29.0
       react: 18.2.0
 
+  '@tanstack/react-table@8.16.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0)':
+    dependencies:
+      '@tanstack/table-core': 8.16.0
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
+
+  '@tanstack/table-core@8.16.0': {}
+
   '@tanstack/virtual-core@3.2.0': {}
 
   '@tanstack/vue-virtual@3.2.0(vue@3.4.21(typescript@5.4.5))':
@@ -12932,7 +12963,9 @@ snapshots:
 
   '@types/prop-types@15.7.12': {}
 
-  '@types/qrcode-svg@1.1.4': {}
+  '@types/qrcode@1.5.5':
+    dependencies:
+      '@types/node': 20.12.2
 
   '@types/react-dom@18.2.25':
     dependencies:
@@ -16198,6 +16231,11 @@ snapshots:
       next: 14.2.2(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       react: 18.2.0
 
+  next-runtime-env@3.2.1(next@14.2.2(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react@18.2.0):
+    dependencies:
+      next: 14.2.2(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+      react: 18.2.0
+
   next-themes@0.3.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0):
     dependencies:
       react: 18.2.0
@@ -17410,8 +17448,6 @@ snapshots:
 
   pvutils@1.1.3: {}
 
-  qrcode-svg@1.1.0: {}
-
   qrcode@1.5.3:
     dependencies:
       dijkstrajs: 1.0.3
@@ -17486,6 +17522,11 @@ snapshots:
       use-sidecar: 1.1.2(@types/react@18.2.77)(react@18.2.0)
     optionalDependencies:
       '@types/react': 18.2.77
+
+  react-resizable-panels@2.0.18(react-dom@18.2.0(react@18.2.0))(react@18.2.0):
+    dependencies:
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
 
   react-style-singleton@2.2.1(@types/react@18.2.77)(react@18.2.0):
     dependencies:
@@ -18586,6 +18627,10 @@ snapshots:
     optionalDependencies:
       '@types/react': 18.2.77
 
+  use-sync-external-store@1.2.0(react@18.2.0):
+    dependencies:
+      react: 18.2.0
+
   util-deprecate@1.0.2: {}
 
   uuid@8.3.2: {}
@@ -18611,7 +18656,7 @@ snapshots:
       debug: 4.3.4
       pathe: 1.1.2
       picocolors: 1.0.0
-      vite: 5.1.6(@types/node@20.11.29)(terser@5.29.2)
+      vite: 5.2.8(@types/node@20.11.29)(terser@5.29.2)
     transitivePeerDependencies:
       - '@types/node'
       - less
@@ -18628,7 +18673,7 @@ snapshots:
       debug: 4.3.4
       pathe: 1.1.2
       picocolors: 1.0.0
-      vite: 5.1.6(@types/node@20.12.2)(terser@5.29.2)
+      vite: 5.2.8(@types/node@20.12.2)(terser@5.29.2)
     transitivePeerDependencies:
       - '@types/node'
       - less
@@ -18752,26 +18797,6 @@ snapshots:
       vite: 5.2.8(@types/node@20.12.2)(terser@5.29.2)
     transitivePeerDependencies:
       - supports-color
-
-  vite@5.1.6(@types/node@20.11.29)(terser@5.29.2):
-    dependencies:
-      esbuild: 0.19.12
-      postcss: 8.4.38
-      rollup: 4.13.0
-    optionalDependencies:
-      '@types/node': 20.11.29
-      fsevents: 2.3.3
-      terser: 5.29.2
-
-  vite@5.1.6(@types/node@20.12.2)(terser@5.29.2):
-    dependencies:
-      esbuild: 0.19.12
-      postcss: 8.4.38
-      rollup: 4.13.0
-    optionalDependencies:
-      '@types/node': 20.12.2
-      fsevents: 2.3.3
-      terser: 5.29.2
 
   vite@5.2.8(@types/node@20.11.29)(terser@5.29.2):
     dependencies:
@@ -19075,3 +19100,10 @@ snapshots:
       zod: 3.22.4
 
   zod@3.22.4: {}
+
+  zustand@4.5.2(@types/react@18.2.77)(react@18.2.0):
+    dependencies:
+      use-sync-external-store: 1.2.0(react@18.2.0)
+    optionalDependencies:
+      '@types/react': 18.2.77
+      react: 18.2.0

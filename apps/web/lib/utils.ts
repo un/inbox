@@ -49,5 +49,6 @@ export const generateAvatarUrl = ({
 export const getInitials = (input: string) =>
   input
     .split(/\s/)
-    .map((chunk) => chunk.charAt(0))
-    .slice(0, 2);
+    .map((chunk) => chunk.charAt(0).toUpperCase())
+    .slice(0, 2)
+    .join('');

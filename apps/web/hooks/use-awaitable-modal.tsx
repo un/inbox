@@ -1,6 +1,6 @@
 import { useRef, useState, type ReactNode } from 'react';
 
-type AwaitableModalApi<ResolveArgs, OpenArgs> = {
+export type AwaitableModalApi<ResolveArgs, OpenArgs> = {
   open: boolean;
   args?: OpenArgs;
   onClose: () => void;

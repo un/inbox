@@ -71,7 +71,7 @@ export default function CreateOrgButton({
       orgShortcode: debouncedOrgShortCode
     });
     toast.success('Organization created successfully.');
-    router.push(`/profile?org=${debouncedOrgShortCode}`);
+    router.push(`/join/profile?org=${debouncedOrgShortCode}`);
   });
 
   useEffect(() => {

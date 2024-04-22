@@ -3,20 +3,15 @@
 import { datePlus } from 'itty-time';
 import { Avatar, Button, Card, Flex, Spinner, Text } from '@radix-ui/themes';
 import Link from 'next/link';
-import { api } from '@/lib/trpc';
+import { api, isAuthenticated } from '@/lib/trpc';
 import useLoading from '@/hooks/use-loading';
 import { useCookies } from 'next-client-cookies';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { generateAvatarUrl, getInitials } from '@/lib/utils';
+import { useQuery } from '@tanstack/react-query';
 
-export default function InviteCard({
-  signedIn,
-  code
-}: {
-  code: string;
-  signedIn: boolean;
-}) {
+export default function InviteCard({ code }: { code: string }) {
   const inviteDataApi = api.useUtils().org.users.invites.validateInvite;
   const router = useRouter();
   const cookies = useCookies();
@@ -36,11 +31,18 @@ export default function InviteCard({
     );
   });
 
+  const { isPending: signedInLoading, data: signedIn } = useQuery({
+    enabled: true,
+    queryKey: ['auth', 'status'],
+    queryFn: isAuthenticated
+  });
+
   useEffect(() => {
     checkInvite();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (inviteLoading || (!inviteData && !inviteError)) {
+  if (inviteLoading || (!inviteData && !inviteError) || signedInLoading) {
     return (
       <Card className="mx-auto my-4 max-w-[450px]">
         <Flex
@@ -132,7 +134,7 @@ export default function InviteCard({
                 align="center"
                 gap="2">
                 <Avatar
-                  src={orgAvatar || undefined}
+                  src={orgAvatar ?? undefined}
                   fallback={getInitials(inviteData.orgName)}
                   className="h-10 w-10 rounded-full"
                 />

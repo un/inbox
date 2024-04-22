@@ -7,6 +7,7 @@ import { useState } from 'react';
 import SuperJSON from 'superjson';
 import { useParams } from 'next/navigation';
 import type { TrpcPlatformRouter } from '@u22n/platform/trpc';
+import { env } from 'next-runtime-env';
 
 const createQueryClient = () =>
   new QueryClient({
@@ -33,6 +34,7 @@ export const api = createTRPCReact<TrpcPlatformRouter>();
 export function TRPCReactProvider(props: { children: React.ReactNode }) {
   const queryClient = getQueryClient();
   const params = useParams();
+  const PLATFORM_URL = env('NEXT_PUBLIC_PLATFORM_URL');
 
   const [trpcClient] = useState(() =>
     api.createClient({
@@ -44,12 +46,12 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
         }),
         httpBatchLink({
           transformer: SuperJSON,
-          url: getBaseUrl() + '/trpc',
+          url: `${PLATFORM_URL}/trpc`,
           headers: async () => {
-            let headers = new Headers();
+            const headers = new Headers();
 
             if (typeof params.orgShortCode === 'string') {
-              headers.set('org-shortcode', params.orgShortCode as string);
+              headers.set('org-shortcode', params.orgShortCode);
             }
             return headers;
           },
@@ -71,8 +73,18 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
   );
 }
 
-function getBaseUrl() {
-  if (process.env.NEXT_PUBLIC_PLATFORM_URL)
-    return process.env.NEXT_PUBLIC_PLATFORM_URL;
-  throw new Error('PLATFORM_URL is not set');
+export async function isAuthenticated() {
+  const PLATFORM_URL = env('NEXT_PUBLIC_PLATFORM_URL');
+  try {
+    const data = (await fetch(`${PLATFORM_URL}/auth/status`, {
+      credentials: 'include'
+    }).then((r) => r.json())) as {
+      authStatus: 'authenticated' | 'unauthenticated';
+    };
+    const authenticated = data.authStatus === 'authenticated';
+    return authenticated;
+  } catch (e) {
+    console.error(e);
+    return false;
+  }
 }

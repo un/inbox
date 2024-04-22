@@ -21,7 +21,7 @@ export default function Page() {
   const router = useRouter();
 
   if (!username) {
-    return redirect('/join', RedirectType.replace);
+    redirect('/join', RedirectType.replace);
   }
 
   const { ModalRoot: PasskeyModalRoot, openModal: signUpWithPasskey } =

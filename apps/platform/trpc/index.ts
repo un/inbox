@@ -20,6 +20,7 @@ import { addressRouter } from './routers/userRouter/addressRouter';
 import { defaultsRouter } from './routers/userRouter/defaultsRouter';
 import { twoFactorRouter } from './routers/authRouter/twoFactorRouter';
 import { securityRouter } from './routers/userRouter/securityRouter';
+import { storeRouter } from './routers/orgRouter/orgStoreRouter';
 
 export const trpcPlatformContext = createContext;
 
@@ -42,6 +43,7 @@ const trpcPlatformOrgSetupRouter = router({
   profile: orgProfileRouter,
   billing: billingRouter
 });
+
 const trpcPlatformOrgUsersRouter = router({
   invites: invitesRouter,
   members: orgMembersRouter,
@@ -57,7 +59,8 @@ const trpcPlatformOrgRouter = router({
   contacts: contactsRouter,
   setup: trpcPlatformOrgSetupRouter,
   users: trpcPlatformOrgUsersRouter,
-  mail: trpcPlatformOrgMailRouter
+  mail: trpcPlatformOrgMailRouter,
+  store: storeRouter
 });
 
 export const trpcPlatformRouter = router({

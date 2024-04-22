@@ -1,5 +1,5 @@
 import { isAuthenticated, serverApi } from '@/lib/trpc.server';
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 
 // Known public routes, add more as needed
 const publicRoutes = ['/', '/join', '/join/secure'];
@@ -19,7 +19,7 @@ export default async function middleware(req: NextRequest) {
         .catch(() => null);
       if (redirectData) {
         return NextResponse.redirect(
-          new URL(redirectData.defaultOrgShortcode || '/join/org', req.nextUrl)
+          new URL(redirectData.defaultOrgShortcode ?? '/join/org', req.nextUrl)
         );
       }
     } else {

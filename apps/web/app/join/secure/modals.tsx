@@ -11,14 +11,14 @@ import {
   Card
 } from '@radix-ui/themes';
 import useAwaitableModal from '@/hooks/use-awaitable-modal';
-import { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import { type Dispatch, type SetStateAction, useEffect, useState } from 'react';
 import { api } from '@/lib/trpc';
 import useLoading from '@/hooks/use-loading';
 import { startRegistration } from '@simplewebauthn/browser';
 import { Check, Plus, Fingerprint, HelpCircle } from 'lucide-react';
 import TogglePasswordBox from '@/components/toggle-password';
 import { useDebounce } from '@uidotdev/usehooks';
-import QrCode from 'qrcode-svg';
+import { toDataURL } from 'qrcode';
 import CopyButton from '@/components/copy-button';
 import {
   InputOTP,
@@ -27,6 +27,7 @@ import {
   InputOTPSlot
 } from '@/components/input-otp';
 import { downloadAsFile } from '@/lib/utils';
+import Image from 'next/image';
 
 export const passkeyModal = ({ username }: { username: string }) =>
   useAwaitableModal(({ open, onClose, onResolve }) => {
@@ -175,7 +176,7 @@ const PasswordModalStep1 = ({
 }) => {
   const [error, setError] = useState<string | null>(null);
   const [confirmPassword, setConfirmPassword] = useState<string>(
-    password || ''
+    password ?? ''
   );
   const debouncedPassword = useDebounce(password, 1000);
 
@@ -204,6 +205,7 @@ const PasswordModalStep1 = ({
   useEffect(() => {
     if (typeof debouncedPassword === 'undefined') return;
     checkPassword({ clearData: true, clearError: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedPassword]);
 
   const passwordValid =
@@ -346,6 +348,7 @@ const PasswordModalStep2 = ({
   setStep: Dispatch<SetStateAction<number>>;
 }) => {
   const [error, setError] = useState<Error | null>(null);
+  const [qrCode, setQrCode] = useState<string | null>(null);
 
   const twoFaChallenge =
     api.useUtils().auth.twoFactorAuthentication.createTwoFactorChallenge;
@@ -356,15 +359,24 @@ const PasswordModalStep2 = ({
     data: twoFaData,
     loading: twoFaLoading,
     run: generate2Fa
-  } = useLoading(async (signal) => {
-    return await twoFaChallenge.fetch({ username }, { signal }).catch((e) => {
-      setError(e);
-      throw e;
-    });
-  });
+  } = useLoading(
+    async (signal) => {
+      return await twoFaChallenge
+        .fetch({ username }, { signal })
+        .catch((e: Error) => {
+          setError(e);
+          throw e;
+        });
+    },
+    {
+      onSuccess({ uri }) {
+        void toDataURL(uri, { margin: 3 }).then((qr) => setQrCode(qr));
+      }
+    }
+  );
 
   const totpSecret = twoFaData
-    ? twoFaData.uri.match(/secret=([^&]+)/)?.[1] || ''
+    ? twoFaData.uri.match(/secret=([^&]+)/)?.[1] ?? ''
     : '';
 
   const { loading: signUpLoading, run: signUp } = useLoading(async () => {
@@ -380,29 +392,16 @@ const PasswordModalStep2 = ({
         recoveryCode: data.recoveryCode!
       });
     } else {
-      setError(new Error(data.error || 'An unknown error occurred'));
+      setError(new Error(data.error ?? 'An unknown error occurred'));
     }
   });
 
   useEffect(() => {
     generate2Fa();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const inputValid = Boolean(password) && twoFactorCode.length === 6;
-
-  const generateQrCode = (uri: string) => {
-    const qr = new QrCode({
-      content: uri,
-      padding: 2,
-      width: 200,
-      height: 200,
-      color: '#000000',
-      background: '#ffffff',
-      join: true,
-      ecl: 'L'
-    });
-    return `data:image/svg+xml;base64,${btoa(qr.svg())}`;
-  };
 
   return (
     <Flex
@@ -434,11 +433,17 @@ const PasswordModalStep2 = ({
             Scan this QR code with your 2FA app
           </Text>
           <Box className="mx-auto w-full max-w-48">
-            <img
-              src={generateQrCode(twoFaData.uri)}
-              alt="QrCode for 2FA"
-              className="w-fit rounded"
-            />
+            <>
+              {qrCode && (
+                <Image
+                  src={qrCode}
+                  width={200}
+                  height={200}
+                  alt="QrCode for 2FA"
+                  className="w-fit rounded"
+                />
+              )}
+            </>
           </Box>
 
           <TextField.Root
@@ -509,7 +514,7 @@ const PasswordModalStep2 = ({
 };
 
 export const recoveryCodeModal = () =>
-  useAwaitableModal<{}, { recoveryCode: string; username: string }>(
+  useAwaitableModal<unknown, { recoveryCode: string; username: string }>(
     ({ onResolve, open, args }) => {
       const [downloaded, setDownloaded] = useState(false);
 

@@ -3,6 +3,7 @@ import type { Config } from 'tailwindcss';
 import radixColors from 'tailwindcss-radix-colors';
 
 const config: Config = {
+  darkMode: 'class',
   content: [
     './components/**/*.{js,ts,jsx,tsx,mdx}',
     './app/**/*.{js,ts,jsx,tsx,mdx}'

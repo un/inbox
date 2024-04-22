@@ -1,7 +1,7 @@
 'use client';
 
 import { Button, Flex, Text, TextField } from '@radix-ui/themes';
-import { avatarModal } from './avatar-modal';
+import { useAvatarModal } from './avatar-modal';
 import { api } from '@/lib/trpc';
 import Stepper from '../Stepper';
 import { useEffect, useState } from 'react';
@@ -25,15 +25,15 @@ type ProfileCardProps = {
 
 export default function ProfileCard({ orgData, wasInvited }: ProfileCardProps) {
   const { ModalRoot: AvatarModalRoot, openModal: avatarModalOpen } =
-    avatarModal({
+    useAvatarModal({
       publicId: orgData.profile.publicId
     });
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [firstNameValue, setFirstNameValue] = useState<string>(
-    orgData.profile.firstName || orgData.profile.handle || ''
+    orgData.profile.firstName ?? orgData.profile.handle ?? ''
   );
   const [lastNameValue, setLastNameValue] = useState<string>(
-    orgData.profile.lastName || ''
+    orgData.profile.lastName ?? ''
   );
 
   const router = useRouter();
@@ -63,10 +63,10 @@ export default function ProfileCard({ orgData, wasInvited }: ProfileCardProps) {
     await updateProfileApi.mutateAsync({
       fName: firstNameValue,
       lName: lastNameValue,
-      blurb: orgData.profile.blurb || '',
-      handle: orgData.profile.handle || '',
+      blurb: orgData.profile.blurb ?? '',
+      handle: orgData.profile.handle ?? '',
       profilePublicId: orgData.profile.publicId,
-      title: orgData.profile.title || ''
+      title: orgData.profile.title ?? ''
     });
     router.push('/');
   });

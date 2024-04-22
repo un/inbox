@@ -6,6 +6,8 @@ import { Theme, ThemePanel } from '@radix-ui/themes';
 import { ThemeProvider } from 'next-themes';
 import { TRPCReactProvider } from '@/lib/trpc';
 import Toaster from '@/components/toaster';
+import { CookiesProvider } from 'next-client-cookies/server';
+import { PublicEnvScript } from 'next-runtime-env';
 
 import './globals.css';
 
@@ -37,26 +39,31 @@ export default function RootLayout({
       lang="en"
       className="h-full w-full font-sans antialiased"
       suppressHydrationWarning>
-      <body className={cn(inter.variable, calSans.variable, 'h-full')}>
-        <ThemeProvider
-          attribute="class"
-          enableSystem
-          enableColorScheme
-          defaultTheme="system"
-          disableTransitionOnChange>
-          <Theme
-            className="flex h-full w-full flex-col"
-            radius="medium">
-            <TRPCReactProvider>
-              {process.env.NODE_ENV === 'development' && (
-                <ThemePanel defaultOpen={false} />
-              )}
-              <Toaster />
-              {children}
-              <div id="modal-root" />
-            </TRPCReactProvider>
-          </Theme>
-        </ThemeProvider>
+      <head>
+        <PublicEnvScript />
+      </head>
+      <body
+        className={cn(inter.variable, calSans.variable, 'h-full font-sans')}>
+        <CookiesProvider>
+          <ThemeProvider
+            attribute="class"
+            enableSystem
+            enableColorScheme
+            defaultTheme="system"
+            disableTransitionOnChange>
+            <Theme
+              className="flex h-full w-full flex-col"
+              radius="medium">
+              <TRPCReactProvider>
+                {process.env.NODE_ENV === 'development' && (
+                  <ThemePanel defaultOpen={false} />
+                )}
+                <Toaster />
+                {children}
+              </TRPCReactProvider>
+            </Theme>
+          </ThemeProvider>
+        </CookiesProvider>
       </body>
     </html>
   );

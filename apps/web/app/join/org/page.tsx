@@ -1,11 +1,13 @@
+'use client';
 import { Flex, Text } from '@radix-ui/themes';
 import Stepper from '../Stepper';
-import { cookies } from 'next/headers';
 import CreateOrgButton from './CreateOrg';
 import JoinOrgButton from './JoinOrg';
+import { useCookies } from 'next-client-cookies';
 
-export default async function JoinOrg() {
-  const inviteCode = cookies().get('un-invite-code')?.value;
+export default function JoinOrg() {
+  const cookies = useCookies();
+  const inviteCode = cookies.get('un-invite-code');
   const hasInviteCode = !!inviteCode;
 
   return (
@@ -37,8 +39,8 @@ export default async function JoinOrg() {
           size="2"
           className="text-balance"
           weight="medium">
-          If you're planning on using UnInbox alone, you'll still need an
-          organization to manage all the settings.
+          If you&apos;re planning on using UnInbox alone, you&apos;ll still need
+          an organization to manage all the settings.
         </Text>
         <Text
           size="2"
