@@ -57,14 +57,11 @@
   });
 
   const typeClasses = computed(() => {
-    if (userIsAuthor.value) {
-      return 'bg-blue-10 text-white';
-    }
     switch (messageType.value) {
       case 'message':
-        return 'bg-base-5 text-base-12';
+        return 'bg-blue-10 text-white bg-base-5 text-base-12';
       case 'comment':
-        return 'bg-base-4 text-base-12 ';
+        return 'bg-blue-5 text-black bg-base-4 text-base-12 ';
       default:
         return 'bg-base-1';
     }
