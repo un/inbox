@@ -20,18 +20,18 @@
     await navigateTo(`/${orgShortcode}/settings`);
   }
 
-  const groupPublicId = route.params.groupId as string;
-  const isNewGroup = route.query.new === 'true';
+  const teamPublicId = route.params.teamId as string;
+  const isNewTeam = route.query.new === 'true';
 
   const showAddNewOrgMember = ref(false);
 
   const addingOrgMemberId = ref('');
 
-  const { data: groupData, pending: groupPending } =
-    await $trpc.org.users.groups.getGroup.useLazyQuery(
+  const { data: teamData, pending: teamPending } =
+    await $trpc.org.users.teams.getTeam.useLazyQuery(
       {
-        groupPublicId: groupPublicId,
-        newGroup: isNewGroup
+        teamPublicId: teamPublicId,
+        newTeam: isNewTeam
       },
       { server: false }
     );
@@ -53,7 +53,7 @@
     }
   ];
   interface TableRow {
-    groupMemberPublicId: TypeId<'groupMembers'>;
+    teamMemberPublicId: TypeId<'teamMembers'>;
     orgMemberPublicId: TypeId<'orgMembers'> | null;
     orgMemberProfilePublicId: TypeId<'orgMemberProfile'> | null;
     avatarTimestamp: Date | null;
@@ -64,13 +64,13 @@
     notifications: string;
   }
 
-  const orgMembersInGroup = ref<string[]>([]);
+  const orgMembersInTeam = ref<string[]>([]);
   const tableRows = ref<TableRow[]>([]);
-  watch(groupData, (newResults) => {
-    if (newResults?.group?.members) {
-      for (const member of newResults.group.members) {
+  watch(teamData, (newResults) => {
+    if (newResults?.team?.members) {
+      for (const member of newResults.team.members) {
         tableRows.value.push({
-          groupMemberPublicId: member.publicId,
+          teamMemberPublicId: member.publicId,
           orgMemberPublicId: member.orgMember.publicId,
           orgMemberProfilePublicId: member.orgMemberProfile?.publicId || null,
           avatarTimestamp: member.orgMemberProfile?.avatarTimestamp || null,
@@ -83,7 +83,7 @@
           role: member.role,
           notifications: member.notifications
         });
-        orgMembersInGroup.value.push(member.orgMember.publicId);
+        orgMembersInTeam.value.push(member.orgMember.publicId);
       }
     }
   });
@@ -114,7 +114,7 @@
   watch(orgMembersData, (newOrgMembersData) => {
     if (newOrgMembersData?.members) {
       for (const member of newOrgMembersData.members) {
-        if (!orgMembersInGroup.value.includes(member.publicId)) {
+        if (!orgMembersInTeam.value.includes(member.publicId)) {
           orgMembersDropdownData.value.push({
             orgMemberPublicId: member.publicId,
             label:
@@ -136,23 +136,23 @@
     undefined
   );
 
-  async function addNewOrgMemberToGroup(orgMemberPublicId: string) {
+  async function addNewOrgMemberToTeam(orgMemberPublicId: string) {
     const toast = useToast();
     addingOrgMemberId.value = orgMemberPublicId;
-    const addOrgMemberToGroupTrpc =
-      $trpc.org.users.groups.addOrgMemberToGroup.useMutation();
-    await addOrgMemberToGroupTrpc.mutate({
-      groupPublicId: groupPublicId,
+    const addOrgMemberToTeamTrpc =
+      $trpc.org.users.teams.addOrgMemberToTeam.useMutation();
+    await addOrgMemberToTeamTrpc.mutate({
+      teamPublicId: teamPublicId,
       orgMemberPublicId: orgMemberPublicId
     });
     if (
-      addOrgMemberToGroupTrpc.status.value === 'error' ||
-      !addOrgMemberToGroupTrpc.data.value?.publicId
+      addOrgMemberToTeamTrpc.status.value === 'error' ||
+      !addOrgMemberToTeamTrpc.data.value?.publicId
     ) {
       toast.add({
-        id: 'add_org_member_to_group_fail',
-        title: 'Could not add org member to group',
-        description: `${selectedOrgMemberToAdd.value?.name} could not be added to the ${groupData.value?.group?.name} group`,
+        id: 'add_org_member_to_team_fail',
+        title: 'Could not add org member to team',
+        description: `${selectedOrgMemberToAdd.value?.name} could not be added to the ${teamData.value?.team?.name} team`,
         color: 'red',
         icon: 'i-ph-warning-circle',
         timeout: 5000
@@ -160,13 +160,13 @@
       return;
     }
 
-    orgMembersInGroup.value.push(orgMemberPublicId);
+    orgMembersInTeam.value.push(orgMemberPublicId);
     // get the org member profile from the org members list
     const member = orgMembersData?.value?.members?.find(
       (member) => member.publicId === orgMemberPublicId
     );
     tableRows.value.push({
-      groupMemberPublicId: addOrgMemberToGroupTrpc.data.value?.publicId,
+      teamMemberPublicId: addOrgMemberToTeamTrpc.data.value?.publicId,
       orgMemberPublicId: member?.publicId || null,
       orgMemberProfilePublicId: member?.profile.publicId || null,
       avatarTimestamp: member?.profile.avatarTimestamp || null,
@@ -179,9 +179,9 @@
 
     addingOrgMemberId.value = '';
     toast.add({
-      id: 'org_member_added_to_group',
+      id: 'org_member_added_to_team',
       title: 'Org Member Added',
-      description: `${selectedOrgMemberToAdd.value?.name} has been added to the ${groupData.value?.group?.name} group`,
+      description: `${selectedOrgMemberToAdd.value?.name} has been added to the ${teamData.value?.team?.name} team`,
       icon: 'i-ph-thumbs-up',
       timeout: 5000
     });
@@ -196,30 +196,30 @@
           icon="i-ph-arrow-left"
           square
           variant="soft"
-          @click="navigateTo(`/${orgShortcode}/settings/org/users/groups`)" />
+          @click="navigateTo(`/${orgShortcode}/settings/org/users/teams`)" />
 
         <UnUiAvatar
-          v-if="groupData?.group"
-          :color="groupData?.group?.color || ('base' as UiColor)"
-          :name="groupData?.group?.name"
-          :public-id="groupData?.group?.publicId"
-          :avatar-timestamp="groupData?.group?.avatarTimestamp"
-          :type="'group'"
+          v-if="teamData?.team"
+          :color="teamData?.team?.color || ('base' as UiColor)"
+          :name="teamData?.team?.name"
+          :public-id="teamData?.team?.publicId"
+          :avatar-timestamp="teamData?.team?.avatarTimestamp"
+          :type="'team'"
           size="lg" />
 
         <div class="flex flex-col gap-1">
           <span
-            v-if="!groupPending"
+            v-if="!teamPending"
             class="font-display text-2xl">
-            {{ groupData?.group?.name }}
+            {{ teamData?.team?.name }}
           </span>
           <span
-            v-if="!groupPending"
+            v-if="!teamPending"
             class="text-xl">
-            {{ groupData?.group?.description }}
+            {{ teamData?.team?.description }}
           </span>
           <span
-            v-if="groupPending"
+            v-if="teamPending"
             class="font-mono text-2xl">
             Loading...
           </span>
@@ -228,28 +228,28 @@
     </div>
     <div class="flex w-full flex-col gap-8 overflow-y-auto">
       <div
-        v-if="groupPending"
+        v-if="teamPending"
         class="flex w-full flex-col gap-8">
         <div class="flex flex-row items-center gap-4">
           <div class="flex flex-col gap-1">
             <span class="font-display text-2xl">Loading...</span>
-            <span class="text-sm">Please wait while we load your group</span>
+            <span class="text-sm">Please wait while we load your team</span>
           </div>
         </div>
       </div>
       <div
-        v-if="!groupPending && !groupData?.group"
+        v-if="!teamPending && !teamData?.team"
         class="flex w-full flex-col gap-8">
         <div class="flex flex-row items-center gap-4">
           <div class="flex flex-col gap-1">
-            <span class="font-display text-2xl">Group not found</span>
+            <span class="font-display text-2xl">Team not found</span>
             <span class="text-sm"></span>
           </div>
         </div>
       </div>
 
       <div
-        v-if="!groupPending && groupData?.group"
+        v-if="!teamPending && teamData?.team"
         class="flex w-full flex-col gap-8">
         <div class="flex flex-col gap-4">
           <div class="border-b-1 border-base-5 w-full pb-2">
@@ -261,7 +261,7 @@
             :columns="tableColumns"
             :rows="tableRows"
             class="text-md"
-            :loading="groupPending">
+            :loading="teamPending">
             <template #name-data="{ row }">
               <div class="flex flex-row items-center gap-2">
                 <UnUiAvatar
@@ -317,7 +317,7 @@
           </NuxtUiTable>
           <UnUiButton
             v-if="!showAddNewOrgMember"
-            label="Add more users to the group"
+            label="Add more users to the team"
             @click="showAddOrgMember()" />
           <div
             v-if="showAddNewOrgMember && orgMembersPending"
@@ -325,7 +325,7 @@
             <UnUiIcon
               name="i-svg-spinners:3-dots-fade"
               size="32" />
-            <span>Loading group members</span>
+            <span>Loading team members</span>
           </div>
           <div
             v-if="showAddNewOrgMember && !orgMembersPending"
@@ -371,11 +371,11 @@
               </template>
             </NuxtUiSelectMenu>
             <UnUiButton
-              label="Add to group"
+              label="Add to team"
               size="sm"
               :disabled="!selectedOrgMemberToAdd"
               @click="
-                addNewOrgMemberToGroup(
+                addNewOrgMemberToTeam(
                   selectedOrgMemberToAdd?.orgMemberPublicId || ''
                 )
               " />

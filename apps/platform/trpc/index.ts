@@ -13,7 +13,7 @@ import { contactsRouter } from './routers/contactRouter/contactRouter';
 import { orgProfileRouter } from './routers/orgRouter/setup/profileRouter';
 import { orgMembersRouter } from './routers/orgRouter/users/membersRouter';
 import { domainsRouter } from './routers/orgRouter/mail/domainsRouter';
-import { groupsRouter } from './routers/orgRouter/users/groupsRouter';
+import { teamsRouter } from './routers/orgRouter/users/teamsRouter';
 import { emailIdentityRouter } from './routers/orgRouter/mail/emailIdentityRouter';
 import { billingRouter } from './routers/orgRouter/setup/billingRouter';
 import { addressRouter } from './routers/userRouter/addressRouter';
@@ -45,7 +45,7 @@ const trpcPlatformOrgSetupRouter = router({
 const trpcPlatformOrgUsersRouter = router({
   invites: invitesRouter,
   members: orgMembersRouter,
-  groups: groupsRouter
+  teams: teamsRouter
 });
 const trpcPlatformOrgMailRouter = router({
   domains: domainsRouter,

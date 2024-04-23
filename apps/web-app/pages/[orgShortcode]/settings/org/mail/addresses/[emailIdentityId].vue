@@ -96,23 +96,23 @@
               ?.routingRules.destinations"
             :key="destination.id">
             <div
-              v-if="destination.groupId && destination.group"
+              v-if="destination.teamId && destination.team"
               class="bg-base-2 flex flex-row items-center gap-8 rounded-xl p-2">
               <div class="flex flex-row items-center gap-4">
                 <UnUiAvatar
-                  :public-id="destination.group?.publicId"
-                  :avatar-timestamp="destination.group?.avatarTimestamp"
-                  :type="'group'"
-                  :alt="destination.group?.name"
-                  :color="destination.group?.color as UiColor"
+                  :public-id="destination.team?.publicId"
+                  :avatar-timestamp="destination.team?.avatarTimestamp"
+                  :type="'team'"
+                  :alt="destination.team?.name"
+                  :color="destination.team?.color as UiColor"
                   size="xs" />
                 <div class="flex flex-col gap-1">
                   <span class="font-semibold leading-none">
-                    {{ destination.group?.name }}
+                    {{ destination.team?.name }}
                   </span>
 
                   <span class="leading-none">
-                    {{ destination.group?.description }}
+                    {{ destination.team?.description }}
                   </span>
                 </div>
               </div>

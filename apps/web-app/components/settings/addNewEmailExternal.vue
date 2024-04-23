@@ -67,7 +67,7 @@
         smtpValid.value === true &&
         newIdentityEmailValid.value === true &&
         newIdentitySendNameValid.value === true &&
-        (selectedOrgGroups.value.length > 0 ||
+        (selectedOrgTeams.value.length > 0 ||
           selectedOrgMembers.value.length > 0) &&
         !multipleDestinationsSelected.value
       );
@@ -76,41 +76,37 @@
       smtpValid.value === true &&
       newIdentityEmailValid.value === true &&
       newIdentitySendNameValid.value === true &&
-      (selectedOrgGroups.value.length > 0 ||
-        selectedOrgMembers.value.length > 0)
+      (selectedOrgTeams.value.length > 0 || selectedOrgMembers.value.length > 0)
     );
   });
 
-  // get list of groups
-  const { data: orgGroupsData, pending: orgGroupPending } =
-    await $trpc.org.users.groups.getOrgGroups.useLazyQuery(
-      {},
-      { server: false }
-    );
-  interface OrgUserGroups {
-    publicId: TypeId<'groups'>;
+  // get list of teams
+  const { data: orgTeamsData, pending: orgTeamPending } =
+    await $trpc.org.users.teams.getOrgTeams.useLazyQuery({}, { server: false });
+  interface OrgUserTeams {
+    publicId: TypeId<'teams'>;
     avatarTimestamp: Date | null;
     name: String;
     description: String | null;
     color: String | null;
   }
-  const orgUserGroups = ref<OrgUserGroups[]>([]);
+  const orgUserTeams = ref<OrgUserTeams[]>([]);
 
-  watch(orgGroupsData, (newOrgUserGroupsData) => {
-    if (newOrgUserGroupsData?.groups) {
-      for (const group of newOrgUserGroupsData.groups) {
-        orgUserGroups.value.push({
-          publicId: group.publicId,
-          avatarTimestamp: group.avatarTimestamp,
-          name: group.name,
-          description: group.description,
-          color: group.color
+  watch(orgTeamsData, (newOrgUserTeamsData) => {
+    if (newOrgUserTeamsData?.teams) {
+      for (const team of newOrgUserTeamsData.teams) {
+        orgUserTeams.value.push({
+          publicId: team.publicId,
+          avatarTimestamp: team.avatarTimestamp,
+          name: team.name,
+          description: team.description,
+          color: team.color
         });
       }
     }
   });
 
-  const selectedOrgGroups = ref<OrgUserGroups[]>([]);
+  const selectedOrgTeams = ref<OrgUserTeams[]>([]);
 
   // get list of users
   const { data: orgMembersData, pending: orgMembersPending } =
@@ -213,8 +209,8 @@
     buttonLabel.value = 'Creating...';
     const toast = useToast();
 
-    const selectedGroupsPublicIds: string[] = selectedOrgGroups.value.map(
-      (group) => group.publicId as string
+    const selectedTeamsPublicIds: string[] = selectedOrgTeams.value.map(
+      (team) => team.publicId as string
     );
     const selectedOrgMembersPublicIds: string[] = selectedOrgMembers.value.map(
       (member) => member.publicId as string
@@ -232,7 +228,7 @@
         encryption: smtpEncryptionMethod.value || 'none',
         authMethod: smtpAuthMethod.value || 'plain'
       },
-      routeToGroupsPublicIds: selectedGroupsPublicIds,
+      routeToTeamsPublicIds: selectedTeamsPublicIds,
       routeToOrgMemberPublicIds: selectedOrgMembersPublicIds
     });
     if (createNewExternalEmailIdentityTrpc.status.value === 'error') {
@@ -262,7 +258,7 @@
   }
 
   const multipleDestinationsSelected = computed(() => {
-    return selectedOrgGroups.value.length + selectedOrgMembers.value.length > 1;
+    return selectedOrgTeams.value.length + selectedOrgMembers.value.length > 1;
   });
 
   function openInternalIdentity() {
@@ -387,53 +383,53 @@
         <div
           class="grid-row-2 md:grid-row-1 grid grid-cols-1 gap-4 md:grid-cols-2">
           <div class="flex flex-col gap-2">
-            <span class="text-sm font-medium">Groups</span>
-            <span v-if="orgGroupPending">
-              <UnUiIcon name="i-svg-spinners:3-dots-fade" /> Loading User Groups
+            <span class="text-sm font-medium">Teams</span>
+            <span v-if="orgTeamPending">
+              <UnUiIcon name="i-svg-spinners:3-dots-fade" /> Loading User Teams
             </span>
             <div
-              v-if="!orgGroupPending"
+              v-if="!orgTeamPending"
               class="flex flex-row flex-wrap gap-4">
-              <span v-if="orgGroupsData?.groups.length === 0">
-                No Groups Found
+              <span v-if="orgTeamsData?.teams.length === 0">
+                No Teams Found
               </span>
               <NuxtUiSelectMenu
                 v-else
-                v-model="selectedOrgGroups"
+                v-model="selectedOrgTeams"
                 multiple
-                placeholder="Select a group"
-                :options="orgUserGroups"
+                placeholder="Select a team"
+                :options="orgUserTeams"
                 class="w-full">
                 <template
-                  v-if="selectedOrgGroups"
+                  v-if="selectedOrgTeams"
                   #label>
                   <UnUiIcon
                     name="i-ph-check"
                     class="h-4 w-4" />
                   <div
-                    v-if="selectedOrgGroups.length"
+                    v-if="selectedOrgTeams.length"
                     class="flex flex-wrap gap-3">
                     <div
-                      v-for="(group, index) in selectedOrgGroups"
+                      v-for="(team, index) in selectedOrgTeams"
                       :key="index"
                       class="flex flex-row items-center gap-1 truncate">
                       <UnUiAvatar
-                        :alt="group.name.toString()"
-                        :public-id="group.publicId"
-                        :avatar-timestamp="group.avatarTimestamp"
-                        :type="'group'"
-                        :color="group.color as UiColor"
+                        :alt="team.name.toString()"
+                        :public-id="team.publicId"
+                        :avatar-timestamp="team.avatarTimestamp"
+                        :type="'team'"
+                        :color="team.color as UiColor"
                         size="3xs" />
-                      <span>{{ group.name }}</span>
+                      <span>{{ team.name }}</span>
                     </div>
                   </div>
-                  <span v-else>Select groups</span>
+                  <span v-else>Select teams</span>
                 </template>
                 <template #option="{ option }">
                   <UnUiAvatar
                     :public-id="option.publicId"
                     :avatar-timestamp="option.avatarTimestamp"
-                    :type="'group'"
+                    :type="'team'"
                     :alt="option.name"
                     :color="option.color as UiColor"
                     size="3xs" />

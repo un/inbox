@@ -20,17 +20,17 @@ export type ConvoAttachmentUpload = {
 
 export type ConvoParticipantEntry = {
   participantPublicId: TypeId<'convoParticipants'>;
-  typePublicId: TypeId<'orgMembers' | 'groups' | 'contacts'>;
-  avatarProfilePublicId: TypeId<'orgMemberProfile' | 'groups' | 'contacts'>;
+  typePublicId: TypeId<'orgMembers' | 'teams' | 'contacts'>;
+  avatarProfilePublicId: TypeId<'orgMemberProfile' | 'teams' | 'contacts'>;
   avatarTimestamp: Date | null;
   name: string;
-  type: 'orgMember' | 'group' | 'contact';
+  type: 'orgMember' | 'team' | 'contact';
   role:
     | 'assigned'
     | 'contributor'
     | 'commenter'
     | 'watcher'
-    | 'groupMember'
+    | 'teamMember'
     | 'guest';
   color: (typeof uiColors)[number] | null;
   signaturePlainText?: string | null;

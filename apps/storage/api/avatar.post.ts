@@ -2,7 +2,7 @@ import {
   orgs,
   orgMemberProfiles,
   orgMembers,
-  groups,
+  teams,
   contacts
 } from '@u22n/database/schema';
 import { validateTypeId } from '@u22n/utils';
@@ -30,7 +30,7 @@ export default eventHandler({
       { name: 'orgMember', value: 'om' },
       { name: 'org', value: 'o' },
       { name: 'contact', value: 'c' },
-      { name: 'group', value: 'g' }
+      { name: 'team', value: 't' }
     ];
 
     const formInputs = await readMultipartFormData(event);
@@ -116,12 +116,12 @@ export default eventHandler({
     } else if (typeObject.name === 'contact') {
       setResponseStatus(event, 400);
       return send(event, 'Not implemented');
-    } else if (typeObject.name === 'group') {
-      if (!validateTypeId('groups', publicId)) {
-        return send(event, 'Invalid groups publicId');
+    } else if (typeObject.name === 'team') {
+      if (!validateTypeId('teams', publicId)) {
+        return send(event, 'Invalid teams publicId');
       }
-      const groupResponse = await db.query.groups.findFirst({
-        where: eq(groups.publicId, publicId),
+      const teamResponse = await db.query.teams.findFirst({
+        where: eq(teams.publicId, publicId),
         columns: {
           id: true,
           avatarTimestamp: true
@@ -140,11 +140,11 @@ export default eventHandler({
           }
         }
       });
-      if (!groupResponse) {
+      if (!teamResponse) {
         setResponseStatus(event, 400);
-        return send(event, 'Invalid group');
+        return send(event, 'Invalid team');
       }
-      const isAdmin = groupResponse.org.members.some(
+      const isAdmin = teamResponse.org.members.some(
         (member) => member.accountId === accountId
       );
       if (!isAdmin) {
@@ -215,16 +215,16 @@ export default eventHandler({
           avatarTimestamp: newAvatarTimestamp
         })
         .where(eq(orgs.publicId, publicId));
-    } else if (typeObject.name === 'group') {
-      if (!validateTypeId('groups', publicId)) {
+    } else if (typeObject.name === 'team') {
+      if (!validateTypeId('teams', publicId)) {
         return send(event, 'Invalid publicId');
       }
       await db
-        .update(groups)
+        .update(teams)
         .set({
           avatarTimestamp: newAvatarTimestamp
         })
-        .where(eq(groups.publicId, publicId));
+        .where(eq(teams.publicId, publicId));
     } else if (typeObject.name === 'contact') {
       if (!validateTypeId('contacts', publicId)) {
         return send(event, 'Invalid publicId');

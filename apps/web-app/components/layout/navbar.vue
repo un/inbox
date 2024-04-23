@@ -46,9 +46,9 @@
       badge: 'Soon'
     },
     {
-      label: 'Group Convos',
+      label: 'Team Convos',
       // to: `/${orgShortcode}/convo`,
-      tooltip: 'Separate your group and personal conversations',
+      tooltip: 'Separate your team and personal conversations',
       icon: 'i-ph-chats-circle',
 
       disabled: true,

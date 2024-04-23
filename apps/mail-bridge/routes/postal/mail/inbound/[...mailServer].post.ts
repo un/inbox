@@ -408,7 +408,7 @@ export default eventHandler(async (event) => {
 
   // get the routing rule destinations for each of the email addresses, then get the users and contacts within those routing rules
 
-  const routingRuleGroupIds: number[] = [];
+  const routingRuleTeamIds: number[] = [];
   const routingRuleOrgMemberIds: number[] = [];
   const emailIdentityResponse = await db.query.emailIdentities.findMany({
     where: and(
@@ -426,7 +426,7 @@ export default eventHandler(async (event) => {
         with: {
           destinations: {
             columns: {
-              groupId: true,
+              teamId: true,
               orgMemberId: true
             }
           }
@@ -436,8 +436,8 @@ export default eventHandler(async (event) => {
   });
   emailIdentityResponse.forEach((emailIdentity) => {
     emailIdentity.routingRules.destinations.forEach((destination) => {
-      if (destination.groupId) {
-        routingRuleGroupIds.push(destination.groupId);
+      if (destination.teamId) {
+        routingRuleTeamIds.push(destination.teamId);
       } else if (destination.orgMemberId) {
         routingRuleOrgMemberIds.push(destination.orgMemberId);
       }
@@ -490,7 +490,7 @@ export default eventHandler(async (event) => {
               columns: {
                 id: true,
                 contactId: true,
-                groupId: true,
+                teamId: true,
                 orgMemberId: true
               }
             }
@@ -542,7 +542,7 @@ export default eventHandler(async (event) => {
         // if not in the convo, we'll set their id later
       }
 
-      // check all the contacts, users and groups in the incoming email are included in the convo participants
+      // check all the contacts, users and teams in the incoming email are included in the convo participants
       const existingConvoParticipantsContactIds =
         existingMessage.convo.participants.map((p) => p.contactId);
       const missingContacts = contactIds.filter(
@@ -553,10 +553,10 @@ export default eventHandler(async (event) => {
       const missingOrgMembers = routingRuleOrgMemberIds.filter(
         (c) => !existingConvoParticipantsOrgMemberIds.includes(c)
       );
-      const existingConvoParticipantsgroupIds =
-        existingMessage.convo.participants.map((p) => p.groupId);
-      const missingUserGroups = routingRuleGroupIds.filter(
-        (c) => !existingConvoParticipantsgroupIds.includes(c)
+      const existingConvoParticipantsteamIds =
+        existingMessage.convo.participants.map((p) => p.teamId);
+      const missingUserTeams = routingRuleTeamIds.filter(
+        (c) => !existingConvoParticipantsteamIds.includes(c)
       );
 
       // - if not, then add them to the convo participants to add array
@@ -582,11 +582,11 @@ export default eventHandler(async (event) => {
           }))
         );
       }
-      if (missingUserGroups.length) {
+      if (missingUserTeams.length) {
         convoParticipantsToAdd.push(
-          ...missingUserGroups.map((groupId) => ({
+          ...missingUserTeams.map((teamId) => ({
             convoId: convoId || 0,
-            groupId: groupId || 0,
+            teamId: teamId || 0,
             orgId: orgId || 0,
             publicId: typeIdGenerator('convoParticipants'),
             role: 'contributor' as const
@@ -641,11 +641,11 @@ export default eventHandler(async (event) => {
         }))
       );
     }
-    if (routingRuleGroupIds.length) {
+    if (routingRuleTeamIds.length) {
       convoParticipantsToAdd.push(
-        ...routingRuleGroupIds.map((groupId) => ({
+        ...routingRuleTeamIds.map((teamId) => ({
           convoId: convoId || 0,
-          groupId: groupId || 0,
+          teamId: teamId || 0,
           orgId: orgId || 0,
           publicId: typeIdGenerator('convoParticipants'),
           role: 'contributor' as const
@@ -675,7 +675,7 @@ export default eventHandler(async (event) => {
       // @ts-expect-error we check and define earlier up
       fromAddressParticipantId = contactParticipant.id;
     } else if (fromAddressPlatformObject.type === 'emailIdentity') {
-      // we need to get the first person/group in the routing rule and add them to the convo
+      // we need to get the first person/team in the routing rule and add them to the convo
       const emailIdentityParticipant = await db.query.emailIdentities.findFirst(
         {
           where: and(
@@ -693,7 +693,7 @@ export default eventHandler(async (event) => {
               with: {
                 destinations: {
                   columns: {
-                    groupId: true,
+                    teamId: true,
                     orgMemberId: true
                   }
                 }
@@ -721,13 +721,13 @@ export default eventHandler(async (event) => {
             }
           });
         // @ts-expect-error we check and define earlier up
-      } else if (firstDestination.groupId) {
+      } else if (firstDestination.teamId) {
         convoParticipantFromAddressIdentity =
           await db.query.convoParticipants.findFirst({
             where: and(
               eq(convoParticipants.orgId, orgId),
               eq(convoParticipants.convoId, convoId || 0),
-              eq(convoParticipants.groupId, firstDestination!.groupId)
+              eq(convoParticipants.teamId, firstDestination!.teamId)
             ),
             columns: {
               id: true

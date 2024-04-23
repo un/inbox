@@ -15,18 +15,18 @@ import {
   convos,
   convoParticipants,
   convoSubjects,
-  groups,
+  teams,
   orgMembers,
   contacts,
   contactGlobalReputations,
   convoEntries,
-  groupMembers,
+  teamMembers,
   convoAttachments,
   pendingAttachments,
   convoEntryReplies,
   convoSeenTimestamps,
   convoEntrySeenTimestamps,
-  convoParticipantGroupMembers,
+  convoParticipantTeamMembers,
   emailIdentities,
   convoEntryPrivateVisibilityParticipants,
   convoEntryRawHtmlEmails
@@ -45,16 +45,16 @@ export const convoRouter = router({
     .input(
       z.object({
         participantsOrgMembersPublicIds: z.array(typeIdValidator('orgMembers')),
-        participantsGroupsPublicIds: z.array(typeIdValidator('groups')),
+        participantsTeamsPublicIds: z.array(typeIdValidator('teams')),
         participantsContactsPublicIds: z.array(typeIdValidator('contacts')),
         participantsEmails: z.array(z.string()),
         sendAsEmailIdentityPublicId:
           typeIdValidator('emailIdentities').optional(),
         to: z
           .object({
-            type: z.enum(['orgMember', 'group', 'contact']),
+            type: z.enum(['orgMember', 'team', 'contact']),
             publicId: typeIdValidator('orgMembers')
-              .or(typeIdValidator('groups'))
+              .or(typeIdValidator('teams'))
               .or(typeIdValidator('contacts'))
           })
           .or(
@@ -98,7 +98,7 @@ export const convoRouter = router({
         sendAsEmailIdentityPublicId,
         participantsEmails,
         participantsOrgMembersPublicIds,
-        participantsGroupsPublicIds,
+        participantsTeamsPublicIds,
         participantsContactsPublicIds,
         topic,
         message: messageString,
@@ -122,7 +122,7 @@ export const convoRouter = router({
       };
       const orgMemberIds: IdPairOrgMembers[] = [];
       const orgMemberPublicIdsForNotifications: TypeId<'orgMembers'>[] = [];
-      const orgGroupIds: IdPair[] = [];
+      const orgTeamIds: IdPair[] = [];
       const orgContactIds: IdPair[] = [];
       const orgContactReputationIds: number[] = [];
 
@@ -197,12 +197,12 @@ export const convoRouter = router({
         }
       }
 
-      // validate the publicIds of Groups and get the IDs
-      if (participantsGroupsPublicIds && participantsGroupsPublicIds.length) {
-        const groupResponses = await db.query.groups.findMany({
+      // validate the publicIds of Teams and get the IDs
+      if (participantsTeamsPublicIds && participantsTeamsPublicIds.length) {
+        const teamResponses = await db.query.teams.findMany({
           where: and(
-            eq(groups.orgId, orgId),
-            inArray(groups.publicId, participantsGroupsPublicIds)
+            eq(teams.orgId, orgId),
+            inArray(teams.publicId, participantsTeamsPublicIds)
           ),
           columns: {
             id: true,
@@ -225,27 +225,27 @@ export const convoRouter = router({
           }
         });
 
-        for (const group of groupResponses) {
-          let emailIdentityId = group.authorizedEmailIdentities.find(
+        for (const team of teamResponses) {
+          let emailIdentityId = team.authorizedEmailIdentities.find(
             (emailIdentity) => emailIdentity.default
           )?.emailIdentity.id;
 
           if (!emailIdentityId) {
             emailIdentityId =
-              group.authorizedEmailIdentities[0]?.emailIdentity.id;
+              team.authorizedEmailIdentities[0]?.emailIdentity.id;
           }
-          const groupObject: IdPair = {
-            id: group.id,
-            publicId: group.publicId,
+          const teamObject: IdPair = {
+            id: team.id,
+            publicId: team.publicId,
             emailIdentityId: emailIdentityId || null
           };
-          orgGroupIds.push(groupObject);
+          orgTeamIds.push(teamObject);
         }
 
-        if (orgGroupIds.length !== participantsGroupsPublicIds.length) {
+        if (orgTeamIds.length !== participantsTeamsPublicIds.length) {
           throw new TRPCError({
             code: 'UNPROCESSABLE_CONTENT',
-            message: 'One or more groups is invalid'
+            message: 'One or more teams is invalid'
           });
         }
       }
@@ -442,31 +442,31 @@ export const convoRouter = router({
           .values(convoParticipantsDbInsertValuesArray);
       }
 
-      if (orgGroupIds.length) {
-        for (const groupId of orgGroupIds) {
-          // add the group to the convo participants
-          const convoGroupPublicId = typeIdGenerator('convoParticipants');
+      if (orgTeamIds.length) {
+        for (const teamId of orgTeamIds) {
+          // add the team to the convo participants
+          const convoTeamPublicId = typeIdGenerator('convoParticipants');
 
           if (
-            convoMessageTo.type === 'group' &&
-            convoMessageTo.publicId === groupId.publicId
+            convoMessageTo.type === 'team' &&
+            convoMessageTo.publicId === teamId.publicId
           ) {
-            convoParticipantToPublicId = convoGroupPublicId;
+            convoParticipantToPublicId = convoTeamPublicId;
           }
 
-          const insertConvoParticipantGroupResponse = await db
+          const insertConvoParticipantTeamResponse = await db
             .insert(convoParticipants)
             .values({
               orgId: orgId,
               convoId: Number(insertConvoResponse.insertId),
-              publicId: convoGroupPublicId,
-              groupId: groupId.id,
-              emailIdentityId: groupId.emailIdentityId
+              publicId: convoTeamPublicId,
+              teamId: teamId.id,
+              emailIdentityId: teamId.emailIdentityId
             });
 
-          //get the groups members and add to convo separately
-          const groupMembersQuery = await db.query.groupMembers.findMany({
-            where: eq(groupMembers.groupId, groupId.id),
+          //get the teams members and add to convo separately
+          const teamMembersQuery = await db.query.teamMembers.findMany({
+            where: eq(teamMembers.teamId, teamId.id),
             columns: {
               orgMemberId: true
             },
@@ -478,9 +478,9 @@ export const convoRouter = router({
               }
             }
           });
-          if (groupMembersQuery.length > 0) {
-            for (const groupMember of groupMembersQuery) {
-              const convoParticipantGroupMemberPublicId =
+          if (teamMembersQuery.length > 0) {
+            for (const teamMember of teamMembersQuery) {
+              const convoParticipantTeamMemberPublicId =
                 typeIdGenerator('convoParticipants');
               let convoParticipantId: number | undefined;
               try {
@@ -488,12 +488,12 @@ export const convoRouter = router({
                   .insert(convoParticipants)
                   .values({
                     orgId: orgId,
-                    publicId: convoParticipantGroupMemberPublicId,
+                    publicId: convoParticipantTeamMemberPublicId,
                     convoId: Number(insertConvoResponse.insertId),
-                    orgMemberId: groupMember.orgMemberId,
-                    role: 'groupMember',
+                    orgMemberId: teamMember.orgMemberId,
+                    role: 'teamMember',
                     notifications: 'active',
-                    emailIdentityId: groupId.emailIdentityId
+                    emailIdentityId: teamId.emailIdentityId
                   });
                 if (insertConvoParticipantResponse) {
                   convoParticipantId = Number(
@@ -511,7 +511,7 @@ export const convoRouter = router({
                         convoParticipants.convoId,
                         Number(insertConvoResponse.insertId)
                       ),
-                      eq(convoParticipants.orgMemberId, groupMember.orgMemberId)
+                      eq(convoParticipants.orgMemberId, teamMember.orgMemberId)
                     )
                   });
                 if (existingConvoParticipant) {
@@ -519,14 +519,14 @@ export const convoRouter = router({
                 }
               }
               if (convoParticipantId) {
-                await db.insert(convoParticipantGroupMembers).values({
+                await db.insert(convoParticipantTeamMembers).values({
                   convoParticipantId: Number(convoParticipantId),
-                  groupId: Number(insertConvoParticipantGroupResponse.insertId),
+                  teamId: Number(insertConvoParticipantTeamResponse.insertId),
                   orgId: orgId
                 });
               }
               orgMemberPublicIdsForNotifications.push(
-                groupMember.orgMember.publicId
+                teamMember.orgMember.publicId
               );
             }
           }
@@ -789,7 +789,7 @@ export const convoRouter = router({
                     id: true,
                     publicId: true,
                     orgMemberId: true,
-                    groupId: true,
+                    teamId: true,
                     contactId: true,
                     emailIdentityId: true,
                     role: true,
@@ -831,10 +831,10 @@ export const convoRouter = router({
               authorizedOrgMembers: {
                 columns: {
                   orgMemberId: true,
-                  groupId: true
+                  teamId: true
                 },
                 with: {
-                  group: {
+                  team: {
                     columns: {
                       id: true
                     },
@@ -854,8 +854,8 @@ export const convoRouter = router({
           sendAsEmailIdentityResponse?.authorizedOrgMembers.some(
             (authorizedOrgMember) =>
               authorizedOrgMember.orgMemberId === accountOrgMemberId ||
-              authorizedOrgMember.group?.members.some(
-                (groupMember) => groupMember.orgMemberId === accountOrgMemberId
+              authorizedOrgMember.team?.members.some(
+                (teamMember) => teamMember.orgMemberId === accountOrgMemberId
               )
           );
         if (!userIsAuthorized) {
@@ -872,7 +872,7 @@ export const convoRouter = router({
         convoEntryToReplyToQueryResponse?.convo.participants.find(
           (participant) => participant.orgMemberId === accountOrgMemberId
         )?.id;
-      // if we cant find the orgMembers participant id, we assume they're a part of the convo as a group member and we're somehow skipped accidentally, so now we add them as a dedicated participant
+      // if we cant find the orgMembers participant id, we assume they're a part of the convo as a team member and we're somehow skipped accidentally, so now we add them as a dedicated participant
       if (!authorConvoParticipantId) {
         const newConvoParticipantInsertResponse = await db
           .insert(convoParticipants)
@@ -1151,7 +1151,7 @@ export const convoRouter = router({
             columns: {
               publicId: true,
               orgMemberId: true,
-              groupId: true,
+              teamId: true,
               contactId: true,
               lastReadAt: true,
               notifications: true,
@@ -1183,7 +1183,7 @@ export const convoRouter = router({
                   }
                 }
               },
-              group: {
+              team: {
                 columns: {
                   avatarTimestamp: true,
                   id: true,
@@ -1242,11 +1242,11 @@ export const convoRouter = router({
         }
       });
 
-      // If not found, check if the user's orgMemberId is in any participant's group members
+      // If not found, check if the user's orgMemberId is in any participant's team members
       if (!participantPublicId) {
         convoDetails?.participants.forEach((participant) => {
-          participant.group?.members.forEach((groupMember) => {
-            if (groupMember.orgMemberId === accountOrgMemberId) {
+          participant.team?.members.forEach((teamMember) => {
+            if (teamMember.orgMemberId === accountOrgMemberId) {
               participantPublicId = participant.publicId;
             }
           });
@@ -1264,8 +1264,8 @@ export const convoRouter = router({
       // strip the user IDs from the response
       convoDetails.participants.forEach((participant) => {
         if (participant.orgMember?.id) participant.orgMember.id = 0;
-        participant.group?.members.forEach((groupMember) => {
-          if (groupMember.orgMemberId) groupMember.orgMemberId = 0;
+        participant.team?.members.forEach((teamMember) => {
+          if (teamMember.orgMemberId) teamMember.orgMemberId = 0;
         });
       });
       return {
@@ -1336,11 +1336,11 @@ export const convoRouter = router({
                   or(
                     eq(convoParticipants.orgMemberId, orgMemberId),
                     inArray(
-                      convoParticipants.groupId,
+                      convoParticipants.teamId,
                       db
-                        .select({ id: groupMembers.groupId })
-                        .from(groupMembers)
-                        .where(eq(groupMembers.orgMemberId, orgMemberId))
+                        .select({ id: teamMembers.teamId })
+                        .from(teamMembers)
+                        .where(eq(teamMembers.orgMemberId, orgMemberId))
                     )
                   )
                 )
@@ -1375,7 +1375,7 @@ export const convoRouter = router({
                   }
                 }
               },
-              group: {
+              team: {
                 columns: {
                   publicId: true,
                   name: true,
@@ -1425,7 +1425,7 @@ export const convoRouter = router({
                       }
                     }
                   },
-                  group: {
+                  team: {
                     columns: {
                       publicId: true,
                       name: true,
@@ -1518,7 +1518,7 @@ export const convoRouter = router({
                   }
                 }
               },
-              group: {
+              team: {
                 columns: {
                   publicId: true,
                   name: true,
@@ -1568,7 +1568,7 @@ export const convoRouter = router({
                       }
                     }
                   },
-                  group: {
+                  team: {
                     columns: {
                       publicId: true,
                       name: true,
@@ -1749,16 +1749,16 @@ export const convoRouter = router({
           await db
             .delete(convoParticipants)
             .where(eq(convoParticipants.convoId, convoQueryResponse.id));
-          //? convoParticipantGroupMembers
+          //? convoParticipantTeamMembers
           const convoParticipantIds = convoQueryResponse.participants.map(
             (participant) => participant.id
           );
 
           await db
-            .delete(convoParticipantGroupMembers)
+            .delete(convoParticipantTeamMembers)
             .where(
               inArray(
-                convoParticipantGroupMembers.convoParticipantId,
+                convoParticipantTeamMembers.convoParticipantId,
                 convoParticipantIds
               )
             );

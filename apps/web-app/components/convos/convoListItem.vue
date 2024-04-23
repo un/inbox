@@ -26,14 +26,14 @@
     if (!firstEntryAuthor) return null;
     return (
       firstEntryAuthor.orgMember?.publicId ||
-      firstEntryAuthor.group?.publicId ||
+      firstEntryAuthor.team?.publicId ||
       firstEntryAuthor.contact?.publicId
     );
   });
   const authorEntryName = computed(() => {
     if (!firstEntryAuthor) return null;
     return (
-      firstEntryAuthor.group?.name ||
+      firstEntryAuthor.team?.name ||
       firstEntryAuthor.contact?.setName ||
       firstEntryAuthor.contact?.name ||
       firstEntryAuthor.orgMember?.profile.firstName +

@@ -442,11 +442,11 @@ export const orgMemberProfileRelations = relations(
   })
 );
 
-export const groups = mysqlTable(
-  'groups',
+export const teams = mysqlTable(
+  'teams',
   {
-    id: serial('id').primaryKey(),
-    publicId: publicId('groups', 'public_id').notNull(),
+    id: serial('id'), // -> removed pk from here
+    publicId: publicId('teams', 'public_id').notNull(),
     avatarTimestamp: timestamp('avatar_timestamp'),
     orgId: foreignKey('org_id').notNull(),
     name: varchar('name', { length: 128 }).notNull(),
@@ -457,28 +457,30 @@ export const groups = mysqlTable(
       .$defaultFn(() => new Date())
   },
   (table) => ({
+    // moved pk here
+    pk: primaryKey({ columns: [table.id], name: 'groups_id' }),
     publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
     orgIdIndex: index('org_id_idx').on(table.orgId)
   })
 );
 
-export const groupsRelations = relations(groups, ({ one, many }) => ({
+export const teamsRelations = relations(teams, ({ one, many }) => ({
   org: one(orgs, {
-    fields: [groups.orgId],
+    fields: [teams.orgId],
     references: [orgs.id]
   }),
-  members: many(groupMembers),
+  members: many(teamMembers),
   routingRuleDestinations: many(emailRoutingRulesDestinations),
   authorizedEmailIdentities: many(emailIdentitiesAuthorizedOrgMembers)
 }));
 
-export const groupMembers = mysqlTable(
-  'group_members',
+export const teamMembers = mysqlTable(
+  'team_members',
   {
-    id: serial('id').primaryKey(),
+    id: serial('id'), // -> removed pk from here
     orgId: foreignKey('org_id').notNull(),
-    publicId: publicId('groupMembers', 'public_id').notNull(),
-    groupId: foreignKey('group_id').notNull(),
+    publicId: publicId('teamMembers', 'public_id').notNull(),
+    teamId: foreignKey('team_id').notNull(),
     orgMemberId: foreignKey('org_member_id').notNull(),
     orgMemberProfileId: foreignKey('org_member_profile_id'),
     addedBy: foreignKey('added_by').notNull(),
@@ -491,25 +493,28 @@ export const groupMembers = mysqlTable(
       .$defaultFn(() => new Date())
   },
   (table) => ({
-    groupIdIndex: index('group_id_idx').on(table.groupId),
+    // moved pk here
+    pk: primaryKey({ columns: [table.id], name: 'group_members_id' }),
+    teamIdIndex: index('team_id_idx').on(table.teamId),
     orgMemberIdIndex: index('org_member_id_idx').on(table.orgMemberId),
-    orgMemberToGroupIndex: uniqueIndex('org_member_to_group_idx').on(
-      table.groupId,
+    orgMemberToTeamIndex: uniqueIndex('org_member_to_team_idx').on(
+      table.teamId,
       table.orgMemberId
     )
   })
 );
-export const groupMembersRelations = relations(groupMembers, ({ one }) => ({
-  group: one(groups, {
-    fields: [groupMembers.groupId],
-    references: [groups.id]
+
+export const teamMembersRelations = relations(teamMembers, ({ one }) => ({
+  team: one(teams, {
+    fields: [teamMembers.teamId],
+    references: [teams.id]
   }),
   orgMember: one(orgMembers, {
-    fields: [groupMembers.orgMemberId],
+    fields: [teamMembers.orgMemberId],
     references: [orgMembers.id]
   }),
   orgMemberProfile: one(orgMemberProfiles, {
-    fields: [groupMembers.orgMemberProfileId],
+    fields: [teamMembers.orgMemberProfileId],
     references: [orgMemberProfiles.id]
   })
 }));
@@ -747,7 +752,7 @@ export const emailRoutingRulesDestinations = mysqlTable(
     publicId: publicId('emailRoutingRuleDestinations', 'public_id').notNull(),
     orgId: foreignKey('org_id').notNull(),
     ruleId: foreignKey('rule_id').notNull(),
-    groupId: foreignKey('group_id'),
+    teamId: foreignKey('team_id'),
     orgMemberId: foreignKey('org_member_id'),
     createdAt: timestamp('created_at')
       .notNull()
@@ -755,7 +760,7 @@ export const emailRoutingRulesDestinations = mysqlTable(
   },
   (table) => ({
     orgIdIndex: index('org_id_idx').on(table.orgId)
-    //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit : orgMemberId//groupId
+    //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit : orgMemberId//teamId
   })
 );
 export const emailRoutingRulesDestinationsRelations = relations(
@@ -769,9 +774,9 @@ export const emailRoutingRulesDestinationsRelations = relations(
       fields: [emailRoutingRulesDestinations.ruleId],
       references: [emailRoutingRules.id]
     }),
-    group: one(groups, {
-      fields: [emailRoutingRulesDestinations.groupId],
-      references: [groups.id]
+    team: one(teams, {
+      fields: [emailRoutingRulesDestinations.teamId],
+      references: [teams.id]
     }),
     orgMember: one(orgMembers, {
       fields: [emailRoutingRulesDestinations.orgMemberId],
@@ -844,7 +849,7 @@ export const emailIdentitiesAuthorizedOrgMembers = mysqlTable(
     orgId: foreignKey('org_id').notNull(),
     identityId: foreignKey('identity_id').notNull(),
     orgMemberId: foreignKey('org_member_id'),
-    groupId: foreignKey('group_id'),
+    teamId: foreignKey('team_id'),
     default: boolean('default').notNull().default(false),
     addedBy: foreignKey('added_by').notNull(),
     createdAt: timestamp('created_at')
@@ -852,16 +857,16 @@ export const emailIdentitiesAuthorizedOrgMembers = mysqlTable(
       .$defaultFn(() => new Date())
   },
   (table) => ({
-    //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit : orgMemberId//groupId, orgMemberId//default, groupId//default
+    //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit : orgMemberId//teamId, orgMemberId//default, teamId//default
     orgIdIndex: index('org_id_idx').on(table.orgId),
     identityIdIndex: index('identity_id_idx').on(table.identityId),
     orgMemberToIdentityIndex: uniqueIndex('org_member_to_identity_idx').on(
       table.identityId,
       table.orgMemberId
     ),
-    groupToIdentityIndex: uniqueIndex('group_to_identity_idx').on(
+    teamToIdentityIndex: uniqueIndex('team_to_identity_idx').on(
       table.identityId,
-      table.groupId
+      table.teamId
     )
   })
 );
@@ -881,9 +886,9 @@ export const emailIdentitiesAuthorizedOrgMemberRelations = relations(
       fields: [emailIdentitiesAuthorizedOrgMembers.orgMemberId],
       references: [orgMembers.id]
     }),
-    group: one(groups, {
-      fields: [emailIdentitiesAuthorizedOrgMembers.groupId],
-      references: [groups.id]
+    team: one(teams, {
+      fields: [emailIdentitiesAuthorizedOrgMembers.teamId],
+      references: [teams.id]
     })
   })
 );
@@ -1039,7 +1044,7 @@ export const convoParticipants = mysqlTable(
     orgId: foreignKey('org_id').notNull(),
     publicId: publicId('convoParticipants', 'public_id').notNull(),
     orgMemberId: foreignKey('org_member_id'),
-    groupId: foreignKey('group_id'),
+    teamId: foreignKey('team_id'),
     contactId: foreignKey('contact_id'),
     convoId: foreignKey('convo_id').notNull(),
     role: mysqlEnum('role', [
@@ -1047,7 +1052,7 @@ export const convoParticipants = mysqlTable(
       'contributor',
       'commenter',
       'watcher',
-      'groupMember',
+      'teamMember',
       'guest'
     ]) // Assigned/Contributor will be added to email CCs - other roles will not
       .notNull()
@@ -1064,7 +1069,7 @@ export const convoParticipants = mysqlTable(
       .$defaultFn(() => new Date())
   },
   (table) => ({
-    //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit : orgMemberId//groupId
+    //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit : orgMemberId//teamId
     orgIdIndex: index('org_id_idx').on(table.orgId),
     publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
     orgMemberIdIndex: index('org_member_id_idx').on(table.orgMemberId),
@@ -1073,9 +1078,9 @@ export const convoParticipants = mysqlTable(
       table.convoId,
       table.orgMemberId
     ),
-    groupToConvoIndex: uniqueIndex('group_to_convo_idx').on(
+    teamToConvoIndex: uniqueIndex('team_to_convo_idx').on(
       table.convoId,
-      table.groupId
+      table.teamId
     )
   })
 );
@@ -1090,9 +1095,9 @@ export const convoParticipantsRelations = relations(
       fields: [convoParticipants.orgMemberId],
       references: [orgMembers.id]
     }),
-    group: one(groups, {
-      fields: [convoParticipants.groupId],
-      references: [groups.id]
+    team: one(teams, {
+      fields: [convoParticipants.teamId],
+      references: [teams.id]
     }),
     contact: one(contacts, {
       fields: [convoParticipants.contactId],
@@ -1103,10 +1108,10 @@ export const convoParticipantsRelations = relations(
       references: [convos.id]
     }),
     seen: many(convoSeenTimestamps),
-    groupMemberships: many(convoParticipantGroupMembers, {
+    teamMemberships: many(convoParticipantTeamMembers, {
       relationName: 'memberships'
     }),
-    groupMembers: many(convoParticipantGroupMembers, { relationName: 'group' }),
+    teamMembers: many(convoParticipantTeamMembers, { relationName: 'team' }),
     emailIdentity: one(emailIdentities, {
       fields: [convoParticipants.emailIdentityId],
       references: [emailIdentities.id]
@@ -1114,34 +1119,39 @@ export const convoParticipantsRelations = relations(
   })
 );
 
-export const convoParticipantGroupMembers = mysqlTable(
-  'convo_participant_group_members',
+export const convoParticipantTeamMembers = mysqlTable(
+  'convo_participant_team_members',
   {
-    id: serial('id').primaryKey(),
+    id: serial('id'), // -> removed pk from here
     orgId: foreignKey('org_id').notNull(),
     convoParticipantId: foreignKey('convo_participant_id').notNull(),
-    groupId: foreignKey('group_id').notNull()
+    teamId: foreignKey('team_id').notNull()
   },
   (table) => ({
+    // moved pk here
+    pk: primaryKey({
+      columns: [table.id],
+      name: 'convo_participant_group_members_id'
+    }),
     convoParticipantIdIndex: index('convo_participant_id_idx').on(
       table.convoParticipantId
     ),
-    groupIdIndex: index('group_id_idx').on(table.groupId)
+    teamIdIndex: index('team_id_idx').on(table.teamId)
   })
 );
 
-export const convoParticipantGroupMembersRelations = relations(
-  convoParticipantGroupMembers,
+export const convoParticipantTeamMembersRelations = relations(
+  convoParticipantTeamMembers,
   ({ one }) => ({
     convoParticipant: one(convoParticipants, {
-      fields: [convoParticipantGroupMembers.convoParticipantId],
+      fields: [convoParticipantTeamMembers.convoParticipantId],
       references: [convoParticipants.id],
       relationName: 'memberships'
     }),
-    group: one(convoParticipants, {
-      fields: [convoParticipantGroupMembers.groupId],
-      references: [convoParticipants.groupId],
-      relationName: 'group'
+    team: one(convoParticipants, {
+      fields: [convoParticipantTeamMembers.teamId],
+      references: [convoParticipants.teamId],
+      relationName: 'team'
     })
   })
 );
@@ -1230,7 +1240,7 @@ export type ConvoEntryMetadataEmailAddress = {
 };
 
 export type ConvoEntryMetadataMissingParticipant = {
-  type: 'user' | 'group';
+  type: 'user' | 'team';
   publicId: String;
   name: String;
 };

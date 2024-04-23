@@ -48,10 +48,10 @@
     keywords: String;
     own?: Boolean;
   }
-  interface ConvoParticipantOrgGroups {
-    type: 'group';
+  interface ConvoParticipantOrgTeams {
+    type: 'team';
     icon: 'i-ph-users-three';
-    publicId: TypeId<'groups'>;
+    publicId: TypeId<'teams'>;
     avatarTimestamp: Date | null;
     name: String;
     description: String | null;
@@ -78,7 +78,7 @@
 
   type NewConvoParticipant =
     | ConvoParticipantOrgMembers
-    | ConvoParticipantOrgGroups
+    | ConvoParticipantOrgTeams
     | ConvoParticipantOrgContacts
     | NewConvoParticipantEmailAddresses;
 
@@ -101,9 +101,9 @@
       }
     );
 
-  // get list of groups
-  const { data: orgGroupsData, status: orgGroupsStatus } =
-    await $trpc.org.users.groups.getOrgGroups.useLazyQuery(
+  // get list of teams
+  const { data: orgTeamsData, status: orgTeamsStatus } =
+    await $trpc.org.users.teams.getOrgTeams.useLazyQuery(
       {},
       {
         server: false
@@ -122,14 +122,14 @@
   //* List Data
   const orgEmailIdentities = ref<OrgEmailIdentities[]>([]);
   const orgMembers = ref<ConvoParticipantOrgMembers[]>([]);
-  const orgGroups = ref<ConvoParticipantOrgGroups[]>([]);
+  const orgTeams = ref<ConvoParticipantOrgTeams[]>([]);
   const orgContacts = ref<ConvoParticipantOrgContacts[]>([]);
 
   //* Data Watchers
   function setParticipantOptions() {
     participantOptions.value = [
       ...orgMembers.value,
-      ...orgGroups.value,
+      ...orgTeams.value,
       ...orgContacts.value
     ];
   }
@@ -227,18 +227,18 @@
     setParticipantOptions();
   });
 
-  watch(orgGroupsData, (newOrgGroupsData) => {
-    if (newOrgGroupsData?.groups) {
-      for (const group of newOrgGroupsData.groups) {
-        orgGroups.value.push({
-          type: 'group',
+  watch(orgTeamsData, (newOrgTeamsData) => {
+    if (newOrgTeamsData?.teams) {
+      for (const team of newOrgTeamsData.teams) {
+        orgTeams.value.push({
+          type: 'team',
           icon: 'i-ph-users-three',
-          publicId: group.publicId,
-          avatarTimestamp: group.avatarTimestamp,
-          name: group.name,
-          description: group.description,
-          color: group.color,
-          keywords: group.name + ' ' + group.description
+          publicId: team.publicId,
+          avatarTimestamp: team.avatarTimestamp,
+          name: team.name,
+          description: team.description,
+          color: team.color,
+          keywords: team.name + ' ' + team.description
         });
       }
       setParticipantOptions();
@@ -347,7 +347,7 @@
 
   const participantPlaceholder = computed(() => {
     if (
-      orgGroupsStatus.value !== 'success' ||
+      orgTeamsStatus.value !== 'success' ||
       orgMembersStatus.value !== 'success'
     ) {
       return 'Loading Participants';
@@ -415,7 +415,7 @@
 
     const convoParticipantsOrgMembersPublicIds =
       getPublicIdsByType('orgMember');
-    const convoParticipantsGroupPublicIds = getPublicIdsByType('group');
+    const convoParticipantsTeamPublicIds = getPublicIdsByType('team');
     const convoParticipantsContactPublicIds = getPublicIdsByType('contact');
     const convoParticipantsEmailPublicIds = getPublicIdsByType(
       'email',
@@ -426,7 +426,7 @@
 
     const convoToValue:
       | { type: 'email'; emailAddress: string }
-      | { type: 'orgMember' | 'group' | 'contact'; publicId: string } =
+      | { type: 'orgMember' | 'team' | 'contact'; publicId: string } =
       firstParticipant.type === 'email'
         ? {
             type: 'email',
@@ -442,7 +442,7 @@
       firstMessageType: type,
       to: convoToValue,
       participantsOrgMembersPublicIds: convoParticipantsOrgMembersPublicIds,
-      participantsGroupsPublicIds: convoParticipantsGroupPublicIds,
+      participantsTeamsPublicIds: convoParticipantsTeamPublicIds,
       participantsContactsPublicIds: convoParticipantsContactPublicIds,
       participantsEmails: convoParticipantsEmailPublicIds,
       sendAsEmailIdentityPublicId: selectedOrgEmailIdentities.value?.publicId,
@@ -565,12 +565,12 @@
                       </span>
                     </div>
                     <div
-                      v-if="participant.type === 'group'"
+                      v-if="participant.type === 'team'"
                       class="flex flex-row items-center gap-1">
                       <UnUiAvatar
                         :public-id="participant.publicId"
                         :avatar-timestamp="participant.avatarTimestamp"
-                        :type="'group'"
+                        :type="'team'"
                         :alt="participant.name.toString()"
                         :color="participant.color as UiColor"
                         size="xs" />
@@ -639,12 +639,12 @@
                   </span>
                 </div>
                 <div
-                  v-if="option.type === 'group'"
+                  v-if="option.type === 'team'"
                   class="flex flex-row items-center gap-2">
                   <UnUiAvatar
                     :public-id="option.publicId"
                     :avatar-timestamp="option.avatarTimestamp"
-                    :type="'group'"
+                    :type="'team'"
                     :alt="option.name"
                     :color="option.color.toString()"
                     size="xs" />

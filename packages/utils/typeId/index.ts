@@ -12,8 +12,10 @@ export const idTypes = {
   orgInvitations: 'oi',
   orgMembers: 'om',
   orgMemberProfile: 'omp',
-  groups: 'g',
-  groupMembers: 'gm',
+  groups: 'g', // remove after migration of groups to teams: April 2024
+  groupMembers: 'gm', // remove after migration of groups to teams: April 2024
+  teams: 't',
+  teamMembers: 'tm',
   domains: 'dom',
   postalServers: 'ps',
   contacts: 'k',

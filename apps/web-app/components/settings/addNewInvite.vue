@@ -60,7 +60,7 @@
 
   const sendEmailNotification = ref(false);
   const createEmailIdentity = ref(false);
-  const addUserToGroups = ref(false);
+  const addUserToTeams = ref(false);
 
   const buttonLabel = ref('Create New Invite');
   const buttonLoading = ref(false);
@@ -76,9 +76,7 @@
         ? newInviteEmailUsernameValid.value === true &&
           newInviteEmailSendNameValid.value === true
         : true) &&
-      (addUserToGroups.value === true
-        ? selectedOrgGroups.value.length > 0
-        : true)
+      (addUserToTeams.value === true ? selectedOrgTeams.value.length > 0 : true)
     );
   });
 
@@ -151,36 +149,33 @@
     checkEmailAvailability();
   });
 
-  // get list of groups
-  const { data: orgGroupsData } =
-    await $trpc.org.users.groups.getOrgGroups.useLazyQuery(
-      {},
-      { server: false }
-    );
-  interface OrgUserGroups {
-    publicId: TypeId<'groups'>;
+  // get list of teams
+  const { data: orgTeamsData } =
+    await $trpc.org.users.teams.getOrgTeams.useLazyQuery({}, { server: false });
+  interface OrgUserTeams {
+    publicId: TypeId<'teams'>;
     avatarTimestamp: Date | null;
     name: String;
     description: String | null;
     color: String | null;
   }
-  const orgUserGroups = ref<OrgUserGroups[]>([]);
+  const orgUserTeams = ref<OrgUserTeams[]>([]);
 
-  watch(orgGroupsData, (newOrgGroupsData) => {
-    if (newOrgGroupsData?.groups) {
-      for (const group of newOrgGroupsData.groups) {
-        orgUserGroups.value.push({
-          publicId: group.publicId,
-          avatarTimestamp: group.avatarTimestamp,
-          name: group.name,
-          description: group.description,
-          color: group.color
+  watch(orgTeamsData, (newOrgTeamsData) => {
+    if (newOrgTeamsData?.teams) {
+      for (const team of newOrgTeamsData.teams) {
+        orgUserTeams.value.push({
+          publicId: team.publicId,
+          avatarTimestamp: team.avatarTimestamp,
+          name: team.name,
+          description: team.description,
+          color: team.color
         });
       }
     }
   });
 
-  const selectedOrgGroups = ref<OrgUserGroups[]>([]);
+  const selectedOrgTeams = ref<OrgUserTeams[]>([]);
 
   async function createInvite() {
     const toast = useToast();
@@ -218,10 +213,10 @@
         }
       : undefined;
 
-    const addToGroups = addUserToGroups.value
+    const addToTeams = addUserToTeams.value
       ? {
-          groupsPublicIds: selectedOrgGroups.value.map(
-            (group) => group.publicId as string
+          teamsPublicIds: selectedOrgTeams.value.map(
+            (team) => team.publicId as string
           )
         }
       : undefined;
@@ -234,7 +229,7 @@
       newOrgMember: newOrgMember,
       notification: sendEmailNotification.value ? sendNotification : undefined,
       email: createEmailIdentity.value ? createEmail : undefined,
-      groups: addUserToGroups.value ? addToGroups : undefined
+      teams: addUserToTeams.value ? addToTeams : undefined
     });
 
     if (createNewInviteTrpc.status.value === 'error') {
@@ -445,61 +440,61 @@
       <div class="items-top flex w-full flex-row justify-between gap-1">
         <div>
           <span class="text-base-12 text-sm font-medium"
-            >Add user to groups</span
+            >Add user to teams</span
           >
           <div class="flex w-full flex-row justify-between gap-8">
             <span
-              v-if="!addUserToGroups"
+              v-if="!addUserToTeams"
               class="text- text-base-11 text-sm">
-              Give them access to existing group conversations and email
+              Give them access to existing team conversations and email
               identities
             </span>
             <div class="flex flex-col gap-1"></div>
           </div>
         </div>
         <UnUiToggle
-          v-model="addUserToGroups"
-          label="Add user to group" />
+          v-model="addUserToTeams"
+          label="Add user to team" />
       </div>
-      <div v-if="addUserToGroups">
-        <span v-if="orgGroupsData?.groups.length === 0"> No Groups Found </span>
+      <div v-if="addUserToTeams">
+        <span v-if="orgTeamsData?.teams.length === 0"> No Teams Found </span>
         <NuxtUiSelectMenu
           v-else
-          v-model="selectedOrgGroups"
+          v-model="selectedOrgTeams"
           multiple
-          placeholder="Select a group"
-          :options="orgUserGroups"
+          placeholder="Select a team"
+          :options="orgUserTeams"
           class="mr-3">
           <template
-            v-if="selectedOrgGroups"
+            v-if="selectedOrgTeams"
             #label>
             <UnUiIcon
               name="i-ph-check"
               class="h-4 w-4" />
             <div
-              v-if="selectedOrgGroups.length"
+              v-if="selectedOrgTeams.length"
               class="flex flex-wrap gap-3">
               <div
-                v-for="(group, index) in selectedOrgGroups"
+                v-for="(team, index) in selectedOrgTeams"
                 :key="index"
                 class="flex flex-row items-center gap-1 truncate">
                 <UnUiAvatar
-                  :alt="group.name.toString()"
-                  :public-id="group.publicId"
-                  :avatar-timestamp="group.avatarTimestamp"
-                  :type="'group'"
-                  :color="group.color as UiColor"
+                  :alt="team.name.toString()"
+                  :public-id="team.publicId"
+                  :avatar-timestamp="team.avatarTimestamp"
+                  :type="'team'"
+                  :color="team.color as UiColor"
                   size="3xs" />
-                <span>{{ group.name }}</span>
+                <span>{{ team.name }}</span>
               </div>
             </div>
-            <span v-else>Select groups</span>
+            <span v-else>Select teams</span>
           </template>
           <template #option="{ option }">
             <UnUiAvatar
               :public-id="option.publicId"
               :avatar-timestamp="option.avatarTimestamp"
-              :type="'group'"
+              :type="'team'"
               :alt="option.name"
               :color="option.color.toString()"
               size="3xs" />
