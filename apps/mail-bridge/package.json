@@ -30,7 +30,7 @@
     "html-to-text": "^9.0.5",
     "mailauth": "^4.6.5",
     "mailparser": "^3.6.9",
-    "mysql2": "^3.9.4",
+    "mysql2": "^3.9.7",
     "nitropack": "^2.9.4",
     "nodemailer": "^6.9.13",
     "superjson": "^2.2.1",
