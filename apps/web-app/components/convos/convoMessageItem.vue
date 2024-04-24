@@ -62,7 +62,7 @@
       participant: 'bg-base-5 text-base-12'
     },
     comment: {
-      author: 'bg-blue-4 dark:bg-blue-7 text-black',
+      author: 'bg-blue-4 dark:bg-blue-11 text-black',
       participant: 'bg-base-4 dark:bg-base-10 text-black'
     },
     draft: {
