@@ -62,8 +62,8 @@
       participant: 'bg-base-5 text-base-12'
     },
     comment: {
-      author: 'bg-blue-4 dark:bg-blue-11 text-black',
-      participant: 'bg-base-4 dark:bg-base-10 text-black'
+      author: 'bg-blue-4 text-black',
+      participant: 'bg-base-4 text-black'
     },
     draft: {
       author: 'bg-base-1',
@@ -72,7 +72,7 @@
   };
 
   const typeClasses = computed(() => {
-    const accessElement = !!userIsAuthor.value ? 'author' : 'participant';
+    const accessElement = userIsAuthor.value ? 'author' : 'participant';
     return messageTypeClasses[messageType.value][accessElement];
   });
 
