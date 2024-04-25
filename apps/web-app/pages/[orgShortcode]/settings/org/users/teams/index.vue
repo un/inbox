@@ -16,10 +16,10 @@
   }
 
   const {
-    data: orgGroupsQuery,
+    data: orgTeamsQuery,
     pending,
     refresh
-  } = await $trpc.org.users.groups.getOrgGroups.useLazyQuery(
+  } = await $trpc.org.users.teams.getOrgTeams.useLazyQuery(
     {},
     {
       server: false
@@ -44,7 +44,7 @@
   ];
 
   interface TableRow {
-    publicId: TypeId<'groups'>;
+    publicId: TypeId<'teams'>;
     avatarTimestamp: Date | null;
     name: string;
     description: string | null;
@@ -63,24 +63,24 @@
   }
 
   const tableRows = ref<TableRow[]>([]);
-  watch(orgGroupsQuery, (newResults) => {
-    if (newResults?.groups) {
+  watch(orgTeamsQuery, (newResults) => {
+    if (newResults?.teams) {
       tableRows.value = [];
-      for (const group of newResults.groups) {
+      for (const team of newResults.teams) {
         tableRows.value.push({
-          publicId: group.publicId,
-          avatarTimestamp: group.avatarTimestamp,
-          name: group.name,
-          description: group.description,
-          color: group.color,
+          publicId: team.publicId,
+          avatarTimestamp: team.avatarTimestamp,
+          name: team.name,
+          description: team.description,
+          color: team.color,
           // @ts-ignore
-          members: group.members
+          members: team.members
         });
       }
     }
   });
   function select(row: (typeof tableRows.value)[number]) {
-    navigateTo(`/${orgShortcode}/settings/org/users/groups/${row.publicId}`);
+    navigateTo(`/${orgShortcode}/settings/org/users/teams/${row.publicId}`);
   }
 
   const addNewModalOpen = ref(false);
@@ -101,8 +101,8 @@
           variant="soft"
           @click="navigateTo(`/${orgShortcode}/settings`)" />
         <div class="flex flex-col gap-1">
-          <span class="font-display text-2xl">Groups</span>
-          <span class="text-sm">Manage your organizations user groups</span>
+          <span class="font-display text-2xl">Teams</span>
+          <span class="text-sm">Manage your organizations user teams</span>
         </div>
       </div>
       <div class="flex flex-row items-center gap-4">
@@ -111,9 +111,9 @@
           @click="addNewModalOpen = true" />
         <UnUiModal v-model="addNewModalOpen">
           <template #header>
-            <span class="">Add new group</span>
+            <span class="">Add new team</span>
           </template>
-          <SettingsAddNewGroup
+          <SettingsAddNewTeam
             lazy
             @close="closeModal()" />
         </UnUiModal>

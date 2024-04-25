@@ -9,7 +9,7 @@ function generateAvatarUrl({
   avatarTimestamp,
   size
 }: {
-  publicId: TypeId<'orgMemberProfile' | 'contacts' | 'groups' | 'org'>;
+  publicId: TypeId<'orgMemberProfile' | 'contacts' | 'teams' | 'org'>;
   avatarTimestamp: Date | null;
   size?:
     | '3xs'
@@ -42,25 +42,25 @@ function useParticipantData(
 ) {
   const typePublicId =
     participant.orgMember?.publicId ||
-    participant.group?.publicId ||
+    participant.team?.publicId ||
     participant.contact?.publicId;
   const avatarProfilePublicId =
     participant.orgMember?.profile.publicId ||
-    participant.group?.publicId ||
+    participant.team?.publicId ||
     participant.contact?.publicId ||
     null;
   if (!typePublicId || !avatarProfilePublicId) return null;
 
   const avatarTimestampProp = participant.orgMember?.profile.avatarTimestamp
     ? participant.orgMember?.profile.avatarTimestamp
-    : participant.group?.avatarTimestamp
-      ? participant.group?.avatarTimestamp
+    : participant.team?.avatarTimestamp
+      ? participant.team?.avatarTimestamp
       : participant.contact?.avatarTimestamp
         ? participant.contact?.avatarTimestamp
         : null;
 
-  const nameProp = participant.group?.name
-    ? participant.group?.name
+  const nameProp = participant.team?.name
+    ? participant.team?.name
     : participant.orgMember?.profile.firstName
       ? `${participant.orgMember?.profile.firstName} ${participant.orgMember?.profile.lastName || ''}`
       : participant.contact?.setName
@@ -77,11 +77,11 @@ function useParticipantData(
     avatarProfilePublicId: avatarProfilePublicId,
     avatarTimestamp: avatarTimestampProp,
     name: nameProp,
-    color: participant.group?.color || null,
+    color: participant.team?.color || null,
     type: participant.orgMember
       ? 'orgMember'
-      : participant.group
-        ? 'group'
+      : participant.team
+        ? 'team'
         : 'contact',
     role: participant.role,
     signatureHtml: participant.contact?.signatureHtml || null,

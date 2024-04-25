@@ -4,7 +4,7 @@ import { router, orgProcedure } from '../../../trpc';
 import { and, eq, inArray, type InferInsertModel } from '@u22n/database/orm';
 import {
   orgMembers,
-  groups,
+  teams,
   emailRoutingRules,
   emailRoutingRulesDestinations,
   emailIdentities,
@@ -104,7 +104,7 @@ export const emailIdentityExternalRouter = router({
         routeToOrgMemberPublicIds: z
           .array(typeIdValidator('orgMembers'))
           .optional(),
-        routeToGroupsPublicIds: z.array(typeIdValidator('groups')).optional()
+        routeToTeamsPublicIds: z.array(typeIdValidator('teams')).optional()
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -120,7 +120,7 @@ export const emailIdentityExternalRouter = router({
         sendName,
         smtp,
         routeToOrgMemberPublicIds,
-        routeToGroupsPublicIds
+        routeToTeamsPublicIds
       } = input;
 
       const [emailUsername, emailDomain] = input.emailAddress.split('@');
@@ -131,10 +131,10 @@ export const emailIdentityExternalRouter = router({
         });
       }
 
-      if (!routeToOrgMemberPublicIds && !routeToGroupsPublicIds) {
+      if (!routeToOrgMemberPublicIds && !routeToTeamsPublicIds) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
-          message: 'Must route to at least one user or group'
+          message: 'Must route to at least one user or team'
         });
       }
 
@@ -151,7 +151,7 @@ export const emailIdentityExternalRouter = router({
         });
       }
 
-      // get orgmembers and groups
+      // get orgmembers and teams
       const orgMemberObjects: { id: number; hasDefault: boolean }[] = [];
       const orgMemberIdsResponse =
         routeToOrgMemberPublicIds && routeToOrgMemberPublicIds.length > 0
@@ -178,11 +178,11 @@ export const emailIdentityExternalRouter = router({
         });
       });
 
-      const userGroupObjects: { id: number; hasDefault: boolean }[] = [];
-      const userGroupIdsResponse =
-        routeToGroupsPublicIds && routeToGroupsPublicIds.length > 0
-          ? await db.query.groups.findMany({
-              where: inArray(groups.publicId, routeToGroupsPublicIds),
+      const userTeamObjects: { id: number; hasDefault: boolean }[] = [];
+      const userTeamIdsResponse =
+        routeToTeamsPublicIds && routeToTeamsPublicIds.length > 0
+          ? await db.query.teams.findMany({
+              where: inArray(teams.publicId, routeToTeamsPublicIds),
               columns: {
                 id: true
               },
@@ -195,10 +195,10 @@ export const emailIdentityExternalRouter = router({
               }
             })
           : [];
-      userGroupIdsResponse.forEach((userGroup) => {
-        userGroupObjects.push({
-          id: userGroup.id,
-          hasDefault: userGroup.authorizedEmailIdentities.some(
+      userTeamIdsResponse.forEach((userTeam) => {
+        userTeamObjects.push({
+          id: userTeam.id,
+          hasDefault: userTeam.authorizedEmailIdentities.some(
             (identity) => identity.default
           )
         });
@@ -232,8 +232,8 @@ export const emailIdentityExternalRouter = router({
           });
         });
       }
-      if (userGroupObjects.length > 0) {
-        userGroupObjects.forEach((userGroupObject) => {
+      if (userTeamObjects.length > 0) {
+        userTeamObjects.forEach((userTeamObject) => {
           const newRoutingRuleDestinationPublicId = typeIdGenerator(
             'emailRoutingRuleDestinations'
           );
@@ -241,7 +241,7 @@ export const emailIdentityExternalRouter = router({
             publicId: newRoutingRuleDestinationPublicId,
             orgId: orgId,
             ruleId: +insertEmailRoutingRule.insertId,
-            groupId: userGroupObject.id
+            teamId: userTeamObject.id
           });
         });
       }
@@ -288,14 +288,14 @@ export const emailIdentityExternalRouter = router({
         });
       }
 
-      if (userGroupObjects.length > 0) {
-        userGroupObjects.forEach((userGroupObject) => {
+      if (userTeamObjects.length > 0) {
+        userTeamObjects.forEach((userTeamObject) => {
           emailIdentityAuthorizedOrgMembersObjects.push({
             orgId: orgId,
             identityId: +insertEmailIdentityResponse.insertId,
             addedBy: org.memberId,
-            groupId: userGroupObject.id,
-            default: !userGroupObject.hasDefault
+            teamId: userTeamObject.id,
+            default: !userTeamObject.hasDefault
           });
         });
       }

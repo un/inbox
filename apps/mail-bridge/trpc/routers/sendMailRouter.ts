@@ -10,7 +10,7 @@ import {
   contacts,
   emailIdentitiesAuthorizedOrgMembers,
   orgMembers,
-  groups,
+  teams,
   type ConvoEntryMetadataMissingParticipant,
   orgs,
   convoParticipants
@@ -87,7 +87,7 @@ export const sendMailRouter = router({
             columns: {
               publicId: true,
               orgMemberId: true,
-              groupId: true,
+              teamId: true,
               contactId: true
             },
             where: inArray(convoParticipants.role, ['assigned', 'contributor'])
@@ -110,12 +110,12 @@ export const sendMailRouter = router({
       const contactConvoParticipants = convoResponse.participants.filter(
         (participant) => participant.contactId
       );
-      // we only include participants that are not in the convo as part of a group
+      // we only include participants that are not in the convo as part of a team
       const orgMemberParticipants = convoResponse.participants.filter(
-        (participant) => participant.orgMemberId && !participant.groupId
+        (participant) => participant.orgMemberId && !participant.teamId
       );
-      const groupParticipants = convoResponse.participants.filter(
-        (participant) => participant.groupId
+      const teamParticipants = convoResponse.participants.filter(
+        (participant) => participant.teamId
       );
 
       if (
@@ -383,16 +383,16 @@ export const sendMailRouter = router({
         );
       }
 
-      // get the default email addresses for all groups
-      if (groupParticipants.length) {
+      // get the default email addresses for all teams
+      if (teamParticipants.length) {
         await Promise.all(
-          groupParticipants.map(async (groupParticipant) => {
+          teamParticipants.map(async (teamParticipant) => {
             const emailIdentityResponse =
               await db.query.emailIdentitiesAuthorizedOrgMembers.findFirst({
                 where: and(
                   eq(
-                    emailIdentitiesAuthorizedOrgMembers.groupId,
-                    groupParticipant.groupId!
+                    emailIdentitiesAuthorizedOrgMembers.teamId,
+                    teamParticipant.teamId!
                   ),
                   eq(emailIdentitiesAuthorizedOrgMembers.default, true)
                 ),
@@ -411,27 +411,26 @@ export const sendMailRouter = router({
                 }
               });
             if (!emailIdentityResponse) {
-              const orgGroupResponse = await db.query.groups.findFirst({
-                where: eq(groups.id, groupParticipant.groupId!),
+              const orgTeamResponse = await db.query.teams.findFirst({
+                where: eq(teams.id, teamParticipant.teamId!),
                 columns: {
                   publicId: true,
                   name: true
                 }
               });
 
-              if (orgGroupResponse) {
+              if (orgTeamResponse) {
                 missingEmailIdentitiesWarnings.push({
-                  type: 'group',
-                  publicId: orgGroupResponse.publicId,
-                  name: orgGroupResponse.name
+                  type: 'team',
+                  publicId: orgTeamResponse.publicId,
+                  name: orgTeamResponse.name
                 });
                 return;
               }
             }
             if (emailIdentityResponse) {
               if (
-                groupParticipant.publicId ===
-                input.newConvoToParticipantPublicId
+                teamParticipant.publicId === input.newConvoToParticipantPublicId
               ) {
                 convoMetadataToAddress = {
                   id: Number(emailIdentityResponse.emailIdentity.id),

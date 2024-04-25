@@ -29,11 +29,11 @@
     "@u22n/types": "workspace:*",
     "@u22n/utils": "workspace:*",
     "drizzle-orm": "^0.30.3",
-    "mysql2": "^3.9.4"
+    "mysql2": "^3.9.7"
   },
   "devDependencies": {
     "@faker-js/faker": "^8.4.1",
-    "drizzle-kit": "^0.20.14",
+    "drizzle-kit": "^0.20.17",
     "tsx": "^4.7.1"
   }
 }

@@ -11,11 +11,11 @@
 
   type Props = {
     color?: UiColors;
-    publicId: TypeId<'orgMemberProfile' | 'contacts' | 'groups' | 'org'> | null;
+    publicId: TypeId<'orgMemberProfile' | 'contacts' | 'teams' | 'org'> | null;
     avatarTimestamp: Date | null;
     name?: string;
     alt?: string;
-    type: 'orgMember' | 'org' | 'group' | 'contact';
+    type: 'orgMember' | 'org' | 'team' | 'contact';
     tooltip?: string;
     avatarUrl?: string;
     tooltipText?: string;
@@ -107,7 +107,7 @@
         return 'i-ph-user';
       case 'org':
         return 'i-ph-buildings';
-      case 'group':
+      case 'team':
         return 'i-ph-users-three';
       case 'contact':
         return 'i-ph-at';

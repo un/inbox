@@ -1,20 +1,20 @@
 import { z } from 'zod';
 import { router, orgProcedure } from '../../../trpc';
 import { eq, and } from '@u22n/database/orm';
-import { groups } from '@u22n/database/schema';
+import { teams } from '@u22n/database/schema';
 import { typeIdGenerator, typeIdValidator } from '@u22n/utils';
 import { uiColors } from '@u22n/types/ui';
 import { isAccountAdminOfOrg } from '../../../../utils/account';
 import { TRPCError } from '@trpc/server';
-import { addOrgMemberToGroupHandler } from './groupHandler';
+import { addOrgMemberToTeamHandler } from './teamsHandler';
 
-export const groupsRouter = router({
-  createGroup: orgProcedure
+export const teamsRouter = router({
+  createTeam: orgProcedure
     .input(
       z.object({
-        groupName: z.string().min(2).max(50),
-        groupDescription: z.string().min(0).max(500).optional(),
-        groupColor: z.enum(uiColors)
+        teamName: z.string().min(2).max(50),
+        teamDescription: z.string().min(0).max(500).optional(),
+        teamColor: z.enum(uiColors)
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -27,8 +27,8 @@ export const groupsRouter = router({
       const { db, org } = ctx;
 
       const orgId = org?.id;
-      const { groupName, groupDescription, groupColor } = input;
-      const newPublicId = typeIdGenerator('groups');
+      const { teamName, teamDescription, teamColor } = input;
+      const newPublicId = typeIdGenerator('teams');
 
       const isAdmin = await isAccountAdminOfOrg(org);
       if (!isAdmin) {
@@ -38,19 +38,19 @@ export const groupsRouter = router({
         });
       }
 
-      await db.insert(groups).values({
+      await db.insert(teams).values({
         publicId: newPublicId,
-        name: groupName,
-        description: groupDescription,
-        color: groupColor,
+        name: teamName,
+        description: teamDescription,
+        color: teamColor,
         orgId: orgId
       });
 
       return {
-        newGroupPublicId: newPublicId
+        newTeamPublicId: newPublicId
       };
     }),
-  getOrgGroups: orgProcedure
+  getOrgTeams: orgProcedure
     .input(z.object({}).strict())
     .query(async ({ ctx }) => {
       if (!ctx.account || !ctx.org) {
@@ -62,7 +62,7 @@ export const groupsRouter = router({
       const { db, org } = ctx;
       const orgId = org?.id;
 
-      const groupQuery = await db.query.groups.findMany({
+      const teamQuery = await db.query.teams.findMany({
         columns: {
           publicId: true,
           avatarTimestamp: true,
@@ -70,7 +70,7 @@ export const groupsRouter = router({
           description: true,
           color: true
         },
-        where: and(eq(groups.orgId, orgId)),
+        where: and(eq(teams.orgId, orgId)),
         with: {
           members: {
             columns: {
@@ -99,14 +99,14 @@ export const groupsRouter = router({
       });
 
       return {
-        groups: groupQuery
+        teams: teamQuery
       };
     }),
-  getGroup: orgProcedure
+  getTeam: orgProcedure
     .input(
       z.object({
-        groupPublicId: typeIdValidator('groups'),
-        newGroup: z.boolean().optional()
+        teamPublicId: typeIdValidator('teams'),
+        newTeam: z.boolean().optional()
       })
     )
     .query(async ({ ctx, input }) => {
@@ -122,7 +122,7 @@ export const groupsRouter = router({
       // Handle when adding database replicas
       const dbReplica = db;
 
-      const groupQuery = await dbReplica.query.groups.findFirst({
+      const teamQuery = await dbReplica.query.teams.findFirst({
         columns: {
           publicId: true,
           avatarTimestamp: true,
@@ -131,8 +131,8 @@ export const groupsRouter = router({
           color: true
         },
         where: and(
-          eq(groups.publicId, input.groupPublicId),
-          eq(groups.orgId, orgId)
+          eq(teams.publicId, input.teamPublicId),
+          eq(teams.orgId, orgId)
         ),
         with: {
           members: {
@@ -163,13 +163,13 @@ export const groupsRouter = router({
       });
 
       return {
-        group: groupQuery
+        team: teamQuery
       };
     }),
-  addOrgMemberToGroup: orgProcedure
+  addOrgMemberToTeam: orgProcedure
     .input(
       z.object({
-        groupPublicId: typeIdValidator('groups'),
+        teamPublicId: typeIdValidator('teams'),
         orgMemberPublicId: typeIdValidator('orgMembers')
       })
     )
@@ -181,7 +181,7 @@ export const groupsRouter = router({
         });
       }
       const { org } = ctx;
-      const { groupPublicId, orgMemberPublicId } = input;
+      const { teamPublicId, orgMemberPublicId } = input;
 
       const isAdmin = await isAccountAdminOfOrg(org);
       if (!isAdmin) {
@@ -191,15 +191,15 @@ export const groupsRouter = router({
         });
       }
 
-      const newGroupMemberPublicId = await addOrgMemberToGroupHandler({
+      const newTeamMemberPublicId = await addOrgMemberToTeamHandler({
         orgId: org.id,
-        groupPublicId: groupPublicId,
+        teamPublicId: teamPublicId,
         orgMemberPublicId: orgMemberPublicId,
         orgMemberId: org.memberId
       });
 
       return {
-        publicId: newGroupMemberPublicId
+        publicId: newTeamMemberPublicId
       };
     })
 });

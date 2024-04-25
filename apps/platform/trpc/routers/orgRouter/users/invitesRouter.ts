@@ -28,7 +28,7 @@ import { isAccountAdminOfOrg } from '../../../../utils/account';
 import { TRPCError } from '@trpc/server';
 import { useRuntimeConfig } from '#imports';
 import { billingTrpcClient } from '../../../../utils/tRPCServerClients';
-import { addOrgMemberToGroupHandler } from './groupHandler';
+import { addOrgMemberToTeamHandler } from './teamsHandler';
 import { sendInviteEmail } from '../../../../utils/mail/transactional';
 import type { MailDomains } from '../../../../types';
 
@@ -54,9 +54,9 @@ export const invitesRouter = router({
             sendName: z.string().min(1).max(64)
           })
           .optional(),
-        groups: z
+        teams: z
           .object({
-            groupsPublicIds: z.array(typeIdValidator('groups'))
+            teamsPublicIds: z.array(typeIdValidator('teams'))
           })
           .optional()
       })
@@ -73,7 +73,7 @@ export const invitesRouter = router({
       const orgId = org?.id;
       const orgMemberId = org?.memberId || 0;
 
-      const { newOrgMember, notification, email, groups: groupsInput } = input;
+      const { newOrgMember, notification, email, teams: teamsInput } = input;
 
       // Insert account profile - save ID
       return db.transaction(async (db) => {
@@ -101,12 +101,12 @@ export const invitesRouter = router({
           orgMemberProfileId: orgMemberProfileId
         });
 
-        // Insert groupMemberships - save ID
-        if (groupsInput) {
-          for (const groupPublicId of groupsInput.groupsPublicIds) {
-            await addOrgMemberToGroupHandler({
+        // Insert teamMemberships - save ID
+        if (teamsInput) {
+          for (const teamPublicId of teamsInput.teamsPublicIds) {
+            await addOrgMemberToTeamHandler({
               orgId: org.id,
-              groupPublicId: groupPublicId,
+              teamPublicId: teamPublicId,
               orgMemberPublicId: orgMemberPublicId,
               orgMemberId: org.memberId
             });
