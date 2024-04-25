@@ -56,19 +56,26 @@
     return props.entry.type;
   });
 
+  const messageTypeClasses = {
+    message: {
+      author: 'bg-blue-10 text-white',
+      participant: 'bg-base-5 text-base-12'
+    },
+    comment: {
+      author: 'bg-blue-4 text-black',
+      participant: 'bg-base-4 text-black'
+    },
+    draft: {
+      author: 'bg-base-1',
+      participant: ''
+    }
+  };
+
   const typeClasses = computed(() => {
-    if (userIsAuthor.value) {
-      return 'bg-blue-10 text-white';
-    }
-    switch (messageType.value) {
-      case 'message':
-        return 'bg-base-5 text-base-12';
-      case 'comment':
-        return 'bg-base-4 text-base-12 ';
-      default:
-        return 'bg-base-1';
-    }
+    const accessElement = userIsAuthor.value ? 'author' : 'participant';
+    return messageTypeClasses[messageType.value][accessElement];
   });
+
   const containerClasses = computed(() => {
     return userIsAuthor.value ? 'items-end' : 'items-start';
   });
