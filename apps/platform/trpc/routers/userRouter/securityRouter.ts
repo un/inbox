@@ -3,11 +3,13 @@ import { z } from 'zod';
 import { router, accountProcedure } from '../../trpc';
 import { and, eq } from '@u22n/database/orm';
 import { accounts, authenticators, sessions } from '@u22n/database/schema';
-import { nanoIdToken, typeIdValidator, zodSchemas } from '@u22n/utils';
 import {
+  nanoIdToken,
+  typeIdValidator,
+  zodSchemas,
   calculatePasswordStrength,
   strongPasswordSchema
-} from '@u22n/utils/password';
+} from '@u22n/utils';
 import { TRPCError } from '@trpc/server';
 import { useStorage, useRuntimeConfig } from '#imports';
 import { getCookie, setCookie } from 'h3';

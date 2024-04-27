@@ -1,14 +1,14 @@
 {
   "name": "@u22n/storage",
   "private": true,
+  "type": "module",
   "engines": {
     "node": ">=20",
     "pnpm": ">=8"
   },
   "scripts": {
-    "dev": "tsx --watch --watch-preserve-output src/app.ts",
-    "build": "tsup",
-    "start": "node dist/app.mjs",
+    "dev": "tsx watch --clear-screen=false src/app.ts",
+    "start": "tsx src/app.ts",
     "check": "tsc --noEmit"
   },
   "dependencies": {

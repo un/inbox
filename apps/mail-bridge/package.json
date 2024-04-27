@@ -1,20 +1,22 @@
 {
   "name": "@u22n/mail-bridge",
   "private": true,
-  "type": "module",
   "types": "types.ts",
+  "type": "module",
   "engines": {
     "node": ">=20",
     "pnpm": ">=8"
   },
   "scripts": {
-    "dev": "PORT=3100 npx nitropack dev",
-    "build": "npx nitropack build",
-    "preview": "node .output/server/index.mjs",
-    "check": "tsc --noEmit",
-    "precheck": "nitro prepare"
+    "dev": "tsx watch --clear-screen=false app.ts",
+    "start": "tsx app.ts",
+    "check": "tsc --noEmit"
   },
   "dependencies": {
+    "@hono/node-server": "^1.11.1",
+    "@hono/trpc-server": "^0.2.0",
+    "@hono/zod-validator": "^0.2.1",
+    "@t3-oss/env-core": "^0.10.1",
     "@trpc/client": "^10.45.2",
     "@trpc/server": "^10.45.2",
     "@types/mailparser": "^3.4.4",
@@ -27,17 +29,17 @@
     "@u22n/utils": "workspace:*",
     "drizzle-kit": "^0.20.17",
     "drizzle-orm": "^0.30.3",
-    "html-to-text": "^9.0.5",
+    "hono": "^4.2.8",
     "mailauth": "^4.6.5",
     "mailparser": "^3.6.9",
     "mysql2": "^3.9.7",
-    "nitropack": "^2.9.4",
     "nodemailer": "^6.9.13",
     "superjson": "^2.2.1",
-    "trpc-nuxt": "^0.10.20",
     "zod": "^3.22.4"
   },
   "devDependencies": {
-    "@types/nodemailer": "^6.4.14"
+    "@types/node": "^20.12.7",
+    "@types/nodemailer": "^6.4.14",
+    "tsx": "^4.7.1"
   }
 }

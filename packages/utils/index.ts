@@ -33,3 +33,6 @@ export const zodSchemas = {
 };
 
 export * from './typeId';
+export * from './dns';
+export * from './dns/txtParsers';
+export * from './password';

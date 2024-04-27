@@ -17,8 +17,6 @@ import {
 } from '@u22n/database/schema';
 import { typeIdValidator } from '@u22n/utils';
 import { and, eq, inArray } from '@u22n/database/orm';
-import type { PostalConfig } from '../../types';
-import { useRuntimeConfig } from '#imports';
 import { tiptapHtml, tiptapVue3 } from '@u22n/tiptap';
 import { tipTapExtensions } from '@u22n/tiptap/extensions';
 import { sendEmail } from '../../smtp/sendEmail';
@@ -37,9 +35,9 @@ export const sendMailRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const { config, db } = ctx;
-      const postalConfig = config.postal as PostalConfig;
+      const localMode = config.MAILBRIDGE_POSTAL_LOCAL_MODE;
 
-      if (postalConfig.localMode === true) {
+      if (localMode) {
         return {
           success: true,
           metadata: {
@@ -495,8 +493,9 @@ export const sendMailRouter = router({
       let postalServerAPIKey: string;
 
       if (sendAsEmailIdentity.personalEmailIdentityId) {
-        postalServerUrl = `https://${postalConfig.personalServerCredentials.apiUrl}/api/v1/send/message`;
-        postalServerAPIKey = postalConfig.personalServerCredentials.apiKey;
+        postalServerUrl = `https://${config.MAILBRIDGE_POSTAL_SERVER_PERSONAL_CREDENTIALS.apiUrl}/api/v1/send/message`;
+        postalServerAPIKey =
+          config.MAILBRIDGE_POSTAL_SERVER_PERSONAL_CREDENTIALS.apiKey;
       } else {
         const orgPostalServerResponse = await db.query.postalServers.findFirst({
           where: and(
@@ -521,7 +520,7 @@ export const sendMailRouter = router({
           };
         }
         postalServerAPIKey = orgPostalServerResponse.apiKey;
-        const postalServerConfigItem = postalConfig.servers.find(
+        const postalServerConfigItem = config.MAILBRIDGE_POSTAL_SERVERS.find(
           (server) =>
             server.url === orgPostalServerResponse.orgPostalConfigs.host
         );
@@ -548,13 +547,13 @@ export const sendMailRouter = router({
           url: string;
         };
         const downloadUrl = (await fetch(
-          `${useRuntimeConfig().storage.url}/api/attachments/mailfetch`,
+          `${config.STORAGE_URL}/api/attachments/mailfetch`,
           {
             method: 'post',
 
             headers: {
               'Content-Type': 'application/json',
-              Authorization: useRuntimeConfig().storage.key
+              Authorization: config.STORAGE_KEY
             },
             body: JSON.stringify({
               orgPublicId: input.orgPublicId,

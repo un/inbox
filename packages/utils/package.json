@@ -2,8 +2,12 @@
   "name": "@u22n/utils",
   "version": "1.0.0",
   "description": "",
+  "type": "module",
   "scripts": {
     "check": "tsc --noEmit"
+  },
+  "exports": {
+    ".": "./index.ts"
   },
   "keywords": [],
   "author": "",
