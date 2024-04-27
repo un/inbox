@@ -83,10 +83,11 @@
   });
 
   const canDeletePasskeys = computed(() => {
+    console.log('legacySecurity', legacySecurity.value, 'data', data.value);
     if (legacySecurity.value || (data.value?.passkeys.length ?? 0) > 1) {
-      return false;
+      return true;
     }
-    return true;
+    return false;
   });
 
   const verificationPasswordInput = ref<string | undefined>(undefined);
@@ -537,10 +538,13 @@
       <div class="flex flex-col gap-2">
         <div class="flex gap-4">
           <span class="text-lg font-medium">Use Password & 2FA</span>
-          <UnUiTooltip text="Add a passkey to disable password signin">
+
+          <UnUiTooltip
+            v-if="!canDisableLegacySecurity"
+            text="Add a passkey to disable password signin">
             <UnUiToggle
               :model-value="legacySecurity"
-              :disabled="!canDisableLegacySecurity"
+              disabled="true"
               :loading="legacyLoading"
               label="Use Password & 2FA"
               @click="
@@ -550,6 +554,17 @@
                 })
               " />
           </UnUiTooltip>
+          <UnUiToggle
+            v-else
+            :model-value="legacySecurity"
+            :loading="legacyLoading"
+            label="Use Password & 2FA"
+            @click="
+              toggleLegacySecurity().finally(() => {
+                legacyLoading = false;
+                refreshSecurityData();
+              })
+            " />
         </div>
         <div
           v-if="legacySecurity"
@@ -611,15 +626,30 @@
                 <span class="text-sm font-medium">
                   {{ passkey.nickname }}
                 </span>
-
                 <span class="text-xs">
                   <UnUiTooltip :text="passkey.createdAt.toLocaleString()">
                     Created: {{ passkey.createdAt.toLocaleDateString() }}
                   </UnUiTooltip>
                 </span>
               </div>
+              <UnUiTooltip
+                v-if="!canDeletePasskeys"
+                text="Add a password & 2FA to disable passkey signin">
+                <UnUiButton
+                  disabled="true"
+                  size="sm"
+                  square
+                  color="red"
+                  icon="i-ph-trash"
+                  class="h-full"
+                  @click="
+                    deletePasskey({
+                      passkeyPublicId: passkey.publicId
+                    })
+                  " />
+              </UnUiTooltip>
               <UnUiButton
-                :disabled="canDeletePasskeys"
+                v-else
                 size="sm"
                 square
                 color="red"
