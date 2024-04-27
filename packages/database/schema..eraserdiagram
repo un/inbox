@@ -1,0 +1,713 @@
+entity-relationship-diagram
+
+accounts {
+    id: serial('id') pk,
+    publicId: publicId('account') notNull uIDX uIDX,
+    username: varchar() 32 notNull uIDX,
+    metadata: json(),
+    createdAt: timestamp() Date(),
+    lastLoginAt: timestamp(,
+    passwordHash: varchar() 255,
+    twoFactorSecret: varchar() 255,
+    twoFactorEnabled: boolean() notNull false,
+    recoveryCode: varchar() 256,
+    preAccount: boolean() notNull true
+}
+
+accounts.id < authenticators.accountId
+accounts.id - account_credentials.accountId
+accounts.id < sessions.accountId
+accounts.id < org_members.accountId
+accounts.id < org_member_profiles.accountId
+accounts.id < email_identities_personal.accountId
+
+//* Auth tables
+account_credentials {
+    id: serial('id') pk,
+    accountId: foreignKey() notNull IDX,
+    passwordHash: varchar() 255,
+    twoFactorSecret: varchar() 255,
+    twoFactorEnabled: boolean() notNull false,
+    recoveryCode: varchar() 256
+}
+
+account_credentials.accountId - accounts.id
+account_credentials.id < authenticators.accountCredentialId
+
+
+// transports type comes from @simplewebauthn/types AuthenticatorTransportFuture
+authenticators {
+    id: serial('id') pk,
+    publicId: publicId('accountPasskey') notNull uIDX,
+    accountCredentialId: foreignKey() notNull IDX,
+    accountId: foreignKey() notNull,
+    nickname: varchar() 64 notNull,
+    credentialID: varchar() 255 notNull uIDX, //Uint8Array
+    credentialPublicKey: text('credential_public_key') notNull, //Uint8Array
+    counter: bigint('counter') unsigned bigint notNull, //bigint
+    credentialDeviceType: varchar() 32 notNull,
+    credentialBackedUp: boolean() notNull,
+    transports: json(),
+    createdAt: timestamp() notNull Date()
+}
+
+authenticators.accountId - accounts.id
+authenticators.accountCredentialId - account_credentials.id
+
+sessions {
+    id: serial('id') pk,
+    publicId: publicId('accountSession') notNull uIDX,
+    accountId: foreignKey() notNull IDX,
+    accountPublicId: publicId('account') notNull uIDX,
+    sessionToken: varchar() 255 notNull uIDX,
+    device: varchar() 255 notNull,
+    os: varchar() 255 notNull,
+    expiresAt: timestamp() notNull IDX,
+    createdAt: timestamp() notNull Date()
+}
+
+sessions.accountId - accounts.id
+
+
+//******************* */
+//* ORG DATA
+orgs {
+    id: serial('id') pk,
+    publicId: publicId('org') notNull uIDX uIDX,
+    avatarTimestamp: timestamp(,
+    shortcode: varchar() 64 notNull uIDX,
+    ownerId: foreignKey() notNull,
+    name: varchar() 64 notNull,
+    metadata: json(),
+    createdAt: timestamp() notNull Date()
+}
+
+orgs.ownerId - accounts.id
+orgs.members < org_members.orgId
+orgs.domains < domains.orgId
+orgs.postalServers < postal_servers.orgId
+orgs.postalConfig < org_postal_configs.orgId
+orgs.modules < org_modules.orgId
+orgs.orgMemberProfiles < org_member_profiles.orgId
+//orgs.spaces < spaces.orgId
+
+org_invitations {
+    id: serial('id') pk,
+    publicId: publicId('orgInvitations') notNull uIDX,
+    orgId: foreignKey() notNull IDX,
+    invitedByOrgMemberId: foreignKey() notNull,
+    role: mysqlEnum('role') ['member', 'admin'] notNull,
+    orgMemberId: foreignKey() uIDX,
+    invitedOrgMemberProfileId: foreignKey(),
+    email: varchar() 128 uIDX[orgid + email],
+    inviteToken: varchar() 64,
+    invitedAt: timestamp() notNull Date(),
+    expiresAt: timestamp(,
+    acceptedAt: timestamp()
+}
+
+org_invitations.orgId - orgs.id
+org_invitations.invitedByOrgMemberId - org_members.id
+org_invitations.orgMemberId - org_members.id
+org_invitations.invitedOrgMemberProfileId - org_member_profiles.id 
+
+
+// Opt-ins/modules/add-ons/boosts tables
+org_modules {
+    id: serial('id') pk,
+    orgId: foreignKey() notNull IDX,
+    module: mysqlEnum('module') ['strip signatures', 'anonymous analytics'] notNull uIDX[orgId, module],
+    enabled: boolean() notNull false,
+    lastModifiedByOrgMember: foreignKey() notNull,
+    lastModifiedAt: timestamp(,
+    createdAt: timestamp() notNull Date()
+}
+
+org_modules.orgId - orgs.id
+org_modules.lastModifiedByOrgMember - org_members.id
+
+org_postal_configs {
+    id: serial('id') pk,
+    orgId: foreignKey() notNull IDX,
+    host: varchar() 32 notNull,
+    ipPools: json() notNull,
+    defaultIpPool: varchar() 32 notNull
+}
+
+org_postal_configs.orgId - orgs.id
+org_postal_configs.id < domains.org_postal_configs
+
+
+//* Org Members
+
+// changes to status and role must be reflected in types OrgContext
+org_members {
+    id: serial('id') pk,
+    publicId: publicId('orgMembers') notNull uIDX,
+    accountId: foreignKey() IDX,
+    orgId: foreignKey() notNull IDX uIDX[orgId, accountId],
+    invitedByOrgMemberId: foreignKey(),
+    status: mysqlEnum() ['invited', 'active', 'removed'] notNull,
+    role: mysqlEnum() ['member', 'admin'] notNull,
+    orgMemberProfileId: foreignKey() notNull,
+    addedAt: timestamp() notNull Date(),
+    removedAt: timestamp()
+}
+
+org_members.accountId - accounts.id
+org_members.orgId - orgs.id
+org_members.invitedByOrgMemberId - org_members.id
+org_members.orgMemberProfileId - org_member_profiles.id
+org_members.id < email_routing_rules_destinations.orgMemberId
+org_members.id < email_identities_authorized_org_members.orgMemberId
+
+org_member_profiles {
+    id: serial('id') pk,
+    publicId: publicId('orgMemberProfile') notNull uIDX uIDX,
+    orgId: foreignKey() notNull,
+    avatarTimestamp: timestamp(,
+    accountId: foreignKey() IDX,
+    firstName: varchar() 64,
+    lastName: varchar() 64,
+    handle: varchar() 64,
+    title: varchar() 64,
+    blurb: text('blurb'),
+    createdAt: timestamp() notNull Date()
+}
+
+org_member_profiles.accountId - accounts.id
+org_member_profiles.orgId - orgs.id
+
+groups {
+    id: serial('id') pk,
+    publicId: publicId('groups') notNull uIDX uIDX,
+    avatarTimestamp: timestamp(,
+    orgId: foreignKey() notNull IDX,
+    name: varchar() 128 notNull,
+    color: mysqlEnum() [uiColors],
+    description: text('description'),
+    createdAt: timestamp() notNull Date()
+}
+
+groups.orgId - orgs.id
+groups.id < group_members.groupId
+groups.id < email_routing_rules_destinations.groupId
+groups.id < email_identities_authorized_org_members.groupId
+
+group_members {
+    id: serial('id') pk,
+    orgId: foreignKey() notNull,
+    publicId: publicId('groupMembers') notNull uIDX,
+    groupId: foreignKey() notNull IDX,
+    orgMemberId: foreignKey() notNull IDX uIDX[groupId, orgMemberId],
+    orgMemberProfileId: foreignKey(),
+    addedBy: foreignKey() notNull,
+    role: mysqlEnum() ['member', 'admin'] notNull,
+    notifications: mysqlEnum() ['active', 'muted', 'off'] notNull,
+    createdAt: timestamp() notNull Date()
+}
+
+group_members.orgId - orgs.id
+group_members.groupId - groups.id
+group_members.orgMemberId - org_members.id
+group_members.orgMemberProfileId - org_member_profiles.id
+
+
+//******************* */
+//* Spaces
+
+// export const spaces = mysqlTable(
+//   'spaces',
+//   {
+//     id: serial('id') pk,
+//     publicId: publicId('spaces') notNull uIDX,
+//     orgId: foreignKey() notNull,
+//     name: varchar() 128 notNull,
+//     icon: varchar() 32,
+//     color: mysqlEnum('color', [...uiColors]),
+//     description: text('description'),
+//     avatarTimestamp: timestamp(,
+//     createdBy: foreignKey() notNull,
+//     createdAt: timestamp()
+//        notNull
+//        Date()
+// },
+//   (table) => ({
+//     publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
+//     orgIdIndex: index('org_id_idx').on(table.orgId)
+// })
+// );
+// export const spacesRelations = relations(spaces, ({ one, many }) => ({
+//   org: one(orgs, {
+//     fields: [spaces.orgId],
+//     references: [orgs.id]
+// }),
+//   createdBy: one(orgMembers, {
+//     fields: [spaces.createdBy],
+//     references: [org_members.id]
+// }),
+//   spaceMembers: many(spaceMembers)
+// }));
+
+// export const spaceMembers = mysqlTable(
+//   'space_members',
+//   {
+//     id: serial('id') pk,
+//     publicId: publicId('spaceMembers') notNull uIDX,
+//     spaceId: foreignKey() notNull,
+//     orgMemberId: foreignKey() notNull,
+//     role: mysqlEnum('role', ['member', 'admin']) notNull.default('member'),
+//     addedBy: foreignKey() notNull,
+//     createdAt: timestamp()
+//        notNull
+//        Date()
+// },
+//   (table) => ({
+//     spaceIdIndex: index('space_id_idx').on(table.spaceId),
+//     orgMemberIdIndex: index('org_member_id_idx').on(table.orgMemberId),
+//     spaceMemberIndex: uniqueIndex('space_member_idx').on(
+//       table.spaceId,
+//       table.orgMemberId
+//     )
+// })
+// );
+
+// export const spaceMembersRelations = relations(spaceMembers, ({ one }) => ({
+//   space: one(spaces, {
+//     fields: [spaceMembers.spaceId],
+//     references: [spaces.id]
+// }),
+//   orgMember: one(orgMembers, {
+//     fields: [spaceMembers.orgMemberId],
+//     references: [org_members.id]
+// }),
+//   addedBy: one(orgMembers, {
+//     fields: [spaceMembers.addedBy],
+//     references: [org_members.id]
+// })
+// }));
+
+//******************* */
+//* Domains table
+domains {
+    id: serial('id') pk,
+    publicId: publicId('domains') notNull uIDX,
+    orgId: foreignKey() notNull IDX,
+    catchAllAddress: foreignKey(),
+    postalHost: varchar() 32 notNull,
+    domain: varchar() 256 notNull uIDX,
+    forwardingAddress: varchar() 128,
+    postalId: varchar() 64 uIDX,
+    domainStatus: mysqlEnum() notNull,
+    sendingMode: mysqlEnum() notNull,
+    receivingMode: mysqlEnum() notNull,
+    dkimKey: varchar() 32,
+    dkimValue: varchar() 256,
+    verificationToken: varchar() 64,
+    mxDnsValid: boolean() notNull false,
+    dkimDnsValid: boolean() notNull false,
+    spfDnsValid: boolean() notNull false,
+    returnPathDnsValid: boolean() notNull false,
+    lastDnsCheckAt: timestamp(,
+    disabledAt: timestamp(,
+    verifiedAt: timestamp(,
+    createdAt: timestamp() notNull Date()
+}
+
+domains.orgId - orgs.id
+domains.postalHost - org_postal_configs.id
+domains.catchAllAddress - email_identities.id
+
+
+//******************* */
+//* Postal servers
+
+postal_servers {
+    id: serial('id') pk,
+    publicId: publicId('postalServers') notNull uIDX,
+    orgId: foreignKey() notNull IDX,
+    type: mysqlEnum() notNull,
+    apiKey: varchar() 64 notNull,
+    smtpKey: varchar() 64,
+    rootForwardingAddress: varchar() 128
+}
+
+postal_servers.orgId - orgs.id
+postal_servers.id < org_postal_configs.postalServerId
+
+//******************* */
+//* Contacts
+
+// TODO: Add email generated column when supported in Drizzle-orm: https://github.com/drizzle-team/drizzle-orm/pull/1471
+
+contacts {
+    id: serial('id') pk,
+    publicId: publicId('contacts') notNull uIDX,
+    avatarTimestamp: timestamp(,
+    orgId: foreignKey() notNull IDX uIDX[orgId, emailUsername, emailDomain]
+    reputationId: foreignKey() notNull,
+    name: varchar() 128,
+    setName: varchar() 128,
+    emailUsername: varchar() 128 notNull IDX,
+    emailDomain: varchar() 128 notNull IDX,
+    signaturePlainText: text('signature'),
+    signatureHtml: text('signature_html'),
+    type: mysqlEnum() notNull,
+    screenerStatus: mysqlEnum(),
+    createdAt: timestamp() notNull Date()
+}
+
+contacts.orgId - orgs.id
+contacts.reputationId - contact_global_reputations.id
+contacts.id < convo_participants.contactId
+
+contact_global_reputations {
+    id: serial('id') pk,
+    emailAddress: varchar() 128 notNull uIDX,
+    spam: tinyint('spam') notNull,
+    cold: tinyint('cold') notNull,
+    newsletter: tinyint('newsletter') notNull,
+    marketing: tinyint('marketing') notNull,
+    product: tinyint('product') notNull,
+    messageCount: mediumint('message_count') notNull,
+    lastUpdated: timestamp() notNull Date()
+}
+
+contact_global_reputations.id < contacts.reputationId
+
+//******************* */
+//* Email Identities
+
+email_routing_rules {
+    id: serial('id') pk,
+    publicId: publicId('emailRoutingRules') notNull uIDX,
+    orgId: foreignKey() notNull IDX,
+    name: varchar() 128 notNull,
+    description: text('description'),
+    createdBy: foreignKey() notNull,
+    createdAt: timestamp() notNull Date()
+}
+
+email_routing_rules.orgId - orgs.id
+email_routing_rules.createdBy - org_members.id
+email_routing_rules.id < email_routing_rules_destinations.ruleId
+email_routing_rules.id < email_identities.routingRuleId
+
+email_routing_rules_destinations {
+    id: serial('id') pk,
+    publicId: publicId('emailRoutingRuleDestinations') notNull uIDX,
+    orgId: foreignKey() notNull IDX,
+    ruleId: foreignKey() notNull,
+    spaceId: foreignKey(),
+    groupId: foreignKey(),
+    orgMemberId: foreignKey(),
+    createdAt: timestamp() notNull Date()
+}
+
+email_routing_rules_destinations.orgId - orgs.id
+email_routing_rules_destinations.ruleId - email_routing_rules.id
+//email_routing_rules_destinations.spaceId - spaces.id
+email_routing_rules_destinations.groupId - groups.id
+email_routing_rules_destinations.orgMemberId - org_members.id
+
+email_identities {
+    id: serial('id') pk,
+    publicId: publicId('emailIdentities') notNull uIDX,
+    orgId: foreignKey() notNull IDX,
+    username: varchar() 32 notNull uIDX[username, domainName],
+    domainName: varchar() 128 notNull IDX,
+    domainId: foreignKey() IDX,
+    routingRuleId: foreignKey() notNull,
+    sendName: varchar() 128,
+    createdBy: foreignKey() notNull,
+    isCatchAll: boolean() notNull false,
+    personalEmailIdentityId: foreignKey(),
+    externalCredentialsId: foreignKey(),
+    forwardingAddress: varchar() 128,
+    createdAt: timestamp() notNull Date()
+}
+
+email_identities.orgId - orgs.id
+email_identities.domainId - domains.id
+email_identities.routingRuleId - email_routing_rules.id
+email_identities.createdBy - org_members.id
+email_identities.personalEmailIdentityId - email_identities_personal.id
+email_identities.externalCredentialsId - email_identity_external.id
+
+email_identities_authorized_org_members {
+    id: serial('id') pk,
+    orgId: foreignKey() notNull IDX,
+    identityId: foreignKey() notNull IDX,
+    orgMemberId: foreignKey() uIDX[identityId, orgMemberId],
+    groupId: foreignKey() uIDX[identityId, groupId],
+    default: boolean() notNull false,
+    addedBy: foreignKey() notNull,
+    createdAt: timestamp() notNull Date()
+}
+
+email_identities_authorized_org_members.orgId - orgs.id
+email_identities_authorized_org_members.identityId - email_identities.id
+email_identities_authorized_org_members.orgMemberId - org_members.id
+email_identities_authorized_org_members.groupId - groups.id
+
+
+email_identities_personal {
+    id: serial('id') pk,
+    publicId: publicId('emailIdentitiesPersonal') notNull uIDX,
+    accountId: foreignKey() notNull IDX,
+    orgId: foreignKey() notNull IDX,
+    emailIdentityId: foreignKey() notNull IDX,
+    createdAt: timestamp() notNull Date()
+}
+
+email_identities_personal.accountId - accounts.id
+email_identities_personal.orgId - orgs.id
+email_identities_personal.emailIdentityId - email_identities.id
+
+email_identity_external {
+    id: serial('id') pk,
+    publicId: publicId('emailIdentitiesExternal') notNull uIDX,
+    orgId: foreignKey() notNull IDX,
+    nickname: varchar() 128 notNull,
+    createdBy: foreignKey() notNull,
+    username: varchar() 128 notNull,
+    password: varchar() 128 notNull,
+    host: varchar() 128 notNull,
+    port: smallint('port') notNull,
+    authMethod: mysqlEnum() notNull, // No support for CRAM_MD5 yet, does it even gets used?
+    encryption: mysqlEnum()  notNull,
+    createdAt: timestamp() notNull Date()
+}
+
+email_identity_external.orgId - orgs.id
+email_identity_external.createdBy - org_members.id
+email_identity_external.id < email_identities.externalCredentialsId
+
+
+//******************* */
+//* conversation tables
+
+convos {
+    id: serial('id') pk,
+    orgId: foreignKey() notNull IDX,
+    publicId: publicId('convos') notNull uIDX,
+    lastUpdatedAt: timestamp() notNull,
+    createdAt: timestamp() notNull Date()
+}
+
+convos.orgId - orgs.id
+convos.id < convo_participants.convoId
+convos.id < convo_attachments.convoId
+convos.id < convo_entries.convoId
+convos.id < convo_subjects.convoId
+convos.id < convo_seen_timestamps.convoId
+//convos.id < convo_to_spaces.convoId
+
+// export const convoToSpaces = mysqlTable(
+//   'convo_to_spaces',
+//   {
+//     id: serial('id') pk,
+//     orgId: foreignKey() notNull,
+//     convoId: foreignKey() notNull,
+//     spaceId: foreignKey() notNull
+//     // Status
+//     //label
+// },
+//   (table) => ({
+//     orgIdIndex: index('org_id_idx').on(table.orgId),
+//     convoIdIndex: index('convo_id_idx').on(table.convoId),
+//     spaceIdIndex: index('space_id_idx').on(table.spaceId)
+// })
+// );
+
+// export const convoToSpacesRelations = relations(convoToSpaces, ({ one }) => ({
+//   org: one(orgs, {
+//     fields: [convoToSpaces.orgId],
+//     references: [orgs.id]
+// }),
+//   convo: one(convos, {
+//     fields: [convoToSpaces.convoId],
+//     references: [convos.id]
+// }),
+//   space: one(spaces, {
+//     fields: [convoToSpaces.spaceId],
+//     references: [spaces.id]
+// })
+// }));
+
+convo_subjects {
+    id: serial('id') pk,
+    orgId: foreignKey() notNull IDX,
+    publicId: publicId('convoSubjects') notNull uIDX,
+    convoId: foreignKey() notNull IDX,
+    subject: varchar() 256 notNull,
+    createdAt: timestamp() notNull Date()
+}
+
+convos.orgId - orgs.id
+convo_subjects.convoId > convos.id
+
+convo_participants {
+    id: serial('id') pk,
+    orgId: foreignKey() notNull IDX,
+    publicId: publicId('convoParticipants') notNull uIDX,
+    orgMemberId: foreignKey() IDX uIDX[convoId, orgMemberId],
+    groupId: foreignKey() uIDX[convoId, groupId],
+    contactId: foreignKey(),
+    convoId: foreignKey() notNull IDX,
+    role: mysqlEnum() notNull,
+    emailIdentityId: foreignKey(),
+    notifications: mysqlEnum() notNull,
+    lastReadAt: timestamp(),
+    active: boolean() notNull true,
+    hidden: boolean() notNull false,
+    createdAt: timestamp() notNull Date()
+}
+
+convo_participants.orgId - orgs.id
+convo_participants.orgMemberId - org_members.id
+convo_participants.groupId - groups.id
+convo_participants.contactId - contacts.id
+convo_participants.convoId - convos.id
+convo_participants.emailIdentityId - email_identities.id
+convo_participants.id < convo_seen_timestamps.participantId
+convo_participants.id < convo_participant_group_members.convoParticipantId
+
+convo_participant_group_members {
+    id: serial('id') pk,
+    orgId: foreignKey() notNull,
+    convoParticipantId: foreignKey() notNull IDX,
+    groupId: foreignKey() notNull IDX
+}
+
+convo_participant_group_members.orgId - orgs.id
+convo_participant_group_members.convoParticipantId - convo_participants.id
+convo_participant_group_members.groupId - groups.id
+
+convo_attachments {
+    id: serial('id') pk,
+    orgId: foreignKey() notNull IDX,
+    publicId: publicId('convoAttachments') notNull uIDX,
+    convoId: foreignKey() notNull IDX,
+    convoEntryId: foreignKey() IDX,
+    fileName: varchar() 256 notNull,
+    type: varchar() 256 notNull,
+    size: int() unsigned notNull,
+    inline: boolean() notNull false,
+    public: boolean() notNull false,
+    convoParticipantId: foreignKey() notNull,
+    createdAt: timestamp() notNull Date()
+}
+
+convo_attachments.orgId - orgs.id
+convo_attachments.convoId - convos.id
+convo_attachments.convoEntryId - convo_entries.id
+convo_attachments.convoParticipantId - convo_participants.id
+
+pending_attachments {
+    id: serial('id') pk,
+    publicId: publicId('convoAttachments') notNull uIDX,
+    orgId: foreignKey() notNull IDX,
+    orgPublicId: publicId('org') notNull uIDX,
+    filename: varchar() 256 notNull,
+    createdAt: timestamp() notNull Date()
+}
+
+pending_attachments.orgId - orgs.id
+
+convo_entries {
+    id: serial('id') pk,
+    orgId: foreignKey() notNull IDX,
+    publicId: publicId('convoEntries') notNull uIDX,
+    type: mysqlEnum() notNull IDX,
+    convoId: foreignKey() notNull IDX,
+    subjectId: foreignKey(),
+    author: foreignKey() notNull,
+    replyToId: foreignKey() IDX,
+    body: json() notNull,
+    bodyPlainText: text('body_plain_text') notNull,
+    metadata: json(),
+    emailMessageId: messageIdCustomType(),
+    visibility: mysqlEnum() notNull,
+    createdAt: timestamp() notNull Date()
+}
+
+convo_entries.orgId - orgs.id
+convo_entries.convoId - convos.id
+convo_entries.subjectId - convo_subjects.id
+convo_entries.author - convo_participants.id
+convo_entries.replyToId - convo_entries.id
+convo_entries.id < convo_entry_replies.entrySourceId
+convo_entries.id < convo_entry_private_visibility_participants.entryId
+convo_entries.id < convo_entry_seen_timestamps.convoEntryId
+convo_entries.id < convo_entry_raw_html_emails.entryId
+
+convo_entry_replies {
+    id: serial('id') pk,
+    orgId: foreignKey() notNull,
+    entrySourceId: foreignKey() notNull,
+    entryReplyId: foreignKey(),
+    createdAt: timestamp() notNull Date()
+}
+
+convo_entry_replies.orgId - orgs.id
+convo_entry_replies.entrySourceId - convo_entries.id
+convo_entry_replies.entryReplyId - convo_entries.id
+
+convo_entry_private_visibility_participants {
+    id: serial('id') pk,
+    orgId: foreignKey() notNull,
+    entryId: foreignKey() notNull IDX,
+    convoMemberId: foreignKey() notNull,
+    createdAt: timestamp() notNull Date()
+}
+
+convo_entry_private_visibility_participants.orgId - orgs.id
+convo_entry_private_visibility_participants.entryId - convo_entries.id
+convo_entry_private_visibility_participants.convoMemberId - convo_participants.id
+
+convo_entry_raw_html_emails {
+    id: serial('id') pk,
+    orgId: foreignKey() notNull,
+    entryId: foreignKey() notNull IDX,
+    headers: json() notNull,
+    html: mediumtext('html') notNull,
+    wipeDate: timestamp() notNull,
+    keep: boolean() notNull false,
+    wiped: boolean() notNull false
+} 
+
+convo_entry_raw_html_emails.orgId - orgs.id
+convo_entry_raw_html_emails.entryId - convo_entries.id
+
+// timestamps
+convo_seen_timestamps {
+    pk: convoId+participantId+orgMemberId,
+    orgId: foreignKey() notNull,
+    convoId: foreignKey() notNull IDX,
+    participantId: foreignKey() notNull,
+    orgMemberId: foreignKey() notNull,
+    seenAt: timestamp() notNull IDX
+}
+
+convo_seen_timestamps.orgId - orgs.id
+convo_seen_timestamps.convoId - convos.id
+convo_seen_timestamps.participantId - convo_participants.id
+convo_seen_timestamps.orgMemberId - org_members.id
+
+convo_entry_seen_timestamps {
+    pk: convoEntryId+participantId+orgMemberId,
+    orgId: foreignKey() notNull,
+    convoEntryId: foreignKey() notNull IDX,
+    participantId: foreignKey() notNull,
+    orgMemberId: foreignKey() notNull,
+    seenAt: timestamp() notNull IDX
+}
+
+convo_entry_seen_timestamps.orgId - orgs.id
+convo_entry_seen_timestamps.convoEntryId - convo_entries.id
+convo_entry_seen_timestamps.participantId - convo_participants.id
+convo_entry_seen_timestamps.orgMemberId - org_members.id
+
+
+
