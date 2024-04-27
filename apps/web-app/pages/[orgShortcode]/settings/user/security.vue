@@ -83,7 +83,6 @@
   });
 
   const canDeletePasskeys = computed(() => {
-    console.log('legacySecurity', legacySecurity.value, 'data', data.value);
     if (legacySecurity.value || (data.value?.passkeys.length ?? 0) > 1) {
       return true;
     }
