@@ -6,7 +6,7 @@ import { type StoreApi, useStore } from 'zustand';
 import {
   type GlobalStore,
   createGlobalStore,
-  GlobalStoreState
+  type GlobalStoreState
 } from '@/stores/global-store';
 
 export const GlobalStoreContext = createContext<StoreApi<GlobalStore> | null>(

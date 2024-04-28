@@ -6,40 +6,16 @@ import { GlobalStoreProvider } from '@/providers/global-store-provider';
 import { ConvoStoreProvider } from '@/providers/convo-store-provider';
 import Link from 'next/link';
 import { api } from '@/lib/trpc';
-import { useQuery } from '@tanstack/react-query';
 
 export default function Layout({
   children,
   params: { orgShortCode }
 }: Readonly<{ children: React.ReactNode; params: { orgShortCode: string } }>) {
-  const getStoreDataApi = api.useUtils().org.store.getStoreData;
-
   const {
     data: storeData,
     isPending: storeDataLoading,
     error: storeError
-  } = useQuery({
-    queryKey: ['org.store.getStoreData', {}],
-    queryFn: async () => {
-      return await getStoreDataApi
-        .fetch({})
-        .then(({ publicId, username, orgMemberships }) => {
-          const transformed = {
-            user: { publicId, username },
-            orgs: orgMemberships.map(({ org, profile }) => ({
-              name: org.name,
-              publicId: org.publicId,
-              shortCode: org.shortcode,
-              avatarTimestamp: org.avatarTimestamp,
-              orgMemberProfile: profile
-            }))
-          };
-          const currentOrg =
-            transformed.orgs.find((o) => o.shortCode === orgShortCode) ?? null;
-          return { ...transformed, currentOrg };
-        });
-    }
-  });
+  } = api.org.store.getStoreData.useQuery({ orgShortCode });
 
   if (storeDataLoading) {
     return (
@@ -108,7 +84,6 @@ export default function Layout({
   }
 
   return (
-    // @ts-expect-error, idk why this is behaving like this
     <GlobalStoreProvider initialState={storeData}>
       <ConvoStoreProvider>
         <Flex className="h-full w-full">

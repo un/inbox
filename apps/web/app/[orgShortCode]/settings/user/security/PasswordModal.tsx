@@ -14,8 +14,7 @@ import Modal from '@/hooks/use-awaitable-modal';
 import { type Dispatch, type SetStateAction, useEffect, useState } from 'react';
 import { api } from '@/lib/trpc';
 import useLoading from '@/hooks/use-loading';
-import { startRegistration } from '@simplewebauthn/browser';
-import { Check, Plus, Fingerprint, HelpCircle } from 'lucide-react';
+import { Check, Plus, HelpCircle } from 'lucide-react';
 import TogglePasswordBox from '@/components/toggle-password';
 import { useDebounce } from '@uidotdev/usehooks';
 import { toDataURL } from 'qrcode';
@@ -27,150 +26,221 @@ import {
   InputOTPSlot
 } from '@/components/input-otp';
 import { downloadAsFile } from '@/lib/utils';
-import Image from 'next/image';
 
-export const passkeyModal = ({ username }: { username: string }) =>
-  Modal(({ open, onClose, onResolve }) => {
-    const [state, setState] = useState<string | null>(null);
+export const passwordModal = () =>
+  Modal<unknown, { verificationToken: string }>(
+    ({ open, onClose, onResolve, args }) => {
+      const [password, setPassword] = useState<string>();
+      const [error, setError] = useState<string | null>(null);
+      const [confirmPassword, setConfirmPassword] = useState<string>(
+        password ?? ''
+      );
+      const debouncedPassword = useDebounce(password, 1000);
 
-    const getPasskeyChallenge =
-      api.useUtils().auth.passkey.signUpWithPasskeyStart;
-    const verifyPasskeyChallenge =
-      api.auth.passkey.signUpWithPasskeyFinish.useMutation();
+      const checkPasswordStrength =
+        api.useUtils().auth.signup.checkPasswordStrength;
 
-    const { error, loading, run } = useLoading(async () => {
-      setState('Getting a passkey challenge from server');
-      const { options, publicId } = await getPasskeyChallenge.fetch({
-        username
-      });
-      setState('Waiting for your passkey to respond');
-      const passkeyData = await startRegistration(options).catch((e: Error) => {
-        if (e.name === 'NotAllowedError') {
-          e.message = 'Passkey verification was timed out or cancelled';
+      const {
+        data: passwordCheckData,
+        loading: passwordCheckLoading,
+        run: checkPassword
+      } = useLoading(
+        async (signal) => {
+          if (!password) return;
+          if (password.length < 8) {
+            return { error: 'Password must be at least 8 characters long' };
+          }
+          return await checkPasswordStrength.fetch({ password }, { signal });
+        },
+        {
+          onError: (err) => {
+            setError(err.message);
+          }
         }
-        throw e;
-      });
-      setState("Verifying your passkey's response");
-      await verifyPasskeyChallenge.mutateAsync({
-        username,
-        publicId,
-        registrationResponseRaw: passkeyData
-      });
-      onResolve({});
-    });
+      );
 
-    useEffect(() => {
-      if (error) {
-        setState(error.message);
-      }
-    }, [error]);
+      useEffect(() => {
+        if (typeof debouncedPassword === 'undefined') return;
+        checkPassword({ clearData: true, clearError: true });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+      }, [debouncedPassword]);
 
-    return (
-      <Dialog.Root
-        open={open}
-        onOpenChange={() => {
-          if (open) onClose();
-        }}>
-        <Dialog.Content className="w-full max-w-96 p-4">
-          <Dialog.Title className="mx-auto w-fit py-4">
-            Sign up with Passkey
-          </Dialog.Title>
-          <Flex
-            gap="2"
-            justify="center">
-            <Spinner loading={loading && !error} />
-            <Text
-              as="div"
-              size="2"
-              mb="1"
-              weight="bold">
-              {state}
-            </Text>
-          </Flex>
+      const passwordValid =
+        passwordCheckData &&
+        'score' in passwordCheckData &&
+        passwordCheckData.score >= 3 &&
+        password === confirmPassword;
 
-          <Flex
-            className="w-full p-2"
-            direction="column"
-            gap="4">
-            <Button
-              loading={loading}
-              size="3"
-              className="mx-auto my-4"
-              onClick={() => run()}>
-              <Fingerprint size={20} />
-              <Text>Use your Passkey</Text>
-            </Button>
-            <Button
-              variant="soft"
-              color="gray"
-              size="3"
-              onClick={() => onClose()}>
-              Cancel
-            </Button>
-          </Flex>
-        </Dialog.Content>
-      </Dialog.Root>
-    );
-  });
+      const setPasswordApi = api.account.security.resetPassword.useMutation();
+      const { loading: passwordLoading, run: updatePassword } = useLoading(
+        async () => {
+          if (!args?.verificationToken)
+            throw new Error('No verification token provided');
+          if (!password) throw new Error('Password is required');
+          await setPasswordApi.mutateAsync({
+            newPassword: password,
+            verificationToken: args?.verificationToken
+          });
+          onResolve({});
+        },
+        {
+          onError: (err) => {
+            setError(err.message);
+          }
+        }
+      );
 
-export const passwordModal = ({ username }: { username: string }) =>
-  Modal<{ recoveryCode: string }, unknown>(({ open, onClose, onResolve }) => {
-    const [password, setPassword] = useState<string>();
-    const [twoFactorCode, setTwoFactorCode] = useState<string>('');
-    const [step, setStep] = useState(1);
+      return (
+        <Dialog.Root open={open}>
+          <Dialog.Content className="w-full max-w-96 p-4">
+            <Dialog.Title className="mx-auto w-fit">
+              Set your Password
+            </Dialog.Title>
+            <Dialog.Description>
+              <Text
+                weight="bold"
+                size="2"
+                align="center"
+                className="p-2">
+                Choose a Password
+              </Text>
+            </Dialog.Description>
 
-    return (
-      <Dialog.Root
-        open={open}
-        onOpenChange={() => {
-          if (open) onClose();
-        }}>
-        <Dialog.Content className="w-full max-w-96 p-4">
-          <Dialog.Title className="mx-auto w-fit">
-            Sign up with Password
-          </Dialog.Title>
-          <Dialog.Description>
-            <Text
-              weight="bold"
-              size="2"
-              align="center"
-              className="p-2">
-              {step === 1 ? 'Choose a password' : 'Setup 2FA'}
-            </Text>
-          </Dialog.Description>
-          {step === 1 && (
-            <PasswordModalStep1
-              password={password}
-              setPassword={setPassword}
-              onClose={onClose}
-              setStep={setStep}
-            />
-          )}
-          {step === 2 && (
-            <PasswordModalStep2
-              username={username}
-              password={password}
-              twoFactorCode={twoFactorCode}
-              setTwoFactorCode={setTwoFactorCode}
-              onResolve={onResolve}
-              setStep={setStep}
-            />
-          )}
-        </Dialog.Content>
-      </Dialog.Root>
-    );
-  });
+            <Flex
+              className="w-full p-2"
+              direction="column"
+              gap="4">
+              <TogglePasswordBox
+                passwordValue={password}
+                setPasswordValue={setPassword}
+                textFieldProps={{
+                  autoComplete: 'new-password',
+                  id: 'password',
+                  color: passwordCheckData
+                    ? 'error' in passwordCheckData ||
+                      passwordCheckData.score < 3
+                      ? 'red'
+                      : 'green'
+                    : undefined
+                }}
+                label="Password"
+              />
+              {passwordCheckLoading && (
+                <Flex
+                  align="center"
+                  gap="2"
+                  className="w-full">
+                  <Spinner loading />
+                  <Text
+                    size="2"
+                    weight="bold">
+                    Checking password strength
+                  </Text>
+                </Flex>
+              )}
+              {passwordCheckData && 'error' in passwordCheckData && (
+                <Text
+                  size="2"
+                  color="red"
+                  weight="bold">
+                  {passwordCheckData.error}
+                </Text>
+              )}
+              {passwordCheckData && 'score' in passwordCheckData && (
+                <Flex
+                  gap="1"
+                  align="center">
+                  {passwordCheckData.score >= 3 ? (
+                    <Check
+                      size={16}
+                      className="stroke-green-10"
+                    />
+                  ) : (
+                    <Plus
+                      size={16}
+                      className="stroke-red-10 rotate-45"
+                    />
+                  )}
+                  <Text
+                    size="2"
+                    weight="bold"
+                    className="flex-1"
+                    color={passwordCheckData.score >= 3 ? 'green' : 'red'}>
+                    Your password is{' '}
+                    {
+                      ['very weak', 'weak', 'fair', 'strong', 'very strong'][
+                        passwordCheckData.score
+                      ]
+                    }
+                  </Text>
+                  <Tooltip
+                    content={
+                      <Text size="2">
+                        It would take a computer {passwordCheckData.crackTime}{' '}
+                        to crack it
+                      </Text>
+                    }>
+                    <HelpCircle size={14} />
+                  </Tooltip>
+                </Flex>
+              )}
+              <TogglePasswordBox
+                passwordValue={confirmPassword}
+                setPasswordValue={setConfirmPassword}
+                textFieldProps={{
+                  id: 'confirm-password',
+                  color:
+                    confirmPassword && confirmPassword.length > 0
+                      ? password === confirmPassword
+                        ? 'green'
+                        : 'red'
+                      : undefined
+                }}
+                label="Confirm Password"
+              />
 
-const PasswordModalStep1 = ({
+              <Text
+                as="div"
+                size="2"
+                color="red"
+                className="text-center">
+                {error}
+              </Text>
+
+              <Button
+                size="2"
+                disabled={!passwordValid}
+                loading={passwordLoading}
+                onClick={() => updatePassword()}>
+                Set Password
+              </Button>
+              <Button
+                variant="soft"
+                color="gray"
+                size="2"
+                onClick={() => onClose()}>
+                Cancel
+              </Button>
+            </Flex>
+          </Dialog.Content>
+        </Dialog.Root>
+      );
+    }
+  );
+
+{
+  /* const PasswordModalStep1 = ({
   password,
   setPassword,
   onClose,
-  setStep
+  setStep,
+  verificationToken
 }: {
   password?: string;
   setPassword: Dispatch<SetStateAction<string | undefined>>;
   onClose: () => void;
   setStep: Dispatch<SetStateAction<number>>;
+  verificationToken?: string;
 }) => {
   const [error, setError] = useState<string | null>(null);
   const [confirmPassword, setConfirmPassword] = useState<string>(
@@ -328,9 +398,11 @@ const PasswordModalStep1 = ({
       </Button>
     </Flex>
   );
-};
+}; */
+}
 
-const PasswordModalStep2 = ({
+{
+  /* const PasswordModalStep2 = ({
   username,
   password,
   twoFactorCode,
@@ -509,9 +581,11 @@ const PasswordModalStep2 = ({
       </Button>
     </Flex>
   );
-};
+}; */
+}
 
-export const recoveryCodeModal = () =>
+{
+  /* export const recoveryCodeModal = () =>
   Modal<unknown, { recoveryCode: string; username: string }>(
     ({ onResolve, open, args }) => {
       const [downloaded, setDownloaded] = useState(false);
@@ -560,4 +634,5 @@ export const recoveryCodeModal = () =>
         </Dialog.Root>
       );
     }
-  );
+  ); */
+}

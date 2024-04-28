@@ -7,14 +7,15 @@ export type AwaitableModalApi<ResolveArgs, OpenArgs> = {
   onResolve: (data: ResolveArgs) => void;
 };
 
-export default function useAwaitableModal<ResolveArgs, OpenArgs>(
-  renderFn: (args: AwaitableModalApi<ResolveArgs, OpenArgs>) => ReactNode
-) {
+export default function useAwaitableModal<
+  ResolveArgs = unknown,
+  OpenArgs = unknown
+>(renderFn: (args: AwaitableModalApi<ResolveArgs, OpenArgs>) => ReactNode) {
   const [open, setOpen] = useState(false);
 
   const promiseRef = useRef<{
     resolve: (_: ResolveArgs) => void;
-    reject: (res: Error | null) => void;
+    reject: (_: Error | null) => void;
     args: OpenArgs;
   } | null>(null);
 

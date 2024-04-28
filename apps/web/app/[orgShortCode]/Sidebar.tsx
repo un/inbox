@@ -3,6 +3,7 @@
 import useLoading from '@/hooks/use-loading';
 import { cn, generateAvatarUrl, getInitials } from '@/lib/utils';
 import { useGlobalStore } from '@/providers/global-store-provider';
+
 import {
   Button,
   Flex,
@@ -28,6 +29,7 @@ import {
   ShieldAlert,
   Sun
 } from 'lucide-react';
+import { env } from 'next-runtime-env';
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -200,9 +202,12 @@ export default function Sidebar() {
 
 function OrgMenu({ collapsed }: { collapsed: boolean }) {
   const currentOrg = useGlobalStore((state) => state.currentOrg);
+  const setCurrentOrg = useGlobalStore((state) => state.setCurrentOrg);
   const username = useGlobalStore((state) => state.user.username);
   const orgs = useGlobalStore((state) => state.orgs);
-  const setCurrentOrg = useGlobalStore((state) => state.setCurrentOrg);
+
+  const PLATFORM_URL = env('NEXT_PUBLIC_PLATFORM_URL');
+
   const { setTheme, resolvedTheme } = useTheme();
   const router = useRouter();
 
@@ -231,10 +236,11 @@ function OrgMenu({ collapsed }: { collapsed: boolean }) {
     loading: loggingOut,
     error: logOutError
   } = useLoading(async () => {
-    await fetch(`${process.env.NEXT_PUBLIC_PLATFORM_URL}/auth/logout`, {
+    await fetch(`${PLATFORM_URL}/auth/logout`, {
       method: 'POST',
       credentials: 'include'
     });
+
     router.replace('/');
   });
 
