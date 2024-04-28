@@ -43,6 +43,5 @@
     "superjson": "^2.2.1",
     "trpc-nuxt": "^0.10.20",
     "zod": "^3.22.4"
-  },
-  "packageManager": "pnpm@8.5.1"
+  }
 }
