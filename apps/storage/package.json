@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "tsx watch --clear-screen=false src/app.ts",
-    "start": "tsx src/app.ts",
+    "start": "node --import=tsx src/app.ts",
     "check": "tsc --noEmit"
   },
   "dependencies": {
