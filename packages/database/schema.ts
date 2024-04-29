@@ -20,7 +20,7 @@ import {
 } from 'drizzle-orm/mysql-core';
 import { relations } from 'drizzle-orm';
 import { uiColors } from '@u22n/types/ui';
-import { typeIdDataType as publicId } from '@u22n/utils/typeId';
+import { typeIdDataType as publicId } from '@u22n/utils';
 
 // TODO: we need to make this separated from nuxt apps, imports from "#import" breaks everything
 

@@ -3,7 +3,6 @@ import { router, protectedProcedure } from '../trpc';
 import { and, eq } from '@u22n/database/orm';
 import { postalServers } from '@u22n/database/schema';
 import { typeIdValidator } from '@u22n/utils';
-import type { PostalConfig } from '../../types';
 import { postalDB } from '../../postal-db';
 import { httpEndpoints, organizations, servers } from '../../postal-db/schema';
 import {
@@ -12,6 +11,7 @@ import {
   getDomainDNSRecords,
   type GetDomainDNSRecordsOutput
 } from '../../postal-db/functions';
+import { activePostalServer } from '../../env';
 
 export const domainRouter = router({
   createDomain: protectedProcedure
@@ -27,9 +27,9 @@ export const domainRouter = router({
       const { orgId, orgPublicId, domainName } = input;
       const postalOrgId = orgPublicId;
 
-      const postalConfig = config.postal as PostalConfig;
+      const localMode = config.MAILBRIDGE_POSTAL_LOCAL_MODE;
 
-      if (postalConfig.localMode === true) {
+      if (localMode) {
         return {
           orgId: orgId,
           postalServerUrl: 'localmode',
@@ -123,13 +123,13 @@ export const domainRouter = router({
 
       return {
         orgId: orgId,
-        postalServerUrl: postalConfig.activeServers.url as string,
+        postalServerUrl: activePostalServer.url,
         postalOrgId: postalOrgId,
         domainId: domainId,
         dkimKey: dkimSelector,
         dkimValue: dkimPublicKey,
         verificationToken: verificationToken,
-        forwardingAddress: `${token}@${postalConfig.activeServers.routesDomain}`
+        forwardingAddress: `${token}@${activePostalServer.routesDomain}`
       };
     }),
   refreshDomainDns: protectedProcedure
@@ -143,8 +143,8 @@ export const domainRouter = router({
       const { config } = ctx;
       const { postalDomainId, postalServerUrl } = input;
 
-      const postalConfig = config.postal as PostalConfig;
-      if (postalConfig.localMode === true) {
+      const localMode = config.MAILBRIDGE_POSTAL_LOCAL_MODE;
+      if (localMode) {
         return {
           verification: {
             valid: true,

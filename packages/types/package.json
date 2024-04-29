@@ -3,8 +3,13 @@
   "private": true,
   "version": "1.0.0",
   "description": "",
+  "type": "module",
   "main": "index.ts",
   "types": "index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./ui": "./ui.ts"
+  },
   "engines": {
     "node": ">=20",
     "pnpm": ">=8"

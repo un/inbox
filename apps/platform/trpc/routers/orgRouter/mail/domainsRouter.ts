@@ -10,7 +10,7 @@ import { typeIdGenerator, typeIdValidator } from '@u22n/utils';
 import { TRPCError } from '@trpc/server';
 import { isAccountAdminOfOrg } from '../../../../utils/account';
 import { mailBridgeTrpcClient } from '../../../../utils/tRPCServerClients';
-import { lookupNS } from '@u22n/utils/dns';
+import { lookupNS } from '@u22n/utils';
 
 export const domainsRouter = router({
   createNewDomain: orgProcedure

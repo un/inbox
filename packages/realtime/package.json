@@ -4,6 +4,12 @@
   "private": true,
   "types": "./index.ts",
   "main": "index.js",
+  "type": "module",
+  "exports": {
+    "./client": "./client.ts",
+    "./server": "./server.ts",
+    "./events": "./events.ts"
+  },
   "scripts": {
     "check": "tsc --noEmit"
   },

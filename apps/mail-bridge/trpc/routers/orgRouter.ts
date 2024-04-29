@@ -2,7 +2,6 @@ import { z } from 'zod';
 import { router, protectedProcedure } from '../trpc';
 import { eq } from '@u22n/database/orm';
 import { typeIdGenerator, typeIdValidator } from '@u22n/utils';
-import type { PostalConfig } from '../../types';
 import {
   addMailServer,
   createOrg,
@@ -14,6 +13,7 @@ import {
 } from '../../postal-db/functions';
 import { postalDB } from '../../postal-db';
 import { ipPools } from '../../postal-db/schema';
+import { activePostalServer } from '../../env';
 
 export const orgRouter = router({
   createPostalOrg: protectedProcedure
@@ -26,10 +26,10 @@ export const orgRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { config } = ctx;
       const { orgId, orgPublicId } = input;
-      const postalConfig = config.postal as PostalConfig;
-      const limits = postalConfig.limits;
+      const localMode = config.MAILBRIDGE_POSTAL_LOCAL_MODE;
+      const limits = config.MAILBRIDGE_POSTAL_SERVER_LIMITS;
 
-      if (postalConfig.localMode === true) {
+      if (localMode) {
         return {
           success: true,
           orgId: orgId,
@@ -40,15 +40,15 @@ export const orgRouter = router({
             smtpKey: 'localSMTPKey'
           },
           config: {
-            host: postalConfig.activeServers.url,
-            ipPools: postalConfig.activeServers.defaultNewPool,
-            defaultIpPool: postalConfig.activeServers.defaultNewPool
+            host: activePostalServer.url,
+            ipPools: activePostalServer.defaultNewPool,
+            defaultIpPool: activePostalServer.defaultNewPool
           }
         };
       }
 
       const postalIpPoolQuery = await postalDB.query.ipPools.findFirst({
-        where: eq(ipPools.name, postalConfig.activeServers.defaultNewPool),
+        where: eq(ipPools.name, activePostalServer.defaultNewPool),
         columns: {
           id: true
         }
@@ -92,7 +92,7 @@ export const orgRouter = router({
       await setMailServerEventWebhook({
         serverId: internalPostalMailserverId,
         serverPublicId: newServerPublicId,
-        mailBridgeUrl: postalConfig.webhookDestinations.messages
+        mailBridgeUrl: config.MAILBRIDGE_POSTAL_WEBHOOK_DESTINATIONS.messages
       });
 
       const { key: apiKey } = await setMailServerKey({
@@ -110,7 +110,7 @@ export const orgRouter = router({
       });
 
       await setMailServerRoutingHttpEndpoint({
-        mailBridgeUrl: postalConfig.webhookDestinations.messages,
+        mailBridgeUrl: config.MAILBRIDGE_POSTAL_WEBHOOK_DESTINATIONS.messages,
         orgId: orgId,
         serverId: internalPostalMailserverId,
         serverPublicId: newServerPublicId
@@ -126,9 +126,9 @@ export const orgRouter = router({
           smtpKey: smtpKey
         },
         config: {
-          host: postalConfig.activeServers.url,
-          ipPools: postalConfig.activeServers.defaultNewPool,
-          defaultIpPool: postalConfig.activeServers.defaultNewPool
+          host: activePostalServer.url,
+          ipPools: activePostalServer.defaultNewPool,
+          defaultIpPool: activePostalServer.defaultNewPool
         }
       };
     })

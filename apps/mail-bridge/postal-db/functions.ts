@@ -17,23 +17,25 @@ import {
   randomAlphaNumeric
 } from './generators';
 import { and, eq, sql } from 'drizzle-orm/sql';
-import { lookupCNAME, lookupMX, lookupTXT } from '@u22n/utils/dns';
 import {
+  lookupCNAME,
+  lookupMX,
+  lookupTXT,
   buildDkimRecord,
   buildSpfRecord,
   parseDkim,
   parseSpfIncludes,
   parseDmarc,
   buildDmarcRecord
-} from '@u22n/utils/dns/txtParsers';
-import { useRuntimeConfig } from '#imports';
+} from '@u22n/utils';
+import { env } from '../env';
 
 export type CreateOrgInput = {
   orgPublicId: string;
   ipPoolId: number;
 };
 
-const postalConfig = useRuntimeConfig().postal as Record<string, any>;
+const dnsRootUrl = env.MAILBRIDGE_POSTAL_SERVERS_DNS_ROOT_URL;
 
 export async function createOrg(input: CreateOrgInput) {
   const [{ insertId }] = await postalDB.insert(organizations).values({
@@ -208,23 +210,21 @@ export async function getDomainDNSRecords(
   records.spf.name = '@';
   records.spf.extraSenders =
     (spfDomains &&
-      spfDomains.includes.filter((x) => x !== `_spf.${postalConfig.dnsRootUrl}`)
-        .length > 0) ||
+      spfDomains.includes.filter((x) => x !== `_spf.${dnsRootUrl}`).length >
+        0) ||
     false;
 
   // We need to resolve duplicate entries incase the spf record is already included, so that we don't have duplicate entries
   const allSenders = Array.from(
     new Set([
-      `_spf.${postalConfig.dnsRootUrl}`,
+      `_spf.${dnsRootUrl}`,
       ...(records.spf.extraSenders ? spfDomains?.includes || [] : [])
     ]).values()
   );
 
   records.spf.value = buildSpfRecord(allSenders, '~all');
   records.spf.valid =
-    (spfDomains &&
-      spfDomains.includes.includes(`_spf.${postalConfig.dnsRootUrl}`)) ||
-    false;
+    (spfDomains && spfDomains.includes.includes(`_spf.${dnsRootUrl}`)) || false;
 
   if (!records.spf.valid || domainInfo.spfStatus !== 'OK' || forceReverify) {
     await postalDB
@@ -232,7 +232,7 @@ export async function getDomainDNSRecords(
       .set(
         !spfDomains
           ? { spfStatus: 'Missing', spfError: 'SPF record not found' }
-          : !spfDomains.includes.includes(`_spf.${postalConfig.dnsRootUrl}`)
+          : !spfDomains.includes.includes(`_spf.${dnsRootUrl}`)
             ? { spfStatus: 'Invalid', spfError: 'SPF record Invalid' }
             : { spfStatus: 'OK', spfError: null }
       )

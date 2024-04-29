@@ -3,9 +3,15 @@
   "private": true,
   "types": "./index.ts",
   "main": "index.ts",
+  "type": "module",
   "engines": {
     "node": ">=20",
     "pnpm": ">=8"
+  },
+  "exports": {
+    ".": "./index.ts",
+    "./orm": "./orm.ts",
+    "./schema": "./schema.ts"
   },
   "scripts": {
     "check": "tsc --noEmit",

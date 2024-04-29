@@ -1,9 +1,12 @@
 // Original is taken and modified from: https://github.com/postalserver/postal/issues/432#issuecomment-730454586
 // modified for clarity and to remove unnecessary code, credits at the end of the file
-import crypto from 'crypto';
+import { createVerify } from 'crypto';
 
 export async function validatePostalWebhookSignature(
-  body: string,
+  /**
+   * @param body - The body of the webhook request as JSON
+   */
+  body: unknown,
   postalSignature: string,
   postalWebhookPKs: string[]
 ): Promise<boolean> {
@@ -11,10 +14,10 @@ export async function validatePostalWebhookSignature(
     // convert postal public key to PEM (X.509) format
     const publicKey =
       '-----BEGIN PUBLIC KEY-----\r\n' +
-      (await chunkSplit(postalWebhookPK, 64, '\r\n')) +
+      chunkSplit(postalWebhookPK, 64, '\r\n') +
       '-----END PUBLIC KEY-----';
 
-    const verifier = crypto.createVerify('SHA1');
+    const verifier = createVerify('SHA1');
 
     verifier.update(jsonToRubyString(body));
 
@@ -39,8 +42,8 @@ function chunkSplit(key: string, chunkSize: number, newLineReturn: string) {
     .join(newLineReturn);
   return chunked;
 }
-function jsonToRubyString(jsonString: string) {
-  const json = JSON.stringify(jsonString);
+function jsonToRubyString(bodyObject: unknown) {
+  const json = JSON.stringify(bodyObject);
   return json.replace(
     /[\u2028\u2029&><]/gu,
     (c) => '\\u' + ('0000' + c.charCodeAt(0).toString(16)).slice(-4)

@@ -1,9 +1,16 @@
 import { TRPCError, initTRPC } from '@trpc/server';
+import type { db } from '@u22n/database';
 import superjson from 'superjson';
-import type { CreateContext } from './createContext';
+import type { env } from '../env';
+import type { Context } from 'hono';
 
 export const trpcContext = initTRPC
-  .context<CreateContext>()
+  .context<{
+    auth: boolean;
+    db: typeof db;
+    config: typeof env;
+    context: Context;
+  }>()
   .create({ transformer: superjson });
 
 const isServiceAuthenticated = trpcContext.middleware(({ next, ctx }) => {
