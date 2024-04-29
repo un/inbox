@@ -6,7 +6,7 @@
   "scripts": {
     "format": "prettier . --write",
     "check:format": "prettier . --check",
-    "check:types": "turbo run check --cache-dir=.turbo",
+    "check:types": "dotenv -e .env.local -- turbo run check --cache-dir=.turbo",
     "check:lint": "eslint .",
     "precheck": "dotenv -e .env.local -- pnpm -r precheck",
     "check": "pnpm check:format && pnpm check:lint && pnpm precheck && pnpm check:types",
@@ -58,5 +58,5 @@
   "lint-staged": {
     "*": "prettier --write --ignore-unknown"
   },
-  "packageManager": "pnpm@8.5.1"
+  "packageManager": "pnpm@9.0.6"
 }

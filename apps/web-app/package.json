@@ -64,6 +64,5 @@
     "ua-parser-js": "2.0.0-beta.2",
     "vue-virtual-scroller": "2.0.0-beta.8",
     "zod": "^3.22.4"
-  },
-  "packageManager": "pnpm@8.5.1"
+  }
 }
