@@ -1,27 +1,33 @@
 {
   "name": "@u22n/storage",
   "private": true,
-  "types": "types.ts",
   "engines": {
     "node": ">=20",
     "pnpm": ">=8"
   },
   "scripts": {
-    "dev": "PORT=3200 npx nitropack dev",
-    "build": "npx nitropack build",
-    "preview": "node .output/server/index.mjs",
-    "check": "tsc --noEmit",
-    "precheck": "nitro prepare"
+    "dev": "tsx --watch --watch-preserve-output src/app.ts",
+    "build": "tsup",
+    "start": "node dist/app.mjs",
+    "check": "tsc --noEmit"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.536.0",
     "@aws-sdk/s3-request-presigner": "^3.536.0",
+    "@hono/node-server": "^1.11.1",
+    "@hono/zod-validator": "^0.2.1",
+    "@t3-oss/env-core": "^0.10.1",
     "@u22n/database": "workspace:*",
     "@u22n/tsconfig": "^0.0.2",
-    "@u22n/types": "workspace:*",
     "@u22n/utils": "workspace:*",
-    "nitropack": "2.9.4",
+    "hono": "^4.2.8",
     "sharp": "^0.33.2",
-    "superjson": "^2.2.1"
+    "unstorage": "^1.10.2",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.7",
+    "tsup": "^8.0.2",
+    "tsx": "^4.7.1"
   }
 }
