@@ -11,7 +11,8 @@ import { TOTPController, createTOTPKeyURI } from 'oslo/otp';
 import { TRPCError } from '@trpc/server';
 import { nanoIdToken, zodSchemas } from '@u22n/utils';
 import { Argon2id } from 'oslo/password';
-import { setCookie, useStorage, useRuntimeConfig, getCookie } from '#imports';
+import { setCookie, getCookie } from 'h3';
+import { useRuntimeConfig, useStorage } from '#imports';
 
 export const twoFactorRouter = router({
   /**

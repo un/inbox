@@ -31,7 +31,7 @@ export default function InviteCard({ code }: { code: string }) {
     );
   });
 
-  const { isPending: signedInLoading, data: signedIn } = useQuery({
+  const { isLoading: signedInLoading, data: signedIn } = useQuery({
     enabled: true,
     queryKey: ['auth', 'status'],
     queryFn: isAuthenticated

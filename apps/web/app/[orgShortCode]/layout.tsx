@@ -13,7 +13,7 @@ export default function Layout({
 }: Readonly<{ children: React.ReactNode; params: { orgShortCode: string } }>) {
   const {
     data: storeData,
-    isPending: storeDataLoading,
+    isLoading: storeDataLoading,
     error: storeError
   } = api.org.store.getStoreData.useQuery({ orgShortCode });
 

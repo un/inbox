@@ -133,11 +133,11 @@ importers:
         specifier: ^9.0.3
         version: 9.0.3(encoding@0.1.13)
       '@trpc/client':
-        specifier: 11.0.0-rc.334
-        version: 11.0.0-rc.334(@trpc/server@11.0.0-rc.334)
+        specifier: 10.45.2
+        version: 10.45.2(@trpc/server@10.45.2)
       '@trpc/server':
-        specifier: 11.0.0-rc.334
-        version: 11.0.0-rc.334
+        specifier: 10.45.2
+        version: 10.45.2
       '@u22n/database':
         specifier: workspace:^
         version: link:../../packages/database
@@ -243,20 +243,20 @@ importers:
         specifier: ^10.0.0
         version: 10.0.0
       '@tanstack/react-query':
-        specifier: ^5.32.0
-        version: 5.32.0(react@18.3.1)
+        specifier: ^4.36.1
+        version: 4.36.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@tanstack/react-table':
         specifier: ^8.16.0
         version: 8.16.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@trpc/client':
-        specifier: 11.0.0-rc.334
-        version: 11.0.0-rc.334(@trpc/server@11.0.0-rc.334)
+        specifier: 10.45.2
+        version: 10.45.2(@trpc/server@10.45.2)
       '@trpc/react-query':
-        specifier: 11.0.0-rc.334
-        version: 11.0.0-rc.334(@tanstack/react-query@5.32.0(react@18.3.1))(@trpc/client@11.0.0-rc.334(@trpc/server@11.0.0-rc.334))(@trpc/server@11.0.0-rc.334)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: 10.45.2
+        version: 10.45.2(@tanstack/react-query@4.36.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@trpc/client@10.45.2(@trpc/server@10.45.2))(@trpc/server@10.45.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@trpc/server':
-        specifier: 11.0.0-rc.334
-        version: 11.0.0-rc.334
+        specifier: 10.45.2
+        version: 10.45.2
       '@u22n/platform':
         specifier: workspace:^
         version: link:../platform
@@ -439,8 +439,8 @@ importers:
         specifier: ^2.2.1
         version: 2.2.1
       trpc-nuxt:
-        specifier: ^0.10.20
-        version: 0.10.20(@trpc/client@10.45.2(@trpc/server@10.45.2))(@trpc/server@10.45.2)
+        specifier: ^0.10.21
+        version: 0.10.21(@trpc/client@10.45.2(@trpc/server@10.45.2))(@trpc/server@10.45.2)(ofetch@1.3.3)
       ua-parser-js:
         specifier: 2.0.0-beta.2
         version: 2.0.0-beta.2
@@ -506,10 +506,10 @@ importers:
   ee/apps/billing:
     dependencies:
       '@trpc/client':
-        specifier: ^10.45.1
+        specifier: ^10.45.2
         version: 10.45.2(@trpc/server@10.45.2)
       '@trpc/server':
-        specifier: ^10.45.1
+        specifier: ^10.45.2
         version: 10.45.2
       '@u22n/database':
         specifier: workspace:*
@@ -530,8 +530,8 @@ importers:
         specifier: ^2.2.1
         version: 2.2.1
       trpc-nuxt:
-        specifier: ^0.10.19
-        version: 0.10.20(@trpc/client@10.45.2(@trpc/server@10.45.2))(@trpc/server@10.45.2)
+        specifier: ^0.10.21
+        version: 0.10.21(@trpc/client@10.45.2(@trpc/server@10.45.2))(@trpc/server@10.45.2)(ofetch@1.3.3)
       zod:
         specifier: ^3.22.4
         version: 3.22.4
@@ -575,8 +575,8 @@ importers:
         specifier: ^2.2.1
         version: 2.2.1
       trpc-nuxt:
-        specifier: ^0.10.20
-        version: 0.10.20(@trpc/client@10.45.2(@trpc/server@10.45.2))(@trpc/server@10.45.2)
+        specifier: ^0.10.21
+        version: 0.10.21(@trpc/client@10.45.2(@trpc/server@10.45.2))(@trpc/server@10.45.2)(ofetch@1.3.3)
       zod:
         specifier: ^3.22.4
         version: 3.22.4
@@ -3732,13 +3732,20 @@ packages:
     peerDependencies:
       tailwindcss: '>=3.0.0 || insiders'
 
-  '@tanstack/query-core@5.32.0':
-    resolution: {integrity: sha512-Z3flEgCat55DRXU5UMwYU1U+DgFZKA3iufyOKs+II7iRAo0uXkeU7PH5e6sOH1CGEag0IpKmZxlUFpCg6roSKw==}
+  '@tanstack/query-core@4.36.1':
+    resolution: {integrity: sha512-DJSilV5+ytBP1FbFcEJovv4rnnm/CokuVvrBEtW/Va9DvuJ3HksbXUJEpI0aV1KtuL4ZoO9AVE6PyNLzF7tLeA==}
 
-  '@tanstack/react-query@5.32.0':
-    resolution: {integrity: sha512-+E3UudQtarnx9A6xhpgMZapyF+aJfNBGFMgI459FnduEZqT/9KhOWnMOneZahLRt52yzskSA0AuOyLkXHK0yBA==}
+  '@tanstack/react-query@4.36.1':
+    resolution: {integrity: sha512-y7ySVHFyyQblPl3J3eQBWpXZkliroki3ARnBKsdJchlgt7yJLRDUcf4B8soufgiYt3pEQIkBWBx1N9/ZPIeUWw==}
     peerDependencies:
-      react: ^18.0.0
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0
+      react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0
+      react-native: '*'
+    peerDependenciesMeta:
+      react-dom:
+        optional: true
+      react-native:
+        optional: true
 
   '@tanstack/react-table@8.16.0':
     resolution: {integrity: sha512-rKRjnt8ostqN2fercRVOIH/dq7MAmOENCMvVlKx6P9Iokhh6woBGnIZEkqsY/vEJf1jN3TqLOb34xQGLVRuhAg==}
@@ -3938,25 +3945,17 @@ packages:
     peerDependencies:
       '@trpc/server': 10.45.2
 
-  '@trpc/client@11.0.0-rc.334':
-    resolution: {integrity: sha512-nVKOxCfhKxBXvs1MwjfNNsWHQH/rHWzS4SxYPtYld7zqANTfNqn8cuClHMKlkeMKljObFiCfWhbdrBamKO/dDw==}
+  '@trpc/react-query@10.45.2':
+    resolution: {integrity: sha512-BAqb9bGZIscroradlNx+Cc9522R+idY3BOSf5z0jHUtkxdMbjeGKxSSMxxu7JzoLqSIEC+LVzL3VvF8sdDWaZQ==}
     peerDependencies:
-      '@trpc/server': 11.0.0-rc.334+fdf26e552
-
-  '@trpc/react-query@11.0.0-rc.334':
-    resolution: {integrity: sha512-DvhU7qMfQkLyrhQoDlrtMAGIgJyin9I8WCsF0oGlAD95ygoJcviD8D+lQzSCUttul9rPcNqWDuGhm5laS7V43A==}
-    peerDependencies:
-      '@tanstack/react-query': ^5.25.0
-      '@trpc/client': 11.0.0-rc.334+fdf26e552
-      '@trpc/server': 11.0.0-rc.334+fdf26e552
-      react: '>=18.2.0'
-      react-dom: '>=18.2.0'
+      '@tanstack/react-query': ^4.18.0
+      '@trpc/client': 10.45.2
+      '@trpc/server': 10.45.2
+      react: '>=16.8.0'
+      react-dom: '>=16.8.0'
 
   '@trpc/server@10.45.2':
     resolution: {integrity: sha512-wOrSThNNE4HUnuhJG6PfDRp4L2009KDVxsd+2VYH8ro6o/7/jwYZ8Uu5j+VaW+mOmc8EHerHzGcdbGNQSAUPgg==}
-
-  '@trpc/server@11.0.0-rc.334':
-    resolution: {integrity: sha512-ckg+f4z3Lc0wYvm1Cx8Zjz8b2hguNlUFQeF8vLrtWYBL8HEolshmxOHMG9MLc6WDE6T1R7DZrG+xEwjI44XH9w==}
 
   '@trysound/sax@0.2.0':
     resolution: {integrity: sha512-L7z9BgrNEcYyUYtF+HaEfiS5ebkh9jXqbszz7pC0hRBPaatV0XjSD3+eHrpqFemQfgwiFF0QPIarnIihIDn7OA==}
@@ -8347,11 +8346,12 @@ packages:
     resolution: {integrity: sha512-L0Orpi8qGpRG//Nd+H90vFB+3iHnue1zSSGmNOOCh1GLJ7rUKVwV2HvijphGQS2UmhUZewS9VgvxYIdgr+fG1A==}
     hasBin: true
 
-  trpc-nuxt@0.10.20:
-    resolution: {integrity: sha512-OSehO1f/nmJ5osmhmyAf0UxhmR5Dy7IU3d52e1ZC3G9i3sOh3mhvN75msoeNCeOzl8ESN73JRQ7gDt0kwkAhZA==}
+  trpc-nuxt@0.10.21:
+    resolution: {integrity: sha512-QNrKFNosZ6ax8QLG6VBi3VUurXvoyrRvt0utvuQk2H1ej54YG6SbHEfBnGSIsz7HyDJt4mFvdNIE1lbebEtUAQ==}
     peerDependencies:
       '@trpc/client': ^10.38.1 <11
       '@trpc/server': ^10.38.1 <11
+      ofetch: ^1.3.3
 
   ts-api-utils@1.3.0:
     resolution: {integrity: sha512-UQMIo7pb8WRomKR1/+MFVLTroIvDVtMX3K6OUir8ynLyzB8Jeriont2bTAtmNPa1ekAgN7YPDyf6V+ygrdU+eQ==}
@@ -12699,12 +12699,15 @@ snapshots:
       postcss-selector-parser: 6.0.10
       tailwindcss: 3.4.3
 
-  '@tanstack/query-core@5.32.0': {}
+  '@tanstack/query-core@4.36.1': {}
 
-  '@tanstack/react-query@5.32.0(react@18.3.1)':
+  '@tanstack/react-query@4.36.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
-      '@tanstack/query-core': 5.32.0
+      '@tanstack/query-core': 4.36.1
       react: 18.3.1
+      use-sync-external-store: 1.2.0(react@18.3.1)
+    optionalDependencies:
+      react-dom: 18.3.1(react@18.3.1)
 
   '@tanstack/react-table@8.16.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
@@ -12913,21 +12916,15 @@ snapshots:
     dependencies:
       '@trpc/server': 10.45.2
 
-  '@trpc/client@11.0.0-rc.334(@trpc/server@11.0.0-rc.334)':
+  '@trpc/react-query@10.45.2(@tanstack/react-query@4.36.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@trpc/client@10.45.2(@trpc/server@10.45.2))(@trpc/server@10.45.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
-      '@trpc/server': 11.0.0-rc.334
-
-  '@trpc/react-query@11.0.0-rc.334(@tanstack/react-query@5.32.0(react@18.3.1))(@trpc/client@11.0.0-rc.334(@trpc/server@11.0.0-rc.334))(@trpc/server@11.0.0-rc.334)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
-    dependencies:
-      '@tanstack/react-query': 5.32.0(react@18.3.1)
-      '@trpc/client': 11.0.0-rc.334(@trpc/server@11.0.0-rc.334)
-      '@trpc/server': 11.0.0-rc.334
+      '@tanstack/react-query': 4.36.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@trpc/client': 10.45.2(@trpc/server@10.45.2)
+      '@trpc/server': 10.45.2
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
   '@trpc/server@10.45.2': {}
-
-  '@trpc/server@11.0.0-rc.334': {}
 
   '@trysound/sax@0.2.0': {}
 
@@ -14671,7 +14668,7 @@ snapshots:
       eslint: 8.57.0
       eslint-import-resolver-node: 0.3.9
       eslint-import-resolver-typescript: 3.6.1(@typescript-eslint/parser@7.2.0(eslint@8.57.0)(typescript@5.4.5))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.29.1)(eslint@8.57.0)
-      eslint-plugin-import: 2.29.1(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.4.5))(eslint@8.57.0)
+      eslint-plugin-import: 2.29.1(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.4.3))(eslint@8.57.0)
       eslint-plugin-jsx-a11y: 6.8.0(eslint@8.57.0)
       eslint-plugin-react: 7.34.1(eslint@8.57.0)
       eslint-plugin-react-hooks: 4.6.2(eslint@8.57.0)
@@ -14699,7 +14696,7 @@ snapshots:
       enhanced-resolve: 5.16.0
       eslint: 8.57.0
       eslint-module-utils: 2.8.1(@typescript-eslint/parser@7.2.0(eslint@8.57.0)(typescript@5.4.5))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.1(@typescript-eslint/parser@7.2.0(eslint@8.57.0)(typescript@5.4.5))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.29.1)(eslint@8.57.0))(eslint@8.57.0)
-      eslint-plugin-import: 2.29.1(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.4.5))(eslint@8.57.0)
+      eslint-plugin-import: 2.29.1(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.4.3))(eslint@8.57.0)
       fast-glob: 3.3.2
       get-tsconfig: 4.7.3
       is-core-module: 2.13.1
@@ -14710,7 +14707,7 @@ snapshots:
       - eslint-import-resolver-webpack
       - supports-color
 
-  eslint-module-utils@2.8.1(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.4.5))(eslint-import-resolver-node@0.3.9)(eslint@8.57.0):
+  eslint-module-utils@2.8.1(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.4.3))(eslint-import-resolver-node@0.3.9)(eslint@8.57.0):
     dependencies:
       debug: 3.2.7
     optionalDependencies:
@@ -14731,7 +14728,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-plugin-import@2.29.1(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.4.5))(eslint@8.57.0):
+  eslint-plugin-import@2.29.1(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.4.3))(eslint@8.57.0):
     dependencies:
       array-includes: 3.1.8
       array.prototype.findlastindex: 1.2.5
@@ -14741,7 +14738,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 8.57.0
       eslint-import-resolver-node: 0.3.9
-      eslint-module-utils: 2.8.1(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.4.5))(eslint-import-resolver-node@0.3.9)(eslint@8.57.0)
+      eslint-module-utils: 2.8.1(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.4.3))(eslint-import-resolver-node@0.3.9)(eslint@8.57.0)
       hasown: 2.0.2
       is-core-module: 2.13.1
       is-glob: 4.0.3
@@ -18300,11 +18297,12 @@ snapshots:
 
   tree-kill@1.2.2: {}
 
-  trpc-nuxt@0.10.20(@trpc/client@10.45.2(@trpc/server@10.45.2))(@trpc/server@10.45.2):
+  trpc-nuxt@0.10.21(@trpc/client@10.45.2(@trpc/server@10.45.2))(@trpc/server@10.45.2)(ofetch@1.3.3):
     dependencies:
       '@trpc/client': 10.45.2(@trpc/server@10.45.2)
       '@trpc/server': 10.45.2
       h3: 1.11.1
+      ofetch: 1.3.3
       ohash: 1.1.3
     transitivePeerDependencies:
       - uWebSockets.js

@@ -16,12 +16,14 @@ import { columns } from './columns';
 import useAwaitableModal from '@/hooks/use-awaitable-modal';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { useState } from 'react';
 
 export default function Page() {
   const username = useGlobalStore((state) => state.user.username);
   const currentOrg = useGlobalStore((state) => state.currentOrg);
 
   const { data: proStatus } = api.org.setup.billing.isPro.useQuery({});
+  const [isClaiming, setIsClaiming] = useState(false);
 
   const {
     data: personalAddresses,
@@ -34,9 +36,12 @@ export default function Page() {
     unknown,
     { address: string }
   >(({ open, onClose, onResolve, args }) => {
-    const { mutateAsync: claimAddressConfirm, isPending: isClaiming } =
+    const { mutateAsync: claimAddressConfirm } =
       api.account.addresses.claimPersonalAddress.useMutation({
-        onSuccess: () => refetchPersonalAddresses()
+        onSuccess: async () => {
+          await refetchPersonalAddresses();
+          setIsClaiming(false);
+        }
       });
 
     return (
@@ -110,6 +115,7 @@ export default function Page() {
               variant="solid"
               onClick={() => {
                 if (!args) return;
+                setIsClaiming(true);
                 claimAddressConfirm({
                   emailIdentity: args.address
                 })

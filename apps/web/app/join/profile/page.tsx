@@ -36,7 +36,7 @@ export default function Page({
     );
   }
 
-  const { data: orgData, isPending: orgDataLoading } =
+  const { data: orgData, isLoading: orgDataLoading } =
     api.account.profile.getOrgMemberProfile.useQuery({
       orgShortcode: searchParams.org
     });

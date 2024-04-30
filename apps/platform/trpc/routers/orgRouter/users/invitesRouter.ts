@@ -26,7 +26,7 @@ import {
 import { refreshOrgShortcodeCache } from '../../../../utils/orgShortcode';
 import { isAccountAdminOfOrg } from '../../../../utils/account';
 import { TRPCError } from '@trpc/server';
-import { deleteCookie, useRuntimeConfig } from '#imports';
+import { useRuntimeConfig } from '#imports';
 import { billingTrpcClient } from '../../../../utils/tRPCServerClients';
 import { addOrgMemberToTeamHandler } from './teamsHandler';
 import { sendInviteEmail } from '../../../../utils/mail/transactional';

@@ -41,7 +41,7 @@
     "@vueuse/integrations": "^10.9.0",
     "@vueuse/nuxt": "^10.9.0",
     "superjson": "^2.2.1",
-    "trpc-nuxt": "^0.10.20",
+    "trpc-nuxt": "^0.10.21",
     "zod": "^3.22.4"
   }
 }

@@ -68,6 +68,10 @@ export const securityRouter = router({
       return {
         passwordSet: !!accountObjectQuery.passwordHash,
         recoveryCodeSet: !!accountObjectQuery.recoveryCode,
+        legacySecurityEnabled:
+          Boolean(accountObjectQuery.passwordHash) &&
+          accountObjectQuery.twoFactorEnabled &&
+          Boolean(accountObjectQuery.twoFactorSecret),
         twoFactorEnabled:
           accountObjectQuery.twoFactorEnabled &&
           !!accountObjectQuery.twoFactorSecret,
