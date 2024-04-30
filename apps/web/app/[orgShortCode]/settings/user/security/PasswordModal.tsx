@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import {
   AlertDialog as Dialog, // Alert Dialogs don't close on outside click
   Flex,

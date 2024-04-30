@@ -25,7 +25,7 @@ export default function AvatarCrop({
   const [scale, setScale] = useState(1);
   const imageRef = useRef<HTMLImageElement | null>(null);
 
-  const convertCropToBlob = (crop: Crop) => {
+  const convertCropToBlob = async (crop: Crop) => {
     if (!imageRef.current) throw new Error('No image ref');
     const image = imageRef.current;
 
@@ -74,10 +74,7 @@ export default function AvatarCrop({
 
     ctx.restore();
 
-    const blob = canvas.convertToBlob({ type: 'image/png' });
-    if (!blob) {
-      throw new Error('Failed to convert canvas to blob');
-    }
+    const blob = await canvas.convertToBlob({ type: 'image/png' });
     return blob;
   };
 
@@ -93,10 +90,12 @@ export default function AvatarCrop({
         aspect={1}
         ruleOfThirds={true}
         circularCrop={true}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={imageSrc}
           className="origin-center transition-transform duration-100 ease-linear will-change-transform"
           style={{ transform: `scale(${scale})` }}
+          alt="Your Avatar"
           ref={imageRef}
           onLoad={(e) => {
             const { naturalWidth: width, naturalHeight: height } =
@@ -124,7 +123,7 @@ export default function AvatarCrop({
         max={5}
         step={0.1}
         value={[scale]}
-        onValueChange={(e) => setScale(e[0] || 0)}
+        onValueChange={(e) => setScale(e[0] ?? 0)}
       />
       <Flex
         gap="2"

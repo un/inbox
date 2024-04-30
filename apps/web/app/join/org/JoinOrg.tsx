@@ -25,7 +25,7 @@ export default function JoinOrgButton({
   hasInviteCode: boolean;
   inviteCode?: string;
 }) {
-  const [inviteCode, setInviteCode] = useState(initialInviteCode || '');
+  const [inviteCode, setInviteCode] = useState(initialInviteCode ?? '');
   const validateInviteCodeApi = api.useUtils().org.users.invites.validateInvite;
   const joinOrgApi = api.org.users.invites.redeemInvite.useMutation();
   const router = useRouter();
@@ -67,6 +67,7 @@ export default function JoinOrgButton({
     if (inviteCode && modalOpen) {
       validateInvite();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modalOpen]);
 
   useEffect(() => {
@@ -149,7 +150,7 @@ export default function JoinOrgButton({
                   align="center"
                   gap="2">
                   <Avatar
-                    src={orgAvatar || undefined}
+                    src={orgAvatar ?? undefined}
                     fallback={getInitials(inviteData.orgName)}
                     className="h-10 w-10 rounded-full"
                   />

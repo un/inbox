@@ -11,9 +11,15 @@ type Callbacks<T> = {
 export default function useLoading<T>(
   fn: (signal: AbortSignal) => Promise<T>,
   {
-    onSuccess = () => {},
-    onError = () => {},
-    onSettled = () => {}
+    onSuccess = () => {
+      /** */
+    },
+    onError = () => {
+      /** */
+    },
+    onSettled = () => {
+      /** */
+    }
   }: Callbacks<T> = {}
 ) {
   const [loading, setLoading] = useState(false);

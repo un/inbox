@@ -52,6 +52,7 @@ export default function Page() {
   useEffect(() => {
     if (typeof debouncedUsername === 'undefined') return;
     checkUsername({ clearData: true, clearError: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedUsername]);
 
   useEffect(() => {

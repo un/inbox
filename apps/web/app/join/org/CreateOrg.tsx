@@ -81,6 +81,7 @@ export default function CreateOrgButton({
 
   useEffect(() => {
     checkOrgShortCode({ clearData: true, clearError: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedOrgShortCode]);
 
   return (
