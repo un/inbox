@@ -7,7 +7,7 @@ export default function Layout({
 }: Readonly<{ children: React.ReactNode }>) {
   unstable_noStore();
   return (
-    <Flex className="h-full">
+    <Flex className="h-full w-full">
       <ChatList />
       <Flex className="flex-1">{children}</Flex>
     </Flex>

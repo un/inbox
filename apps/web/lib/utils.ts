@@ -22,7 +22,7 @@ export const generateAvatarUrl = ({
   avatarTimestamp,
   size
 }: {
-  publicId: TypeId<'orgMemberProfile' | 'contacts' | 'groups' | 'org'>;
+  publicId: TypeId<'orgMemberProfile' | 'contacts' | 'teams' | 'org'>;
   avatarTimestamp: Date | null;
   size?:
     | '3xs'
