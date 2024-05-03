@@ -1,3 +1,7 @@
 {
-  "extends": "@u22n/tsconfig"
+  "extends": "@u22n/tsconfig",
+  "compilerOptions": {
+    "jsx": "preserve",
+    "lib": ["DOM", "ESNext"]
+  }
 }

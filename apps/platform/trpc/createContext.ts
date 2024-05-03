@@ -1,4 +1,3 @@
-import type { inferAsyncReturnType } from '@trpc/server';
 import type { H3Event } from 'h3';
 import { db } from '@u22n/database';
 import type { OrgContext, AccountContext } from '@u22n/types';
@@ -12,4 +11,4 @@ export const createContext = async (event: H3Event) => {
   return { db, account, org, event };
 };
 
-export type Context = inferAsyncReturnType<typeof createContext>;
+export type Context = Awaited<ReturnType<typeof createContext>>;

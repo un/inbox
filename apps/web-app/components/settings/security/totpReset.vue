@@ -19,7 +19,7 @@
 
   // creation step
   const qrUri = ref('');
-  const qrCode = useQRCode(qrUri, { width: 200, height: 200 });
+  const qrCode = useQRCode(qrUri, { width: 200 });
 
   const manualCode = ref('');
 

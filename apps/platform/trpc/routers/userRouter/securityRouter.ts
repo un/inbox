@@ -72,7 +72,9 @@ export const securityRouter = router({
           Boolean(accountObjectQuery.passwordHash) &&
           accountObjectQuery.twoFactorEnabled &&
           Boolean(accountObjectQuery.twoFactorSecret),
-        twoFactorEnabled: accountObjectQuery.twoFactorEnabled,
+        twoFactorEnabled:
+          accountObjectQuery.twoFactorEnabled &&
+          !!accountObjectQuery.twoFactorSecret,
         passkeys: accountObjectQuery.authenticators || [],
         sessions: accountObjectQuery.sessions || []
       };
@@ -117,18 +119,15 @@ export const securityRouter = router({
 
   getVerificationToken: accountProcedure
     .input(
-      z
-        .object({
+      z.union([
+        z.object({
           password: z.string().min(8),
           twoFactorCode: z.string()
+        }),
+        z.object({
+          verificationResponseRaw: z.any()
         })
-        .or(
-          z
-            .object({
-              verificationResponseRaw: z.any()
-            })
-            .strict()
-        )
+      ])
     )
     .query(async ({ ctx, input }) => {
       const { db, account } = ctx;

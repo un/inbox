@@ -14,7 +14,7 @@ import {
   strongPasswordSchema
 } from '@u22n/utils';
 import { TRPCError } from '@trpc/server';
-import { createError, setCookie } from 'h3';
+import { createError, deleteCookie, getCookie, setCookie } from 'h3';
 import { lucia } from '../../../utils/auth';
 import { validateUsername } from './signupRouter';
 import { createLuciaSessionCookie } from '../../../utils/session';
@@ -23,6 +23,9 @@ import { TOTPController } from 'oslo/otp';
 import { useStorage, useRuntimeConfig } from '#imports';
 
 export const passwordRouter = router({
+  /**
+   * @deprecated remove with Nuxt Webapp
+   */
   signUpWithPassword: publicRateLimitedProcedure.signUpWithPassword
     .input(
       z.object({
@@ -77,6 +80,106 @@ export const passwordRouter = router({
       return { success: true };
     }),
 
+  signUpWithPassword2FA: publicRateLimitedProcedure.signUpWithPassword
+    .input(
+      z.object({
+        username: zodSchemas.username(),
+        password: strongPasswordSchema,
+        twoFactorCode: z.string().min(6).max(6)
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { username, password, twoFactorCode } = input;
+      const { db } = ctx;
+
+      const twoFaChallengeCookie = getCookie(ctx.event, 'un-2fa-challenge');
+      if (!twoFaChallengeCookie) {
+        return {
+          success: false,
+          error: '2FA cookie not found or expired, Please try to setup new 2FA'
+        };
+      }
+
+      const authStorage = useStorage('auth');
+      const twoFaChallenge = await authStorage.getItem(
+        `un2faChallenge:${username}-${twoFaChallengeCookie}`
+      );
+
+      if (typeof twoFaChallenge !== 'string') {
+        return {
+          success: false,
+          error:
+            '2FA challenge was invalid or expired, Please try to setup new 2FA'
+        };
+      }
+
+      const secret = decodeHex(twoFaChallenge);
+      const isValid = await new TOTPController().verify(twoFactorCode, secret);
+
+      if (!isValid) {
+        return {
+          success: false,
+          error: 'Invalid 2FA code'
+        };
+      }
+
+      const { accountId, publicId, recoveryCode } = await db.transaction(
+        async (tx) => {
+          try {
+            // making sure someone doesn't bypass the client side validation
+            const { available, error } = await validateUsername(tx, username);
+            if (!available) {
+              throw new TRPCError({
+                code: 'FORBIDDEN',
+                message: `Username Error : ${error}`
+              });
+            }
+
+            const passwordHash = await new Argon2id().hash(password);
+            const publicId = typeIdGenerator('account');
+
+            const recoveryCode = nanoIdToken();
+            const hashedRecoveryCode = await new Argon2id().hash(recoveryCode);
+
+            const newUser = await tx.insert(accounts).values({
+              username,
+              publicId,
+              passwordHash,
+              twoFactorEnabled: true,
+              twoFactorSecret: twoFaChallenge,
+              recoveryCode: hashedRecoveryCode
+            });
+
+            return {
+              accountId: Number(newUser.insertId),
+              publicId,
+              recoveryCode
+            };
+          } catch (err) {
+            tx.rollback();
+            console.error(err);
+            throw err;
+          }
+        }
+      );
+
+      const cookie = await createLuciaSessionCookie(ctx.event, {
+        accountId,
+        username,
+        publicId
+      });
+
+      setCookie(ctx.event, cookie.name, cookie.value, cookie.attributes);
+      deleteCookie(ctx.event, 'un-2fa-challenge');
+
+      await db
+        .update(accounts)
+        .set({ lastLoginAt: new Date() })
+        .where(eq(accounts.id, accountId));
+
+      return { success: true, error: null, recoveryCode };
+    }),
+
   signInWithPassword: publicRateLimitedProcedure.signInWithPassword
     .input(
       z.object({
@@ -98,6 +201,18 @@ export const passwordRouter = router({
           passwordHash: true,
           twoFactorSecret: true,
           twoFactorEnabled: true
+        },
+        with: {
+          orgMemberships: {
+            with: {
+              org: {
+                columns: {
+                  shortcode: true,
+                  id: true
+                }
+              }
+            }
+          }
         }
       });
 
@@ -192,7 +307,11 @@ export const passwordRouter = router({
           .set({ lastLoginAt: new Date() })
           .where(eq(accounts.id, userResponse.id));
 
-        return { success: true };
+        const defaultOrg = userResponse.orgMemberships.sort(
+          (a, b) => a.id - b.id
+        )[0]?.org.shortcode;
+
+        return { success: true, defaultOrg };
       }
 
       throw new TRPCError({

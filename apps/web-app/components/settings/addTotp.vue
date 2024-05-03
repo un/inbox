@@ -37,7 +37,7 @@
 
   // creation step
   const qrUri = ref('');
-  const qrCode = useQRCode(qrUri, { width: 200, height: 200, margin: 5 });
+  const qrCode = useQRCode(qrUri, { width: 200, margin: 5 });
 
   const manualCode = ref('');
 
