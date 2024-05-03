@@ -667,8 +667,8 @@ importers:
         specifier: ^8.4.1
         version: 8.4.1
       drizzle-kit:
-        specifier: ^0.20.17
-        version: 0.20.17
+        specifier: 0.21.0
+        version: 0.21.0
       tsx:
         specifier: ^4.7.1
         version: 4.7.1
@@ -5280,6 +5280,10 @@ packages:
 
   drizzle-kit@0.20.17:
     resolution: {integrity: sha512-mLVDS4nXmO09wFVlzGrdshWnAL+U9eQGC5zRs6hTN6Q9arwQGWU2XnZ17I8BM8Quau8CQRx3Ms6VPgRWJFVp7Q==}
+    hasBin: true
+
+  drizzle-kit@0.21.0:
+    resolution: {integrity: sha512-vdGbZWa9/Bvu3sLMruNufH5eNExDXvJZ3b1l6u/vbkmxT1v7RofC83zVY7jlBFuMsk2J7xckAwlbNesXB6Pj1w==}
     hasBin: true
 
   drizzle-orm@0.30.3:
@@ -13078,7 +13082,7 @@ snapshots:
   '@tufjs/models@2.0.0':
     dependencies:
       '@tufjs/canonical-json': 2.0.0
-      minimatch: 9.0.3
+      minimatch: 9.0.4
 
   '@tybys/wasm-util@0.8.3':
     dependencies:
@@ -14563,6 +14567,20 @@ snapshots:
       semver: 7.6.0
       superjson: 2.2.1
       zod: 3.22.4
+    transitivePeerDependencies:
+      - supports-color
+
+  drizzle-kit@0.21.0:
+    dependencies:
+      '@esbuild-kit/esm-loader': 2.6.5
+      commander: 9.5.0
+      env-paths: 3.0.0
+      esbuild: 0.19.12
+      esbuild-register: 3.5.0(esbuild@0.19.12)
+      glob: 8.1.0
+      hanji: 0.0.5
+      json-diff: 0.9.0
+      zod: 3.23.4
     transitivePeerDependencies:
       - supports-color
 

@@ -15,12 +15,12 @@
   },
   "scripts": {
     "check": "tsc --noEmit",
-    "db:generate": "drizzle-kit generate:mysql --config=drizzle.config.ts",
-    "db:push": "drizzle-kit push:mysql --config=drizzle.config.ts && tsx postPush.ts",
-    "db:push:r": "drizzle-kit push:mysql --config=drizzle.config.ts && tsx postPush.ts",
-    "db:check": "drizzle-kit check:mysql --config=drizzle.config.ts",
+    "db:generate": "drizzle-kit generate --config=drizzle.config.ts",
+    "db:push": "drizzle-kit push --config=drizzle.config.ts && tsx postPush.ts",
+    "db:push:r": "drizzle-kit push --config=drizzle.config.ts && tsx postPush.ts",
+    "db:check": "drizzle-kit check --config=drizzle.config.ts",
     "db:clean": "tsx dbClean.ts",
-    "db:up": "drizzle-kit up:mysql --config=drizzle.config.ts",
+    "db:up": "drizzle-kit up --config=drizzle.config.ts",
     "db:drop": "drizzle-kit drop --config=drizzle.config.ts",
     "db:drop:r": "drizzle-kit drop --config=drizzle.config.ts",
     "db:studio": "pnpm drizzle-kit studio --port 3333  --config=drizzle.config.ts",
@@ -39,7 +39,7 @@
   },
   "devDependencies": {
     "@faker-js/faker": "^8.4.1",
-    "drizzle-kit": "^0.20.17",
+    "drizzle-kit": "0.21.0",
     "tsx": "^4.7.1"
   }
 }
