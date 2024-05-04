@@ -1,9 +1,7 @@
 'use client';
 
 import AvatarCrop from '@/components/avatar-crop';
-import useAwaitableModal, {
-  type AwaitableModalApi
-} from '@/hooks/use-awaitable-modal';
+import { type ModalComponent } from '@/hooks/use-awaitable-modal';
 import uploadTracker from '@/lib/upload';
 import { cn } from '@/lib/utils';
 import {
@@ -17,27 +15,17 @@ import { type TypeId } from '@u22n/utils';
 import { Camera } from 'lucide-react';
 import { useRef, useState } from 'react';
 
-export const useAvatarModal = ({
-  publicId
-}: {
-  publicId: TypeId<'orgMemberProfile'>;
-}) =>
-  useAwaitableModal<string, unknown>((args) => (
-    <AvatarModal
-      publicId={publicId}
-      {...args}
-    />
-  ));
-
-// We can just declare the component inside useAwaitableModal but react eslint doesn't like it
-function AvatarModal({
+export function AvatarModal({
+  open,
   onClose,
   onResolve,
-  open,
   publicId
-}: AwaitableModalApi<string, unknown> & {
-  publicId: TypeId<'orgMemberProfile'>;
-}) {
+}: ModalComponent<
+  {
+    publicId: TypeId<'orgMemberProfile'>;
+  },
+  string
+>) {
   const [file, setFile] = useState<File | null>(null);
   const [editing, setEditing] = useState(false);
   const [croppedUrl, setCroppedUrl] = useState<string | null>(null);

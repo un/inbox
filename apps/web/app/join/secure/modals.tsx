@@ -10,7 +10,7 @@ import {
   Separator,
   Card
 } from '@radix-ui/themes';
-import Modal from '@/hooks/use-awaitable-modal';
+import { type ModalComponent } from '@/hooks/use-awaitable-modal';
 import { type Dispatch, type SetStateAction, useEffect, useState } from 'react';
 import { api } from '@/lib/trpc';
 import useLoading from '@/hooks/use-loading';
@@ -29,137 +29,145 @@ import {
 import { downloadAsFile } from '@/lib/utils';
 import Image from 'next/image';
 
-export const passkeyModal = ({ username }: { username: string }) =>
-  Modal(({ open, onClose, onResolve }) => {
-    const [state, setState] = useState<string | null>(null);
+export function PasskeyModal({
+  open,
+  onClose,
+  onResolve,
+  username
+}: ModalComponent<{ username: string }>) {
+  const [state, setState] = useState<string | null>(null);
 
-    const getPasskeyChallenge =
-      api.useUtils().auth.passkey.signUpWithPasskeyStart;
-    const verifyPasskeyChallenge =
-      api.auth.passkey.signUpWithPasskeyFinish.useMutation();
+  const getPasskeyChallenge =
+    api.useUtils().auth.passkey.signUpWithPasskeyStart;
+  const verifyPasskeyChallenge =
+    api.auth.passkey.signUpWithPasskeyFinish.useMutation();
 
-    const { error, loading, run } = useLoading(async () => {
-      setState('Getting a passkey challenge from server');
-      const { options, publicId } = await getPasskeyChallenge.fetch({
-        username
-      });
-      setState('Waiting for your passkey to respond');
-      const passkeyData = await startRegistration(options).catch((e: Error) => {
-        if (e.name === 'NotAllowedError') {
-          e.message = 'Passkey verification was timed out or cancelled';
-        }
-        throw e;
-      });
-      setState("Verifying your passkey's response");
-      await verifyPasskeyChallenge.mutateAsync({
-        username,
-        publicId,
-        registrationResponseRaw: passkeyData
-      });
-      onResolve({});
+  const { error, loading, run } = useLoading(async () => {
+    setState('Getting a passkey challenge from server');
+    const { options, publicId } = await getPasskeyChallenge.fetch({
+      username
     });
-
-    useEffect(() => {
-      if (error) {
-        setState(error.message);
+    setState('Waiting for your passkey to respond');
+    const passkeyData = await startRegistration(options).catch((e: Error) => {
+      if (e.name === 'NotAllowedError') {
+        e.message = 'Passkey verification was timed out or cancelled';
       }
-    }, [error]);
-
-    return (
-      <Dialog.Root
-        open={open}
-        onOpenChange={() => {
-          if (open) onClose();
-        }}>
-        <Dialog.Content className="w-full max-w-96 p-4">
-          <Dialog.Title className="mx-auto w-fit py-4">
-            Sign up with Passkey
-          </Dialog.Title>
-          <Flex
-            gap="2"
-            justify="center">
-            <Spinner loading={loading && !error} />
-            <Text
-              as="div"
-              size="2"
-              mb="1"
-              weight="bold">
-              {state}
-            </Text>
-          </Flex>
-
-          <Flex
-            className="w-full p-2"
-            direction="column"
-            gap="4">
-            <Button
-              loading={loading}
-              size="3"
-              className="mx-auto my-4"
-              onClick={() => run()}>
-              <Fingerprint size={20} />
-              <Text>Use your Passkey</Text>
-            </Button>
-            <Button
-              variant="soft"
-              color="gray"
-              size="3"
-              onClick={() => onClose()}>
-              Cancel
-            </Button>
-          </Flex>
-        </Dialog.Content>
-      </Dialog.Root>
-    );
+      throw e;
+    });
+    setState("Verifying your passkey's response");
+    await verifyPasskeyChallenge.mutateAsync({
+      username,
+      publicId,
+      registrationResponseRaw: passkeyData
+    });
+    onResolve(null);
   });
 
-export const passwordModal = ({ username }: { username: string }) =>
-  Modal<{ recoveryCode: string }, unknown>(({ open, onClose, onResolve }) => {
-    const [password, setPassword] = useState<string>();
-    const [twoFactorCode, setTwoFactorCode] = useState<string>('');
-    const [step, setStep] = useState(1);
+  useEffect(() => {
+    if (error) {
+      setState(error.message);
+    }
+  }, [error]);
 
-    return (
-      <Dialog.Root
-        open={open}
-        onOpenChange={() => {
-          if (open) onClose();
-        }}>
-        <Dialog.Content className="w-full max-w-96 p-4">
-          <Dialog.Title className="mx-auto w-fit">
-            Sign up with Password
-          </Dialog.Title>
-          <Dialog.Description>
-            <Text
-              weight="bold"
-              size="2"
-              align="center"
-              className="p-2">
-              {step === 1 ? 'Choose a password' : 'Setup 2FA'}
-            </Text>
-          </Dialog.Description>
-          {step === 1 && (
-            <PasswordModalStep1
-              password={password}
-              setPassword={setPassword}
-              onClose={onClose}
-              setStep={setStep}
-            />
-          )}
-          {step === 2 && (
-            <PasswordModalStep2
-              username={username}
-              password={password}
-              twoFactorCode={twoFactorCode}
-              setTwoFactorCode={setTwoFactorCode}
-              onResolve={onResolve}
-              setStep={setStep}
-            />
-          )}
-        </Dialog.Content>
-      </Dialog.Root>
-    );
-  });
+  return (
+    <Dialog.Root
+      open={open}
+      onOpenChange={() => {
+        if (open) onClose();
+      }}>
+      <Dialog.Content className="w-full max-w-96 p-4">
+        <Dialog.Title className="mx-auto w-fit py-4">
+          Sign up with Passkey
+        </Dialog.Title>
+        <Flex
+          gap="2"
+          justify="center">
+          <Spinner loading={loading && !error} />
+          <Text
+            as="div"
+            size="2"
+            mb="1"
+            weight="bold">
+            {state}
+          </Text>
+        </Flex>
+
+        <Flex
+          className="w-full p-2"
+          direction="column"
+          gap="4">
+          <Button
+            loading={loading}
+            size="3"
+            className="mx-auto my-4"
+            onClick={() => run()}>
+            <Fingerprint size={20} />
+            <Text>Use your Passkey</Text>
+          </Button>
+          <Button
+            variant="soft"
+            color="gray"
+            size="3"
+            onClick={() => onClose()}>
+            Cancel
+          </Button>
+        </Flex>
+      </Dialog.Content>
+    </Dialog.Root>
+  );
+}
+
+export function PasswordModal({
+  open,
+  onClose,
+  onResolve,
+  username
+}: ModalComponent<{ username: string }, { recoveryCode: string }>) {
+  const [password, setPassword] = useState<string>();
+  const [twoFactorCode, setTwoFactorCode] = useState<string>('');
+  const [step, setStep] = useState(1);
+
+  return (
+    <Dialog.Root
+      open={open}
+      onOpenChange={() => {
+        if (open) onClose();
+      }}>
+      <Dialog.Content className="w-full max-w-96 p-4">
+        <Dialog.Title className="mx-auto w-fit">
+          Sign up with Password
+        </Dialog.Title>
+        <Dialog.Description>
+          <Text
+            weight="bold"
+            size="2"
+            align="center"
+            className="p-2">
+            {step === 1 ? 'Choose a password' : 'Setup 2FA'}
+          </Text>
+        </Dialog.Description>
+        {step === 1 && (
+          <PasswordModalStep1
+            password={password}
+            setPassword={setPassword}
+            onClose={onClose}
+            setStep={setStep}
+          />
+        )}
+        {step === 2 && (
+          <PasswordModalStep2
+            username={username}
+            password={password}
+            twoFactorCode={twoFactorCode}
+            setTwoFactorCode={setTwoFactorCode}
+            onResolve={onResolve}
+            setStep={setStep}
+          />
+        )}
+      </Dialog.Content>
+    </Dialog.Root>
+  );
+}
 
 const PasswordModalStep1 = ({
   password,
@@ -511,53 +519,50 @@ const PasswordModalStep2 = ({
   );
 };
 
-export const recoveryCodeModal = () =>
-  Modal<unknown, { recoveryCode: string; username: string }>(
-    ({ onResolve, open, args }) => {
-      const [downloaded, setDownloaded] = useState(false);
+export function RecoveryCodeModal({
+  open,
+  onResolve,
+  recoveryCode,
+  username
+}: ModalComponent<{ username: string; recoveryCode: string }>) {
+  const [downloaded, setDownloaded] = useState(false);
 
-      return (
-        <Dialog.Root open={open}>
-          <Dialog.Content className="w-full max-w-96 p-4">
-            <Dialog.Title className="mx-auto w-fit py-2">
-              Recovery Code
-            </Dialog.Title>
-            <Flex
-              className="w-full p-2"
-              direction="column"
-              gap="4">
-              <Text
-                size="2"
-                weight="bold"
-                align="center">
-                Save this recovery code in a safe place, without this code you
-                would not be able to recover your account
-              </Text>
-              <Card>
-                <Text className="break-words font-mono">
-                  {args?.recoveryCode}
-                </Text>
-              </Card>
-              <Button
-                size="2"
-                onClick={() => {
-                  downloadAsFile(
-                    `${args?.username}-recovery-code.txt`,
-                    args?.recoveryCode ?? ''
-                  );
-                  setDownloaded(true);
-                }}>
-                {!downloaded ? 'Download' : 'Download Again'}
-              </Button>
-              <Button
-                size="2"
-                disabled={!downloaded}
-                onClick={() => onResolve({})}>
-                Close
-              </Button>
-            </Flex>
-          </Dialog.Content>
-        </Dialog.Root>
-      );
-    }
+  return (
+    <Dialog.Root open={open}>
+      <Dialog.Content className="w-full max-w-96 p-4">
+        <Dialog.Title className="mx-auto w-fit py-2">
+          Recovery Code
+        </Dialog.Title>
+        <Flex
+          className="w-full p-2"
+          direction="column"
+          gap="4">
+          <Text
+            size="2"
+            weight="bold"
+            align="center">
+            Save this recovery code in a safe place, without this code you would
+            not be able to recover your account
+          </Text>
+          <Card>
+            <Text className="break-words font-mono">{recoveryCode}</Text>
+          </Card>
+          <Button
+            size="2"
+            onClick={() => {
+              downloadAsFile(`${username}-recovery-code.txt`, recoveryCode);
+              setDownloaded(true);
+            }}>
+            {!downloaded ? 'Download' : 'Download Again'}
+          </Button>
+          <Button
+            size="2"
+            disabled={!downloaded}
+            onClick={() => onResolve(null)}>
+            Close
+          </Button>
+        </Flex>
+      </Dialog.Content>
+    </Dialog.Root>
   );
+}
