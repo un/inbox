@@ -1,5 +1,4 @@
 'use client';
-import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { Flex, Text } from '@radix-ui/themes';
 import Link from 'next/link';
@@ -21,27 +20,19 @@ import {
 export default function SettingsSidebar() {
   const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
   const pathname = usePathname();
-  const [currentUrl, setCurrentUrl] = useState('');
-
-  useEffect(() => {
-    setCurrentUrl(pathname);
-  }, [pathname]);
 
   const personalLinks = [
     {
-      key: `/${orgShortCode}/settings/user/profile`,
       label: 'Profile',
       to: `/${orgShortCode}/settings/user/profile`,
       icon: <CircleUser />
     },
     {
-      key: `/${orgShortCode}/settings/user/addresses`,
       label: 'Personal Addresses',
       to: `/${orgShortCode}/settings/user/addresses`,
       icon: <Mail />
     },
     {
-      key: `/${orgShortCode}/settings/user/security`,
       label: 'Security',
       to: `/${orgShortCode}/settings/user/security`,
       icon: <Lock />
@@ -49,13 +40,11 @@ export default function SettingsSidebar() {
   ];
   const orgSetupLinks = [
     {
-      key: `/${orgShortCode}/settings/org`,
       label: 'Org Profile',
       to: `/${orgShortCode}/settings/org`,
       icon: <Building2 />
     },
     {
-      key: `/${orgShortCode}/settings/org/setup/billing`,
       label: 'Billing',
       to: `/${orgShortCode}/settings/org/setup/billing`,
       icon: <CreditCard />
@@ -64,19 +53,16 @@ export default function SettingsSidebar() {
 
   const orgUserLinks = [
     {
-      key: 'members',
       label: 'Members',
       to: `/${orgShortCode}/settings/org/users/members`,
       icon: <Users />
     },
     {
-      key: `/${orgShortCode}/settings/org/users/invites`,
       label: 'Invites',
       to: `/${orgShortCode}/settings/org/users/invites`,
       icon: <UserRoundPlus />
     },
     {
-      key: `/${orgShortCode}/settings/org/users/teams`,
       label: 'Teams',
       to: `/${orgShortCode}/settings/org/users/teams`,
       icon: <HeartHandshake />
@@ -84,13 +70,11 @@ export default function SettingsSidebar() {
   ];
   const orgMailLinks = [
     {
-      key: `/${orgShortCode}/settings/org/mail/domains`,
       label: 'Domains',
       to: `/${orgShortCode}/settings/org/mail/domains`,
       icon: <Globe />
     },
     {
-      key: `/${orgShortCode}/settings/org/mail/addresses`,
       label: 'Email Addresses',
       to: `/${orgShortCode}/settings/org/mail/addresses`,
       icon: <AtSign />
@@ -110,14 +94,14 @@ export default function SettingsSidebar() {
       <Flex
         className="flex-col"
         gap="1">
-        {personalLinks.map(({ key, label, to, icon }) => (
+        {personalLinks.map(({ label, to, icon }) => (
           <Link
-            key={key}
+            key={to}
             href={to}>
             <Flex
               gap="4"
               className={cn(
-                currentUrl === key ? 'dark:bg-gray-10 bg-gray-4' : '',
+                pathname === to ? 'dark:bg-gray-10 bg-gray-4' : '',
                 'rounded p-1 pl-2'
               )}>
               {icon}
@@ -151,7 +135,7 @@ export default function SettingsSidebar() {
             <Flex
               gap="4"
               className={cn(
-                currentUrl === key ? 'dark:bg-gray-10 bg-gray-4' : '',
+                pathname === key ? 'dark:bg-gray-10 bg-gray-4' : '',
                 'rounded p-1 pl-2'
               )}>
               {icon}
@@ -177,7 +161,7 @@ export default function SettingsSidebar() {
             <Flex
               gap="4"
               className={cn(
-                currentUrl === key ? 'dark:bg-gray-10 bg-gray-4' : '',
+                pathname === key ? 'dark:bg-gray-10 bg-gray-4' : '',
                 'rounded p-1 pl-2'
               )}>
               {icon}
@@ -204,7 +188,7 @@ export default function SettingsSidebar() {
             <Flex
               gap="4"
               className={cn(
-                currentUrl === key ? 'dark:bg-gray-10 bg-gray-4' : '',
+                pathname === key ? 'dark:bg-gray-10 bg-gray-4' : '',
                 'rounded p-1 pl-2'
               )}>
               {icon}
