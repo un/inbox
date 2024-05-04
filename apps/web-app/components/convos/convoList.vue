@@ -26,10 +26,7 @@
       if (!orgMemberHasMoreConvos.value) return;
       if (convoQueryPending.value) return;
       pauseConvoLoading.value = true;
-      convoQueryParams.value = {
-        cursorLastUpdatedAt: convosListCursor.value.cursorLastUpdatedAt,
-        cursorLastPublicId: convosListCursor.value.cursorLastPublicId
-      };
+      convoQueryParams.value = convosListCursor.value ?? {};
       await convoStore.getConvoList();
       pauseConvoLoading.value = false;
     },
