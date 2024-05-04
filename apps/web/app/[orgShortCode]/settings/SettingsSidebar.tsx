@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import { type ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 import { Flex, Text } from '@radix-ui/themes';
 import Link from 'next/link';
@@ -19,17 +19,17 @@ import {
   HeartHandshake
 } from 'lucide-react';
 
-interface links {
+type NavLinks = {
   label: string;
   to: string;
-  icon: React.ReactNode;
-}
+  icon: ReactNode;
+};
 
 export default function SettingsSidebar() {
   const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
   const pathname = usePathname();
 
-  const personalLinks: links[] = [
+  const personalLinks: NavLinks[] = [
     {
       label: 'Profile',
       to: `/${orgShortCode}/settings/user/profile`,
@@ -46,7 +46,7 @@ export default function SettingsSidebar() {
       icon: <Lock />
     }
   ];
-  const orgSetupLinks = [
+  const orgSetupLinks: NavLinks[] = [
     {
       label: 'Org Profile',
       to: `/${orgShortCode}/settings/org`,
@@ -59,7 +59,7 @@ export default function SettingsSidebar() {
     }
   ];
 
-  const orgUserLinks: links[] = [
+  const orgUserLinks: NavLinks[] = [
     {
       label: 'Members',
       to: `/${orgShortCode}/settings/org/users/members`,
@@ -76,7 +76,7 @@ export default function SettingsSidebar() {
       icon: <HeartHandshake />
     }
   ];
-  const orgMailLinks: links[] = [
+  const orgMailLinks: NavLinks[] = [
     {
       label: 'Domains',
       to: `/${orgShortCode}/settings/org/mail/domains`,
