@@ -1,8 +1,10 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { useParams, usePathname } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { Flex, Text } from '@radix-ui/themes';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
+import { useGlobalStore } from '@/providers/global-store-provider';
 import {
   CircleUser,
   Mail,
@@ -17,36 +19,29 @@ import {
 } from 'lucide-react';
 
 export default function SettingsSidebar() {
+  const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
   const pathname = usePathname();
   const [currentUrl, setCurrentUrl] = useState('');
-  const { orgShortCode } = useParams();
 
   useEffect(() => {
-    const segments = pathname.split('/').filter(Boolean);
-    if (segments.length > 0) {
-      let endpoint = segments[segments.length - 1];
-      if (endpoint === 'addresses') {
-        endpoint = `${segments[segments.length - 2]}/${segments[segments.length - 1]}`;
-      }
-      setCurrentUrl(endpoint || '');
-    }
+    setCurrentUrl(pathname);
   }, [pathname]);
 
   const personalLinks = [
     {
-      key: 'profile',
+      key: `/${orgShortCode}/settings/user/profile`,
       label: 'Profile',
       to: `/${orgShortCode}/settings/user/profile`,
       icon: <CircleUser />
     },
     {
-      key: 'user/addresses',
+      key: `/${orgShortCode}/settings/user/addresses`,
       label: 'Personal Addresses',
       to: `/${orgShortCode}/settings/user/addresses`,
       icon: <Mail />
     },
     {
-      key: 'security',
+      key: `/${orgShortCode}/settings/user/security`,
       label: 'Security',
       to: `/${orgShortCode}/settings/user/security`,
       icon: <Lock />
@@ -54,13 +49,13 @@ export default function SettingsSidebar() {
   ];
   const orgSetupLinks = [
     {
-      key: 'org',
+      key: `/${orgShortCode}/settings/org`,
       label: 'Org Profile',
       to: `/${orgShortCode}/settings/org`,
       icon: <Building2 />
     },
     {
-      key: 'billing',
+      key: `/${orgShortCode}/settings/org/setup/billing`,
       label: 'Billing',
       to: `/${orgShortCode}/settings/org/setup/billing`,
       icon: <CreditCard />
@@ -75,13 +70,13 @@ export default function SettingsSidebar() {
       icon: <Users />
     },
     {
-      key: 'invites',
+      key: `/${orgShortCode}/settings/org/users/invites`,
       label: 'Invites',
       to: `/${orgShortCode}/settings/org/users/invites`,
       icon: <UserRoundPlus />
     },
     {
-      key: 'teams',
+      key: `/${orgShortCode}/settings/org/users/teams`,
       label: 'Teams',
       to: `/${orgShortCode}/settings/org/users/teams`,
       icon: <HeartHandshake />
@@ -89,13 +84,13 @@ export default function SettingsSidebar() {
   ];
   const orgMailLinks = [
     {
-      key: 'domains',
+      key: `/${orgShortCode}/settings/org/mail/domains`,
       label: 'Domains',
       to: `/${orgShortCode}/settings/org/mail/domains`,
       icon: <Globe />
     },
     {
-      key: 'mail/addresses',
+      key: `/${orgShortCode}/settings/org/mail/addresses`,
       label: 'Email Addresses',
       to: `/${orgShortCode}/settings/org/mail/addresses`,
       icon: <AtSign />
@@ -110,7 +105,7 @@ export default function SettingsSidebar() {
         size="5"
         weight="bold"
         color="gray">
-        # Personal
+        Personal
       </Text>
       <Flex
         className="flex-col"
@@ -121,7 +116,10 @@ export default function SettingsSidebar() {
             href={to}>
             <Flex
               gap="4"
-              className={`${currentUrl === key ? 'dark:bg-gray-10 bg-gray-4' : ''} rounded p-1 pl-2`}>
+              className={cn(
+                currentUrl === key ? 'dark:bg-gray-10 bg-gray-4' : '',
+                'rounded p-1 pl-2'
+              )}>
               {icon}
               <div>{label}</div>
             </Flex>
@@ -133,7 +131,7 @@ export default function SettingsSidebar() {
         size="5"
         weight="bold"
         color="gray">
-        # Organization
+        Organization
       </Text>
 
       <Flex
@@ -152,7 +150,10 @@ export default function SettingsSidebar() {
             href={to}>
             <Flex
               gap="4"
-              className={`${currentUrl === key ? 'dark:bg-gray-10 bg-gray-4' : ''} rounded p-1 pl-2`}>
+              className={cn(
+                currentUrl === key ? 'dark:bg-gray-10 bg-gray-4' : '',
+                'rounded p-1 pl-2'
+              )}>
               {icon}
               <div>{label}</div>
             </Flex>
@@ -175,7 +176,10 @@ export default function SettingsSidebar() {
             href={to}>
             <Flex
               gap="4"
-              className={`${currentUrl === key ? 'dark:bg-gray-10 bg-gray-4' : ''} rounded p-1 pl-2`}>
+              className={cn(
+                currentUrl === key ? 'dark:bg-gray-10 bg-gray-4' : '',
+                'rounded p-1 pl-2'
+              )}>
               {icon}
               <div>{label}</div>
             </Flex>
@@ -199,7 +203,10 @@ export default function SettingsSidebar() {
             href={to}>
             <Flex
               gap="4"
-              className={`${currentUrl === key ? 'dark:bg-gray-10 bg-gray-4' : ''} rounded p-1 pl-2`}>
+              className={cn(
+                currentUrl === key ? 'dark:bg-gray-10 bg-gray-4' : '',
+                'rounded p-1 pl-2'
+              )}>
               {icon}
               <div>{label}</div>
             </Flex>
