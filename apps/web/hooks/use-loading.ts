@@ -5,22 +5,14 @@ type Callbacks<T> = {
   onError?: (e: Error) => void;
   onSettled?: () => void;
 };
+// eslint-disable-next-line @typescript-eslint/no-empty-function
+const noop = () => {};
 
 // A simple useQuery like hook that handles loading and error states,
 // useful for doing dependent async functions like passkey login
 export default function useLoading<T>(
   fn: (signal: AbortSignal) => Promise<T>,
-  {
-    onSuccess = () => {
-      /** */
-    },
-    onError = () => {
-      /** */
-    },
-    onSettled = () => {
-      /** */
-    }
-  }: Callbacks<T> = {}
+  { onSuccess = noop, onError = noop, onSettled = noop }: Callbacks<T> = {}
 ) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
