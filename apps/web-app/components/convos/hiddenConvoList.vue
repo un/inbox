@@ -26,10 +26,7 @@
       if (!orgMemberHasMoreHiddenConvos.value) return;
       if (hiddenConvoQueryPending.value) return;
       pauseHiddenConvoLoading.value = true;
-      hiddenConvoQueryParams.value = {
-        cursorLastUpdatedAt: hiddenConvosListCursor.value.cursorLastUpdatedAt,
-        cursorLastPublicId: hiddenConvosListCursor.value.cursorLastPublicId
-      };
+      hiddenConvoQueryParams.value = hiddenConvosListCursor.value ?? {};
       await hiddenConvoStore.getHiddenConvoList();
       pauseHiddenConvoLoading.value = false;
     },

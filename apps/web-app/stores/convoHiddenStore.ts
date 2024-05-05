@@ -8,12 +8,10 @@ export const useHiddenConvoStore = defineStore(
     const { $trpc } = useNuxtApp();
 
     const hiddenConvosListCursor = ref<{
-      cursorLastUpdatedAt: Date | null;
-      cursorLastPublicId: string | null;
-    }>({
-      cursorLastUpdatedAt: null,
-      cursorLastPublicId: null
-    });
+      lastUpdatedAt: Date;
+      lastPublicId: string;
+    } | null>(null);
+
     const orgMemberHasMoreHiddenConvos = ref(true);
     const pauseHiddenConvoLoading = ref(false);
 
@@ -24,8 +22,8 @@ export const useHiddenConvoStore = defineStore(
 
     type UserConvoQueryParams =
       | {
-          cursorLastUpdatedAt: Date;
-          cursorLastPublicId: string;
+          lastUpdatedAt: Date;
+          lastPublicId: string;
         }
       | {};
     const hiddenConvoQueryParams = ref<UserConvoQueryParams>({});
@@ -38,7 +36,7 @@ export const useHiddenConvoStore = defineStore(
       hiddenConvoQueryPending.value = true;
       const { data: convosListData } =
         await $trpc.convos.getOrgMemberConvos.useQuery({
-          ...hiddenConvoQueryParams.value,
+          cursor: hiddenConvoQueryParams.value,
           includeHidden: true
         });
       hiddenConvoQueryPending.value = false;
@@ -57,10 +55,7 @@ export const useHiddenConvoStore = defineStore(
       }
 
       orgMemberHiddenConvos.value.push(...convosListData.value.data);
-      hiddenConvosListCursor.value.cursorLastUpdatedAt =
-        convosListData.value.cursor.lastUpdatedAt;
-      hiddenConvosListCursor.value.cursorLastPublicId =
-        convosListData.value.cursor.lastPublicId;
+      hiddenConvosListCursor.value = convosListData.value.cursor;
 
       hiddenConvoQueryPending.value = false;
     }

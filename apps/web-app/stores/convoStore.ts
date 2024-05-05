@@ -8,12 +8,9 @@ export const useConvoStore = defineStore(
     const { $trpc } = useNuxtApp();
 
     const convosListCursor = ref<{
-      cursorLastUpdatedAt: Date | null;
-      cursorLastPublicId: string | null;
-    }>({
-      cursorLastUpdatedAt: null,
-      cursorLastPublicId: null
-    });
+      lastUpdatedAt: Date;
+      lastPublicId: string;
+    } | null>(null);
     const orgMemberHasMoreConvos = ref(true);
     const pauseConvoLoading = ref(false);
 
@@ -24,8 +21,8 @@ export const useConvoStore = defineStore(
 
     type UserConvoQueryParams =
       | {
-          cursorLastUpdatedAt: Date;
-          cursorLastPublicId: string;
+          lastUpdatedAt: Date;
+          lastPublicId: string;
         }
       | {};
     const convoQueryParams = ref<UserConvoQueryParams>({});
@@ -37,7 +34,9 @@ export const useConvoStore = defineStore(
     async function getConvoList() {
       convoQueryPending.value = true;
       const { data: convosListData } =
-        await $trpc.convos.getOrgMemberConvos.useQuery(convoQueryParams);
+        await $trpc.convos.getOrgMemberConvos.useQuery({
+          cursor: convoQueryParams.value
+        });
 
       if (!convosListData.value) {
         convoQueryPending.value = false;
@@ -54,11 +53,7 @@ export const useConvoStore = defineStore(
       }
 
       orgMemberConvos.value.push(...convosListData.value.data);
-      convosListCursor.value.cursorLastUpdatedAt =
-        convosListData.value.cursor.lastUpdatedAt;
-      convosListCursor.value.cursorLastPublicId =
-        convosListData.value.cursor.lastPublicId;
-
+      convosListCursor.value = convosListData.value.cursor;
       convoQueryPending.value = false;
     }
 
