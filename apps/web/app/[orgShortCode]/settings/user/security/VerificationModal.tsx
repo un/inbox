@@ -1,27 +1,23 @@
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/input-otp';
 import TogglePasswordBox from '@/components/toggle-password';
-import useAwaitableModal, {
-  type AwaitableModalApi
-} from '@/hooks/use-awaitable-modal';
+import { type ModalComponent } from '@/hooks/use-awaitable-modal';
 import useLoading from '@/hooks/use-loading';
 import { api } from '@/lib/trpc';
 import { Badge, Button, Dialog, Flex, Separator, Text } from '@radix-ui/themes';
 import { startAuthentication } from '@simplewebauthn/browser';
 import { useState } from 'react';
 
-type OpenArgs = { hasPasskey: boolean; hasPassword: boolean; has2Fa: boolean };
-
-export const useVerificationModal = () =>
-  useAwaitableModal<string, OpenArgs>((args) => (
-    <VerificationModal {...args} />
-  ));
-
-function VerificationModal({
+export function VerificationModal({
   open,
   onClose,
   onResolve,
-  args
-}: AwaitableModalApi<string, OpenArgs>) {
+  hasPasskey,
+  hasPassword,
+  has2Fa
+}: ModalComponent<
+  { hasPasskey: boolean; hasPassword: boolean; has2Fa: boolean },
+  string
+>) {
   const getPasskeyVerificationChallenge =
     api.useUtils().account.security.generatePasskeyVerificationChallenge;
   const getVerificationToken =
@@ -84,7 +80,7 @@ function VerificationModal({
             We need to verify your identity before you can proceed changing your
             Security settings.
           </Text>
-          {args?.hasPasskey && (
+          {hasPasskey && (
             <Flex>
               <Button
                 onClick={() =>
@@ -96,7 +92,7 @@ function VerificationModal({
             </Flex>
           )}
 
-          {args?.hasPasskey && args?.hasPassword ? (
+          {hasPasskey && hasPassword ? (
             <Flex
               align="center"
               gap="2"
@@ -113,7 +109,7 @@ function VerificationModal({
             </Flex>
           ) : null}
 
-          {args?.hasPassword && (
+          {hasPassword && (
             <TogglePasswordBox
               passwordValue={password}
               setPasswordValue={setPassword}
@@ -121,7 +117,7 @@ function VerificationModal({
             />
           )}
 
-          {args?.has2Fa && (
+          {has2Fa && (
             <InputOTP
               maxLength={6}
               value={otp}
@@ -140,7 +136,7 @@ function VerificationModal({
             </InputOTP>
           )}
 
-          {args?.hasPassword && (
+          {hasPassword && (
             <Button
               disabled={password.length < 8}
               loading={passwordLoading}
