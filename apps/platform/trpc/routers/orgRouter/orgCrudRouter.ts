@@ -6,7 +6,9 @@ import {
   orgs,
   orgMembers,
   orgMemberProfiles,
-  accounts
+  accounts,
+  spaces,
+  spaceMembers
 } from '@u22n/database/schema';
 import { typeIdGenerator } from '@u22n/utils';
 import { TRPCError } from '@trpc/server';
@@ -81,7 +83,6 @@ export const crudRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { db, account } = ctx;
       const accountId = account.id;
-
       const newPublicId = typeIdGenerator('org');
 
       const insertOrgResponse = await db.insert(orgs).values({
@@ -91,8 +92,6 @@ export const crudRouter = router({
         publicId: newPublicId
       });
       const orgId = +insertOrgResponse.insertId;
-
-      const newProfilePublicId = typeIdGenerator('orgMemberProfile');
 
       const { username } =
         (await db.query.accounts.findFirst({
@@ -109,6 +108,29 @@ export const crudRouter = router({
         });
       }
 
+      const newSpacePublicId = typeIdGenerator('spaces');
+      const newOrgMemberPersonalSpace = await db.insert(spaces).values({
+        orgId: orgId,
+        publicId: newSpacePublicId,
+        name: 'Personal',
+        description: `${username}'s personal space`,
+        shortcode: 'personal',
+        type: 'personal',
+        createdBy: 0
+      });
+
+      const newSpaceMemberPublicId = typeIdGenerator('spaceMembers');
+      await db.insert(spaceMembers).values({
+        orgId: orgId,
+        publicId: newSpaceMemberPublicId,
+        role: 'admin',
+        addedBy: 0,
+        orgMemberId: 0,
+        teamId: 0,
+        spaceId: Number(newOrgMemberPersonalSpace.insertId)
+      });
+
+      const newProfilePublicId = typeIdGenerator('orgMemberProfile');
       const newOrgMemberProfileInsert = await db
         .insert(orgMemberProfiles)
         .values({
@@ -129,8 +151,24 @@ export const crudRouter = router({
         role: 'admin',
         accountId: accountId,
         status: 'active',
-        orgMemberProfileId: Number(newOrgMemberProfileInsert.insertId)
+        orgMemberProfileId: Number(newOrgMemberProfileInsert.insertId),
+        personalSpaceId: Number(newOrgMemberPersonalSpace.insertId)
       });
+
+      await db
+        .update(spaces)
+        .set({
+          createdBy: Number(newOrgMemberProfileInsert.insertId)
+        })
+        .where(eq(spaces.id, Number(newOrgMemberPersonalSpace.insertId)));
+
+      await db
+        .update(spaceMembers)
+        .set({
+          orgMemberId: Number(newOrgMemberPublicId),
+          addedBy: Number(newOrgMemberPublicId)
+        })
+        .where(eq(spaceMembers.id, Number(newSpaceMemberPublicId)));
 
       return {
         orgId: newPublicId,

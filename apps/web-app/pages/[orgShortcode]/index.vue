@@ -18,7 +18,7 @@
   }
   if (!has2FAError) {
     reloadNuxtApp({
-      path: `/${orgShortcode}/convo`,
+      path: `/${orgShortcode}/personal/convo`,
       force: true,
       ttl: 5000
     });

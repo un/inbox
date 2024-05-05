@@ -19,7 +19,7 @@ export const errorHandler: TRPCLink<TrpcPlatformRouter> = () => {
           observer.next(value);
         },
         error(err) {
-          const orgShortCode = useRoute().params.orgShortcode;
+          const { orgShortcode, spaceShortcode } = useRoute().params;
           if (
             err.data?.code === 'UNAUTHORIZED' &&
             err.message ===
@@ -39,7 +39,7 @@ export const errorHandler: TRPCLink<TrpcPlatformRouter> = () => {
             err.data?.code === 'NOT_FOUND' &&
             err.message === 'Conversation not found'
           ) {
-            navigateTo(`/${orgShortCode}/convo/404`);
+            navigateTo(`/${orgShortcode}/${spaceShortcode}/convo/404`);
             return;
           }
 

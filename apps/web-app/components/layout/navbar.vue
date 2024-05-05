@@ -25,7 +25,10 @@
   );
 
   const currentPath = ref(useRouter().currentRoute.value.path as string);
-  const orgShortcode = useRoute().params.orgShortcode as string;
+  const { orgShortcode, spaceShortcode } = useRoute().params as {
+    orgShortcode: string;
+    spaceShortcode: string;
+  };
   const router = useRouter();
   router.beforeEach((to) => {
     currentPath.value = to.path;
@@ -34,7 +37,7 @@
   const navLinks = [
     {
       label: 'Conversations',
-      to: `/${orgShortcode}/convo`,
+      to: `/${orgShortcode}/${spaceShortcode}/convo`,
       icon: 'i-ph-chat-circle'
     },
     {

@@ -26,7 +26,7 @@
   );
 
   const currentPath = ref(useRouter().currentRoute.value.path as string);
-  const orgShortcode = useRoute().params.orgShortcode as string;
+  const { orgShortcode, spaceShortcode } = useRoute().params;
   const router = useRouter();
   router.beforeEach((to) => {
     currentPath.value = to.path;
@@ -280,7 +280,7 @@
       icon="i-ph-chat-circle"
       variant="ghost"
       size="xl"
-      @click="navigateTo(`/${orgShortcode}/convo`)" />
+      @click="navigateTo(`/${orgShortcode}/${spaceShortcode}/convo`)" />
 
     <NuxtUiDropdown
       :items="userMenuItems"

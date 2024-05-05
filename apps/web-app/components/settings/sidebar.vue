@@ -37,6 +37,16 @@
       to: `/${orgShortcode}/settings/org`,
       icon: 'i-ph-buildings'
     },
+    {
+      label: 'Permissions',
+      to: `/${orgShortcode}/settings/org/setup/permissions`,
+      icon: 'i-ph-warning-octagon'
+    },
+    {
+      label: 'Spaces',
+      to: `/${orgShortcode}/settings/org/setup/spaces`,
+      icon: 'i-ph-planet'
+    },
     ...(eeBilling
       ? [
           {

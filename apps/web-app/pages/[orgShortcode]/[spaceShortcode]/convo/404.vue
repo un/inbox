@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { useRoute, navigateTo } from '#imports';
-  const orgShortcode = useRoute().params.orgShortcode as string;
+  const { orgShortcode, spaceShortcode } = useRoute().params;
   const urlParams = useRoute().query;
   const hasConvoDeletedError = urlParams['error'] === 'convo_deleted';
 </script>
@@ -34,7 +34,7 @@
       <UnUiButton
         label="Back to conversations"
         size="lg"
-        @click="navigateTo(`/${orgShortcode}/convo`)" />
+        @click="navigateTo(`/${orgShortcode}/${spaceShortcode}/convo`)" />
     </div>
   </div>
 </template>

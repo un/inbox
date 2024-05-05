@@ -5,7 +5,7 @@
   const breakpoints = useBreakpoints(breakpointsTailwind);
   const isMobile = breakpoints.smaller('lg'); // only smaller than lg
 
-  const orgShortcode = useRoute().params.orgShortcode as string;
+  const { orgShortcode, spaceShortcode } = useRoute().params;
 
   const view = ref<'convo' | 'hidden'>('convo');
   function toggleView() {
@@ -24,7 +24,7 @@
           class="w-full"
           label="Start new conversation"
           icon="i-ph-plus"
-          @click="navigateTo(`/${orgShortcode}/convo/new`)" />
+          @click="navigateTo(`/${orgShortcode}/${spaceShortcode}/convo/new`)" />
       </div>
     </div>
     <div
@@ -46,7 +46,7 @@
             label="New"
             icon="i-ph-plus"
             variant="outline"
-            :to="`/${orgShortcode}/convo/new`" />
+            :to="`/${orgShortcode}/${spaceShortcode}/convo/new`" />
           <div>
             <UnUiButton
               class="flex-grow justify-center"
