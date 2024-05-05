@@ -1303,6 +1303,7 @@ export const convoRouter = router({
       const orgId = org.id;
 
       const orgMemberId = org.memberId;
+      const LIMIT = 15;
 
       const inputLastUpdatedAt = cursor.lastUpdatedAt
         ? new Date(cursor.lastUpdatedAt)
@@ -1312,7 +1313,7 @@ export const convoRouter = router({
 
       const convoQuery = await db.query.convos.findMany({
         orderBy: [desc(convos.lastUpdatedAt), desc(convos.publicId)],
-        limit: 15,
+        limit: LIMIT + 1,
         columns: {
           publicId: true,
           lastUpdatedAt: true
@@ -1455,12 +1456,16 @@ export const convoRouter = router({
         }
       });
 
-      if (!convoQuery.length) {
+      // As we fetch ${LIMIT + 1} convos at a time, if the length is <= ${LIMIT}, we know we've reached the end
+      if (convoQuery.length <= LIMIT) {
         return {
-          data: <typeof convoQuery>[],
+          data: convoQuery,
           cursor: null
         };
       }
+
+      // If we have ${LIMIT + 1} convos, we pop the last one as we return ${LIMIT} convos
+      convoQuery.pop();
 
       const newCursorLastUpdatedAt =
         convoQuery[convoQuery.length - 1]!.lastUpdatedAt;

@@ -3,7 +3,6 @@
 import useLoading from '@/hooks/use-loading';
 import { cn, generateAvatarUrl, getInitials } from '@/lib/utils';
 import { useGlobalStore } from '@/providers/global-store-provider';
-
 import {
   Button,
   Flex,
@@ -33,8 +32,9 @@ import { env } from 'next-runtime-env';
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function Sidebar() {
   const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
@@ -200,13 +200,14 @@ export default function Sidebar() {
   );
 }
 
+const PLATFORM_URL = env('NEXT_PUBLIC_PLATFORM_URL');
+
 function OrgMenu({ collapsed }: { collapsed: boolean }) {
-  const currentOrg = useGlobalStore((state) => state.currentOrg);
   const setCurrentOrg = useGlobalStore((state) => state.setCurrentOrg);
+  const currentOrg = useGlobalStore((state) => state.currentOrg);
   const username = useGlobalStore((state) => state.user.username);
   const orgs = useGlobalStore((state) => state.orgs);
-
-  const PLATFORM_URL = env('NEXT_PUBLIC_PLATFORM_URL');
+  const queryClient = useQueryClient();
 
   const { setTheme, resolvedTheme } = useTheme();
   const router = useRouter();
@@ -214,11 +215,11 @@ function OrgMenu({ collapsed }: { collapsed: boolean }) {
   const orgAvatarUrl = useMemo(
     () =>
       generateAvatarUrl({
-        publicId: currentOrg.orgMemberProfile.publicId,
+        publicId: currentOrg.publicId,
         avatarTimestamp: currentOrg.avatarTimestamp,
         size: '5xl'
       }),
-    [currentOrg]
+    [currentOrg.publicId, currentOrg.avatarTimestamp]
   );
 
   const userAvatarUrl = useMemo(
@@ -228,27 +229,27 @@ function OrgMenu({ collapsed }: { collapsed: boolean }) {
         avatarTimestamp: currentOrg.orgMemberProfile.avatarTimestamp,
         size: '5xl'
       }),
-    [currentOrg]
+    [
+      currentOrg.orgMemberProfile.publicId,
+      currentOrg.orgMemberProfile.avatarTimestamp
+    ]
   );
 
-  const {
-    run: logOut,
-    loading: loggingOut,
-    error: logOutError
-  } = useLoading(async () => {
-    await fetch(`${PLATFORM_URL}/auth/logout`, {
-      method: 'POST',
-      credentials: 'include'
-    });
-
-    router.replace('/');
-  });
-
-  useEffect(() => {
-    if (logOutError) {
-      toast.error(logOutError.message);
+  const { run: logOut, loading: loggingOut } = useLoading(
+    async () => {
+      await fetch(`${PLATFORM_URL}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+      await queryClient.invalidateQueries();
+      router.replace('/');
+    },
+    {
+      onError: (error) => {
+        if (error) toast.error(error.message);
+      }
     }
-  }, [logOutError]);
+  );
 
   const displayName =
     `${currentOrg.orgMemberProfile.firstName ?? username} ${currentOrg.orgMemberProfile.lastName}`.trim();
