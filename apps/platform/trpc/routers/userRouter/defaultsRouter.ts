@@ -6,7 +6,7 @@ import { TRPCError } from '@trpc/server';
 
 export const defaultsRouter = router({
   redirectionData: accountProcedure
-    .input(z.object({}).strict())
+    .input(z.object({}))
     .query(async ({ ctx }) => {
       const { db, account } = ctx;
       const accountId = account.id;
@@ -46,14 +46,14 @@ export const defaultsRouter = router({
       const userHasOrgMembership = accountResponse.orgMemberships.length > 0;
 
       return {
-        defaultOrgShortcode:
+        defaultOrgShortCode:
           accountResponse?.orgMemberships[0]?.org?.shortcode || null,
         twoFactorEnabledCorrectly: twoFactorEnabledCorrectly,
         userHasOrgMembership: userHasOrgMembership,
         username: accountResponse.username
       };
     }),
-  getIds: orgProcedure.input(z.object({}).strict()).query(async ({ ctx }) => {
+  getIds: orgProcedure.input(z.object({})).query(async ({ ctx }) => {
     const { db, org } = ctx;
 
     const dbQuery = await db.query.orgMembers.findFirst({

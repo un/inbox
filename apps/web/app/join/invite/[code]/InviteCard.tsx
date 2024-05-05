@@ -144,7 +144,7 @@ export default function InviteCard({ code }: { code: string }) {
                     size="2">
                     {inviteData.orgName}
                   </Text>
-                  <Text size="2">{inviteData.orgShortcode}</Text>
+                  <Text size="2">{inviteData.orgShortCode}</Text>
                 </Flex>
               </Flex>
             </Card>

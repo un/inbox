@@ -3,7 +3,7 @@
   import { navigateTo, ref, useRoute, onMounted, storeToRefs } from '#imports';
   import { useConvoStore } from '~/stores/convoStore';
 
-  const orgShortcode = useRoute().params.orgShortcode as string;
+  const orgShortCode = useRoute().params.orgShortCode as string;
   const infiniteContainer = ref<HTMLElement | null>(null);
 
   const convoStore = useConvoStore();
@@ -89,7 +89,7 @@
               :size-dependencies="[item.data]"
               :data-index="index"
               class="pb-4"
-              @click="navigateTo(`/${orgShortcode}/convo/${item.publicId}`)">
+              @click="navigateTo(`/${orgShortCode}/convo/${item.publicId}`)">
               <convos-convo-list-item :convo="item" />
             </DynamicScrollerItem>
           </template>

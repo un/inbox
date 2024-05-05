@@ -8,7 +8,7 @@ import { billingTrpcClient } from '../../../../utils/tRPCServerClients';
 
 export const billingRouter = router({
   getOrgBillingOverview: eeProcedure
-    .input(z.object({}).strict())
+    .input(z.object({}))
     .query(async ({ ctx }) => {
       if (!ctx.account || !ctx.org) {
         throw new TRPCError({
@@ -52,7 +52,7 @@ export const billingRouter = router({
       };
     }),
   getOrgStripePortalLink: eeProcedure
-    .input(z.object({}).strict())
+    .input(z.object({}))
     .query(async ({ ctx }) => {
       if (!ctx.account || !ctx.org) {
         throw new TRPCError({

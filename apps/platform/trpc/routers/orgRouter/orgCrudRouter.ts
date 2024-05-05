@@ -12,7 +12,7 @@ import { typeIdGenerator } from '@u22n/utils';
 import { TRPCError } from '@trpc/server';
 import { blockedUsernames, reservedUsernames } from '../../../utils/signup';
 
-async function validateOrgShortcode(
+async function validateOrgShortCode(
   db: DBType,
   shortcode: string
 ): Promise<{
@@ -49,7 +49,7 @@ async function validateOrgShortcode(
 }
 
 export const crudRouter = router({
-  checkShortcodeAvailability: accountProcedure
+  checkShortCodeAvailability: accountProcedure
     .input(
       z.object({
         shortcode: z
@@ -62,14 +62,14 @@ export const crudRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      return await validateOrgShortcode(ctx.db, input.shortcode);
+      return await validateOrgShortCode(ctx.db, input.shortcode);
     }),
 
   createNewOrg: accountProcedure
     .input(
       z.object({
         orgName: z.string().min(3).max(32),
-        orgShortcode: z
+        orgShortCode: z
           .string()
           .min(5)
           .max(64)
@@ -87,7 +87,7 @@ export const crudRouter = router({
       const insertOrgResponse = await db.insert(orgs).values({
         ownerId: accountId,
         name: input.orgName,
-        shortcode: input.orgShortcode,
+        shortcode: input.orgShortCode,
         publicId: newPublicId
       });
       const orgId = +insertOrgResponse.insertId;
@@ -172,13 +172,13 @@ export const crudRouter = router({
         }
       });
 
-      const adminOrgShortcodes = orgMembersQuery
+      const adminOrgShortCodes = orgMembersQuery
         .filter((orgMember) => orgMember.role === 'admin')
         .map((orgMember) => orgMember.org.shortcode);
 
       return {
         userOrgs: orgMembersQuery,
-        adminOrgShortcodes: adminOrgShortcodes
+        adminOrgShortCodes: adminOrgShortCodes
       };
     })
 });

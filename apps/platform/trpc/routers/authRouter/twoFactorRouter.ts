@@ -19,7 +19,7 @@ export const twoFactorRouter = router({
    * @deprecated remove with Nuxt Webapp
    */
   createTwoFactorSecret: accountProcedure
-    .input(z.object({}).strict())
+    .input(z.object({}))
     .mutation(async ({ ctx }) => {
       const { account, db } = ctx;
       const accountId = account.id;
@@ -65,11 +65,9 @@ export const twoFactorRouter = router({
    */
   verifyTwoFactor: accountProcedure
     .input(
-      z
-        .object({
-          twoFactorCode: z.string()
-        })
-        .strict()
+      z.object({
+        twoFactorCode: z.string()
+      })
     )
     .mutation(async ({ ctx, input }) => {
       const { account, db } = ctx;
@@ -135,7 +133,7 @@ export const twoFactorRouter = router({
    * @deprecated remove with Nuxt Webapp
    */
   disableTwoFactor: accountProcedure
-    .input(z.object({ twoFactorCode: z.string() }).strict())
+    .input(z.object({ twoFactorCode: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const { account, db } = ctx;
       const accountId = account.id;

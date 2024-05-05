@@ -10,8 +10,11 @@ import { ClaimAddressModal } from './claim-address-modal';
 
 export default function Page() {
   const username = useGlobalStore((state) => state.user.username);
+  const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
 
-  const { data: proStatus } = api.org.setup.billing.isPro.useQuery({});
+  const { data: proStatus } = api.org.setup.billing.isPro.useQuery({
+    orgShortCode
+  });
 
   const {
     data: personalAddresses,

@@ -35,7 +35,7 @@ export default function AttachmentButton({
     { progress: number; fileName: string }[]
   >([]);
   const [processing, setProcessing] = useState(false);
-  const currentOrgShortcode = useGlobalStore(
+  const currentOrgShortCode = useGlobalStore(
     (state) => state.currentOrg.shortCode
   );
   const uploadedAttachmentSize = useMemo(
@@ -63,7 +63,7 @@ export default function AttachmentButton({
     const results = await Promise.allSettled(
       files.map(async (file) => {
         const preSignedData = (await fetch(
-          `${STORAGE_URL}/api/attachments/presign?orgShortcode=${currentOrgShortcode}&filename=${file.name}`,
+          `${STORAGE_URL}/api/attachments/presign?orgShortCode=${currentOrgShortCode}&filename=${file.name}`,
           {
             method: 'GET',
             credentials: 'include'

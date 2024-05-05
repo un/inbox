@@ -51,12 +51,12 @@ export default function JoinOrgButton({
     error: joinError,
     run: joinOrg
   } = useLoading(async () => {
-    const { success, orgShortcode } = await joinOrgApi.mutateAsync({
+    const { success, orgShortCode } = await joinOrgApi.mutateAsync({
       inviteToken: inviteCode
     });
     if (success) {
       toast.success(`You have joined ${inviteData?.orgName}!`);
-      router.push(`/join/profile?org=${orgShortcode}`);
+      router.push(`/join/profile?org=${orgShortCode}`);
       setModalOpen(false);
     } else {
       throw new Error('Unknown Error Occurred');
@@ -160,7 +160,7 @@ export default function JoinOrgButton({
                       size="2">
                       {inviteData.orgName}
                     </Text>
-                    <Text size="2">{inviteData.orgShortcode}</Text>
+                    <Text size="2">{inviteData.orgShortCode}</Text>
                   </Flex>
                 </Flex>
               </Card>

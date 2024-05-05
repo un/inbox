@@ -11,7 +11,7 @@ const isAccountAuthenticated = trpcContext.middleware(({ next, ctx }) => {
   if (!ctx.account || !ctx.account.id || !ctx.account.username) {
     throw new TRPCError({
       code: 'UNAUTHORIZED',
-      message: 'You are not logged in'
+      message: 'You are not logged in, redirecting...'
     });
   }
   return next({

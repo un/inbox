@@ -19,7 +19,7 @@ export const errorHandler: TRPCLink<TrpcPlatformRouter> = () => {
           observer.next(value);
         },
         error(err) {
-          const orgShortCode = useRoute().params.orgShortcode;
+          const orgShortCode = useRoute().params.orgShortCode;
           if (
             err.data?.code === 'UNAUTHORIZED' &&
             err.message ===
@@ -65,7 +65,7 @@ export const errorHandler: TRPCLink<TrpcPlatformRouter> = () => {
 
 export default defineNuxtPlugin(() => {
   const config = useRuntimeConfig();
-  const route = useRoute();
+
   const trpcPlatformClient = createTRPCNuxtClient<TrpcPlatformRouter>({
     transformer: superjson,
     links: [
@@ -78,11 +78,6 @@ export default defineNuxtPlugin(() => {
       httpBatchLink({
         url: `${config.public.platformUrl}/trpc`,
         maxURLLength: 2083,
-        headers() {
-          return {
-            'org-shortcode': route.params.orgShortcode || ''
-          };
-        },
         fetch: (input, init) =>
           fetch(input, { credentials: 'include', ...init })
       })
