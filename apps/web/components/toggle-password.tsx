@@ -26,7 +26,7 @@ export default function TogglePasswordBox({
         <Text
           as="div"
           size="2"
-          mb="1"
+          mb="2"
           weight="bold">
           {label}
         </Text>
@@ -35,6 +35,7 @@ export default function TogglePasswordBox({
         {...textFieldProps}
         type={passwordShown ? 'text' : 'password'}
         value={passwordValue}
+        ml="2"
         onChange={(e) => setPasswordValue(e.target.value)}>
         <TextField.Slot>{slot}</TextField.Slot>
         <TextField.Slot>
