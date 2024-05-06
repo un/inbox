@@ -25,7 +25,7 @@ import { lucia } from '../../../utils/auth';
 
 export const securityRouter = router({
   getSecurityOverview: accountProcedure
-    .input(z.object({}).strict())
+    .input(z.object({}))
     .query(async ({ ctx }) => {
       const { db, account } = ctx;
       const accountId = account.id;
@@ -313,12 +313,10 @@ export const securityRouter = router({
 
   resetPassword: accountProcedure
     .input(
-      z
-        .object({
-          newPassword: strongPasswordSchema,
-          verificationToken: zodSchemas.nanoIdToken()
-        })
-        .strict()
+      z.object({
+        newPassword: strongPasswordSchema,
+        verificationToken: zodSchemas.nanoIdToken()
+      })
     )
     .mutation(async ({ ctx, input }) => {
       const { db, account } = ctx;
@@ -661,13 +659,11 @@ export const securityRouter = router({
 
   addNewPasskey: accountProcedure
     .input(
-      z
-        .object({
-          registrationResponseRaw: z.any(),
-          nickname: z.string().min(3).max(32).default('Passkey'),
-          verificationToken: zodSchemas.nanoIdToken()
-        })
-        .strict()
+      z.object({
+        registrationResponseRaw: z.any(),
+        nickname: z.string().min(3).max(32).default('Passkey'),
+        verificationToken: zodSchemas.nanoIdToken()
+      })
     )
     .mutation(async ({ ctx, input }) => {
       const { db, account } = ctx;
@@ -767,12 +763,10 @@ export const securityRouter = router({
 
   deletePasskey: accountProcedure
     .input(
-      z
-        .object({
-          passkeyPublicId: typeIdValidator('accountPasskey'),
-          verificationToken: zodSchemas.nanoIdToken()
-        })
-        .strict()
+      z.object({
+        passkeyPublicId: typeIdValidator('accountPasskey'),
+        verificationToken: zodSchemas.nanoIdToken()
+      })
     )
     .mutation(async ({ ctx, input }) => {
       const { db, account } = ctx;
@@ -840,12 +834,10 @@ export const securityRouter = router({
 
   deleteSession: accountProcedure
     .input(
-      z
-        .object({
-          sessionPublicId: typeIdValidator('accountSession'),
-          verificationToken: zodSchemas.nanoIdToken()
-        })
-        .strict()
+      z.object({
+        sessionPublicId: typeIdValidator('accountSession'),
+        verificationToken: zodSchemas.nanoIdToken()
+      })
     )
     .mutation(async ({ ctx, input }) => {
       const { db, account } = ctx;
@@ -908,11 +900,9 @@ export const securityRouter = router({
     }),
   deleteAllSessions: accountProcedure
     .input(
-      z
-        .object({
-          verificationToken: zodSchemas.nanoIdToken()
-        })
-        .strict()
+      z.object({
+        verificationToken: zodSchemas.nanoIdToken()
+      })
     )
     .mutation(async ({ ctx, input }) => {
       const { db, account } = ctx;

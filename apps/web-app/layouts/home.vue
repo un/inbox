@@ -18,7 +18,7 @@
   const breakpoints = useBreakpoints(breakpointsTailwind);
   const isMobile = breakpoints.smaller('lg'); // only smaller than lg
 
-  const orgShortcode = useRoute().params.orgShortcode;
+  const orgShortCode = (useRoute().params.orgShortCode ?? '') as string;
 
   const convoStore = useConvoStore();
   const hiddenConvoStore = useHiddenConvoStore();
@@ -27,7 +27,7 @@
 
   const { data: userHasEmailIdentities } =
     await $trpc.org.mail.emailIdentities.userHasEmailIdentities.useQuery(
-      {},
+      { orgShortCode },
       { server: false }
     );
 
@@ -41,7 +41,7 @@
   const realtime = useRealtime();
   const toast = useToast();
 
-  realtime.connect({ orgShortcode: orgShortcode as string });
+  realtime.connect({ orgShortCode: orgShortCode as string });
 
   realtime.on('convo:new', async (convo) => {
     await convoStore.fetchAndAddSingleConvo({ convoPublicId: convo.publicId });
@@ -81,7 +81,7 @@
         color: 'red',
         timeout: 10000
       });
-      navigateTo(`/${orgShortcode}/convo/404?error=convo_deleted`);
+      navigateTo(`/${orgShortCode}/convo/404?error=convo_deleted`);
     }
     return;
   });
@@ -103,7 +103,7 @@
 
   function navToClaimEmailIdentity() {
     showClaimEmailIdentityModal.value = false;
-    navigateTo(`/${orgShortcode}/settings/user/addresses`);
+    navigateTo(`/${orgShortCode}/settings/user/addresses`);
   }
 </script>
 <template>

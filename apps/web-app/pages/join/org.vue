@@ -27,20 +27,20 @@
   const orgNameValid = ref<boolean | 'remote' | null>(null);
   const orgNameValue = ref('');
   const orgNameValidationMessage = ref('');
-  const orgShortcodeValid = ref<boolean | 'remote' | null>(null);
-  const orgShortcodeValue = ref('');
-  const orgShortcodeTempValue = ref('');
-  const orgShortcodeValidationMessage = ref('');
+  const orgShortCodeValid = ref<boolean | 'remote' | null>(null);
+  const orgShortCodeValue = ref('');
+  const orgShortCodeTempValue = ref('');
+  const orgShortCodeValidationMessage = ref('');
 
   watchDebounced(
     orgNameValue,
     async () => {
-      if (orgShortcodeTempValue.value === orgShortcodeValue.value) {
+      if (orgShortCodeTempValue.value === orgShortCodeValue.value) {
         const newValue = orgNameValue.value
           .toLowerCase()
           .replace(/[^a-z0-9]/g, '');
-        orgShortcodeValue.value = newValue;
-        orgShortcodeTempValue.value = newValue;
+        orgShortCodeValue.value = newValue;
+        orgShortCodeTempValue.value = newValue;
       }
     },
     {
@@ -50,18 +50,18 @@
   );
 
   watchDebounced(
-    orgShortcodeValue,
+    orgShortCodeValue,
     async () => {
-      if (orgShortcodeValid.value === 'remote') {
+      if (orgShortCodeValid.value === 'remote') {
         const { available, error } =
-          await $trpc.org.crud.checkShortcodeAvailability.query({
-            shortcode: orgShortcodeValue.value
+          await $trpc.org.crud.checkShortCodeAvailability.query({
+            shortcode: orgShortCodeValue.value
           });
         if (!available) {
-          orgShortcodeValid.value = false;
-          orgShortcodeValidationMessage.value = error || 'Not available';
+          orgShortCodeValid.value = false;
+          orgShortCodeValidationMessage.value = error || 'Not available';
         }
-        available && (orgShortcodeValid.value = true);
+        available && (orgShortCodeValid.value = true);
       }
     },
     {
@@ -82,7 +82,7 @@
     if (orgPath.value === 'join' && inviteCodeValid.value === true) return true;
     if (
       orgPath.value === 'new' &&
-      (orgNameValid.value && orgShortcodeValid.value) === true
+      (orgNameValid.value && orgShortCodeValid.value) === true
     ) {
       return true;
     }
@@ -105,7 +105,7 @@
     const createNewOrgTrpc = $trpc.org.crud.createNewOrg.useMutation();
     await createNewOrgTrpc.mutate({
       orgName: orgNameValue.value,
-      orgShortcode: orgShortcodeValue.value
+      orgShortCode: orgShortCodeValue.value
     });
     if (createNewOrgTrpc.status.value === 'error') {
       newButtonLoading.value = false;
@@ -121,10 +121,10 @@
       return;
     }
 
-    const orgShortcodeCookie = useCookie('un-join-org-shortcode', {
+    const orgShortCodeCookie = useCookie('un-join-org-shortcode', {
       expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
     });
-    orgShortcodeCookie.value = orgShortcodeValue.value as string;
+    orgShortCodeCookie.value = orgShortCodeValue.value as string;
     toast.remove('creating_org');
     toast.add({
       id: 'created_org',
@@ -157,10 +157,10 @@
       });
       return;
     }
-    const orgShortcodeCookie = useCookie('un-join-org-shortcode', {
+    const orgShortCodeCookie = useCookie('un-join-org-shortcode', {
       expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
     });
-    orgShortcodeCookie.value = joinOrgResponse!.orgShortcode as string;
+    orgShortCodeCookie.value = joinOrgResponse!.orgShortCode as string;
     toast.add({
       id: 'joined_org',
       title: 'Organization joined',
@@ -249,13 +249,13 @@
           placeholder=""
           :schema="z.string().trim()" />
         <UnUiInput
-          v-model:value="orgShortcodeValue"
-          v-model:valid="orgShortcodeValid"
-          v-model:validationMessage="orgShortcodeValidationMessage"
+          v-model:value="orgShortCodeValue"
+          v-model:valid="orgShortCodeValid"
+          v-model:validationMessage="orgShortCodeValidationMessage"
           width="full"
           locked
           remote-validation
-          label="Organization Shortcode"
+          label="Organization ShortCode"
           placeholder=""
           :schema="
             z

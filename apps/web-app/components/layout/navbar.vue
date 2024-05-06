@@ -25,7 +25,7 @@
   );
 
   const currentPath = ref(useRouter().currentRoute.value.path as string);
-  const orgShortcode = useRoute().params.orgShortcode as string;
+  const orgShortCode = useRoute().params.orgShortCode as string;
   const router = useRouter();
   router.beforeEach((to) => {
     currentPath.value = to.path;
@@ -34,12 +34,12 @@
   const navLinks = [
     {
       label: 'Conversations',
-      to: `/${orgShortcode}/convo`,
+      to: `/${orgShortCode}/convo`,
       icon: 'i-ph-chat-circle'
     },
     {
       label: 'Contacts',
-      // to: `/${orgShortcode}/screener`,
+      // to: `/${orgShortCode}/screener`,
       icon: 'i-ph-address-book',
       tooltip: 'Manage your contacts',
       disabled: true,
@@ -47,7 +47,7 @@
     },
     {
       label: 'Team Convos',
-      // to: `/${orgShortcode}/convo`,
+      // to: `/${orgShortCode}/convo`,
       tooltip: 'Separate your team and personal conversations',
       icon: 'i-ph-chats-circle',
 
@@ -56,7 +56,7 @@
     },
     {
       label: 'Screener',
-      // to: `/${orgShortcode}/screener`,
+      // to: `/${orgShortCode}/screener`,
       tooltip: 'Set who can or cant email you',
       icon: 'i-ph-hand',
       disabled: true,
@@ -64,7 +64,7 @@
     },
     {
       label: 'Feed',
-      // to: `/${orgShortcode}/feed`,
+      // to: `/${orgShortCode}/feed`,
       tooltip:
         'All your newsletters, marketing messages, and product updates in one place',
       icon: 'i-ph-newspaper',
@@ -73,7 +73,7 @@
     },
     {
       label: 'Codes',
-      // to: `/${orgShortcode}/codes`,
+      // to: `/${orgShortCode}/codes`,
       tooltip: 'Easily copy your login or verification codes',
       icon: 'i-ph-password',
       disabled: true,
@@ -85,7 +85,7 @@
 
   const { data: orgMemberProfile } =
     $trpc.account.profile.getOrgMemberProfile.useLazyQuery(
-      { orgShortcode: orgShortcode },
+      { orgShortCode: orgShortCode },
       { server: false, queryKey: 'getOrgMemberSingleProfileNav' }
     );
 
@@ -96,11 +96,11 @@
     );
 
   watch(accountOrgs, (newUserOrgs) => {
-    const userOrgShortcodes = newUserOrgs?.userOrgs.map(
+    const userOrgShortCodes = newUserOrgs?.userOrgs.map(
       (userOrg) => userOrg.org.shortcode
     );
 
-    if (!userOrgShortcodes?.includes(orgShortcode)) {
+    if (!userOrgShortCodes?.includes(orgShortCode)) {
       navigateTo(`/redirect`);
     }
   });
@@ -108,7 +108,7 @@
   const currentOrgProfile = computed(() => {
     if (accountOrgs.value && accountOrgs.value.userOrgs.length > 0) {
       return accountOrgs.value.userOrgs.find(
-        (org) => org.org.shortcode === orgShortcode
+        (org) => org.org.shortcode === orgShortCode
       )?.org;
     }
     return null;
@@ -159,7 +159,7 @@
         label: 'Settings',
         icon: 'i-ph-gear',
         click: () => {
-          navigateTo(`/${orgShortcode}/settings`);
+          navigateTo(`/${orgShortCode}/settings`);
         }
       },
       {
@@ -421,7 +421,7 @@
             </div>
           </div>
           <UnUiIcon
-            v-if="item.shortcode === orgShortcode"
+            v-if="item.shortcode === orgShortCode"
             name="i-ph-check"
             class="ms-auto h-4 w-4 flex-shrink-0" />
         </template>

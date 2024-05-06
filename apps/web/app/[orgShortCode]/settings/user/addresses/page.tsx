@@ -1,29 +1,20 @@
 'use client';
 
-import {
-  Button,
-  Flex,
-  Heading,
-  Text,
-  Card,
-  Spinner,
-  Dialog
-} from '@radix-ui/themes';
+import { Button, Flex, Heading, Text, Card, Spinner } from '@radix-ui/themes';
 import { DataTable } from './table';
 import { useGlobalStore } from '@/providers/global-store-provider';
 import { api } from '@/lib/trpc';
 import { columns } from './columns';
 import useAwaitableModal from '@/hooks/use-awaitable-modal';
-import Link from 'next/link';
-import { toast } from 'sonner';
-import { useState } from 'react';
+import { ClaimAddressModal } from './claim-address-modal';
 
 export default function Page() {
   const username = useGlobalStore((state) => state.user.username);
-  const currentOrg = useGlobalStore((state) => state.currentOrg);
+  const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
 
-  const { data: proStatus } = api.org.setup.billing.isPro.useQuery({});
-  const [isClaiming, setIsClaiming] = useState(false);
+  const { data: proStatus } = api.org.setup.billing.isPro.useQuery({
+    orgShortCode
+  });
 
   const {
     data: personalAddresses,
@@ -32,109 +23,10 @@ export default function Page() {
     refetch: refetchPersonalAddresses
   } = api.account.addresses.getPersonalAddresses.useQuery({});
 
-  const { ModalRoot, openModal: claimAddress } = useAwaitableModal<
-    unknown,
-    { address: string }
-  >(({ open, onClose, onResolve, args }) => {
-    const { mutateAsync: claimAddressConfirm } =
-      api.account.addresses.claimPersonalAddress.useMutation({
-        onSuccess: async () => {
-          await refetchPersonalAddresses();
-          setIsClaiming(false);
-        }
-      });
-
-    return (
-      <Dialog.Root
-        open={open}
-        onOpenChange={(open) => {
-          if (!open) {
-            onClose();
-          }
-        }}>
-        <Dialog.Content className="w-full max-w-96 p-4">
-          <Dialog.Title
-            className="mx-auto w-fit py-2"
-            size="2">
-            Do you want to claim{' '}
-            <span className="underline">{args?.address}</span> ?
-          </Dialog.Title>
-
-          <Flex
-            gap="4"
-            direction="column">
-            <Text
-              size="2"
-              as="div">
-              You are about to link {args?.address} to the Org {currentOrg.name}
-              . This action is irreversible.
-            </Text>
-            <Text
-              size="2"
-              as="div">
-              If you&apos;re removed from this organization in the future,
-              you&apos;ll lose all associated conversations. Our support team
-              may be able to reset the address for use in another organization.
-            </Text>
-
-            <Text
-              size="2"
-              as="div">
-              We suggest to claim your personal addresses with a personal Org.
-              You can{' '}
-              <Link
-                className="underline"
-                href="/">
-                create a personal Org
-              </Link>{' '}
-              if you don&apos;t have one already.
-            </Text>
-
-            <Text
-              size="2"
-              as="div"
-              color="red">
-              Make sure you want to claim this address with {currentOrg.name},
-              if not Cancel this action, change the selected Org and try again.
-            </Text>
-          </Flex>
-
-          <Flex
-            gap="3"
-            align="center"
-            justify="end"
-            className="mt-4">
-            <Button
-              size="2"
-              variant="surface"
-              onClick={() => onClose()}>
-              Cancel
-            </Button>
-            <Button
-              size="2"
-              variant="solid"
-              onClick={() => {
-                if (!args) return;
-                setIsClaiming(true);
-                claimAddressConfirm({
-                  emailIdentity: args.address
-                })
-                  .then(() => {
-                    onResolve({});
-                  })
-                  .catch((e: Error) => {
-                    toast.error(e.message);
-                    onClose();
-                  });
-              }}
-              loading={isClaiming}>
-              I Understand, Claim Address
-            </Button>
-          </Flex>
-        </Dialog.Content>
-      </Dialog.Root>
-    );
-  });
+  const [ClaimAddressModalRoot, claimAddress] = useAwaitableModal(
+    ClaimAddressModal,
+    { address: '' }
+  );
 
   return (
     <Flex
@@ -185,7 +77,9 @@ export default function Page() {
                   onClick={() => {
                     void claimAddress({
                       address: `${username}@${domain}`
-                    }).catch(() => null);
+                    })
+                      .then(() => refetchPersonalAddresses())
+                      .catch(() => null);
                   }}>
                   Claim
                 </Button>
@@ -242,7 +136,7 @@ export default function Page() {
         </>
       )}
 
-      <ModalRoot />
+      <ClaimAddressModalRoot />
     </Flex>
   );
 }

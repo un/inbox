@@ -3,7 +3,6 @@
 import { Button, Flex, Heading, Spinner, Text } from '@radix-ui/themes';
 import Sidebar from './Sidebar';
 import { GlobalStoreProvider } from '@/providers/global-store-provider';
-import { ConvoStoreProvider } from '@/providers/convo-store-provider';
 import Link from 'next/link';
 import { api } from '@/lib/trpc';
 
@@ -85,14 +84,12 @@ export default function Layout({
 
   return (
     <GlobalStoreProvider initialState={storeData}>
-      <ConvoStoreProvider>
-        <Flex className="h-full w-full">
-          <div className="h-full w-fit">
-            <Sidebar />
-          </div>
-          <Flex className="h-full w-full">{children}</Flex>
-        </Flex>
-      </ConvoStoreProvider>
+      <Flex className="h-full w-full">
+        <div className="h-full w-fit">
+          <Sidebar />
+        </div>
+        <Flex className="h-full w-full">{children}</Flex>
+      </Flex>
     </GlobalStoreProvider>
   );
 }

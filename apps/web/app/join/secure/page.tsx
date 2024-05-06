@@ -7,9 +7,9 @@ import Stepper from '../Stepper';
 import { PasskeyCard, PasswordCard } from './SecureCards';
 import { useQueryState, parseAsStringLiteral } from 'nuqs';
 import useLoading from '@/hooks/use-loading';
-import { useEffect } from 'react';
 import { toast } from 'sonner';
-import { passkeyModal, passwordModal, recoveryCodeModal } from './modals';
+import { PasskeyModal, PasswordModal, RecoveryCodeModal } from './modals';
+import useAwaitableModal from '@/hooks/use-awaitable-modal';
 
 export default function Page() {
   const cookie = useCookies();
@@ -24,41 +24,45 @@ export default function Page() {
     redirect('/join', RedirectType.replace);
   }
 
-  const { ModalRoot: PasskeyModalRoot, openModal: signUpWithPasskey } =
-    passkeyModal({ username });
+  const [PasskeyModalRoot, signUpWithPasskey] = useAwaitableModal(
+    PasskeyModal,
+    { username }
+  );
 
-  const { ModalRoot: PasswordModalRoot, openModal: signUpWithPassword } =
-    passwordModal({ username });
+  const [PasswordModalRoot, signUpWithPassword] = useAwaitableModal(
+    PasswordModal,
+    { username }
+  );
 
-  const { ModalRoot: RecoveryCodeModalRoot, openModal: showRecoveryCode } =
-    recoveryCodeModal();
+  const [RecoveryCodeModalRoot, showRecoveryCode] = useAwaitableModal(
+    RecoveryCodeModal,
+    { username, recoveryCode: '' }
+  );
 
-  const {
-    loading,
-    error,
-    run: createAccount
-  } = useLoading(async () => {
-    if (selectedAuth === 'passkey') {
-      await signUpWithPasskey({});
-    } else {
-      const { recoveryCode } = await signUpWithPassword({});
-      await showRecoveryCode({
-        recoveryCode,
-        username
-      });
+  const { loading, run: createAccount } = useLoading(
+    async () => {
+      if (selectedAuth === 'passkey') {
+        await signUpWithPasskey({});
+      } else {
+        const { recoveryCode } = await signUpWithPassword({});
+        await showRecoveryCode({
+          recoveryCode
+        });
+      }
+      cookie.remove('un-join-username');
+      toast.success(
+        'Your account has been created! Redirecting for Organization Creation'
+      );
+      router.push('/join/org');
+    },
+    {
+      onError: (error) => {
+        if (error) {
+          toast.error(error.message);
+        }
+      }
     }
-    cookie.remove('un-join-username');
-    toast.success(
-      'Your account has been created! Redirecting for Organization Creation'
-    );
-    router.push('/join/org');
-  });
-
-  useEffect(() => {
-    if (error) {
-      toast.error(error.message);
-    }
-  }, [error]);
+  );
 
   return (
     <Flex

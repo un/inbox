@@ -8,13 +8,14 @@ import {
   Text,
   TextField
 } from '@radix-ui/themes';
-import { useAvatarModal } from '@/app/join/profile/avatar-modal';
+import { AvatarModal } from '@/app/join/profile/avatar-modal';
 import { Camera } from 'lucide-react';
 import { useEffect, useState, useMemo } from 'react';
 import { cn, generateAvatarUrl } from '@/lib/utils';
 import useLoading from '@/hooks/use-loading';
 import { useGlobalStore } from '@/providers/global-store-provider';
 import { api } from '@/lib/trpc';
+import useAwaitableModal from '@/hooks/use-awaitable-modal';
 
 export default function Page() {
   const profile = useGlobalStore((state) => state.currentOrg.orgMemberProfile);
@@ -26,7 +27,7 @@ export default function Page() {
     isLoading: isInitDataLoading,
     refetch: revalidateProfile
   } = api.account.profile.getOrgMemberProfile.useQuery({
-    orgShortcode: currentOrg.shortCode
+    orgShortCode: currentOrg.shortCode
   });
 
   const [avatarTimestamp, setAvatarTimestamp] = useState<Date | null>(null);
@@ -44,10 +45,9 @@ export default function Page() {
     });
   }, [avatarTimestamp, initData]);
 
-  const { ModalRoot: AvatarModalRoot, openModal: avatarModalOpen } =
-    useAvatarModal({
-      publicId: profile.publicId
-    });
+  const [AvatarModalRoot, avatarModalOpen] = useAwaitableModal(AvatarModal, {
+    publicId: profile.publicId
+  });
 
   useEffect(() => {
     if (initData) {

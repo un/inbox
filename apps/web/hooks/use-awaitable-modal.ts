@@ -1,43 +1,51 @@
 import { useRef, useState, type ReactNode } from 'react';
 
-export type AwaitableModalApi<ResolveArgs, OpenArgs> = {
-  open: boolean;
-  args?: OpenArgs;
-  onClose: () => void;
-  onResolve: (data: ResolveArgs) => void;
-};
+type EmptyObject = Record<string, never>;
+type ObjectProps = Record<string, unknown>;
+// eslint-disable-next-line @typescript-eslint/no-empty-function
+const noop = () => {};
 
-export default function useAwaitableModal<
-  ResolveArgs = unknown,
-  OpenArgs = unknown
->(renderFn: (args: AwaitableModalApi<ResolveArgs, OpenArgs>) => ReactNode) {
+export type ModalComponent<
+  Props extends ObjectProps = EmptyObject,
+  Resolved = null
+> = {
+  open: boolean;
+  onClose: (reason?: Error) => void;
+  onResolve: (data: Resolved) => void;
+} & Props;
+
+export default function useAwaitableModal<Props extends ObjectProps, Resolved>(
+  ModalComponent: (props: ModalComponent<Props, Resolved>) => ReactNode,
+  defaultProps: Props
+) {
   const [open, setOpen] = useState(false);
+  const [props, setProps] = useState<Props>(defaultProps);
 
   const promiseRef = useRef<{
-    resolve: (_: ResolveArgs) => void;
+    resolve: (_: Resolved) => void;
     reject: (_: Error | null) => void;
-    args: OpenArgs;
-  } | null>(null);
+  }>({ resolve: noop, reject: noop });
 
   const ModalRoot = () =>
-    renderFn({
+    ModalComponent({
       open,
-      onClose: () => {
+      onClose: (reason) => {
         setOpen(false);
-        promiseRef.current?.reject(null);
+        promiseRef.current.reject(reason ?? null);
       },
       onResolve: (data) => {
         setOpen(false);
-        promiseRef.current?.resolve(data);
+        promiseRef.current.resolve(data);
       },
-      args: promiseRef.current?.args
+      ...props
     });
 
-  const openModal = (args: OpenArgs) =>
-    new Promise<ResolveArgs>((resolve, reject) => {
-      promiseRef.current = { resolve, reject, args };
+  const openModal = (props: Partial<Props> = {}) =>
+    new Promise<Resolved>((resolve, reject) => {
+      promiseRef.current = { resolve, reject };
+      setProps((prev) => ({ ...prev, ...props }));
       setOpen(true);
     });
 
-  return { ModalRoot, openModal };
+  return [ModalRoot, openModal] as const;
 }

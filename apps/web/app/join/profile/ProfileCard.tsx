@@ -1,7 +1,7 @@
 'use client';
 
 import { Button, Flex, Text, TextField } from '@radix-ui/themes';
-import { useAvatarModal } from './avatar-modal';
+import { AvatarModal } from './avatar-modal';
 import { api } from '@/lib/trpc';
 import Stepper from '../Stepper';
 import { useEffect, useState } from 'react';
@@ -10,6 +10,7 @@ import useLoading from '@/hooks/use-loading';
 import { Camera, CheckCheck, SkipForward } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import useAwaitableModal from '@/hooks/use-awaitable-modal';
 
 type ProfileCardProps = {
   // I couldn't find a better way to find the type of orgData
@@ -24,10 +25,9 @@ type ProfileCardProps = {
 };
 
 export default function ProfileCard({ orgData, wasInvited }: ProfileCardProps) {
-  const { ModalRoot: AvatarModalRoot, openModal: avatarModalOpen } =
-    useAvatarModal({
-      publicId: orgData.profile.publicId
-    });
+  const [AvatarModalRoot, openAvatarModal] = useAwaitableModal(AvatarModal, {
+    publicId: orgData.profile.publicId
+  });
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [firstNameValue, setFirstNameValue] = useState<string>(
     orgData.profile.firstName ?? orgData.profile.handle ?? ''
@@ -43,7 +43,7 @@ export default function ProfileCard({ orgData, wasInvited }: ProfileCardProps) {
     loading: avatarLoading,
     run: openModal
   } = useLoading(async () => {
-    const avatarTimestamp = new Date(await avatarModalOpen({}));
+    const avatarTimestamp = new Date(await openAvatarModal({}));
     setAvatarUrl(
       generateAvatarUrl({
         publicId: orgData.profile.publicId,

@@ -17,14 +17,14 @@ export const presignApi = new Hono<Ctx>().get(
   checkSignedIn,
   zValidator(
     'query',
-    z.object({ filename: z.string(), orgShortcode: z.string() })
+    z.object({ filename: z.string(), orgShortCode: z.string() })
   ),
   async (c) => {
     const accountId = c.get('account')?.id!; // we know it's not null here, checked in the middleware
     const data = c.req.valid('query');
 
     const orgQueryResponse = await db.query.orgs.findFirst({
-      where: eq(orgs.shortcode, data.orgShortcode),
+      where: eq(orgs.shortcode, data.orgShortCode),
       columns: {
         id: true,
         publicId: true

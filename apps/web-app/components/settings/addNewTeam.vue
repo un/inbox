@@ -15,6 +15,7 @@
   import { useEEStore } from '~/stores/eeStore';
 
   const { $trpc } = useNuxtApp();
+  const orgShortCode = (useRoute().params.orgShortCode ?? '') as string;
 
   const newTeamNameValue = ref('');
   const newTeamNameValidationMessage = ref('');
@@ -63,7 +64,7 @@
 
   const { data: orgDomainsData, pending: orgDomainsPending } =
     await $trpc.org.mail.domains.getOrgDomains.useLazyQuery(
-      {},
+      { orgShortCode },
       { server: false }
     );
 
@@ -99,10 +100,6 @@
 
   const emit = defineEmits(['close']);
 
-  const route = useRoute();
-
-  const orgShortcode = route.params.orgShortcode as string;
-
   async function createTeam() {
     if (!newTeamColorValue.value) return;
 
@@ -113,7 +110,8 @@
     const createOrgTeamsTrpcResponse = await createOrgTeamsTrpc.mutate({
       teamName: newTeamNameValue.value,
       teamDescription: newTeamDescriptionValue.value,
-      teamColor: newTeamColorValue.value
+      teamColor: newTeamColorValue.value,
+      orgShortCode
     });
 
     if (
@@ -143,7 +141,8 @@
         sendName: newEmailIdentitySendNameValue.value,
         routeToTeamsPublicIds: [newTeamPublicId],
         routeToOrgMemberPublicIds: [],
-        catchAll: false
+        catchAll: false,
+        orgShortCode
       });
       if (createNewEmailIdentityTrpc.status.value === 'error') {
         buttonLoading.value = false;
@@ -193,7 +192,8 @@
       const { available } =
         await $trpc.org.mail.emailIdentities.checkEmailAvailability.query({
           domainPublicId: selectedDomain.value?.domainPublicId as string,
-          emailUsername: newEmailIdentityUsernameValue.value
+          emailUsername: newEmailIdentityUsernameValue.value,
+          orgShortCode
         });
       if (!available) {
         newEmailIdentityUsernameValid.value = false;
@@ -247,7 +247,7 @@
         <UnUiButton
           icon="i-ph-credit-card"
           label="Go to billing"
-          @click="navigateTo(`/${orgShortcode}/settings/org/setup/billing`)" />
+          @click="navigateTo(`/${orgShortCode}/settings/org/setup/billing`)" />
       </div>
     </div>
     <div

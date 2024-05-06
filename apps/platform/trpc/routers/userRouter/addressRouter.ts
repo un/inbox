@@ -18,7 +18,7 @@ import { nanoIdToken, typeIdGenerator, typeIdValidator } from '@u22n/utils';
 
 export const addressRouter = router({
   getPersonalAddresses: accountProcedure
-    .input(z.object({}).strict())
+    .input(z.object({}))
     .query(async ({ ctx }) => {
       const { db, account } = ctx;
       const accountId = account?.id;
@@ -90,7 +90,7 @@ export const addressRouter = router({
       };
     }),
   claimPersonalAddress: orgProcedure
-    .input(z.object({ emailIdentity: z.string().min(3) }).strict())
+    .input(z.object({ emailIdentity: z.string().min(3) }))
     .mutation(async ({ ctx, input }) => {
       const { db, account, org } = ctx;
       if (!account || !org) {
@@ -274,12 +274,10 @@ export const addressRouter = router({
     }),
   editSendName: orgProcedure
     .input(
-      z
-        .object({
-          emailIdentityPublicId: typeIdValidator('emailIdentities'),
-          newSendName: z.string().min(1)
-        })
-        .strict()
+      z.object({
+        emailIdentityPublicId: typeIdValidator('emailIdentities'),
+        newSendName: z.string().min(1)
+      })
     )
     .mutation(async ({ ctx, input }) => {
       const { db, account, org } = ctx;

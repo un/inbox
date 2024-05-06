@@ -1,11 +1,12 @@
-import { eventHandler, createError, readBody } from 'h3';
+import { eventHandler, createError, readBody, getHeader } from 'h3';
 import { z } from 'zod';
 import { realtime } from '../../utils/realtime';
 import { validateTypeId } from '@u22n/utils';
 import { db } from '@u22n/database';
 import { and, eq } from '@u22n/database/orm';
 import { orgMembers } from '@u22n/database/schema';
-import type { AccountContext, OrgContext } from '@u22n/types';
+import type { AccountContext } from '@u22n/types';
+import { validateOrgShortCode } from '../../utils/orgShortCode';
 
 const bodySchema = z.object({
   socketId: z.string()
@@ -28,8 +29,17 @@ export default eventHandler(async (event) => {
     });
   }
 
-  const orgContext: OrgContext = await event.context.org;
   const accountContext: AccountContext = await event.context.account;
+  const orgShortCode = getHeader(event, 'org-shortcode');
+
+  if (!orgShortCode) {
+    throw createError({
+      status: 400,
+      message: 'Missing org-shortcode header'
+    });
+  }
+
+  const orgContext = await validateOrgShortCode(orgShortCode);
 
   if (!orgContext || !accountContext) {
     throw createError({
@@ -38,7 +48,7 @@ export default eventHandler(async (event) => {
     });
   }
 
-  const orgMemberId = orgContext?.members.find(
+  const orgMemberId = orgContext.members.find(
     (m) => m.accountId === accountContext.id
   )?.id;
   if (!orgMemberId) {

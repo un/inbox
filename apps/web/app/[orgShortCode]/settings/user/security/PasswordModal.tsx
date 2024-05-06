@@ -12,7 +12,7 @@ import {
   Separator,
   Card
 } from '@radix-ui/themes';
-import Modal from '@/hooks/use-awaitable-modal';
+import { type ModalComponent } from '@/hooks/use-awaitable-modal';
 import { type Dispatch, type SetStateAction, useEffect, useState } from 'react';
 import { api } from '@/lib/trpc';
 import useLoading from '@/hooks/use-loading';
@@ -29,209 +29,207 @@ import {
 } from '@/components/input-otp';
 import { downloadAsFile } from '@/lib/utils';
 
-export const passwordModal = () =>
-  Modal<unknown, { verificationToken: string }>(
-    ({ open, onClose, onResolve, args }) => {
-      const [password, setPassword] = useState<string>();
-      const [error, setError] = useState<string | null>(null);
-      const [confirmPassword, setConfirmPassword] = useState<string>(
-        password ?? ''
-      );
-      const debouncedPassword = useDebounce(password, 1000);
+export function PasswordModal({
+  open,
+  onClose,
+  onResolve,
+  verificationToken
+}: ModalComponent<{ verificationToken: string }, null>) {
+  const [password, setPassword] = useState<string>();
+  const [error, setError] = useState<string | null>(null);
+  const [confirmPassword, setConfirmPassword] = useState<string>(
+    password ?? ''
+  );
+  const debouncedPassword = useDebounce(password, 1000);
 
-      const checkPasswordStrength =
-        api.useUtils().auth.signup.checkPasswordStrength;
+  const checkPasswordStrength =
+    api.useUtils().auth.signup.checkPasswordStrength;
 
-      const {
-        data: passwordCheckData,
-        loading: passwordCheckLoading,
-        run: checkPassword
-      } = useLoading(
-        async (signal) => {
-          if (!password) return;
-          if (password.length < 8) {
-            return { error: 'Password must be at least 8 characters long' };
-          }
-          return await checkPasswordStrength.fetch({ password }, { signal });
-        },
-        {
-          onError: (err) => {
-            setError(err.message);
-          }
-        }
-      );
-
-      useEffect(() => {
-        if (typeof debouncedPassword === 'undefined') return;
-        checkPassword({ clearData: true, clearError: true });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-      }, [debouncedPassword]);
-
-      const passwordValid =
-        passwordCheckData &&
-        'score' in passwordCheckData &&
-        passwordCheckData.score >= 3 &&
-        password === confirmPassword;
-
-      const setPasswordApi = api.account.security.resetPassword.useMutation();
-      const { loading: passwordLoading, run: updatePassword } = useLoading(
-        async () => {
-          if (!args?.verificationToken)
-            throw new Error('No verification token provided');
-          if (!password) throw new Error('Password is required');
-          await setPasswordApi.mutateAsync({
-            newPassword: password,
-            verificationToken: args?.verificationToken
-          });
-          onResolve({});
-        },
-        {
-          onError: (err) => {
-            setError(err.message);
-          }
-        }
-      );
-
-      return (
-        <Dialog.Root open={open}>
-          <Dialog.Content className="w-full max-w-96 p-4">
-            <Dialog.Title className="mx-auto w-fit">
-              Set your Password
-            </Dialog.Title>
-            <Dialog.Description>
-              <Text
-                weight="bold"
-                size="2"
-                align="center"
-                className="p-2">
-                Choose a Password
-              </Text>
-            </Dialog.Description>
-
-            <Flex
-              className="w-full p-2"
-              direction="column"
-              gap="4">
-              <TogglePasswordBox
-                passwordValue={password}
-                setPasswordValue={setPassword}
-                textFieldProps={{
-                  autoComplete: 'new-password',
-                  id: 'password',
-                  color: passwordCheckData
-                    ? 'error' in passwordCheckData ||
-                      passwordCheckData.score < 3
-                      ? 'red'
-                      : 'green'
-                    : undefined
-                }}
-                label="Password"
-              />
-              {passwordCheckLoading && (
-                <Flex
-                  align="center"
-                  gap="2"
-                  className="w-full">
-                  <Spinner loading />
-                  <Text
-                    size="2"
-                    weight="bold">
-                    Checking password strength
-                  </Text>
-                </Flex>
-              )}
-              {passwordCheckData && 'error' in passwordCheckData && (
-                <Text
-                  size="2"
-                  color="red"
-                  weight="bold">
-                  {passwordCheckData.error}
-                </Text>
-              )}
-              {passwordCheckData && 'score' in passwordCheckData && (
-                <Flex
-                  gap="1"
-                  align="center">
-                  {passwordCheckData.score >= 3 ? (
-                    <Check
-                      size={16}
-                      className="stroke-green-10"
-                    />
-                  ) : (
-                    <Plus
-                      size={16}
-                      className="stroke-red-10 rotate-45"
-                    />
-                  )}
-                  <Text
-                    size="2"
-                    weight="bold"
-                    className="flex-1"
-                    color={passwordCheckData.score >= 3 ? 'green' : 'red'}>
-                    Your password is{' '}
-                    {
-                      ['very weak', 'weak', 'fair', 'strong', 'very strong'][
-                        passwordCheckData.score
-                      ]
-                    }
-                  </Text>
-                  <Tooltip
-                    content={
-                      <Text size="2">
-                        It would take a computer {passwordCheckData.crackTime}{' '}
-                        to crack it
-                      </Text>
-                    }>
-                    <HelpCircle size={14} />
-                  </Tooltip>
-                </Flex>
-              )}
-              <TogglePasswordBox
-                passwordValue={confirmPassword}
-                setPasswordValue={setConfirmPassword}
-                textFieldProps={{
-                  id: 'confirm-password',
-                  color:
-                    confirmPassword && confirmPassword.length > 0
-                      ? password === confirmPassword
-                        ? 'green'
-                        : 'red'
-                      : undefined
-                }}
-                label="Confirm Password"
-              />
-
-              <Text
-                as="div"
-                size="2"
-                color="red"
-                className="text-center">
-                {error}
-              </Text>
-
-              <Button
-                size="2"
-                disabled={!passwordValid}
-                loading={passwordLoading}
-                onClick={() => updatePassword()}>
-                Set Password
-              </Button>
-              <Button
-                variant="soft"
-                color="gray"
-                size="2"
-                onClick={() => onClose()}>
-                Cancel
-              </Button>
-            </Flex>
-          </Dialog.Content>
-        </Dialog.Root>
-      );
+  const {
+    data: passwordCheckData,
+    loading: passwordCheckLoading,
+    run: checkPassword
+  } = useLoading(
+    async (signal) => {
+      if (!password) return;
+      if (password.length < 8) {
+        return { error: 'Password must be at least 8 characters long' };
+      }
+      return await checkPasswordStrength.fetch({ password }, { signal });
+    },
+    {
+      onError: (err) => {
+        setError(err.message);
+      }
     }
   );
 
-{
-  /* const PasswordModalStep1 = ({
+  useEffect(() => {
+    if (typeof debouncedPassword === 'undefined') return;
+    checkPassword({ clearData: true, clearError: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedPassword]);
+
+  const passwordValid =
+    passwordCheckData &&
+    'score' in passwordCheckData &&
+    passwordCheckData.score >= 3 &&
+    password === confirmPassword;
+
+  const setPasswordApi = api.account.security.resetPassword.useMutation();
+  const { loading: passwordLoading, run: updatePassword } = useLoading(
+    async () => {
+      if (verificationToken === '')
+        throw new Error('No verification token provided');
+      if (!password) throw new Error('Password is required');
+      await setPasswordApi.mutateAsync({
+        newPassword: password,
+        verificationToken
+      });
+      onResolve(null);
+    },
+    {
+      onError: (err) => {
+        setError(err.message);
+      }
+    }
+  );
+
+  return (
+    <Dialog.Root open={open}>
+      <Dialog.Content className="w-full max-w-96 p-4">
+        <Dialog.Title className="mx-auto w-fit">Set your Password</Dialog.Title>
+        <Dialog.Description>
+          <Text
+            weight="bold"
+            size="2"
+            align="center"
+            className="p-2">
+            Choose a Password
+          </Text>
+        </Dialog.Description>
+
+        <Flex
+          className="w-full p-2"
+          direction="column"
+          gap="4">
+          <TogglePasswordBox
+            passwordValue={password}
+            setPasswordValue={setPassword}
+            textFieldProps={{
+              autoComplete: 'new-password',
+              id: 'password',
+              color: passwordCheckData
+                ? 'error' in passwordCheckData || passwordCheckData.score < 3
+                  ? 'red'
+                  : 'green'
+                : undefined
+            }}
+            label="Password"
+          />
+          {passwordCheckLoading && (
+            <Flex
+              align="center"
+              gap="2"
+              className="w-full">
+              <Spinner loading />
+              <Text
+                size="2"
+                weight="bold">
+                Checking password strength
+              </Text>
+            </Flex>
+          )}
+          {passwordCheckData && 'error' in passwordCheckData && (
+            <Text
+              size="2"
+              color="red"
+              weight="bold">
+              {passwordCheckData.error}
+            </Text>
+          )}
+          {passwordCheckData && 'score' in passwordCheckData && (
+            <Flex
+              gap="1"
+              align="center">
+              {passwordCheckData.score >= 3 ? (
+                <Check
+                  size={16}
+                  className="stroke-green-10"
+                />
+              ) : (
+                <Plus
+                  size={16}
+                  className="stroke-red-10 rotate-45"
+                />
+              )}
+              <Text
+                size="2"
+                weight="bold"
+                className="flex-1"
+                color={passwordCheckData.score >= 3 ? 'green' : 'red'}>
+                Your password is{' '}
+                {
+                  ['very weak', 'weak', 'fair', 'strong', 'very strong'][
+                    passwordCheckData.score
+                  ]
+                }
+              </Text>
+              <Tooltip
+                content={
+                  <Text size="2">
+                    It would take a computer {passwordCheckData.crackTime} to
+                    crack it
+                  </Text>
+                }>
+                <HelpCircle size={14} />
+              </Tooltip>
+            </Flex>
+          )}
+          <TogglePasswordBox
+            passwordValue={confirmPassword}
+            setPasswordValue={setConfirmPassword}
+            textFieldProps={{
+              id: 'confirm-password',
+              color:
+                confirmPassword && confirmPassword.length > 0
+                  ? password === confirmPassword
+                    ? 'green'
+                    : 'red'
+                  : undefined
+            }}
+            label="Confirm Password"
+          />
+
+          <Text
+            as="div"
+            size="2"
+            color="red"
+            className="text-center">
+            {error}
+          </Text>
+
+          <Button
+            size="2"
+            disabled={!passwordValid}
+            loading={passwordLoading}
+            onClick={() => updatePassword()}>
+            Set Password
+          </Button>
+          <Button
+            variant="soft"
+            color="gray"
+            size="2"
+            onClick={() => onClose()}>
+            Cancel
+          </Button>
+        </Flex>
+      </Dialog.Content>
+    </Dialog.Root>
+  );
+}
+
+/* const PasswordModalStep1 = ({
   password,
   setPassword,
   onClose,
@@ -401,10 +399,8 @@ export const passwordModal = () =>
     </Flex>
   );
 }; */
-}
 
-{
-  /* const PasswordModalStep2 = ({
+/* const PasswordModalStep2 = ({
   username,
   password,
   twoFactorCode,
@@ -584,10 +580,8 @@ export const passwordModal = () =>
     </Flex>
   );
 }; */
-}
 
-{
-  /* export const recoveryCodeModal = () =>
+/* export const recoveryCodeModal = () =>
   Modal<unknown, { recoveryCode: string; username: string }>(
     ({ onResolve, open, args }) => {
       const [downloaded, setDownloaded] = useState(false);
@@ -637,4 +631,3 @@ export const passwordModal = () =>
       );
     }
   ); */
-}

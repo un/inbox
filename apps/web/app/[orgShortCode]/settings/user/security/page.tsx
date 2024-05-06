@@ -3,8 +3,9 @@
 import { Flex, Heading, Spinner, Text, Switch } from '@radix-ui/themes';
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/trpc';
-import { useVerificationModal } from './VerificationModal';
-import { passwordModal } from './PasswordModal';
+import { VerificationModal } from './VerificationModal';
+import { PasswordModal } from './PasswordModal';
+import useAwaitableModal from '@/hooks/use-awaitable-modal';
 
 export default function Page() {
   const { data: initData, isLoading: isInitDataLoading } =
@@ -25,10 +26,17 @@ export default function Page() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initData?.passwordSet, initData?.twoFactorEnabled]);
 
-  const { ModalRoot: VerificationModalRoot, openModal: verifyModal } =
-    useVerificationModal();
-  const { ModalRoot: PasswordSetModal, openModal: updatePassword } =
-    passwordModal();
+  const [VerificationModalRoot, verifyModal] = useAwaitableModal(
+    VerificationModal,
+    {
+      has2Fa: false,
+      hasPassword: false,
+      hasPasskey: false
+    }
+  );
+  const [PasswordSetModal, updatePassword] = useAwaitableModal(PasswordModal, {
+    verificationToken: ''
+  });
 
   async function waitForVerification() {
     if (!initData) throw new Error('No init data');

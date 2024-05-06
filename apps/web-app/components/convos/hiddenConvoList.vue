@@ -3,7 +3,7 @@
   import { navigateTo, ref, useRoute, onMounted, storeToRefs } from '#imports';
   import { useHiddenConvoStore } from '~/stores/convoHiddenStore';
 
-  const orgShortcode = useRoute().params.orgShortcode as string;
+  const orgShortCode = useRoute().params.orgShortCode as string;
   const infiniteContainer = ref<HTMLElement | null>(null);
 
   const hiddenConvoStore = useHiddenConvoStore();
@@ -26,10 +26,7 @@
       if (!orgMemberHasMoreHiddenConvos.value) return;
       if (hiddenConvoQueryPending.value) return;
       pauseHiddenConvoLoading.value = true;
-      hiddenConvoQueryParams.value = {
-        cursorLastUpdatedAt: hiddenConvosListCursor.value.cursorLastUpdatedAt,
-        cursorLastPublicId: hiddenConvosListCursor.value.cursorLastPublicId
-      };
+      hiddenConvoQueryParams.value = hiddenConvosListCursor.value ?? {};
       await hiddenConvoStore.getHiddenConvoList();
       pauseHiddenConvoLoading.value = false;
     },
@@ -89,7 +86,7 @@
               :size-dependencies="[item.data]"
               :data-index="index"
               class="pb-4"
-              @click="navigateTo(`/${orgShortcode}/convo/${item.publicId}`)">
+              @click="navigateTo(`/${orgShortCode}/convo/${item.publicId}`)">
               <convos-convo-list-item :convo="item" />
             </DynamicScrollerItem>
           </template>

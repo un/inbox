@@ -5,7 +5,7 @@
 
   onMounted(async () => {
     const {
-      defaultOrgShortcode,
+      defaultOrgShortCode,
       twoFactorEnabledCorrectly,
       userHasOrgMembership,
       username
@@ -21,7 +21,7 @@
           process.client && // running in client
           !usernameCookie.value && // doesn't have a username cookie
           username && // has username set
-          Boolean(defaultOrgShortcode) && // has a default org
+          Boolean(defaultOrgShortCode) && // has a default org
           !twoFactorEnabledCorrectly // 2fa is not enabled correctly
         ) {
           usernameCookie.value = username;
@@ -37,15 +37,15 @@
 
     const authVerificationToken = useCookie('authVerificationToken');
 
-    // We need to redirect to the index page of [orgShortcode] due to this nuxt issue https://github.com/nuxt/nuxt/issues/25214
+    // We need to redirect to the index page of [orgShortCode] due to this nuxt issue https://github.com/nuxt/nuxt/issues/25214
     // the index page will reload nuxt, then redirect to the convos view - we should not directly navigate to convos page!!!
     if (!twoFactorEnabledCorrectly || authVerificationToken.value) {
       setTimeout(() => {
-        navigateTo(`/${defaultOrgShortcode}?error=2fa`);
+        navigateTo(`/${defaultOrgShortCode}?error=2fa`);
       }, 500);
     }
     setTimeout(() => {
-      navigateTo(`/${defaultOrgShortcode}`);
+      navigateTo(`/${defaultOrgShortCode}`);
     }, 500);
   });
 </script>
