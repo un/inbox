@@ -68,6 +68,7 @@ export default function Page() {
   }
 
   return (
+    // Draft for design cleanup in join page
     <Flex
       direction="column"
       gap="3"
