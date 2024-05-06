@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@radix-ui/themes';
-import { KeyRound } from 'lucide-react';
+import { Fingerprint } from 'lucide-react';
 import { api } from '@/lib/trpc';
 import { startAuthentication } from '@simplewebauthn/browser';
 import { useRouter } from 'next/navigation';
@@ -53,7 +53,7 @@ export default function PasskeyLoginButton() {
       loading={loading}
       disabled={loading}
       className="mb-2 w-72 cursor-pointer font-semibold">
-      <KeyRound size={20} />
+      <Fingerprint size={20} />
       <span>Login with my passkey</span>
     </Button>
   );

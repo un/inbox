@@ -12,7 +12,7 @@ import {
   TextField,
   Checkbox
 } from '@radix-ui/themes';
-import { Fingerprint, User } from 'lucide-react';
+import { KeyRound, User } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { zodSchemas } from '@u22n/utils';
@@ -76,7 +76,7 @@ export default function PasswordLoginButton() {
           size="3"
           className="w-72 cursor-pointer font-semibold"
           variant="surface">
-          <Fingerprint size={20} />
+          <KeyRound size={20} />
           <Text>Login with my password</Text>
         </Button>
       </Dialog.Trigger>
