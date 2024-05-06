@@ -34,7 +34,7 @@ export default function SettingsSidebar() {
     data: isAdmin,
     isLoading: isInitDataLoading,
     refetch: revalidateProfile
-  } = api.org.users.members.isOrgMemberAdmin.useQuery({});
+  } = api.org.users.members.isOrgMemberAdmin.useQuery({ orgShortCode });
 
   const personalLinks: NavLinks[] = [
     {
