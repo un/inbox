@@ -7,7 +7,8 @@ import Placeholder from '@tiptap/extension-placeholder';
 import Underline from '@tiptap/extension-underline';
 import Subscript from '@tiptap/extension-subscript';
 import Superscript from '@tiptap/extension-superscript';
-import type { AnyExtension } from '@tiptap/vue-3';
+import { Markdown } from 'tiptap-markdown';
+import type { AnyExtension } from '@tiptap/react';
 
 export const tipTapExtensions: AnyExtension[] = [
   StarterKit,
@@ -18,6 +19,10 @@ export const tipTapExtensions: AnyExtension[] = [
     HTMLAttributes: {
       crossorigin: 'use-credentials'
     }
+  }),
+  Markdown.configure({
+    html: false,
+    transformCopiedText: true
   }),
   Link.configure({
     linkOnPaste: true,

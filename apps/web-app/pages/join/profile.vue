@@ -27,10 +27,10 @@
   const titleValue = ref('');
   const blurbValue = ref('');
 
-  const orgShortcode = ref('');
+  const orgShortCode = ref('');
   if (process.client) {
-    const orgShortcodeCookie = useCookie('un-join-org-shortcode').value;
-    orgShortcodeCookie ? (orgShortcode.value = orgShortcodeCookie || '') : null;
+    const orgShortCodeCookie = useCookie('un-join-org-shortcode').value;
+    orgShortCodeCookie ? (orgShortCode.value = orgShortCodeCookie || '') : null;
   }
   const wasInvited = ref(false);
   if (process.client) {
@@ -43,7 +43,7 @@
   const { data: accountOrgProfile, pending } =
     await $trpc.account.profile.getOrgMemberProfile.useLazyQuery(
       {
-        orgShortcode: orgShortcode.value as string
+        orgShortCode: orgShortCode.value as string
       },
       { server: false }
     );

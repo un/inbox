@@ -1,0 +1,31 @@
+import { fontFamily } from 'tailwindcss/defaultTheme';
+import type { Config } from 'tailwindcss';
+import radixColors from 'tailwindcss-radix-colors';
+
+const config: Config = {
+  darkMode: 'class',
+  content: [
+    './components/**/*.{js,ts,jsx,tsx,mdx}',
+    './app/**/*.{js,ts,jsx,tsx,mdx}'
+  ],
+  plugins: [radixColors({})],
+  theme: {
+    extend: {
+      fontFamily: {
+        sans: ['var(--font-inter)', ...fontFamily.sans],
+        display: ['var(--font-cal-sans)', ...fontFamily.sans]
+      },
+      keyframes: {
+        'caret-blink': {
+          '0%,70%,100%': { opacity: '1' },
+          '20%,50%': { opacity: '0' }
+        }
+      },
+      animation: {
+        'caret-blink': 'caret-blink 1.25s ease-out infinite'
+      }
+    }
+  }
+};
+
+export default config;

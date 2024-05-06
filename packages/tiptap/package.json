@@ -7,7 +7,9 @@
   "exports": {
     ".": "./index.ts",
     "./extensions": "./extensions.ts",
-    "./vue": "./vue.ts"
+    "./vue": "./vue.ts",
+    "./react": "./react/index.ts",
+    "./react/components": "./react/components/index.ts"
   },
   "scripts": {
     "check": "tsc --noEmit"
@@ -16,18 +18,32 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@radix-ui/react-slot": "^1.0.2",
     "@tiptap/core": "^2.2.4",
     "@tiptap/extension-color": "^2.2.4",
     "@tiptap/extension-image": "^2.2.4",
     "@tiptap/extension-link": "^2.2.4",
     "@tiptap/extension-placeholder": "^2.2.4",
+    "@tiptap/extension-subscript": "^2.2.4",
+    "@tiptap/extension-superscript": "^2.2.4",
     "@tiptap/extension-text-style": "^2.2.4",
     "@tiptap/extension-underline": "^2.2.4",
-    "@tiptap/extension-superscript": "^2.2.4",
-    "@tiptap/extension-subscript": "^2.2.4",
     "@tiptap/html": "^2.2.4",
+    "@tiptap/react": "^2.3.1",
     "@tiptap/starter-kit": "^2.2.4",
     "@tiptap/vue-3": "^2.2.4",
-    "@u22n/tsconfig": "^0.0.2"
+    "@u22n/tsconfig": "^0.0.2",
+    "cmdk": "^1.0.0",
+    "jotai": "^2.8.0",
+    "tiptap-markdown": "^0.8.10",
+    "tunnel-rat": "^0.1.2"
+  },
+  "peerDependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0"
   }
 }

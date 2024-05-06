@@ -5,78 +5,74 @@ import { orgs, orgMembers } from '@u22n/database/schema';
 import { TRPCError } from '@trpc/server';
 
 export const orgMembersRouter = router({
-  isOrgMemberAdmin: orgProcedure
-    .input(z.object({}).strict())
-    .query(async ({ ctx }) => {
-      if (!ctx.account || !ctx.org) {
-        throw new TRPCError({
-          code: 'UNPROCESSABLE_CONTENT',
-          message: 'Account or Organization is not defined'
-        });
-      }
-      const { org } = ctx;
+  isOrgMemberAdmin: orgProcedure.input(z.object({})).query(async ({ ctx }) => {
+    if (!ctx.account || !ctx.org) {
+      throw new TRPCError({
+        code: 'UNPROCESSABLE_CONTENT',
+        message: 'Account or Organization is not defined'
+      });
+    }
+    const { org } = ctx;
 
-      const accountOrgMembership = org.members.find(
-        (member) => member.accountId === ctx.account.id
-      );
+    const accountOrgMembership = org.members.find(
+      (member) => member.accountId === ctx.account.id
+    );
 
-      if (!accountOrgMembership) {
-        throw new TRPCError({
-          code: 'UNPROCESSABLE_CONTENT',
-          message: 'Account is not a member of this organization'
-        });
-      }
+    if (!accountOrgMembership) {
+      throw new TRPCError({
+        code: 'UNPROCESSABLE_CONTENT',
+        message: 'Account is not a member of this organization'
+      });
+    }
 
-      return accountOrgMembership?.role === 'admin';
-    }),
-  getOrgMembers: orgProcedure
-    .input(z.object({}).strict())
-    .query(async ({ ctx }) => {
-      if (!ctx.account || !ctx.org) {
-        throw new TRPCError({
-          code: 'UNPROCESSABLE_CONTENT',
-          message: 'Account or Organization is not defined'
-        });
-      }
-      const { db, org } = ctx;
-      const orgId = org?.id;
+    return accountOrgMembership?.role === 'admin';
+  }),
+  getOrgMembers: orgProcedure.input(z.object({})).query(async ({ ctx }) => {
+    if (!ctx.account || !ctx.org) {
+      throw new TRPCError({
+        code: 'UNPROCESSABLE_CONTENT',
+        message: 'Account or Organization is not defined'
+      });
+    }
+    const { db, org } = ctx;
+    const orgId = org?.id;
 
-      const orgQuery = await db.query.orgs.findFirst({
-        columns: {
-          id: true
-        },
-        where: and(eq(orgs.id, orgId)),
-        with: {
-          members: {
-            columns: {
-              publicId: true,
-              role: true,
-              status: true,
-              addedAt: true,
-              removedAt: true,
-              invitedByOrgMemberId: true
-            },
-            with: {
-              profile: {
-                columns: {
-                  publicId: true,
-                  avatarTimestamp: true,
-                  firstName: true,
-                  lastName: true,
-                  handle: true,
-                  title: true,
-                  blurb: true
-                }
+    const orgQuery = await db.query.orgs.findFirst({
+      columns: {
+        id: true
+      },
+      where: and(eq(orgs.id, orgId)),
+      with: {
+        members: {
+          columns: {
+            publicId: true,
+            role: true,
+            status: true,
+            addedAt: true,
+            removedAt: true,
+            invitedByOrgMemberId: true
+          },
+          with: {
+            profile: {
+              columns: {
+                publicId: true,
+                avatarTimestamp: true,
+                firstName: true,
+                lastName: true,
+                handle: true,
+                title: true,
+                blurb: true
               }
             }
           }
         }
-      });
+      }
+    });
 
-      return {
-        members: orgQuery?.members
-      };
-    }),
+    return {
+      members: orgQuery?.members
+    };
+  }),
   getOrgMembersList: orgProcedure
     .input(
       z.object({

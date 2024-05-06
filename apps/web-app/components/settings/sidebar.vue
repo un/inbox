@@ -3,45 +3,49 @@
   import { useEE } from '~/composables/EE';
 
   const { $trpc } = useNuxtApp();
-  const orgShortcode = useRoute().params.orgShortcode as string;
+  const orgShortCode = (useRoute().params.orgShortCode ?? '') as string;
 
   const eeBilling = useEE().config.modules.billing;
 
-  const { data: currentIds } = $trpc.account.defaults.getIds.useQuery({});
+  const { data: currentIds } = $trpc.account.defaults.getIds.useQuery({
+    orgShortCode
+  });
 
   const { data: isAdmin } =
-    await $trpc.org.users.members.isOrgMemberAdmin.useQuery({});
+    await $trpc.org.users.members.isOrgMemberAdmin.useQuery({
+      orgShortCode
+    });
 
   // Settings Links
 
   const personalLinks = [
     {
       label: 'Profile',
-      to: `/${orgShortcode}/settings/user/profiles`,
+      to: `/${orgShortCode}/settings/user/profiles`,
       icon: 'i-ph-user-circle-gear'
     },
     {
       label: 'Personal Addresses',
-      to: `/${orgShortcode}/settings/user/addresses`,
+      to: `/${orgShortCode}/settings/user/addresses`,
       icon: 'i-ph-envelope-open'
     },
     {
       label: 'Security',
-      to: `/${orgShortcode}/settings/user/security`,
+      to: `/${orgShortCode}/settings/user/security`,
       icon: 'i-ph-lock'
     }
   ];
   const orgSetupLinks = computed(() => [
     {
       label: 'Org Profile',
-      to: `/${orgShortcode}/settings/org`,
+      to: `/${orgShortCode}/settings/org`,
       icon: 'i-ph-buildings'
     },
     ...(eeBilling
       ? [
           {
             label: 'Billing',
-            to: `/${orgShortcode}/settings/org/setup/billing`,
+            to: `/${orgShortCode}/settings/org/setup/billing`,
             icon: 'i-ph-credit-card'
           }
         ]
@@ -50,29 +54,29 @@
   const orgUsersLinks = computed(() => [
     {
       label: 'Members',
-      to: `/${orgShortcode}/settings/org/users/members`,
+      to: `/${orgShortCode}/settings/org/users/members`,
       icon: 'i-ph-users'
     },
     {
       label: 'Invites',
-      to: `/${orgShortcode}/settings/org/users/invites`,
+      to: `/${orgShortCode}/settings/org/users/invites`,
       icon: 'i-ph-user-plus'
     },
     {
       label: 'Teams',
-      to: `/${orgShortcode}/settings/org/users/teams`,
+      to: `/${orgShortCode}/settings/org/users/teams`,
       icon: 'i-ph-users-three'
     }
   ]);
   const orgMailLinks = computed(() => [
     {
       label: 'Domains',
-      to: `/${orgShortcode}/settings/org/mail/domains`,
+      to: `/${orgShortCode}/settings/org/mail/domains`,
       icon: 'i-ph-globe'
     },
     {
       label: 'Email Addresses',
-      to: `/${orgShortcode}/settings/org/mail/addresses`,
+      to: `/${orgShortCode}/settings/org/mail/addresses`,
       icon: 'i-ph-at'
     }
   ]);

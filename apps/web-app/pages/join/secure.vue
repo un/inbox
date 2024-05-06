@@ -169,8 +169,7 @@
       // get passkey options for new user
       const { options, publicId } =
         await $trpc.auth.passkey.signUpWithPasskeyStart.query({
-          username: username.value,
-          authenticatorType: passkeyType
+          username: username.value
         });
       // start registration
 

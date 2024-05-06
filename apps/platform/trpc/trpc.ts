@@ -2,8 +2,10 @@ import { TRPCError, initTRPC } from '@trpc/server';
 import superjson from 'superjson';
 import type { Context } from './createContext';
 import { useRuntimeConfig } from '#imports';
+import { validateOrgShortCode } from '../utils/orgShortCode';
 import { type Duration, Ratelimit, NoopRatelimit } from '@unkey/ratelimit';
 import { getRequestIP } from 'h3';
+import { z } from 'zod';
 
 export const trpcContext = initTRPC
   .context<Context>()
@@ -25,40 +27,6 @@ const isAccountAuthenticated = trpcContext.middleware(({ next, ctx }) => {
   });
 });
 
-// It is not unstable - only the API might change in the future: https://trpc.io/docs/faq#unstable
-const hasOrgShortcode = isAccountAuthenticated.unstable_pipe(
-  ({ next, ctx }) => {
-    if (!ctx.org) {
-      throw new TRPCError({
-        code: 'BAD_REQUEST',
-        message: 'Invalid organization selected, redirecting...'
-      });
-    }
-
-    const accountId = ctx.account?.id;
-    const orgMembership = ctx.org?.members.find(
-      (member) => member.accountId === accountId
-    );
-
-    if (!accountId || !orgMembership) {
-      throw new TRPCError({
-        code: 'UNAUTHORIZED',
-        message: 'You are not a member of this organization, redirecting...'
-      });
-    }
-
-    return next({
-      ctx: {
-        ...ctx,
-        org: {
-          ...ctx.org,
-          memberId: orgMembership.id
-        }
-      }
-    });
-  }
-);
-
 const isEeEnabled = trpcContext.middleware(({ next }) => {
   if (!useRuntimeConfig().billing?.enabled) {
     throw new TRPCError({
@@ -71,11 +39,12 @@ const isEeEnabled = trpcContext.middleware(({ next }) => {
 
 const publicRateLimits = {
   checkUsernameAvailability: [30, '1h'],
-  checkPasswordStrength: [30, '1h'],
+  checkPasswordStrength: [50, '1h'],
   generatePasskeyChallenge: [20, '1h'],
   signUpPasskeyStart: [10, '1h'],
   signUpPasskeyFinish: [10, '1h'],
   verifyPasskey: [30, '1h'],
+  createTwoFactorChallenge: [10, '1h'],
   signUpWithPassword: [10, '1h'],
   signInWithPassword: [20, '1h'],
   recoverAccount: [10, '1h'],
@@ -133,7 +102,40 @@ export const publicRateLimitedProcedure = Object.entries(
 export const accountProcedure = trpcContext.procedure.use(
   isAccountAuthenticated
 );
-export const orgProcedure = trpcContext.procedure.use(hasOrgShortcode);
+export const orgProcedure = trpcContext.procedure
+  .use(isAccountAuthenticated)
+  .input(z.object({ orgShortCode: z.string() }))
+  .use(async (opts) => {
+    const { orgShortCode } = opts.input;
+    const orgData = await validateOrgShortCode(orgShortCode);
+
+    if (!orgData) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'Organization not found'
+      });
+    }
+
+    const accountId = opts.ctx.account.id;
+    const orgMembership = orgData.members.find(
+      (member) => member.accountId === accountId
+    );
+
+    if (!accountId || !orgMembership) {
+      throw new TRPCError({
+        code: 'UNAUTHORIZED',
+        message: 'You are not a member of this organization, redirecting...'
+      });
+    }
+
+    return opts.next({
+      ctx: {
+        ...opts.ctx,
+        org: { ...orgData, memberId: orgMembership.id }
+      }
+    });
+  });
+
 export const eeProcedure = orgProcedure.use(isEeEnabled);
 
 export const router = trpcContext.router;

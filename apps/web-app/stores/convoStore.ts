@@ -1,19 +1,18 @@
 import { ref, computed } from 'vue';
 import { defineStore, acceptHMRUpdate, useNuxtApp } from '#imports';
 import type { TypeId } from '@u22n/utils';
+import { useRoute } from '#vue-router';
 
 export const useConvoStore = defineStore(
   'convos',
   () => {
     const { $trpc } = useNuxtApp();
+    const orgShortCode = (useRoute().params.orgShortCode ?? '') as string;
 
     const convosListCursor = ref<{
-      cursorLastUpdatedAt: Date | null;
-      cursorLastPublicId: string | null;
-    }>({
-      cursorLastUpdatedAt: null,
-      cursorLastPublicId: null
-    });
+      lastUpdatedAt: Date;
+      lastPublicId: string;
+    } | null>(null);
     const orgMemberHasMoreConvos = ref(true);
     const pauseConvoLoading = ref(false);
 
@@ -24,8 +23,8 @@ export const useConvoStore = defineStore(
 
     type UserConvoQueryParams =
       | {
-          cursorLastUpdatedAt: Date;
-          cursorLastPublicId: string;
+          lastUpdatedAt: Date;
+          lastPublicId: string;
         }
       | {};
     const convoQueryParams = ref<UserConvoQueryParams>({});
@@ -37,7 +36,10 @@ export const useConvoStore = defineStore(
     async function getConvoList() {
       convoQueryPending.value = true;
       const { data: convosListData } =
-        await $trpc.convos.getOrgMemberConvos.useQuery(convoQueryParams);
+        await $trpc.convos.getOrgMemberConvos.useQuery({
+          cursor: convoQueryParams.value,
+          orgShortCode
+        });
 
       if (!convosListData.value) {
         convoQueryPending.value = false;
@@ -54,11 +56,7 @@ export const useConvoStore = defineStore(
       }
 
       orgMemberConvos.value.push(...convosListData.value.data);
-      convosListCursor.value.cursorLastUpdatedAt =
-        convosListData.value.cursor.lastUpdatedAt;
-      convosListCursor.value.cursorLastPublicId =
-        convosListData.value.cursor.lastPublicId;
-
+      convosListCursor.value = convosListData.value.cursor;
       convoQueryPending.value = false;
     }
 
@@ -69,7 +67,8 @@ export const useConvoStore = defineStore(
     }) {
       const { data: newConvo } =
         await $trpc.convos.getOrgMemberSpecificConvo.useQuery({
-          convoPublicId
+          convoPublicId,
+          orgShortCode
         });
       if (!newConvo.value || !('publicId' in newConvo.value)) return;
       const convoLastUpdatedAt = new Date(newConvo.value.lastUpdatedAt);

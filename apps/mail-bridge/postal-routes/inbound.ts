@@ -767,14 +767,14 @@ export const inboundApi = new Hono().post(
         }
       };
 
-      const orgShortcode = await db.query.orgs.findFirst({
+      const orgShortCode = await db.query.orgs.findFirst({
         where: eq(orgs.id, orgId),
         columns: {
           shortcode: true
         }
       });
 
-      if (!orgShortcode) {
+      if (!orgShortCode) {
         console.error('⛔ no org shortcode found', {
           id
         });
@@ -828,7 +828,7 @@ export const inboundApi = new Hono().post(
               cid: attachment.cid || null
             },
             resolvedOrgPublicId,
-            orgShortcode?.shortcode || ''
+            orgShortCode?.shortcode || ''
           )
         )
       ).then(
@@ -922,7 +922,7 @@ type PreSignedData = {
 async function uploadAndAttachAttachment(
   input: UploadAndAttachAttachmentInput,
   orgPublicId: TypeId<'org'>,
-  orgShortcode: string
+  orgShortCode: string
 ) {
   const preUpload = (await fetch(
     `${env.STORAGE_URL}/api/attachments/internalPresign`,
@@ -976,7 +976,7 @@ async function uploadAndAttachAttachment(
   });
 
   return {
-    attachmentUrl: `${env.STORAGE_URL}/attachment/${orgShortcode}/${attachmentPublicId}/${input.fileName}`,
+    attachmentUrl: `${env.STORAGE_URL}/attachment/${orgShortCode}/${attachmentPublicId}/${input.fileName}`,
     cid: input.cid,
     inline: input.inline
   };

@@ -1,19 +1,19 @@
 import { ref, computed } from 'vue';
 import { defineStore, acceptHMRUpdate, useNuxtApp } from '#imports';
 import type { TypeId } from '@u22n/utils';
+import { useRoute } from '#vue-router';
 
 export const useHiddenConvoStore = defineStore(
   'hiddenConvos',
   () => {
     const { $trpc } = useNuxtApp();
+    const orgShortCode = (useRoute().params.orgShortCode ?? '') as string;
 
     const hiddenConvosListCursor = ref<{
-      cursorLastUpdatedAt: Date | null;
-      cursorLastPublicId: string | null;
-    }>({
-      cursorLastUpdatedAt: null,
-      cursorLastPublicId: null
-    });
+      lastUpdatedAt: Date;
+      lastPublicId: string;
+    } | null>(null);
+
     const orgMemberHasMoreHiddenConvos = ref(true);
     const pauseHiddenConvoLoading = ref(false);
 
@@ -24,8 +24,8 @@ export const useHiddenConvoStore = defineStore(
 
     type UserConvoQueryParams =
       | {
-          cursorLastUpdatedAt: Date;
-          cursorLastPublicId: string;
+          lastUpdatedAt: Date;
+          lastPublicId: string;
         }
       | {};
     const hiddenConvoQueryParams = ref<UserConvoQueryParams>({});
@@ -38,8 +38,9 @@ export const useHiddenConvoStore = defineStore(
       hiddenConvoQueryPending.value = true;
       const { data: convosListData } =
         await $trpc.convos.getOrgMemberConvos.useQuery({
-          ...hiddenConvoQueryParams.value,
-          includeHidden: true
+          cursor: hiddenConvoQueryParams.value,
+          includeHidden: true,
+          orgShortCode
         });
       hiddenConvoQueryPending.value = false;
 
@@ -57,10 +58,7 @@ export const useHiddenConvoStore = defineStore(
       }
 
       orgMemberHiddenConvos.value.push(...convosListData.value.data);
-      hiddenConvosListCursor.value.cursorLastUpdatedAt =
-        convosListData.value.cursor.lastUpdatedAt;
-      hiddenConvosListCursor.value.cursorLastPublicId =
-        convosListData.value.cursor.lastPublicId;
+      hiddenConvosListCursor.value = convosListData.value.cursor;
 
       hiddenConvoQueryPending.value = false;
     }
@@ -75,7 +73,8 @@ export const useHiddenConvoStore = defineStore(
       }
       const { data: newConvo } =
         await $trpc.convos.getOrgMemberSpecificConvo.useQuery({
-          convoPublicId
+          convoPublicId,
+          orgShortCode
         });
       if (!newConvo.value || !('publicId' in newConvo.value)) return;
       const convoLastUpdatedAt = new Date(newConvo.value.lastUpdatedAt);

@@ -26,7 +26,7 @@
   );
 
   const currentPath = ref(useRouter().currentRoute.value.path as string);
-  const orgShortcode = useRoute().params.orgShortcode as string;
+  const orgShortCode = useRoute().params.orgShortCode as string;
   const router = useRouter();
   router.beforeEach((to) => {
     currentPath.value = to.path;
@@ -36,7 +36,7 @@
 
   const { data: orgMemberProfile } =
     $trpc.account.profile.getOrgMemberProfile.useLazyQuery(
-      { orgShortcode: orgShortcode },
+      { orgShortCode: orgShortCode },
       { server: false, queryKey: 'getOrgMemberSingleProfileNav' }
     );
 
@@ -47,11 +47,11 @@
     );
 
   watch(accountOrgs, (newUserOrgs) => {
-    const userOrgShortcodes = newUserOrgs?.userOrgs.map(
+    const userOrgShortCodes = newUserOrgs?.userOrgs.map(
       (userOrg) => userOrg.org.shortcode
     );
 
-    if (!userOrgShortcodes?.includes(orgShortcode)) {
+    if (!userOrgShortCodes?.includes(orgShortCode)) {
       navigateTo(`/redirect`);
     }
   });
@@ -101,7 +101,7 @@
         label: 'Settings',
         icon: 'i-ph-gear',
         click: () => {
-          navigateTo(`/${orgShortcode}/settings`);
+          navigateTo(`/${orgShortCode}/settings`);
         }
       },
       {
@@ -280,7 +280,7 @@
       icon="i-ph-chat-circle"
       variant="ghost"
       size="xl"
-      @click="navigateTo(`/${orgShortcode}/convo`)" />
+      @click="navigateTo(`/${orgShortCode}/convo`)" />
 
     <NuxtUiDropdown
       :items="userMenuItems"
@@ -343,7 +343,7 @@
           </div>
         </div>
         <UnUiIcon
-          v-if="item.shortcode === orgShortcode"
+          v-if="item.shortcode === orgShortCode"
           name="i-ph-check"
           class="ms-auto h-4 w-4 flex-shrink-0" />
       </template>

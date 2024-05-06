@@ -33,7 +33,7 @@ export async function validateUsername(
     return {
       available: false,
       error:
-        'This username is currently reserved. If you own this trademark, please Contact Support'
+        'This username is reserved. If you own this trademark, please contact support'
     };
   }
   return {

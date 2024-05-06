@@ -1279,8 +1279,10 @@ export const convoRouter = router({
     .input(
       z.object({
         convoPublicId: typeIdValidator('convos'),
-        cursorLastUpdatedAt: z.date().optional(),
-        cursorLastPublicId: typeIdValidator('convos').optional()
+        cursor: z.object({
+          lastUpdatedAt: z.date().optional(),
+          lastPublicId: typeIdValidator('convos').optional()
+        })
       })
     )
     .query(async () => {}),
@@ -1289,26 +1291,29 @@ export const convoRouter = router({
     .input(
       z.object({
         includeHidden: z.boolean().default(false),
-        cursorLastUpdatedAt: z.date().optional(),
-        cursorLastPublicId: typeIdValidator('convos').optional()
+        cursor: z.object({
+          lastUpdatedAt: z.date().optional(),
+          lastPublicId: typeIdValidator('convos').optional()
+        })
       })
     )
     .query(async ({ ctx, input }) => {
       const { db, org } = ctx;
-      const { cursorLastUpdatedAt, cursorLastPublicId } = input;
+      const { cursor } = input;
       const orgId = org.id;
 
       const orgMemberId = org.memberId;
+      const LIMIT = 15;
 
-      const inputLastUpdatedAt = cursorLastUpdatedAt
-        ? new Date(cursorLastUpdatedAt)
+      const inputLastUpdatedAt = cursor.lastUpdatedAt
+        ? new Date(cursor.lastUpdatedAt)
         : new Date();
 
-      const inputLastPublicId = cursorLastPublicId || 'c_';
+      const inputLastPublicId = cursor.lastPublicId || 'c_';
 
       const convoQuery = await db.query.convos.findMany({
         orderBy: [desc(convos.lastUpdatedAt), desc(convos.publicId)],
-        limit: 15,
+        limit: LIMIT + 1,
         columns: {
           publicId: true,
           lastUpdatedAt: true
@@ -1451,12 +1456,16 @@ export const convoRouter = router({
         }
       });
 
-      if (!convoQuery.length) {
+      // As we fetch ${LIMIT + 1} convos at a time, if the length is <= ${LIMIT}, we know we've reached the end
+      if (convoQuery.length <= LIMIT) {
         return {
-          data: <typeof convoQuery>[],
+          data: convoQuery,
           cursor: null
         };
       }
+
+      // If we have ${LIMIT + 1} convos, we pop the last one as we return ${LIMIT} convos
+      convoQuery.pop();
 
       const newCursorLastUpdatedAt =
         convoQuery[convoQuery.length - 1]!.lastUpdatedAt;

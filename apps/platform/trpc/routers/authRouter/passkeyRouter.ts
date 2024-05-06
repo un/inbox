@@ -26,13 +26,12 @@ export const passkeyRouter = router({
   signUpWithPasskeyStart: publicRateLimitedProcedure.signUpPasskeyStart
     .input(
       z.object({
-        username: zodSchemas.username(),
-        authenticatorType: z.enum(['platform', 'cross-platform'])
+        username: zodSchemas.username()
       })
     )
     .query(async ({ input, ctx }) => {
       const { db } = ctx;
-      const { username, authenticatorType } = input;
+      const { username } = input;
       const { available, error } = await validateUsername(db, input.username);
       if (!available) {
         throw new TRPCError({
@@ -45,8 +44,7 @@ export const passkeyRouter = router({
       const passkeyOptions = await usePasskeys.generateRegistrationOptions({
         userDisplayName: username,
         username: username,
-        accountPublicId: publicId,
-        authenticatorAttachment: authenticatorType
+        accountPublicId: publicId
       });
       return { publicId, options: passkeyOptions };
     }),
@@ -210,6 +208,18 @@ export const passkeyRouter = router({
           id: true,
           publicId: true,
           username: true
+        },
+        with: {
+          orgMemberships: {
+            with: {
+              org: {
+                columns: {
+                  shortcode: true,
+                  id: true
+                }
+              }
+            }
+          }
         }
       });
 
@@ -241,6 +251,9 @@ export const passkeyRouter = router({
         .set({ lastLoginAt: new Date() })
         .where(eq(accounts.id, account.id));
 
-      return { success: true };
+      const defaultOrg = account.orgMemberships.sort((a, b) => a.id - b.id)[0]
+        ?.org.shortcode;
+
+      return { success: true, defaultOrg };
     })
 });
