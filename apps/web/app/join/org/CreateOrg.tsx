@@ -29,7 +29,7 @@ export default function CreateOrgButton({
 
   const debouncedOrgShortCode = useDebounce(orgShortCode, 1000);
   const checkOrgShortCodeApi =
-    api.useUtils().org.crud.checkShortcodeAvailability;
+    api.useUtils().org.crud.checkShortCodeAvailability;
   const createOrgApi = api.org.crud.createNewOrg.useMutation();
 
   const {
@@ -68,7 +68,7 @@ export default function CreateOrgButton({
     if (!orgShortCodeData?.available) return;
     await createOrgApi.mutateAsync({
       orgName,
-      orgShortcode: debouncedOrgShortCode
+      orgShortCode: debouncedOrgShortCode
     });
     toast.success('Organization created successfully.');
     router.push(`/join/profile?org=${debouncedOrgShortCode}`);

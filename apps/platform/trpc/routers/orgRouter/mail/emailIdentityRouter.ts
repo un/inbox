@@ -445,7 +445,7 @@ export const emailIdentityRouter = router({
       };
     }),
   getOrgEmailIdentities: orgProcedure
-    .input(z.object({}).strict())
+    .input(z.object({}))
     .query(async ({ ctx }) => {
       if (!ctx.account || !ctx.org) {
         throw new TRPCError({
@@ -515,7 +515,7 @@ export const emailIdentityRouter = router({
       };
     }),
   getUserEmailIdentities: orgProcedure
-    .input(z.object({}).strict())
+    .input(z.object({}))
     .query(async ({ ctx }) => {
       if (!ctx.account || !ctx.org) {
         throw new TRPCError({
@@ -617,7 +617,7 @@ export const emailIdentityRouter = router({
       };
     }),
   userHasEmailIdentities: orgProcedure
-    .input(z.object({}).strict())
+    .input(z.object({}))
     .query(async ({ ctx }) => {
       if (!ctx.account || !ctx.org) {
         throw new TRPCError({

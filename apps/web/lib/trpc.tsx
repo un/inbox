@@ -3,9 +3,8 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { loggerLink, httpBatchLink } from '@trpc/client';
 import { createTRPCReact } from '@trpc/react-query';
-import { useState } from 'react';
+import { type PropsWithChildren, useState } from 'react';
 import SuperJSON from 'superjson';
-import { useParams } from 'next/navigation';
 import type { TrpcPlatformRouter } from '@u22n/platform/trpc';
 import { env } from 'next-runtime-env';
 
@@ -31,9 +30,8 @@ const getQueryClient = () => {
 
 export const api = createTRPCReact<TrpcPlatformRouter>();
 
-export function TRPCReactProvider(props: { children: React.ReactNode }) {
+export function TRPCReactProvider({ children }: PropsWithChildren) {
   const queryClient = getQueryClient();
-  const params = useParams();
   const PLATFORM_URL = env('NEXT_PUBLIC_PLATFORM_URL');
 
   const [trpcClient] = useState(() =>
@@ -47,14 +45,6 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
         }),
         httpBatchLink({
           url: `${PLATFORM_URL}/trpc`,
-          headers: async () => {
-            const headers = new Headers();
-
-            if (typeof params.orgShortCode === 'string') {
-              headers.set('org-shortcode', params.orgShortCode);
-            }
-            return Object.fromEntries(headers.entries());
-          },
           fetch: (input, init) =>
             fetch(input, { ...init, credentials: 'include' })
         })
@@ -67,7 +57,7 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
       <api.Provider
         client={trpcClient}
         queryClient={queryClient}>
-        {props.children}
+        {children}
       </api.Provider>
     </QueryClientProvider>
   );

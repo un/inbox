@@ -7,11 +7,13 @@
     watch,
     watchDebounced
   } from '#imports';
+  import { useRoute } from '#vue-router';
   import type { UiColor } from '@u22n/types/ui';
   import type { TypeId } from '@u22n/utils';
   import { z } from 'zod';
 
   const { $trpc } = useNuxtApp();
+  const orgShortCode = (useRoute().params.orgShortCode ?? '') as string;
 
   const newInviteUserFnameValue = ref('');
   const newInviteUserFnameValid = ref<boolean | 'remote' | null>(null);
@@ -90,7 +92,7 @@
 
   const { data: orgDomainsData, pending: orgDomainsPending } =
     await $trpc.org.mail.domains.getOrgDomains.useLazyQuery(
-      {},
+      { orgShortCode },
       { server: false }
     );
 
@@ -120,7 +122,8 @@
       const { available } =
         await $trpc.org.mail.emailIdentities.checkEmailAvailability.query({
           domainPublicId: selectedDomain.value?.domainPublicId as string,
-          emailUsername: newInviteEmailUsernameValue.value
+          emailUsername: newInviteEmailUsernameValue.value,
+          orgShortCode
         });
       if (!available) {
         newInviteEmailUsernameValid.value = false;
@@ -151,7 +154,10 @@
 
   // get list of teams
   const { data: orgTeamsData } =
-    await $trpc.org.users.teams.getOrgTeams.useLazyQuery({}, { server: false });
+    await $trpc.org.users.teams.getOrgTeams.useLazyQuery(
+      { orgShortCode },
+      { server: false }
+    );
   interface OrgUserTeams {
     publicId: TypeId<'teams'>;
     avatarTimestamp: Date | null;
@@ -229,7 +235,8 @@
       newOrgMember: newOrgMember,
       notification: sendEmailNotification.value ? sendNotification : undefined,
       email: createEmailIdentity.value ? createEmail : undefined,
-      teams: addUserToTeams.value ? addToTeams : undefined
+      teams: addUserToTeams.value ? addToTeams : undefined,
+      orgShortCode
     });
 
     if (createNewInviteTrpc.status.value === 'error') {

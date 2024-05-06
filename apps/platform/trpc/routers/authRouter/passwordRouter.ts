@@ -323,14 +323,12 @@ export const passwordRouter = router({
 
   updateUserPassword: accountProcedure
     .input(
-      z
-        .object({
-          oldPassword: z.string().min(8),
-          newPassword: strongPasswordSchema,
-          otp: zodSchemas.nanoIdToken(),
-          invalidateAllSessions: z.boolean().default(false)
-        })
-        .strict()
+      z.object({
+        oldPassword: z.string().min(8),
+        newPassword: strongPasswordSchema,
+        otp: zodSchemas.nanoIdToken(),
+        invalidateAllSessions: z.boolean().default(false)
+      })
     )
     .mutation(async ({ ctx, input }) => {
       const { db, account } = ctx;

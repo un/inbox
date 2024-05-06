@@ -1,7 +1,7 @@
 <script setup lang="ts">
   import { useRoute, ref } from '#imports';
 
-  const orgShortcode = useRoute().params.orgShortcode as string;
+  const orgShortCode = useRoute().params.orgShortCode as string;
 
   const view = ref<'convo' | 'hidden'>('convo');
   function toggleView() {
@@ -27,7 +27,7 @@
           label="New"
           icon="i-ph-plus"
           variant="outline"
-          :to="`/${orgShortcode}/convo/new`" />
+          :to="`/${orgShortCode}/convo/new`" />
         <div>
           <UnUiButton
             class="flex-grow justify-center"

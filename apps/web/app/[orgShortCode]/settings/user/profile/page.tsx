@@ -27,7 +27,7 @@ export default function Page() {
     isLoading: isInitDataLoading,
     refetch: revalidateProfile
   } = api.account.profile.getOrgMemberProfile.useQuery({
-    orgShortcode: currentOrg.shortCode
+    orgShortCode: currentOrg.shortCode
   });
 
   const [avatarTimestamp, setAvatarTimestamp] = useState<Date | null>(null);

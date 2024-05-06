@@ -50,58 +50,56 @@ export const teamsRouter = router({
         newTeamPublicId: newPublicId
       };
     }),
-  getOrgTeams: orgProcedure
-    .input(z.object({}).strict())
-    .query(async ({ ctx }) => {
-      if (!ctx.account || !ctx.org) {
-        throw new TRPCError({
-          code: 'UNPROCESSABLE_CONTENT',
-          message: 'User or Organization is not defined'
-        });
-      }
-      const { db, org } = ctx;
-      const orgId = org?.id;
+  getOrgTeams: orgProcedure.input(z.object({})).query(async ({ ctx }) => {
+    if (!ctx.account || !ctx.org) {
+      throw new TRPCError({
+        code: 'UNPROCESSABLE_CONTENT',
+        message: 'User or Organization is not defined'
+      });
+    }
+    const { db, org } = ctx;
+    const orgId = org?.id;
 
-      const teamQuery = await db.query.teams.findMany({
-        columns: {
-          publicId: true,
-          avatarTimestamp: true,
-          name: true,
-          description: true,
-          color: true
-        },
-        where: and(eq(teams.orgId, orgId)),
-        with: {
-          members: {
-            columns: {
-              publicId: true,
-              id: true
+    const teamQuery = await db.query.teams.findMany({
+      columns: {
+        publicId: true,
+        avatarTimestamp: true,
+        name: true,
+        description: true,
+        color: true
+      },
+      where: and(eq(teams.orgId, orgId)),
+      with: {
+        members: {
+          columns: {
+            publicId: true,
+            id: true
+          },
+          with: {
+            orgMember: {
+              columns: {
+                publicId: true
+              }
             },
-            with: {
-              orgMember: {
-                columns: {
-                  publicId: true
-                }
-              },
-              orgMemberProfile: {
-                columns: {
-                  publicId: true,
-                  avatarTimestamp: true,
-                  firstName: true,
-                  lastName: true,
-                  handle: true,
-                  title: true
-                }
+            orgMemberProfile: {
+              columns: {
+                publicId: true,
+                avatarTimestamp: true,
+                firstName: true,
+                lastName: true,
+                handle: true,
+                title: true
               }
             }
           }
         }
-      });
+      }
+    });
 
-      return {
-        teams: teamQuery
-      };
-    }),
+    return {
+      teams: teamQuery
+    };
+  }),
   getTeam: orgProcedure
     .input(
       z.object({

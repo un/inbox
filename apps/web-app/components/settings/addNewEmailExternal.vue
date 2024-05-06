@@ -12,8 +12,10 @@
   } from '#imports';
   import type { TypeId } from '@u22n/utils';
   import { useEEStore } from '~/stores/eeStore';
+  import { useRoute } from '#vue-router';
 
   const { $trpc } = useNuxtApp();
+  const orgShortCode = (useRoute().params.orgShortCode ?? '') as string;
 
   const newIdentityEmailValue = ref('');
   const newIdentityEmailValid = ref<boolean | 'remote' | null>(null);
@@ -82,7 +84,10 @@
 
   // get list of teams
   const { data: orgTeamsData, pending: orgTeamPending } =
-    await $trpc.org.users.teams.getOrgTeams.useLazyQuery({}, { server: false });
+    await $trpc.org.users.teams.getOrgTeams.useLazyQuery(
+      { orgShortCode },
+      { server: false }
+    );
   interface OrgUserTeams {
     publicId: TypeId<'teams'>;
     avatarTimestamp: Date | null;
@@ -111,7 +116,7 @@
   // get list of users
   const { data: orgMembersData, pending: orgMembersPending } =
     await $trpc.org.users.members.getOrgMembersList.useLazyQuery(
-      {},
+      { orgShortCode },
       { server: false }
     );
   interface OrgMembers {
@@ -159,7 +164,8 @@
       const { data, error } =
         await $trpc.org.mail.emailIdentities.external.checkExternalAvailability.useQuery(
           {
-            emailAddress: newIdentityEmailValue.value
+            emailAddress: newIdentityEmailValue.value,
+            orgShortCode
           }
         );
       if (error) {
@@ -196,7 +202,8 @@
           username: smtpUsername.value,
           password: smtpPassword.value,
           encryption: smtpEncryptionMethod.value || 'none',
-          authMethod: smtpAuthMethod.value || 'plain'
+          authMethod: smtpAuthMethod.value || 'plain',
+          orgShortCode
         }
       );
     smtpValid.value = result.valid;
@@ -229,7 +236,8 @@
         authMethod: smtpAuthMethod.value || 'plain'
       },
       routeToTeamsPublicIds: selectedTeamsPublicIds,
-      routeToOrgMemberPublicIds: selectedOrgMembersPublicIds
+      routeToOrgMemberPublicIds: selectedOrgMembersPublicIds,
+      orgShortCode
     });
     if (createNewExternalEmailIdentityTrpc.status.value === 'error') {
       buttonLoading.value = false;

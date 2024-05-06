@@ -3,9 +3,12 @@
 'use client';
 
 import { api } from '@/lib/trpc';
+import { useGlobalStore } from '@/providers/global-store-provider';
 import { Flex } from '@radix-ui/themes';
 
 export default function ConvoList() {
+  const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+
   const {
     data: convos,
     fetchNextPage,
@@ -14,7 +17,8 @@ export default function ConvoList() {
     isFetchingNextPage
   } = api.convos.getOrgMemberConvos.useInfiniteQuery(
     {
-      includeHidden: false
+      includeHidden: false,
+      orgShortCode
     },
     {
       initialCursor: {},

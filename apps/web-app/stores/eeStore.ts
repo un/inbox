@@ -1,11 +1,13 @@
 import { ref } from 'vue';
 import { defineStore, acceptHMRUpdate, useNuxtApp } from '#imports';
 import { useEE } from '~/composables/EE';
+import { useRoute } from '#vue-router';
 
 export const useEEStore = defineStore(
   'ee',
   () => {
     const { $trpc } = useNuxtApp();
+    const orgShortCode = (useRoute().params.orgShortCode ?? '') as string;
 
     const isPro = ref<boolean | null>(null);
     const isProPending = ref<boolean>(true);
@@ -22,7 +24,9 @@ export const useEEStore = defineStore(
         isProPending.value = false;
         return;
       }
-      const { data } = await $trpc.org.setup.billing.isPro.useQuery({});
+      const { data } = await $trpc.org.setup.billing.isPro.useQuery({
+        orgShortCode
+      });
       isPro.value = data.value?.isPro || false;
       isProPending.value = false;
     }
@@ -32,7 +36,9 @@ export const useEEStore = defineStore(
         canAddDomainPending.value = false;
         return;
       }
-      const data = await $trpc.org.setup.billing.canAddDomain.query({});
+      const data = await $trpc.org.setup.billing.canAddDomain.query({
+        orgShortCode
+      });
 
       canAddDomain.value = data.canAddDomain || false;
       canAddDomainPending.value = false;

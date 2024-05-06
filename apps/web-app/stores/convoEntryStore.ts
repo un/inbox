@@ -1,11 +1,13 @@
 import { ref } from 'vue';
 import { defineStore, acceptHMRUpdate, useNuxtApp } from '#imports';
 import type { TypeId } from '@u22n/utils';
+import { useRoute } from '#vue-router';
 
 export const useConvoEntryStore = defineStore(
   'convoEntries',
   () => {
     const { $trpc } = useNuxtApp();
+    const orgShortCode = (useRoute().params.orgShortCode ?? '') as string;
 
     type ConvoEntriesDataType = Awaited<
       ReturnType<typeof $trpc.convos.entries.getConvoEntries.query>
@@ -45,7 +47,8 @@ export const useConvoEntryStore = defineStore(
       while (newDataStatus === 'loading') {
         const { data: result, status: queryStatus } =
           await $trpc.convos.entries.getConvoEntries.useQuery({
-            convoPublicId: convoPublicId
+            convoPublicId: convoPublicId,
+            orgShortCode
           });
 
         data = result;
@@ -86,7 +89,8 @@ export const useConvoEntryStore = defineStore(
       const { data: result } =
         await $trpc.convos.entries.getConvoSingleEntry.useQuery({
           convoPublicId,
-          convoEntryPublicId
+          convoEntryPublicId,
+          orgShortCode
         });
 
       if (result && result.value) {

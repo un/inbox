@@ -403,34 +403,32 @@ export const domainsRouter = router({
       };
     }),
 
-  getOrgDomains: orgProcedure
-    .input(z.object({}).strict())
-    .query(async ({ ctx }) => {
-      if (!ctx.account || !ctx.org) {
-        throw new TRPCError({
-          code: 'UNPROCESSABLE_CONTENT',
-          message: 'Account or Organization is not defined'
-        });
-      }
-      const { db, org } = ctx;
-      const orgId = org?.id;
-
-      const domainResponse = await db.query.domains.findMany({
-        where: eq(domains.orgId, orgId),
-        columns: {
-          publicId: true,
-          domain: true,
-          domainStatus: true,
-          receivingMode: true,
-          sendingMode: true,
-          forwardingAddress: true,
-          createdAt: true,
-          lastDnsCheckAt: true
-        }
+  getOrgDomains: orgProcedure.input(z.object({})).query(async ({ ctx }) => {
+    if (!ctx.account || !ctx.org) {
+      throw new TRPCError({
+        code: 'UNPROCESSABLE_CONTENT',
+        message: 'Account or Organization is not defined'
       });
+    }
+    const { db, org } = ctx;
+    const orgId = org?.id;
 
-      return {
-        domainData: domainResponse
-      };
-    })
+    const domainResponse = await db.query.domains.findMany({
+      where: eq(domains.orgId, orgId),
+      columns: {
+        publicId: true,
+        domain: true,
+        domainStatus: true,
+        receivingMode: true,
+        sendingMode: true,
+        forwardingAddress: true,
+        createdAt: true,
+        lastDnsCheckAt: true
+      }
+    });
+
+    return {
+      domainData: domainResponse
+    };
+  })
 });
