@@ -805,6 +805,13 @@ export const inboundApi = new Hono().post(
         subjectId
       });
 
+      await db
+        .update(convos)
+        .set({
+          lastUpdatedAt: new Date()
+        })
+        .where(eq(convos.id, convoId));
+
       const uploadedAttachments = await Promise.allSettled(
         attachments.map((attachment) =>
           uploadAndAttachAttachment(
