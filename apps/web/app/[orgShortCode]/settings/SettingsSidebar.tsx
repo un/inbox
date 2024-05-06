@@ -2,9 +2,10 @@
 
 import { type ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
-import { Flex, Text } from '@radix-ui/themes';
+import { Flex, Text, Container } from '@radix-ui/themes';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { api } from '@/lib/trpc';
 import { useGlobalStore } from '@/providers/global-store-provider';
 import {
   CircleUser,
@@ -28,6 +29,12 @@ type NavLinks = {
 export default function SettingsSidebar() {
   const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
   const pathname = usePathname();
+
+  const {
+    data: isAdmin,
+    isLoading: isInitDataLoading,
+    refetch: revalidateProfile
+  } = api.org.users.members.isOrgMemberAdmin.useQuery({});
 
   const personalLinks: NavLinks[] = [
     {
@@ -118,93 +125,96 @@ export default function SettingsSidebar() {
           </Link>
         ))}
       </Flex>
-      <Text
-        className="border-t pt-4"
-        size="5"
-        weight="bold"
-        color="gray">
-        Organization
-      </Text>
+      {isAdmin && (
+        <Container className="border-t pt-1">
+          <Text
+            size="5"
+            weight="bold"
+            color="gray">
+            Organization
+          </Text>
 
-      <Flex
-        className="flex-col"
-        gap="1">
-        <Text
-          className="pb-1 pl-1"
-          size="3"
-          weight="bold"
-          color="cyan">
-          Setup
-        </Text>
-        {orgSetupLinks.map(({ label, to, icon }) => (
-          <Link
-            key={to}
-            href={to}>
-            <Flex
-              gap="4"
-              className={cn(
-                pathname === to ? 'dark:bg-gray-10 bg-gray-4' : '',
-                'rounded p-1 pl-2'
-              )}>
-              {icon}
-              <div>{label}</div>
-            </Flex>
-          </Link>
-        ))}
-      </Flex>
-      <Flex
-        className="flex-col"
-        gap="1">
-        <Text
-          className="pb-1 pl-1"
-          size="3"
-          weight="bold"
-          color="cyan">
-          Users
-        </Text>
-        {orgUserLinks.map(({ label, to, icon }) => (
-          <Link
-            key={to}
-            href={to}>
-            <Flex
-              gap="4"
-              className={cn(
-                pathname === to ? 'dark:bg-gray-10 bg-gray-4' : '',
-                'rounded p-1 pl-2'
-              )}>
-              {icon}
-              <div>{label}</div>
-            </Flex>
-          </Link>
-        ))}
-      </Flex>
+          <Flex
+            className="flex-col pt-4"
+            gap="1">
+            <Text
+              className="pb-1 pl-1"
+              size="3"
+              weight="bold"
+              color="cyan">
+              Setup
+            </Text>
+            {orgSetupLinks.map(({ label, to, icon }) => (
+              <Link
+                key={to}
+                href={to}>
+                <Flex
+                  gap="4"
+                  className={cn(
+                    pathname === to ? 'dark:bg-gray-10 bg-gray-4' : '',
+                    'rounded p-1 pl-2'
+                  )}>
+                  {icon}
+                  <div>{label}</div>
+                </Flex>
+              </Link>
+            ))}
+          </Flex>
+          <Flex
+            className="flex-col"
+            gap="1">
+            <Text
+              className="pb-1 pl-1"
+              size="3"
+              weight="bold"
+              color="cyan">
+              Users
+            </Text>
+            {orgUserLinks.map(({ label, to, icon }) => (
+              <Link
+                key={to}
+                href={to}>
+                <Flex
+                  gap="4"
+                  className={cn(
+                    pathname === to ? 'dark:bg-gray-10 bg-gray-4' : '',
+                    'rounded p-1 pl-2'
+                  )}>
+                  {icon}
+                  <div>{label}</div>
+                </Flex>
+              </Link>
+            ))}
+          </Flex>
 
-      <Flex
-        className="flex-col"
-        gap="1">
-        <Text
-          className="pb-1 pl-1"
-          size="3"
-          weight="bold"
-          color="cyan">
-          Mail
-        </Text>
-        {orgMailLinks.map(({ label, to, icon }) => (
-          <Link
-            key={to}
-            href={to}>
-            <Flex
-              gap="4"
-              className={cn(
-                pathname === to ? 'dark:bg-gray-10 bg-gray-4' : '',
-                'rounded p-1 pl-2'
-              )}>
-              {icon}
-              <div>{label}</div>
-            </Flex>
-          </Link>
-        ))}
-      </Flex>
+          <Flex
+            className="flex-col"
+            gap="1">
+            <Text
+              className="pb-1 pl-1"
+              size="3"
+              weight="bold"
+              color="cyan">
+              Mail
+            </Text>
+            {orgMailLinks.map(({ label, to, icon }) => (
+              <Link
+                key={to}
+                href={to}>
+                <Flex
+                  gap="4"
+                  className={cn(
+                    pathname === to ? 'dark:bg-gray-10 bg-gray-4' : '',
+                    'rounded p-1 pl-2'
+                  )}>
+                  {icon}
+                  <div>{label}</div>
+                </Flex>
+              </Link>
+            ))}
+          </Flex>
+        </Container>
+      )}
     </Flex>
   );
 }
