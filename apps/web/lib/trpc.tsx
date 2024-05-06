@@ -2,10 +2,14 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { loggerLink, httpBatchLink } from '@trpc/client';
-import { createTRPCReact } from '@trpc/react-query';
+import {
+  createTRPCReact,
+  type inferReactQueryProcedureOptions
+} from '@trpc/react-query';
 import { type PropsWithChildren, useState } from 'react';
 import SuperJSON from 'superjson';
 import type { TrpcPlatformRouter } from '@u22n/platform/trpc';
+import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server';
 import { env } from 'next-runtime-env';
 
 const createQueryClient = () =>
@@ -78,3 +82,8 @@ export async function isAuthenticated() {
     return false;
   }
 }
+
+export type ReactQueryOptions =
+  inferReactQueryProcedureOptions<TrpcPlatformRouter>;
+export type RouterInputs = inferRouterInputs<TrpcPlatformRouter>;
+export type RouterOutputs = inferRouterOutputs<TrpcPlatformRouter>;

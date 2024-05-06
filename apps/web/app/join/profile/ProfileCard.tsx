@@ -2,7 +2,7 @@
 
 import { Button, Flex, Text, TextField } from '@radix-ui/themes';
 import { AvatarModal } from './avatar-modal';
-import { api } from '@/lib/trpc';
+import { type RouterOutputs, api } from '@/lib/trpc';
 import Stepper from '../Stepper';
 import { useEffect, useState } from 'react';
 import { cn, generateAvatarUrl } from '@/lib/utils';
@@ -13,14 +13,7 @@ import { toast } from 'sonner';
 import useAwaitableModal from '@/hooks/use-awaitable-modal';
 
 type ProfileCardProps = {
-  // I couldn't find a better way to find the type of orgData
-  orgData: Awaited<
-    ReturnType<
-      ReturnType<
-        typeof api.useUtils
-      >['account']['profile']['getOrgMemberProfile']['fetch']
-    >
-  >;
+  orgData: RouterOutputs['account']['profile']['getOrgMemberProfile'];
   wasInvited: boolean;
 };
 
