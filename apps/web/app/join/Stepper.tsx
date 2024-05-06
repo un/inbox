@@ -12,7 +12,7 @@ export default function Stepper({
       gap="2"
       align="center"
       justify="center"
-      className="mx-auto w-full">
+      className="mx-auto mt-3 w-full">
       {Array.from({ length: total }).map((_, i) => (
         <Separator
           key={i}

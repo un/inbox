@@ -72,10 +72,10 @@ export default function Page() {
     <Flex
       direction="column"
       gap="3"
-      className="mx-auto w-full max-w-[560px] px-4">
+      className="mx-auto w-full max-w-[400px] px-4 sm:max-w-[560px]">
       <Text
-        mt="3"
-        size="4"
+        mt="8"
+        size="5"
         weight="bold">
         Choose Your Username
       </Text>
@@ -88,13 +88,13 @@ export default function Page() {
         gap="1">
         <Text
           size="3"
-          className="text-pretty"
+          className="mt-2 text-pretty"
           weight="medium">
           This will be your username across the whole Un ecosystem.
         </Text>
         <Text
           size="3"
-          className="text-pretty"
+          className="mt-1 text-pretty"
           weight="medium">
           It&apos;s yours personally and can join as many organizations as you
           want.
@@ -211,6 +211,7 @@ export default function Page() {
       </Text>
 
       <Button
+        mt="4"
         disabled={!usernameData?.available || !agree}
         onClick={nextStep}>
         I like it!

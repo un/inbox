@@ -12,12 +12,12 @@ export default function Page({ children }: { children: React.ReactNode }) {
       <Box className="w-full text-center">
         <Heading
           as="h1"
-          className="font-display text-2xl">
+          className="text-2xl font-light">
           Let&apos;s Make your
         </Heading>
         <Heading
           as="h2"
-          className="font-display text-5xl">
+          className="text-5xl font-bold">
           UnInbox
         </Heading>
         {children}
