@@ -43,7 +43,8 @@ export const stripeLinksRouter = router({
             period: input.period,
             totalUsers: input.totalOrgUsers
           }
-        }
+        },
+        allow_promotion_codes: true
       });
 
       return {
