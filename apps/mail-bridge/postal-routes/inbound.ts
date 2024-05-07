@@ -38,7 +38,7 @@ export const inboundApi = new Hono().post(
     'json',
     z.object({
       id: z.number(),
-      rcpt_to: z.string().email(),
+      rcpt_to: z.string().includes('@'),
       mail_from: z.string(),
       message: z.string(),
       base64: z.boolean(),
@@ -114,7 +114,7 @@ export const inboundApi = new Hono().post(
         }
         orgId = fwdEmailIdentity.orgId;
         resolvedOrgPublicId = fwdEmailIdentity.org.publicId;
-        forwardedEmailAddress = rcpt_to;
+        forwardedEmailAddress = `${fwdEmailIdentity.username}@${fwdEmailIdentity.domainName}`;
       } else if (
         // Checks to narrow down the mailserverId
         orgId !== 0 &&
@@ -208,7 +208,7 @@ export const inboundApi = new Hono().post(
         ? Array.isArray(parsedEmail.cc)
           ? parsedEmail.cc.map((a) => a.value).flat()
           : parsedEmail.cc.value
-        : null;
+        : [];
       const inReplyToEmailId = parsedEmail.inReplyTo
         ? parsedEmail.inReplyTo.replace(/^<|>$/g, '')
         : null;
@@ -221,33 +221,13 @@ export const inboundApi = new Hono().post(
           ? (parsedEmail.textAsHtml as string).replace(/\n/g, '')
           : '';
       const attachments = parsedEmail.attachments || [];
-      const emailHeaders = Object.fromEntries(parsedEmail.headers);
+
       if (forwardedEmailAddress) {
-        const forwardedForHeader = emailHeaders['x-forwarded-for'] as string;
-        const forwardedToAddress =
-          forwardedForHeader?.split(' ')[0]?.trim() || null;
-
-        //find if the forwardedToAddress exists in the messageFrom, messageTo or messageCc arrays, if it does, push the forwardingAddress to the respective array so we can look it up in case the to address is not a registered identity
-        if (forwardedToAddress) {
-          const forwardingAddressObject: EmailAddress = {
-            address: forwardedEmailAddress,
-            name: ''
-          };
-
-          if (messageTo.some((email) => email.address === forwardedToAddress)) {
-            messageTo.push(forwardingAddressObject);
-          }
-          if (
-            messageFrom.some((email) => email.address === forwardedToAddress)
-          ) {
-            messageFrom.push(forwardingAddressObject);
-          }
-          if (
-            messageCc?.some((email) => email.address === forwardedToAddress)
-          ) {
-            messageCc.push(forwardingAddressObject);
-          }
-        }
+        const forwardingAddressObject: EmailAddress = {
+          address: forwardedEmailAddress,
+          name: ''
+        };
+        messageCc.push(forwardingAddressObject);
       }
 
       // Check if we have already processed this incoming email by checking the message ID + orgID
@@ -296,7 +276,7 @@ export const inboundApi = new Hono().post(
           addressType: 'from',
           orgId: orgId || 0
         }),
-        messageCc
+        messageCc.length
           ? parseAddressIds({
               addresses: messageCc,
               addressType: 'cc',
