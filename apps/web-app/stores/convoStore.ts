@@ -45,16 +45,18 @@ export const useConvoStore = defineStore(
         convoQueryPending.value = false;
         return;
       }
+      if (!convosListData.value.data) {
+        orgMemberHasMoreConvos.value = false;
+        convoQueryPending.value = false;
+        return;
+      }
       if (
-        !convosListData.value.data ||
         !convosListData.value.cursor ||
         convosListData.value.data.length === 0
       ) {
         orgMemberHasMoreConvos.value = false;
         convoQueryPending.value = false;
-        return;
       }
-
       orgMemberConvos.value.push(...convosListData.value.data);
       convosListCursor.value = convosListData.value.cursor;
       convoQueryPending.value = false;

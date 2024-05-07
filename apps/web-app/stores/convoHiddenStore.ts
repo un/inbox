@@ -47,14 +47,17 @@ export const useHiddenConvoStore = defineStore(
       if (!convosListData.value) {
         return;
       }
+      if (!convosListData.value.data) {
+        orgMemberHasMoreHiddenConvos.value = false;
+        hiddenConvoQueryPending.value = false;
+        return;
+      }
       if (
-        !convosListData.value.data ||
         !convosListData.value.cursor ||
         convosListData.value.data.length === 0
       ) {
         orgMemberHasMoreHiddenConvos.value = false;
         hiddenConvoQueryPending.value = false;
-        return;
       }
 
       orgMemberHiddenConvos.value.push(...convosListData.value.data);
