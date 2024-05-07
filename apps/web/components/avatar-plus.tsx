@@ -73,7 +73,7 @@ export default function AvatarPlus({
           </button>
         </Popover.Trigger>
         <Popover.Content>
-          <div className="flex flex-col gap-1 p-2">
+          <div className="flex gap-2 p-2">
             {rest.map((user) => (
               <Tooltip
                 content={user.name}
