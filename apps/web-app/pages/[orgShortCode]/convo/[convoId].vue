@@ -254,11 +254,18 @@
     }
   });
 
+  const isEmailButDidNotFindEmailIdentity = ref(false);
+
   const findAndSetReplyFromEmailIdentity = (
     messageMetadata: ConvoEntryMetadata
   ) => {
     const emailMetadata = messageMetadata.email;
     if (!emailMetadata) return;
+
+    if (!orgEmailIdentities.value || orgEmailIdentities.value.length === 0) {
+      isEmailButDidNotFindEmailIdentity.value = true;
+      return;
+    }
     // gett all the publicIds of entries in emailMetadata.to array where the type is 'emailIdentity'
     const findAndSetEmailIdentity = (
       emailMetadataField: 'to' | 'from' | 'cc'
@@ -266,16 +273,20 @@
       const addressPublicIds = emailMetadata[emailMetadataField]
         .filter((address) => address.type === 'emailIdentity')
         .map((address) => address.publicId);
+
       // find the first publicId in the addressPublicIds array that is in orgEmailIdentities
+
       const foundPublicId = addressPublicIds.find((publicId) =>
         orgEmailIdentities.value.some(
           (emailIdentity) => emailIdentity.publicId === publicId
         )
       );
+
       if (foundPublicId) {
         const emailIdentityMetaEntry = orgEmailIdentities.value.find(
           (emailIdentity) => emailIdentity.publicId === foundPublicId
         );
+
         selectedOrgEmailIdentities.value =
           {
             publicId: foundPublicId,
@@ -422,6 +433,10 @@
     showDeleteModal.value = false;
     hideConvo();
   }
+
+  const hasSelectedEmailIdentity = computed(() => {
+    return selectedOrgEmailIdentities.value?.publicId !== '';
+  });
 </script>
 <template>
   <div
@@ -533,11 +548,7 @@
           <div class="flex flex-row items-center gap-2">
             <span class="text-base-11 text-xs font-medium"> REPLY </span>
             <NuxtUiSelectMenu
-              v-if="
-                convoHasContactParticipants &&
-                selectedOrgEmailIdentities &&
-                selectedOrgEmailIdentities.publicId
-              "
+              v-if="convoHasContactParticipants"
               v-model="selectedOrgEmailIdentities"
               searchable
               :disabled="orgEmailIdentities.length === 0"
@@ -645,7 +656,9 @@
               icon="i-ph-envelope"
               variant="outline"
               :loading="actionLoading"
-              :disabled="!formValid || actionLoading"
+              :disabled="
+                !formValid || actionLoading || !hasSelectedEmailIdentity
+              "
               @click="createNewReply('message')" />
           </div>
         </div>
