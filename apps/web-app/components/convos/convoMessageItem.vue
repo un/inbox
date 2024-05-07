@@ -5,8 +5,10 @@
   import { computed, inject, ref, useNuxtApp } from '#imports';
   import type { VerticalNavigationLink } from '#ui/types';
   import type { ComputedRef } from 'vue';
+  import { useRoute } from '#vue-router';
 
   const { $trpc } = useNuxtApp();
+  const orgShortCode = (useRoute().params.orgShortCode ?? '') as string;
 
   type ConvoEntryDataType = Awaited<
     ReturnType<typeof $trpc.convos.entries.getConvoEntries.query>
@@ -96,7 +98,8 @@
     execute: rawHtmlExecute
   } = $trpc.convos.entries.getConvoSingleEntryRawEmail.useLazyQuery(
     {
-      convoEntryPublicId: props.entry.publicId
+      convoEntryPublicId: props.entry.publicId,
+      orgShortCode
     },
     { immediate: false }
   );

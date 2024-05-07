@@ -12,8 +12,10 @@
   } from '#imports';
   import type { TypeId } from '@u22n/utils';
   import { useEEStore } from '~/stores/eeStore';
+  import { useRoute } from '#vue-router';
 
   const { $trpc } = useNuxtApp();
+  const orgShortCode = (useRoute().params.orgShortCode ?? '') as string;
 
   const newIdentityUsernameValue = ref('');
   const newIdentityUsernameValid = ref<boolean | 'remote' | null>(null);
@@ -55,7 +57,7 @@
 
   const { data: orgDomainsData, pending: orgDomainsPending } =
     await $trpc.org.mail.domains.getOrgDomains.useLazyQuery(
-      {},
+      { orgShortCode },
       { server: false }
     );
 
@@ -74,7 +76,10 @@
 
   // get list of teams
   const { data: orgTeamsData, pending: orgTeamPending } =
-    await $trpc.org.users.teams.getOrgTeams.useLazyQuery({}, { server: false });
+    await $trpc.org.users.teams.getOrgTeams.useLazyQuery(
+      { orgShortCode },
+      { server: false }
+    );
   interface OrgUserTeams {
     publicId: TypeId<'teams'>;
     avatarTimestamp: Date | null;
@@ -103,7 +108,7 @@
   // get list of users
   const { data: orgMembersData, pending: orgMembersPending } =
     await $trpc.org.users.members.getOrgMembersList.useLazyQuery(
-      {},
+      { orgShortCode },
       { server: false }
     );
   interface OrgMembers {
@@ -156,7 +161,8 @@
       const { available } =
         await $trpc.org.mail.emailIdentities.checkEmailAvailability.query({
           domainPublicId: selectedDomain.value?.domainPublicId as string,
-          emailUsername: newIdentityUsernameValue.value
+          emailUsername: newIdentityUsernameValue.value,
+          orgShortCode
         });
       if (!available) {
         newIdentityUsernameValid.value = false;
@@ -204,7 +210,8 @@
       sendName: newIdentitySendNameValue.value,
       routeToTeamsPublicIds: selectedTeamsPublicIds,
       routeToOrgMemberPublicIds: selectedOrgMembersPublicIds,
-      catchAll: newIdentityCatchAll.value
+      catchAll: newIdentityCatchAll.value,
+      orgShortCode
     });
     if (createNewEmailIdentityTrpc.status.value === 'error') {
       buttonLoading.value = false;

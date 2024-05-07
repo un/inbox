@@ -2,8 +2,10 @@
   import { z } from 'zod';
   import { computed, ref, storeToRefs, useNuxtApp, useToast } from '#imports';
   import { useEEStore } from '~/stores/eeStore';
+  import { useRoute } from '#vue-router';
 
   const { $trpc } = useNuxtApp();
+  const orgShortCode = (useRoute().params.orgShortCode ?? '') as string;
 
   const buttonLoading = ref(false);
   const buttonLabel = ref('Add Domain');
@@ -31,7 +33,8 @@
     const createNewDomainTrpc =
       $trpc.org.mail.domains.createNewDomain.useMutation();
     await createNewDomainTrpc.mutate({
-      domainName: newDomainNameValue.value
+      domainName: newDomainNameValue.value,
+      orgShortCode
     });
 
     if (createNewDomainTrpc.status.value === 'error') {

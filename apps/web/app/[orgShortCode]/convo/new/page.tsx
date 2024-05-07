@@ -102,24 +102,24 @@ const newEmailParticipantsAtom = atom<string[]>([]);
 const attachmentsAtom = atom<ConvoAttachmentUpload[]>([]);
 
 export default function Page() {
+  const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+
   const { data: userEmailIdentities, isLoading: emailIdentitiesLoading } =
-    api.org.mail.emailIdentities.getUserEmailIdentities.useQuery({});
+    api.org.mail.emailIdentities.getUserEmailIdentities.useQuery({
+      orgShortCode
+    });
   const { data: orgMemberList, isLoading: orgMemberListLoading } =
-    api.org.users.members.getOrgMembersList.useQuery({});
+    api.org.users.members.getOrgMembersList.useQuery({ orgShortCode });
   const { data: orgTeamsData, isLoading: orgTeamsLoading } =
-    api.org.users.teams.getOrgTeams.useQuery({});
+    api.org.users.teams.getOrgTeams.useQuery({ orgShortCode });
   const { data: orgContacts, isLoading: orgContactsLoading } =
-    api.org.contacts.getOrgContacts.useQuery({});
+    api.org.contacts.getOrgContacts.useQuery({ orgShortCode });
   const { mutateAsync: createConvoFn } =
     api.convos.createNewConvo.useMutation();
 
   const newEmailParticipants = useAtomValue(newEmailParticipantsAtom);
   const selectedParticipants = useAtomValue(selectedParticipantsAtom);
   const attachments = useAtomValue(attachmentsAtom);
-
-  const currentOrgShortCode = useGlobalStore(
-    (state) => state.currentOrg.shortCode
-  );
 
   const router = useRouter();
 
@@ -320,7 +320,8 @@ export default function Page() {
       participantsContactsPublicIds,
       participantsEmails,
       message: stringify(editorText),
-      attachments
+      attachments,
+      orgShortCode
     });
   }
 
@@ -332,7 +333,7 @@ export default function Page() {
       },
       onSuccess: (data) => {
         toast.success('Convo created, redirecting you to your conversion');
-        router.push(`/${currentOrgShortCode}/convo/${data.publicId}`);
+        router.push(`/${orgShortCode}/convo/${data.publicId}`);
       }
     }
   );
@@ -345,7 +346,7 @@ export default function Page() {
       },
       onSuccess: (data) => {
         toast.success('Convo created, redirecting you to your conversion');
-        router.push(`/${currentOrgShortCode}/convo/${data.publicId}`);
+        router.push(`/${orgShortCode}/convo/${data.publicId}`);
       }
     }
   );

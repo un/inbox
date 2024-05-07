@@ -23,7 +23,7 @@ import {
   typeIdValidator,
   zodSchemas
 } from '@u22n/utils';
-import { refreshOrgShortcodeCache } from '../../../../utils/orgShortcode';
+import { refreshOrgShortCodeCache } from '../../../../utils/orgShortCode';
 import { isAccountAdminOfOrg } from '../../../../utils/account';
 import { TRPCError } from '@trpc/server';
 import { useRuntimeConfig } from '#imports';
@@ -222,63 +222,61 @@ export const invitesRouter = router({
         };
       });
     }),
-  viewInvites: orgProcedure
-    .input(z.object({}).strict())
-    .query(async ({ ctx }) => {
-      if (!ctx.account || !ctx.org) {
-        throw new TRPCError({
-          code: 'UNPROCESSABLE_CONTENT',
-          message: 'Account or Organization is not defined'
-        });
-      }
-      const { db, org } = ctx;
+  viewInvites: orgProcedure.input(z.object({})).query(async ({ ctx }) => {
+    if (!ctx.account || !ctx.org) {
+      throw new TRPCError({
+        code: 'UNPROCESSABLE_CONTENT',
+        message: 'Account or Organization is not defined'
+      });
+    }
+    const { db, org } = ctx;
 
-      const orgId = org?.id;
+    const orgId = org?.id;
 
-      const orgInvitesResponse = await db.query.orgInvitations.findMany({
-        where: eq(orgInvitations.orgId, orgId),
-        columns: {
-          publicId: true,
-          role: true,
-          inviteToken: true,
-          invitedAt: true,
-          expiresAt: true,
-          acceptedAt: true,
-          email: true
-        },
-        with: {
-          invitedByOrgMember: {
-            columns: {},
-            with: {
-              profile: {
-                columns: {
-                  publicId: true,
-                  avatarTimestamp: true,
-                  firstName: true,
-                  lastName: true
-                }
+    const orgInvitesResponse = await db.query.orgInvitations.findMany({
+      where: eq(orgInvitations.orgId, orgId),
+      columns: {
+        publicId: true,
+        role: true,
+        inviteToken: true,
+        invitedAt: true,
+        expiresAt: true,
+        acceptedAt: true,
+        email: true
+      },
+      with: {
+        invitedByOrgMember: {
+          columns: {},
+          with: {
+            profile: {
+              columns: {
+                publicId: true,
+                avatarTimestamp: true,
+                firstName: true,
+                lastName: true
               }
             }
-          },
-          orgMember: {
-            with: {
-              profile: {
-                columns: {
-                  publicId: true,
-                  avatarTimestamp: true,
-                  firstName: true,
-                  lastName: true
-                }
+          }
+        },
+        orgMember: {
+          with: {
+            profile: {
+              columns: {
+                publicId: true,
+                avatarTimestamp: true,
+                firstName: true,
+                lastName: true
               }
             }
           }
         }
-      });
+      }
+    });
 
-      return {
-        invites: orgInvitesResponse
-      };
-    }),
+    return {
+      invites: orgInvitesResponse
+    };
+  }),
 
   validateInvite: publicRateLimitedProcedure.validateInvite
     .input(
@@ -347,7 +345,7 @@ export const invitesRouter = router({
         orgPublicId: queryInvitesResponse.org.publicId,
         orgAvatarTimestamp: queryInvitesResponse.org.avatarTimestamp,
         orgName: queryInvitesResponse.org.name,
-        orgShortcode: queryInvitesResponse.org.shortcode,
+        orgShortCode: queryInvitesResponse.org.shortcode,
         loggedIn: userLoggedIn,
         username: username
       };
@@ -470,11 +468,11 @@ export const invitesRouter = router({
         });
       }
 
-      await refreshOrgShortcodeCache(+queryInvitesResponse.orgId);
+      await refreshOrgShortCodeCache(+queryInvitesResponse.orgId);
 
       return {
         success: true,
-        orgShortcode: queryInvitesResponse.org.shortcode
+        orgShortCode: queryInvitesResponse.org.shortcode
       };
     }),
   invalidateInvite: orgProcedure

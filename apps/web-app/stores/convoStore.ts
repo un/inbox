@@ -1,11 +1,13 @@
 import { ref, computed } from 'vue';
 import { defineStore, acceptHMRUpdate, useNuxtApp } from '#imports';
 import type { TypeId } from '@u22n/utils';
+import { useRoute } from '#vue-router';
 
 export const useConvoStore = defineStore(
   'convos',
   () => {
     const { $trpc } = useNuxtApp();
+    const orgShortCode = (useRoute().params.orgShortCode ?? '') as string;
 
     const convosListCursor = ref<{
       lastUpdatedAt: Date;
@@ -35,7 +37,8 @@ export const useConvoStore = defineStore(
       convoQueryPending.value = true;
       const { data: convosListData } =
         await $trpc.convos.getOrgMemberConvos.useQuery({
-          cursor: convoQueryParams.value
+          cursor: convoQueryParams.value,
+          orgShortCode
         });
 
       if (!convosListData.value) {
@@ -64,7 +67,8 @@ export const useConvoStore = defineStore(
     }) {
       const { data: newConvo } =
         await $trpc.convos.getOrgMemberSpecificConvo.useQuery({
-          convoPublicId
+          convoPublicId,
+          orgShortCode
         });
       if (!newConvo.value || !('publicId' in newConvo.value)) return;
       const convoLastUpdatedAt = new Date(newConvo.value.lastUpdatedAt);

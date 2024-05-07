@@ -59,10 +59,10 @@
       });
       return;
     }
-    const orgShortcodeCookie = useCookie('un-org-shortcode', {
+    const orgShortCodeCookie = useCookie('un-org-shortcode', {
       expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
     });
-    orgShortcodeCookie.value = joinOrgResponse!.orgShortcode as string;
+    orgShortCodeCookie.value = joinOrgResponse!.orgShortCode as string;
 
     joinButtonLoading.value = false;
     joinButtonLabel.value = 'All Done!';
@@ -74,7 +74,7 @@
       timeout: 5000
     });
 
-    navigateTo(`/${inviteQuery.value?.orgShortcode}`);
+    navigateTo(`/${inviteQuery.value?.orgShortCode}`);
   }
 
   const pageReady: Ref<boolean> = ref(false);
