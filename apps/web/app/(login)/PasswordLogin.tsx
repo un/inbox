@@ -74,10 +74,10 @@ export default function PasswordLoginButton() {
       <Dialog.Trigger>
         <Button
           size="3"
-          className="w-full cursor-pointer font-semibold"
+          className="w-72 cursor-pointer font-semibold"
           variant="surface">
           <KeyRound size={20} />
-          <Text>Login with my Password</Text>
+          <Text>Login with my password</Text>
         </Button>
       </Dialog.Trigger>
 
@@ -91,7 +91,8 @@ export default function PasswordLoginButton() {
               <Text
                 as="div"
                 size="2"
-                mb="1"
+                mb="2"
+                mt="2"
                 weight="bold">
                 Username
               </Text>
@@ -99,6 +100,7 @@ export default function PasswordLoginButton() {
                 placeholder="Enter your username"
                 autoComplete="username"
                 value={username}
+                ml="2"
                 onChange={(e) => setUsername(e.target.value)}>
                 <TextField.Slot>
                   <User size={16} />
@@ -123,7 +125,7 @@ export default function PasswordLoginButton() {
             <Text
               as="div"
               size="2"
-              mb="1"
+              mt="2"
               weight="bold">
               Enter your 2FA Code
             </Text>

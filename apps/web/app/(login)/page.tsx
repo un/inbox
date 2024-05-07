@@ -10,15 +10,15 @@ export default async function Page() {
       height="100%"
       align="center"
       justify="center">
-      <Box className="text-center">
+      <Box className="-mt-4 text-center">
         <Heading
           as="h1"
-          className="font-display text-2xl">
+          className="mb-2 text-2xl font-medium">
           Login to your
         </Heading>
         <Heading
           as="h2"
-          className="font-display text-5xl">
+          className="font-display mb-6 text-5xl">
           UnInbox
         </Heading>
         <Box py="6">
@@ -37,22 +37,22 @@ export default async function Page() {
               color="grass"
             />
           </Flex>
-          <PasswordLoginButton />
+          <Flex
+            py="2"
+            gap="4"
+            align="center"
+            justify="center"
+            direction="column">
+            <PasswordLoginButton />
+            <Button
+              size="3"
+              className="mt-4 w-72 cursor-pointer text-sm font-semibold"
+              variant="soft">
+              <Link href="/join">Not a member yet? Join instead</Link>
+            </Button>
+          </Flex>
         </Box>
-        <Flex
-          py="8"
-          gap="4"
-          align="center"
-          justify="center"
-          direction="column">
-          <Button
-            size="3"
-            className="w-fit cursor-pointer font-semibold"
-            variant="ghost">
-            <Link href="/join">Create an Account</Link>
-          </Button>
-          <RecoveryButton />
-        </Flex>
+        <RecoveryButton />
       </Box>
     </Flex>
   );

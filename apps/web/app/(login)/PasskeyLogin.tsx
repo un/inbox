@@ -52,9 +52,9 @@ export default function PasskeyLoginButton() {
       onClick={() => passkeyLogin()}
       loading={loading}
       disabled={loading}
-      className="w-full cursor-pointer font-semibold">
+      className="mb-2 w-72 cursor-pointer font-semibold">
       <Fingerprint size={20} />
-      <span>Login with my Passkey</span>
+      <span>Login with my passkey</span>
     </Button>
   );
 }
