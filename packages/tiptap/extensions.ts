@@ -9,6 +9,13 @@ import Subscript from '@tiptap/extension-subscript';
 import Superscript from '@tiptap/extension-superscript';
 import { Markdown } from 'tiptap-markdown';
 import type { AnyExtension } from '@tiptap/react';
+import BulletList from '@tiptap/extension-bullet-list';
+import Blockquote from '@tiptap/extension-blockquote';
+import Code from '@tiptap/extension-code';
+import CodeBlock from '@tiptap/extension-code-block';
+import HardBreak from '@tiptap/extension-hard-break';
+import ListItem from '@tiptap/extension-list-item';
+import OrderedList from '@tiptap/extension-ordered-list';
 
 export const tipTapExtensions: AnyExtension[] = [
   StarterKit,
@@ -35,5 +42,12 @@ export const tipTapExtensions: AnyExtension[] = [
   Placeholder,
   Underline,
   Subscript,
-  Superscript
+  Superscript,
+  BulletList,
+  Blockquote,
+  Code,
+  CodeBlock,
+  HardBreak,
+  ListItem,
+  OrderedList
 ];
