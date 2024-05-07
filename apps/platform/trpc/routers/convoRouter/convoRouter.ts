@@ -1711,7 +1711,8 @@ export const convoRouter = router({
           participants: {
             columns: {
               id: true,
-              orgMemberId: true
+              orgMemberId: true,
+              teamId: true
             },
             with: {
               orgMember: {
@@ -1740,7 +1741,31 @@ export const convoRouter = router({
         (participant) => participant.orgMemberId === accountOrgMemberId
       );
 
-      if (!userInConvo) {
+      let userInTeam: boolean | null = null;
+      const teamIdsArray: number[] = [];
+      for (const participant of convoQueryResponse.participants) {
+        if (participant.teamId) {
+          teamIdsArray.push(participant.teamId);
+        }
+      }
+      if (teamIdsArray.length > 0) {
+        // get all org members for a team
+
+        const teamMembersQuery = await db.query.teamMembers.findMany({
+          where: inArray(teamMembers.teamId, teamIdsArray),
+          columns: {
+            orgMemberId: true
+          }
+        });
+
+        const userInTeamMember = teamMembersQuery.find(
+          (teamMember) => teamMember.orgMemberId === accountOrgMemberId
+        );
+
+        userInTeam = userInTeamMember ? true : false;
+      }
+
+      if (!userInConvo && !userInTeam) {
         throw new TRPCError({
           code: 'UNAUTHORIZED',
           message:
