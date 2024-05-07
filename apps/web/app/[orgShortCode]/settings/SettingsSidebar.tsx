@@ -30,11 +30,9 @@ export default function SettingsSidebar() {
   const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
   const pathname = usePathname();
 
-  const {
-    data: isAdmin,
-    isLoading: isInitDataLoading,
-    refetch: revalidateProfile
-  } = api.org.users.members.isOrgMemberAdmin.useQuery({ orgShortCode });
+  const { data: isAdmin } = api.org.users.members.isOrgMemberAdmin.useQuery({
+    orgShortCode
+  });
 
   const personalLinks: NavLinks[] = [
     {
