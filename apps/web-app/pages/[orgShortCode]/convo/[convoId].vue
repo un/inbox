@@ -393,7 +393,7 @@
       orgShortCode
     });
 
-    if (!data.success) {
+    if (!data || !data.success) {
       toast.add({
         id: 'delete_convo_fail',
         title: 'Failed to delete conversation',
