@@ -1291,10 +1291,12 @@ export const convoRouter = router({
     .input(
       z.object({
         includeHidden: z.boolean().default(false),
-        cursor: z.object({
-          lastUpdatedAt: z.date().optional(),
-          lastPublicId: typeIdValidator('convos').optional()
-        })
+        cursor: z
+          .object({
+            lastUpdatedAt: z.date().optional(),
+            lastPublicId: typeIdValidator('convos').optional()
+          })
+          .default({})
       })
     )
     .query(async ({ ctx, input }) => {

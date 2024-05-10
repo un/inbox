@@ -10,10 +10,12 @@ export const convoEntryRouter = router({
     .input(
       z.object({
         convoPublicId: typeIdValidator('convos'),
-        cursor: z.object({
-          lastCreatedAt: z.date().optional(),
-          lastPublicId: typeIdValidator('convoEntries').optional()
-        })
+        cursor: z
+          .object({
+            lastCreatedAt: z.date().optional(),
+            lastPublicId: typeIdValidator('convoEntries').optional()
+          })
+          .default({})
       })
     )
     .query(async ({ ctx, input }) => {
