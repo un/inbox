@@ -28,7 +28,7 @@ export const avatarApi = new Hono<Ctx>().post(
           const types = [
             { name: 'orgMember', value: 'omp' }, // the naming is wrong here, it should be 'orgMemberProfile', but keeping it as is for now
             { name: 'org', value: 'o' },
-            { name: 'contact', value: 'c' },
+            { name: 'contact', value: 'k' },
             { name: 'team', value: 't' }
           ] as const;
           return types.find((ty) => ty.name === t)!;
