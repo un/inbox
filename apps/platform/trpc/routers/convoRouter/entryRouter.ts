@@ -10,8 +10,10 @@ export const convoEntryRouter = router({
     .input(
       z.object({
         convoPublicId: typeIdValidator('convos'),
-        cursorLastCreatedAt: z.date().optional(),
-        cursorLastPublicId: typeIdValidator('convoEntries').optional()
+        cursor: z.object({
+          lastCreatedAt: z.date().optional(),
+          lastPublicId: typeIdValidator('convoEntries').optional()
+        })
       })
     )
     .query(async ({ ctx, input }) => {
@@ -33,11 +35,15 @@ export const convoEntryRouter = router({
       const orgId = org.id;
       const accountOrgMemberId = org.memberId;
 
-      const { convoPublicId, cursorLastCreatedAt, cursorLastPublicId } = input;
-      const inputLastCreatedAt = cursorLastCreatedAt
-        ? new Date(cursorLastCreatedAt)
+      const {
+        convoPublicId,
+        cursor: { lastCreatedAt, lastPublicId }
+      } = input;
+      const inputLastCreatedAt = lastCreatedAt
+        ? new Date(lastCreatedAt)
         : new Date();
-      const inputLastPublicId = cursorLastPublicId || 'ce_';
+
+      const inputLastPublicId = lastPublicId || 'ce_';
 
       // check if the conversation belongs to the same org, early return if not before multiple db selects
       const convoResponse = await db.query.convos.findFirst({
@@ -110,6 +116,7 @@ export const convoEntryRouter = router({
         });
       }
 
+      const LIMIT = 15;
       // get the entries
       const convoEntriesQuery = await db.query.convoEntries.findMany({
         where: and(
@@ -123,7 +130,7 @@ export const convoEntryRouter = router({
           eq(convoEntries.convoId, convoDetails.id)
         ),
         orderBy: [desc(convoEntries.createdAt), desc(convoEntries.publicId)],
-        limit: 15,
+        limit: LIMIT + 1,
         columns: {
           publicId: true,
           createdAt: true,
@@ -160,30 +167,46 @@ export const convoEntryRouter = router({
       });
 
       // for each of the email.to, email.cc and email.from arrays from the metadata, set all entries.id fields to 0
+      // we do this to prevent leaking internal ids to the client
       convoEntriesQuery.forEach((entry) => {
         if (entry.metadata?.email) {
           if (entry.metadata.email.to) {
-            entry.metadata.email.to.forEach((to) => {
-              to.id = 0;
-            });
+            entry.metadata.email.to.forEach((to) => (to.id = 0));
           }
           if (entry.metadata.email.cc) {
-            entry.metadata.email.cc.forEach((cc) => {
-              cc.id = 0;
-            });
+            entry.metadata.email.cc.forEach((cc) => (cc.id = 0));
           }
           if (entry.metadata.email.from) {
-            entry.metadata.email.from.forEach((from) => {
-              from.id = 0;
-            });
+            entry.metadata.email.from.forEach((from) => (from.id = 0));
           }
         }
       });
 
+      // As we fetch ${LIMIT + 1} convos at a time, if the length is <= ${LIMIT}, we know we've reached the end
+      if (convoEntriesQuery.length <= LIMIT) {
+        return {
+          entries: convoEntriesQuery,
+          cursor: null
+        };
+      }
+
+      // If we have ${LIMIT + 1} convos, we pop the last one as we return ${LIMIT} convos
+      convoEntriesQuery.pop();
+
+      const newCursorLastCreatedAt =
+        convoEntriesQuery[convoEntriesQuery.length - 1]!.createdAt;
+      const newCursorLastPublicId =
+        convoEntriesQuery[convoEntriesQuery.length - 1]!.publicId;
+
       return {
-        entries: convoEntriesQuery
+        entries: convoEntriesQuery,
+        cursor: {
+          lastCreatedAt: newCursorLastCreatedAt,
+          lastPublicId: newCursorLastPublicId
+        }
       };
     }),
+
   getConvoSingleEntry: orgProcedure
     .input(
       z.object({

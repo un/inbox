@@ -48,7 +48,8 @@ export const useConvoEntryStore = defineStore(
         const { data: result, status: queryStatus } =
           await $trpc.convos.entries.getConvoEntries.useQuery({
             convoPublicId: convoPublicId,
-            orgShortCode
+            orgShortCode,
+            cursor: {}
           });
 
         data = result;

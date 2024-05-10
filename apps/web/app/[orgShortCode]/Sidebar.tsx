@@ -241,8 +241,8 @@ function OrgMenu({ collapsed }: { collapsed: boolean }) {
         method: 'POST',
         credentials: 'include'
       });
-      await queryClient.invalidateQueries();
       router.replace('/');
+      await queryClient.invalidateQueries();
     },
     {
       onError: (error) => {
