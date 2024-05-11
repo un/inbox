@@ -54,32 +54,90 @@ export function formatParticipantData(
   };
 }
 
-export function useRemoveConvoFromList() {
+export function useDeleteConvo$Cache() {
   const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
   const convoListApi = api.useUtils().convos.getOrgMemberConvos;
 
-  return (convoId: TypeId<'convos'>) =>
+  return async (convoId: TypeId<'convos'>) => {
+    await convoListApi.cancel({ orgShortCode });
     convoListApi.setInfiniteData({ orgShortCode }, (updater) => {
       if (!updater) return;
-      const pageIndex = updater.pages.findIndex((page) =>
-        page.data.some((convo) => convo.publicId === convoId)
-      );
-      const newPage = updater.pages[pageIndex]?.data.filter(
-        (convo) => convo.publicId !== convoId
-      );
-
-      if (!newPage) return;
-
-      const newPages = updater.pages.slice();
-
-      newPages[pageIndex] = {
-        data: newPage,
-        cursor: updater.pages[pageIndex]?.cursor ?? null
-      };
-
-      return {
-        pages: newPages,
-        pageParams: updater?.pageParams.slice()
-      };
+      const clonedUpdater = structuredClone(updater);
+      for (const page of clonedUpdater.pages) {
+        const convoIndex = page.data.findIndex(
+          (convo) => convo.publicId === convoId
+        );
+        if (convoIndex === -1) continue;
+        page.data.splice(convoIndex, 1);
+        break;
+      }
+      return clonedUpdater;
     });
+  };
+}
+
+export function useToggleConvoHidden$Cache() {
+  const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  const convoApi = api.useUtils().convos.getConvo;
+  const convoListApi = api.useUtils().convos.getOrgMemberConvos;
+  const specificConvoApi = api.useUtils().convos.getOrgMemberSpecificConvo;
+
+  return async (convoId: TypeId<'convos'>, hide = false) => {
+    const convoToAdd = !hide
+      ? await specificConvoApi.fetch({
+          convoPublicId: convoId,
+          orgShortCode
+        })
+      : null;
+
+    await convoApi.cancel({ convoPublicId: convoId, orgShortCode });
+    convoApi.setData({ convoPublicId: convoId, orgShortCode }, (updater) => {
+      if (!updater) return;
+      const clonedUpdater = structuredClone(updater);
+      const participantIndex = clonedUpdater.data.participants.findIndex(
+        (participant) => participant.publicId === updater.ownParticipantPublicId
+      );
+      if (participantIndex === -1) return;
+      clonedUpdater.data.participants[participantIndex]!.hidden = hide;
+      return clonedUpdater;
+    });
+
+    await convoListApi.cancel({ orgShortCode });
+    convoListApi.setInfiniteData({ orgShortCode }, (updater) => {
+      if (!updater) return;
+      const clonedUpdater = structuredClone(updater);
+
+      if (hide) {
+        for (const page of clonedUpdater.pages) {
+          const convoIndex = page.data.findIndex(
+            (convo) => convo.publicId === convoId
+          );
+          if (convoIndex === -1) continue;
+          page.data.splice(convoIndex, 1);
+          break;
+        }
+      } else {
+        const clonedConvo = structuredClone(convoToAdd)!; // We know it's not null as we are not hiding
+        let convoAlreadyAdded = false;
+        for (const page of clonedUpdater.pages) {
+          const insertIndex = page.data.findIndex(
+            (convo) => convo.lastUpdatedAt < clonedConvo.lastUpdatedAt
+          );
+          if (insertIndex === -1) {
+            continue;
+          } else {
+            page.data.splice(insertIndex, 0, clonedConvo);
+          }
+          convoAlreadyAdded = true;
+          break;
+        }
+
+        // If convo is the oldest, add it to the last page as the last item
+        if (!convoAlreadyAdded) {
+          clonedUpdater.pages.at(-1)?.data.push(clonedConvo);
+        }
+      }
+      return clonedUpdater;
+    });
+  };
 }

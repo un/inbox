@@ -123,6 +123,15 @@ function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
   }, [status]);
 
   const participantOwnPublicId = convoData?.ownParticipantPublicId;
+  const convoHidden = useMemo(
+    () =>
+      convoData
+        ? convoData?.data.participants.find(
+            (p) => p.publicId === participantOwnPublicId
+          )?.hidden ?? false
+        : null,
+    [convoData, participantOwnPublicId]
+  );
 
   const allParticipants = useMemo(() => {
     const formattedParticipants: NonNullable<
@@ -217,6 +226,7 @@ function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
       <ChatSideBar
         participants={allParticipants}
         convoId={convoId}
+        convoHidden={convoHidden}
       />
     </Flex>
   );
