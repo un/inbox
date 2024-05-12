@@ -10,13 +10,13 @@ import {
   ScrollArea,
   Text,
   Badge,
-  Skeleton
+  Skeleton,
+  Spinner
 } from '@radix-ui/themes';
 import Link from 'next/link';
 import { type TypeId, validateTypeId } from '@u22n/utils';
 import { useGlobalStore } from '@/providers/global-store-provider';
-import { memo, useEffect, useMemo, useRef } from 'react';
-import { useVirtualizer } from '@tanstack/react-virtual';
+import { memo, useCallback, useMemo, useState } from 'react';
 import { type JSONContent, generateHTML } from '@u22n/tiptap/react';
 import { tipTapExtensions } from '@u22n/tiptap/extensions';
 import { formatParticipantData } from '../utils';
@@ -28,6 +28,7 @@ import { atom, useAtom } from 'jotai';
 import { useCopyToClipboard } from '@uidotdev/usehooks';
 import { toast } from 'sonner';
 import { ms } from 'itty-time';
+import { Virtuoso } from 'react-virtuoso';
 
 const replyToMessageAtom = atom<null | TypeId<'convoEntries'>>(null);
 
@@ -42,9 +43,16 @@ export default function Page({
   return <ConvoView convoId={convoId} />;
 }
 
+// This is the index of the first item in the list. It is set to a high number to ensure that the list starts at the bottom
+// This also means the list can't be longer than 10000 items (which is fine for our most cases)
+const INVERSE_LIST_START_INDEX = 10000;
+
 function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
   const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
-  const scrollableRef = useRef<HTMLDivElement | null>(null);
+  const [firstItemIndex, setFirstItemIndex] = useState(
+    INVERSE_LIST_START_INDEX
+  );
+  const [scrollParent, setScrollParent] = useState<HTMLElement | null>(null);
 
   const {
     data: convoData,
@@ -55,72 +63,25 @@ function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
     convoPublicId: convoId
   });
 
-  const {
-    data,
-    status,
-    isLoading,
-    hasNextPage,
-    fetchNextPage,
-    isFetchingNextPage
-  } = api.convos.entries.getConvoEntries.useInfiniteQuery(
-    {
-      convoPublicId: convoId,
-      orgShortCode
-    },
-    {
-      getNextPageParam: (lastPage) => lastPage.cursor ?? undefined,
-      staleTime: ms('1 hour')
-    }
-  );
-
-  const allMessages = data ? data.pages.flatMap(({ entries }) => entries) : [];
-
-  const messagesVirtualizer = useVirtualizer({
-    count: allMessages.length + (hasNextPage ? 1 : 0),
-    estimateSize: () => 500,
-    getScrollElement: () => scrollableRef.current,
-    overscan: 1,
-    gap: 30
-  });
-
-  useEffect(() => {
-    const lastItem = messagesVirtualizer.getVirtualItems().at(-1);
-    if (!lastItem) return;
-    if (
-      lastItem.index >= allMessages.length - 1 &&
-      hasNextPage &&
-      !isFetchingNextPage
-    ) {
-      void fetchNextPage();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    fetchNextPage,
-    hasNextPage,
-    allMessages.length,
-    isFetchingNextPage,
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    messagesVirtualizer.getVirtualItems()
-  ]);
-
-  // Inverse Scroll Handler
-  useEffect(() => {
-    const handleScroll = (e: WheelEvent) => {
-      e.preventDefault();
-      const currentTarget = e.currentTarget as HTMLDivElement;
-      if (currentTarget) {
-        currentTarget.scrollTop -= e.deltaY;
+  const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } =
+    api.convos.entries.getConvoEntries.useInfiniteQuery(
+      {
+        convoPublicId: convoId,
+        orgShortCode
+      },
+      {
+        getNextPageParam: (lastPage) => lastPage.cursor ?? undefined,
+        staleTime: ms('1 hour')
       }
-    };
+    );
 
-    const scrollable = scrollableRef.current;
-    scrollable?.addEventListener('wheel', handleScroll, {
-      passive: false
-    });
-    return () => {
-      scrollable?.removeEventListener('wheel', handleScroll);
-    };
-  }, [status]);
+  const allMessages = useMemo(() => {
+    const messages = data
+      ? data.pages.flatMap(({ entries }) => entries).reverse()
+      : [];
+    setFirstItemIndex(() => INVERSE_LIST_START_INDEX - messages.length);
+    return messages;
+  }, [data]);
 
   const participantOwnPublicId = convoData?.ownParticipantPublicId;
   const convoHidden = useMemo(
@@ -146,6 +107,25 @@ function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
     }
     return formattedParticipants;
   }, [convoData?.data.participants]);
+
+  const itemRenderer = useCallback(
+    (index: number, message: (typeof allMessages)[number]) => (
+      <div className="h-full w-full px-8 py-4">
+        {index === firstItemIndex && hasNextPage ? (
+          <div className="flex w-full items-center justify-center gap-2 p-2">
+            <Spinner loading />
+            <Text weight="bold">Loading...</Text>
+          </div>
+        ) : null}
+        <MessageItem
+          message={message}
+          participantOwnPublicId={participantOwnPublicId!}
+          allParticipants={allParticipants}
+        />
+      </div>
+    ),
+    [participantOwnPublicId, allParticipants, firstItemIndex, hasNextPage]
+  );
 
   if (convoError && convoError.data?.code === 'NOT_FOUND') {
     return <ConvoNotFound />;
@@ -182,43 +162,19 @@ function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
             Loading...
           </div>
         ) : (
-          <ScrollArea
-            ref={scrollableRef}
-            className="reverse-scroll h-full w-full flex-1"
-            style={{ transform: 'scaleY(-1)' }}>
-            <div
-              className="relative w-full"
-              style={{ height: `${messagesVirtualizer.getTotalSize()}px` }}>
-              {messagesVirtualizer.getVirtualItems().map((virtualItem) => {
-                const isLoader = virtualItem.index > allMessages.length - 1;
-                const message = allMessages[virtualItem.index]!;
-
-                return (
-                  <div
-                    key={virtualItem.index}
-                    data-index={virtualItem.index}
-                    className="absolute left-0 top-0 w-full py-1"
-                    ref={messagesVirtualizer.measureElement}
-                    style={{
-                      transform: `translateY(${virtualItem.start}px) scaleY(-1)`
-                    }}>
-                    {isLoader ? (
-                      <div className="w-full text-center font-bold">
-                        {hasNextPage ? 'Loading...' : ''}
-                      </div>
-                    ) : (
-                      <div className="h-full px-8">
-                        <MessageItem
-                          message={message}
-                          participantOwnPublicId={participantOwnPublicId!}
-                          allParticipants={allParticipants}
-                        />
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+          <ScrollArea ref={setScrollParent}>
+            <Virtuoso
+              startReached={() => {
+                if (isFetchingNextPage || !hasNextPage) return;
+                void fetchNextPage();
+              }}
+              data={allMessages}
+              initialTopMostItemIndex={Math.max(0, allMessages.length - 1)}
+              firstItemIndex={firstItemIndex}
+              itemContent={itemRenderer}
+              customScrollParent={scrollParent ?? undefined}
+              style={{ overscrollBehavior: 'contain' }}
+            />
           </ScrollArea>
         )}
         <Flex className="h-20">Editor box</Flex>
