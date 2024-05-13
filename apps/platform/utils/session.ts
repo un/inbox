@@ -1,8 +1,7 @@
-import type { EventHandlerRequest, H3Event } from 'h3';
 import { UAParser } from 'ua-parser-js';
-import { getHeader } from 'h3';
 import { lucia } from './auth';
 import type { TypeId } from '@u22n/utils';
+import type { Context } from 'hono';
 
 type SessionInfo = {
   accountId: number;
@@ -11,10 +10,10 @@ type SessionInfo = {
 };
 
 export const createLuciaSessionCookie = async (
-  event: H3Event<EventHandlerRequest>,
+  event: Context,
   info: SessionInfo
 ) => {
-  const { device, os } = UAParser(getHeader(event, 'User-Agent'));
+  const { device, os } = UAParser(event.req.header('User-Agent'));
   const userDevice =
     device.type === 'mobile' ? device.toString() : device.vendor;
   const { accountId, username, publicId } = info;

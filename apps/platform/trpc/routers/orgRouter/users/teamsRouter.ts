@@ -3,7 +3,7 @@ import { router, orgProcedure } from '../../../trpc';
 import { eq, and } from '@u22n/database/orm';
 import { teams } from '@u22n/database/schema';
 import { typeIdGenerator, typeIdValidator } from '@u22n/utils';
-import { uiColors } from '@u22n/types/ui';
+import { uiColors } from '@u22n/utils';
 import { isAccountAdminOfOrg } from '../../../../utils/account';
 import { TRPCError } from '@trpc/server';
 import { addOrgMemberToTeamHandler } from './teamsHandler';

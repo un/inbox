@@ -1,4 +1,7 @@
-import type { MailDomainEntries } from '@u22n/types';
+type MailDomainEntries = {
+  name: string;
+  postalId: string;
+};
 
 export default defineNuxtConfig({
   telemetry: false,

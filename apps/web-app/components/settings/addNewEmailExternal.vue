@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import type { UiColor } from '@u22n/types/ui';
+  import type { UiColor } from '@u22n/utils';
   import { z } from 'zod';
   import {
     computed,

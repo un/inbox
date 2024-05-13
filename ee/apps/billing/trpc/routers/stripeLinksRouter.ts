@@ -1,29 +1,27 @@
 import { z } from 'zod';
 import { router, protectedProcedure } from '../trpc';
-import { useStripe } from '../../utils/useStripe';
-import { stripeBillingPeriods, stripePlanNames } from '../../types';
 import { eq } from '@u22n/database/orm';
 import { orgBilling } from '@u22n/database/schema';
+import { stripePlans, stripeBillingPeriods, stripeSdk } from '../../stripe';
 
 export const stripeLinksRouter = router({
   createSubscriptionPaymentLink: protectedProcedure
     .input(
       z.object({
         orgId: z.number().min(1),
-        plan: z.enum(stripePlanNames),
+        plan: z.enum(stripePlans),
         period: z.enum(stripeBillingPeriods),
         totalOrgUsers: z.number().min(1)
       })
     )
     .mutation(async ({ ctx, input }) => {
-      //const { config, db } = ctx;
       const { stripe } = ctx;
       const { orgId, totalOrgUsers } = input;
 
       const planPriceId = stripe.plans[input.plan][input.period];
       const subscriptionDescription = `Total users: ${totalOrgUsers}`;
 
-      const subscribeToPlan = await useStripe().sdk.paymentLinks.create({
+      const subscribeToPlan = await stripeSdk.paymentLinks.create({
         metadata: {
           orgId
         },
@@ -35,7 +33,6 @@ export const stripeLinksRouter = router({
         ],
         subscription_data: {
           description: subscriptionDescription,
-          //@ts-ignore metadata not typed correctly
           metadata: {
             orgId,
             product: 'subscription',
@@ -58,7 +55,6 @@ export const stripeLinksRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      //const { config, db } = ctx;
       const { db } = ctx;
       const { orgId } = input;
 
@@ -72,7 +68,7 @@ export const stripeLinksRouter = router({
       if (!orgBillingQuery?.stripeCustomerId)
         throw new Error('No stripe customer id');
 
-      const portalLink = await useStripe().sdk.billingPortal.sessions.create({
+      const portalLink = await stripeSdk.billingPortal.sessions.create({
         customer: orgBillingQuery?.stripeCustomerId
       });
 

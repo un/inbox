@@ -1,4 +1,4 @@
-/** @type {import('postcss-load-config').Config} */
+// /** @type {import('postcss-load-config').Config} */
 const config = {
   plugins: {
     'postcss-import': {},

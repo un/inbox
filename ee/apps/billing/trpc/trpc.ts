@@ -1,25 +1,20 @@
 import { TRPCError, initTRPC } from '@trpc/server';
 import superjson from 'superjson';
-import type { CreateContext } from './createContext';
+import type { db } from '@u22n/database';
+import type { stripeData } from '../stripe';
 
 export const trpcContext = initTRPC
-  .context<CreateContext>()
+  .context<{
+    auth: boolean;
+    stripe: typeof stripeData;
+    db: typeof db;
+  }>()
   .create({ transformer: superjson });
 
-const isServiceAuthenticated = trpcContext.middleware(({ next, ctx }) => {
-  if (!ctx.auth) {
-    throw new TRPCError({ code: 'UNAUTHORIZED' });
-  }
-  return next({
-    ctx: {
-      authed: ctx.auth
-    }
-  });
-});
-
 export const publicProcedure = trpcContext.procedure;
-export const protectedProcedure = trpcContext.procedure.use(
-  isServiceAuthenticated
-);
+export const protectedProcedure = trpcContext.procedure.use(({ next, ctx }) => {
+  if (!ctx.auth) throw new TRPCError({ code: 'UNAUTHORIZED' });
+  return next();
+});
 export const router = trpcContext.router;
 export const middleware = trpcContext.middleware;

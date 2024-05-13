@@ -1,13 +1,7 @@
 {
   "name": "@u22n/database",
   "private": true,
-  "types": "./index.ts",
-  "main": "index.ts",
   "type": "module",
-  "engines": {
-    "node": ">=20",
-    "pnpm": ">=8"
-  },
   "exports": {
     ".": "./index.ts",
     "./orm": "./orm.ts",
@@ -31,14 +25,14 @@
   },
   "dependencies": {
     "@planetscale/database": "^1.16.0",
+    "@t3-oss/env-core": "^0.10.1",
     "@u22n/tsconfig": "^0.0.2",
-    "@u22n/types": "workspace:*",
     "@u22n/utils": "workspace:*",
     "drizzle-orm": "^0.30.3",
-    "mysql2": "^3.9.7"
+    "mysql2": "^3.9.7",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@faker-js/faker": "^8.4.1",
     "drizzle-kit": "0.21.0",
     "tsx": "^4.7.1"
   }

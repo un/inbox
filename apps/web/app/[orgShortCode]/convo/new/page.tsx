@@ -438,7 +438,7 @@ type ParticipantsComboboxPopoverProps = {
   loading: boolean;
 };
 
-export function ParticipantsComboboxPopover({
+function ParticipantsComboboxPopover({
   participants,
   loading
 }: ParticipantsComboboxPopoverProps) {

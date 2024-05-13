@@ -1,11 +1,11 @@
 {
   "name": "@u22n/mail-bridge",
   "private": true,
-  "types": "types.ts",
   "type": "module",
-  "engines": {
-    "node": ">=20",
-    "pnpm": ">=8"
+  "exports": {
+    "./trpc": {
+      "types": "./trpc/index.ts"
+    }
   },
   "scripts": {
     "dev": "tsx watch --clear-screen=false app.ts",
@@ -25,17 +25,16 @@
     "@u22n/realtime": "workspace:^",
     "@u22n/tiptap": "workspace:^",
     "@u22n/tsconfig": "^0.0.2",
-    "@u22n/types": "workspace:*",
     "@u22n/utils": "workspace:*",
-    "drizzle-kit": "^0.20.17",
     "drizzle-orm": "^0.30.3",
     "hono": "^4.2.8",
     "mailauth": "^4.6.5",
     "mailparser": "^3.6.9",
     "mysql2": "^3.9.7",
+    "nanoid": "^5.0.6",
     "nodemailer": "^6.9.13",
     "superjson": "^2.2.1",
-    "zod": "^3.22.4"
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/node": "^20.12.7",

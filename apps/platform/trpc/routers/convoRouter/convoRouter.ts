@@ -37,7 +37,7 @@ import { tipTapExtensions } from '@u22n/tiptap/extensions';
 import { tiptapCore, type tiptapVue3 } from '@u22n/tiptap';
 import { convoEntryRouter } from './entryRouter';
 import { realtime, sendRealtimeNotification } from '../../../utils/realtime';
-import { useRuntimeConfig } from '#imports';
+import { env } from '../../../env';
 
 export const convoRouter = router({
   entries: convoEntryRouter,
@@ -1863,22 +1863,22 @@ export const convoRouter = router({
                 filename: attachment.fileName
               }));
 
-            const deleteStorageResponse = await $fetch(
-              `${useRuntimeConfig().storage.url}/api/attachments/deleteAttachments`,
+            const deleteStorageResponse = await fetch(
+              `${env.STORAGE_URL}/api/attachments/deleteAttachments`,
               {
                 method: 'post',
                 headers: {
                   'Content-Type': 'application/json',
-                  Authorization: useRuntimeConfig().storage.key
+                  Authorization: env.STORAGE_KEY
                 },
-                body: {
+                body: JSON.stringify({
                   attachments: attachmentsToDelete.map(
                     (attachment) =>
                       `${attachment.orgPublicId}/${attachment.attachmentPublicId}/${attachment.filename}`
                   )
-                }
+                })
               }
-            );
+            ).then((res) => res.json());
 
             if (!deleteStorageResponse) {
               console.error('🔥 Failed to delete attachments from storage', {

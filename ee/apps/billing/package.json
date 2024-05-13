@@ -2,26 +2,35 @@
   "name": "@uninbox-ee/billing",
   "license": "COMMERCIAL",
   "private": true,
-  "types": "types.ts",
-  "engines": {
-    "node": ">=20",
-    "pnpm": ">=8"
+  "exports": {
+    "./trpc": {
+      "types": "./trpc/index.ts"
+    }
   },
   "scripts": {
-    "ee:dev": "PORT=3800 npx nitropack dev",
-    "ee:build": "npx nitropack build",
-    "ee:preview": "node .output/server/index.mjs"
+    "ee:dev": "tsx watch --clear-screen=false app.ts",
+    "ee:start": "node --import=tsx app.ts",
+    "check": "tsc --noEmit"
   },
   "dependencies": {
+    "@hono/node-server": "^1.11.1",
+    "@hono/trpc-server": "^0.2.0",
+    "@hono/zod-validator": "^0.2.1",
+    "@t3-oss/env-core": "^0.10.1",
     "@trpc/client": "^10.45.2",
     "@trpc/server": "^10.45.2",
-    "@u22n/tsconfig": "^0.0.2",
     "@u22n/database": "workspace:*",
+    "@u22n/tsconfig": "^0.0.2",
     "@u22n/utils": "workspace:*",
+    "hono": "^4.2.8",
     "nitropack": "^2.8.1",
     "stripe": "^14.17.0",
     "superjson": "^2.2.1",
-    "trpc-nuxt": "^0.10.21",
-    "zod": "^3.22.4"
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.11",
+    "tsx": "^4.7.1",
+    "typescript": "^5.4.5"
   }
 }

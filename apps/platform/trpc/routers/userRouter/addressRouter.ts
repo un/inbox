@@ -12,9 +12,8 @@ import {
 } from '@u22n/database/schema';
 
 import { orgMembers } from '@u22n/database/schema';
-import { useRuntimeConfig } from '#imports';
-import type { MailDomains } from '../../../types';
 import { nanoIdToken, typeIdGenerator, typeIdValidator } from '@u22n/utils';
+import { env } from '../../../env';
 
 export const addressRouter = router({
   getPersonalAddresses: accountProcedure
@@ -56,7 +55,7 @@ export const addressRouter = router({
           }
         });
 
-      const mailDomains = useRuntimeConfig().mailDomains as MailDomains;
+      const mailDomains = env.MAIL_DOMAINS;
       const consumedDomains =
         accountsEmailIdentitiesPersonal.map(
           (identity) => identity.emailIdentity.domainName
@@ -112,7 +111,7 @@ export const addressRouter = router({
         });
       }
 
-      const mailDomains = useRuntimeConfig().mailDomains as MailDomains;
+      const mailDomains = env.MAIL_DOMAINS;
 
       // Check the accounts already claimed personal addresses
       const accountsEmailIdentitiesPersonal =

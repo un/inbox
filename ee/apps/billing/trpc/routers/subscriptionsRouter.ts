@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { router, protectedProcedure } from '../trpc';
-import { useStripe } from '../../utils/useStripe';
 import { and, eq, sql } from '@u22n/database/orm';
 import { orgBilling, orgMembers } from '@u22n/database/schema';
+import { stripeSdk } from '../../stripe';
 
 export const subscriptionsRouter = router({
   updateOrgUserCount: protectedProcedure
@@ -41,7 +41,7 @@ export const subscriptionsRouter = router({
 
       if (orgSubscriptionQuery.stripeSubscriptionId) {
         const stripeGetSubscriptionResult =
-          await useStripe().sdk.subscriptions.retrieve(
+          await stripeSdk.subscriptions.retrieve(
             orgSubscriptionQuery.stripeSubscriptionId
           );
 
@@ -50,7 +50,7 @@ export const subscriptionsRouter = router({
           stripeGetSubscriptionResult.items &&
           stripeGetSubscriptionResult.items.data
         ) {
-          await useStripe().sdk.subscriptions.update(
+          await stripeSdk.subscriptions.update(
             orgSubscriptionQuery.stripeSubscriptionId,
             {
               description: `Total users: ${totalOrgUsers}`,

@@ -2,7 +2,7 @@
   import { computed } from '#imports';
   import { useUtils } from '~/composables/utils';
   import { NuxtUiAvatar } from '#components';
-  import { uiColors } from '@u22n/types/ui';
+  import { uiColors } from '@u22n/utils';
   import type { TypeId } from '@u22n/utils';
 
   type UiColors = (typeof uiColors)[number] | null;

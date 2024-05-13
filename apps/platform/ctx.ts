@@ -1,4 +1,16 @@
+import type { HttpBindings } from '@hono/node-server';
 import type { DatabaseSession } from 'lucia';
+
+export type Ctx = {
+  Bindings: HttpBindings;
+  Variables: {
+    account: {
+      id: number;
+      session: any;
+    } | null;
+  };
+};
+
 export type OrgContext = {
   id: number;
   publicId: string;
@@ -12,16 +24,8 @@ export type OrgContext = {
     role: 'admin' | 'member';
   }[];
 } | null;
+
 export type AccountContext = {
   id: number;
   session: DatabaseSession;
 } | null;
-export type AuthH3SessionData = {
-  isUserLoggedIn: boolean;
-  userId?: number | null;
-};
-export interface MailDomainEntries {
-  name: string;
-  postalId: string;
-}
-export type { TrpcMailBridgeRouter } from '../../apps/mail-bridge';

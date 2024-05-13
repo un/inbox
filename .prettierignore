@@ -3,3 +3,5 @@ node_modules
 .pnpm-store
 .nuxt
 pnpm-lock.yaml
+.next
+packages/database/migrations

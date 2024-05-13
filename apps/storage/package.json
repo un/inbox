@@ -7,8 +7,8 @@
     "pnpm": ">=8"
   },
   "scripts": {
-    "dev": "tsx watch --clear-screen=false src/app.ts",
-    "start": "node --import=tsx src/app.ts",
+    "dev": "tsx watch --clear-screen=false app.ts",
+    "start": "node --import=tsx app.ts",
     "check": "tsc --noEmit"
   },
   "dependencies": {
@@ -23,11 +23,11 @@
     "hono": "^4.2.8",
     "sharp": "^0.33.2",
     "unstorage": "^1.10.2",
-    "zod": "^3.22.4"
+    "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@types/node": "^20.12.7",
-    "tsup": "^8.0.2",
-    "tsx": "^4.7.1"
+    "@types/node": "^20.12.11",
+    "tsx": "^4.7.1",
+    "typescript": "^5.4.5"
   }
 }

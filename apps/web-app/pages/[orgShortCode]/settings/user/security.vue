@@ -543,7 +543,7 @@
             text="Add a passkey to disable password signin">
             <UnUiToggle
               :model-value="legacySecurity"
-              disabled="true"
+              :disabled="true"
               :loading="legacyLoading"
               label="Use Password & 2FA"
               @click="
@@ -635,7 +635,7 @@
                 v-if="!canDeletePasskeys"
                 text="Add a password & 2FA to disable passkey signin">
                 <UnUiButton
-                  disabled="true"
+                  :disabled="true"
                   size="sm"
                   square
                   color="red"

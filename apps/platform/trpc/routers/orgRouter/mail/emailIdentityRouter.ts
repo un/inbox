@@ -17,7 +17,6 @@ import {
   teamMembers,
   emailIdentitiesAuthorizedOrgMembers
 } from '@u22n/database/schema';
-import { useRuntimeConfig } from '#imports';
 import {
   typeIdGenerator,
   typeIdValidator,
@@ -27,7 +26,7 @@ import {
 import { isAccountAdminOfOrg } from '../../../../utils/account';
 import { TRPCError } from '@trpc/server';
 import { emailIdentityExternalRouter } from './emailIdentityExternalRouter';
-import type { MailDomains } from '../../../../types';
+import { env } from '../../../../env';
 
 export const emailIdentityRouter = router({
   external: emailIdentityExternalRouter,
@@ -259,7 +258,7 @@ export const emailIdentityRouter = router({
 
       // create address
       const emailIdentityPublicId = typeIdGenerator('emailIdentities');
-      const mailDomains = useRuntimeConfig().mailDomains as MailDomains;
+      const mailDomains = env.MAIL_DOMAINS;
       const fwdDomain = mailDomains.fwd[0];
       const newForwardingAddress = `${nanoIdToken()}@${fwdDomain}`;
       const insertEmailIdentityResponse = await db

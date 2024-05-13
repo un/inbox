@@ -89,7 +89,7 @@ export const billingRouter = router({
   getOrgSubscriptionPaymentLink: eeProcedure
     .input(
       z.object({
-        plan: z.enum(['starter', 'pro']),
+        plan: z.enum(['pro']),
         period: z.enum(['monthly', 'yearly'])
       })
     )

@@ -1,6 +1,5 @@
 import { useNuxtApp } from '#imports';
-import { uiColors } from '@u22n/types/ui';
-import type { TypeId } from '@u22n/utils';
+import type { TypeId, UiColor } from '@u22n/utils';
 
 const { $trpc } = useNuxtApp();
 
@@ -32,7 +31,7 @@ export type ConvoParticipantEntry = {
     | 'watcher'
     | 'teamMember'
     | 'guest';
-  color: (typeof uiColors)[number] | null;
+  color: UiColor | null;
   signaturePlainText?: string | null;
   signatureHtml?: string | null;
 };

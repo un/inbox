@@ -2,7 +2,7 @@ import type { Adapter, DatabaseSession, DatabaseUser } from 'lucia';
 import { db } from '@u22n/database';
 import { eq, inArray, lte } from '@u22n/database/orm';
 import { sessions, accounts } from '@u22n/database/schema';
-import { useStorage } from '#imports';
+import { storage } from '../../storage';
 import { typeIdGenerator } from '@u22n/utils';
 
 //! Enable debug logging
@@ -23,7 +23,7 @@ export class UnInboxDBAdapter implements Adapter {
       .where(eq(sessions.sessionToken, sessionId))
       .execute();
 
-    const sessionStorage = useStorage('sessions');
+    const sessionStorage = storage.session;
     sessionStorage.removeItem(sessionId);
   }
 
@@ -56,7 +56,7 @@ export class UnInboxDBAdapter implements Adapter {
         .execute();
     }
 
-    const sessionStorage = useStorage('sessions');
+    const sessionStorage = storage.session;
     sessionIds.forEach((id) => {
       sessionStorage.removeItem(id);
     });
@@ -122,7 +122,7 @@ export class UnInboxDBAdapter implements Adapter {
 
   public async setSession(session: DatabaseSession): Promise<void> {
     log('setSession', { session });
-    const sessionStorage = useStorage('sessions');
+    const sessionStorage = storage.session;
     const accountId = session.attributes.account.id;
     const accountPublicId = session.attributes.account.publicId;
     const sessionPublicId = typeIdGenerator('accountSession');
@@ -149,7 +149,7 @@ export class UnInboxDBAdapter implements Adapter {
     expiresAt: Date
   ): Promise<void> {
     log('updateSessionExpiration', { sessionId, expiresAt });
-    const sessionStorage = useStorage('sessions');
+    const sessionStorage = storage.session;
 
     await db
       .update(sessions)
@@ -180,7 +180,7 @@ export class UnInboxDBAdapter implements Adapter {
 
   private async getSession(sessionId: string): Promise<DatabaseSession | null> {
     log('getSession', { sessionId });
-    const sessionStorage = useStorage('sessions');
+    const sessionStorage = storage.session;
     const sessionObject: DatabaseSession | null =
       await sessionStorage.getItem(sessionId);
     log('getSession', { sessionObject });

@@ -11,8 +11,9 @@ import { TOTPController, createTOTPKeyURI } from 'oslo/otp';
 import { TRPCError } from '@trpc/server';
 import { nanoIdToken, zodSchemas } from '@u22n/utils';
 import { Argon2id } from 'oslo/password';
-import { setCookie, getCookie } from 'h3';
-import { useRuntimeConfig, useStorage } from '#imports';
+import { getCookie, setCookie } from 'hono/cookie';
+import { storage } from '../../../storage';
+import { env } from '../../../env';
 
 export const twoFactorRouter = router({
   /**
@@ -186,7 +187,7 @@ export const twoFactorRouter = router({
   createTwoFactorChallenge: publicRateLimitedProcedure.createTwoFactorChallenge
     .input(z.object({ username: zodSchemas.username() }))
     .query(async ({ ctx, input }) => {
-      const authStorage = useStorage('auth');
+      const authStorage = storage.auth;
       const existingChallenge = getCookie(ctx.event, 'un-2fa-challenge');
 
       if (existingChallenge) {
@@ -213,7 +214,7 @@ export const twoFactorRouter = router({
         hexSecret
       );
       setCookie(ctx.event, 'un-2fa-challenge', challengeId, {
-        domain: useRuntimeConfig().primaryDomain,
+        domain: env.PRIMARY_DOMAIN,
         httpOnly: true
       });
       return { uri };

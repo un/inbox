@@ -7,7 +7,7 @@
     "dev": "next dev --turbo",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "check": "next lint"
   },
   "dependencies": {
     "@radix-ui/themes": "^3.0.2",
@@ -45,7 +45,7 @@
     "superjson": "^2.2.1",
     "tailwind-merge": "^2.3.0",
     "tailwindcss-radix-colors": "^1.2.0",
-    "zod": "^3.23.4",
+    "zod": "^3.23.8",
     "zustand": "^4.5.2"
   },
   "devDependencies": {
