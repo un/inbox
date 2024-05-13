@@ -11,8 +11,14 @@ import { mailfetchApi } from './api/mailfetch';
 import { internalPresignApi } from './api/internalPresign';
 import { deleteAttachmentsApi } from './api/deleteAttachments';
 import type { Ctx } from './ctx';
+import { logger } from 'hono/logger';
 
 const app = new Hono<Ctx>();
+
+// Logger middleware
+if (env.NODE_ENV === 'development') {
+  app.use(logger());
+}
 
 // CORS middleware
 app.use(

@@ -126,7 +126,7 @@ export default function ChatSideBar({
                       style={{ zIndex: 100 + i }}
                       className={cn(
                         !participantOpen && i !== 0 ? '-ml-2' : '',
-                        'dark:outline-graydark-1 dark:bg-graydark-1 w-fit rounded-full outline'
+                        'dark:outline-graydark-1 dark:bg-graydark-1 outline-gray-1 bg-gray-1 w-fit rounded-full outline'
                       )}>
                       <Avatar
                         src={

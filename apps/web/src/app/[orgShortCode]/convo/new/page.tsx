@@ -49,6 +49,7 @@ import { useGlobalStore } from '@/src/providers/global-store-provider';
 import AttachmentButton, {
   type ConvoAttachmentUpload
 } from './attachment-button';
+import { useAddSingleConvo$Cache } from '../utils';
 
 interface ConvoParticipantOrgMembers {
   type: 'orgMember';
@@ -325,6 +326,8 @@ export default function Page() {
     });
   }
 
+  const addConvo = useAddSingleConvo$Cache();
+
   const { loading: isMessageLoading, run: createConvo } = useLoading(
     async () => await startConvoUnderlying('message'),
     {
@@ -333,7 +336,9 @@ export default function Page() {
       },
       onSuccess: (data) => {
         toast.success('Convo created, redirecting you to your conversion');
-        router.push(`/${orgShortCode}/convo/${data.publicId}`);
+        void addConvo(data.publicId).then(() => {
+          router.push(`/${orgShortCode}/convo/${data.publicId}`);
+        });
       }
     }
   );
@@ -346,7 +351,9 @@ export default function Page() {
       },
       onSuccess: (data) => {
         toast.success('Convo created, redirecting you to your conversion');
-        router.push(`/${orgShortCode}/convo/${data.publicId}`);
+        void addConvo(data.publicId).then(() => {
+          router.push(`/${orgShortCode}/convo/${data.publicId}`);
+        });
       }
     }
   );
@@ -408,6 +415,8 @@ export default function Page() {
           <Editor
             initialValue={editorText}
             onChange={setEditorText}
+            // eslint-disable-next-line @typescript-eslint/no-empty-function
+            setEditor={() => {}}
           />
         </Flex>
       </Flex>

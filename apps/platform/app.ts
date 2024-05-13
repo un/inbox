@@ -9,8 +9,14 @@ import { trpcPlatformRouter } from './trpc';
 import { db } from '@u22n/database';
 import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
 import { authMiddleware } from './middlewares';
+import { logger } from 'hono/logger';
 
 const app = new Hono<Ctx>();
+
+// Logger middleware
+if (env.NODE_ENV === 'development') {
+  app.use(logger());
+}
 
 // CORS middleware
 app.use(
