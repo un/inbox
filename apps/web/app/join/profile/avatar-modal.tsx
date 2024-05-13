@@ -22,7 +22,7 @@ export function AvatarModal({
   publicId
 }: ModalComponent<
   {
-    publicId: TypeId<'orgMemberProfile'>;
+    publicId: TypeId<'orgMemberProfile' | 'org' | 'contacts' | 'teams'>;
   },
   string
 >) {
@@ -54,7 +54,16 @@ export function AvatarModal({
     setUploading(true);
     const formData = new FormData();
     formData.append('file', croppedFile.current);
-    formData.append('type', 'orgMember');
+    formData.append(
+      'type',
+      publicId.startsWith('omp_')
+        ? 'orgMember'
+        : publicId.startsWith('o_')
+          ? 'org'
+          : publicId.startsWith('k_')
+            ? 'contact'
+            : 'team'
+    );
     formData.append('publicId', publicId);
     uploadTracker({
       formData,
