@@ -28,6 +28,7 @@ export default function ConvoList() {
       getNextPageParam: (lastPage) => lastPage.cursor ?? undefined
     }
   );
+
   const allConvos = convos ? convos.pages.flatMap(({ data }) => data) : [];
   const convosVirtualizer = useVirtualizer({
     count: allConvos.length + (hasNextPage ? 1 : 0),
