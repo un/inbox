@@ -1,4 +1,6 @@
-import { type RouterOutputs } from '@/lib/trpc';
+import { api, type RouterOutputs } from '@/lib/trpc';
+import { useGlobalStore } from '@/providers/global-store-provider';
+import { type TypeId } from '@u22n/utils';
 
 export function formatParticipantData(
   participant: RouterOutputs['convos']['getOrgMemberConvos']['data'][number]['participants'][number]
@@ -50,4 +52,34 @@ export function formatParticipantData(
     signatureHtml: participant.contact?.signatureHtml ?? null,
     signaturePlainText: participant.contact?.signaturePlainText ?? null
   };
+}
+
+export function useRemoveConvoFromList() {
+  const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  const convoListApi = api.useUtils().convos.getOrgMemberConvos;
+
+  return (convoId: TypeId<'convos'>) =>
+    convoListApi.setInfiniteData({ orgShortCode }, (updater) => {
+      if (!updater) return;
+      const pageIndex = updater.pages.findIndex((page) =>
+        page.data.some((convo) => convo.publicId === convoId)
+      );
+      const newPage = updater.pages[pageIndex]?.data.filter(
+        (convo) => convo.publicId !== convoId
+      );
+
+      if (!newPage) return;
+
+      const newPages = updater.pages.slice();
+
+      newPages[pageIndex] = {
+        data: newPage,
+        cursor: updater.pages[pageIndex]?.cursor ?? null
+      };
+
+      return {
+        pages: newPages,
+        pageParams: updater?.pageParams.slice()
+      };
+    });
 }

@@ -22,11 +22,9 @@ export default function ConvoList() {
     isFetchingNextPage
   } = api.convos.getOrgMemberConvos.useInfiniteQuery(
     {
-      includeHidden: false,
       orgShortCode
     },
     {
-      initialCursor: {},
       getNextPageParam: (lastPage) => lastPage.cursor ?? undefined
     }
   );
@@ -59,7 +57,7 @@ export default function ConvoList() {
   ]);
 
   return (
-    <Flex className="bg-slate-2 dark:bg-slatedark-2 h-full w-[400px] overflow-x-hidden">
+    <Flex className="bg-slate-2 dark:bg-slatedark-2 h-full w-[400px] max-w-[400px]">
       {isLoading ? (
         <div className="w-full text-center font-bold">Loading...</div>
       ) : (
@@ -85,7 +83,7 @@ export default function ConvoList() {
                       {hasNextPage ? 'Loading...' : ''}
                     </div>
                   ) : (
-                    <div className="h-full">
+                    <div className="h-full w-full">
                       <ConvoItem convo={convo} />
                     </div>
                   )}
@@ -149,7 +147,7 @@ function ConvoItem({
   return (
     <Link
       href={`/${orgShortCode}/convo/${convo.publicId}`}
-      className="border-gray-12 flex h-full w-full gap-4 border-b p-2">
+      className="border-gray-12 flex h-full w-full max-w-full gap-4 border-b p-2">
       <AvatarPlus
         size="4"
         imageSize="lg"
@@ -157,18 +155,20 @@ function ConvoItem({
       />
       <Flex
         direction="column"
-        className="w-full"
+        className="w-full flex-1"
         gap="1">
         <Text
-          className="w-full overflow-hidden pl-2 text-left"
+          className="w-full max-w-[320px] truncate pl-2 text-left"
           size="1"
           weight="bold">
-          <span className="truncate text-xs">{convo.subjects[0]?.subject}</span>
+          {convo.subjects[0]?.subject}
         </Text>
         <div className="dark:bg-graydark-3 dark:hover:bg-graydark-4 dark:text-graydark-11 w-full rounded-lg p-1 text-left text-sm">
           <span className="line-clamp-2">
             <Text weight="bold">{authorName}</Text>:{' '}
-            <Text className="w-full overflow-ellipsis break-words">
+            <Text
+              className="w-full max-w-full overflow-ellipsis break-words"
+              style={{ overflowWrap: 'anywhere' }}>
               {convo.entries[0]?.bodyPlainText ?? ''}
             </Text>
           </span>

@@ -9,7 +9,8 @@ import {
   IconButton,
   ScrollArea,
   Text,
-  Badge
+  Badge,
+  Skeleton
 } from '@radix-ui/themes';
 import Link from 'next/link';
 import { type TypeId, validateTypeId } from '@u22n/utils';
@@ -22,10 +23,11 @@ import { formatParticipantData } from '../utils';
 import { cn, generateAvatarUrl, getInitials } from '@/lib/utils';
 import ChatSideBar from './ChatSideBar';
 import useTimeAgo from '@/hooks/use-time-ago';
-import { Ellipsis } from 'lucide-react';
+import { ArrowLeft, Ellipsis } from 'lucide-react';
 import { atom, useAtom } from 'jotai';
 import { useCopyToClipboard } from '@uidotdev/usehooks';
 import { toast } from 'sonner';
+import { ms } from 'itty-time';
 
 const replyToMessageAtom = atom<null | TypeId<'convoEntries'>>(null);
 
@@ -44,11 +46,14 @@ function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
   const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
   const scrollableRef = useRef<HTMLDivElement | null>(null);
 
-  const { data: convoData, isLoading: convoDataLoading } =
-    api.convos.getConvo.useQuery({
-      orgShortCode,
-      convoPublicId: convoId
-    });
+  const {
+    data: convoData,
+    isLoading: convoDataLoading,
+    error: convoError
+  } = api.convos.getConvo.useQuery({
+    orgShortCode,
+    convoPublicId: convoId
+  });
 
   const {
     data,
@@ -63,8 +68,8 @@ function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
       orgShortCode
     },
     {
-      initialCursor: {},
-      getNextPageParam: (lastPage) => lastPage.cursor ?? undefined
+      getNextPageParam: (lastPage) => lastPage.cursor ?? undefined,
+      staleTime: ms('1 hour')
     }
   );
 
@@ -133,19 +138,44 @@ function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
     return formattedParticipants;
   }, [convoData?.data.participants]);
 
+  if (convoError && convoError.data?.code === 'NOT_FOUND') {
+    return <ConvoNotFound />;
+  }
+
   return (
     <Flex className="h-full w-full">
       <Flex
         direction="column"
         className="h-full w-full flex-1">
-        <Text>Convo Page</Text>
+        <Flex
+          className="border-gray-11 h-12 w-full border-b p-2"
+          align="center"
+          justify="start"
+          gap="2">
+          <Link href={`/${orgShortCode}/convo`}>
+            <IconButton
+              variant="soft"
+              size="2">
+              <ArrowLeft size={16} />
+            </IconButton>
+          </Link>
+          <Skeleton loading={convoDataLoading}>
+            <Text
+              className="w-full truncate p-1"
+              weight="bold">
+              {convoData?.data.subjects[0]?.subject ?? '...'}
+            </Text>
+          </Skeleton>
+        </Flex>
 
         {isLoading || convoDataLoading ? (
-          <div className="h-full flex-1">Loading...</div>
+          <div className="flex h-full flex-1 items-center justify-center font-bold">
+            Loading...
+          </div>
         ) : (
           <ScrollArea
             ref={scrollableRef}
-            className="h-full w-full flex-1"
+            className="reverse-scroll h-full w-full flex-1"
             style={{ transform: 'scaleY(-1)' }}>
             <div
               className="relative w-full"
@@ -184,7 +214,10 @@ function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
         )}
         <Flex className="h-20">Editor box</Flex>
       </Flex>
-      <ChatSideBar />
+      <ChatSideBar
+        participants={allParticipants}
+        convoId={convoId}
+      />
     </Flex>
   );
 }
@@ -235,18 +268,18 @@ function MessageItem({
       <Flex
         direction="column"
         gap="1"
-        className="w-fit">
+        className="w-fit max-w-full overflow-x-hidden">
         <Text className={cn(isUserAuthor ? 'text-right' : 'text-left')}>
           {messageAuthor.name}{' '}
           {message.metadata?.email?.from?.[0]?.email ? (
             <Text color="gray">
-              - via {message.metadata.email.from[0].email})
+              - via {message.metadata.email.from[0].email}
             </Text>
           ) : null}
         </Text>
         <Flex
           className={cn(
-            'w-full rounded-lg p-2',
+            'w-full max-w-full overflow-hidden rounded-lg p-2',
             isUserAuthor ? 'bg-blue-10' : 'bg-gray-11'
           )}>
           <HTMLMessage html={messageHtml} />
@@ -305,7 +338,7 @@ const HTMLMessage = memo(
     return (
       <div
         dangerouslySetInnerHTML={{ __html }}
-        className="w-full"
+        className="w-full max-w-full overflow-clip break-words"
       />
     );
   },
