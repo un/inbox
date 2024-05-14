@@ -20,7 +20,7 @@
     "@u22n/database": "workspace:*",
     "@u22n/tsconfig": "^0.0.2",
     "@u22n/utils": "workspace:*",
-    "hono": "^4.2.8",
+    "hono": "^4.3.6",
     "sharp": "^0.33.2",
     "unstorage": "^1.10.2",
     "zod": "^3.23.8"
