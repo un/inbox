@@ -7,8 +7,7 @@
     useToast,
     watch
   } from '#imports';
-  import type { UiColor } from '@u22n/types/ui';
-  import type { TypeId } from '@u22n/utils';
+  import type { TypeId, UiColor } from '@u22n/utils';
   const orgShortCode = (useRoute().params.orgShortCode ?? '') as string;
 
   const { $trpc } = useNuxtApp();

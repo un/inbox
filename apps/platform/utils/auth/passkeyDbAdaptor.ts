@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { eq } from '@u22n/database/orm';
 import { db } from '@u22n/database';
 import { accounts, authenticators } from '@u22n/database/schema';
 import type { AuthenticatorTransportFuture } from '@simplewebauthn/types';

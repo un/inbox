@@ -2,7 +2,7 @@
 // import { and, eq } from '@u22n/database/orm';
 // import { orgMembers, orgs } from '@u22n/database/schema';
 // import type { TypeId } from '@u22n/utils';
-import type { OrgContext } from '@u22n/types';
+import type { OrgContext } from '../ctx';
 
 // USED
 export async function isAccountAdminOfOrg(orgContext: OrgContext) {

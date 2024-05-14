@@ -1,10 +1,9 @@
-import { useRuntimeConfig } from '#imports';
-import type { TransactionalCredentials } from '../../types';
 import {
   inviteTemplate,
   inviteTemplatePlainText,
   type InviteEmailProps
 } from './inviteTemplate';
+import { env } from '../../env';
 
 type PostalResponse =
   | {
@@ -37,9 +36,7 @@ export async function sendInviteEmail({
   expiryDate,
   inviteUrl
 }: InviteEmailProps) {
-  const config = useRuntimeConfig()
-    .transactionalCredentials as TransactionalCredentials;
-
+  const config = env.MAILBRIDGE_TRANSACTIONAL_CREDENTIALS;
   const sendMailPostalResponse = (await fetch(
     `${config.apiUrl}/api/v1/send/message`,
     {

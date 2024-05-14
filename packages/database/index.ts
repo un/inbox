@@ -1,14 +1,14 @@
 import { drizzle } from 'drizzle-orm/planetscale-serverless';
 import { Client } from '@planetscale/database';
+import { env } from './env';
 import * as schema from './schema';
 
 const client = new Client({
-  host: process.env.DB_PLANETSCALE_HOST,
-  username: process.env.DB_PLANETSCALE_USERNAME,
-  password: process.env.DB_PLANETSCALE_PASSWORD,
-
-  fetch: (url: string, init: any) => {
-    (init as any).cache = undefined; // Remove cache header
+  host: env.DB_PLANETSCALE_HOST,
+  username: env.DB_PLANETSCALE_USERNAME,
+  password: env.DB_PLANETSCALE_PASSWORD,
+  fetch: (url, init) => {
+    init && delete init.cache;
     const u = new URL(url);
     // set protocol to http if localhost for CI testing
     if (u.host.includes('localhost') || u.host.includes('127.0.0.1')) {

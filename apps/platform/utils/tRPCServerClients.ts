@@ -1,27 +1,26 @@
 import { loggerLink } from '@trpc/client';
 import { createTRPCProxyClient, httpBatchLink } from '@trpc/client';
 import superjson from 'superjson';
-import type { TrpcMailBridgeRouter } from '@u22n/types';
-import type { TrpcBillingRouter } from '@uninbox-ee/types/trpc';
-import { useRuntimeConfig } from '#imports';
+import type { TrpcMailBridgeRouter } from '@u22n/mail-bridge/trpc';
+import type { TrpcBillingRouter } from '@uninbox-ee/billing/trpc';
+import { env } from '../env';
 
-const config = useRuntimeConfig();
 export const mailBridgeTrpcClient = createTRPCProxyClient<TrpcMailBridgeRouter>(
   {
     transformer: superjson,
     links: [
       loggerLink({
         enabled: (opts) =>
-          (process.env.NODE_ENV === 'development' &&
-            typeof window !== 'undefined') ||
-          (opts.direction === 'down' && opts.result instanceof Error)
+          env.NODE_ENV === 'development' &&
+          opts.direction === 'down' &&
+          opts.result instanceof Error
       }),
       httpBatchLink({
-        url: `${config.mailBridge.url}/trpc`,
+        url: `${env.MAILBRIDGE_URL}/trpc`,
         maxURLLength: 2083,
         headers() {
           return {
-            Authorization: config.mailBridge.key as string
+            Authorization: env.MAILBRIDGE_KEY
           };
         }
       })
@@ -35,16 +34,18 @@ export const billingTrpcClient = createTRPCProxyClient<TrpcBillingRouter>({
   links: [
     loggerLink({
       enabled: (opts) =>
-        (process.env.NODE_ENV === 'development' &&
-          typeof window !== 'undefined') ||
+        (env.NODE_ENV === 'development' && typeof window !== 'undefined') ||
         (opts.direction === 'down' && opts.result instanceof Error)
     }),
     httpBatchLink({
-      url: `${config.billing.url}/trpc`,
+      url: `${env.BILLING_URL}/trpc`,
       maxURLLength: 2083,
       headers() {
+        if (!env.BILLING_KEY) {
+          throw new Error('Tried to use billing client without key');
+        }
         return {
-          Authorization: config.billing.key as string
+          Authorization: env.BILLING_KEY
         };
       }
     })

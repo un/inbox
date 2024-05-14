@@ -46,7 +46,7 @@
   const currentPlan = ref(orgBillingOverview?.value?.currentPlan);
   const calStatus = ref<'loading' | 'loaded' | 'showing'>('loading');
 
-  async function subscribeToPlan(plan: 'starter' | 'pro') {
+  async function subscribeToPlan(plan: 'pro') {
     loadingButton.value = plan;
     pendingAction.value = true;
     watchStripeData();

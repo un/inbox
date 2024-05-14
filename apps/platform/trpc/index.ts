@@ -1,6 +1,5 @@
 export * from '@trpc/server';
 import { router } from './trpc';
-import { createContext } from './createContext';
 import { passkeyRouter } from './routers/authRouter/passkeyRouter';
 import { passwordRouter } from './routers/authRouter/passwordRouter';
 import { signupRouter } from './routers/authRouter/signupRouter';
@@ -21,8 +20,6 @@ import { defaultsRouter } from './routers/userRouter/defaultsRouter';
 import { twoFactorRouter } from './routers/authRouter/twoFactorRouter';
 import { securityRouter } from './routers/userRouter/securityRouter';
 import { storeRouter } from './routers/orgRouter/orgStoreRouter';
-
-export const trpcPlatformContext = createContext;
 
 const trpcPlatformAuthRouter = router({
   signup: signupRouter,

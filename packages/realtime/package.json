@@ -20,7 +20,7 @@
     "@u22n/utils": "workspace:^",
     "pusher": "^5.2.0",
     "pusher-js": "8.4.0-rc2",
-    "zod": "^3.22.4"
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@u22n/tsconfig": "^0.0.2"

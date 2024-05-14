@@ -5,20 +5,19 @@ import {
   TimeSpan
 } from 'lucia';
 import { UnInboxDBAdapter } from './auth/luciaDbAdaptor';
-import { useRuntimeConfig } from '#imports';
 import type { TypeId } from '@u22n/utils';
+import { env } from '../env';
 
 const adapter = new UnInboxDBAdapter();
-const config = useRuntimeConfig();
-const devMode = import.meta.dev;
+const devMode = env.NODE_ENV === 'development';
 
 export const lucia = new Lucia(adapter, {
   sessionExpiresIn: devMode ? new TimeSpan(1, 'd') : new TimeSpan(4, 'w'),
   sessionCookie: {
     name: 'unsession',
     attributes: {
-      secure: !import.meta.dev,
-      domain: config.primaryDomain
+      secure: !devMode,
+      domain: env.PRIMARY_DOMAIN
     }
   },
   getSessionAttributes: (attributes) => {

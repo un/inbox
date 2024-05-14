@@ -14,13 +14,15 @@ import {
   strongPasswordSchema
 } from '@u22n/utils';
 import { TRPCError } from '@trpc/server';
-import { createError, deleteCookie, getCookie, setCookie } from 'h3';
 import { lucia } from '../../../utils/auth';
 import { validateUsername } from './signupRouter';
 import { createLuciaSessionCookie } from '../../../utils/session';
 import { decodeHex } from 'oslo/encoding';
 import { TOTPController } from 'oslo/otp';
-import { useStorage, useRuntimeConfig } from '#imports';
+import { setCookie, getCookie, deleteCookie } from 'hono/cookie';
+import { convertLuciaAttributesToHono } from '../../../utils/misc';
+import { env } from '../../../env';
+import { storage } from '../../../storage';
 
 export const passwordRouter = router({
   /**
@@ -35,7 +37,7 @@ export const passwordRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const { username, password } = input;
-      const { db } = ctx;
+      const { db, event } = ctx;
 
       const { accountId, publicId } = await db.transaction(async (tx) => {
         try {
@@ -71,7 +73,12 @@ export const passwordRouter = router({
         publicId
       });
 
-      setCookie(ctx.event, cookie.name, cookie.value, cookie.attributes);
+      setCookie(
+        event,
+        cookie.name,
+        cookie.value,
+        convertLuciaAttributesToHono(cookie.attributes)
+      );
       await db
         .update(accounts)
         .set({ lastLoginAt: new Date() })
@@ -90,9 +97,9 @@ export const passwordRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const { username, password, twoFactorCode } = input;
-      const { db } = ctx;
+      const { db, event } = ctx;
 
-      const twoFaChallengeCookie = getCookie(ctx.event, 'un-2fa-challenge');
+      const twoFaChallengeCookie = getCookie(event, 'un-2fa-challenge');
       if (!twoFaChallengeCookie) {
         return {
           success: false,
@@ -100,7 +107,7 @@ export const passwordRouter = router({
         };
       }
 
-      const authStorage = useStorage('auth');
+      const authStorage = storage.auth;
       const twoFaChallenge = await authStorage.getItem(
         `un2faChallenge:${username}-${twoFaChallengeCookie}`
       );
@@ -163,14 +170,19 @@ export const passwordRouter = router({
         }
       );
 
-      const cookie = await createLuciaSessionCookie(ctx.event, {
+      const cookie = await createLuciaSessionCookie(event, {
         accountId,
         username,
         publicId
       });
 
-      setCookie(ctx.event, cookie.name, cookie.value, cookie.attributes);
-      deleteCookie(ctx.event, 'un-2fa-challenge');
+      setCookie(
+        event,
+        cookie.name,
+        cookie.value,
+        convertLuciaAttributesToHono(cookie.attributes)
+      );
+      deleteCookie(event, 'un-2fa-challenge');
 
       await db
         .update(accounts)
@@ -190,7 +202,7 @@ export const passwordRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const { db } = ctx;
+      const { db, event } = ctx;
 
       const userResponse = await db.query.accounts.findFirst({
         where: eq(accounts.username, input.username),
@@ -218,7 +230,7 @@ export const passwordRouter = router({
 
       if (!userResponse) {
         throw new TRPCError({
-          code: 'NOT_FOUND',
+          code: 'UNAUTHORIZED',
           message: 'Incorrect username or password'
         });
       }
@@ -249,9 +261,9 @@ export const passwordRouter = router({
           input.password
         );
         if (!validPassword) {
-          throw createError({
-            message: 'Incorrect username or password',
-            statusCode: 400
+          throw new TRPCError({
+            code: 'UNAUTHORIZED',
+            message: 'Incorrect username or password'
           });
         }
       }
@@ -279,28 +291,33 @@ export const passwordRouter = router({
       if (!userResponse.twoFactorEnabled || !userResponse.twoFactorSecret) {
         // If 2FA is not enabled, we can consider it as valid, user will be redirected to setup 2FA afterwards
         otpValid = true;
-        const authStorage = useStorage('auth');
+        const authStorage = storage.auth;
         const token = nanoIdToken();
         authStorage.setItem(
           `authVerificationToken: ${userResponse.publicId}`,
           token
         );
-        setCookie(ctx.event, 'authVerificationToken', token, {
+        setCookie(event, 'authVerificationToken', token, {
           maxAge: 5 * 60,
           httpOnly: false,
-          domain: useRuntimeConfig().primaryDomain
+          domain: env.PRIMARY_DOMAIN
         });
       }
 
       if (validPassword && otpValid) {
         const { id: accountId, username, publicId } = userResponse;
 
-        const cookie = await createLuciaSessionCookie(ctx.event, {
+        const cookie = await createLuciaSessionCookie(event, {
           accountId,
           username,
           publicId
         });
-        setCookie(ctx.event, cookie.name, cookie.value, cookie.attributes);
+        setCookie(
+          event,
+          cookie.name,
+          cookie.value,
+          convertLuciaAttributesToHono(cookie.attributes)
+        );
 
         await db
           .update(accounts)
@@ -331,7 +348,7 @@ export const passwordRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const { db, account } = ctx;
+      const { db, account, event } = ctx;
       const accountId = account.id;
 
       const accountData = await db.query.accounts.findFirst({
@@ -399,13 +416,18 @@ export const passwordRouter = router({
         await lucia.invalidateUserSessions(accountId);
       }
 
-      const cookie = await createLuciaSessionCookie(ctx.event, {
+      const cookie = await createLuciaSessionCookie(event, {
         accountId,
         username: accountData.username,
         publicId: accountData.publicId
       });
 
-      setCookie(ctx.event, cookie.name, cookie.value, cookie.attributes);
+      setCookie(
+        event,
+        cookie.name,
+        cookie.value,
+        convertLuciaAttributesToHono(cookie.attributes)
+      );
       return { success: true };
     })
 });

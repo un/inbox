@@ -16,11 +16,13 @@ import {
 import { UAParser } from 'ua-parser-js';
 import { usePasskeys } from '../../../utils/auth/passkeys';
 import { usePasskeysDb } from '../../../utils/auth/passkeyDbAdaptor';
-import { setCookie, getCookie, getHeader } from 'h3';
 import { lucia } from '../../../utils/auth';
 import { validateUsername } from './signupRouter';
 import { createLuciaSessionCookie } from '../../../utils/session';
-import { useRuntimeConfig } from '#imports';
+import { env } from '../../../env';
+import { ms } from 'itty-time';
+import { getCookie, setCookie } from 'hono/cookie';
+import { convertLuciaAttributesToHono } from '../../../utils/misc';
 
 export const passkeyRouter = router({
   signUpWithPasskeyStart: publicRateLimitedProcedure.signUpPasskeyStart
@@ -141,7 +143,12 @@ export const passkeyRouter = router({
         username: input.username,
         publicId: input.publicId
       });
-      setCookie(ctx.event, cookie.name, cookie.value, cookie.attributes);
+      setCookie(
+        ctx.event,
+        cookie.name,
+        cookie.value,
+        convertLuciaAttributesToHono(cookie.attributes)
+      );
       return { success: true };
     }),
 
@@ -154,10 +161,10 @@ export const passkeyRouter = router({
 
       setCookie(event, 'unauth-challenge', authChallengeId, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: 60 * 5,
-        domain: useRuntimeConfig().primaryDomain
+        secure: env.NODE_ENV === 'production',
+        sameSite: 'Strict',
+        maxAge: ms('5m'),
+        domain: env.PRIMARY_DOMAIN
       });
       const passkeyOptions = await usePasskeys.generateAuthenticationOptions({
         authChallengeId: authChallengeId
@@ -173,12 +180,12 @@ export const passkeyRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const { db } = ctx;
+      const { db, event } = ctx;
 
       const verificationResponse =
         input.verificationResponseRaw as AuthenticationResponseJSON;
 
-      const challengeCookie = getCookie(ctx.event, 'unauth-challenge');
+      const challengeCookie = getCookie(event, 'unauth-challenge');
       if (!challengeCookie) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
@@ -230,7 +237,7 @@ export const passkeyRouter = router({
         });
       }
 
-      const { device, os } = UAParser(getHeader(ctx.event, 'User-Agent'));
+      const { device, os } = UAParser(event.req.header('User-Agent'));
       const userDevice =
         device.type === 'mobile' ? device.toString() : device.vendor;
 
@@ -244,7 +251,12 @@ export const passkeyRouter = router({
         os: os.name || 'Unknown'
       });
       const cookie = lucia.createSessionCookie(accountSession.id);
-      setCookie(ctx.event, cookie.name, cookie.value, cookie.attributes);
+      setCookie(
+        event,
+        cookie.name,
+        cookie.value,
+        convertLuciaAttributesToHono(cookie.attributes)
+      );
 
       await db
         .update(accounts)

@@ -19,7 +19,6 @@
   } = storeToRefs(hiddenConvoStore);
 
   useInfiniteScroll(
-    //@ts-expect-error - correct type not exported by vueUse
     infiniteContainer,
     async () => {
       if (pauseHiddenConvoLoading.value) return;

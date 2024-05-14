@@ -15,7 +15,6 @@
     type Ref,
     onNuxtReady
   } from '#imports';
-  import { useUtils } from '~/composables/utils';
 
   const { $trpc } = useNuxtApp();
 
@@ -30,16 +29,6 @@
   const accountCreated = ref(false);
   const passkeyCreated = ref(false);
   const passwordCreated = ref(false);
-  // check if the users device can directly support passkeys
-  const isArc = ref(useUtils().isArcBrowser());
-  const passkeyType = await (async () => {
-    if (isArc.value === true) {
-      return 'cross-platform';
-    }
-    return (await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable())
-      ? 'platform'
-      : 'cross-platform';
-  })();
 
   const username = ref('');
   if (process.client) {

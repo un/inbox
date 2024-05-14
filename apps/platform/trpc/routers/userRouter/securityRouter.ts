@@ -11,8 +11,7 @@ import {
   strongPasswordSchema
 } from '@u22n/utils';
 import { TRPCError } from '@trpc/server';
-import { useStorage, useRuntimeConfig } from '#imports';
-import { getCookie, setCookie } from 'h3';
+import { getCookie, setCookie } from 'hono/cookie';
 import type {
   AuthenticationResponseJSON,
   RegistrationResponseJSON
@@ -22,6 +21,10 @@ import { usePasskeysDb } from '../../../utils/auth/passkeyDbAdaptor';
 import { decodeHex, encodeHex } from 'oslo/encoding';
 import { TOTPController, createTOTPKeyURI } from 'oslo/otp';
 import { lucia } from '../../../utils/auth';
+import { storage } from '../../../storage';
+import { env } from '../../../env';
+
+const authStorage = storage.auth;
 
 export const securityRouter = router({
   getSecurityOverview: accountProcedure
@@ -103,10 +106,10 @@ export const securityRouter = router({
 
       setCookie(event, 'unauth-challenge', authChallengeId, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
+        secure: env.NODE_ENV === 'production',
+        sameSite: 'Strict',
         maxAge: 60 * 5,
-        domain: useRuntimeConfig().primaryDomain
+        domain: env.PRIMARY_DOMAIN
       });
 
       const passkeyOptions = await usePasskeys.generateAuthenticationOptions({
@@ -231,7 +234,6 @@ export const securityRouter = router({
         });
       }
 
-      const authStorage = useStorage('auth');
       const token = nanoIdToken();
       authStorage.setItem(
         `authVerificationToken: ${accountObjectQuery.publicId}`,
@@ -285,8 +287,6 @@ export const securityRouter = router({
           message: 'VerificationToken is required'
         });
       }
-
-      const authStorage = useStorage('auth');
 
       const storedVerificationToken = await authStorage.getItem(
         `authVerificationToken: ${accountData.publicId}`
@@ -343,8 +343,6 @@ export const securityRouter = router({
         });
       }
 
-      const authStorage = useStorage('auth');
-
       const storedVerificationToken = await authStorage.getItem(
         `authVerificationToken: ${accountData.publicId}`
       );
@@ -399,7 +397,6 @@ export const securityRouter = router({
           message: 'VerificationToken is required'
         });
       }
-      const authStorage = useStorage('auth');
 
       const storedVerificationToken = await authStorage.getItem(
         `authVerificationToken: ${accountData.publicId}`
@@ -465,7 +462,6 @@ export const securityRouter = router({
           message: 'VerificationToken is required'
         });
       }
-      const authStorage = useStorage('auth');
 
       const storedVerificationToken = await authStorage.getItem(
         `authVerificationToken: ${accountData.publicId}`
@@ -527,7 +523,6 @@ export const securityRouter = router({
           message: 'VerificationToken is required'
         });
       }
-      const authStorage = useStorage('auth');
 
       const storedVerificationToken = await authStorage.getItem(
         `authVerificationToken: ${accountData.publicId}`
@@ -579,7 +574,6 @@ export const securityRouter = router({
           message: 'VerificationToken is required'
         });
       }
-      const authStorage = useStorage('auth');
 
       const storedVerificationToken = await authStorage.getItem(
         `authVerificationToken: ${accountData.publicId}`
@@ -635,8 +629,6 @@ export const securityRouter = router({
         });
       }
 
-      const authStorage = useStorage('auth');
-
       const storedVerificationToken = await authStorage.getItem(
         `authVerificationToken: ${accountData.publicId}`
       );
@@ -690,7 +682,6 @@ export const securityRouter = router({
           message: 'VerificationToken is required'
         });
       }
-      const authStorage = useStorage('auth');
 
       const storedVerificationToken = await authStorage.getItem(
         `authVerificationToken: ${accountData.publicId}`
@@ -802,7 +793,6 @@ export const securityRouter = router({
           message: 'VerificationToken is required'
         });
       }
-      const authStorage = useStorage('auth');
 
       const storedVerificationToken = await authStorage.getItem(
         `authVerificationToken: ${accountData.publicId}`
@@ -864,7 +854,6 @@ export const securityRouter = router({
           message: 'VerificationToken is required'
         });
       }
-      const authStorage = useStorage('auth');
 
       const storedVerificationToken = await authStorage.getItem(
         `authVerificationToken: ${accountData.publicId}`
@@ -929,7 +918,6 @@ export const securityRouter = router({
           message: 'VerificationToken is required'
         });
       }
-      const authStorage = useStorage('auth');
 
       const storedVerificationToken = await authStorage.getItem(
         `authVerificationToken: ${accountData.publicId}`

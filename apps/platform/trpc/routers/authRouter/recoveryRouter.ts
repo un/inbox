@@ -5,11 +5,13 @@ import { eq } from '@u22n/database/orm';
 import { accounts } from '@u22n/database/schema';
 import { nanoIdToken, zodSchemas } from '@u22n/utils';
 import { TRPCError } from '@trpc/server';
-import { setCookie } from 'h3';
 import { createLuciaSessionCookie } from '../../../utils/session';
 import { decodeHex } from 'oslo/encoding';
 import { TOTPController } from 'oslo/otp';
-import { useStorage, useRuntimeConfig } from '#imports';
+import { setCookie } from 'hono/cookie';
+import { convertLuciaAttributesToHono } from '../../../utils/misc';
+import { env } from '../../../env';
+import { storage } from '../../../storage';
 
 export const recoveryRouter = router({
   recoverAccount: publicRateLimitedProcedure.recoverAccount
@@ -22,7 +24,7 @@ export const recoveryRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const { db } = ctx;
+      const { db, event } = ctx;
 
       const userResponse = await db.query.accounts.findFirst({
         where: eq(accounts.username, input.username),
@@ -128,25 +130,30 @@ export const recoveryRouter = router({
       ) {
         const { id: accountId, username, publicId } = userResponse;
 
-        const cookie = await createLuciaSessionCookie(ctx.event, {
+        const cookie = await createLuciaSessionCookie(event, {
           accountId,
           username,
           publicId
         });
 
-        setCookie(ctx.event, cookie.name, cookie.value, cookie.attributes);
+        setCookie(
+          event,
+          cookie.name,
+          cookie.value,
+          convertLuciaAttributesToHono(cookie.attributes)
+        );
 
-        const authStorage = useStorage('auth');
+        const authStorage = storage.auth;
         const token = nanoIdToken();
         authStorage.setItem(
           `authVerificationToken: ${userResponse.publicId}`,
           token
         );
-        setCookie(ctx.event, 'authVerificationToken', token, {
+        setCookie(event, 'authVerificationToken', token, {
           maxAge: 5 * 60,
           httpOnly: false,
-          domain: useRuntimeConfig().primaryDomain,
-          sameSite: 'lax'
+          domain: env.PRIMARY_DOMAIN,
+          sameSite: 'Lax'
         });
 
         await db

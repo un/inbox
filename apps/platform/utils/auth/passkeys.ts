@@ -11,9 +11,8 @@ import type {
 } from '@simplewebauthn/types';
 import { type Authenticator, usePasskeysDb } from './passkeyDbAdaptor';
 import { TRPCError } from '@trpc/server';
-import { useRuntimeConfig, useStorage } from '#imports';
-
-const runtimeConfig = useRuntimeConfig();
+import { env } from '../../env';
+import { storage } from '../../storage';
 
 type RegistrationOptions = {
   accountId?: number;
@@ -39,8 +38,8 @@ async function generateRegistrationOptions(options: RegistrationOptions) {
       : await usePasskeysDb.listAuthenticatorsByAccountId(accountId);
 
   const registrationOptions = await webAuthnGenerateRegistrationOptions({
-    rpName: runtimeConfig.auth.passkeys.rpName,
-    rpID: runtimeConfig.auth.passkeys.rpID,
+    rpName: env.APP_NAME,
+    rpID: env.PRIMARY_DOMAIN,
     userID: accountPublicId,
     userName: username,
     userDisplayName,
@@ -58,7 +57,7 @@ async function generateRegistrationOptions(options: RegistrationOptions) {
     }
   });
 
-  const authStorage = useStorage('auth');
+  const authStorage = storage.auth;
   authStorage.setItem(
     `passkeyChallenge: ${accountPublicId}`,
     registrationOptions.challenge
@@ -74,7 +73,7 @@ async function verifyRegistrationResponse({
   registrationResponse: RegistrationResponseJSON;
   publicId: string;
 }) {
-  const authStorage = useStorage('auth');
+  const authStorage = storage.auth;
   const expectedChallenge = await authStorage.getItem(
     `passkeyChallenge: ${publicId}`
   );
@@ -91,8 +90,8 @@ async function verifyRegistrationResponse({
     {
       response: registrationResponse,
       expectedChallenge: expectedChallenge.toString(),
-      expectedOrigin: runtimeConfig.auth.passkeys.origin,
-      expectedRPID: runtimeConfig.auth.passkeys.rpID
+      expectedOrigin: env.WEBAPP_URL,
+      expectedRPID: env.PRIMARY_DOMAIN
     }
   );
   await authStorage.removeItem(`passkeyChallenge: ${publicId}`);
@@ -125,14 +124,14 @@ async function generateAuthenticationOptions({
   }
 
   const authenticationOptions = await webAuthnGenerateAuthenticationOptions({
-    rpID: runtimeConfig.auth.passkeys.rpID,
+    rpID: env.PRIMARY_DOMAIN,
     userVerification: 'preferred',
     timeout: 60000,
     allowCredentials: credentials
   });
 
   const userChallenge = authenticationOptions.challenge;
-  const authStorage = useStorage('auth');
+  const authStorage = storage.auth;
   await authStorage.setItem(`authChallenge: ${authChallengeId}`, userChallenge);
 
   return authenticationOptions;
@@ -157,7 +156,7 @@ async function verifyAuthenticationResponse({
       message: 'Authenticator not found'
     });
   }
-  const authStorage = useStorage('auth');
+  const authStorage = storage.auth;
   const expectedChallenge = await authStorage.getItem(
     `authChallenge: ${authChallengeId}`
   );
@@ -165,8 +164,8 @@ async function verifyAuthenticationResponse({
   const verificationResult = await webAuthnVerifyAuthenticationResponse({
     response: authenticationResponse,
     expectedChallenge: expectedChallenge as string,
-    expectedOrigin: runtimeConfig.auth.passkeys.origin,
-    expectedRPID: runtimeConfig.auth.passkeys.rpID,
+    expectedOrigin: env.WEBAPP_URL,
+    expectedRPID: env.PRIMARY_DOMAIN,
     requireUserVerification: true,
     authenticator: authenticator
   });

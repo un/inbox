@@ -13,8 +13,7 @@ import {
 } from '@u22n/database/schema';
 import { nanoIdToken, typeIdGenerator, typeIdValidator } from '@u22n/utils';
 import { TRPCError } from '@trpc/server';
-import type { MailDomains } from '../../../../types';
-import { useRuntimeConfig } from '#imports';
+import { env } from '../../../../env';
 
 export const emailIdentityExternalRouter = router({
   checkExternalAvailability: orgProcedure
@@ -251,7 +250,7 @@ export const emailIdentityExternalRouter = router({
         .values(routingRuleInsertValues);
 
       const emailIdentityPublicId = typeIdGenerator('emailIdentities');
-      const mailDomains = useRuntimeConfig().mailDomains as MailDomains;
+      const mailDomains = env.MAIL_DOMAINS;
       const fwdDomain = mailDomains.fwd[0];
       const newForwardingAddress = `${nanoIdToken()}@${fwdDomain}`;
       // create address

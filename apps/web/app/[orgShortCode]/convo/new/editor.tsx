@@ -3,12 +3,12 @@
 import {
   EditorRoot,
   EditorCommand,
-  EditorCommandItem,
+  // EditorCommandItem,
   EditorCommandEmpty,
   EditorContent,
-  type JSONContent,
-  EditorCommandList,
-  EditorBubble
+  type JSONContent
+  // EditorCommandList,
+  // EditorBubble
 } from '@u22n/tiptap/react/components';
 import { ScrollArea } from '@radix-ui/themes';
 

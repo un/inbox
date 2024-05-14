@@ -26,11 +26,10 @@ import {
 import { refreshOrgShortCodeCache } from '../../../../utils/orgShortCode';
 import { isAccountAdminOfOrg } from '../../../../utils/account';
 import { TRPCError } from '@trpc/server';
-import { useRuntimeConfig } from '#imports';
 import { billingTrpcClient } from '../../../../utils/tRPCServerClients';
 import { addOrgMemberToTeamHandler } from './teamsHandler';
 import { sendInviteEmail } from '../../../../utils/mail/transactional';
-import type { MailDomains } from '../../../../types';
+import { env } from '../../../../env';
 
 export const invitesRouter = router({
   createNewInvite: orgProcedure
@@ -150,7 +149,7 @@ export const invitesRouter = router({
           });
 
           const emailIdentityPublicId = typeIdGenerator('emailIdentities');
-          const mailDomains = useRuntimeConfig().mailDomains as MailDomains;
+          const mailDomains = env.MAIL_DOMAINS;
           const fwdDomain = mailDomains.fwd[0];
           const newForwardingAddress = `${nanoIdToken()}@${fwdDomain}`;
           const emailIdentityResponse = await db
@@ -462,7 +461,7 @@ export const invitesRouter = router({
         })
         .where(eq(orgInvitations.id, queryInvitesResponse.id));
 
-      if (useRuntimeConfig().billing.enabled) {
+      if (env.EE_LICENSE_KEY) {
         billingTrpcClient.stripe.subscriptions.updateOrgUserCount.mutate({
           orgId: +queryInvitesResponse.orgId
         });

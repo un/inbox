@@ -1,14 +1,21 @@
 import { TRPCError, initTRPC } from '@trpc/server';
 import superjson from 'superjson';
-import type { Context } from './createContext';
-import { useRuntimeConfig } from '#imports';
 import { validateOrgShortCode } from '../utils/orgShortCode';
 import { type Duration, Ratelimit, NoopRatelimit } from '@unkey/ratelimit';
-import { getRequestIP } from 'h3';
+import type { OrgContext, AccountContext } from '../ctx';
+import type { db } from '@u22n/database';
+import type { Context } from 'hono';
 import { z } from 'zod';
+import { env } from '../env';
+import type { Ctx } from '../ctx';
 
 export const trpcContext = initTRPC
-  .context<Context>()
+  .context<{
+    db: typeof db;
+    account: AccountContext;
+    org: OrgContext;
+    event: Context<Ctx>;
+  }>()
   .create({ transformer: superjson });
 
 const isAccountAuthenticated = trpcContext.middleware(({ next, ctx }) => {
@@ -28,7 +35,7 @@ const isAccountAuthenticated = trpcContext.middleware(({ next, ctx }) => {
 });
 
 const isEeEnabled = trpcContext.middleware(({ next }) => {
-  if (!useRuntimeConfig().billing?.enabled) {
+  if (!env.EE_LICENSE_KEY) {
     throw new TRPCError({
       code: 'PRECONDITION_FAILED',
       message: 'Enterprise Edition features are disabled on this server'
@@ -60,7 +67,7 @@ function createRatelimiter({
   duration: Duration;
   namespace: string;
 }) {
-  const rootKey = (useRuntimeConfig().unkey as any).rootKey;
+  const rootKey = env.UNKEY_ROOT_KEY;
   const unkey = rootKey
     ? new Ratelimit({
         async: true,
@@ -72,8 +79,8 @@ function createRatelimiter({
     : new NoopRatelimit();
 
   return trpcContext.middleware(async ({ ctx, next }) => {
-    const ip = getRequestIP(ctx.event);
-    const result = await unkey.limit(ip || 'unknown');
+    const ip = ctx.event.env.incoming.socket.remoteAddress;
+    const result = await unkey.limit(ip ?? 'unknown');
     if (!result.success) {
       throw new TRPCError({
         code: 'TOO_MANY_REQUESTS',

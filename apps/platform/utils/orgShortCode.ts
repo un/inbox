@@ -1,18 +1,16 @@
 import { db } from '@u22n/database';
 import { eq } from '@u22n/database/orm';
 import { orgs } from '@u22n/database/schema';
-import type { OrgContext } from '@u22n/types';
-import { useStorage } from '#imports';
+import type { OrgContext } from '../ctx';
+import { storage } from '../storage';
 
-export const validateOrgShortCode = async (
-  orgShortCode: string
-): Promise<OrgContext | null> => {
+export const validateOrgShortCode = async (orgShortCode: string) => {
   if (!orgShortCode) {
     return null;
   }
 
-  const cachedShortCodeOrgContext: OrgContext | null =
-    await useStorage('org-context').getItem(orgShortCode);
+  const cachedShortCodeOrgContext: OrgContext =
+    await storage.orgContext.getItem(orgShortCode);
   if (cachedShortCodeOrgContext) {
     return cachedShortCodeOrgContext;
   }
@@ -42,7 +40,7 @@ export const validateOrgShortCode = async (
     name: orgLookupResult.name
   };
 
-  await useStorage('org-context').setItem(orgShortCode, orgContext);
+  await storage.orgContext.setItem(orgShortCode, orgContext);
   return orgContext;
 };
 
@@ -70,8 +68,5 @@ export async function refreshOrgShortCodeCache(orgId: number): Promise<void> {
     members: orgLookupResult.members,
     name: orgLookupResult.name
   };
-  await useStorage('org-context').setItem(
-    orgLookupResult.shortcode,
-    orgContext
-  );
+  await storage.orgContext.setItem(orgLookupResult.shortcode, orgContext);
 }

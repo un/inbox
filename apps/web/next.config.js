@@ -1,7 +1,7 @@
 /** @type {import("next").NextConfig} */
 const config = {
+  // Checked in CI anyways
   typescript: {
-    // Of course Nitro would interfere
     ignoreBuildErrors: true
   },
   eslint: {
