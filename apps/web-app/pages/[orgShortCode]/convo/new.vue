@@ -760,7 +760,7 @@
         v-model:uploadedAttachments="attachmentUploads"
         :max-size="20000000"
         :current-size="currentTotalUploadSize"
-        :org-shortcode="orgShortCode">
+        :org-short-code="orgShortCode">
         <template #default="{ openFileDialog, loading }">
           <UnUiButton
             square
@@ -780,7 +780,7 @@
         v-model:uploadedAttachments="attachmentUploads"
         :max-size="20000000"
         :current-size="currentTotalUploadSize"
-        :org-shortcode="orgShortCode">
+        :org-short-code="orgShortCode">
         <template #default="{ openFileDialog, loading }">
           <UnUiButton
             label="Attachment"
