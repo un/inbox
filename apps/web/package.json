@@ -4,12 +4,14 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "next dev --turbo",
+    "dev": "PORT=3000 next dev --turbo",
     "build": "next build",
     "start": "next start",
     "check": "next lint"
   },
   "dependencies": {
+    "@phosphor-icons/react": "^2.1.5",
+    "@radix-ui/react-slot": "^1.0.2",
     "@radix-ui/themes": "^3.0.2",
     "@simplewebauthn/browser": "^10.0.0",
     "@tanstack/react-query": "^4.36.1",
@@ -22,6 +24,7 @@
     "@u22n/tiptap": "workspace:^",
     "@u22n/utils": "workspace:^",
     "@uidotdev/usehooks": "^2.4.1",
+    "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
     "date-fns": "^3.6.0",
@@ -44,11 +47,12 @@
     "sonner": "^1.4.41",
     "superjson": "^2.2.1",
     "tailwind-merge": "^2.3.0",
-    "tailwindcss-radix-colors": "^1.2.0",
+    "tailwindcss-animate": "^1.0.7",
     "zod": "^3.23.8",
     "zustand": "^4.5.2"
   },
   "devDependencies": {
+    "@radix-ui/colors": "^3.0.0",
     "@types/node": "^20.12.7",
     "@types/qrcode": "^1.5.5",
     "@types/react": "^18.3.1",
@@ -57,6 +61,7 @@
     "eslint-config-next": "14.2.1",
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.3",
-    "typescript": "^5.4.5"
+    "typescript": "^5.4.5",
+    "windy-radix-palette": "2.0.0-beta.7"
   }
 }
