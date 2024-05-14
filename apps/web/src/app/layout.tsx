@@ -5,7 +5,7 @@ import { cn } from '@/src/lib/utils';
 import { Theme, ThemePanel } from '@radix-ui/themes';
 import { ThemeProvider } from 'next-themes';
 import { TRPCReactProvider } from '@/src/lib/trpc';
-import Toaster from '@/src/components/toaster';
+import { Toaster } from '@/src/components/shadcn-ui/sonner';
 import { CookiesProvider } from 'next-client-cookies/server';
 import { PublicEnvScript } from 'next-runtime-env';
 
@@ -58,8 +58,8 @@ export default function RootLayout({
                 {process.env.NODE_ENV === 'development' && (
                   <ThemePanel defaultOpen={false} />
                 )}
-                <Toaster />
                 {children}
+                <Toaster />
               </TRPCReactProvider>
             </Theme>
           </ThemeProvider>
