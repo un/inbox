@@ -8,7 +8,7 @@
   },
   "scripts": {
     "build": "nuxt build",
-    "dev": "PORT=3000 nuxt dev --host",
+    "dev": "PORT=3001 nuxt dev --host",
     "generate": "nuxt generate",
     "preview": "nuxt preview"
   },
