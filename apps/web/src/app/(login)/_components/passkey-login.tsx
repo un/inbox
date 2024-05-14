@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@radix-ui/themes';
-import { Fingerprint } from 'lucide-react';
+import { Fingerprint } from '@phosphor-icons/react';
 import { api } from '@/src/lib/trpc';
 import { startAuthentication } from '@simplewebauthn/browser';
 import { useRouter } from 'next/navigation';

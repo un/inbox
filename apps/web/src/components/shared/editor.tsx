@@ -22,7 +22,7 @@ interface EditorProp {
   setEditor: (editor: EditorType) => void;
 }
 
-const Editor = ({ initialValue, onChange, setEditor }: EditorProp) => {
+export const Editor = ({ initialValue, onChange, setEditor }: EditorProp) => {
   return (
     <ScrollArea className="border-gray-7 dark:border-graydark-7 rounded-md border">
       <EditorRoot>
@@ -56,5 +56,3 @@ function EditorForwarder({
   if (editor) setEditor(editor);
   return null;
 }
-
-export default Editor;

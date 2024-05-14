@@ -1,5 +1,5 @@
 import { Flex, Button, Text, Badge } from '@radix-ui/themes';
-import { Fingerprint, KeyRound } from 'lucide-react';
+import { Fingerprint, Key } from '@phosphor-icons/react';
 
 type Selected = {
   selected: 'passkey' | 'password';
@@ -50,7 +50,7 @@ export function PasswordCard({ selected, setSelected }: Selected) {
         justify="center"
         gap="1"
         className="h-full w-full">
-        <KeyRound size={32} />
+        <Key size={32} />
 
         <Text
           size="3"

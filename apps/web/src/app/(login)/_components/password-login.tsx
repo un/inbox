@@ -4,7 +4,7 @@ import {
   InputOTP,
   InputOTPGroup,
   InputOTPSlot
-} from '@/src/components/input-otp';
+} from '@/src/components/shadcn-ui/input-otp';
 import useLoading from '@/src/hooks/use-loading';
 import { api } from '@/src/lib/trpc';
 import { useRouter } from 'next/navigation';
@@ -16,7 +16,7 @@ import {
   TextField,
   Checkbox
 } from '@radix-ui/themes';
-import { KeyRound, User } from 'lucide-react';
+import { Key, User } from '@phosphor-icons/react';
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { zodSchemas } from '@u22n/utils';
@@ -80,7 +80,7 @@ export default function PasswordLoginButton() {
           size="3"
           className="w-72 cursor-pointer font-semibold"
           variant="surface">
-          <KeyRound size={20} />
+          <Key size={20} />
           <Text>Login with my password</Text>
         </Button>
       </Dialog.Trigger>
