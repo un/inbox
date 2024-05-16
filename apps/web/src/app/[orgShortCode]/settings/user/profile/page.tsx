@@ -16,11 +16,14 @@ import useLoading from '@/src/hooks/use-loading';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { api } from '@/src/lib/trpc';
 import useAwaitableModal from '@/src/hooks/use-awaitable-modal';
+import { useRouter } from 'next/navigation';
 
 export default function Page() {
   const profile = useGlobalStore((state) => state.currentOrg.orgMemberProfile);
   const currentOrg = useGlobalStore((state) => state.currentOrg);
   const updateOrg = useGlobalStore((state) => state.updateOrg);
+
+  const router = useRouter();
 
   const {
     data: initData,
@@ -85,6 +88,19 @@ export default function Page() {
     });
     await revalidateProfile();
   });
+
+  const deleteProfileApi = api.account.profile.deleteUserProfile.useMutation();
+  const handleDeleteProfile = async () => {
+    if (!initData) return;
+    try {
+      await deleteProfileApi.mutateAsync({
+        profilePublicId: initData.profile.publicId
+      });
+      router.push('/');
+    } catch (error) {
+      console.error('Error deleting profile:', error);
+    }
+  };
 
   return (
     <Flex
@@ -221,6 +237,15 @@ export default function Page() {
                 saveProfile({ clearData: true, clearError: true })
               }>
               Save
+            </Button>
+          </Skeleton>
+          <Skeleton loading={isInitDataLoading}>
+            <Button
+              size="2"
+              className="flex-1"
+              loading={saveLoading}
+              onClick={handleDeleteProfile}>
+              Delete
             </Button>
           </Skeleton>
         </Flex>

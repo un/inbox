@@ -147,5 +147,37 @@ export const profileRouter = router({
       return {
         success: true
       };
+    }),
+
+  deleteUserProfile: accountProcedure
+    .input(
+      z.object({
+        profilePublicId: typeIdValidator('orgMemberProfile')
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { db, account } = ctx;
+      const accountId = account.id;
+
+      const result = await db
+        .delete(orgMemberProfiles)
+        .where(
+          and(
+            eq(orgMemberProfiles.publicId, input.profilePublicId),
+            eq(orgMemberProfiles.accountId, accountId)
+          )
+        );
+
+      if (!result) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message:
+            'Profile not found or you do not have permission to delete this profile.'
+        });
+      }
+
+      return {
+        success: true
+      };
     })
 });
