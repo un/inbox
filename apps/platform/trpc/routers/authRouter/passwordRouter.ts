@@ -20,7 +20,6 @@ import { createLuciaSessionCookie } from '../../../utils/session';
 import { decodeHex } from 'oslo/encoding';
 import { TOTPController } from 'oslo/otp';
 import { setCookie, getCookie, deleteCookie } from 'hono/cookie';
-import { convertLuciaAttributesToHono } from '../../../utils/misc';
 import { env } from '../../../env';
 import { storage } from '../../../storage';
 
@@ -73,12 +72,7 @@ export const passwordRouter = router({
         publicId
       });
 
-      setCookie(
-        event,
-        cookie.name,
-        cookie.value,
-        convertLuciaAttributesToHono(cookie.attributes)
-      );
+      setCookie(event, cookie.name, cookie.value, cookie.attributes);
       await db
         .update(accounts)
         .set({ lastLoginAt: new Date() })
@@ -176,12 +170,7 @@ export const passwordRouter = router({
         publicId
       });
 
-      setCookie(
-        event,
-        cookie.name,
-        cookie.value,
-        convertLuciaAttributesToHono(cookie.attributes)
-      );
+      setCookie(event, cookie.name, cookie.value, cookie.attributes);
       deleteCookie(event, 'un-2fa-challenge');
 
       await db
@@ -312,12 +301,7 @@ export const passwordRouter = router({
           username,
           publicId
         });
-        setCookie(
-          event,
-          cookie.name,
-          cookie.value,
-          convertLuciaAttributesToHono(cookie.attributes)
-        );
+        setCookie(event, cookie.name, cookie.value, cookie.attributes);
 
         await db
           .update(accounts)
@@ -422,12 +406,7 @@ export const passwordRouter = router({
         publicId: accountData.publicId
       });
 
-      setCookie(
-        event,
-        cookie.name,
-        cookie.value,
-        convertLuciaAttributesToHono(cookie.attributes)
-      );
+      setCookie(event, cookie.name, cookie.value, cookie.attributes);
       return { success: true };
     })
 });

@@ -22,7 +22,6 @@ import { createLuciaSessionCookie } from '../../../utils/session';
 import { env } from '../../../env';
 import { ms } from 'itty-time';
 import { getCookie, setCookie } from 'hono/cookie';
-import { convertLuciaAttributesToHono } from '../../../utils/misc';
 
 export const passkeyRouter = router({
   signUpWithPasskeyStart: publicRateLimitedProcedure.signUpPasskeyStart
@@ -143,12 +142,7 @@ export const passkeyRouter = router({
         username: input.username,
         publicId: input.publicId
       });
-      setCookie(
-        ctx.event,
-        cookie.name,
-        cookie.value,
-        convertLuciaAttributesToHono(cookie.attributes)
-      );
+      setCookie(ctx.event, cookie.name, cookie.value, cookie.attributes);
       return { success: true };
     }),
 
@@ -251,12 +245,7 @@ export const passkeyRouter = router({
         os: os.name || 'Unknown'
       });
       const cookie = lucia.createSessionCookie(accountSession.id);
-      setCookie(
-        event,
-        cookie.name,
-        cookie.value,
-        convertLuciaAttributesToHono(cookie.attributes)
-      );
+      setCookie(event, cookie.name, cookie.value, cookie.attributes);
 
       await db
         .update(accounts)

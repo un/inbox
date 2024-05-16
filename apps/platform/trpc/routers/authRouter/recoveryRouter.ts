@@ -9,7 +9,6 @@ import { createLuciaSessionCookie } from '../../../utils/session';
 import { decodeHex } from 'oslo/encoding';
 import { TOTPController } from 'oslo/otp';
 import { setCookie } from 'hono/cookie';
-import { convertLuciaAttributesToHono } from '../../../utils/misc';
 import { env } from '../../../env';
 import { storage } from '../../../storage';
 
@@ -136,12 +135,7 @@ export const recoveryRouter = router({
           publicId
         });
 
-        setCookie(
-          event,
-          cookie.name,
-          cookie.value,
-          convertLuciaAttributesToHono(cookie.attributes)
-        );
+        setCookie(event, cookie.name, cookie.value, cookie.attributes);
 
         const authStorage = storage.auth;
         const token = nanoIdToken();

@@ -2,7 +2,6 @@ import { Hono } from 'hono';
 import type { Ctx } from '../ctx';
 import { lucia } from '../utils/auth';
 import { setCookie } from 'hono/cookie';
-import { convertLuciaAttributesToHono } from '../utils/misc';
 
 export const authApi = new Hono<Ctx>();
 
@@ -22,11 +21,6 @@ authApi.post('/logout', async (c) => {
   const sessionId = account.session.id;
   await lucia.invalidateSession(sessionId);
   const cookie = lucia.createBlankSessionCookie();
-  setCookie(
-    c,
-    cookie.name,
-    cookie.value,
-    convertLuciaAttributesToHono(cookie.attributes)
-  );
+  setCookie(c, cookie.name, cookie.value, cookie.attributes);
   return c.json({ ok: true });
 });
