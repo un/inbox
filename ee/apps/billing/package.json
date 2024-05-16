@@ -22,7 +22,7 @@
     "@u22n/database": "workspace:*",
     "@u22n/tsconfig": "^0.0.2",
     "@u22n/utils": "workspace:*",
-    "hono": "^4.2.8",
+    "hono": "^4.3.6",
     "nitropack": "^2.8.1",
     "stripe": "^14.17.0",
     "superjson": "^2.2.1",

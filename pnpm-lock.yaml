@@ -52,10 +52,10 @@ importers:
         version: 1.11.1
       '@hono/trpc-server':
         specifier: ^0.2.0
-        version: 0.2.0(@trpc/server@10.45.2)(hono@4.2.8)
+        version: 0.2.0(@trpc/server@10.45.2)(hono@4.3.6)
       '@hono/zod-validator':
         specifier: ^0.2.1
-        version: 0.2.1(hono@4.2.8)(zod@3.23.8)
+        version: 0.2.1(hono@4.3.6)(zod@3.23.8)
       '@t3-oss/env-core':
         specifier: ^0.10.1
         version: 0.10.1(typescript@5.4.5)(zod@3.23.8)
@@ -90,8 +90,8 @@ importers:
         specifier: ^0.30.3
         version: 0.30.3(@planetscale/database@1.16.0)(@types/react@18.3.1)(mysql2@3.9.7)(react@18.3.1)
       hono:
-        specifier: ^4.2.8
-        version: 4.2.8
+        specifier: ^4.3.6
+        version: 4.3.6
       mailauth:
         specifier: ^4.6.5
         version: 4.6.5
@@ -219,7 +219,7 @@ importers:
         version: 1.11.1
       '@hono/zod-validator':
         specifier: ^0.2.1
-        version: 0.2.1(hono@4.2.8)(zod@3.23.8)
+        version: 0.2.1(hono@4.3.6)(zod@3.23.8)
       '@t3-oss/env-core':
         specifier: ^0.10.1
         version: 0.10.1(typescript@5.4.5)(zod@3.23.8)
@@ -233,8 +233,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/utils
       hono:
-        specifier: ^4.2.8
-        version: 4.2.8
+        specifier: ^4.3.6
+        version: 4.3.6
       sharp:
         specifier: ^0.33.2
         version: 0.33.2
@@ -546,10 +546,10 @@ importers:
         version: 1.11.1
       '@hono/trpc-server':
         specifier: ^0.2.0
-        version: 0.2.0(@trpc/server@10.45.2)(hono@4.2.8)
+        version: 0.2.0(@trpc/server@10.45.2)(hono@4.3.6)
       '@hono/zod-validator':
         specifier: ^0.2.1
-        version: 0.2.1(hono@4.2.8)(zod@3.23.8)
+        version: 0.2.1(hono@4.3.6)(zod@3.23.8)
       '@t3-oss/env-core':
         specifier: ^0.10.1
         version: 0.10.1(typescript@5.4.5)(zod@3.23.8)
@@ -569,8 +569,8 @@ importers:
         specifier: workspace:*
         version: link:../../../packages/utils
       hono:
-        specifier: ^4.2.8
-        version: 4.2.8
+        specifier: ^4.3.6
+        version: 4.3.6
       nitropack:
         specifier: ^2.8.1
         version: 2.9.4(@planetscale/database@1.16.0)(@upstash/redis@1.28.4)(encoding@0.1.13)
@@ -3640,8 +3640,8 @@ packages:
     peerDependencies:
       tailwindcss: '>=3.0.0 || >= 3.0.0-alpha.1'
 
-  '@tailwindcss/typography@0.5.12':
-    resolution: {integrity: sha512-CNwpBpconcP7ppxmuq3qvaCxiRWnbhANpY/ruH4L5qs2GCiVDJXde/pjj2HWPV1+Q4G9+V/etrwUYopdcjAlyg==}
+  '@tailwindcss/typography@0.5.13':
+    resolution: {integrity: sha512-ADGcJ8dX21dVVHIwTRgzrcunY6YY9uSlAHHGVKvkA+vLc5qLwEszvKts40lx7z0qc4clpjclwLeK5rVCV2P/uw==}
     peerDependencies:
       tailwindcss: '>=3.0.0 || insiders'
 
@@ -5781,10 +5781,6 @@ packages:
 
   heap@0.2.7:
     resolution: {integrity: sha512-2bsegYkkHO+h/9MGbn6KWcE45cHZgPANo5LXF7EvWdT0yT2EguSVO1nDgU5c8+ZOPwp2vMNa7YFsJhVcDR9Sdg==}
-
-  hono@4.2.8:
-    resolution: {integrity: sha512-re/zNrOWb7Sp9KhojlMEgcgvqsE8Rgk9IcmumqsbKa9ruPT5XuOcx1U+xuNaI4SUnwrPsiTQ72MiodtpJEVfjg==}
-    engines: {node: '>=16.0.0'}
 
   hono@4.3.6:
     resolution: {integrity: sha512-2IqXwrxWF4tG2AR7b5tMYn+KEnWK8UvdC/NUSbOKWj/Kj11OJqel58FxyiXLK5CcKLiL8aGtTe4lkBKXyaHMBQ==}
@@ -9984,15 +9980,10 @@ snapshots:
 
   '@hono/node-server@1.11.1': {}
 
-  '@hono/trpc-server@0.2.0(@trpc/server@10.45.2)(hono@4.2.8)':
+  '@hono/trpc-server@0.2.0(@trpc/server@10.45.2)(hono@4.3.6)':
     dependencies:
       '@trpc/server': 10.45.2
-      hono: 4.2.8
-
-  '@hono/zod-validator@0.2.1(hono@4.2.8)(zod@3.23.8)':
-    dependencies:
-      hono: 4.2.8
-      zod: 3.23.8
+      hono: 4.3.6
 
   '@hono/zod-validator@0.2.1(hono@4.3.6)(zod@3.23.8)':
     dependencies:
@@ -10745,7 +10736,7 @@ snapshots:
       '@tailwindcss/aspect-ratio': 0.4.2(tailwindcss@3.4.3)
       '@tailwindcss/container-queries': 0.1.1(tailwindcss@3.4.3)
       '@tailwindcss/forms': 0.5.7(tailwindcss@3.4.3)
-      '@tailwindcss/typography': 0.5.12(tailwindcss@3.4.3)
+      '@tailwindcss/typography': 0.5.13(tailwindcss@3.4.3)
       '@vueuse/core': 10.9.0(vue@3.4.24(typescript@5.4.5))
       '@vueuse/integrations': 10.9.0(fuse.js@6.6.2)(qrcode@1.5.3)(vue@3.4.24(typescript@5.4.5))
       '@vueuse/math': 10.9.0(vue@3.4.24(typescript@5.4.5))
@@ -12251,7 +12242,7 @@ snapshots:
       mini-svg-data-uri: 1.4.4
       tailwindcss: 3.4.3
 
-  '@tailwindcss/typography@0.5.12(tailwindcss@3.4.3)':
+  '@tailwindcss/typography@0.5.13(tailwindcss@3.4.3)':
     dependencies:
       lodash.castarray: 4.4.0
       lodash.isplainobject: 4.0.6
@@ -14774,8 +14765,6 @@ snapshots:
   he@1.2.0: {}
 
   heap@0.2.7: {}
-
-  hono@4.2.8: {}
 
   hono@4.3.6: {}
 

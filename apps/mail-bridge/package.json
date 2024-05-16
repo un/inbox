@@ -27,7 +27,7 @@
     "@u22n/tsconfig": "^0.0.2",
     "@u22n/utils": "workspace:*",
     "drizzle-orm": "^0.30.3",
-    "hono": "^4.2.8",
+    "hono": "^4.3.6",
     "mailauth": "^4.6.5",
     "mailparser": "^3.6.9",
     "mysql2": "^3.9.7",

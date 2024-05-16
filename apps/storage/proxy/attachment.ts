@@ -78,14 +78,13 @@ export const attachmentProxy = new Hono<Ctx>().get(
       Key: `${orgPublicId}/${attachmentId}/${filename}`
     });
     const url = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
-    const res = await fetch(url);
+    const res = await fetch(url).then((res) => c.body(res.body, res));
     if (!res.ok) {
       return c.json(
         { error: 'Error while fetching attachment' },
         { status: 500 }
       );
     }
-    // Copy response as fetch headers are immutable
-    return new Response(res.body, res);
+    return res;
   }
 );
