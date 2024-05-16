@@ -4,6 +4,7 @@ import { cn, generateAvatarUrl, getInitials } from '@/src/lib/utils';
 import {
   Avatar,
   Box,
+  Badge,
   Dialog,
   Flex,
   Heading,
@@ -32,11 +33,18 @@ import { useRouter } from 'next/navigation';
 export default function ChatSideBar({
   participants,
   convoId,
-  convoHidden
+  convoHidden,
+  attachments
 }: {
   participants: NonNullable<ReturnType<typeof formatParticipantData>>[];
   convoId: TypeId<'convos'>;
   convoHidden: boolean | null;
+  attachments: {
+    name: string;
+    url: string;
+    type: string;
+    publicId: TypeId<'convoAttachments'>;
+  }[];
 }) {
   const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
   const [participantOpen, setParticipantOpen] = useState(false);
@@ -93,7 +101,8 @@ export default function ChatSideBar({
       <Flex className="border-gray-11 h-full w-full border-l">
         <Flex
           direction="column"
-          className="w-full">
+          className="w-full"
+          gap="2">
           <Flex
             className="w-full p-1"
             justify="between"
@@ -168,6 +177,23 @@ export default function ChatSideBar({
               </Flex>
             ))}
           </Flex>
+          {attachments.length > 0 ? (
+            <div className="flex flex-col gap-2 px-2">
+              <span className="font-bold">Attachments</span>
+              <div className="flex w-full flex-wrap gap-2">
+                {attachments.map((attachment) => (
+                  <a
+                    target="_blank"
+                    key={attachment.publicId}
+                    href={attachment.url}>
+                    <Badge className="flex w-fit max-w-full truncate p-1">
+                      {attachment.name}
+                    </Badge>
+                  </a>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </Flex>
       </Flex>
       <ModalRoot />
