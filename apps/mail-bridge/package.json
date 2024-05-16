@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.11.1",
-    "@hono/trpc-server": "^0.2.0",
+    "@hono/trpc-server": "^0.3.1",
     "@hono/zod-validator": "^0.2.1",
     "@t3-oss/env-core": "^0.10.1",
     "@trpc/client": "^10.45.2",
@@ -27,7 +27,7 @@
     "@u22n/tsconfig": "^0.0.2",
     "@u22n/utils": "workspace:*",
     "drizzle-orm": "^0.30.3",
-    "hono": "^4.3.6",
+    "hono": "^4.3.7",
     "mailauth": "^4.6.5",
     "mailparser": "^3.6.9",
     "mysql2": "^3.9.7",

@@ -7,7 +7,7 @@ import { authApi } from './routes/auth';
 import { realtimeApi } from './routes/realtime';
 import { trpcPlatformRouter } from './trpc';
 import { db } from '@u22n/database';
-import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
+import { trpcServer } from '@hono/trpc-server';
 import { authMiddleware } from './middlewares';
 import { logger } from 'hono/logger';
 
@@ -38,18 +38,17 @@ app.route('/auth', authApi);
 app.route('/realtime', realtimeApi);
 
 // TRPC handler
-app.use('/trpc/*', async (c) =>
-  fetchRequestHandler({
+app.use(
+  '/trpc/*',
+  trpcServer({
     router: trpcPlatformRouter,
-    createContext: () => ({
+    createContext: (_, c) => ({
       db,
       account: c.get('account'),
       org: null,
       event: c
-    }),
-    endpoint: '/trpc',
-    req: c.req.raw
-  }).then((res) => c.body(res.body, res))
+    })
+  })
 );
 
 // 404 handler
