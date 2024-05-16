@@ -54,6 +54,27 @@ export function formatParticipantData(
   };
 }
 
+export function useAddSingleConvo$Cache() {
+  const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  const convoListApi = api.useUtils().convos.getOrgMemberConvos;
+  const getOrgMemberSpecificConvoApi =
+    api.useUtils().convos.getOrgMemberSpecificConvo;
+
+  return async (convoId: TypeId<'convos'>) => {
+    const convo = await getOrgMemberSpecificConvoApi.fetch({
+      convoPublicId: convoId,
+      orgShortCode
+    });
+    convoListApi.setInfiniteData({ orgShortCode }, (updater) => {
+      if (!updater) return;
+      const clonedUpdater = structuredClone(updater);
+      const clonedConvo = structuredClone(convo)!;
+      clonedUpdater.pages.at(0)?.data.unshift(clonedConvo);
+      return clonedUpdater;
+    });
+  };
+}
+
 export function useDeleteConvo$Cache() {
   const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
   const convoListApi = api.useUtils().convos.getOrgMemberConvos;
@@ -139,5 +160,36 @@ export function useToggleConvoHidden$Cache() {
       }
       return clonedUpdater;
     });
+  };
+}
+
+export function useUpdateConvoMessageList$Cache() {
+  const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  const convoEntiresApi = api.useUtils().convos.entries.getConvoEntries;
+  const singleConvoEntryApi = api.useUtils().convos.entries.getConvoSingleEntry;
+
+  // TODO: make the reply mutation return the new convo entry, to save one API call
+  return async (
+    convoId: TypeId<'convos'>,
+    convoEntryPublicId: TypeId<'convoEntries'>
+  ) => {
+    await convoEntiresApi.cancel({ convoPublicId: convoId, orgShortCode });
+    const convo = await singleConvoEntryApi.fetch({
+      convoPublicId: convoId,
+      convoEntryPublicId,
+      orgShortCode
+    });
+    convoEntiresApi.setInfiniteData(
+      { convoPublicId: convoId, orgShortCode },
+      (updater) => {
+        if (!updater) return;
+        const clonedUpdater = structuredClone(updater);
+        const page = clonedUpdater.pages.at(-1)!;
+        if (!page || !convo) return;
+        const clonedConvo = structuredClone(convo.entry);
+        page.entries.unshift(clonedConvo);
+        return clonedUpdater;
+      }
+    );
   };
 }

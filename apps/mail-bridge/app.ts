@@ -7,8 +7,14 @@ import { trpcServer } from '@hono/trpc-server';
 import { eventApi } from './postal-routes/events';
 import { inboundApi } from './postal-routes/inbound';
 import { signatureMiddleware } from './postal-routes/signature-middleware';
+import { logger } from 'hono/logger';
 
 const app = new Hono();
+
+// Logger middleware
+if (env.NODE_ENV === 'development') {
+  app.use(logger());
+}
 
 // Health check endpoint
 app.get('/', (c) => c.json({ status: "I'm Alive 🏝️" }));

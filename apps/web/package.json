@@ -7,13 +7,14 @@
     "dev": "PORT=3000 next dev --turbo",
     "build": "next build",
     "start": "next start",
-    "check": "next lint"
+    "check": "tsc --noEmit && next lint"
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.5",
     "@radix-ui/react-slot": "^1.0.2",
     "@radix-ui/themes": "^3.0.2",
     "@simplewebauthn/browser": "^10.0.0",
+    "@tailwindcss/typography": "^0.5.13",
     "@tanstack/react-query": "^4.36.1",
     "@tanstack/react-table": "^8.16.0",
     "@tanstack/react-virtual": "^3.5.0",

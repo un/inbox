@@ -1,6 +1,7 @@
 import type { Config } from 'tailwindcss';
 import { fontFamily } from 'tailwindcss/defaultTheme';
 import { createPlugin } from 'windy-radix-palette';
+import typographyPlugin from '@tailwindcss/typography';
 
 const colors = createPlugin();
 
@@ -82,7 +83,7 @@ const config = {
       }
     }
   },
-  plugins: [colors.plugin, require('tailwindcss-animate')]
+  plugins: [colors.plugin, require('tailwindcss-animate'), typographyPlugin()]
 } satisfies Config;
 
 export default config;

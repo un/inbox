@@ -11,26 +11,38 @@ import {
   Text,
   Badge,
   Skeleton,
-  Spinner
+  Spinner,
+  Select
 } from '@radix-ui/themes';
 import Link from 'next/link';
 import { type TypeId, validateTypeId } from '@u22n/utils';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { type JSONContent, generateHTML } from '@u22n/tiptap/react';
 import { tipTapExtensions } from '@u22n/tiptap/extensions';
-import { formatParticipantData } from '../utils';
+import {
+  formatParticipantData,
+  useUpdateConvoMessageList$Cache
+} from '../utils';
 import { cn, generateAvatarUrl, getInitials } from '@/src/lib/utils';
 import ChatSideBar from './_components/chat-sidebar';
 import useTimeAgo from '@/src/hooks/use-time-ago';
 import { ArrowLeft, Ellipsis } from 'lucide-react';
-import { atom, useAtom } from 'jotai';
+import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { useCopyToClipboard } from '@uidotdev/usehooks';
 import { toast } from 'sonner';
 import { ms } from 'itty-time';
 import { Virtuoso } from 'react-virtuoso';
+import Editor from '../new/editor';
+import { emptyTiptapEditorContent } from '@u22n/tiptap';
+import AttachmentButton, {
+  type ConvoAttachmentUpload
+} from '../new/attachment-button';
+import { stringify } from 'superjson';
+import { type Editor as EditorType } from '@u22n/tiptap/react';
 
 const replyToMessageAtom = atom<null | TypeId<'convoEntries'>>(null);
+const selectedEmailIdentityAtom = atom<null | TypeId<'emailIdentities'>>(null);
 
 export default function Page({
   params: { convoId }
@@ -53,6 +65,8 @@ function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
     INVERSE_LIST_START_INDEX
   );
   const [scrollParent, setScrollParent] = useState<HTMLElement | null>(null);
+  const setReplyTo = useSetAtom(replyToMessageAtom);
+  const [emailIdentity, setEmailIdentity] = useAtom(selectedEmailIdentityAtom);
 
   const {
     data: convoData,
@@ -62,6 +76,11 @@ function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
     orgShortCode,
     convoPublicId: convoId
   });
+
+  const { data: emailIdentities, isLoading: emailIdentitiesLoading } =
+    api.org.mail.emailIdentities.getUserEmailIdentities.useQuery({
+      orgShortCode
+    });
 
   const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } =
     api.convos.entries.getConvoEntries.useInfiniteQuery(
@@ -82,6 +101,18 @@ function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
     setFirstItemIndex(() => INVERSE_LIST_START_INDEX - messages.length);
     return messages;
   }, [data]);
+
+  useEffect(() => {
+    const lastMessage = allMessages.at(-1);
+    setReplyTo(() => lastMessage?.publicId ?? null);
+  }, [allMessages, setReplyTo]);
+
+  useEffect(() => {
+    setEmailIdentity((prev) => {
+      if (!emailIdentities) return prev;
+      return prev ?? emailIdentities.emailIdentities[0]?.publicId ?? null;
+    });
+  }, [emailIdentities, setEmailIdentity]);
 
   const participantOwnPublicId = convoData?.ownParticipantPublicId;
   const convoHidden = useMemo(
@@ -177,7 +208,36 @@ function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
             />
           </ScrollArea>
         )}
-        <Flex className="h-20">Editor box</Flex>
+        <Flex
+          className="border-top min-h-32"
+          direction="column"
+          justify="end"
+          gap="1">
+          {!emailIdentitiesLoading ? (
+            <div className="flex items-center gap-1">
+              <span className="text-gray-9 px-2 text-sm">Reply as</span>
+              <Select.Root
+                value={emailIdentity ?? undefined}
+                onValueChange={(email) =>
+                  setEmailIdentity(email as TypeId<'emailIdentities'>)
+                }>
+                <Select.Trigger className="text-xs" />
+                <Select.Content>
+                  {emailIdentities?.emailIdentities.map((email) => (
+                    <Select.Item
+                      key={email.publicId}
+                      value={email.publicId}>
+                      <span>
+                        {email.username}@{email.domainName}
+                      </span>
+                    </Select.Item>
+                  ))}
+                </Select.Content>
+              </Select.Root>
+            </div>
+          ) : null}
+          <MessageReplyBox convoId={convoId} />
+        </Flex>
       </Flex>
       <ChatSideBar
         participants={allParticipants}
@@ -185,6 +245,109 @@ function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
         convoHidden={convoHidden}
       />
     </Flex>
+  );
+}
+
+const attachmentsAtom = atom<ConvoAttachmentUpload[]>([]);
+
+function MessageReplyBox({ convoId }: { convoId: TypeId<'convos'> }) {
+  const [editorText, setEditorText] = useState<JSONContent>(
+    emptyTiptapEditorContent
+  );
+  const [attachments, setAttachments] = useAtom(attachmentsAtom);
+  const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  const replyTo = useAtomValue(replyToMessageAtom);
+  const addConvoToCache = useUpdateConvoMessageList$Cache();
+  const editorRef = useRef<EditorType | null>(null);
+  const emailIdentity = useAtomValue(selectedEmailIdentityAtom);
+
+  // TODO: Find a better way to handle this
+  const [loadingType, setLoadingType] = useState<'comment' | 'message'>(
+    'message'
+  );
+
+  const replyToConvoMutation = api.convos.replyToConvo.useMutation({
+    onSuccess: () => {
+      editorRef.current?.commands.clearContent();
+      setEditorText(emptyTiptapEditorContent);
+      setAttachments([]);
+    },
+    onError: (err) => {
+      toast.error(err.message);
+    }
+  });
+
+  const isEditorEmpty = useMemo(() => {
+    const contentArray = editorText?.content;
+    if (!contentArray) return true;
+    if (contentArray.length === 0) return true;
+    if (
+      contentArray[0] &&
+      (!contentArray[0].content || contentArray[0].content.length === 0)
+    )
+      return true;
+    return false;
+  }, [editorText]);
+
+  return (
+    <div className="flex max-h-[250px] w-full flex-col gap-1 p-1">
+      <Editor
+        initialValue={editorText}
+        onChange={setEditorText}
+        setEditor={(editor) => {
+          editorRef.current = editor;
+        }}
+      />
+      <div className="align-center flex justify-end gap-2">
+        <AttachmentButton attachmentsAtom={attachmentsAtom} />
+        <Button
+          variant="soft"
+          loading={replyToConvoMutation.isLoading && loadingType === 'comment'}
+          disabled={
+            !replyTo ||
+            isEditorEmpty ||
+            !emailIdentity ||
+            replyToConvoMutation.isLoading
+          }
+          onClick={async () => {
+            if (!replyTo || !emailIdentity) return;
+            setLoadingType('comment');
+            const { publicId } = await replyToConvoMutation.mutateAsync({
+              attachments,
+              orgShortCode,
+              message: stringify(editorText),
+              replyToMessagePublicId: replyTo,
+              messageType: 'comment'
+            });
+            await addConvoToCache(convoId, publicId);
+          }}>
+          Comment
+        </Button>
+        <Button
+          loading={replyToConvoMutation.isLoading && loadingType === 'message'}
+          disabled={
+            !replyTo ||
+            isEditorEmpty ||
+            !emailIdentity ||
+            replyToConvoMutation.isLoading
+          }
+          onClick={async () => {
+            if (!replyTo || !emailIdentity) return;
+            setLoadingType('message');
+            const { publicId } = await replyToConvoMutation.mutateAsync({
+              attachments,
+              orgShortCode,
+              message: stringify(editorText),
+              replyToMessagePublicId: replyTo,
+              messageType: 'message',
+              sendAsEmailIdentityPublicId: emailIdentity
+            });
+            await addConvoToCache(convoId, publicId);
+          }}>
+          Send
+        </Button>
+      </div>
+    </div>
   );
 }
 
@@ -246,7 +409,9 @@ function MessageItem({
         <Flex
           className={cn(
             'w-full max-w-full overflow-hidden rounded-lg p-2',
-            isUserAuthor ? 'bg-blue-10' : 'bg-gray-11'
+            isUserAuthor
+              ? 'dark:bg-blue-10 bg-blue-8'
+              : 'dark:bg-gray-10 bg-gray-8'
           )}>
           <HTMLMessage html={messageHtml} />
         </Flex>
@@ -304,7 +469,7 @@ const HTMLMessage = memo(
     return (
       <div
         dangerouslySetInnerHTML={{ __html }}
-        className="w-full max-w-full overflow-clip break-words"
+        className="prose dark:prose-invert prose-p:my-1 prose-a:decoration-blue-8 prose-img:my-1 w-full max-w-full overflow-clip break-words text-black dark:text-white"
       />
     );
   },

@@ -868,18 +868,26 @@ export const convoRouter = router({
       }
 
       let authorConvoParticipantId: number | undefined;
+      let authorConvoParticipantPublicId:
+        | TypeId<'convoParticipants'>
+        | undefined;
       authorConvoParticipantId =
         convoEntryToReplyToQueryResponse?.convo.participants.find(
           (participant) => participant.orgMemberId === accountOrgMemberId
         )?.id;
+      authorConvoParticipantPublicId =
+        convoEntryToReplyToQueryResponse?.convo.participants.find(
+          (participant) => participant.orgMemberId === accountOrgMemberId
+        )?.publicId;
       // if we cant find the orgMembers participant id, we assume they're a part of the convo as a team member and we're somehow skipped accidentally, so now we add them as a dedicated participant
       if (!authorConvoParticipantId) {
+        authorConvoParticipantPublicId = typeIdGenerator('convoParticipants');
         const newConvoParticipantInsertResponse = await db
           .insert(convoParticipants)
           .values({
             convoId: convoEntryToReplyToQueryResponse.convoId,
             orgId: orgId,
-            publicId: typeIdGenerator('convoParticipants'),
+            publicId: authorConvoParticipantPublicId,
             orgMemberId: accountOrgMemberId,
             emailIdentityId: emailIdentityId,
             role: 'contributor'
@@ -1275,17 +1283,17 @@ export const convoRouter = router({
     }),
 
   //* get convo entries
-  getConvoEntries: orgProcedure
-    .input(
-      z.object({
-        convoPublicId: typeIdValidator('convos'),
-        cursor: z.object({
-          lastUpdatedAt: z.date().optional(),
-          lastPublicId: typeIdValidator('convos').optional()
-        })
-      })
-    )
-    .query(async () => {}),
+  // getConvoEntries: orgProcedure
+  //   .input(
+  //     z.object({
+  //       convoPublicId: typeIdValidator('convos'),
+  //       cursor: z.object({
+  //         lastUpdatedAt: z.date().optional(),
+  //         lastPublicId: typeIdValidator('convos').optional()
+  //       })
+  //     })
+  //   )
+  //   .query(async () => {}),
 
   getOrgMemberConvos: orgProcedure
     .input(
