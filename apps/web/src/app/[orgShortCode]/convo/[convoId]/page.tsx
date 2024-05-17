@@ -39,7 +39,10 @@ import AttachmentButton, {
   type ConvoAttachmentUpload
 } from '../new/attachment-button';
 import { stringify } from 'superjson';
+import { env } from 'next-runtime-env';
 import { type Editor as EditorType } from '@u22n/tiptap/react';
+
+const STORAGE_URL = env('NEXT_PUBLIC_STORAGE_URL');
 
 const replyToMessageAtom = atom<null | TypeId<'convoEntries'>>(null);
 const selectedEmailIdentityAtom = atom<null | TypeId<'emailIdentities'>>(null);
@@ -101,6 +104,18 @@ function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
     setFirstItemIndex(() => INVERSE_LIST_START_INDEX - messages.length);
     return messages;
   }, [data]);
+
+  const attachments = useMemo(() => {
+    if (!convoData) return [];
+    return convoData.data.attachments
+      .filter((f) => !f.inline)
+      .map((attachment) => ({
+        name: attachment.fileName,
+        url: `${STORAGE_URL}/attachment/${orgShortCode}/${attachment.publicId}/${attachment.fileName}`,
+        type: attachment.type,
+        publicId: attachment.publicId
+      }));
+  }, [convoData, orgShortCode]);
 
   useEffect(() => {
     const lastMessage = allMessages.at(-1);
@@ -243,6 +258,7 @@ function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
         participants={allParticipants}
         convoId={convoId}
         convoHidden={convoHidden}
+        attachments={attachments}
       />
     </Flex>
   );
