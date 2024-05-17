@@ -16,7 +16,7 @@ export const storage = {
   auth: createCachedStorage('auth', ms('5 minutes')),
   orgContext: createCachedStorage('org-context', ms('12 hours')),
   session: createCachedStorage(
-    'session',
+    'sessions',
     env.NODE_ENV === 'development' ? ms('12 hours') : ms('30 days')
   )
 };
