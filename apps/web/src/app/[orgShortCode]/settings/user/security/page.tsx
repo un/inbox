@@ -1,15 +1,19 @@
 'use client';
 
-import { Flex, Heading, Spinner, Text, Switch } from '@radix-ui/themes';
+import { Flex, Heading, Spinner, Text, Switch, Button } from '@radix-ui/themes';
 import { useEffect, useState } from 'react';
 import { api } from '@/src/lib/trpc';
 import { VerificationModal } from './_components/verification-modal';
-import { PasswordModal } from './_components/password-modal';
+import { PasswordModal, TOTPModal } from './_components/reset-modals';
 import useAwaitableModal from '@/src/hooks/use-awaitable-modal';
+import { toast } from 'sonner';
 
 export default function Page() {
-  const { data: initData, isLoading: isInitDataLoading } =
-    api.account.security.getSecurityOverview.useQuery({});
+  const {
+    data: initData,
+    isLoading: isInitDataLoading,
+    refetch: refreshSecurityData
+  } = api.account.security.getSecurityOverview.useQuery({});
 
   const [verificationToken, setVerificationToken] = useState<null | string>(
     null
@@ -23,10 +27,9 @@ export default function Page() {
         initData.passwordSet && initData.twoFactorEnabled
       );
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initData?.passwordSet, initData?.twoFactorEnabled]);
+  }, [initData, isInitDataLoading]);
 
-  const [VerificationModalRoot, verifyModal] = useAwaitableModal(
+  const [VerificationModalRoot, openVerifyModal] = useAwaitableModal(
     VerificationModal,
     {
       has2Fa: false,
@@ -34,14 +37,20 @@ export default function Page() {
       hasPasskey: false
     }
   );
-  const [PasswordSetModal, updatePassword] = useAwaitableModal(PasswordModal, {
+  const [PasswordModalRoot, openPasswordModal] = useAwaitableModal(
+    PasswordModal,
+    {
+      verificationToken: ''
+    }
+  );
+  const [TOTPModalRoot, openTOTPModal] = useAwaitableModal(TOTPModal, {
     verificationToken: ''
   });
 
   async function waitForVerification() {
     if (!initData) throw new Error('No init data');
     if (verificationToken) return verificationToken;
-    const token = await verifyModal({
+    const token = await openVerifyModal({
       hasPasskey: initData.passkeys.length > 0,
       hasPassword: initData.passwordSet,
       has2Fa: initData.twoFactorEnabled
@@ -49,6 +58,19 @@ export default function Page() {
     setVerificationToken(token);
     return token;
   }
+
+  const {
+    mutate: disableLegacySecurity,
+    isLoading: isDisablingLegacySecurity
+  } = api.account.security.disableLegacySecurity.useMutation({
+    onError: (err) => {
+      toast.error('Something went wrong while disabling Legacy Security', {
+        description: err.message
+      });
+    }
+  });
+
+  const canDisableLegacySecurity = (initData?.passkeys.length ?? 0) > 0;
 
   return (
     <Flex
@@ -79,30 +101,77 @@ export default function Page() {
             as="label"
             size="3"
             weight="medium">
-            <Flex gap="2">
+            <Flex
+              gap="2"
+              align="center">
               Enable Password and 2FA Login
               <Switch
                 size="2"
                 checked={isPassword2FaEnabled}
+                disabled={
+                  isDisablingLegacySecurity ||
+                  !(isPassword2FaEnabled && canDisableLegacySecurity)
+                }
                 onCheckedChange={async () => {
                   const token = await waitForVerification();
                   if (!token) return;
 
-                  const passwordSet = await updatePassword({
-                    verificationToken: verificationToken ?? token
-                  }).catch(() => false);
-
-                  if (!passwordSet) return;
-
-                  setIsPassword2FaEnabled(!isPassword2FaEnabled);
+                  if (isPassword2FaEnabled) {
+                    disableLegacySecurity({
+                      verificationToken: verificationToken ?? token
+                    });
+                    await refreshSecurityData();
+                    setIsPassword2FaEnabled(false);
+                  } else {
+                    const passwordSet = await openPasswordModal({
+                      verificationToken: verificationToken ?? token
+                    }).catch(() => false);
+                    const otpSet = await openTOTPModal({
+                      verificationToken: verificationToken ?? token
+                    }).catch(() => false);
+                    if (!passwordSet || !otpSet) return;
+                    await refreshSecurityData();
+                    setIsPassword2FaEnabled(true);
+                  }
                 }}
               />
+              {isDisablingLegacySecurity && <Spinner loading />}
             </Flex>
           </Text>
+
+          <div className="flex gap-2">
+            {initData?.passwordSet && (
+              <Button
+                onClick={async () => {
+                  const token = await waitForVerification();
+                  if (!token) return;
+                  await openPasswordModal({
+                    verificationToken: verificationToken ?? token
+                  }).catch(() => null);
+                }}>
+                Reset Password
+              </Button>
+            )}
+
+            {initData?.twoFactorEnabled && (
+              <Button
+                onClick={async () => {
+                  const token = await waitForVerification();
+                  if (!token) return;
+                  await openTOTPModal({
+                    verificationToken: verificationToken ?? token
+                  }).catch(() => null);
+                }}>
+                Reset 2FA
+              </Button>
+            )}
+          </div>
         </Flex>
       )}
+
       <VerificationModalRoot />
-      <PasswordSetModal />
+      <PasswordModalRoot />
+      <TOTPModalRoot />
     </Flex>
   );
 }

@@ -1,8 +1,6 @@
 {
   "i18n-ally.localesPaths": ["packages/locales"],
-  "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "explicit"
-  },
+  "editor.codeActionsOnSave": {},
   "i18n-ally.dirStructure": "auto",
   "i18n-ally.enabledFrameworks": ["vue", "vue-sfc"],
   "unocss.root": ["apps/web-app"],
