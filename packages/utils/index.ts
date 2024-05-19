@@ -16,8 +16,23 @@ export const nanoIdToken = customAlphabet(
 );
 
 export const zodSchemas = {
-  nanoIdLong: z.string().min(3).max(nanoIdLongLength),
-  nanoIdToken: () => z.string().min(3).max(nanoIdTokenLength),
+  nanoIdLong: z
+    .string()
+    .min(nanoIdLongLength, {
+      message: `Token must be ${nanoIdLongLength} characters long`
+    })
+    .max(nanoIdLongLength, {
+      message: `Token must be ${nanoIdLongLength} characters long`
+    }),
+  nanoIdToken: () =>
+    z
+      .string()
+      .min(nanoIdTokenLength, {
+        message: `Token must be ${nanoIdTokenLength} characters long`
+      })
+      .max(nanoIdTokenLength, {
+        message: `Token must be ${nanoIdTokenLength} characters long`
+      }),
   username: (minLength: number = 5) =>
     z
       .string()

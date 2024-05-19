@@ -2,7 +2,7 @@
 
 import { Button, Flex, Text } from '@radix-ui/themes';
 import { useCookies } from 'next-client-cookies';
-import { RedirectType, redirect, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Stepper from '../_components/stepper';
 import { PasskeyCard, PasswordCard } from './_components/secure-cards';
 import { useQueryState, parseAsStringLiteral } from 'nuqs';
@@ -25,35 +25,38 @@ export default function Page() {
   const router = useRouter();
 
   if (!username) {
-    redirect('/join', RedirectType.replace);
+    router.push('/join');
   }
 
   const [PasskeyModalRoot, signUpWithPasskey] = useAwaitableModal(
     PasskeyModal,
-    { username }
+    { username: username ?? '' }
   );
 
   const [PasswordModalRoot, signUpWithPassword] = useAwaitableModal(
     PasswordModal,
-    { username }
+    { username: username ?? '' }
   );
 
   const [RecoveryCodeModalRoot, showRecoveryCode] = useAwaitableModal(
     RecoveryCodeModal,
-    { username, recoveryCode: '' }
+    { username: username ?? '', recoveryCode: '' }
   );
 
   const { loading, run: createAccount } = useLoading(
     async () => {
       if (selectedAuth === 'passkey') {
-        await signUpWithPasskey({});
+        await signUpWithPasskey({
+          username: username ?? ''
+        });
       } else {
-        const { recoveryCode } = await signUpWithPassword({});
+        const { recoveryCode } = await signUpWithPassword({
+          username: username ?? ''
+        });
         await showRecoveryCode({
           recoveryCode
         });
       }
-      cookie.remove('un-join-username');
       toast.success(
         'Your account has been created! Redirecting for Organization Creation'
       );

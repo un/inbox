@@ -34,7 +34,8 @@ const config = {
           attributes: false
         }
       }
-    ]
+    ],
+    'react/no-children-prop': ['warn', { allowFunctions: true }]
   }
 };
 module.exports = config;
