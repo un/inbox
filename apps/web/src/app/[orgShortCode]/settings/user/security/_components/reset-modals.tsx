@@ -25,7 +25,8 @@ import {
 } from '@/src/components/input-otp';
 import { ms } from 'itty-time';
 import Image from 'next/image';
-// import { downloadAsFile } from '@/src/lib/utils';
+import { downloadAsFile } from '@/src/lib/utils';
+import { toast } from 'sonner';
 
 export function PasswordModal({
   open,
@@ -367,53 +368,84 @@ const MemoizedQrCode = memo(
   (prev, next) => prev.text === next.text
 );
 
-/* export const recoveryCodeModal = () =>
-  Modal<unknown, { recoveryCode: string; username: string }>(
-    ({ onResolve, open, args }) => {
-      const [downloaded, setDownloaded] = useState(false);
+export function RecoveryCodeModal({
+  open,
+  mode,
+  onResolve,
+  onClose,
+  verificationToken
+}: ModalComponent<{ mode: 'reset' | 'disable'; verificationToken: string }>) {
+  const {
+    mutateAsync: resetRecovery,
+    isLoading: resetRecoveryLoading,
+    error: resetError
+  } = api.account.security.resetRecoveryCode.useMutation();
+  const {
+    mutateAsync: disableRecovery,
+    isLoading: disableRecoveryLoading,
+    error: disableError
+  } = api.account.security.disableRecoveryCode.useMutation();
 
-      return (
-        <Dialog.Root open={open}>
-          <Dialog.Content className="w-full max-w-96 p-4">
-            <Dialog.Title className="mx-auto w-fit py-2">
-              Recovery Code
-            </Dialog.Title>
-            <Flex
-              className="w-full p-2"
-              direction="column"
-              gap="4">
-              <Text
-                size="2"
-                weight="bold"
-                align="center">
-                Save this recovery code in a safe place, without this code you
-                would not be able to recover your account
-              </Text>
-              <Card>
-                <Text className="break-words font-mono">
-                  {args?.recoveryCode}
-                </Text>
-              </Card>
-              <Button
-                size="2"
-                onClick={() => {
-                  downloadAsFile(
-                    `${args?.username}-recovery-code.txt`,
-                    args?.recoveryCode ?? ''
-                  );
-                  setDownloaded(true);
-                }}>
-                {!downloaded ? 'Download' : 'Download Again'}
-              </Button>
-              <Button
-                size="2"
-                disabled={!downloaded}
-                onClick={() => onResolve({})}>
-                Close
-              </Button>
-            </Flex>
-          </Dialog.Content>
-        </Dialog.Root>
-      );
-    }
-  ); */
+  const [code, setCode] = useState<string>('');
+
+  return (
+    <Dialog.Root open={open}>
+      <Dialog.Content className="w-full max-w-96 p-4">
+        <Dialog.Title className="mx-auto w-fit">
+          {mode === 'reset' ? 'Set up Recovery' : 'Disable Recovery'}
+        </Dialog.Title>
+        <Dialog.Description className="mx-auto flex w-fit text-balance p-2 text-center text-sm font-bold">
+          {mode === 'reset' ? (
+            <span>
+              You are going to setup/reset your Recovery Code, If you already
+              had a recovery code that would be invalidated after this.
+            </span>
+          ) : (
+            <span>Are you sure you want to disable your Recovery Code?</span>
+          )}
+        </Dialog.Description>
+        <div className="flex w-full flex-col gap-2">
+          <div className="text-red-10 p-1">
+            {resetError?.message ?? disableError?.message}
+          </div>
+          {code ? (
+            <Button
+              className="w-full"
+              onClick={() => downloadAsFile('recovery-code.txt', code)}>
+              Download Again
+            </Button>
+          ) : (
+            <Button
+              className="w-full"
+              loading={resetRecoveryLoading || disableRecoveryLoading}
+              onClick={async () => {
+                if (mode === 'reset') {
+                  const { recoveryCode } = await resetRecovery({
+                    verificationToken
+                  });
+                  downloadAsFile('recovery-code.txt', recoveryCode);
+                  toast.success('Recovery Code has been downloaded');
+                  setCode(recoveryCode);
+                } else {
+                  await disableRecovery({ verificationToken });
+                  onResolve(null);
+                }
+              }}>
+              {mode === 'reset'
+                ? 'Setup/Reset Recovery Code'
+                : 'Disable Recovery'}
+            </Button>
+          )}
+          <Button
+            className="w-full"
+            variant="soft"
+            disabled={resetRecoveryLoading || disableRecoveryLoading}
+            color="gray"
+            onClick={() => (code ? onResolve(null) : onClose())}>
+            {code ? 'Close' : 'Cancel'}
+          </Button>
+        </div>
+      </Dialog.Content>
+    </Dialog.Root>
+  );
+}

@@ -4,7 +4,11 @@ import { Flex, Heading, Spinner, Text, Switch, Button } from '@radix-ui/themes';
 import { useEffect, useState } from 'react';
 import { api } from '@/src/lib/trpc';
 import { VerificationModal } from './_components/verification-modal';
-import { PasswordModal, TOTPModal } from './_components/reset-modals';
+import {
+  PasswordModal,
+  TOTPModal,
+  RecoveryCodeModal
+} from './_components/reset-modals';
 import useAwaitableModal from '@/src/hooks/use-awaitable-modal';
 import { toast } from 'sonner';
 
@@ -46,6 +50,14 @@ export default function Page() {
   const [TOTPModalRoot, openTOTPModal] = useAwaitableModal(TOTPModal, {
     verificationToken: ''
   });
+
+  const [RecoveryModalRoot, openRecoveryModal] = useAwaitableModal(
+    RecoveryCodeModal,
+    {
+      verificationToken: '',
+      mode: 'reset'
+    }
+  );
 
   async function waitForVerification() {
     if (!initData) throw new Error('No init data');
@@ -93,85 +105,108 @@ export default function Page() {
       )}
 
       {!isInitDataLoading && initData && (
-        <Flex
-          className="my-4"
-          direction="column"
-          gap="5">
-          <Text
-            as="label"
-            size="3"
-            weight="medium">
-            <Flex
-              gap="2"
-              align="center">
-              Enable Password and 2FA Login
-              <Switch
-                size="2"
-                checked={isPassword2FaEnabled}
-                disabled={
-                  isDisablingLegacySecurity ||
-                  !(isPassword2FaEnabled && canDisableLegacySecurity)
-                }
-                onCheckedChange={async () => {
-                  const token = await waitForVerification();
-                  if (!token) return;
-
-                  if (isPassword2FaEnabled) {
-                    disableLegacySecurity({
-                      verificationToken: verificationToken ?? token
-                    });
-                    await refreshSecurityData();
-                    setIsPassword2FaEnabled(false);
-                  } else {
-                    const passwordSet = await openPasswordModal({
-                      verificationToken: verificationToken ?? token
-                    }).catch(() => false);
-                    const otpSet = await openTOTPModal({
-                      verificationToken: verificationToken ?? token
-                    }).catch(() => false);
-                    if (!passwordSet || !otpSet) return;
-                    await refreshSecurityData();
-                    setIsPassword2FaEnabled(true);
+        <div className="my-4 flex flex-col gap-5">
+          <div className="flex flex-col gap-3">
+            <span className="text-lg font-bold">Legacy Security</span>
+            <Text
+              as="label"
+              size="3"
+              weight="medium">
+              <Flex
+                gap="2"
+                align="center">
+                Enable Password and 2FA Login
+                <Switch
+                  size="2"
+                  checked={isPassword2FaEnabled}
+                  disabled={
+                    isDisablingLegacySecurity ||
+                    !(isPassword2FaEnabled && canDisableLegacySecurity)
                   }
-                }}
-              />
-              {isDisablingLegacySecurity && <Spinner loading />}
-            </Flex>
-          </Text>
+                  onCheckedChange={async () => {
+                    const token = await waitForVerification();
+                    if (!token) return;
 
-          <div className="flex gap-2">
-            {initData?.passwordSet && (
-              <Button
-                onClick={async () => {
-                  const token = await waitForVerification();
-                  if (!token) return;
-                  await openPasswordModal({
-                    verificationToken: verificationToken ?? token
-                  }).catch(() => null);
-                }}>
-                Reset Password
-              </Button>
-            )}
+                    if (isPassword2FaEnabled) {
+                      disableLegacySecurity({
+                        verificationToken: verificationToken ?? token
+                      });
+                      await refreshSecurityData();
+                      setIsPassword2FaEnabled(false);
+                    } else {
+                      const passwordSet = await openPasswordModal({
+                        verificationToken: verificationToken ?? token
+                      }).catch(() => false);
+                      const otpSet = await openTOTPModal({
+                        verificationToken: verificationToken ?? token
+                      }).catch(() => false);
+                      if (!passwordSet || !otpSet) return;
+                      await refreshSecurityData();
+                      setIsPassword2FaEnabled(true);
+                    }
+                  }}
+                />
+                {isDisablingLegacySecurity && <Spinner loading />}
+              </Flex>
+            </Text>
 
-            {initData?.twoFactorEnabled && (
-              <Button
-                onClick={async () => {
-                  const token = await waitForVerification();
-                  if (!token) return;
-                  await openTOTPModal({
-                    verificationToken: verificationToken ?? token
-                  }).catch(() => null);
-                }}>
-                Reset 2FA
-              </Button>
-            )}
+            <div className="flex gap-2">
+              {initData?.passwordSet && (
+                <Button
+                  onClick={async () => {
+                    const token = await waitForVerification();
+                    if (!token) return;
+                    await openPasswordModal({
+                      verificationToken: verificationToken ?? token
+                    }).catch(() => null);
+                  }}>
+                  Reset Password
+                </Button>
+              )}
+
+              {initData?.twoFactorEnabled && (
+                <Button
+                  onClick={async () => {
+                    const token = await waitForVerification();
+                    if (!token) return;
+                    await openTOTPModal({
+                      verificationToken: verificationToken ?? token
+                    }).catch(() => null);
+                  }}>
+                  Reset 2FA
+                </Button>
+              )}
+            </div>
           </div>
-        </Flex>
+          {(initData.recoveryCodeSet || isPassword2FaEnabled) && (
+            <div className="flex flex-col gap-3">
+              <span className="text-lg font-bold">Account Recovery</span>
+              <Button
+                className="w-fit"
+                onClick={async () => {
+                  const token = await waitForVerification();
+                  if (!token) return;
+                  await openRecoveryModal({
+                    verificationToken: verificationToken ?? token,
+                    mode: isPassword2FaEnabled ? 'reset' : 'disable'
+                  }).catch(() => null);
+                  await refreshSecurityData();
+                }}>
+                {initData.recoveryCodeSet
+                  ? isPassword2FaEnabled
+                    ? 'Reset Recovery Code'
+                    : 'Disable Recovery Code'
+                  : 'Setup Recovery'}
+              </Button>
+            </div>
+          )}
+        </div>
       )}
 
       <VerificationModalRoot />
       <PasswordModalRoot />
       <TOTPModalRoot />
+      <RecoveryModalRoot />
     </Flex>
   );
 }
