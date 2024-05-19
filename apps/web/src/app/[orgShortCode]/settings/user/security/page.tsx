@@ -1,9 +1,18 @@
 'use client';
 
-import { Flex, Heading, Spinner, Text, Switch, Button } from '@radix-ui/themes';
+import {
+  Flex,
+  Heading,
+  Spinner,
+  Text,
+  Switch,
+  Button,
+  IconButton
+} from '@radix-ui/themes';
 import { useEffect, useState } from 'react';
 import { api } from '@/src/lib/trpc';
 import { VerificationModal } from './_components/verification-modal';
+import { DeletePasskeyModal } from './_components/delete-modals';
 import {
   PasswordModal,
   TOTPModal,
@@ -11,6 +20,11 @@ import {
 } from './_components/reset-modals';
 import useAwaitableModal from '@/src/hooks/use-awaitable-modal';
 import { toast } from 'sonner';
+import { Trash } from 'lucide-react';
+import { format } from 'date-fns';
+import useLoading from '@/src/hooks/use-loading';
+import { startRegistration } from '@simplewebauthn/browser';
+// import { PasskeyNameModal } from './_components/passkey-modals';
 
 export default function Page() {
   const {
@@ -59,6 +73,55 @@ export default function Page() {
     }
   );
 
+  const [DeletePasskeyModalRoot, openDeletePasskeyModal] = useAwaitableModal(
+    DeletePasskeyModal,
+    {
+      publicId: 'ap_',
+      name: '',
+      verificationToken: ''
+    }
+  );
+
+  // const [PasskeyNameModalRoot, openPasskeyNameModal] = useAwaitableModal(
+  //   PasskeyNameModal,
+  //   {}
+  // );
+
+  const fetchPasskeyChallengeApi =
+    api.useUtils().account.security.generateNewPasskeyChallenge;
+  const { mutateAsync: addNewPasskey } =
+    api.account.security.addNewPasskey.useMutation({
+      onSuccess: () => {
+        void refreshSecurityData();
+      },
+      onError: (err) => {
+        toast.error('Something went wrong while adding new passkey', {
+          description: err.message
+        });
+      }
+    });
+
+  const { loading: passkeyAddLoading, run: addPasskey } = useLoading(
+    async () => {
+      const token = await waitForVerification();
+      if (!token) return;
+      const challenge = await fetchPasskeyChallengeApi.fetch({
+        verificationToken: token
+      });
+      const response = await startRegistration(challenge.options);
+
+      // Need to have a separate endpoint for rename
+      // const passkeyName = await openPasskeyNameModal().catch(() => null);
+      // if (!passkeyName) return;
+
+      await addNewPasskey({
+        verificationToken: token,
+        // nickname: passkeyName,
+        registrationResponseRaw: response
+      });
+    }
+  );
+
   async function waitForVerification() {
     if (!initData) throw new Error('No init data');
     if (verificationToken) return verificationToken;
@@ -83,6 +146,8 @@ export default function Page() {
   });
 
   const canDisableLegacySecurity = (initData?.passkeys.length ?? 0) > 0;
+  const canDeletePasskey =
+    (initData?.passkeys.length ?? 0) > 1 || isPassword2FaEnabled;
 
   return (
     <Flex
@@ -121,7 +186,7 @@ export default function Page() {
                   checked={isPassword2FaEnabled}
                   disabled={
                     isDisablingLegacySecurity ||
-                    !(isPassword2FaEnabled && canDisableLegacySecurity)
+                    (isPassword2FaEnabled && !canDisableLegacySecurity)
                   }
                   onCheckedChange={async () => {
                     const token = await waitForVerification();
@@ -200,6 +265,51 @@ export default function Page() {
               </Button>
             </div>
           )}
+          <div className="flex flex-col gap-3">
+            <span className="text-lg font-bold">Passkeys</span>
+            <div className="flex flex-wrap gap-2">
+              {initData?.passkeys.map((passkey) => (
+                <div
+                  key={passkey.publicId}
+                  className="bg-muted flex items-center justify-center gap-2 rounded border px-2 py-1">
+                  <div className="flex flex-col">
+                    <span>{passkey.nickname}</span>
+                    <span className="text-muted-foreground text-xs">
+                      {format(passkey.createdAt, ' HH:mm, do MMM yyyy')}
+                    </span>
+                  </div>
+                  <div>
+                    <IconButton
+                      size="2"
+                      variant="soft"
+                      disabled={!canDeletePasskey}
+                      onClick={async () => {
+                        const token = await waitForVerification();
+                        if (!token) return;
+                        await openDeletePasskeyModal({
+                          publicId: passkey.publicId,
+                          name: passkey.nickname,
+                          verificationToken: verificationToken ?? token
+                        })
+                          .then(() => refreshSecurityData())
+                          .catch(() => null);
+                      }}>
+                      <Trash size={16} />
+                    </IconButton>
+                  </div>
+                </div>
+              ))}
+              {initData?.passkeys.length === 0 && (
+                <div className="text-muted-foreground">No passkeys found</div>
+              )}
+            </div>
+            <Button
+              className="w-fit"
+              loading={passkeyAddLoading}
+              onClick={() => addPasskey({ clearError: true, clearData: true })}>
+              Add New Passkey
+            </Button>
+          </div>
         </div>
       )}
 
@@ -207,6 +317,8 @@ export default function Page() {
       <PasswordModalRoot />
       <TOTPModalRoot />
       <RecoveryModalRoot />
+      <DeletePasskeyModalRoot />
+      {/* <PasskeyNameModalRoot /> */}
     </Flex>
   );
 }

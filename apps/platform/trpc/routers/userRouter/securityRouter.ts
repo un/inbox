@@ -763,7 +763,10 @@ export const securityRouter = router({
     .input(
       z.object({
         verificationToken: zodSchemas.nanoIdToken(),
-        authenticatorType: z.enum(['platform', 'cross-platform'])
+        /**
+         * @deprecated Let the browser decide
+         */
+        authenticatorType: z.enum(['platform', 'cross-platform']).optional()
       })
     )
     .query(async ({ ctx, input }) => {
@@ -806,8 +809,7 @@ export const securityRouter = router({
       const passkeyOptions = await usePasskeys.generateRegistrationOptions({
         userDisplayName: accountData.username,
         username: accountData.username,
-        accountPublicId: accountData.publicId,
-        authenticatorAttachment: input.authenticatorType
+        accountPublicId: accountData.publicId
       });
       return { options: passkeyOptions };
     }),
