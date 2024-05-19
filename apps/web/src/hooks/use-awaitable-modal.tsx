@@ -1,3 +1,5 @@
+//@refresh reset
+
 import { useRef, useState, type ReactNode } from 'react';
 
 type EmptyObject = Record<string, never>;
@@ -26,19 +28,20 @@ export default function useAwaitableModal<Props extends ObjectProps, Resolved>(
     reject: (_: Error | null) => void;
   }>({ resolve: noop, reject: noop });
 
-  const ModalRoot = () =>
-    ModalComponent({
-      open,
-      onClose: (reason) => {
+  const ModalRoot = () => (
+    <ModalComponent
+      open={open}
+      onClose={(reason) => {
         setOpen(false);
         promiseRef.current.reject(reason ?? null);
-      },
-      onResolve: (data) => {
+      }}
+      onResolve={(data) => {
         setOpen(false);
         promiseRef.current.resolve(data);
-      },
-      ...props
-    });
+      }}
+      {...props}
+    />
+  );
 
   const openModal = (props: Partial<Props> = {}) =>
     new Promise<Resolved>((resolve, reject) => {

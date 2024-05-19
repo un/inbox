@@ -142,7 +142,7 @@ export function VerificationModal({
 
           {hasPassword && (
             <Button
-              disabled={password.length < 8}
+              disabled={password.length < 8 || (has2Fa && otp.length < 6)}
               loading={passwordLoading}
               onClick={() => verifyWithPassword2Fa()}>
               Verify with Password

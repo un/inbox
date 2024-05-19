@@ -157,7 +157,7 @@ export const passkeyRouter = router({
         httpOnly: true,
         secure: env.NODE_ENV === 'production',
         sameSite: 'Strict',
-        maxAge: ms('5m'),
+        maxAge: ms('5 minutes'),
         domain: env.PRIMARY_DOMAIN
       });
       const passkeyOptions = await usePasskeys.generateAuthenticationOptions({

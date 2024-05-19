@@ -11,7 +11,7 @@ import {
   strongPasswordSchema
 } from '@u22n/utils';
 import { TRPCError } from '@trpc/server';
-import { getCookie, setCookie } from 'hono/cookie';
+import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
 import type {
   AuthenticationResponseJSON,
   RegistrationResponseJSON
@@ -23,6 +23,7 @@ import { TOTPController, createTOTPKeyURI } from 'oslo/otp';
 import { lucia } from '../../../utils/auth';
 import { storage } from '../../../storage';
 import { env } from '../../../env';
+import { datePlus } from 'itty-time';
 
 const authStorage = storage.auth;
 
@@ -366,6 +367,9 @@ export const securityRouter = router({
       return { success: true };
     }),
 
+  /**
+   * @deprecated use `generateTwoFactorResetChallenge` as that one doesn't reset the 2FA secret, unless the user completes the reset
+   */
   resetTwoFactorSecret: accountProcedure
     .input(
       z.object({
@@ -422,6 +426,9 @@ export const securityRouter = router({
       return { uri };
     }),
 
+  /**
+   * @deprecated use `verifyTwoFactorResetChallenge` with the `generateTwoFactorResetChallenge` to reset the 2FA secret
+   */
   completeTwoFactorReset: accountProcedure
     .input(
       z.object({
@@ -488,6 +495,162 @@ export const securityRouter = router({
         .update(accounts)
         .set({ twoFactorEnabled: true })
         .where(eq(accounts.id, accountId));
+
+      return { success: true };
+    }),
+
+  generateTwoFactorResetChallenge: accountProcedure
+    .input(
+      z.object({
+        verificationToken: zodSchemas.nanoIdToken()
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const { verificationToken } = input;
+      const { db, account } = ctx;
+
+      const accountData = await db.query.accounts.findFirst({
+        where: eq(accounts.id, account.id),
+        columns: {
+          publicId: true,
+          username: true
+        }
+      });
+
+      if (!accountData) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'User not found'
+        });
+      }
+
+      const storedVerificationToken = await authStorage.getItem(
+        `authVerificationToken: ${accountData.publicId}`
+      );
+
+      if (verificationToken !== storedVerificationToken) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'VerificationToken is invalid'
+        });
+      }
+
+      const existingChallengeId = getCookie(
+        ctx.event,
+        'un-2fa-reset-challenge'
+      );
+      if (existingChallengeId) {
+        const encodedSecret = await authStorage.getItem<string>(
+          `un-2fa-reset-challenge:${existingChallengeId}`
+        );
+        if (encodedSecret) {
+          return {
+            uri: createTOTPKeyURI(
+              'UnInbox.com',
+              accountData.username,
+              decodeHex(encodedSecret)
+            )
+          };
+        }
+      }
+
+      const newSecret = crypto.getRandomValues(new Uint8Array(20));
+      const uri = createTOTPKeyURI(
+        'UnInbox.com',
+        accountData.username,
+        newSecret
+      );
+
+      const un2faResetChallengeId = nanoIdToken();
+      authStorage.setItem(
+        `un-2fa-reset-challenge:${un2faResetChallengeId}`,
+        encodeHex(newSecret)
+      );
+
+      setCookie(ctx.event, 'un-2fa-reset-challenge', un2faResetChallengeId, {
+        httpOnly: true,
+        secure: env.NODE_ENV === 'production',
+        sameSite: 'Strict',
+        expires: datePlus('5 minutes'),
+        domain: env.PRIMARY_DOMAIN
+      });
+
+      return { uri };
+    }),
+
+  verifyTwoFactorResetChallenge: accountProcedure
+    .input(
+      z.object({
+        verificationToken: zodSchemas.nanoIdToken(),
+        code: z.string().min(6).max(6)
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { verificationToken, code } = input;
+      const { db, account } = ctx;
+
+      const accountData = await db.query.accounts.findFirst({
+        where: eq(accounts.id, account.id),
+        columns: {
+          publicId: true,
+          username: true
+        }
+      });
+
+      if (!accountData) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'User not found'
+        });
+      }
+
+      const storedVerificationToken = await authStorage.getItem(
+        `authVerificationToken: ${accountData.publicId}`
+      );
+
+      if (verificationToken !== storedVerificationToken) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'VerificationToken is invalid'
+        });
+      }
+
+      const challengeId = getCookie(ctx.event, 'un-2fa-reset-challenge');
+      if (!challengeId) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: '2FA Challenge cookie not found or expired, please try again'
+        });
+      }
+
+      const encodedSecret = await authStorage.getItem<string>(
+        `un-2fa-reset-challenge:${challengeId}`
+      );
+
+      if (!encodedSecret) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: '2FA Challenge cookie not found or expired, please try again'
+        });
+      }
+
+      const secret = decodeHex(encodedSecret);
+      const isValid = await new TOTPController().verify(code, secret);
+
+      if (!isValid) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'Invalid 2FA code'
+        });
+      }
+
+      await db
+        .update(accounts)
+        .set({ twoFactorSecret: encodedSecret, twoFactorEnabled: true })
+        .where(eq(accounts.id, account.id));
+
+      deleteCookie(ctx.event, 'un-2fa-reset-challenge');
+      authStorage.removeItem(`un-2fa-reset-challenge:${challengeId}`);
 
       return { success: true };
     }),
