@@ -24,9 +24,15 @@ import { Trash } from 'lucide-react';
 import { format } from 'date-fns';
 import useLoading from '@/src/hooks/use-loading';
 import { startRegistration } from '@simplewebauthn/browser';
+import { useRouter } from 'next/navigation';
+import { DeleteAllSessions } from './_components/session-modals';
+import { useQueryClient } from '@tanstack/react-query';
 // import { PasskeyNameModal } from './_components/passkey-modals';
 
 export default function Page() {
+  const queryClient = useQueryClient();
+  const router = useRouter();
+
   const {
     data: initData,
     isLoading: isInitDataLoading,
@@ -82,6 +88,9 @@ export default function Page() {
     }
   );
 
+  const [DeleteAllSessionsModalRoot, openDeleteAllSessionsModal] =
+    useAwaitableModal(DeleteAllSessions, { verificationToken: '' });
+
   // const [PasskeyNameModalRoot, openPasskeyNameModal] = useAwaitableModal(
   //   PasskeyNameModal,
   //   {}
@@ -121,6 +130,9 @@ export default function Page() {
       });
     }
   );
+
+  const { mutateAsync: logoutSingle } =
+    api.account.security.deleteSession.useMutation();
 
   async function waitForVerification() {
     if (!initData) throw new Error('No init data');
@@ -310,6 +322,59 @@ export default function Page() {
               Add New Passkey
             </Button>
           </div>
+
+          <div className="flex flex-col gap-3">
+            <span className="text-lg font-bold">Sessions</span>
+            <div className="flex flex-wrap gap-2">
+              {initData?.sessions.map((session) => (
+                <div
+                  key={session.publicId}
+                  className="bg-muted flex items-center justify-center gap-2 rounded border px-2 py-1">
+                  <div className="flex flex-col">
+                    <span>
+                      {session.device} - {session.os}
+                    </span>
+                    <span className="text-muted-foreground text-xs">
+                      {format(session.createdAt, ' HH:mm, do MMM yyyy')}
+                    </span>
+                  </div>
+                  <div>
+                    <IconButton
+                      size="2"
+                      variant="soft"
+                      onClick={async () => {
+                        const token = await waitForVerification();
+                        if (!token) return;
+                        await logoutSingle({
+                          sessionPublicId: session.publicId,
+                          verificationToken: verificationToken ?? token
+                        })
+                          .then(() => refreshSecurityData())
+                          .catch(() => null);
+                      }}>
+                      <Trash size={16} />
+                    </IconButton>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <Button
+              className="w-fit"
+              onClick={async () => {
+                const token = await waitForVerification();
+                if (!token) return;
+                await openDeleteAllSessionsModal({
+                  verificationToken: verificationToken ?? token
+                })
+                  .then(() => {
+                    queryClient.removeQueries();
+                    router.replace('/');
+                  })
+                  .catch(() => null);
+              }}>
+              Logout of All Sessions
+            </Button>
+          </div>
         </div>
       )}
 
@@ -319,6 +384,7 @@ export default function Page() {
       <RecoveryModalRoot />
       <DeletePasskeyModalRoot />
       {/* <PasskeyNameModalRoot /> */}
+      <DeleteAllSessionsModalRoot />
     </Flex>
   );
 }
