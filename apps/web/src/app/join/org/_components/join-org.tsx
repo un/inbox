@@ -13,7 +13,7 @@ import {
   Card,
   Avatar
 } from '@radix-ui/themes';
-import { Users } from 'lucide-react';
+import { Users } from '@phosphor-icons/react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';

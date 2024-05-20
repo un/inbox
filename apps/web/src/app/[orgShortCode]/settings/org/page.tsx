@@ -10,7 +10,7 @@ import {
   TextField,
   Spinner
 } from '@radix-ui/themes';
-import { Camera, Save } from 'lucide-react';
+import { Camera, FloppyDisk } from '@phosphor-icons/react';
 import { api } from '@/src/lib/trpc';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import useLoading from '@/src/hooks/use-loading';
@@ -160,7 +160,7 @@ export default function ProfileComponent() {
             onClick={() =>
               saveOrgProfile({ clearData: true, clearError: true })
             }>
-            <Save size={20} />
+            <FloppyDisk size={20} />
             Save
           </Button>
         </Flex>

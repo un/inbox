@@ -2,7 +2,7 @@
 
 import { Text, TextField, Button } from '@radix-ui/themes';
 import { type ReactNode, useState } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeSlash } from '@phosphor-icons/react';
 
 type TogglePasswordBoxProps = {
   slot?: ReactNode;
@@ -42,7 +42,7 @@ export default function TogglePasswordBox({
           <Button
             variant="ghost"
             onClick={() => setPasswordShown(!passwordShown)}>
-            {passwordShown ? <Eye size={16} /> : <EyeOff size={16} />}
+            {passwordShown ? <Eye size={16} /> : <EyeSlash size={16} />}
           </Button>
         </TextField.Slot>
       </TextField.Root>

@@ -9,7 +9,7 @@ import {
   TextField
 } from '@radix-ui/themes';
 import { AvatarModal } from '@/src/components/shared/avatar-modal';
-import { Camera } from 'lucide-react';
+import { Camera } from '@phosphor-icons/react';
 import { useEffect, useState, useMemo } from 'react';
 import { cn, generateAvatarUrl } from '@/src/lib/utils';
 import useLoading from '@/src/hooks/use-loading';

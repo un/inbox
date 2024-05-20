@@ -26,34 +26,35 @@ import {
 } from 'cmdk';
 import { useState, useMemo, Fragment } from 'react';
 import {
-  type LucideIcon,
-  UserIcon,
-  UsersIcon,
-  BookUserIcon,
-  AtSignIcon,
-  ChevronDown,
+  type Icon,
+  User,
+  Users,
+  AddressBook,
+  At,
+  CaretDown,
   Check
-} from 'lucide-react';
+} from '@phosphor-icons/react';
 import { z } from 'zod';
 import {
   type JSONContent,
   emptyTiptapEditorContent
 } from '@u22n/tiptap/react/components';
-import Editor from './editor';
+import { Editor } from '@/src/components/shared/editor';
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import useLoading from '@/src/hooks/use-loading';
 import { stringify } from 'superjson';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
-import AttachmentButton, {
+import {
+  AttachmentButton,
   type ConvoAttachmentUpload
-} from './attachment-button';
+} from '@/src/components/shared/attachment-button';
 import { useAddSingleConvo$Cache } from '../utils';
 
 interface ConvoParticipantOrgMembers {
   type: 'orgMember';
-  icon: LucideIcon;
+  icon: Icon;
   publicId: TypeId<'orgMembers'>;
   avatarTimestamp: Date | null;
   profilePublicId: TypeId<'orgMemberProfile'>;
@@ -66,7 +67,7 @@ interface ConvoParticipantOrgMembers {
 }
 interface ConvoParticipantOrgTeams {
   type: 'team';
-  icon: LucideIcon;
+  icon: Icon;
   publicId: TypeId<'teams'>;
   avatarTimestamp: Date | null;
   name: string;
@@ -76,7 +77,7 @@ interface ConvoParticipantOrgTeams {
 }
 interface ConvoParticipantOrgContacts {
   type: 'contact';
-  icon: LucideIcon;
+  icon: Icon;
   publicId: TypeId<'contacts'>;
   avatarTimestamp: Date | null;
   name: string | null;
@@ -86,7 +87,7 @@ interface ConvoParticipantOrgContacts {
 }
 interface NewConvoParticipantEmailAddresses {
   type: 'email';
-  icon: LucideIcon;
+  icon: Icon;
   publicId: string;
   address: string;
   keywords: string[];
@@ -157,7 +158,7 @@ export default function Page() {
       }
       const ownData: ConvoParticipantOrgMembers = {
         type: 'orgMember',
-        icon: UserIcon,
+        icon: User,
         publicId: ownOrgMemberData.publicId,
         profilePublicId: ownOrgMemberData.profile.publicId,
         avatarTimestamp: ownOrgMemberData.profile.avatarTimestamp,
@@ -183,7 +184,7 @@ export default function Page() {
         }
         participants.push({
           type: 'orgMember',
-          icon: UserIcon,
+          icon: User,
           publicId: member.publicId,
           profilePublicId: member.profile.publicId,
           avatarTimestamp: member.profile.avatarTimestamp,
@@ -204,7 +205,7 @@ export default function Page() {
       for (const team of orgTeamsData.teams) {
         participants.push({
           type: 'team',
-          icon: UsersIcon,
+          icon: Users,
           publicId: team.publicId,
           avatarTimestamp: team.avatarTimestamp,
           name: team.name,
@@ -219,7 +220,7 @@ export default function Page() {
       for (const contact of orgContacts.contacts) {
         participants.push({
           type: 'contact',
-          icon: BookUserIcon,
+          icon: AddressBook,
           publicId: contact.publicId,
           avatarTimestamp: contact.avatarTimestamp,
           name: contact.setName ?? contact.name ?? null,
@@ -238,7 +239,7 @@ export default function Page() {
       for (const emailParticipant of newEmailParticipants) {
         participants.push({
           type: 'email',
-          icon: AtSignIcon,
+          icon: At,
           publicId: emailParticipant,
           address: emailParticipant,
           keywords: [emailParticipant]
@@ -536,7 +537,7 @@ function ParticipantsComboboxPopover({
             ) : (
               <>
                 <Text>Search or type an Email address</Text>
-                <ChevronDown size={16} />
+                <CaretDown size={16} />
               </>
             )}
           </Button>
@@ -721,7 +722,7 @@ function EmptyStateHandler() {
         ? prev
         : prev.concat({
             type: 'email',
-            icon: AtSignIcon,
+            icon: At,
             publicId: email,
             address: email,
             keywords: [email]
@@ -747,7 +748,7 @@ function EmptyStateHandler() {
         onClick={() => {
           addEmailParticipant(email);
         }}>
-        <AtSignIcon className="mr-2 h-4 w-4" />
+        <At className="mr-2 h-4 w-4" />
         <Text size="2">Add {email}</Text>
       </Button>
     </CommandItem>

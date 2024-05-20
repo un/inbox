@@ -1,8 +1,9 @@
 'use client';
 
-import { Button, Flex, Heading, Spinner, Text } from '@radix-ui/themes';
 import Sidebar from './_components/sidebar';
 import { GlobalStoreProvider } from '@/src/providers/global-store-provider';
+import { buttonVariants } from '@/src/components/shadcn-ui/button';
+import { SpinnerGap } from '@phosphor-icons/react';
 import Link from 'next/link';
 import { api } from '@/src/lib/trpc';
 
@@ -18,78 +19,57 @@ export default function Layout({
 
   if (storeDataLoading) {
     return (
-      <Flex
-        className="h-full w-full"
-        align="center"
-        justify="center"
-        gap="2"
-        direction="column">
-        <Spinner loading />
-      </Flex>
+      <div className="flex h-full w-full flex-col items-center justify-center gap-2">
+        <SpinnerGap className=" text-sand-11 h-20 w-20 animate-spin" />
+      </div>
     );
   }
 
   if (storeError && !storeDataLoading) {
     return (
-      <Flex
-        className="h-full w-full"
-        align="center"
-        justify="center"
-        gap="2"
-        direction="column">
-        <Heading
-          as="h1"
-          color="red">
-          An Error Occurred!
-        </Heading>
-        <Text
-          className="whitespace-pre"
-          size="2"
-          color="red">
+      <div className="flex h-full w-full flex-col items-center justify-center gap-2">
+        <h1 className="text-red-11 text-2xl font-bold">An Error Occurred!</h1>
+        <span className="text-red-11 whitespace-pre font-mono text-xl">
           {storeError.message}
-        </Text>
-        <Button asChild>
-          <Link href="/">Go Back Home</Link>
-        </Button>
-      </Flex>
+        </span>
+
+        <Link
+          className={buttonVariants({ variant: 'outline' })}
+          href="/">
+          Go Back Home
+        </Link>
+      </div>
     );
   }
 
   if (!storeDataLoading && !storeData?.currentOrg) {
     return (
-      <Flex
-        className="h-full w-full"
-        align="center"
-        justify="center"
-        gap="2"
-        direction="column">
-        <Heading
-          as="h1"
-          color="red">
-          Invalid Org
-        </Heading>
-        <Text
-          className="whitespace-pre"
-          size="2">
+      <div className="flex h-full w-full flex-col items-center justify-center gap-2">
+        <h1 className="text-red-11 text-2xl font-bold">Invalid Org</h1>
+
+        <span className="whitespace-pre text-xl">
           Org with ShortCode{' '}
           <span className="font-mono underline">{orgShortCode}</span> either
           does not exists or you are not part of that org!
-        </Text>
-        <Button asChild>
-          <Link href="/">Go Back Home</Link>
-        </Button>
-      </Flex>
+        </span>
+
+        <Link
+          className={buttonVariants({ variant: 'outline' })}
+          href="/">
+          Go Back Home
+        </Link>
+      </div>
     );
   }
 
   return (
     <GlobalStoreProvider initialState={storeData}>
-      <Flex className="h-full w-full">
+      <div className="bg-sand-1 flex h-full w-full flex-row gap-0">
         <div className="h-full w-fit">
           <Sidebar />
         </div>
-        <Flex className="h-full w-full">{children}</Flex>
-      </Flex>
+        <div className="flex h-full w-full flex-row p-0">{children}</div>
+      </div>
     </GlobalStoreProvider>
   );
 }

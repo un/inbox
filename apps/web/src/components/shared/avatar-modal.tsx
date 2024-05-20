@@ -12,7 +12,7 @@ import {
   Progress
 } from '@radix-ui/themes';
 import { type TypeId } from '@u22n/utils';
-import { Camera } from 'lucide-react';
+import { Camera } from '@phosphor-icons/react';
 import { useRef, useState } from 'react';
 
 export function AvatarModal({

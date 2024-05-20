@@ -1,4 +1,4 @@
-'use client';
+'use-client';
 
 import {
   type ElementRef,
@@ -7,8 +7,8 @@ import {
   useContext
 } from 'react';
 import { OTPInput, OTPInputContext } from 'input-otp';
-import { Dot } from 'lucide-react';
-import { Flex, Box } from '@radix-ui/themes';
+import { Dot } from '@phosphor-icons/react';
+
 import { cn } from '@/src/lib/utils';
 
 const InputOTP = forwardRef<
@@ -21,7 +21,7 @@ const InputOTP = forwardRef<
       'flex items-center gap-2 has-[:disabled]:opacity-50',
       containerClassName
     )}
-    className={cn('!w-full disabled:cursor-not-allowed', className)}
+    className={cn('disabled:cursor-not-allowed', className)}
     {...props}
   />
 ));
@@ -30,10 +30,10 @@ InputOTP.displayName = 'InputOTP';
 const InputOTPGroup = forwardRef<
   ElementRef<'div'>,
   ComponentPropsWithoutRef<'div'>
->(({ ...props }, ref) => (
-  <Flex
-    align="center"
+>(({ className, ...props }, ref) => (
+  <div
     ref={ref}
+    className={cn('flex items-center', className)}
     {...props}
   />
 ));
@@ -47,32 +47,21 @@ const InputOTPSlot = forwardRef<
   const { char, hasFakeCaret, isActive } = inputOTPContext.slots[index]!;
 
   return (
-    <Flex
+    <div
       ref={ref}
-      width="40px"
-      height="40px"
       className={cn(
-        'border-gray-9 relative items-center justify-center border-y border-r font-bold transition-all first:rounded-l-md first:border-l last:rounded-r-md',
+        'border-input relative flex h-10 w-10 items-center justify-center border-y border-r text-sm transition-all first:rounded-l-md first:border-l last:rounded-r-md',
         isActive && 'ring-ring ring-offset-background z-10 ring-2',
         className
       )}
       {...props}>
       {char}
       {hasFakeCaret && (
-        <Flex
-          align="center"
-          justify="center"
-          inset="0"
-          position="absolute"
-          className="pointer-events-none">
-          <Box
-            height="16px"
-            width="1px"
-            className="animate-caret-blink bg-gray-9 duration-1000"
-          />
-        </Flex>
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+          <div className="animate-caret-blink bg-foreground h-4 w-px duration-1000" />
+        </div>
       )}
-    </Flex>
+    </div>
   );
 });
 InputOTPSlot.displayName = 'InputOTPSlot';
@@ -81,12 +70,12 @@ const InputOTPSeparator = forwardRef<
   ElementRef<'div'>,
   ComponentPropsWithoutRef<'div'>
 >(({ ...props }, ref) => (
-  <Box
+  <div
     ref={ref}
     role="separator"
     {...props}>
     <Dot />
-  </Box>
+  </div>
 ));
 InputOTPSeparator.displayName = 'InputOTPSeparator';
 

@@ -8,17 +8,17 @@ import { cn } from '@/src/lib/utils';
 import { api } from '@/src/lib/trpc';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import {
-  CircleUser,
-  Mail,
+  User,
+  Envelope,
   Lock,
-  Building2,
+  Buildings,
   CreditCard,
-  AtSign,
+  At,
   Globe,
   Users,
-  UserRoundPlus,
-  HeartHandshake
-} from 'lucide-react';
+  UserPlus,
+  HandHeart
+} from '@phosphor-icons/react';
 
 type NavLinks = {
   label: string;
@@ -38,12 +38,12 @@ export default function SettingsSidebar() {
     {
       label: 'Profile',
       to: `/${orgShortCode}/settings/user/profile`,
-      icon: <CircleUser />
+      icon: <User />
     },
     {
       label: 'Personal Addresses',
       to: `/${orgShortCode}/settings/user/addresses`,
-      icon: <Mail />
+      icon: <Envelope />
     },
     {
       label: 'Security',
@@ -55,7 +55,7 @@ export default function SettingsSidebar() {
     {
       label: 'Org Profile',
       to: `/${orgShortCode}/settings/org`,
-      icon: <Building2 />
+      icon: <Buildings />
     },
     {
       label: 'Billing',
@@ -73,12 +73,12 @@ export default function SettingsSidebar() {
     {
       label: 'Invites',
       to: `/${orgShortCode}/settings/org/users/invites`,
-      icon: <UserRoundPlus />
+      icon: <UserPlus />
     },
     {
       label: 'Teams',
       to: `/${orgShortCode}/settings/org/users/teams`,
-      icon: <HeartHandshake />
+      icon: <HandHeart />
     }
   ];
   const orgMailLinks: NavLinks[] = [
@@ -90,14 +90,14 @@ export default function SettingsSidebar() {
     {
       label: 'Email Addresses',
       to: `/${orgShortCode}/settings/org/mail/addresses`,
-      icon: <AtSign />
+      icon: <At />
     }
   ];
 
   return (
     <Flex
       gap="4"
-      className="bg-slate-2 dark:bg-slatedark-2  h-full w-[400px] flex-col  p-2 px-4">
+      className="bg-sand-2 dark:bg-slatedark-2  h-full w-[400px] flex-col  p-2 px-4">
       <Text
         size="5"
         weight="bold"

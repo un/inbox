@@ -7,7 +7,7 @@ import Stepper from '../../_components/stepper';
 import { useEffect, useState } from 'react';
 import { cn, generateAvatarUrl } from '@/src/lib/utils';
 import useLoading from '@/src/hooks/use-loading';
-import { Camera, CheckCheck, SkipForward } from 'lucide-react';
+import { Camera, Checks, SkipForward } from '@phosphor-icons/react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import useAwaitableModal from '@/src/hooks/use-awaitable-modal';
@@ -188,7 +188,7 @@ export default function ProfileCard({ orgData, wasInvited }: ProfileCardProps) {
             loading={saveLoading}
             onClick={() => saveProfile({ clearData: true, clearError: true })}>
             Next
-            <CheckCheck size={16} />
+            <Checks size={16} />
           </Button>
         </Flex>
       </Flex>

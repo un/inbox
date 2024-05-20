@@ -12,7 +12,7 @@ import { type ModalComponent } from '@/src/hooks/use-awaitable-modal';
 import { useEffect, useState, Suspense, memo } from 'react';
 import { api } from '@/src/lib/trpc';
 import useLoading from '@/src/hooks/use-loading';
-import { Check, Plus, HelpCircle } from 'lucide-react';
+import { Check, Plus, Question } from '@phosphor-icons/react';
 import TogglePasswordBox from '@/src/components/toggle-password';
 import { useDebounce } from '@uidotdev/usehooks';
 import { toDataURL } from 'qrcode';
@@ -22,7 +22,7 @@ import {
   InputOTPGroup,
   InputOTPSeparator,
   InputOTPSlot
-} from '@/src/components/input-otp';
+} from '@/src/components/shadcn-ui/input-otp';
 import { ms } from 'itty-time';
 import Image from 'next/image';
 import { downloadAsFile } from '@/src/lib/utils';
@@ -181,7 +181,7 @@ export function PasswordModal({
                     crack it
                   </Text>
                 }>
-                <HelpCircle size={14} />
+                <Question />
               </Tooltip>
             </Flex>
           )}

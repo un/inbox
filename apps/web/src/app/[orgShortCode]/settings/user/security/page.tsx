@@ -20,7 +20,7 @@ import {
 } from './_components/reset-modals';
 import useAwaitableModal from '@/src/hooks/use-awaitable-modal';
 import { toast } from 'sonner';
-import { Trash } from 'lucide-react';
+import { Trash } from '@phosphor-icons/react';
 import { format } from 'date-fns';
 import useLoading from '@/src/hooks/use-loading';
 import { startRegistration } from '@simplewebauthn/browser';

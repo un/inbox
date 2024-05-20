@@ -11,7 +11,7 @@ import {
   TextField
 } from '@radix-ui/themes';
 import { useDebounce } from '@uidotdev/usehooks';
-import { Check, Plus } from 'lucide-react';
+import { Check, Plus } from '@phosphor-icons/react';
 import { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';

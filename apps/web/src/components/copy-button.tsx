@@ -2,7 +2,7 @@
 import { IconButton } from '@radix-ui/themes';
 import { type Responsive } from '@radix-ui/themes/props';
 import { useCopyToClipboard } from '@uidotdev/usehooks';
-import { Check, Copy } from 'lucide-react';
+import { Check, Copy } from '@phosphor-icons/react';
 import { useState } from 'react';
 
 export default function CopyButton({

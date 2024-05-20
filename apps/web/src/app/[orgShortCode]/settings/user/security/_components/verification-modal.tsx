@@ -2,7 +2,7 @@ import {
   InputOTP,
   InputOTPGroup,
   InputOTPSlot
-} from '@/src/components/input-otp';
+} from '@/src/components/shadcn-ui/input-otp';
 import TogglePasswordBox from '@/src/components/toggle-password';
 import { type ModalComponent } from '@/src/hooks/use-awaitable-modal';
 import useLoading from '@/src/hooks/use-loading';

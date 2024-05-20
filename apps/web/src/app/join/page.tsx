@@ -10,7 +10,7 @@ import {
   Checkbox
 } from '@radix-ui/themes';
 import Stepper from './_components/stepper';
-import { Check, Plus, Info } from 'lucide-react';
+import { Check, Plus, Info } from '@phosphor-icons/react';
 import { useDebounce } from '@uidotdev/usehooks';
 import { api } from '@/src/lib/trpc';
 import { useState, useEffect } from 'react';

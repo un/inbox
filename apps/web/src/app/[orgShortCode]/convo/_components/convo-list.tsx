@@ -2,7 +2,6 @@
 
 import { type RouterOutputs, api } from '@/src/lib/trpc';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
-import { Flex, ScrollArea, Text } from '@radix-ui/themes';
 import { useEffect, useMemo, useRef } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import useTimeAgo from '@/src/hooks/use-time-ago';
@@ -58,13 +57,15 @@ export default function ConvoList() {
   ]);
 
   return (
-    <Flex className="bg-slate-2 dark:bg-slatedark-2 h-full w-[400px] max-w-[400px]">
+    <div className="bg-sand-1 flex h-full w-full min-w-64 max-w-96 flex-col border-r p-4">
       {isLoading ? (
         <div className="w-full text-center font-bold">Loading...</div>
       ) : (
-        <ScrollArea ref={scrollableRef}>
+        <div
+          className="h-full max-h-full w-full max-w-full overflow-y-auto overflow-x-hidden"
+          ref={scrollableRef}>
           <div
-            className="relative w-full"
+            className="relative flex w-full max-w-full flex-col overflow-hidden"
             style={{ height: `${convosVirtualizer.getTotalSize()}px` }}>
             {convosVirtualizer.getVirtualItems().map((virtualItem) => {
               const isLoader = virtualItem.index > allConvos.length - 1;
@@ -74,7 +75,7 @@ export default function ConvoList() {
                 <div
                   key={virtualItem.index}
                   data-index={virtualItem.index}
-                  className="absolute left-0 top-0 w-full py-1"
+                  className="absolute left-0 top-0 w-full"
                   ref={convosVirtualizer.measureElement}
                   style={{
                     transform: `translateY(${virtualItem.start}px)`
@@ -92,9 +93,9 @@ export default function ConvoList() {
               );
             })}
           </div>
-        </ScrollArea>
+        </div>
       )}
-    </Flex>
+    </div>
   );
 }
 
@@ -148,38 +149,30 @@ function ConvoItem({
   return (
     <Link
       href={`/${orgShortCode}/convo/${convo.publicId}`}
-      className="border-gray-12 flex h-full w-full max-w-full gap-4 border-b p-2">
+      className=" flex h-full w-full max-w-full gap-4">
       <AvatarPlus
         size="4"
         imageSize="lg"
         users={participantData}
       />
-      <Flex
-        direction="column"
-        className="w-full flex-1"
-        gap="1">
-        <Text
-          className="w-full max-w-[320px] truncate pl-2 text-left"
-          size="1"
-          weight="bold">
+      <div className="flex w-full flex-1 flex-col">
+        <span className="w-full truncate pl-2 text-left">
           {convo.subjects[0]?.subject}
-        </Text>
+        </span>
         <div className="dark:bg-graydark-3 dark:hover:bg-graydark-4 dark:text-graydark-11 w-full rounded-lg p-1 text-left text-sm">
           <span className="line-clamp-2">
-            <Text weight="bold">{authorName}</Text>:{' '}
-            <Text
-              className="w-full max-w-full overflow-ellipsis break-words"
-              style={{ overflowWrap: 'anywhere' }}>
+            <span>{authorName}</span>:{' '}
+            <span className="w-full max-w-full overflow-ellipsis break-words">
               {convo.entries[0]?.bodyPlainText ?? ''}
-            </Text>
+            </span>
           </span>
         </div>
         <div className="mt-1 flex w-full flex-row items-center justify-end gap-1">
-          <Text className="dark:text-graydark-11 min-w-fit overflow-hidden text-right text-xs">
+          <span className="dark:text-graydark-11 min-w-fit overflow-hidden text-right text-xs">
             {timeAgo}
-          </Text>
+          </span>
         </div>
-      </Flex>
+      </div>
     </Link>
   );
 }

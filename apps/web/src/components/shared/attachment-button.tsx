@@ -3,7 +3,7 @@ import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { Badge, Button, Flex, IconButton } from '@radix-ui/themes';
 import { type TypeId } from '@u22n/utils';
 import { type PrimitiveAtom, useAtom } from 'jotai';
-import { Plus } from 'lucide-react';
+import { Plus } from '@phosphor-icons/react';
 import { env } from 'next-runtime-env';
 import { useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -27,9 +27,7 @@ type PreSignedData = {
 const STORAGE_URL = env('NEXT_PUBLIC_STORAGE_URL');
 const FILE_SIZE_LIMIT = 15_000_000; // 15MB
 
-export default function AttachmentButton({
-  attachmentsAtom
-}: AttachmentButtonProps) {
+export function AttachmentButton({ attachmentsAtom }: AttachmentButtonProps) {
   const [attachments, setAttachments] = useAtom(attachmentsAtom);
   const [uploadProgress, setUploadProgress] = useState<
     { progress: number; fileName: string }[]
