@@ -3,7 +3,7 @@ import {
   router,
   accountProcedure,
   publicRateLimitedProcedure
-} from '../../trpc';
+} from '~platform/trpc/trpc';
 import { eq } from '@u22n/database/orm';
 import { accounts } from '@u22n/database/schema';
 import { decodeHex, encodeHex } from 'oslo/encoding';
@@ -12,8 +12,8 @@ import { TRPCError } from '@trpc/server';
 import { nanoIdToken, zodSchemas } from '@u22n/utils';
 import { Argon2id } from 'oslo/password';
 import { getCookie, setCookie } from 'hono/cookie';
-import { storage } from '../../../storage';
-import { env } from '../../../env';
+import { storage } from '~platform/storage';
+import { env } from '~platform/env';
 
 export const twoFactorRouter = router({
   /**

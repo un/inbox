@@ -1,15 +1,13 @@
 import { db } from '@u22n/database';
 import { eq } from '@u22n/database/orm';
 import { orgs } from '@u22n/database/schema';
-import type { OrgContext } from '../ctx';
-import { storage } from '../storage';
+import type { OrgContext } from '~platform/ctx';
+import { storage } from '~platform/storage';
 
-export const validateOrgShortCode = async (orgShortCode: string) => {
-  if (!orgShortCode) {
-    return null;
-  }
+export async function validateOrgShortCode(orgShortCode: string) {
+  if (!orgShortCode) return null;
 
-  const cachedShortCodeOrgContext: OrgContext =
+  const cachedShortCodeOrgContext =
     await storage.orgContext.getItem(orgShortCode);
   if (cachedShortCodeOrgContext) {
     return cachedShortCodeOrgContext;
@@ -42,9 +40,9 @@ export const validateOrgShortCode = async (orgShortCode: string) => {
 
   await storage.orgContext.setItem(orgShortCode, orgContext);
   return orgContext;
-};
+}
 
-export async function refreshOrgShortCodeCache(orgId: number): Promise<void> {
+export async function refreshOrgShortCodeCache(orgId: number) {
   const orgLookupResult = await db.query.orgs.findFirst({
     where: eq(orgs.id, orgId),
     columns: { id: true, publicId: true, shortcode: true, name: true },

@@ -1,9 +1,9 @@
 import { z } from 'zod';
-import { router, publicRateLimitedProcedure } from '../../trpc';
+import { router, publicRateLimitedProcedure } from '~platform/trpc/trpc';
 import type { DBType } from '@u22n/database';
 import { eq } from '@u22n/database/orm';
 import { accounts } from '@u22n/database/schema';
-import { blockedUsernames, reservedUsernames } from '../../../utils/signup';
+import { blockedUsernames, reservedUsernames } from '~platform/utils/signup';
 import { zodSchemas, calculatePasswordStrength } from '@u22n/utils';
 
 export async function validateUsername(

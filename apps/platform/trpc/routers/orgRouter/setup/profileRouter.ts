@@ -1,9 +1,9 @@
 import { z } from 'zod';
-import { router, orgProcedure } from '../../../trpc';
+import { router, orgProcedure } from '~platform/trpc/trpc';
 import { eq } from '@u22n/database/orm';
 import { orgs } from '@u22n/database/schema';
 import { typeIdValidator } from '@u22n/utils';
-import { isAccountAdminOfOrg } from '../../../../utils/account';
+import { isAccountAdminOfOrg } from '~platform/utils/account';
 import { TRPCError } from '@trpc/server';
 
 export const orgProfileRouter = router({

@@ -3,7 +3,7 @@ import {
   inviteTemplatePlainText,
   type InviteEmailProps
 } from './inviteTemplate';
-import { env } from '../../env';
+import { env } from '~platform/env';
 
 type PostalResponse =
   | {

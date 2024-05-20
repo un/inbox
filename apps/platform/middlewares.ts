@@ -15,8 +15,7 @@ export const authMiddleware = createMiddleware<Ctx>(async (c, next) => {
       await next();
     } else {
       c.set('account', {
-        // @ts-expect-error, not typed properly yet
-        id: Number(sessionObject.attributes.account.id),
+        id: sessionObject.attributes.account.id,
         session: sessionObject
       });
       await next();

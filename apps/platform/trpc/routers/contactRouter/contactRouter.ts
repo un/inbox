@@ -1,17 +1,10 @@
 import { z } from 'zod';
-import { router, orgProcedure } from '../../trpc';
+import { router, orgProcedure } from '~platform/trpc/trpc';
 import { and, eq } from '@u22n/database/orm';
 import { contacts } from '@u22n/database/schema';
-import { TRPCError } from '@trpc/server';
 
 export const contactsRouter = router({
   getOrgContacts: orgProcedure.input(z.object({})).query(async ({ ctx }) => {
-    if (!ctx.account || !ctx.org) {
-      throw new TRPCError({
-        code: 'UNPROCESSABLE_CONTENT',
-        message: 'Account or Organization is not defined'
-      });
-    }
     const { db, org } = ctx;
     const orgId = org?.id;
 

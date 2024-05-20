@@ -1,4 +1,4 @@
-import type { Ctx } from './ctx';
+import type { Ctx, TrpcContext } from './ctx';
 import { env } from './env';
 import { Hono } from 'hono';
 import { serve } from '@hono/node-server';
@@ -42,12 +42,13 @@ app.use(
   '/trpc/*',
   trpcServer({
     router: trpcPlatformRouter,
-    createContext: (_, c) => ({
-      db,
-      account: c.get('account'),
-      org: null,
-      event: c
-    })
+    createContext: (_, c) =>
+      ({
+        db,
+        account: c.get('account'),
+        org: null,
+        event: c
+      }) satisfies TrpcContext
   })
 );
 

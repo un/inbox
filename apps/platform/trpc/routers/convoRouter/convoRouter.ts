@@ -1,7 +1,7 @@
-import { mailBridgeTrpcClient } from './../../../utils/tRPCServerClients';
+import { mailBridgeTrpcClient } from '~platform/utils/tRPCServerClients';
 import { z } from 'zod';
 import { parse } from 'superjson';
-import { router, orgProcedure } from '../../trpc';
+import { router, orgProcedure } from '~platform/trpc/trpc';
 import {
   type InferInsertModel,
   and,
@@ -36,8 +36,8 @@ import { TRPCError } from '@trpc/server';
 import { tipTapExtensions } from '@u22n/tiptap/extensions';
 import { tiptapCore, type tiptapVue3 } from '@u22n/tiptap';
 import { convoEntryRouter } from './entryRouter';
-import { realtime, sendRealtimeNotification } from '../../../utils/realtime';
-import { env } from '../../../env';
+import { realtime, sendRealtimeNotification } from '~platform/utils/realtime';
+import { env } from '~platform/env';
 
 export const convoRouter = router({
   entries: convoEntryRouter,

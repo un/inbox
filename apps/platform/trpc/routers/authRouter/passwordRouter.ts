@@ -4,7 +4,7 @@ import {
   router,
   accountProcedure,
   publicRateLimitedProcedure
-} from '../../trpc';
+} from '~platform/trpc/trpc';
 import { eq } from '@u22n/database/orm';
 import { accounts } from '@u22n/database/schema';
 import {
@@ -14,14 +14,14 @@ import {
   strongPasswordSchema
 } from '@u22n/utils';
 import { TRPCError } from '@trpc/server';
-import { lucia } from '../../../utils/auth';
+import { lucia } from '~platform/utils/auth';
 import { validateUsername } from './signupRouter';
-import { createLuciaSessionCookie } from '../../../utils/session';
+import { createLuciaSessionCookie } from '~platform/utils/session';
 import { decodeHex } from 'oslo/encoding';
 import { TOTPController } from 'oslo/otp';
 import { setCookie, getCookie, deleteCookie } from 'hono/cookie';
-import { env } from '../../../env';
-import { storage } from '../../../storage';
+import { env } from '~platform/env';
+import { storage } from '~platform/storage';
 
 export const passwordRouter = router({
   /**
@@ -36,7 +36,7 @@ export const passwordRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const { username, password } = input;
-      const { db, event } = ctx;
+      const { db } = ctx;
 
       const { accountId, publicId } = await db.transaction(async (tx) => {
         try {
@@ -66,17 +66,11 @@ export const passwordRouter = router({
         }
       });
 
-      const cookie = await createLuciaSessionCookie(ctx.event, {
+      await createLuciaSessionCookie(ctx.event, {
         accountId,
         username,
         publicId
       });
-
-      setCookie(event, cookie.name, cookie.value, cookie.attributes);
-      await db
-        .update(accounts)
-        .set({ lastLoginAt: new Date() })
-        .where(eq(accounts.id, accountId));
 
       return { success: true };
     }),
@@ -164,19 +158,13 @@ export const passwordRouter = router({
         }
       );
 
-      const cookie = await createLuciaSessionCookie(event, {
+      await createLuciaSessionCookie(event, {
         accountId,
         username,
         publicId
       });
 
-      setCookie(event, cookie.name, cookie.value, cookie.attributes);
       deleteCookie(event, 'un-2fa-challenge');
-
-      await db
-        .update(accounts)
-        .set({ lastLoginAt: new Date() })
-        .where(eq(accounts.id, accountId));
 
       return { success: true, error: null, recoveryCode };
     }),
@@ -296,17 +284,11 @@ export const passwordRouter = router({
       if (validPassword && otpValid) {
         const { id: accountId, username, publicId } = userResponse;
 
-        const cookie = await createLuciaSessionCookie(event, {
+        await createLuciaSessionCookie(event, {
           accountId,
           username,
           publicId
         });
-        setCookie(event, cookie.name, cookie.value, cookie.attributes);
-
-        await db
-          .update(accounts)
-          .set({ lastLoginAt: new Date() })
-          .where(eq(accounts.id, userResponse.id));
 
         const defaultOrg = userResponse.orgMemberships.sort(
           (a, b) => a.id - b.id
@@ -400,13 +382,12 @@ export const passwordRouter = router({
         await lucia.invalidateUserSessions(accountId);
       }
 
-      const cookie = await createLuciaSessionCookie(event, {
+      await createLuciaSessionCookie(event, {
         accountId,
         username: accountData.username,
         publicId: accountData.publicId
       });
 
-      setCookie(event, cookie.name, cookie.value, cookie.attributes);
       return { success: true };
     })
 });

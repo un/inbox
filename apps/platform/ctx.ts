@@ -1,13 +1,12 @@
 import type { HttpBindings } from '@hono/node-server';
+import type { DBType } from '@u22n/database';
+import type { Context } from 'hono';
 import type { DatabaseSession } from 'lucia';
 
 export type Ctx = {
   Bindings: HttpBindings;
   Variables: {
-    account: {
-      id: number;
-      session: any;
-    } | null;
+    account: AccountContext;
   };
 };
 
@@ -29,3 +28,10 @@ export type AccountContext = {
   id: number;
   session: DatabaseSession;
 } | null;
+
+export type TrpcContext = {
+  db: DBType;
+  account: AccountContext;
+  org: OrgContext;
+  event: Context<Ctx>;
+};

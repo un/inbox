@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { router, publicRateLimitedProcedure } from '../../trpc';
+import { router, publicRateLimitedProcedure } from '~platform/trpc/trpc';
 import { eq } from '@u22n/database/orm';
 import { accounts } from '@u22n/database/schema';
 import { TRPCError } from '@trpc/server';
@@ -13,13 +13,16 @@ import {
   typeIdValidator,
   zodSchemas
 } from '@u22n/utils';
-import { UAParser } from 'ua-parser-js';
-import { usePasskeys } from '../../../utils/auth/passkeys';
-import { usePasskeysDb } from '../../../utils/auth/passkeyDbAdaptor';
-import { lucia } from '../../../utils/auth';
+import {
+  verifyRegistrationResponse,
+  generateRegistrationOptions,
+  generateAuthenticationOptions,
+  verifyAuthenticationResponse
+} from '~platform/utils/auth/passkeys';
+import { createAuthenticator } from '~platform/utils/auth/passkeyUtils';
 import { validateUsername } from './signupRouter';
-import { createLuciaSessionCookie } from '../../../utils/session';
-import { env } from '../../../env';
+import { createLuciaSessionCookie } from '~platform/utils/session';
+import { env } from '~platform/env';
 import { ms } from 'itty-time';
 import { getCookie, setCookie } from 'hono/cookie';
 
@@ -42,7 +45,7 @@ export const passkeyRouter = router({
       }
 
       const publicId = typeIdGenerator('account');
-      const passkeyOptions = await usePasskeys.generateRegistrationOptions({
+      const passkeyOptions = await generateRegistrationOptions({
         userDisplayName: username,
         username: username,
         accountPublicId: publicId
@@ -63,7 +66,7 @@ export const passkeyRouter = router({
       const registrationResponse =
         input.registrationResponseRaw as RegistrationResponseJSON;
 
-      const passkeyVerification = await usePasskeys.verifyRegistrationResponse({
+      const passkeyVerification = await verifyRegistrationResponse({
         registrationResponse: registrationResponse,
         publicId: input.publicId
       });
@@ -104,7 +107,7 @@ export const passkeyRouter = router({
             });
           }
 
-          const insertPasskey = await usePasskeysDb.createAuthenticator(
+          const insertPasskey = await createAuthenticator(
             {
               accountId: Number(newAccount.insertId),
               credentialID: passkeyVerification.registrationInfo.credentialID,
@@ -137,12 +140,12 @@ export const passkeyRouter = router({
         }
       });
 
-      const cookie = await createLuciaSessionCookie(ctx.event, {
+      await createLuciaSessionCookie(ctx.event, {
         accountId,
         username: input.username,
         publicId: input.publicId
       });
-      setCookie(ctx.event, cookie.name, cookie.value, cookie.attributes);
+
       return { success: true };
     }),
 
@@ -160,7 +163,7 @@ export const passkeyRouter = router({
         maxAge: ms('5 minutes'),
         domain: env.PRIMARY_DOMAIN
       });
-      const passkeyOptions = await usePasskeys.generateAuthenticationOptions({
+      const passkeyOptions = await generateAuthenticationOptions({
         authChallengeId: authChallengeId
       });
 
@@ -187,11 +190,10 @@ export const passkeyRouter = router({
         });
       }
 
-      const passkeyVerification =
-        await usePasskeys.verifyAuthenticationResponse({
-          authenticationResponse: verificationResponse,
-          authChallengeId: challengeCookie
-        });
+      const passkeyVerification = await verifyAuthenticationResponse({
+        authenticationResponse: verificationResponse,
+        authChallengeId: challengeCookie
+      });
 
       if (
         !passkeyVerification.result.verified ||
@@ -231,26 +233,11 @@ export const passkeyRouter = router({
         });
       }
 
-      const { device, os } = UAParser(event.req.header('User-Agent'));
-      const userDevice =
-        device.type === 'mobile' ? device.toString() : device.vendor;
-
-      const accountSession = await lucia.createSession(account.id, {
-        account: {
-          id: account.id,
-          username: account.username,
-          publicId: account.publicId
-        },
-        device: userDevice || 'Unknown',
-        os: os.name || 'Unknown'
+      await createLuciaSessionCookie(ctx.event, {
+        accountId: account.id,
+        username: account.username,
+        publicId: account.publicId
       });
-      const cookie = lucia.createSessionCookie(accountSession.id);
-      setCookie(event, cookie.name, cookie.value, cookie.attributes);
-
-      await db
-        .update(accounts)
-        .set({ lastLoginAt: new Date() })
-        .where(eq(accounts.id, account.id));
 
       const defaultOrg = account.orgMemberships.sort((a, b) => a.id - b.id)[0]
         ?.org.shortcode;

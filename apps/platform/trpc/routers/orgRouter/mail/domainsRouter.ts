@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { router, orgProcedure } from '../../../trpc';
+import { router, orgProcedure } from '~platform/trpc/trpc';
 import { and, eq } from '@u22n/database/orm';
 import {
   domains,
@@ -8,8 +8,8 @@ import {
 } from '@u22n/database/schema';
 import { typeIdGenerator, typeIdValidator } from '@u22n/utils';
 import { TRPCError } from '@trpc/server';
-import { isAccountAdminOfOrg } from '../../../../utils/account';
-import { mailBridgeTrpcClient } from '../../../../utils/tRPCServerClients';
+import { isAccountAdminOfOrg } from '~platform/utils/account';
+import { mailBridgeTrpcClient } from '~platform/utils/tRPCServerClients';
 import { lookupNS } from '@u22n/utils';
 
 export const domainsRouter = router({

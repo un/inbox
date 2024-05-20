@@ -1,18 +1,18 @@
-import {
-  generateRegistrationOptions as webAuthnGenerateRegistrationOptions,
-  verifyRegistrationResponse as webAuthnVerifyRegistrationResponse,
-  generateAuthenticationOptions as webAuthnGenerateAuthenticationOptions,
-  verifyAuthenticationResponse as webAuthnVerifyAuthenticationResponse
-} from '@simplewebauthn/server';
+import * as webAuthn from '@simplewebauthn/server';
 import type {
   RegistrationResponseJSON,
   PublicKeyCredentialDescriptorFuture,
   AuthenticationResponseJSON
 } from '@simplewebauthn/types';
-import { type Authenticator, usePasskeysDb } from './passkeyDbAdaptor';
+import {
+  type Authenticator,
+  getAuthenticator,
+  listAuthenticatorsByAccountCredentialId,
+  listAuthenticatorsByAccountId
+} from './passkeyUtils';
 import { TRPCError } from '@trpc/server';
-import { env } from '../../env';
-import { storage } from '../../storage';
+import { env } from '~platform/env';
+import { storage } from '~platform/storage';
 
 type RegistrationOptions = {
   accountId?: number;
@@ -22,22 +22,20 @@ type RegistrationOptions = {
   authenticatorAttachment?: 'platform' | 'cross-platform';
 };
 
-async function generateRegistrationOptions(options: RegistrationOptions) {
-  const {
-    accountPublicId,
-    username,
-    userDisplayName,
-    // authenticatorAttachment,
-    accountId
-  } = options;
+const authStorage = storage.auth;
+
+export async function generateRegistrationOptions(
+  options: RegistrationOptions
+) {
+  const { accountPublicId, username, userDisplayName, accountId } = options;
 
   // We assume that the account is new if accountId is undefined, and we don't have any authenticators for them
   const accountAuthenticators: Authenticator[] =
     typeof accountId === 'undefined'
       ? []
-      : await usePasskeysDb.listAuthenticatorsByAccountId(accountId);
+      : await listAuthenticatorsByAccountId(accountId);
 
-  const registrationOptions = await webAuthnGenerateRegistrationOptions({
+  const registrationOptions = await webAuthn.generateRegistrationOptions({
     rpName: env.APP_NAME,
     rpID: env.PRIMARY_DOMAIN,
     userID: accountPublicId,
@@ -57,7 +55,6 @@ async function generateRegistrationOptions(options: RegistrationOptions) {
     }
   });
 
-  const authStorage = storage.auth;
   authStorage.setItem(
     `passkeyChallenge: ${accountPublicId}`,
     registrationOptions.challenge
@@ -66,14 +63,13 @@ async function generateRegistrationOptions(options: RegistrationOptions) {
   return registrationOptions;
 }
 
-async function verifyRegistrationResponse({
+export async function verifyRegistrationResponse({
   registrationResponse,
   publicId
 }: {
   registrationResponse: RegistrationResponseJSON;
   publicId: string;
 }) {
-  const authStorage = storage.auth;
   const expectedChallenge = await authStorage.getItem(
     `passkeyChallenge: ${publicId}`
   );
@@ -86,14 +82,13 @@ async function verifyRegistrationResponse({
     });
   }
 
-  const verifiedRegistrationResponse = await webAuthnVerifyRegistrationResponse(
-    {
+  const verifiedRegistrationResponse =
+    await webAuthn.verifyRegistrationResponse({
       response: registrationResponse,
       expectedChallenge: expectedChallenge.toString(),
       expectedOrigin: env.WEBAPP_URL,
       expectedRPID: env.PRIMARY_DOMAIN
-    }
-  );
+    });
   await authStorage.removeItem(`passkeyChallenge: ${publicId}`);
   if (!verifiedRegistrationResponse.verified) {
     throw new Error('Registration verification failed');
@@ -101,7 +96,7 @@ async function verifyRegistrationResponse({
   return verifiedRegistrationResponse;
 }
 
-async function generateAuthenticationOptions({
+export async function generateAuthenticationOptions({
   authChallengeId,
   accountId
 }: {
@@ -112,7 +107,7 @@ async function generateAuthenticationOptions({
 
   if (accountId) {
     const accountPasskeys =
-      await usePasskeysDb.listAuthenticatorsByAccountCredentialId(accountId);
+      await listAuthenticatorsByAccountCredentialId(accountId);
 
     for (const passkey of accountPasskeys) {
       credentials.push({
@@ -123,7 +118,7 @@ async function generateAuthenticationOptions({
     }
   }
 
-  const authenticationOptions = await webAuthnGenerateAuthenticationOptions({
+  const authenticationOptions = await webAuthn.generateAuthenticationOptions({
     rpID: env.PRIMARY_DOMAIN,
     userVerification: 'preferred',
     timeout: 60000,
@@ -131,24 +126,19 @@ async function generateAuthenticationOptions({
   });
 
   const userChallenge = authenticationOptions.challenge;
-  const authStorage = storage.auth;
   await authStorage.setItem(`authChallenge: ${authChallengeId}`, userChallenge);
 
   return authenticationOptions;
 }
 
-async function verifyAuthenticationResponse({
+export async function verifyAuthenticationResponse({
   authenticationResponse,
-  // expectedAllowedCredentials,
   authChallengeId
 }: {
   authenticationResponse: AuthenticationResponseJSON;
   authChallengeId: string;
-  expectedAllowedCredentials?: any;
 }) {
-  const authenticator = await usePasskeysDb.getAuthenticator(
-    authenticationResponse.id
-  );
+  const authenticator = await getAuthenticator(authenticationResponse.id);
 
   if (!authenticator) {
     throw new TRPCError({
@@ -156,12 +146,12 @@ async function verifyAuthenticationResponse({
       message: 'Authenticator not found'
     });
   }
-  const authStorage = storage.auth;
+
   const expectedChallenge = await authStorage.getItem(
     `authChallenge: ${authChallengeId}`
   );
 
-  const verificationResult = await webAuthnVerifyAuthenticationResponse({
+  const verificationResult = await webAuthn.verifyAuthenticationResponse({
     response: authenticationResponse,
     expectedChallenge: expectedChallenge as string,
     expectedOrigin: env.WEBAPP_URL,
@@ -174,10 +164,3 @@ async function verifyAuthenticationResponse({
     accountId: authenticator.accountId
   };
 }
-
-export const usePasskeys = {
-  generateRegistrationOptions,
-  verifyRegistrationResponse,
-  generateAuthenticationOptions,
-  verifyAuthenticationResponse
-};

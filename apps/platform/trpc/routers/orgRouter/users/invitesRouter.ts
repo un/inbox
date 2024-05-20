@@ -4,7 +4,7 @@ import {
   orgProcedure,
   accountProcedure,
   publicRateLimitedProcedure
-} from '../../../trpc';
+} from '~platform/trpc/trpc';
 import { eq } from '@u22n/database/orm';
 import {
   domains,
@@ -23,13 +23,13 @@ import {
   typeIdValidator,
   zodSchemas
 } from '@u22n/utils';
-import { refreshOrgShortCodeCache } from '../../../../utils/orgShortCode';
-import { isAccountAdminOfOrg } from '../../../../utils/account';
+import { refreshOrgShortCodeCache } from '~platform/utils/orgShortCode';
+import { isAccountAdminOfOrg } from '~platform/utils/account';
 import { TRPCError } from '@trpc/server';
-import { billingTrpcClient } from '../../../../utils/tRPCServerClients';
+import { billingTrpcClient } from '~platform/utils/tRPCServerClients';
 import { addOrgMemberToTeamHandler } from './teamsHandler';
-import { sendInviteEmail } from '../../../../utils/mail/transactional';
-import { env } from '../../../../env';
+import { sendInviteEmail } from '~platform/utils/mail/transactional';
+import { env } from '~platform/env';
 
 export const invitesRouter = router({
   createNewInvite: orgProcedure
