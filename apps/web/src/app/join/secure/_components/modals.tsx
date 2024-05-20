@@ -545,7 +545,17 @@ export function RecoveryCodeModal({
             not be able to recover your account
           </Text>
           <Card>
-            <Text className="break-words font-mono">{recoveryCode}</Text>
+            <div className="flex gap-1">
+              <Text className="w-full break-words font-mono">
+                {recoveryCode}
+              </Text>
+              <CopyButton
+                text={recoveryCode}
+                onCopy={() => {
+                  setDownloaded(true);
+                }}
+              />
+            </div>
           </Card>
           <Button
             size="2"
