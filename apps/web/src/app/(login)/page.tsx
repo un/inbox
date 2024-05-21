@@ -2,7 +2,6 @@ import { Flex, Box, Heading, Separator, Badge, Button } from '@radix-ui/themes';
 import PasskeyLoginButton from './_components/passkey-login';
 import PasswordLoginButton from './_components/password-login';
 import Link from 'next/link';
-import RecoveryButton from './_components/recovery-button';
 
 export default async function Page() {
   return (
@@ -52,7 +51,12 @@ export default async function Page() {
             </Button>
           </Flex>
         </Box>
-        <RecoveryButton />
+        <Button
+          size="3"
+          className="w-fit cursor-pointer font-semibold"
+          variant="ghost">
+          <Link href="/recovery">Recover your Account</Link>
+        </Button>
       </Box>
     </Flex>
   );

@@ -59,6 +59,7 @@ export default function PasswordLoginButton() {
         description: 'Redirecting you to create an organization'
       });
       router.push('/join/org');
+      return;
     }
     toast.success('Sign in successful!', {
       description: 'Redirecting you to your conversations'
