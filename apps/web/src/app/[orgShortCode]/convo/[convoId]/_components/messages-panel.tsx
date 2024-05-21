@@ -73,9 +73,9 @@ export function MessagesPanel({
 
   const itemRenderer = useCallback(
     (index: number, message: (typeof allMessages)[number]) => (
-      <div className="h-full w-full px-8 py-4">
+      <div className="h-full w-full">
         {index === firstItemIndex && hasNextPage ? (
-          <div className="flex w-full items-center justify-center gap-2 p-2">
+          <div className="flex w-full items-center justify-center gap-2">
             <Spinner loading />
             <span>Loading...</span>
           </div>
@@ -95,20 +95,22 @@ export function MessagesPanel({
       Loading...
     </div>
   ) : (
-    <ScrollArea ref={setScrollParent}>
-      <Virtuoso
-        startReached={() => {
-          if (isFetchingNextPage || !hasNextPage) return;
-          void fetchNextPage();
-        }}
-        data={allMessages}
-        initialTopMostItemIndex={Math.max(0, allMessages.length - 1)}
-        firstItemIndex={firstItemIndex}
-        itemContent={itemRenderer}
-        customScrollParent={scrollParent ?? undefined}
-        style={{ overscrollBehavior: 'contain' }}
-      />
-    </ScrollArea>
+    <div className="flex h-full w-full flex-col items-center justify-center gap-2 p-4">
+      <ScrollArea ref={setScrollParent}>
+        <Virtuoso
+          startReached={() => {
+            if (isFetchingNextPage || !hasNextPage) return;
+            void fetchNextPage();
+          }}
+          data={allMessages}
+          initialTopMostItemIndex={Math.max(0, allMessages.length - 1)}
+          firstItemIndex={firstItemIndex}
+          itemContent={itemRenderer}
+          customScrollParent={scrollParent ?? undefined}
+          style={{ overscrollBehavior: 'contain' }}
+        />
+      </ScrollArea>
+    </div>
   );
 }
 
@@ -142,7 +144,7 @@ function MessageItem({
   return (
     <div
       className={cn(
-        'flex w-full flex-row gap-2',
+        'mb-8 flex w-full flex-row gap-2',
         isUserAuthor ? 'flex-row-reverse' : 'flex-row'
       )}>
       <Avatar

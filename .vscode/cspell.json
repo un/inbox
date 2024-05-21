@@ -22,6 +22,7 @@
     "nuxt",
     "nuxthq",
     "nuxtjs",
+    "partialize",
     "pinia",
     "Pinia",
     "planetscale",
@@ -30,6 +31,7 @@
     "ratelimit",
     "Ratelimiter",
     "RPID",
+    "shadcn",
     "Shortcode",
     "simplewebauthn",
     "starttls",
@@ -49,6 +51,7 @@
     "unvalidated",
     "vueuse",
     "waitlist",
+    "zustand",
     "zxcvbn"
   ],
   "ignoreWords": ["ABCDEFGHJKMNPQRSTVWXYZ"],

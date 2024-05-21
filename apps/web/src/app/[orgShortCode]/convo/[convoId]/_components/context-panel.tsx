@@ -24,7 +24,7 @@ export function ContextPanel({
   const [participantOpen, setParticipantOpen] = useState(false);
 
   return (
-    <div className=" flex h-full w-80 min-w-80 flex-col">
+    <div className=" flex h-full min-w-64 max-w-80 flex-col">
       <div className="border-gray-11 flex h-full w-full flex-col">
         <div className="flex w-full flex-col">
           <div

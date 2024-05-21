@@ -57,7 +57,7 @@ export default function ConvoList() {
   ]);
 
   return (
-    <div className="bg-sand-1 flex h-full w-full min-w-64 max-w-96 flex-col border-r p-4">
+    <div className="bg-sand-1 flex h-full w-full  flex-col border-r p-4">
       {isLoading ? (
         <div className="w-full text-center font-bold">Loading...</div>
       ) : (
