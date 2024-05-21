@@ -1,12 +1,12 @@
 import { Hono } from 'hono';
-import type { Ctx } from '../ctx';
+import type { Ctx } from '~platform/ctx';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
-import { validateOrgShortCode } from '../utils/orgShortCode';
+import { validateOrgShortCode } from '~platform/utils/orgShortCode';
 import { db } from '@u22n/database';
 import { and, eq } from '@u22n/database/orm';
 import { orgMembers } from '@u22n/database/schema';
-import { realtime } from '../utils/realtime';
+import { realtime } from '~platform/utils/realtime';
 
 export const realtimeApi = new Hono<Ctx>();
 

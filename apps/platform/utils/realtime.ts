@@ -3,7 +3,7 @@ import { eq, inArray } from '@u22n/database/orm';
 import { convoEntries, convoParticipants, convos } from '@u22n/database/schema';
 import RealtimeServer from '@u22n/realtime/server';
 import type { TypeId } from '@u22n/utils';
-import { env } from '../env';
+import { env } from '~platform/env';
 
 export const realtime = new RealtimeServer({
   appId: env.REALTIME_APP_ID,

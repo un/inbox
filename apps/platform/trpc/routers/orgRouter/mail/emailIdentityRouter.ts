@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { router, orgProcedure } from '../../../trpc';
+import { router, orgProcedure } from '~platform/trpc/trpc';
 import {
   and,
   eq,
@@ -23,10 +23,10 @@ import {
   type TypeId,
   nanoIdToken
 } from '@u22n/utils';
-import { isAccountAdminOfOrg } from '../../../../utils/account';
+import { isAccountAdminOfOrg } from '~platform/utils/account';
 import { TRPCError } from '@trpc/server';
 import { emailIdentityExternalRouter } from './emailIdentityExternalRouter';
-import { env } from '../../../../env';
+import { env } from '~platform/env';
 
 export const emailIdentityRouter = router({
   external: emailIdentityExternalRouter,

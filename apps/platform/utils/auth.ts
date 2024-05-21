@@ -4,9 +4,9 @@ import {
   Lucia,
   TimeSpan
 } from 'lucia';
-import { UnInboxDBAdapter } from './auth/luciaDbAdaptor';
+import { UnInboxDBAdapter } from './auth/adapter';
 import type { TypeId } from '@u22n/utils';
-import { env } from '../env';
+import { env } from '~platform/env';
 
 const adapter = new UnInboxDBAdapter();
 const devMode = env.NODE_ENV === 'development';
@@ -20,29 +20,8 @@ export const lucia = new Lucia(adapter, {
       domain: env.PRIMARY_DOMAIN
     }
   },
-  getSessionAttributes: (attributes) => {
-    return {
-      account: attributes.account
-    };
-  },
-  getUserAttributes: (user) => {
-    const {
-      id,
-      publicId,
-      username,
-      passkeyEnabled,
-      passwordEnabled,
-      totpEnabled
-    } = user;
-    return {
-      id,
-      publicId,
-      username,
-      passwordEnabled,
-      totpEnabled,
-      passkeyEnabled
-    };
-  }
+  getSessionAttributes: ({ account }) => ({ account }),
+  getUserAttributes: (user) => user
 });
 
 declare module 'lucia' {
@@ -79,17 +58,18 @@ export interface AuthSession {
   expiresAt: Date;
 }
 
-export function luciaToAuthUser(user: DatabaseUser): AuthAccount {
+export function luciaToAuthUser(user: DatabaseUser) {
   return {
     id: user.attributes.id,
     publicId: user.attributes.publicId,
     username: user.attributes.username
-  };
+  } as AuthAccount;
 }
-export function luciaToAuthSession(session: DatabaseSession): AuthSession {
+
+export function luciaToAuthSession(session: DatabaseSession) {
   return {
     sessionToken: session.id,
     account: session.attributes.account,
     expiresAt: session.expiresAt
-  };
+  } as AuthSession;
 }

@@ -5,17 +5,18 @@ import type { AuthenticatorTransportFuture } from '@simplewebauthn/types';
 import { isoBase64URL } from '@simplewebauthn/server/helpers';
 import { typeIdGenerator } from '@u22n/utils';
 
-//! Enable debug logging
-const debug = false;
-const log = (...args: any[]) => {
-  if (debug) {
-    console.info('🔐 Passkey Auth DB Adapter', ...args);
-  }
-};
+export type CredentialDeviceType = 'singleDevice' | 'multiDevice';
+export interface Authenticator {
+  accountId: number;
+  credentialID: Uint8Array;
+  credentialPublicKey: Uint8Array;
+  counter: number;
+  credentialDeviceType: CredentialDeviceType;
+  credentialBackedUp: boolean;
+  transports?: AuthenticatorTransportFuture[];
+}
 
-//* Utils
-
-async function transformDbToAuthAuthenticator(
+export async function transformDbToAuthAuthenticator(
   dbQuery: typeof authenticators.$inferInsert
 ): Promise<Authenticator> {
   return {
@@ -29,25 +30,12 @@ async function transformDbToAuthAuthenticator(
   };
 }
 
-//* Passkey DB
-export type CredentialDeviceType = 'singleDevice' | 'multiDevice';
-export interface Authenticator {
-  accountId: number;
-  credentialID: Uint8Array;
-  credentialPublicKey: Uint8Array;
-  counter: number;
-  credentialDeviceType: CredentialDeviceType;
-  credentialBackedUp: boolean;
-  transports?: AuthenticatorTransportFuture[];
-}
-
-async function createAuthenticator(
+export async function createAuthenticator(
   authenticator: Authenticator,
   nickname: string,
   // We use a default value for the db if not provided, so that we can also pass transactions
   passkeyDb = db
 ) {
-  log('passkey: createAuthenticator', { authenticator });
   const b64ID = isoBase64URL.fromBuffer(authenticator.credentialID);
   const b64PK = isoBase64URL.fromBuffer(authenticator.credentialPublicKey);
 
@@ -71,14 +59,10 @@ async function createAuthenticator(
   return authenticator;
 }
 
-async function updateAuthenticatorCounter(
-  authenticator: Pick<Authenticator, 'credentialID'>,
+export async function updateAuthenticatorCounter(
+  authenticator: Authenticator,
   newCounter: number
 ) {
-  log('passkey: updateAuthenticatorCounter', {
-    authenticator,
-    newCounter
-  });
   const b64ID = isoBase64URL.fromBuffer(authenticator.credentialID);
 
   const authenticatorObject = await db.query.authenticators.findFirst({
@@ -96,15 +80,13 @@ async function updateAuthenticatorCounter(
     })
     .where(eq(authenticators.credentialID, b64ID));
 
-  const updatedAuthenticator = {
+  return {
     ...authenticator,
-    counter: +newCounter
+    counter: newCounter
   } as Authenticator;
-  return updatedAuthenticator;
 }
 
-async function getAuthenticator(credentialId: string) {
-  log('passkey: getAuthenticator', { credentialId });
+export async function getAuthenticator(credentialId: string) {
   const dbQuery = await db.query.authenticators.findFirst({
     where: eq(authenticators.credentialID, credentialId),
     columns: {
@@ -124,14 +106,10 @@ async function getAuthenticator(credentialId: string) {
     }
   });
   if (!dbQuery) return null;
-  const decodedResult: Authenticator =
-    await transformDbToAuthAuthenticator(dbQuery);
-
-  return decodedResult;
+  return await transformDbToAuthAuthenticator(dbQuery);
 }
 
-async function deleteAuthenticator(credentialId: Uint8Array) {
-  log('passkey: deleteAuthenticator', { credentialId });
+export async function deleteAuthenticator(credentialId: Uint8Array) {
   const b64ID = isoBase64URL.fromBuffer(credentialId);
 
   const dbDeleteResult = await db
@@ -141,10 +119,9 @@ async function deleteAuthenticator(credentialId: Uint8Array) {
   return dbDeleteResult.rowsAffected > 0;
 }
 
-async function listAuthenticatorsByAccountCredentialId(accountId: number) {
-  log('passkey: listAuthenticatorsByAccountCredentialId', {
-    accountId
-  });
+export async function listAuthenticatorsByAccountCredentialId(
+  accountId: number
+) {
   const dbQuery = await db.query.authenticators.findMany({
     where: eq(authenticators.accountId, accountId),
     columns: {
@@ -163,16 +140,10 @@ async function listAuthenticatorsByAccountCredentialId(accountId: number) {
       createdAt: true
     }
   });
-  const decodedResults: Authenticator[] = await Promise.all(
-    dbQuery.map(
-      async (authenticator) =>
-        await transformDbToAuthAuthenticator(authenticator)
-    )
-  );
-  return decodedResults;
+  return await Promise.all(dbQuery.map(transformDbToAuthAuthenticator));
 }
-async function listAuthenticatorsByAccountId(accountId: number) {
-  log('passkey: listAuthenticatorsByAccountId', { accountId });
+
+export async function listAuthenticatorsByAccountId(accountId: number) {
   const dbQuery = await db.query.accounts.findFirst({
     where: eq(accounts.id, accountId),
     columns: {
@@ -199,20 +170,7 @@ async function listAuthenticatorsByAccountId(accountId: number) {
     }
   });
   if (!dbQuery || !dbQuery.authenticators) return [];
-  const decodedResults: Authenticator[] = await Promise.all(
-    dbQuery.authenticators.map(
-      async (authenticator) =>
-        await transformDbToAuthAuthenticator(authenticator)
-    )
+  return await Promise.all(
+    dbQuery.authenticators.map(transformDbToAuthAuthenticator)
   );
-  return decodedResults;
 }
-
-export const usePasskeysDb = {
-  createAuthenticator,
-  updateAuthenticatorCounter,
-  getAuthenticator,
-  deleteAuthenticator,
-  listAuthenticatorsByAccountCredentialId,
-  listAuthenticatorsByAccountId
-};

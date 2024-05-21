@@ -1,6 +1,6 @@
-import { mailBridgeTrpcClient } from '../../../../utils/tRPCServerClients';
+import { mailBridgeTrpcClient } from '~platform/utils/tRPCServerClients';
 import { z } from 'zod';
-import { router, orgProcedure } from '../../../trpc';
+import { router, orgProcedure } from '~platform/trpc/trpc';
 import { and, eq, inArray, type InferInsertModel } from '@u22n/database/orm';
 import {
   orgMembers,
@@ -13,7 +13,7 @@ import {
 } from '@u22n/database/schema';
 import { nanoIdToken, typeIdGenerator, typeIdValidator } from '@u22n/utils';
 import { TRPCError } from '@trpc/server';
-import { env } from '../../../../env';
+import { env } from '~platform/env';
 
 export const emailIdentityExternalRouter = router({
   checkExternalAvailability: orgProcedure

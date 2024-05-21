@@ -1,6 +1,6 @@
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { orgProcedure, router, accountProcedure } from '../../trpc';
+import { orgProcedure, router, accountProcedure } from '~platform/trpc/trpc';
 import { eq } from '@u22n/database/orm';
 import {
   emailIdentities,
@@ -10,10 +10,9 @@ import {
   emailIdentitiesAuthorizedOrgMembers,
   emailRoutingRulesDestinations
 } from '@u22n/database/schema';
-
 import { orgMembers } from '@u22n/database/schema';
 import { nanoIdToken, typeIdGenerator, typeIdValidator } from '@u22n/utils';
-import { env } from '../../../env';
+import { env } from '~platform/env';
 
 export const addressRouter = router({
   getPersonalAddresses: accountProcedure

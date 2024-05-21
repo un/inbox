@@ -1,6 +1,11 @@
-import { usePasskeys } from './../../../utils/auth/passkeys';
+import {
+  generateAuthenticationOptions,
+  generateRegistrationOptions,
+  verifyAuthenticationResponse,
+  verifyRegistrationResponse
+} from '~platform/utils/auth/passkeys';
 import { z } from 'zod';
-import { router, accountProcedure } from '../../trpc';
+import { router, accountProcedure } from '~platform/trpc/trpc';
 import { and, eq } from '@u22n/database/orm';
 import { accounts, authenticators, sessions } from '@u22n/database/schema';
 import {
@@ -17,12 +22,12 @@ import type {
   RegistrationResponseJSON
 } from '@simplewebauthn/types';
 import { Argon2id } from 'oslo/password';
-import { usePasskeysDb } from '../../../utils/auth/passkeyDbAdaptor';
+import { createAuthenticator } from '~platform/utils/auth/passkeyUtils';
 import { decodeHex, encodeHex } from 'oslo/encoding';
 import { TOTPController, createTOTPKeyURI } from 'oslo/otp';
-import { lucia } from '../../../utils/auth';
-import { storage } from '../../../storage';
-import { env } from '../../../env';
+import { lucia } from '~platform/utils/auth';
+import { storage } from '~platform/storage';
+import { env } from '~platform/env';
 import { datePlus } from 'itty-time';
 
 const authStorage = storage.auth;
@@ -113,7 +118,7 @@ export const securityRouter = router({
         domain: env.PRIMARY_DOMAIN
       });
 
-      const passkeyOptions = await usePasskeys.generateAuthenticationOptions({
+      const passkeyOptions = await generateAuthenticationOptions({
         authChallengeId: authChallengeId,
         accountId: accountQuery.id
       });
@@ -162,11 +167,10 @@ export const securityRouter = router({
             message: 'Challenge not found, try again'
           });
         }
-        const passkeyVerification =
-          await usePasskeys.verifyAuthenticationResponse({
-            authenticationResponse: verificationResponse,
-            authChallengeId: challengeCookie
-          });
+        const passkeyVerification = await verifyAuthenticationResponse({
+          authenticationResponse: verificationResponse,
+          authChallengeId: challengeCookie
+        });
 
         if (
           !passkeyVerification.result.verified ||
@@ -806,7 +810,7 @@ export const securityRouter = router({
         });
       }
 
-      const passkeyOptions = await usePasskeys.generateRegistrationOptions({
+      const passkeyOptions = await generateRegistrationOptions({
         userDisplayName: accountData.username,
         username: accountData.username,
         accountPublicId: accountData.publicId
@@ -862,7 +866,7 @@ export const securityRouter = router({
       const registrationResponse =
         input.registrationResponseRaw as RegistrationResponseJSON;
 
-      const passkeyVerification = await usePasskeys.verifyRegistrationResponse({
+      const passkeyVerification = await verifyRegistrationResponse({
         registrationResponse: registrationResponse,
         publicId: accountData.publicId
       });
@@ -891,7 +895,7 @@ export const securityRouter = router({
         });
       }
 
-      const insertPasskey = await usePasskeysDb.createAuthenticator(
+      const insertPasskey = await createAuthenticator(
         {
           accountId: accountQuery.id,
           credentialID: passkeyVerification.registrationInfo.credentialID,

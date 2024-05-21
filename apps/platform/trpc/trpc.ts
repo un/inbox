@@ -1,29 +1,18 @@
 import { TRPCError, initTRPC } from '@trpc/server';
 import superjson from 'superjson';
-import { validateOrgShortCode } from '../utils/orgShortCode';
+import { validateOrgShortCode } from '~platform/utils/orgShortCode';
 import { type Duration, Ratelimit, NoopRatelimit } from '@unkey/ratelimit';
-import type { OrgContext, AccountContext } from '../ctx';
-import type { db } from '@u22n/database';
-import type { Context } from 'hono';
+import type { TrpcContext } from '~platform/ctx';
 import { z } from 'zod';
-import { env } from '../env';
-import type { Ctx } from '../ctx';
+import { env } from '~platform/env';
 
 export const trpcContext = initTRPC
-  .context<{
-    db: typeof db;
-    account: AccountContext;
-    org: OrgContext;
-    event: Context<Ctx>;
-  }>()
+  .context<TrpcContext>()
   .create({ transformer: superjson });
 
 const isAccountAuthenticated = trpcContext.middleware(({ next, ctx }) => {
-  if (
-    !ctx.account ||
-    !ctx.account.session.attributes.account.id ||
-    !ctx.account.id
-  ) {
+  if (!ctx.account) {
+    ctx.event.header('Location', '/');
     throw new TRPCError({
       code: 'UNAUTHORIZED',
       message: 'You are not logged in, redirecting...'
@@ -98,8 +87,7 @@ export const publicRateLimitedProcedure = Object.entries(
   publicRateLimits
 ).reduce(
   (acc, [key, [limit, duration]]) => {
-    // @ts-expect-error, we know this is a valid key
-    acc[key] = trpcContext.procedure.use(
+    acc[key as keyof typeof publicRateLimits] = trpcContext.procedure.use(
       createRatelimiter({ limit, duration, namespace: `public.${key}` })
     );
     return acc;
@@ -113,8 +101,8 @@ export const accountProcedure = trpcContext.procedure.use(
 export const orgProcedure = trpcContext.procedure
   .use(isAccountAuthenticated)
   .input(z.object({ orgShortCode: z.string() }))
-  .use(async (opts) => {
-    const { orgShortCode } = opts.input;
+  .use(async ({ input, ctx, next }) => {
+    const { orgShortCode } = input;
     const orgData = await validateOrgShortCode(orgShortCode);
 
     if (!orgData) {
@@ -124,21 +112,22 @@ export const orgProcedure = trpcContext.procedure
       });
     }
 
-    const accountId = opts.ctx.account.id;
+    const accountId = ctx.account.id;
     const orgMembership = orgData.members.find(
       (member) => member.accountId === accountId
     );
 
     if (!accountId || !orgMembership) {
+      ctx.event.header('Location', '/');
       throw new TRPCError({
         code: 'UNAUTHORIZED',
         message: 'You are not a member of this organization, redirecting...'
       });
     }
 
-    return opts.next({
+    return next({
       ctx: {
-        ...opts.ctx,
+        ...ctx,
         org: { ...orgData, memberId: orgMembership.id }
       }
     });

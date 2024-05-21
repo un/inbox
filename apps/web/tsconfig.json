@@ -3,6 +3,7 @@
     /* Base Options: */
     "esModuleInterop": true,
     "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
     "target": "es2022",
     "allowJs": true,
     "resolveJsonModule": true,
@@ -26,7 +27,9 @@
     /* Path Aliases */
 
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      // Make typescript know about the platform folder with its alias
+      "~platform/*": ["../platform/*"]
     }
   },
   "include": [

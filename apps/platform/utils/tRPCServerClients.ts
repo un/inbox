@@ -3,7 +3,7 @@ import { createTRPCProxyClient, httpBatchLink } from '@trpc/client';
 import superjson from 'superjson';
 import type { TrpcMailBridgeRouter } from '@u22n/mail-bridge/trpc';
 import type { TrpcBillingRouter } from '@uninbox-ee/billing/trpc';
-import { env } from '../env';
+import { env } from '~platform/env';
 
 export const mailBridgeTrpcClient = createTRPCProxyClient<TrpcMailBridgeRouter>(
   {

@@ -5,7 +5,13 @@
   "scripts": {
     "dev": "tsx watch --clear-screen=false app.ts",
     "start": "node --import=tsx app.ts",
+    "build": "echo 'No build step configured'",
     "check": "tsc --noEmit"
+  },
+  "exports": {
+    "./trpc": {
+      "types": "./trpc/index.ts"
+    }
   },
   "dependencies": {
     "@hono/node-server": "^1.11.1",

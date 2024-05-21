@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { Argon2id } from 'oslo/password';
-import { router, publicRateLimitedProcedure } from '../../trpc';
+import { router, publicRateLimitedProcedure } from '~platform/trpc/trpc';
 import { eq } from '@u22n/database/orm';
 import { accounts } from '@u22n/database/schema';
 import {
@@ -10,12 +10,12 @@ import {
   zodSchemas
 } from '@u22n/utils';
 import { TRPCError } from '@trpc/server';
-import { createLuciaSessionCookie } from '../../../utils/session';
+import { createLuciaSessionCookie } from '~platform/utils/session';
 import { decodeHex, encodeHex } from 'oslo/encoding';
 import { TOTPController, createTOTPKeyURI } from 'oslo/otp';
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
-import { env } from '../../../env';
-import { storage } from '../../../storage';
+import { env } from '~platform/env';
+import { storage } from '~platform/storage';
 import { ms } from 'itty-time';
 
 export const recoveryRouter = router({
@@ -138,13 +138,11 @@ export const recoveryRouter = router({
       ) {
         const { id: accountId, username, publicId } = userResponse;
 
-        const cookie = await createLuciaSessionCookie(event, {
+        await createLuciaSessionCookie(event, {
           accountId,
           username,
           publicId
         });
-
-        setCookie(event, cookie.name, cookie.value, cookie.attributes);
 
         const authStorage = storage.auth;
         const token = nanoIdToken();
@@ -158,11 +156,6 @@ export const recoveryRouter = router({
           domain: env.PRIMARY_DOMAIN,
           sameSite: 'Lax'
         });
-
-        await db
-          .update(accounts)
-          .set({ lastLoginAt: new Date() })
-          .where(eq(accounts.id, userResponse.id));
 
         return { success: true };
       }
