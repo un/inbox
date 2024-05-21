@@ -1,5 +1,5 @@
 import { intlFormatDistance } from 'date-fns';
-import { ms } from 'itty-time';
+import { ms } from '@u22n/utils/ms';
 import { useState, useEffect } from 'react';
 
 export default function useTimeAgo(

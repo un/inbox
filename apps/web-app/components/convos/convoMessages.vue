@@ -3,7 +3,7 @@
   import { ref, useNuxtApp, watch } from '#imports';
   import { type ConvoEntryMetadata } from '@u22n/database/schema';
   import { useConvoEntryStore } from '~/stores/convoEntryStore';
-  import type { TypeId } from '@u22n/utils';
+  import type { TypeId } from '@u22n/utils/typeid';
 
   const { $trpc } = useNuxtApp();
 

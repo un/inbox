@@ -16,7 +16,7 @@ import {
   getUniqueDKIMSelector,
   randomAlphaNumeric
 } from './generators';
-import { and, eq, sql } from 'drizzle-orm/sql';
+import { and, eq, sql } from 'drizzle-orm';
 import {
   lookupCNAME,
   lookupMX,
@@ -27,7 +27,7 @@ import {
   parseSpfIncludes,
   parseDmarc,
   buildDmarcRecord
-} from '@u22n/utils';
+} from '@u22n/utils/dns';
 import { env } from '../env';
 
 export type CreateOrgInput = {

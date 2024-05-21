@@ -3,12 +3,10 @@ import { Argon2id } from 'oslo/password';
 import { router, publicRateLimitedProcedure } from '~platform/trpc/trpc';
 import { eq } from '@u22n/database/orm';
 import { accounts } from '@u22n/database/schema';
-import {
-  nanoIdToken,
-  strongPasswordSchema,
-  typeIdValidator,
-  zodSchemas
-} from '@u22n/utils';
+import { nanoIdToken, zodSchemas } from '@u22n/utils/zodSchemas';
+import { strongPasswordSchema } from '@u22n/utils/password';
+import { typeIdValidator } from '@u22n/utils/typeid';
+import { ms } from '@u22n/utils/ms';
 import { TRPCError } from '@trpc/server';
 import { createLuciaSessionCookie } from '~platform/utils/session';
 import { decodeHex, encodeHex } from 'oslo/encoding';
@@ -16,7 +14,6 @@ import { TOTPController, createTOTPKeyURI } from 'oslo/otp';
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
 import { env } from '~platform/env';
 import { storage } from '~platform/storage';
-import { ms } from 'itty-time';
 
 export const recoveryRouter = router({
   /**

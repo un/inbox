@@ -1,6 +1,6 @@
 import { UAParser } from 'ua-parser-js';
 import { lucia } from './auth';
-import type { TypeId } from '@u22n/utils';
+import type { TypeId } from '@u22n/utils/typeid';
 import type { Context } from 'hono';
 import { setCookie } from 'hono/cookie';
 import { db } from '@u22n/database';

@@ -9,7 +9,7 @@ import {
   Badge,
   Spinner
 } from '@radix-ui/themes';
-import { type TypeId } from '@u22n/utils';
+import { type TypeId } from '@u22n/utils/typeid';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { type JSONContent, generateHTML } from '@u22n/tiptap/react';
@@ -22,10 +22,8 @@ import { useAtom } from 'jotai';
 import { useCopyToClipboard } from '@uidotdev/usehooks';
 import { toast } from 'sonner';
 import { Virtuoso } from 'react-virtuoso';
-
 import { replyToMessageAtom } from '../atoms';
-
-import { ms } from 'itty-time';
+import { ms } from '@u22n/utils/ms';
 
 export function MessagesPanel({
   convoId,

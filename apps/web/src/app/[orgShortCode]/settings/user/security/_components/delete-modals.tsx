@@ -1,6 +1,6 @@
 import { type ModalComponent } from '@/src/hooks/use-awaitable-modal';
 import { Button, Dialog } from '@radix-ui/themes';
-import { type TypeId } from '@u22n/utils';
+import { type TypeId } from '@u22n/utils/typeid';
 import { api } from '@/src/lib/trpc';
 
 export function DeletePasskeyModal({

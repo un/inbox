@@ -8,7 +8,8 @@
     watchDebounced
   } from '#imports';
   import { useRoute } from '#vue-router';
-  import type { TypeId, UiColor } from '@u22n/utils';
+  import type { TypeId } from '@u22n/utils/typeid';
+  import type { UiColor } from '@u22n/utils/typeid/colors';
   import { z } from 'zod';
 
   const { $trpc } = useNuxtApp();

@@ -8,7 +8,7 @@ import useAwaitableModal, {
   type ModalComponent
 } from '@/src/hooks/use-awaitable-modal';
 import { type RouterOutputs, api } from '@/src/lib/trpc';
-import { type TypeId } from '@u22n/utils';
+import { type TypeId } from '@u22n/utils/typeid';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/src/components/shadcn-ui/button';

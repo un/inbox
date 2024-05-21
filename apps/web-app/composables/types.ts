@@ -1,5 +1,6 @@
 import { useNuxtApp } from '#imports';
-import type { TypeId, UiColor } from '@u22n/utils';
+import type { TypeId } from '@u22n/utils/typeid';
+import type { UiColor } from '@u22n/utils/colors';
 
 const { $trpc } = useNuxtApp();
 

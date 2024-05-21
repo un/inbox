@@ -1,4 +1,4 @@
-import { type TypeId } from '@u22n/utils';
+import { type TypeId } from '@u22n/utils/typeid';
 import { createStore } from 'zustand/vanilla';
 
 type Org = {

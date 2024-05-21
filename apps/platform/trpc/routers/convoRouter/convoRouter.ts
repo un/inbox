@@ -31,7 +31,11 @@ import {
   convoEntryPrivateVisibilityParticipants,
   convoEntryRawHtmlEmails
 } from '@u22n/database/schema';
-import { typeIdValidator, type TypeId, typeIdGenerator } from '@u22n/utils';
+import {
+  typeIdValidator,
+  type TypeId,
+  typeIdGenerator
+} from '@u22n/utils/typeid';
 import { TRPCError } from '@trpc/server';
 import { tipTapExtensions } from '@u22n/tiptap/extensions';
 import { tiptapCore, type tiptapVue3 } from '@u22n/tiptap';

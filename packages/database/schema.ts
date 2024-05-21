@@ -19,7 +19,8 @@ import {
   customType
 } from 'drizzle-orm/mysql-core';
 import { relations } from 'drizzle-orm';
-import { typeIdDataType as publicId, uiColors } from '@u22n/utils';
+import { typeIdDataType as publicId } from '@u22n/utils/typeid';
+import { uiColors } from '@u22n/utils/colors';
 
 // TODO: we need to make this separated from nuxt apps, imports from "#import" breaks everything
 

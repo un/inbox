@@ -1,4 +1,4 @@
-import { typeIdValidator } from '@u22n/utils';
+import { typeIdValidator } from '@u22n/utils/typeid';
 import { z } from 'zod';
 
 // Just a few examples, do the real implementation here

@@ -2,7 +2,7 @@
 
 import { api } from '@/src/lib/trpc';
 import Link from 'next/link';
-import { type TypeId, validateTypeId } from '@u22n/utils';
+import { type TypeId, validateTypeId } from '@u22n/utils/typeid';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { useMemo } from 'react';
 import { formatParticipantData } from '../utils';

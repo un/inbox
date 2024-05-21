@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { z } from 'zod';
-  import { zodSchemas } from '@u22n/utils';
+  import { zodSchemas } from '@u22n/utils/zodSchemas';
   import {
     navigateTo,
     definePageMeta,

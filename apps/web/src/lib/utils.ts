@@ -1,6 +1,7 @@
 import { twMerge } from 'tailwind-merge';
 import clsx, { type ClassValue } from 'clsx';
-import { type TypeId } from '@u22n/utils';
+import { type TypeId } from '@u22n/utils/typeid';
+import { env } from 'next-runtime-env';
 
 export const cn = (...input: ClassValue[]) => twMerge(clsx(input));
 
@@ -17,6 +18,7 @@ export const downloadAsFile = (filename: string, content: string) => {
   document.body.removeChild(element);
 };
 
+const STORAGE_URL = env('NEXT_PUBLIC_STORAGE_URL');
 export const generateAvatarUrl = ({
   publicId,
   avatarTimestamp,
@@ -41,7 +43,7 @@ export const generateAvatarUrl = ({
     return null;
   }
   const epochTs = new Date(avatarTimestamp).getTime() / 1000;
-  return `${process.env.NEXT_PUBLIC_STORAGE_URL}/avatar/${publicId}/${
+  return `${STORAGE_URL}/avatar/${publicId}/${
     size ? size : '5xl'
   }?t=${epochTs}`;
 };

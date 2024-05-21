@@ -11,7 +11,7 @@ import {
   Flex,
   Progress
 } from '@radix-ui/themes';
-import { type TypeId } from '@u22n/utils';
+import { type TypeId } from '@u22n/utils/typeid';
 import { Camera } from '@phosphor-icons/react';
 import { useRef, useState } from 'react';
 

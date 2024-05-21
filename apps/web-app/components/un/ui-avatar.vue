@@ -2,8 +2,8 @@
   import { computed } from '#imports';
   import { useUtils } from '~/composables/utils';
   import { NuxtUiAvatar } from '#components';
-  import { uiColors } from '@u22n/utils';
-  import type { TypeId } from '@u22n/utils';
+  import { uiColors } from '@u22n/utils/colors';
+  import type { TypeId } from '@u22n/utils/typeid';
 
   type UiColors = (typeof uiColors)[number] | null;
 

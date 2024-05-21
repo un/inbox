@@ -8,7 +8,7 @@ import {
 } from '@/src/components/shadcn-ui/input-otp';
 import { type FieldApi, useForm } from '@tanstack/react-form';
 import { zodValidator } from '@tanstack/zod-form-adapter';
-import { zodSchemas } from '@u22n/utils';
+import { zodSchemas } from '@u22n/utils/zodSchemas';
 import { api } from '@/src/lib/trpc';
 import { z } from 'zod';
 import useAwaitableModal from '@/src/hooks/use-awaitable-modal';

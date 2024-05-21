@@ -4,7 +4,8 @@ import type { DBType } from '@u22n/database';
 import { eq } from '@u22n/database/orm';
 import { accounts } from '@u22n/database/schema';
 import { blockedUsernames, reservedUsernames } from '~platform/utils/signup';
-import { zodSchemas, calculatePasswordStrength } from '@u22n/utils';
+import { calculatePasswordStrength } from '@u22n/utils/password';
+import { zodSchemas } from '@u22n/utils/zodSchemas';
 
 export async function validateUsername(
   db: DBType,

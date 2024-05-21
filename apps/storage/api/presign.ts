@@ -7,7 +7,7 @@ import { orgMembers, orgs, pendingAttachments } from '@u22n/database/schema';
 import { and, eq } from '@u22n/database/orm';
 import { db } from '@u22n/database';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
-import { typeIdGenerator } from '@u22n/utils';
+import { typeIdGenerator } from '@u22n/utils/typeid';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { env } from '../env';
 import { s3Client } from '../s3';

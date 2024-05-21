@@ -3,7 +3,7 @@ import { db } from '@u22n/database';
 import { eq, inArray, lte } from '@u22n/database/orm';
 import { sessions, accounts } from '@u22n/database/schema';
 import { storage } from '~platform/storage';
-import { typeIdGenerator } from '@u22n/utils';
+import { typeIdGenerator } from '@u22n/utils/typeid';
 
 const sessionStorage = storage.session;
 

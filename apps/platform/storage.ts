@@ -1,5 +1,5 @@
 import { env } from './env';
-import { ms } from 'itty-time';
+import { ms } from '@u22n/utils/ms';
 import redisDriver from 'unstorage/drivers/redis';
 import { createStorage, type StorageValue } from 'unstorage';
 import type { DatabaseSession } from 'lucia';

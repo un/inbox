@@ -2,7 +2,7 @@ import type { ConvoParticipantEntry } from './types';
 import { cva, type VariantProps } from 'class-variance-authority';
 import type { UserConvosDataType } from '~/composables/types';
 import { useRuntimeConfig } from '#imports';
-import type { TypeId } from '@u22n/utils';
+import type { TypeId } from '@u22n/utils/typeid';
 
 function generateAvatarUrl({
   publicId,

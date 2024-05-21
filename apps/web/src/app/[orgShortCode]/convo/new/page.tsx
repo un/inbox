@@ -13,7 +13,7 @@ import {
   Text,
   TextField
 } from '@radix-ui/themes';
-import { type TypeId } from '@u22n/utils';
+import { type TypeId } from '@u22n/utils/typeid';
 import {
   Command,
   CommandInput,

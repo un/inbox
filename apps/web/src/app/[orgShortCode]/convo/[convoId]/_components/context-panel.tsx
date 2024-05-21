@@ -6,7 +6,7 @@ import { CaretUp, CaretDown } from '@phosphor-icons/react';
 import { useState } from 'react';
 import { type formatParticipantData } from '../../utils';
 import { memo } from 'react';
-import { type TypeId } from '@u22n/utils';
+import { type TypeId } from '@u22n/utils/typeid';
 import { Badge } from '@/src/components/shadcn-ui/badge';
 
 export function ContextPanel({

@@ -15,7 +15,7 @@ import { useDebounce } from '@uidotdev/usehooks';
 import { api } from '@/src/lib/trpc';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { zodSchemas } from '@u22n/utils';
+import { zodSchemas } from '@u22n/utils/zodSchemas';
 import { useCookies } from 'next-client-cookies';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';

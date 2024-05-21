@@ -9,7 +9,7 @@ import { accounts } from '@u22n/database/schema';
 import { decodeHex, encodeHex } from 'oslo/encoding';
 import { TOTPController, createTOTPKeyURI } from 'oslo/otp';
 import { TRPCError } from '@trpc/server';
-import { nanoIdToken, zodSchemas } from '@u22n/utils';
+import { nanoIdToken, zodSchemas } from '@u22n/utils/zodSchemas';
 import { Argon2id } from 'oslo/password';
 import { getCookie, setCookie } from 'hono/cookie';
 import { storage } from '~platform/storage';

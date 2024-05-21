@@ -19,7 +19,7 @@
   import { tiptapVue3, emptyTiptapEditorContent } from '@u22n/tiptap';
   import { type ConvoEntryMetadata } from '@u22n/database/schema';
   import { stringify } from 'superjson';
-  import { validateTypeId, type TypeId } from '@u22n/utils';
+  import { validateTypeId, type TypeId } from '@u22n/utils/typeid';
   import type { UnEditor } from '#components';
 
   const { $trpc } = useNuxtApp();

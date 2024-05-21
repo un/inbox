@@ -21,7 +21,7 @@
     RegistrationResponseJSON
   } from '@simplewebauthn/types';
   import type { SettingsSecurityPasswordReset } from '#build/components';
-  import type { TypeId } from '@u22n/utils';
+  import type { TypeId } from '@u22n/utils/typeid';
   import { navigateTo } from '#app';
   import { breakpointsTailwind, useBreakpoints } from '@vueuse/core';
 

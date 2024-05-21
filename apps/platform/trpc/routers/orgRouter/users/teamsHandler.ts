@@ -8,7 +8,7 @@ import {
   teams,
   orgMembers
 } from '@u22n/database/schema';
-import { typeIdGenerator, type TypeId } from '@u22n/utils';
+import { typeIdGenerator, type TypeId } from '@u22n/utils/typeid';
 
 export async function addOrgMemberToTeamHandler({
   orgId,

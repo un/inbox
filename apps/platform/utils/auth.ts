@@ -5,7 +5,7 @@ import {
   TimeSpan
 } from 'lucia';
 import { UnInboxDBAdapter } from './auth/adapter';
-import type { TypeId } from '@u22n/utils';
+import type { TypeId } from '@u22n/utils/typeid';
 import { env } from '~platform/env';
 
 const adapter = new UnInboxDBAdapter();

@@ -19,7 +19,7 @@ import {
   typeIdValidator,
   validateTypeId,
   type TypeId
-} from '@u22n/utils';
+} from '@u22n/utils/typeid';
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { db } from '@u22n/database';

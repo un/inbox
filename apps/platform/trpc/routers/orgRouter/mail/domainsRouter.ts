@@ -6,11 +6,11 @@ import {
   postalServers,
   orgPostalConfigs
 } from '@u22n/database/schema';
-import { typeIdGenerator, typeIdValidator } from '@u22n/utils';
+import { typeIdGenerator, typeIdValidator } from '@u22n/utils/typeid';
+import { lookupNS } from '@u22n/utils/dns';
 import { TRPCError } from '@trpc/server';
 import { isAccountAdminOfOrg } from '~platform/utils/account';
 import { mailBridgeTrpcClient } from '~platform/utils/tRPCServerClients';
-import { lookupNS } from '@u22n/utils';
 
 export const domainsRouter = router({
   createNewDomain: orgProcedure

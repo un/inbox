@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { navigateTo, ref, useNuxtApp, useRoute, watch } from '#imports';
-  import type { TypeId } from '@u22n/utils';
+  import type { TypeId } from '@u22n/utils/typeid';
   import { breakpointsTailwind, useBreakpoints } from '@vueuse/core';
 
   const breakpoints = useBreakpoints(breakpointsTailwind);

@@ -11,7 +11,8 @@ import {
   emailRoutingRulesDestinations
 } from '@u22n/database/schema';
 import { orgMembers } from '@u22n/database/schema';
-import { nanoIdToken, typeIdGenerator, typeIdValidator } from '@u22n/utils';
+import { typeIdGenerator, typeIdValidator } from '@u22n/utils/typeid';
+import { nanoIdToken } from '@u22n/utils/zodSchemas';
 import { env } from '~platform/env';
 
 export const addressRouter = router({
