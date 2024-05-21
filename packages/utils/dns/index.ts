@@ -62,3 +62,5 @@ export const lookupNS = async (domain: string) =>
   mapOverSuccess(await lookup(domain, 'NS'), (data) =>
     data.map((d) => d.data.replace(/\.$/, ''))
   );
+
+export * from './txtParsers';

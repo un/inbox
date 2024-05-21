@@ -3,7 +3,7 @@ import { db } from '@u22n/database';
 import { accounts, authenticators } from '@u22n/database/schema';
 import type { AuthenticatorTransportFuture } from '@simplewebauthn/types';
 import { isoBase64URL } from '@simplewebauthn/server/helpers';
-import { typeIdGenerator } from '@u22n/utils';
+import { typeIdGenerator } from '@u22n/utils/typeid';
 
 export type CredentialDeviceType = 'singleDevice' | 'multiDevice';
 export interface Authenticator {

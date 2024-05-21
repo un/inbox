@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { router, protectedProcedure } from '../trpc';
 import { and, eq } from '@u22n/database/orm';
 import { postalServers } from '@u22n/database/schema';
-import { typeIdValidator } from '@u22n/utils';
+import { typeIdValidator } from '@u22n/utils/typeid';
 import { postalDB } from '../../postal-db';
 import { httpEndpoints, organizations, servers } from '../../postal-db/schema';
 import {

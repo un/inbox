@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import type { UiColor } from '@u22n/utils';
+  import type { UiColor } from '@u22n/utils/colors';
   import { z } from 'zod';
   import {
     computed,
@@ -10,7 +10,7 @@
     watch,
     watchDebounced
   } from '#imports';
-  import type { TypeId } from '@u22n/utils';
+  import type { TypeId } from '@u22n/utils/typeid';
   import { useEEStore } from '~/stores/eeStore';
   import { useRoute } from '#vue-router';
 

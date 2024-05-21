@@ -7,12 +7,9 @@ import {
 } from '~platform/trpc/trpc';
 import { eq } from '@u22n/database/orm';
 import { accounts } from '@u22n/database/schema';
-import {
-  nanoIdToken,
-  typeIdGenerator,
-  zodSchemas,
-  strongPasswordSchema
-} from '@u22n/utils';
+import { nanoIdToken, zodSchemas } from '@u22n/utils/zodSchemas';
+import { strongPasswordSchema } from '@u22n/utils/password';
+import { typeIdGenerator } from '@u22n/utils/typeid';
 import { TRPCError } from '@trpc/server';
 import { lucia } from '~platform/utils/auth';
 import { validateUsername } from './signupRouter';

@@ -3,7 +3,7 @@ import type { Ctx } from '../ctx';
 import { checkSignedIn } from '../middlewares';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
-import { typeIdValidator, type TypeId } from '@u22n/utils';
+import { typeIdValidator, type TypeId } from '@u22n/utils/typeid';
 import {
   orgMemberProfiles,
   orgMembers,

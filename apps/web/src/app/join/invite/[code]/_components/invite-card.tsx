@@ -1,6 +1,6 @@
 'use client';
 
-import { datePlus } from 'itty-time';
+import { datePlus } from '@u22n/utils/ms';
 import { Avatar, Button, Card, Flex, Spinner, Text } from '@radix-ui/themes';
 import Link from 'next/link';
 import { api, isAuthenticated } from '@/src/lib/trpc';

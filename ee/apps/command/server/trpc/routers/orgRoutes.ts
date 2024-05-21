@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { router, accountProcedure } from '../trpc';
 import { eq } from '@u22n/database/orm';
-import { typeIdValidator } from '@u22n/utils';
+import { typeIdValidator } from '@u22n/utils/typeid';
 import { db } from '@u22n/database';
 import { orgs, type OrgMetadata } from '@u22n/database/schema';
 import { TRPCError } from '@trpc/server';

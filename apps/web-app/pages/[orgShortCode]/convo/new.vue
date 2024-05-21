@@ -14,7 +14,7 @@
   import type { UiColor } from '@u22n/types/ui';
   import { stringify } from 'superjson';
   import { z } from 'zod';
-  import type { TypeId } from '@u22n/utils';
+  import type { TypeId } from '@u22n/utils/typeid';
 
   const { $trpc } = useNuxtApp();
   const orgShortCode = (useRoute().params.orgShortCode ?? '') as string;

@@ -2,7 +2,7 @@
 
 import { api } from '@/src/lib/trpc';
 import { Select } from '@radix-ui/themes';
-import { type TypeId } from '@u22n/utils';
+import { type TypeId } from '@u22n/utils/typeid';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { type JSONContent } from '@u22n/tiptap/react';

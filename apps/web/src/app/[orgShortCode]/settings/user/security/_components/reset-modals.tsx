@@ -23,7 +23,7 @@ import {
   InputOTPSeparator,
   InputOTPSlot
 } from '@/src/components/shadcn-ui/input-otp';
-import { ms } from 'itty-time';
+import { ms } from '@u22n/utils/ms';
 import Image from 'next/image';
 import { downloadAsFile } from '@/src/lib/utils';
 import { toast } from 'sonner';

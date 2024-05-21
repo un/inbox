@@ -18,7 +18,7 @@ import TogglePasswordBox from '@/src/components/toggle-password';
 import { useDebounce } from '@uidotdev/usehooks';
 import { api } from '@/src/lib/trpc';
 import { cn } from '@/src/lib/utils';
-import { type TypeId } from '@u22n/utils';
+import { type TypeId } from '@u22n/utils/typeid';
 
 export function PasswordRecoveryModal({
   open,

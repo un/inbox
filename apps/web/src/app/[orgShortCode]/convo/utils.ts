@@ -1,6 +1,6 @@
 import { api, type RouterOutputs } from '@/src/lib/trpc';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
-import { type TypeId } from '@u22n/utils';
+import { type TypeId } from '@u22n/utils/typeid';
 
 export function formatParticipantData(
   participant: RouterOutputs['convos']['getOrgMemberConvos']['data'][number]['participants'][number]

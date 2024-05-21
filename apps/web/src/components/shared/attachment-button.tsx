@@ -1,7 +1,7 @@
 import uploadTracker from '@/src/lib/upload';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { Badge, Button, Flex, IconButton } from '@radix-ui/themes';
-import { type TypeId } from '@u22n/utils';
+import { type TypeId } from '@u22n/utils/typeid';
 import { type PrimitiveAtom, useAtom } from 'jotai';
 import { Plus } from '@phosphor-icons/react';
 import { env } from 'next-runtime-env';

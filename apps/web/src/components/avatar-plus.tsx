@@ -8,7 +8,7 @@ import {
   Tooltip,
   type AvatarProps
 } from '@radix-ui/themes';
-import { type TypeId } from '@u22n/utils';
+import { type TypeId } from '@u22n/utils/typeid';
 
 type AvatarPlusProps = {
   size: AvatarProps['size'];

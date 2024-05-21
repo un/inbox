@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { router, protectedProcedure } from '../trpc';
 import { eq } from '@u22n/database/orm';
-import { typeIdGenerator, typeIdValidator } from '@u22n/utils';
+import { typeIdGenerator, typeIdValidator } from '@u22n/utils/typeid';
 import {
   addMailServer,
   createOrg,

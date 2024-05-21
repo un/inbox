@@ -8,7 +8,7 @@ import {
   orgMemberProfiles,
   accounts
 } from '@u22n/database/schema';
-import { typeIdGenerator } from '@u22n/utils';
+import { typeIdGenerator } from '@u22n/utils/typeid';
 import { TRPCError } from '@trpc/server';
 import { blockedUsernames, reservedUsernames } from '~platform/utils/signup';
 

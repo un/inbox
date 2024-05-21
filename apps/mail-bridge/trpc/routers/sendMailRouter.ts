@@ -15,7 +15,7 @@ import {
   orgs,
   convoParticipants
 } from '@u22n/database/schema';
-import { typeIdValidator } from '@u22n/utils';
+import { typeIdValidator } from '@u22n/utils/typeid';
 import { and, eq, inArray } from '@u22n/database/orm';
 import { tiptapHtml, tiptapVue3 } from '@u22n/tiptap';
 import { tipTapExtensions } from '@u22n/tiptap/extensions';

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { zodSchemas } from '@u22n/utils';
+  import { zodSchemas } from '@u22n/utils/zodSchemas';
   import {
     navigateTo,
     definePageMeta,

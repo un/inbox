@@ -7,7 +7,7 @@ import {
   contacts,
   emailIdentities
 } from '@u22n/database/schema';
-import { typeIdGenerator } from '@u22n/utils';
+import { typeIdGenerator } from '@u22n/utils/typeid';
 
 export async function parseAddressIds(input: {
   addresses: EmailAddress[];

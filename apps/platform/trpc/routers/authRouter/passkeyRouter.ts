@@ -7,12 +7,9 @@ import type {
   RegistrationResponseJSON,
   AuthenticationResponseJSON
 } from '@simplewebauthn/types';
-import {
-  nanoIdToken,
-  typeIdGenerator,
-  typeIdValidator,
-  zodSchemas
-} from '@u22n/utils';
+import { typeIdGenerator, typeIdValidator } from '@u22n/utils/typeid';
+import { nanoIdToken, zodSchemas } from '@u22n/utils/zodSchemas';
+import { ms } from '@u22n/utils/ms';
 import {
   verifyRegistrationResponse,
   generateRegistrationOptions,
@@ -23,7 +20,6 @@ import { createAuthenticator } from '~platform/utils/auth/passkeyUtils';
 import { validateUsername } from './signupRouter';
 import { createLuciaSessionCookie } from '~platform/utils/session';
 import { env } from '~platform/env';
-import { ms } from 'itty-time';
 import { getCookie, setCookie } from 'hono/cookie';
 
 export const passkeyRouter = router({

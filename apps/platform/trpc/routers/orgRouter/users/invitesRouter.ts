@@ -17,12 +17,8 @@ import {
   orgMemberProfiles,
   accounts
 } from '@u22n/database/schema';
-import {
-  nanoIdToken,
-  typeIdGenerator,
-  typeIdValidator,
-  zodSchemas
-} from '@u22n/utils';
+import { typeIdGenerator, typeIdValidator } from '@u22n/utils/typeid';
+import { nanoIdToken, zodSchemas } from '@u22n/utils/zodSchemas';
 import { refreshOrgShortCodeCache } from '~platform/utils/orgShortCode';
 import { isAccountAdminOfOrg } from '~platform/utils/account';
 import { TRPCError } from '@trpc/server';

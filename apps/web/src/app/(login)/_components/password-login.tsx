@@ -19,7 +19,7 @@ import {
 import { Key, User } from '@phosphor-icons/react';
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { zodSchemas } from '@u22n/utils';
+import { zodSchemas } from '@u22n/utils/zodSchemas';
 import TogglePasswordBox from '@/src/components/toggle-password';
 
 export default function PasswordLoginButton() {

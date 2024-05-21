@@ -2,7 +2,7 @@
 
 import { createColumnHelper, type ColumnDef } from '@tanstack/react-table';
 import { ScrollArea, Text, Flex } from '@radix-ui/themes';
-import type { TypeId } from '@u22n/utils';
+import type { TypeId } from '@u22n/utils/typeid';
 import CopyButton from '@/src/components/copy-button';
 
 type Identity = {

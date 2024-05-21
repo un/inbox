@@ -11,7 +11,8 @@ import {
   emailIdentitiesAuthorizedOrgMembers,
   emailIdentityExternal
 } from '@u22n/database/schema';
-import { nanoIdToken, typeIdGenerator, typeIdValidator } from '@u22n/utils';
+import { typeIdGenerator, typeIdValidator } from '@u22n/utils/typeid';
+import { nanoIdToken } from '@u22n/utils/zodSchemas';
 import { TRPCError } from '@trpc/server';
 import { env } from '~platform/env';
 

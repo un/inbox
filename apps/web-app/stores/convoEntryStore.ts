@@ -1,6 +1,6 @@
 import { ref } from 'vue';
 import { defineStore, acceptHMRUpdate, useNuxtApp } from '#imports';
-import type { TypeId } from '@u22n/utils';
+import type { TypeId } from '@u22n/utils/typeid';
 import { useRoute } from '#vue-router';
 
 export const useConvoEntryStore = defineStore(
