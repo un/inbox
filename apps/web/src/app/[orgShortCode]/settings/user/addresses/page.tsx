@@ -1,7 +1,7 @@
 'use client';
 
 import { Button, Flex, Heading, Text, Card, Spinner } from '@radix-ui/themes';
-import { DataTable } from './_components/table';
+import { DataTable } from '@/src/components/shared/table';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { api } from '@/src/lib/trpc';
 import { columns } from './_components/columns';

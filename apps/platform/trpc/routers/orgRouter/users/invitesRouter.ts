@@ -99,7 +99,7 @@ export const invitesRouter = router({
         // Insert teamMemberships - save ID
         if (teamsInput) {
           for (const teamPublicId of teamsInput.teamsPublicIds) {
-            await addOrgMemberToTeamHandler({
+            await addOrgMemberToTeamHandler(db, {
               orgId: org.id,
               teamPublicId: teamPublicId,
               orgMemberPublicId: orgMemberPublicId,
