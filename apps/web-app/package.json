@@ -8,6 +8,7 @@
   },
   "scripts": {
     "build": "nuxt build",
+    "start": "node .output/server/index.mjs",
     "dev": "PORT=3001 nuxt dev --host",
     "generate": "nuxt generate",
     "preview": "nuxt preview"

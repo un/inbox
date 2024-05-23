@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "tsx watch --clear-screen=false app.ts",
     "start": "node --import=tsx app.ts",
-    "build": "echo 'No build step configured'",
+    "build": "echo 'No Build Step Needed'",
     "check": "tsc --noEmit"
   },
   "exports": {

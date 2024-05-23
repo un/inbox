@@ -2,15 +2,16 @@
   "name": "@u22n/mail-bridge",
   "private": true,
   "type": "module",
+  "scripts": {
+    "dev": "tsx watch --clear-screen=false app.ts",
+    "start": "node --import=tsx app.ts",
+    "build": "echo 'No Build Step Needed'",
+    "check": "tsc --noEmit"
+  },
   "exports": {
     "./trpc": {
       "types": "./trpc/index.ts"
     }
-  },
-  "scripts": {
-    "dev": "tsx watch --clear-screen=false app.ts",
-    "start": "node --import=tsx app.ts",
-    "check": "tsc --noEmit"
   },
   "dependencies": {
     "@hono/node-server": "^1.11.1",

@@ -10,6 +10,7 @@
   "scripts": {
     "ee:dev": "tsx watch --clear-screen=false app.ts",
     "ee:start": "node --import=tsx app.ts",
+    "ee:build": "echo 'No Build Step Needed'",
     "check": "tsc --noEmit"
   },
   "dependencies": {
