@@ -11,6 +11,8 @@ import { db } from '@u22n/database';
 import { stripeData } from './stripe';
 import { validateLicense } from './validateLicenseKey';
 
+await validateLicense();
+
 const app = new Hono<Ctx>();
 
 // CORS middleware
@@ -48,11 +50,32 @@ app.use(
 // 404 handler
 app.notFound((c) => c.json({ message: 'Not Found' }, 404));
 
-await validateLicense();
+// Global error handler
+app.onError((err, c) => {
+  console.error(err);
+  return c.json({ message: 'Something went wrong' }, 500);
+});
 
+// Development error handlers
+if (env.NODE_ENV === 'development') {
+  process.on('unhandledRejection', (err) => {
+    console.error(err);
+  });
+  process.on('uncaughtException', (err) => {
+    console.error(err);
+  });
+}
+
+// Start server
 serve({
   fetch: app.fetch,
   port: env.PORT
 }).on('listening', () => {
   console.info(`Server listening on port ${env.PORT}`);
+});
+
+// Clean Exit
+process.on('exit', () => {
+  console.info('Shutting down...');
+  process.exit(0);
 });
