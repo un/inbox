@@ -2,13 +2,10 @@
   "name": "@u22n/storage",
   "private": true,
   "type": "module",
-  "engines": {
-    "node": ">=20",
-    "pnpm": ">=8"
-  },
   "scripts": {
     "dev": "tsx watch --clear-screen=false app.ts",
     "start": "node --import=tsx app.ts",
+    "build": "echo 'No Build Step Needed'",
     "check": "tsc --noEmit"
   },
   "dependencies": {

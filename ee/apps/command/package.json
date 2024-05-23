@@ -9,6 +9,7 @@
   "scripts": {
     "ee:build": "nuxt build",
     "ee:dev": "PORT=3810 nuxt dev --host",
+    "ee:start": "node .output/server/index.mjs",
     "ee:generate": "nuxt generate",
     "ee:preview": "nuxt preview",
     "ee:precheck": "infisical run --env=remote -- nuxt prepare"
