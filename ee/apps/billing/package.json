@@ -2,6 +2,7 @@
   "name": "@uninbox-ee/billing",
   "license": "COMMERCIAL",
   "private": true,
+  "type": "module",
   "exports": {
     "./trpc": {
       "types": "./trpc/index.ts"

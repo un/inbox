@@ -27,7 +27,8 @@ export default class RealtimeClient {
             method: 'POST',
             credentials: 'include',
             headers: {
-              'org-shortcode': `${orgShortCode}`
+              'org-shortcode': orgShortCode,
+              'Content-Type': 'application/json'
             }
           });
           if (!res.ok) {
