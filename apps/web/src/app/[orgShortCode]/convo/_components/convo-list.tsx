@@ -2,16 +2,19 @@
 
 import { type RouterOutputs, api } from '@/src/lib/trpc';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
-import { useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import useTimeAgo from '@/src/hooks/use-time-ago';
 import { formatParticipantData } from '../utils';
 import Link from 'next/link';
 import AvatarPlus from '@/src/components/avatar-plus';
+import { Button } from '@/src/components/shadcn-ui/button';
+import { ms } from '@u22n/utils/ms';
 
 export default function ConvoList() {
   const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
   const scrollableRef = useRef(null);
+  const [showHidden, setShowHidden] = useState(false);
 
   const {
     data: convos,
@@ -21,10 +24,12 @@ export default function ConvoList() {
     isFetchingNextPage
   } = api.convos.getOrgMemberConvos.useInfiniteQuery(
     {
-      orgShortCode
+      orgShortCode,
+      includeHidden: showHidden ? true : undefined
     },
     {
-      getNextPageParam: (lastPage) => lastPage.cursor ?? undefined
+      getNextPageParam: (lastPage) => lastPage.cursor ?? undefined,
+      staleTime: ms('1 hour')
     }
   );
 
@@ -57,43 +62,53 @@ export default function ConvoList() {
   ]);
 
   return (
-    <div className="bg-sand-1 flex h-full w-full  flex-col border-r p-4">
+    <div className="bg-sand-1 flex h-full w-full flex-col border-r p-4">
       {isLoading ? (
         <div className="w-full text-center font-bold">Loading...</div>
       ) : (
-        <div
-          className="h-full max-h-full w-full max-w-full overflow-y-auto overflow-x-hidden"
-          ref={scrollableRef}>
-          <div
-            className="relative flex w-full max-w-full flex-col overflow-hidden"
-            style={{ height: `${convosVirtualizer.getTotalSize()}px` }}>
-            {convosVirtualizer.getVirtualItems().map((virtualItem) => {
-              const isLoader = virtualItem.index > allConvos.length - 1;
-              const convo = allConvos[virtualItem.index]!;
-
-              return (
-                <div
-                  key={virtualItem.index}
-                  data-index={virtualItem.index}
-                  className="absolute left-0 top-0 w-full"
-                  ref={convosVirtualizer.measureElement}
-                  style={{
-                    transform: `translateY(${virtualItem.start}px)`
-                  }}>
-                  {isLoader ? (
-                    <div className="w-full text-center font-bold">
-                      {hasNextPage ? 'Loading...' : ''}
-                    </div>
-                  ) : (
-                    <div className="h-full w-full">
-                      <ConvoItem convo={convo} />
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+        <>
+          {/* TODO: Replace this according to designs later */}
+          <div className="flex w-full pb-2">
+            <Button
+              onClick={() => setShowHidden((prev) => !prev)}
+              variant="secondary">
+              {showHidden ? 'Show Normal Convos' : 'Show Hidden Convos'}
+            </Button>
           </div>
-        </div>
+          <div
+            className="h-full max-h-full w-full max-w-full overflow-y-auto overflow-x-hidden"
+            ref={scrollableRef}>
+            <div
+              className="relative flex w-full max-w-full flex-col overflow-hidden"
+              style={{ height: `${convosVirtualizer.getTotalSize()}px` }}>
+              {convosVirtualizer.getVirtualItems().map((virtualItem) => {
+                const isLoader = virtualItem.index > allConvos.length - 1;
+                const convo = allConvos[virtualItem.index]!;
+
+                return (
+                  <div
+                    key={virtualItem.index}
+                    data-index={virtualItem.index}
+                    className="absolute left-0 top-0 w-full"
+                    ref={convosVirtualizer.measureElement}
+                    style={{
+                      transform: `translateY(${virtualItem.start}px)`
+                    }}>
+                    {isLoader ? (
+                      <div className="w-full text-center font-bold">
+                        {hasNextPage ? 'Loading...' : ''}
+                      </div>
+                    ) : (
+                      <div className="h-full w-full">
+                        <ConvoItem convo={convo} />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </>
       )}
     </div>
   );
