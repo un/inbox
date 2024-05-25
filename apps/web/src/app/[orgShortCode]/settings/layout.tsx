@@ -6,7 +6,7 @@ export default function Layout({
   children
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <Flex className="h-full">
+    <Flex className="h-full w-full">
       <SettingsSidebar />
       <Flex className="flex-1">{children}</Flex>
     </Flex>
