@@ -49,9 +49,32 @@ app.route('/api', deleteAttachmentsApi);
 // 404 handler
 app.notFound((c) => c.json({ message: 'Route Not Found' }, 404));
 
+// Global error handler
+app.onError((err, c) => {
+  console.error(err);
+  return c.json({ message: 'Something went wrong' }, 500);
+});
+
+// Development error handlers
+if (env.NODE_ENV === 'development') {
+  process.on('unhandledRejection', (err) => {
+    console.error(err);
+  });
+  process.on('uncaughtException', (err) => {
+    console.error(err);
+  });
+}
+
+// Start server
 serve({
   fetch: app.fetch,
   port: env.PORT
 }).on('listening', () => {
   console.info(`Server listening on port ${env.PORT}`);
+});
+
+// Clean Exit
+process.on('exit', () => {
+  console.info('Shutting down...');
+  process.exit(0);
 });
