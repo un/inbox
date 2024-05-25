@@ -53,14 +53,14 @@ export function SidebarNavButton({
     <div className={'flex w-full max-w-full flex-col gap-0 p-0'}>
       <div
         className={cn(
-          'bg-sand-3 text-sand-12 flex w-full max-w-full flex-row items-center justify-start gap-0  overflow-hidden truncate rounded-md pl-1 text-left',
-          active ? 'bg-sand-5' : '',
-          disabled ? 'opacity-80' : 'hover:bg-sand-4'
+          ' text-base-12 flex w-full max-w-full flex-row items-center justify-start gap-0  overflow-hidden truncate rounded-md pl-1 text-left',
+          active ? 'bg-base-5' : '',
+          disabled ? 'opacity-80' : 'hover:bg-base-4'
         )}
         {...props}>
         {children ? (
           <div
-            className="text-sand-12 h-5 w-5 cursor-pointer rounded-sm p-0.5"
+            className="text-base-12 h-5 w-5 cursor-pointer rounded-sm p-0.5"
             onClick={() => {
               setExpanded(!expanded);
             }}>
@@ -89,14 +89,14 @@ export function SidebarNavButton({
           asChild>
           <div
             className={cn(
-              'text-sand-12 flex h-full w-full flex-row gap-0 overflow-hidden px-2 py-2',
+              'text-base-12 flex h-full w-full flex-row gap-0 overflow-hidden px-2 py-2',
               disabled ? 'cursor-not-allowed' : 'cursor-pointer'
             )}>
             <div className="mr-2 h-5 w-5 rounded-sm p-0 *:h-5 *:w-5">
               {icon}
             </div>
-            <div className="text-sand-12 flex w-full max-w-full flex-row justify-between gap-2 overflow-hidden">
-              <span className={cn('text-sand-12 truncate text-sm')}>
+            <div className="text-base-12 flex w-full max-w-full flex-row justify-between gap-2 overflow-hidden">
+              <span className={cn('text-base-12 truncate text-sm')}>
                 {label}
               </span>
               {badge && <Badge variant={'secondary'}>{badge}</Badge>}

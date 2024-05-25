@@ -32,6 +32,12 @@ export const idTypes = {
 } as const;
 
 type IdType = typeof idTypes;
+type ReversedIdType = { [K in keyof IdType as IdType[K]]: K };
+
+const reversedIdTypes = Object.fromEntries(
+  Object.entries(idTypes).map(([x, y]) => [y, x])
+) as ReversedIdType;
+
 type IdTypePrefixes = keyof typeof idTypes;
 export type TypeId<T extends IdTypePrefixes> = `${IdType[T]}_${string}`;
 
@@ -66,3 +72,7 @@ export const validateTypeId = <const T extends IdTypePrefixes>(
   prefix: T,
   data: unknown
 ): data is TypeId<T> => typeIdValidator(prefix).safeParse(data).success;
+
+export const inferTypeId = <T extends keyof ReversedIdType>(
+  input: `${T}_${string}`
+) => reversedIdTypes[TypeID.fromString(input).getType() as T];

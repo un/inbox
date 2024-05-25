@@ -1426,7 +1426,9 @@ export const convoRouter = router({
             },
             with: {
               author: {
-                columns: {},
+                columns: {
+                  publicId: true
+                },
                 with: {
                   orgMember: {
                     columns: {
