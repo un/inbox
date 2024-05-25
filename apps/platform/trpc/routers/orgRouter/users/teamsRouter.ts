@@ -178,7 +178,7 @@ export const teamsRouter = router({
           message: 'Account or Organization is not defined'
         });
       }
-      const { org } = ctx;
+      const { org, db } = ctx;
       const { teamPublicId, orgMemberPublicId } = input;
 
       const isAdmin = await isAccountAdminOfOrg(org);
@@ -189,7 +189,7 @@ export const teamsRouter = router({
         });
       }
 
-      const newTeamMemberPublicId = await addOrgMemberToTeamHandler({
+      const newTeamMemberPublicId = await addOrgMemberToTeamHandler(db, {
         orgId: org.id,
         teamPublicId: teamPublicId,
         orgMemberPublicId: orgMemberPublicId,

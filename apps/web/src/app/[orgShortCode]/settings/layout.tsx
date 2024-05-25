@@ -1,5 +1,5 @@
 'use client';
-import { Flex } from '@radix-ui/themes';
+import { Flex, ScrollArea } from '@radix-ui/themes';
 import SettingsSidebar from './_components/settings-sidebar';
 
 export default function Layout({
@@ -8,7 +8,9 @@ export default function Layout({
   return (
     <Flex className="h-full w-full">
       <SettingsSidebar />
-      <Flex className="flex-1">{children}</Flex>
+      <Flex className="flex-1">
+        <ScrollArea className="h-full">{children}</ScrollArea>
+      </Flex>
     </Flex>
   );
 }

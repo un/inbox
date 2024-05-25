@@ -7,7 +7,14 @@ import {
   useReactTable
 } from '@tanstack/react-table';
 
-import { Table } from '@radix-ui/themes';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from '../shadcn-ui/table';
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -25,38 +32,38 @@ export function DataTable<TData, TValue>({
   });
 
   return (
-    <Table.Root>
-      <Table.Header>
+    <Table>
+      <TableHeader>
         {table.getHeaderGroups().map((headerGroup) => (
-          <Table.Row key={headerGroup.id}>
+          <TableRow key={headerGroup.id}>
             {headerGroup.headers.map((header) => {
               return (
-                <Table.ColumnHeaderCell key={header.id}>
+                <TableHead key={header.id}>
                   {header.isPlaceholder
                     ? null
                     : flexRender(
                         header.column.columnDef.header,
                         header.getContext()
                       )}
-                </Table.ColumnHeaderCell>
+                </TableHead>
               );
             })}
-          </Table.Row>
+          </TableRow>
         ))}
-      </Table.Header>
-      <Table.Body>
+      </TableHeader>
+      <TableBody>
         {table.getRowModel().rows.map((row) => (
-          <Table.Row
+          <TableRow
             key={row.id}
             data-state={row.getIsSelected() && 'selected'}>
             {row.getVisibleCells().map((cell) => (
-              <Table.Cell key={cell.id}>
+              <TableCell key={cell.id}>
                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
-              </Table.Cell>
+              </TableCell>
             ))}
-          </Table.Row>
+          </TableRow>
         ))}
-      </Table.Body>
-    </Table.Root>
+      </TableBody>
+    </Table>
   );
 }

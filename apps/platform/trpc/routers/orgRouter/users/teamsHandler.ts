@@ -1,5 +1,5 @@
 import { TRPCError } from '@trpc/server';
-import { db } from '@u22n/database';
+import type { DBType } from '@u22n/database';
 import { and, eq } from '@u22n/database/orm';
 import {
   convoParticipantTeamMembers,
@@ -10,17 +10,20 @@ import {
 } from '@u22n/database/schema';
 import { typeIdGenerator, type TypeId } from '@u22n/utils/typeid';
 
-export async function addOrgMemberToTeamHandler({
-  orgId,
-  orgMemberId,
-  orgMemberPublicId,
-  teamPublicId
-}: {
-  orgId: number;
-  orgMemberId: number;
-  orgMemberPublicId: TypeId<'orgMembers'>;
-  teamPublicId: TypeId<'teams'>;
-}) {
+export async function addOrgMemberToTeamHandler(
+  db: DBType,
+  {
+    orgId,
+    orgMemberId,
+    orgMemberPublicId,
+    teamPublicId
+  }: {
+    orgId: number;
+    orgMemberId: number;
+    orgMemberPublicId: TypeId<'orgMembers'>;
+    teamPublicId: TypeId<'teams'>;
+  }
+) {
   const orgMember = await db.query.orgMembers.findFirst({
     columns: {
       id: true,
