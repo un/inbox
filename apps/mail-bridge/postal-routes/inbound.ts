@@ -264,17 +264,17 @@ export const inboundApi = new Hono().post(
       ]: [
         MessageParseAddressPlatformObject[],
         MessageParseAddressPlatformObject[],
-        MessageParseAddressPlatformObject[] | []
+        MessageParseAddressPlatformObject[]
       ] = await Promise.all([
         parseAddressIds({
           addresses: messageTo,
           addressType: 'to',
-          orgId: orgId || 0
+          orgId
         }),
         parseAddressIds({
           addresses: messageFrom,
           addressType: 'from',
-          orgId: orgId || 0
+          orgId
         }),
         messageCc.length
           ? parseAddressIds({

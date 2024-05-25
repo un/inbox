@@ -13,193 +13,274 @@ export async function parseAddressIds(input: {
   addresses: EmailAddress[];
   addressType: 'to' | 'cc' | 'from';
   orgId: number;
-}): Promise<MessageParseAddressPlatformObject[] | []> {
-  const parsedAddressIds: MessageParseAddressPlatformObject[] = [];
+}) {
+  return (
+    await Promise.all(
+      input.addresses.map(async (addressObject) => {
+        if (!addressObject.address) return;
 
-  for (const addressObject of input.addresses) {
-    if (!addressObject.address) {
-      continue;
-    }
+        const [emailUsername, emailDomain] = addressObject.address.split('@');
+        if (!emailDomain || !emailUsername) return;
 
-    const [emailUsername, emailDomain] = addressObject.address.split('@');
-    if (!emailDomain || !emailUsername) {
-      continue;
-    }
-    // check if email is existing contact
-    const contactQuery = await db.query.contacts.findFirst({
-      where: and(
-        eq(contacts.orgId, input.orgId),
-        eq(contacts.emailDomain, emailDomain),
-        eq(contacts.emailUsername, emailUsername)
-      ),
-      columns: {
-        id: true,
-        publicId: true,
-        emailUsername: true,
-        emailDomain: true,
-        name: true,
-        type: true
-      }
-    });
-    if (contactQuery) {
-      parsedAddressIds.push({
-        id: contactQuery.id,
-        type: 'contact',
-        publicId: contactQuery.publicId,
-        email: contactQuery.emailUsername + '@' + contactQuery.emailDomain,
-        contactType: contactQuery.type,
-        ref: input.addressType
-      });
-      if (contactQuery.name === null && addressObject.name) {
-        await db
-          .update(contacts)
-          .set({
-            name: addressObject.name
-          })
-          .where(eq(contacts.id, contactQuery.id));
-      }
-      continue;
-    }
-
-    // check if address is an existing email identity or a catch-all identity
-    const emailIdentityQuery = await db.query.emailIdentities.findFirst({
-      where: and(
-        eq(emailIdentities.orgId, input.orgId),
-        eq(emailIdentities.domainName, emailDomain),
-        eq(emailIdentities.username, emailUsername)
-      ),
-      columns: {
-        id: true,
-        publicId: true,
-        username: true,
-        domainName: true
-      }
-    });
-
-    if (emailIdentityQuery && emailIdentityQuery.id !== null) {
-      parsedAddressIds.push({
-        id: emailIdentityQuery.id,
-        type: 'emailIdentity',
-        publicId: emailIdentityQuery.publicId,
-        email:
-          emailIdentityQuery.username + '@' + emailIdentityQuery.domainName,
-        contactType: null,
-        ref: input.addressType
-      });
-      continue;
-    }
-
-    // check if is catch all
-    const emailIdentityCatchAllQuery =
-      input.addressType === 'from'
-        ? null
-        : await db.query.emailIdentities.findFirst({
-            where: and(
-              eq(emailIdentities.orgId, input.orgId),
-              eq(emailIdentities.domainName, emailDomain),
-              eq(emailIdentities.isCatchAll, true)
-            ),
-            columns: {
-              id: true,
-              publicId: true,
-              username: true,
-              domainName: true
-            }
-          });
-
-    if (emailIdentityCatchAllQuery && emailIdentityCatchAllQuery.id !== null) {
-      parsedAddressIds.push({
-        id: emailIdentityCatchAllQuery.id,
-        type: 'emailIdentity',
-        publicId: emailIdentityCatchAllQuery.publicId,
-        email:
-          emailIdentityCatchAllQuery.username +
-          '@' +
-          emailIdentityCatchAllQuery.domainName,
-        contactType: null,
-        ref: input.addressType
-      });
-      continue;
-    }
-
-    // check if its a forwarding address
-    const emailIdentityFwdQuery =
-      input.addressType === 'from'
-        ? null
-        : await db.query.emailIdentities.findFirst({
-            where: and(
-              eq(emailIdentities.orgId, input.orgId),
-              eq(emailIdentities.forwardingAddress, addressObject.address)
-            ),
-            columns: {
-              id: true,
-              publicId: true,
-              username: true,
-              domainName: true
-            }
-          });
-
-    if (emailIdentityFwdQuery && emailIdentityFwdQuery.id !== null) {
-      parsedAddressIds.push({
-        id: emailIdentityFwdQuery.id,
-        type: 'emailIdentity',
-        publicId: emailIdentityFwdQuery.publicId,
-        email:
-          emailIdentityFwdQuery.username +
-          '@' +
-          emailIdentityFwdQuery.domainName,
-        contactType: null,
-        ref: input.addressType
-      });
-      continue;
-    }
-
-    // if the address is not a known contact or email identity, then maybe its a global contact with a reputation, so we need to create the contact for the org, or create the whole contact+reputation
-
-    const contactGlobalReputation =
-      await db.query.contactGlobalReputations.findFirst({
-        where: eq(contactGlobalReputations.emailAddress, addressObject.address),
-        columns: {
-          id: true
-        }
-      });
-
-    let contactGlobalReputationId: number | null = null;
-    if (contactGlobalReputation) {
-      contactGlobalReputationId = contactGlobalReputation.id;
-    }
-    if (!contactGlobalReputation) {
-      const contactGlobalReputationInsert = await db
-        .insert(contactGlobalReputations)
-        .values({
-          emailAddress: addressObject.address,
-          messageCount: 1,
-          lastUpdated: new Date()
+        const emailIdentity = await tryParsingAsEmailIdentity({
+          addressType: input.addressType,
+          domain: emailDomain,
+          username: emailUsername,
+          orgId: input.orgId
         });
-      contactGlobalReputationId = Number(
-        contactGlobalReputationInsert.insertId
-      );
+
+        if (emailIdentity) return emailIdentity;
+
+        if (input.addressType !== 'from') {
+          const catchAllEmailIdentity = await tryParsingAsCatchAllEmailIdentity(
+            {
+              addressType: input.addressType,
+              domain: emailDomain,
+              orgId: input.orgId
+            }
+          );
+
+          if (catchAllEmailIdentity) return catchAllEmailIdentity;
+
+          const forwardingAddress = await tryParsingAsForwardingAddress({
+            addressType: input.addressType,
+            domain: emailDomain,
+            username: emailUsername,
+            orgId: input.orgId
+          });
+
+          if (forwardingAddress) return forwardingAddress;
+        }
+
+        const contact = await tryParsingAsContact({
+          addressType: input.addressType,
+          domain: emailDomain,
+          username: emailUsername,
+          orgId: input.orgId,
+          saidName: addressObject.name
+        });
+
+        if (contact) return contact;
+
+        const newContact = await tryParsingAsNewContact({
+          addressType: input.addressType,
+          domain: emailDomain,
+          username: emailUsername,
+          orgId: input.orgId
+        });
+
+        return newContact;
+      })
+    )
+  ).filter(
+    (address): address is MessageParseAddressPlatformObject => !!address
+  );
+}
+
+type TryParsingOptions = {
+  orgId: number;
+  username: string;
+  domain: string;
+  addressType: 'to' | 'from' | 'cc';
+};
+
+async function tryParsingAsContact({
+  addressType,
+  domain,
+  orgId,
+  username,
+  saidName
+}: TryParsingOptions & {
+  saidName: string;
+}): Promise<MessageParseAddressPlatformObject | null> {
+  const contactQuery = await db.query.contacts.findFirst({
+    where: and(
+      eq(contacts.orgId, orgId),
+      eq(contacts.emailDomain, domain),
+      eq(contacts.emailUsername, username)
+    ),
+    columns: {
+      id: true,
+      publicId: true,
+      emailUsername: true,
+      emailDomain: true,
+      name: true,
+      type: true
     }
-    const contactInsert = await db.insert(contacts).values({
-      publicId: typeIdGenerator('contacts'),
-      orgId: input.orgId,
-      reputationId: +contactGlobalReputationId!,
-      type: 'unknown',
-      emailUsername: emailUsername,
-      emailDomain: emailDomain,
-      name: addressObject.name || emailUsername + '@' + emailDomain,
-      screenerStatus: 'pending'
+  });
+  if (contactQuery) {
+    if (contactQuery.name === null && saidName) {
+      await db
+        .update(contacts)
+        .set({
+          name: saidName
+        })
+        .where(eq(contacts.id, contactQuery.id));
+    }
+    return {
+      id: contactQuery.id,
+      type: 'contact',
+      publicId: contactQuery.publicId,
+      email: `${contactQuery.emailUsername}@${contactQuery.emailDomain}`,
+      contactType: contactQuery.type,
+      ref: addressType
+    };
+  } else {
+    return null;
+  }
+}
+
+async function tryParsingAsEmailIdentity({
+  addressType,
+  username,
+  domain,
+  orgId
+}: TryParsingOptions): Promise<MessageParseAddressPlatformObject | null> {
+  const emailIdentityQuery = await db.query.emailIdentities.findFirst({
+    where: and(
+      eq(emailIdentities.orgId, orgId),
+      eq(emailIdentities.domainName, domain),
+      eq(emailIdentities.username, username)
+    ),
+    columns: {
+      id: true,
+      publicId: true,
+      username: true,
+      domainName: true
+    }
+  });
+
+  if (emailIdentityQuery && emailIdentityQuery.id !== null) {
+    return {
+      id: emailIdentityQuery.id,
+      type: 'emailIdentity',
+      publicId: emailIdentityQuery.publicId,
+      email: `${emailIdentityQuery.username}@${emailIdentityQuery.domainName}`,
+      contactType: null,
+      ref: addressType
+    };
+  } else {
+    return null;
+  }
+}
+
+async function tryParsingAsCatchAllEmailIdentity({
+  addressType,
+  domain,
+  orgId
+}: Omit<
+  TryParsingOptions,
+  'username'
+>): Promise<MessageParseAddressPlatformObject | null> {
+  const emailIdentityCatchAllQuery = await db.query.emailIdentities.findFirst({
+    where: and(
+      eq(emailIdentities.orgId, orgId),
+      eq(emailIdentities.domainName, domain),
+      eq(emailIdentities.isCatchAll, true)
+    ),
+    columns: {
+      id: true,
+      publicId: true,
+      username: true,
+      domainName: true
+    }
+  });
+
+  if (emailIdentityCatchAllQuery && emailIdentityCatchAllQuery.id !== null) {
+    return {
+      id: emailIdentityCatchAllQuery.id,
+      type: 'emailIdentity',
+      publicId: emailIdentityCatchAllQuery.publicId,
+      email: `${emailIdentityCatchAllQuery.username}@${emailIdentityCatchAllQuery.domainName}`,
+      contactType: null,
+      ref: addressType
+    };
+  } else {
+    return null;
+  }
+}
+
+async function tryParsingAsForwardingAddress({
+  addressType,
+  domain,
+  username,
+  orgId
+}: TryParsingOptions): Promise<MessageParseAddressPlatformObject | null> {
+  const emailIdentityFwdQuery = await db.query.emailIdentities.findFirst({
+    where: and(
+      eq(emailIdentities.orgId, orgId),
+      eq(emailIdentities.forwardingAddress, `${username}@${domain}`)
+    ),
+    columns: {
+      id: true,
+      publicId: true,
+      username: true,
+      domainName: true
+    }
+  });
+
+  if (emailIdentityFwdQuery && emailIdentityFwdQuery.id !== null) {
+    return {
+      id: emailIdentityFwdQuery.id,
+      type: 'emailIdentity',
+      publicId: emailIdentityFwdQuery.publicId,
+      email: `${emailIdentityFwdQuery.username}@${emailIdentityFwdQuery.domainName}`,
+      contactType: null,
+      ref: addressType
+    };
+  } else {
+    return null;
+  }
+}
+
+async function tryParsingAsNewContact({
+  orgId,
+  username,
+  domain,
+  addressType,
+  saidName
+}: TryParsingOptions & {
+  saidName?: string;
+}): Promise<MessageParseAddressPlatformObject> {
+  const contactGlobalReputation =
+    await db.query.contactGlobalReputations.findFirst({
+      where: eq(contactGlobalReputations.emailAddress, `${username}@${domain}`),
+      columns: {
+        id: true
+      }
     });
 
-    parsedAddressIds.push({
-      id: Number(contactInsert.insertId),
-      type: 'contact',
-      publicId: contactInsert.insertId,
-      email: emailUsername + '@' + emailDomain,
-      contactType: 'unknown',
-      ref: input.addressType
-    });
-    continue;
-  }
-  return parsedAddressIds;
+  const contactGlobalReputationId = contactGlobalReputation
+    ? contactGlobalReputation.id
+    : Number(
+        (
+          await db.insert(contactGlobalReputations).values({
+            emailAddress: `${username}@${domain}`,
+            messageCount: 1,
+            lastUpdated: new Date()
+          })
+        ).insertId
+      );
+
+  const newContactPublicId = typeIdGenerator('contacts');
+
+  const contactInsert = await db.insert(contacts).values({
+    publicId: newContactPublicId,
+    orgId: orgId,
+    reputationId: contactGlobalReputationId,
+    type: 'unknown',
+    emailUsername: username,
+    emailDomain: domain,
+    name: saidName ?? `${username}@${domain}`,
+    screenerStatus: 'pending'
+  });
+
+  return {
+    id: Number(contactInsert.insertId),
+    type: 'contact',
+    publicId: newContactPublicId,
+    email: `${username}@${domain}`,
+    contactType: 'unknown',
+    ref: addressType
+  };
 }
