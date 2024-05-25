@@ -15,7 +15,6 @@ export function SidebarNavButton({
   icon,
   isActive,
   isExpanded,
-  sidebarCollapsed,
   disabled,
   badge,
   children,
@@ -29,7 +28,6 @@ export function SidebarNavButton({
   disabled?: boolean;
   badge?: ReactNode;
   children?: ReactNode;
-  sidebarCollapsed: boolean;
 }) {
   const [expanded, setExpanded] = useState(isExpanded);
   const [active, setActive] = useState(false);
@@ -56,7 +54,6 @@ export function SidebarNavButton({
       <div
         className={cn(
           'bg-sand-3 text-sand-12 flex w-full max-w-full flex-row items-center justify-start gap-0  overflow-hidden truncate rounded-md pl-1 text-left',
-          sidebarCollapsed ? 'aspect-square max-w-16' : '',
           active ? 'bg-sand-5' : '',
           disabled ? 'opacity-80' : 'hover:bg-sand-4'
         )}
@@ -99,11 +96,7 @@ export function SidebarNavButton({
               {icon}
             </div>
             <div className="text-sand-12 flex w-full max-w-full flex-row justify-between gap-2 overflow-hidden">
-              <span
-                className={cn(
-                  'text-sand-12 truncate text-sm',
-                  sidebarCollapsed ? 'hidden' : 'visible'
-                )}>
+              <span className={cn('text-sand-12 truncate text-sm')}>
                 {label}
               </span>
               {badge && <Badge variant={'secondary'}>{badge}</Badge>}

@@ -43,7 +43,11 @@ export default function RootLayout({
         <PublicEnvScript />
       </head>
       <body
-        className={cn(inter.variable, calSans.variable, 'h-full font-sans')}>
+        className={cn(
+          inter.variable,
+          calSans.variable,
+          'h-full max-h-svh overflow-hidden font-sans'
+        )}>
         <CookiesProvider>
           <ThemeProvider
             attribute="class"

@@ -64,8 +64,8 @@ export default function Layout({
 
   return (
     <GlobalStoreProvider initialState={storeData}>
-      <div className="bg-sand-1 flex h-full w-full flex-row gap-0">
-        <div className="h-full w-fit">
+      <div className="bg-sand-1 max-w-svh flex h-full max-h-svh w-full flex-row gap-0 overflow-hidden p-0">
+        <div className="h-full max-h-full w-fit">
           <Sidebar />
         </div>
         <div className="flex h-full w-full flex-row p-0">{children}</div>
