@@ -156,6 +156,18 @@ export const teamsRouter = router({
                 }
               }
             }
+          },
+          authorizedEmailIdentities: {
+            columns: {},
+            with: {
+              emailIdentity: {
+                columns: {
+                  username: true,
+                  sendName: true,
+                  domainName: true
+                }
+              }
+            }
           }
         }
       });
@@ -199,5 +211,66 @@ export const teamsRouter = router({
       return {
         publicId: newTeamMemberPublicId
       };
+    }),
+  updateTeamMembers: orgProcedure
+    .input(
+      z.object({
+        teamPublicId: typeIdValidator('teams'),
+        orgMemberPublicIds: z.array(typeIdValidator('orgMembers'))
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.account || !ctx.org) {
+        throw new TRPCError({
+          code: 'UNPROCESSABLE_CONTENT',
+          message: 'Account or Organization is not defined'
+        });
+      }
+      const { org, db } = ctx;
+      const { teamPublicId, orgMemberPublicIds } = input;
+
+      const isAdmin = await isAccountAdminOfOrg(org);
+      if (!isAdmin) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'You are not an admin'
+        });
+      }
+      const teamMembers = await db.query.teams.findFirst({
+        where: and(eq(teams.publicId, teamPublicId), eq(teams.orgId, org.id)),
+        columns: {},
+        with: {
+          members: {
+            columns: {},
+            with: {
+              orgMember: {
+                columns: {
+                  publicId: true
+                }
+              }
+            }
+          }
+        }
+      });
+      if (!teamMembers) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Team not found'
+        });
+      }
+      const currentMembers = teamMembers.members.map(
+        (m) => m.orgMember.publicId
+      );
+      const newMembers = orgMemberPublicIds.filter(
+        (m) => !currentMembers.includes(m)
+      );
+      const removedMembers = currentMembers.filter(
+        (m) => !orgMemberPublicIds.includes(m)
+      );
+
+      throw new TRPCError({
+        code: 'NOT_IMPLEMENTED',
+        message: 'Not implemented'
+      });
     })
 });

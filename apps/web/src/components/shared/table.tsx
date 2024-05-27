@@ -6,7 +6,6 @@ import {
   getCoreRowModel,
   useReactTable
 } from '@tanstack/react-table';
-
 import {
   Table,
   TableBody,
@@ -15,6 +14,7 @@ import {
   TableHeader,
   TableRow
 } from '../shadcn-ui/table';
+import { useRouter } from 'next/navigation';
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -23,8 +23,10 @@ interface DataTableProps<TData, TValue> {
 
 export function DataTable<TData, TValue>({
   columns,
-  data
-}: DataTableProps<TData, TValue>) {
+  data,
+  linkTo
+}: DataTableProps<TData, TValue> & { linkTo?: (row: TData) => string }) {
+  const router = useRouter();
   const table = useReactTable({
     data,
     columns,
@@ -55,7 +57,11 @@ export function DataTable<TData, TValue>({
         {table.getRowModel().rows.map((row) => (
           <TableRow
             key={row.id}
-            data-state={row.getIsSelected() && 'selected'}>
+            data-state={row.getIsSelected() && 'selected'}
+            className="cursor-pointer"
+            onClick={() => {
+              linkTo && router.push(linkTo(row.original));
+            }}>
             {row.getVisibleCells().map((cell) => (
               <TableCell key={cell.id}>
                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
