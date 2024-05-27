@@ -4,6 +4,10 @@ import type { z } from 'zod';
 
 export default class RealtimeClient {
   private client: Pusher | null = null;
+  #preConnectEventHandlers = new Map<keyof EventDataMap, Function[]>();
+  #preConnectBroadcastHandlers = new Map<keyof EventDataMap, Function[]>();
+  #connectionTimeout: NodeJS.Timeout | null = null;
+
   constructor(
     private config: {
       appKey: string;
@@ -12,6 +16,7 @@ export default class RealtimeClient {
       authEndpoint: string;
     }
   ) {}
+
   public async connect({ orgShortCode }: { orgShortCode: string }) {
     if (this.client) return;
     const client = new Pusher(this.config.appKey, {
@@ -44,13 +49,22 @@ export default class RealtimeClient {
 
     client.signin();
     this.client = client;
+    this.bindEvents();
     return new Promise<void>((resolve, reject) => {
+      this.#connectionTimeout = setTimeout(() => {
+        this.client = null;
+        reject(new Error('Connection timeout'));
+      }, 10000);
+
       client.bind('pusher:signin_success', () => {
         client.unbind('pusher:signin_success');
+        if (this.#connectionTimeout) clearTimeout(this.#connectionTimeout);
         resolve();
       });
+
       client.bind('pusher:error', (e: unknown) => {
         this.client = null;
+        if (this.#connectionTimeout) clearTimeout(this.#connectionTimeout);
         reject(e);
       });
     });
@@ -59,6 +73,7 @@ export default class RealtimeClient {
   public disconnect() {
     if (this.client) {
       this.client.disconnect();
+      if (this.#connectionTimeout) clearTimeout(this.#connectionTimeout);
       this.client = null;
     }
   }
@@ -67,24 +82,64 @@ export default class RealtimeClient {
     event: T,
     callback: (data: z.infer<EventDataMap[T]>) => Promise<void>
   ) {
-    if (!this.client) return;
-    this.client.bind(event, (e: unknown) =>
-      callback(eventDataMaps[event].parse(e))
-    );
+    if (!this.client) {
+      const existing = this.#preConnectEventHandlers.get(event) ?? [];
+      existing.push(callback);
+      this.#preConnectEventHandlers.set(event, existing);
+    } else {
+      this.client.bind(event, (e: unknown) =>
+        callback(eventDataMaps[event].parse(e))
+      );
+    }
   }
 
   public off<const T extends keyof EventDataMap>(event: T) {
-    if (!this.client) return;
-    this.client.unbind(event);
+    if (!this.client) {
+      // eslint-disable-next-line drizzle/enforce-delete-with-where
+      this.#preConnectEventHandlers.delete(event);
+    } else {
+      this.client.unbind(event);
+    }
   }
 
   public onBroadcast<const T extends keyof EventDataMap>(
     event: T,
     callback: (data: z.infer<EventDataMap[T]>) => Promise<void>
   ) {
+    if (!this.client) {
+      const existing = this.#preConnectBroadcastHandlers.get(event) ?? [];
+      existing.push(callback);
+      this.#preConnectBroadcastHandlers.set(event, existing);
+    } else {
+      this.client
+        .subscribe('broadcasts')
+        .bind(event, (e: unknown) => callback(eventDataMaps[event].parse(e)));
+    }
+  }
+
+  public get isConnected() {
+    return !!this.client;
+  }
+
+  private bindEvents() {
     if (!this.client) return;
-    this.client
-      .subscribe('broadcasts')
-      .bind(event, (e: unknown) => callback(eventDataMaps[event].parse(e)));
+    for (const [event, handlers] of this.#preConnectEventHandlers) {
+      handlers.forEach((handler) => {
+        if (!this.client) return;
+        this.client.bind(event, (e: unknown) =>
+          handler(eventDataMaps[event].parse(e))
+        );
+      });
+    }
+    for (const [event, handlers] of this.#preConnectBroadcastHandlers) {
+      handlers.forEach((handler) => {
+        if (!this.client) return;
+        this.client
+          .subscribe('broadcasts')
+          .bind(event, (e: unknown) => handler(eventDataMaps[event].parse(e)));
+      });
+    }
+    this.#preConnectEventHandlers.clear();
+    this.#preConnectBroadcastHandlers.clear();
   }
 }

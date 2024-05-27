@@ -6,6 +6,7 @@ import { buttonVariants } from '@/src/components/shadcn-ui/button';
 import { SpinnerGap } from '@phosphor-icons/react';
 import Link from 'next/link';
 import { api } from '@/src/lib/trpc';
+import { RealtimeProvider } from '@/src/providers/realtime-provider';
 
 export default function Layout({
   children,
@@ -68,7 +69,9 @@ export default function Layout({
         <div className="h-full max-h-full w-fit">
           <Sidebar />
         </div>
-        <div className="flex h-full w-full flex-row p-0">{children}</div>
+        <div className="flex h-full w-full flex-row p-0">
+          <RealtimeProvider>{children}</RealtimeProvider>
+        </div>
       </div>
     </GlobalStoreProvider>
   );

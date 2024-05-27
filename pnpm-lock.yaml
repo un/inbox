@@ -344,6 +344,9 @@ importers:
       '@u22n/platform':
         specifier: workspace:^
         version: link:../platform
+      '@u22n/realtime':
+        specifier: workspace:^
+        version: link:../../packages/realtime
       '@u22n/tiptap':
         specifier: workspace:^
         version: link:../../packages/tiptap
