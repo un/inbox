@@ -304,7 +304,15 @@ export function InviteModal() {
                         <div className="flex gap-1">
                           <form.Field
                             name="email.address"
-                            validators={{ onBlur: z.string().min(1).max(64) }}
+                            validators={{
+                              onBlur: z
+                                .string()
+                                .min(1)
+                                .max(32)
+                                .regex(/^[a-zA-Z0-9._-]*$/, {
+                                  message: 'Only letters and numbers'
+                                })
+                            }}
                             children={(field) => (
                               <Input
                                 className="w-full flex-1"
@@ -322,6 +330,7 @@ export function InviteModal() {
                           <span className="flex items-center">@</span>
                           <form.Field
                             name="email.domain"
+                            validators={{ onChange: z.string().min(1) }}
                             children={(field) => (
                               <Select
                                 name={field.name}
@@ -423,7 +432,7 @@ export function InviteModal() {
                                 <div
                                   className="h-4 w-4 rounded-full border"
                                   style={{
-                                    backgroundColor: item.color ?? undefined
+                                    backgroundColor: `var(--${item.color}-10)`
                                   }}
                                 />
                                 {item.name}
@@ -438,7 +447,7 @@ export function InviteModal() {
                                     <div
                                       className="h-4 w-4 rounded-full border"
                                       style={{
-                                        backgroundColor: item.color ?? undefined
+                                        backgroundColor: `var(--${item.color}-10)`
                                       }}
                                     />
                                     <div>{item.name}</div>

@@ -57,7 +57,7 @@ export function MultiSelect<T extends Record<string, unknown>>({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-[200px] justify-between">
+          className="h-full w-fit min-w-[200px] justify-between">
           {values.length > 0 ? (
             <TriggerRenderer
               items={items.filter((item) => values.includes(item.value))}
