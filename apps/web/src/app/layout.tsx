@@ -56,7 +56,7 @@ export default function RootLayout({
             defaultTheme="system"
             disableTransitionOnChange>
             <Theme
-              className="flex h-full w-full flex-col"
+              className="flex h-svh w-full flex-col"
               radius="medium">
               <TRPCReactProvider>
                 {process.env.NODE_ENV === 'development' && (

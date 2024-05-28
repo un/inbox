@@ -2,7 +2,6 @@
 
 import { type RouterOutputs, api } from '@/src/lib/trpc';
 import {
-  Avatar,
   DropdownMenu,
   IconButton,
   ScrollArea,
@@ -15,8 +14,7 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { type JSONContent, generateHTML } from '@u22n/tiptap/react';
 import { tipTapExtensions } from '@u22n/tiptap/extensions';
 import { type formatParticipantData } from '../../utils';
-import { cn, generateAvatarUrl, getInitials } from '@/src/lib/utils';
-import useTimeAgo from '@/src/hooks/use-time-ago';
+import { cn } from '@/src/lib/utils';
 import { DotsThree } from '@phosphor-icons/react';
 import { useAtom } from 'jotai';
 import { useCopyToClipboard } from '@uidotdev/usehooks';
@@ -24,6 +22,8 @@ import { toast } from 'sonner';
 import { Virtuoso } from 'react-virtuoso';
 import { replyToMessageAtom } from '../atoms';
 import { ms } from '@u22n/utils/ms';
+import { Avatar } from '@/src/components/avatar';
+import { cva } from 'class-variance-authority';
 
 export function MessagesPanel({
   convoId,
@@ -84,6 +84,7 @@ export function MessagesPanel({
           message={message}
           participantOwnPublicId={participantOwnPublicId}
           formattedParticipants={formattedParticipants}
+          key={message.publicId}
         />
       </div>
     ),
@@ -95,8 +96,10 @@ export function MessagesPanel({
       Loading...
     </div>
   ) : (
-    <div className="flex h-full w-full flex-col items-center justify-center gap-2 p-4">
-      <ScrollArea ref={setScrollParent}>
+    <div className="flex h-full w-full flex-col items-center justify-center gap-2 px-4">
+      <ScrollArea
+        ref={setScrollParent}
+        className="pb-4">
         <Virtuoso
           startReached={() => {
             if (isFetchingNextPage || !hasNextPage) return;
@@ -108,6 +111,7 @@ export function MessagesPanel({
           itemContent={itemRenderer}
           customScrollParent={scrollParent ?? undefined}
           style={{ overscrollBehavior: 'contain' }}
+          className=""
         />
       </ScrollArea>
     </div>
@@ -137,52 +141,126 @@ function MessageItem({
       )!,
     [formattedParticipants, message.author.publicId]
   );
-  const timeAgo = useTimeAgo(message.createdAt);
   const [replyTo, setReplyTo] = useAtom(replyToMessageAtom);
   const [, copyToClipboard] = useCopyToClipboard();
+
+  // if the message timestamp is less than a day ago, show the date instead of the time
+  const isRecent =
+    new Date().getTime() - message.createdAt.getTime() < 24 * 60 * 60 * 1000;
+
+  const viaAddress = message.metadata?.email?.from?.[0]?.email;
+
+  // styling
+  const messageStyling = cva('…', {
+    variants: {
+      type: {
+        message: 'rounded-2xl',
+        comment: '',
+        draft: 'rounded-none'
+      },
+      author: { true: '', false: '' }
+    },
+    compoundVariants: [
+      {
+        type: 'message',
+        author: true,
+        class: 'bg-accent-3 rounded-tr-sm'
+      },
+      {
+        type: 'message',
+        author: false,
+        class: 'bg-base-3 rounded-tl-sm'
+      },
+      {
+        type: 'comment',
+        author: true,
+        class: 'bg-amber-3 border-amber-5 border-r-2 rounded-l-md'
+      },
+      {
+        type: 'comment',
+        author: false,
+        class: 'bg-amber-2 border-amber-5 border-l-2 rounded-r-md'
+      }
+    ]
+  });
 
   return (
     <div
       className={cn(
-        'mb-8 flex w-full flex-row gap-2',
+        'group my-6 flex w-full gap-2',
         isUserAuthor ? 'flex-row-reverse' : 'flex-row'
       )}>
-      <Avatar
-        src={
-          generateAvatarUrl({
-            avatarTimestamp: messageAuthor.avatarTimestamp,
-            publicId: messageAuthor.avatarProfilePublicId,
-            size: 'lg'
-          }) ?? undefined
-        }
-        fallback={getInitials(messageAuthor.name)}
-        radius="full"
-        size="4"
-      />
-      <div className="flex w-fit  max-w-prose flex-col overflow-x-hidden">
-        <span className={cn(isUserAuthor ? 'text-right' : 'text-left')}>
-          {messageAuthor.name}{' '}
-          {message.metadata?.email?.from?.[0]?.email ? (
-            <span color="gray">
-              - via {message.metadata.email.from[0].email}
-            </span>
-          ) : null}
-        </span>
+      <div
+        className={cn(
+          isUserAuthor ? 'items-end' : 'items-start',
+          'flex w-fit max-w-prose flex-col gap-2 overflow-x-hidden'
+        )}>
         <div
           className={cn(
-            ' flex w-full max-w-full flex-row overflow-hidden rounded-lg p-2',
-            isUserAuthor
-              ? 'dark:bg-blue-10 bg-blue-8'
-              : 'dark:bg-gray-10 bg-gray-8'
+            'flex w-full items-center gap-2',
+            isUserAuthor ? 'flex-row-reverse' : 'flex-row'
+          )}>
+          <Avatar
+            avatarProfilePublicId={messageAuthor.avatarProfilePublicId}
+            avatarTimestamp={messageAuthor.avatarTimestamp}
+            name={messageAuthor.name}
+            color={messageAuthor.color}
+            hideTooltip
+            size="xl"
+          />
+          <div
+            className={cn(
+              isUserAuthor ? 'flex-row-reverse' : 'flex-row',
+              viaAddress ? 'items-end' : 'items-center',
+              'flex gap-2'
+            )}>
+            <div
+              className={cn(
+                'flex flex-col gap-1',
+                isUserAuthor ? 'items-end' : 'items-start'
+              )}>
+              <span className="text-base font-medium leading-none">
+                {messageAuthor.name}
+              </span>
+              {viaAddress ? (
+                <span className="text-base-11 text-xs leading-none">
+                  via {viaAddress}
+                </span>
+              ) : null}
+            </div>
+          </div>
+          <div className={cn(isUserAuthor ? 'mr-4' : 'ml-4')}>
+            {isRecent ? (
+              <span className="text-base-11 text-xs leading-none">timeAgo</span>
+            ) : (
+              <div
+                className={cn(
+                  'flex flex-col gap-1',
+                  isUserAuthor ? 'items-start' : 'items-end'
+                )}>
+                <span className="text-base-11 text-xs leading-none">
+                  {message.createdAt.toLocaleDateString()}
+                </span>
+                <span className="text-base-11 text-xs leading-none">
+                  {message.createdAt.toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+        <div
+          className={cn(
+            'flex w-fit max-w-full flex-row overflow-hidden px-3 py-2',
+            messageStyling({ type: message.type, author: isUserAuthor })
           )}>
           <HTMLMessage html={messageHtml} />
         </div>
-        <span className={cn(isUserAuthor ? 'text-right' : 'text-left')}>
-          {timeAgo}
-        </span>
       </div>
       <DropdownMenu.Root>
-        <DropdownMenu.Trigger>
+        <DropdownMenu.Trigger className="opacity-0 group-hover:opacity-100">
           <IconButton
             variant="soft"
             size="1"
@@ -228,7 +306,7 @@ const HTMLMessage = memo(
     return (
       <div
         dangerouslySetInnerHTML={{ __html }}
-        className="prose dark:prose-invert prose-p:my-1 prose-a:decoration-blue-8 prose-img:my-1 w-full max-w-full overflow-clip break-words text-black dark:text-white"
+        className="prose dark:prose-invert prose-a:decoration-blue-8 prose-img:my-1 text-base-12 w-full max-w-full overflow-clip break-words"
       />
     );
   },

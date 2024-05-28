@@ -34,7 +34,7 @@ export function RealtimeProvider({ children }: PropsWithChildren) {
   useEffect(() => {
     void client.connect({ orgShortCode }).catch(() => {
       toast.error(
-        'Uninbox encountered an error while trying to connect to the realtime server'
+        'UnInbox encountered an error while trying to connect to the realtime server'
       );
     });
     return () => {

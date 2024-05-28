@@ -54,3 +54,9 @@ export const getInitials = (input: string) =>
     .map((chunk) => chunk.charAt(0).toUpperCase())
     .slice(0, 2)
     .join('');
+
+export const prettyBytes = (bytes: number) => {
+  const units = ['b', 'kb', 'mb']; // we don't need gb for now
+  const i = Math.floor(Math.log(bytes) / Math.log(1024));
+  return `${(bytes / Math.pow(1024, i)).toFixed(2)} ${units[i]}`;
+};
