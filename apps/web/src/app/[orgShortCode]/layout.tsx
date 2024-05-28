@@ -20,7 +20,7 @@ export default function Layout({
   if (storeDataLoading) {
     return (
       <div className="flex h-full w-full flex-col items-center justify-center gap-2">
-        <SpinnerGap className=" text-sand-11 h-20 w-20 animate-spin" />
+        <SpinnerGap className=" text-base-11 h-20 w-20 animate-spin" />
       </div>
     );
   }
@@ -64,7 +64,7 @@ export default function Layout({
 
   return (
     <GlobalStoreProvider initialState={storeData}>
-      <div className="bg-sand-1 max-w-svh flex h-full max-h-svh w-full flex-row gap-0 overflow-hidden p-0">
+      <div className="bg-base-1 max-w-svh flex h-full max-h-svh w-full flex-row gap-0 overflow-hidden p-0">
         <div className="h-full max-h-full w-fit">
           <Sidebar />
         </div>

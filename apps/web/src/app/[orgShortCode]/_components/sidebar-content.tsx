@@ -3,7 +3,6 @@
 import useLoading from '@/src/hooks/use-loading';
 import { cn, generateAvatarUrl, getInitials } from '@/src/lib/utils';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
-import { Button } from '@/src/components/shadcn-ui/button';
 import {
   Avatar,
   AvatarFallback,
@@ -25,31 +24,20 @@ import {
 
 import {
   Check,
-  AddressBook,
   SignOut,
-  ChatCircle,
   MoonStars,
   Gear,
-  SpinnerGap,
   Sun,
-  CaretRight,
-  CaretLeft,
-  SquaresFour,
-  Shield,
-  CaretUp,
   Book,
   QuestionMark,
   MapPin,
   Activity,
   Megaphone,
-  PushPin,
-  CaretDoubleLeft,
   CaretUpDown,
   Plus,
   Palette,
   Monitor,
   Question,
-  Paperclip,
   User
 } from '@phosphor-icons/react';
 import { env } from 'next-runtime-env';
@@ -59,11 +47,11 @@ import { useMemo } from 'react';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import React from 'react';
-import { SidebarNavButton } from './sidebar-nav-button';
+
 import { useTheme } from 'next-themes';
 import { sidebarSubmenuOpenAtom } from './atoms';
 import { useAtom } from 'jotai';
-import { usePreferencesState } from '@/src/stores/preferences-store';
+
 import {
   ToggleGroup,
   ToggleGroupItem
@@ -102,7 +90,7 @@ export default function SidebarContent() {
         <span className={cn('font-display text-slate-11 text-sm')}>
           UnInbox
         </span>
-        <span className={cn('text-slate-11 text-xs')}>v0.1.23</span>
+        <span className={cn('text-slate-11 text-xs')}>v0.1.0</span>
       </div>
     </div>
   );

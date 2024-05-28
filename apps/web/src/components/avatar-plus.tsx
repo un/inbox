@@ -1,103 +1,64 @@
 'use client';
-
-import { generateAvatarUrl, getInitials } from '@/src/lib/utils';
-import {
-  Avatar,
-  Badge,
-  Popover,
-  Tooltip,
-  type AvatarProps
-} from '@radix-ui/themes';
 import { type TypeId } from '@u22n/utils/typeid';
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardPortal,
+  HoverCardTrigger
+} from './shadcn-ui/hover-card';
+import { Avatar, type AvatarProps } from './avatar';
 
 type AvatarPlusProps = {
   size: AvatarProps['size'];
-  imageSize:
-    | '3xs'
-    | '2xs'
-    | 'xs'
-    | 'sm'
-    | 'md'
-    | 'lg'
-    | 'xl'
-    | '2xl'
-    | '3xl'
-    | '4xl'
-    | '5xl';
   users: {
     avatarProfilePublicId: TypeId<'orgMemberProfile' | 'teams' | 'contacts'>;
     avatarTimestamp: Date | null;
     name: string;
+    color?: AvatarProps['color'];
   }[];
 };
 
-export default function AvatarPlus({
-  imageSize,
-  size,
-  users
-}: AvatarPlusProps) {
+export default function AvatarPlus({ size, users }: AvatarPlusProps) {
   const [primary, ...rest] = users;
   if (!primary) {
     return null;
   }
   return (
-    <div className="relative h-fit w-fit">
-      <Tooltip
-        content={primary.name}
-        side="bottom">
-        <button>
-          <Avatar
-            size={size}
-            fallback={getInitials(primary.name)}
-            src={
-              generateAvatarUrl({
-                publicId: primary.avatarProfilePublicId,
-                avatarTimestamp: primary.avatarTimestamp,
-                size: imageSize
-              }) ?? undefined
-            }
-            radius="full"
-          />
-        </button>
-      </Tooltip>
-      <Popover.Root>
-        <Popover.Trigger>
-          <button>
-            <Badge
-              variant="solid"
-              color="gray"
-              radius="full"
-              className="absolute bottom-[-6px] right-[-4px] font-bold">
-              {`+${rest.length}`}
-            </Badge>
-          </button>
-        </Popover.Trigger>
-        <Popover.Content>
-          <div className="flex gap-2 p-2">
-            {rest.map((user) => (
-              <Tooltip
-                content={user.name}
-                side="bottom"
-                key={user.avatarProfilePublicId}>
-                <button>
-                  <Avatar
-                    size={size}
-                    fallback={getInitials(user.name)}
-                    src={
-                      generateAvatarUrl({
-                        publicId: user.avatarProfilePublicId,
-                        avatarTimestamp: user.avatarTimestamp,
-                        size: imageSize
-                      }) ?? undefined
-                    }
-                    radius="full"
-                  />
-                </button>
-              </Tooltip>
-            ))}
+    <div className="relative h-fit w-fit scale-100 overflow-visible">
+      <HoverCard>
+        <HoverCardTrigger asChild>
+          <div>
+            <Avatar
+              avatarProfilePublicId={primary.avatarProfilePublicId}
+              avatarTimestamp={primary.avatarTimestamp}
+              name={primary.name}
+              size={size}
+              hideTooltip={true}
+            />
+
+            <div className="bg-accent-3 text-accent-8 fixed bottom-[-4px] right-[-4px] flex h-3 w-3 items-center justify-center rounded-sm p-1 text-[10px] font-semibold">
+              <span className="leading-none">{`${rest.length}`}</span>
+            </div>
           </div>
-        </Popover.Content>
-      </Popover.Root>
+        </HoverCardTrigger>
+        <HoverCardPortal>
+          <HoverCardContent
+            className="absolute z-50"
+            side="right">
+            <div className="flex gap-2">
+              {rest.map((user) => (
+                <Avatar
+                  key={user.avatarProfilePublicId}
+                  avatarProfilePublicId={user.avatarProfilePublicId}
+                  avatarTimestamp={user.avatarTimestamp}
+                  name={user.name}
+                  size={'lg'}
+                />
+              ))}
+            </div>
+          </HoverCardContent>
+        </HoverCardPortal>
+      </HoverCard>
     </div>
   );
 }

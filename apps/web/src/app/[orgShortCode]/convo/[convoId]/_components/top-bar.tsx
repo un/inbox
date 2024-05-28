@@ -34,7 +34,7 @@ export default function TopBar({
   const toggleConvoHiddenState = useToggleConvoHidden$Cache();
 
   return (
-    <div className=" bg-sand-2 flex h-12 w-full flex-row items-center justify-between  p-2">
+    <div className=" bg-base-2 flex h-12 w-full flex-row items-center justify-between  p-2">
       <div className="flex flex-row items-center gap-4">
         <Link href={`/${orgShortCode}/convo`}>
           <IconButton

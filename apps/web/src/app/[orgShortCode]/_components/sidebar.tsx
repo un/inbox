@@ -2,13 +2,7 @@
 
 import { cn } from '@/src/lib/utils';
 import { usePreferencesState } from '@/src/stores/preferences-store';
-import {
-  CaretDoubleLeft,
-  CaretLineRight,
-  Cross,
-  PushPin,
-  X
-} from '@phosphor-icons/react';
+import { CaretDoubleLeft, PushPin, X } from '@phosphor-icons/react';
 import SidebarContent from './sidebar-content';
 import { sidebarSubmenuOpenAtom } from './atoms';
 import { useAtom } from 'jotai';
