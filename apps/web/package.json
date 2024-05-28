@@ -38,6 +38,7 @@
     "@trpc/react-query": "10.45.2",
     "@trpc/server": "10.45.2",
     "@u22n/platform": "workspace:^",
+    "@u22n/realtime": "workspace:^",
     "@u22n/tiptap": "workspace:^",
     "@u22n/utils": "workspace:^",
     "@uidotdev/usehooks": "^2.4.1",

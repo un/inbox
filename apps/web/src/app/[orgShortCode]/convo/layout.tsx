@@ -22,6 +22,8 @@ import {
 import { useState } from 'react';
 import Link from 'next/link';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
+import { useEffect } from 'react';
+import { useRealtime } from '@/src/providers/realtime-provider';
 
 export default function Layout({
   children
@@ -30,6 +32,41 @@ export default function Layout({
   const { setSidebarExpanded } = usePreferencesState();
   const isMobile = useIsMobile();
   const [showHidden, setShowHidden] = useState(false);
+  // TODO: Implement the realtime event handlers and update query cache accordingly
+
+  const client = useRealtime();
+
+  useEffect(() => {
+    client.on('convo:new', async ({ publicId }) => {
+      //TODO: Handle new convo added
+      console.info('New convo added', publicId);
+    });
+
+    client.on('convo:hidden', async ({ publicId }) => {
+      // TODO: Handle convo updated
+      console.info('Convo Hidden', publicId);
+    });
+
+    client.on('convo:deleted', async ({ publicId }) => {
+      // TODO: Handle convo deleted
+      console.info('Convo Delete', publicId);
+    });
+
+    client.on(
+      'convo:entry:new',
+      async ({ convoPublicId, convoEntryPublicId }) => {
+        // TODO: Handle new convo entry
+        console.info('New convo entry', convoPublicId, convoEntryPublicId);
+      }
+    );
+
+    return () => {
+      client.off('convo:new');
+      client.off('convo:hidden');
+      client.off('convo:deleted');
+      client.off('convo:entry:new');
+    };
+  }, [client]);
 
   return (
     <div className="grid h-full w-full grid-cols-3 gap-0">
