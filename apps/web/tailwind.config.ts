@@ -17,7 +17,8 @@ const config = {
   theme: {
     fontFamily: {
       sans: ['var(--font-inter)', ...fontFamily.sans],
-      display: ['var(--font-cal-sans)', ...fontFamily.sans]
+      display: ['var(--font-cal-sans)', ...fontFamily.sans],
+      mono: [...fontFamily.mono]
     },
     container: {
       center: true,
