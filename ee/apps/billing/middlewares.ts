@@ -6,7 +6,7 @@ import { stripeSdk } from './stripe';
 export const stripeWebhookMiddleware = createMiddleware<Ctx>(
   async (ctx, next) => {
     const stripeSignature = ctx.req.header('stripe-signature');
-    const body = await ctx.req.json().catch(() => null);
+    const body = await ctx.req.raw.text();
     if (!stripeSignature || !body) {
       return ctx.json(null, 401);
     }
