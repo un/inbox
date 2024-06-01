@@ -4,26 +4,36 @@ import { getCookie } from 'hono/cookie';
 import type { Ctx } from './ctx';
 import { createMiddleware } from 'hono/factory';
 
-export const authMiddleware = createMiddleware<Ctx>(async (c, next) => {
-  const sessionCookie = getCookie(c, 'unsession');
-  if (!sessionCookie) {
-    c.set('account', null);
-    await next();
-  } else {
-    const sessionObject = await storage.getItem(sessionCookie);
-    if (!sessionObject) {
+export const authMiddleware = createMiddleware<Ctx>(async (c, next) =>
+  c.get('otel').tracer.startActiveSpan('authMiddleware', async (span) => {
+    const sessionCookie = getCookie(c, 'unsession');
+    span.setAttribute('session.has_cookie', !!sessionCookie);
+    if (!sessionCookie) {
       c.set('account', null);
-      await next();
     } else {
-      c.set('account', {
-        // @ts-expect-error, not typed properly yet
-        id: Number(sessionObject.attributes.account.id),
-        session: sessionObject
-      });
-      await next();
+      const sessionObject = await storage.getItem(sessionCookie);
+      span.setAttribute('session.found_in_db', !!sessionObject);
+      if (sessionObject) {
+        span.setAttributes({
+          'session.account_public_id':
+            sessionObject.attributes.account.publicId,
+          'session.account_username': sessionObject?.attributes.account.username
+        });
+      }
+      c.set(
+        'account',
+        !sessionObject
+          ? null
+          : {
+              id: sessionObject.attributes.account.id,
+              session: sessionObject
+            }
+      );
     }
-  }
-});
+    span.end();
+    return next();
+  })
+);
 
 // Middleware to check if user is signed in
 export const checkSignedIn = createMiddleware<Ctx>(async (c, next) => {

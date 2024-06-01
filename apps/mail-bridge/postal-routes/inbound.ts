@@ -31,8 +31,11 @@ import { tipTapExtensions } from '@u22n/tiptap/extensions';
 import { sendRealtimeNotification } from '../utils/realtime';
 import { simpleParser, type EmailAddress } from 'mailparser';
 import { env } from '../env';
+import type { Ctx } from '../ctx';
 
-export const inboundApi = new Hono().post(
+export const inboundApi = new Hono<Ctx>();
+
+inboundApi.post(
   '/mail/inbound/:orgId/:mailserverId',
   zValidator(
     'json',
