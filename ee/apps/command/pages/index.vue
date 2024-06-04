@@ -11,5 +11,9 @@
       label="@unin.me offer"
       color="red"
       to="/unin" />
+    <NuxtUiButton
+      label="Password Rest"
+      color="red"
+      to="/password-reset" />
   </div>
 </template>
