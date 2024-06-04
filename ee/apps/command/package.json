@@ -40,6 +40,8 @@
     "@uninbox-ee/types": "workspace:*",
     "@vueuse/integrations": "^10.9.0",
     "@vueuse/nuxt": "^10.9.0",
+    "oslo": "^1.1.3",
+    "qrcode": "^1.5.3",
     "superjson": "^2.2.1",
     "trpc-nuxt": "^0.10.21",
     "zod": "^3.22.4"
