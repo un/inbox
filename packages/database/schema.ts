@@ -458,7 +458,7 @@ export const teams = mysqlTable(
   },
   (table) => ({
     // moved pk here
-    pk: primaryKey({ columns: [table.id], name: 'groups_id' }),
+    pk: primaryKey({ columns: [table.id], name: 'teams_id' }),
     publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
     orgIdIndex: index('org_id_idx').on(table.orgId)
   })
@@ -494,7 +494,7 @@ export const teamMembers = mysqlTable(
   },
   (table) => ({
     // moved pk here
-    pk: primaryKey({ columns: [table.id], name: 'group_members_id' }),
+    pk: primaryKey({ columns: [table.id], name: 'team_members_id' }),
     teamIdIndex: index('team_id_idx').on(table.teamId),
     orgMemberIdIndex: index('org_member_id_idx').on(table.orgMemberId),
     orgMemberToTeamIndex: uniqueIndex('org_member_to_team_idx').on(
@@ -1131,7 +1131,7 @@ export const convoParticipantTeamMembers = mysqlTable(
     // moved pk here
     pk: primaryKey({
       columns: [table.id],
-      name: 'convo_participant_group_members_id'
+      name: 'convo_participant_team_members_id'
     }),
     convoParticipantIdIndex: index('convo_participant_id_idx').on(
       table.convoParticipantId
@@ -1282,6 +1282,7 @@ export const convoEntries = mysqlTable(
     replyToId: foreignKey('reply_to_id'),
     body: json('body').notNull(),
     bodyPlainText: text('body_plain_text').notNull(),
+    bodyCleanedHtml: text('body_cleaned_html'),
     metadata: json('metadata').$type<ConvoEntryMetadata>().default({}),
     emailMessageId: messageIdCustomType('email_message_id'),
     visibility: mysqlEnum('visibility', [

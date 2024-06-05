@@ -70,11 +70,10 @@ export const env = createEnv({
     REALTIME_APP_KEY: z.string().min(1),
     REALTIME_APP_SECRET: z.string().min(1),
     DB_MYSQL_MIGRATION_URL: z.string().min(1),
+    DB_REDIS_CONNECTION_STRING: z.string().min(1),
     PORT: z.coerce.number().int().min(1).max(65535).default(3100),
     NODE_ENV: z.enum(['development', 'production']).default('development')
   },
-  client: {},
-  clientPrefix: '_', // Not used, just for making TS happy
   runtimeEnv: process.env
 });
 
