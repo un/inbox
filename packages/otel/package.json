@@ -6,7 +6,8 @@
   "exports": {
     "./logger": "./logger.ts",
     "./otel": "./otel.ts",
-    "./hono": "./hono.ts"
+    "./hono": "./hono.ts",
+    "./exports": "./exports.ts"
   },
   "scripts": {},
   "keywords": [],

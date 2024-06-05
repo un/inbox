@@ -28,6 +28,7 @@
     "@u22n/tiptap": "workspace:^",
     "@u22n/tsconfig": "^0.0.2",
     "@u22n/utils": "workspace:*",
+    "bullmq": "^5.7.15",
     "drizzle-orm": "^0.30.3",
     "hono": "^4.3.8",
     "mailauth": "^4.6.5",
