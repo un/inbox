@@ -914,7 +914,7 @@ async function uploadAndAttachAttachment(
       },
       body: JSON.stringify({
         orgPublicId,
-        filename: input.fileName
+        filename: input.fileName.replace(/[^a-zA-Z0-9.]/g, '_')
       })
     }
   ).then((r) => r.json())) as PreSignedData;
@@ -949,14 +949,14 @@ async function uploadAndAttachAttachment(
     convoParticipantId: input.convoParticipantId,
     orgId: input.orgId,
     publicId: attachmentPublicId,
-    fileName: input.fileName,
+    fileName: input.fileName.replace(/[^a-zA-Z0-9.]/g, '_'),
     type: input.fileType,
     size: input.fileSize,
     inline: input.inline
   });
 
   return {
-    attachmentUrl: `${env.STORAGE_URL}/attachment/${orgShortCode}/${attachmentPublicId}/${input.fileName}`,
+    attachmentUrl: `${env.STORAGE_URL}/attachment/${orgShortCode}/${attachmentPublicId}/${input.fileName.replace(/[^a-zA-Z0-9.]/g, '_')}`,
     cid: input.cid,
     inline: input.inline
   };
