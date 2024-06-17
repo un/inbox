@@ -1,12 +1,13 @@
 import uploadTracker from '@/src/lib/upload';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
-import { Badge, Button, Flex, IconButton } from '@radix-ui/themes';
 import { type TypeId } from '@u22n/utils/typeid';
 import { type PrimitiveAtom, useAtom } from 'jotai';
 import { Plus } from '@phosphor-icons/react';
 import { env } from 'next-runtime-env';
 import { useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { Badge } from '@/src/components/shadcn-ui/badge';
+import { Button } from '@/src/components/shadcn-ui/button';
 
 export type ConvoAttachmentUpload = {
   fileName: string;
@@ -118,18 +119,15 @@ export function AttachmentButton({ attachmentsAtom }: AttachmentButtonProps) {
 
   return (
     <>
-      <Flex
-        gap="2"
-        wrap="wrap">
+      <div className="flex flex-wrap gap-2">
         {attachments.map((attachment) => (
           <Badge
             key={attachment.attachmentPublicId}
-            variant="surface"
+            variant={'outline'}
             className="flex p-1">
             <span className="max-w-40 truncate">{attachment.fileName}</span>
-            <IconButton
-              variant="soft"
-              size="1"
+            <Button
+              variant={'secondary'}
               onClick={() => {
                 setAttachments((prev) =>
                   prev.filter(
@@ -142,7 +140,7 @@ export function AttachmentButton({ attachmentsAtom }: AttachmentButtonProps) {
                 className="rotate-45"
                 size={14}
               />
-            </IconButton>
+            </Button>
           </Badge>
         ))}
 
@@ -155,10 +153,10 @@ export function AttachmentButton({ attachmentsAtom }: AttachmentButtonProps) {
             <span className="w-[7ch] text-right">{progress.toFixed(2)}%</span>
           </Badge>
         ))}
-      </Flex>
+      </div>
 
       <Button
-        variant="surface"
+        variant={'outline'}
         onClick={() => fileDialogRef.current?.click()}
         loading={processing}>
         Attachment

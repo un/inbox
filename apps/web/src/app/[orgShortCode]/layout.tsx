@@ -7,6 +7,7 @@ import { SpinnerGap } from '@phosphor-icons/react';
 import Link from 'next/link';
 import { api } from '@/src/lib/trpc';
 import { RealtimeProvider } from '@/src/providers/realtime-provider';
+import { NewConvoSheet } from './convo/_components/new-convo-sheet';
 
 export default function Layout({
   children,
@@ -72,6 +73,8 @@ export default function Layout({
         <div className="flex h-full w-full flex-row p-0">
           <RealtimeProvider>{children}</RealtimeProvider>
         </div>
+
+        <NewConvoSheet />
       </div>
     </GlobalStoreProvider>
   );
