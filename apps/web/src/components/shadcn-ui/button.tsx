@@ -66,7 +66,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
         {...props}
-        disabled={disabled || loading}>
+        disabled={disabled ?? loading}>
         {loading ? (
           <>
             <SpinnerGap className="mr-1 h-5 w-5 animate-spin" /> {children}
