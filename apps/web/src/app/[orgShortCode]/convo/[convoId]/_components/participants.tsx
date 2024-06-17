@@ -65,7 +65,7 @@ export function Participants({
           <DrawerHeader>
             <DrawerTitle>
               <span>Participants</span>
-              <DrawerClose>
+              <DrawerClose asChild>
                 <Button
                   variant={'outline'}
                   size={'icon-sm'}>
