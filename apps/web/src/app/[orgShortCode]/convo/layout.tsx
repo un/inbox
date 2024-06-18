@@ -24,6 +24,12 @@ import Link from 'next/link';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { useEffect } from 'react';
 import { useRealtime } from '@/src/providers/realtime-provider';
+import {
+  useAddSingleConvo$Cache,
+  useDeleteConvo$Cache,
+  useToggleConvoHidden$Cache,
+  useUpdateConvoMessageList$Cache
+} from './utils';
 
 export default function Layout({
   children
@@ -32,32 +38,21 @@ export default function Layout({
   const { setSidebarExpanded } = usePreferencesState();
   const isMobile = useIsMobile();
   const [showHidden, setShowHidden] = useState(false);
-  // TODO: Implement the realtime event handlers and update query cache accordingly
 
+  const addConvo = useAddSingleConvo$Cache();
+  const toggleConvoHidden = useToggleConvoHidden$Cache();
+  const deleteConvo = useDeleteConvo$Cache();
+  const updateConvoMessageList = useUpdateConvoMessageList$Cache();
   const client = useRealtime();
 
   useEffect(() => {
-    client.on('convo:new', async ({ publicId }) => {
-      //TODO: Handle new convo added
-      console.info('New convo added', publicId);
-    });
-
-    client.on('convo:hidden', async ({ publicId }) => {
-      // TODO: Handle convo updated
-      console.info('Convo Hidden', publicId);
-    });
-
-    client.on('convo:deleted', async ({ publicId }) => {
-      // TODO: Handle convo deleted
-      console.info('Convo Delete', publicId);
-    });
-
-    client.on(
-      'convo:entry:new',
-      async ({ convoPublicId, convoEntryPublicId }) => {
-        // TODO: Handle new convo entry
-        console.info('New convo entry', convoPublicId, convoEntryPublicId);
-      }
+    client.on('convo:new', ({ publicId }) => addConvo(publicId));
+    client.on('convo:hidden', ({ publicId, hidden }) =>
+      toggleConvoHidden(publicId, hidden)
+    );
+    client.on('convo:deleted', ({ publicId }) => deleteConvo(publicId));
+    client.on('convo:entry:new', ({ convoPublicId, convoEntryPublicId }) =>
+      updateConvoMessageList(convoPublicId, convoEntryPublicId)
     );
 
     return () => {
@@ -66,7 +61,13 @@ export default function Layout({
       client.off('convo:deleted');
       client.off('convo:entry:new');
     };
-  }, [client]);
+  }, [
+    client,
+    addConvo,
+    toggleConvoHidden,
+    deleteConvo,
+    updateConvoMessageList
+  ]);
 
   return (
     <div className="flex h-full w-full flex-row gap-0 lg:grid-cols-3 xl:grid">

@@ -2,7 +2,7 @@ import {
   createContext,
   useContext,
   useEffect,
-  useMemo,
+  useState,
   type PropsWithChildren
 } from 'react';
 import RealtimeClient from '@u22n/realtime/client';
@@ -20,15 +20,14 @@ const PLATFORM_URL = env('NEXT_PUBLIC_PLATFORM_URL')!;
 export function RealtimeProvider({ children }: PropsWithChildren) {
   const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
 
-  const client = useMemo(
+  const [client] = useState(
     () =>
       new RealtimeClient({
         appKey,
         host,
         port,
         authEndpoint: `${PLATFORM_URL}/realtime/auth`
-      }),
-    []
+      })
   );
 
   useEffect(() => {
