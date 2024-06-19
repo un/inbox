@@ -24,6 +24,7 @@ import { replyToMessageAtom } from '../atoms';
 import { ms } from '@u22n/utils/ms';
 import { Avatar } from '@/src/components/avatar';
 import { cva } from 'class-variance-authority';
+import { OriginalMessageView } from './original-message-view';
 
 export function MessagesPanel({
   convoId,
@@ -143,6 +144,7 @@ function MessageItem({
   );
   const [replyTo, setReplyTo] = useAtom(replyToMessageAtom);
   const [, copyToClipboard] = useCopyToClipboard();
+  const [viewingOriginalMessage, setViewingOriginalMessage] = useState(false);
 
   // if the message timestamp is less than a day ago, show the date instead of the time
   const isRecent =
@@ -282,7 +284,9 @@ function MessageItem({
             ) : null}
           </DropdownMenu.Item>
           {message.rawHtml?.wipeDate && (
-            <DropdownMenu.Item>View Original Message</DropdownMenu.Item>
+            <DropdownMenu.Item onClick={() => setViewingOriginalMessage(true)}>
+              View Original Message
+            </DropdownMenu.Item>
           )}
           <DropdownMenu.Item
             onClick={async () => {
@@ -294,6 +298,12 @@ function MessageItem({
           <DropdownMenu.Item>Report Bug</DropdownMenu.Item>
         </DropdownMenu.Content>
       </DropdownMenu.Root>
+      {viewingOriginalMessage && message.rawHtml?.wipeDate ? (
+        <OriginalMessageView
+          setOpen={setViewingOriginalMessage}
+          messagePublicId={message.publicId}
+        />
+      ) : null}
     </div>
   );
 }
