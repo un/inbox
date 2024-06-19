@@ -1,3 +1,4 @@
+import './tracing';
 import type { Ctx, TrpcContext } from './ctx';
 import { env } from './env';
 import { Hono } from 'hono';
@@ -9,9 +10,11 @@ import { trpcPlatformRouter } from './trpc';
 import { db } from '@u22n/database';
 import { trpcServer } from '@hono/trpc-server';
 import { authMiddleware } from './middlewares';
+import { otel } from '@u22n/otel/hono';
 import { logger } from 'hono/logger';
 
 const app = new Hono<Ctx>();
+app.use(otel());
 
 // Logger middleware
 if (env.NODE_ENV === 'development') {

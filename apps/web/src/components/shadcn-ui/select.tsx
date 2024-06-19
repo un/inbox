@@ -1,8 +1,11 @@
 import * as React from 'react';
 import * as SelectPrimitive from '@radix-ui/react-select';
-import { Check, CaretDown, CaretUp } from '@phosphor-icons/react';
 
 import { cn } from '@/src/lib/utils';
+import { cva, type VariantProps } from 'class-variance-authority';
+import { CaretDown, CaretUp, Check } from '@phosphor-icons/react';
+
+//! This component has been modified from the original version in the shadcn-ui package
 
 const Select = SelectPrimitive.Root;
 
@@ -10,16 +13,39 @@ const SelectGroup = SelectPrimitive.Group;
 
 const SelectValue = SelectPrimitive.Value;
 
+const triggerVariants = cva(
+  'border-base-5 bg-base-1 placeholder:text-base-11 flex items-center justify-between border ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1 ring-base-5 text-base-11 gap-2 font-medium',
+  {
+    variants: {
+      size: {
+        default: 'rounded-md text-sm h-10 px-3 py-2',
+        sm: 'rounded-sm text-xs h-6 px-1.5 py-0.5'
+      },
+      width: {
+        default: 'w-full',
+        fit: 'w-fit',
+        fixed: 'w-80'
+      },
+      iconSize: {
+        default: 'h-4 w-4',
+        sm: 'h-2 w-2'
+      }
+    },
+    defaultVariants: {
+      size: 'default',
+      width: 'default'
+    }
+  }
+);
+
 const SelectTrigger = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Trigger>,
-  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger>
->(({ className, children, ...props }, ref) => (
+  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger> &
+    VariantProps<typeof triggerVariants>
+>(({ className, children, size, ...props }, ref) => (
   <SelectPrimitive.Trigger
     ref={ref}
-    className={cn(
-      'border-input bg-background ring-offset-background placeholder:text-muted-foreground focus:ring-ring flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1',
-      className
-    )}
+    className={cn(triggerVariants({ size }), className)}
     {...props}>
     {children}
     <SelectPrimitive.Icon asChild>

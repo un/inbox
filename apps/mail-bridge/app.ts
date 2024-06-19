@@ -1,3 +1,5 @@
+import './tracing';
+import './queue/mail-processor';
 import { env } from './env';
 import { Hono } from 'hono';
 import { db } from '@u22n/database';
@@ -8,8 +10,11 @@ import { eventApi } from './postal-routes/events';
 import { inboundApi } from './postal-routes/inbound';
 import { signatureMiddleware } from './postal-routes/signature-middleware';
 import { logger } from 'hono/logger';
+import { otel } from '@u22n/otel/hono';
+import type { Ctx, TRPCContext } from './ctx';
 
-const app = new Hono();
+const app = new Hono<Ctx>();
+app.use(otel());
 
 // Logger middleware
 if (env.NODE_ENV === 'development') {
@@ -27,7 +32,12 @@ app.use(
     createContext: (_, c) => {
       const authToken = c.req.header('Authorization');
       const isServiceAuthenticated = authToken === env.MAILBRIDGE_KEY;
-      return { auth: isServiceAuthenticated, db, config: env, context: c };
+      return {
+        auth: isServiceAuthenticated,
+        db,
+        config: env,
+        context: c
+      } satisfies TRPCContext;
     }
   })
 );

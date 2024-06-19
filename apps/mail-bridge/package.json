@@ -23,12 +23,16 @@
     "@types/mailparser": "^3.4.4",
     "@u22n/database": "workspace:*",
     "@u22n/mailtools": "^0.1.2",
+    "@u22n/otel": "workspace:^",
     "@u22n/realtime": "workspace:^",
     "@u22n/tiptap": "workspace:^",
     "@u22n/tsconfig": "^0.0.2",
     "@u22n/utils": "workspace:*",
+    "bullmq": "^5.7.15",
+    "dompurify": "^3.1.5",
     "drizzle-orm": "^0.30.3",
     "hono": "^4.3.8",
+    "jsdom": "^24.1.0",
     "mailauth": "^4.6.5",
     "mailparser": "^3.6.9",
     "mysql2": "^3.9.7",
@@ -38,6 +42,8 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@types/dompurify": "^3.0.5",
+    "@types/jsdom": "^21.1.7",
     "@types/node": "^20.12.7",
     "@types/nodemailer": "^6.4.14",
     "tsx": "^4.7.1"

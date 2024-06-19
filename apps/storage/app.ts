@@ -1,3 +1,4 @@
+import './tracing';
 import { env } from './env';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
@@ -10,10 +11,12 @@ import { presignApi } from './api/presign';
 import { mailfetchApi } from './api/mailfetch';
 import { internalPresignApi } from './api/internalPresign';
 import { deleteAttachmentsApi } from './api/deleteAttachments';
-import type { Ctx } from './ctx';
 import { logger } from 'hono/logger';
+import { otel } from '@u22n/otel/hono';
+import type { Ctx } from './ctx';
 
 const app = new Hono<Ctx>();
+app.use(otel());
 
 // Logger middleware
 if (env.NODE_ENV === 'development') {

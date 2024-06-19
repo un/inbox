@@ -6,7 +6,6 @@ import { type TypeId, validateTypeId } from '@u22n/utils/typeid';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { useMemo } from 'react';
 import { formatParticipantData } from '../utils';
-import { ContextPanel } from './_components/context-panel';
 import { env } from 'next-runtime-env';
 import { MessagesPanel } from './_components/messages-panel';
 import TopBar from './_components/top-bar';
@@ -79,35 +78,29 @@ function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
   }
 
   return (
-    <div className="flex h-full max-h-full w-full max-w-full flex-col overflow-hidden">
+    <div className="flex h-full max-h-full w-full max-w-full flex-col overflow-hidden rounded-2xl">
       <TopBar
         isConvoLoading={convoDataLoading}
         convoId={convoId}
         convoHidden={convoHidden}
         subjects={convoData?.data.subjects}
+        participants={formattedParticipants}
+        attachments={attachments}
       />
-      <div className="flex h-full w-full flex-row">
-        <div className="flex h-full w-full flex-row">
-          <div className="bg-green-5 flex h-full w-full min-w-96 flex-col">
-            {convoDataLoading || !participantOwnPublicId ? (
-              <span>Loading</span>
-            ) : (
-              <MessagesPanel
-                convoId={convoId}
-                formattedParticipants={formattedParticipants}
-                participantOwnPublicId={
-                  participantOwnPublicId as TypeId<'convoParticipants'>
-                }
-              />
-            )}
-            <ReplyBox convoId={convoId} />
-          </div>
-          <ContextPanel
-            participants={formattedParticipants}
-            attachments={attachments}
+      <div className="flex h-full w-full min-w-96 flex-col">
+        {convoDataLoading || !participantOwnPublicId ? (
+          <span>Loading</span>
+        ) : (
+          <MessagesPanel
+            convoId={convoId}
+            formattedParticipants={formattedParticipants}
+            participantOwnPublicId={
+              participantOwnPublicId as TypeId<'convoParticipants'>
+            }
           />
-        </div>
+        )}
       </div>
+      <ReplyBox convoId={convoId} />
     </div>
   );
 }

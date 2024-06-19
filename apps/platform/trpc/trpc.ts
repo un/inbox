@@ -68,26 +68,52 @@ function createRatelimiter({
       })
     : new NoopRatelimit();
 
-  return trpcContext.middleware(async ({ ctx, next }) => {
-    const ip = ctx.event.env.incoming.socket.remoteAddress;
-    const result = await unkey.limit(ip ?? 'unknown');
-    if (!result.success) {
-      throw new TRPCError({
-        code: 'TOO_MANY_REQUESTS',
-        message: 'Too many requests, please try again later'
-      });
-    }
-    return next();
-  });
+  return trpcContext.middleware(async ({ ctx, next }) =>
+    ctx.event
+      .get('otel')
+      .tracer.startActiveSpan(`Ratelimiter ${namespace}`, async (span) => {
+        const ip = ctx.event.env.incoming.socket.remoteAddress;
+        const result = await unkey.limit(ip ?? 'unknown');
+        span.setAttributes({
+          ip,
+          limit,
+          duration,
+          namespace,
+          remaining: result.remaining,
+          reset: result.reset
+        });
+        if (!result.success) {
+          span.end();
+          throw new TRPCError({
+            code: 'TOO_MANY_REQUESTS',
+            message: 'Too many requests, please try again later'
+          });
+        }
+        span.end();
+        return next();
+      })
+  );
 }
 
-export const publicProcedure = trpcContext.procedure;
+export const publicProcedure = trpcContext.procedure.use(
+  async ({ ctx, type, path, next }) =>
+    ctx.event
+      .get('otel')
+      .tracer.startActiveSpan(`TRPC ${type} ${path}`, async (span) => {
+        const result = await next();
+        span.setAttributes({
+          'trpc.ok': result.ok
+        });
+        span.end();
+        return result;
+      })
+);
 
 export const publicRateLimitedProcedure = Object.entries(
   publicRateLimits
 ).reduce(
   (acc, [key, [limit, duration]]) => {
-    acc[key as keyof typeof publicRateLimits] = trpcContext.procedure.use(
+    acc[key as keyof typeof publicRateLimits] = publicProcedure.use(
       createRatelimiter({ limit, duration, namespace: `public.${key}` })
     );
     return acc;
@@ -95,43 +121,55 @@ export const publicRateLimitedProcedure = Object.entries(
   {} as Record<keyof typeof publicRateLimits, typeof publicProcedure>
 );
 
-export const accountProcedure = trpcContext.procedure.use(
-  isAccountAuthenticated
-);
-export const orgProcedure = trpcContext.procedure
+export const accountProcedure = publicProcedure.use(isAccountAuthenticated);
+export const orgProcedure = publicProcedure
   .use(isAccountAuthenticated)
   .input(z.object({ orgShortCode: z.string() }))
-  .use(async ({ input, ctx, next }) => {
-    const { orgShortCode } = input;
-    const orgData = await validateOrgShortCode(orgShortCode);
+  .use(({ input, ctx, next }) =>
+    ctx.event
+      .get('otel')
+      .tracer.startActiveSpan(`Validate orgShortCode`, async (span) => {
+        const { orgShortCode } = input;
+        span.setAttribute('org.shortCode', orgShortCode);
+        const orgData = await validateOrgShortCode(orgShortCode);
 
-    if (!orgData) {
-      throw new TRPCError({
-        code: 'NOT_FOUND',
-        message: 'Organization not found'
-      });
-    }
+        if (!orgData) {
+          span.setAttributes({ 'org.found': false });
+          span.end();
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Organization not found'
+          });
+        }
 
-    const accountId = ctx.account.id;
-    const orgMembership = orgData.members.find(
-      (member) => member.accountId === accountId
-    );
+        const accountId = ctx.account.id;
+        const orgMembership = orgData.members.find(
+          (member) => member.accountId === accountId
+        );
 
-    if (!accountId || !orgMembership) {
-      ctx.event.header('Location', '/');
-      throw new TRPCError({
-        code: 'UNAUTHORIZED',
-        message: 'You are not a member of this organization, redirecting...'
-      });
-    }
-
-    return next({
-      ctx: {
-        ...ctx,
-        org: { ...orgData, memberId: orgMembership.id }
-      }
-    });
-  });
+        if (!accountId || !orgMembership) {
+          span.setAttributes({ 'org.is_member': false });
+          span.end();
+          ctx.event.header('Location', '/');
+          throw new TRPCError({
+            code: 'UNAUTHORIZED',
+            message: 'You are not a member of this organization, redirecting...'
+          });
+        }
+        span.setAttributes({
+          'org.found': true,
+          'org.is_member': true,
+          'org.member_id': orgMembership.id
+        });
+        span.end();
+        return next({
+          ctx: {
+            ...ctx,
+            org: { ...orgData, memberId: orgMembership.id }
+          }
+        });
+      })
+  );
 
 export const eeProcedure = orgProcedure.use(isEeEnabled);
 

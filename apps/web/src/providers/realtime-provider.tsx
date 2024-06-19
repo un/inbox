@@ -2,7 +2,7 @@ import {
   createContext,
   useContext,
   useEffect,
-  useMemo,
+  useState,
   type PropsWithChildren
 } from 'react';
 import RealtimeClient from '@u22n/realtime/client';
@@ -20,21 +20,20 @@ const PLATFORM_URL = env('NEXT_PUBLIC_PLATFORM_URL')!;
 export function RealtimeProvider({ children }: PropsWithChildren) {
   const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
 
-  const client = useMemo(
+  const [client] = useState(
     () =>
       new RealtimeClient({
         appKey,
         host,
         port,
         authEndpoint: `${PLATFORM_URL}/realtime/auth`
-      }),
-    []
+      })
   );
 
   useEffect(() => {
     void client.connect({ orgShortCode }).catch(() => {
       toast.error(
-        'Uninbox encountered an error while trying to connect to the realtime server'
+        'UnInbox encountered an error while trying to connect to the realtime server'
       );
     });
     return () => {

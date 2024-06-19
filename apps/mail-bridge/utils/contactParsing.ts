@@ -1,5 +1,4 @@
 import type { EmailAddress } from 'mailparser';
-import type { MessageParseAddressPlatformObject } from '../types';
 import { db } from '@u22n/database';
 import { and, eq } from '@u22n/database/orm';
 import {
@@ -8,6 +7,21 @@ import {
   emailIdentities
 } from '@u22n/database/schema';
 import { typeIdGenerator } from '@u22n/utils/typeid';
+
+type MessageParseAddressPlatformObject = {
+  id: number;
+  type: 'contact' | 'emailIdentity';
+  publicId: string;
+  email: string;
+  contactType:
+    | 'person'
+    | 'product'
+    | 'newsletter'
+    | 'marketing'
+    | 'unknown'
+    | null;
+  ref: 'to' | 'cc' | 'from';
+};
 
 export async function parseAddressIds(input: {
   addresses: EmailAddress[];

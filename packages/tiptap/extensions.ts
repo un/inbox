@@ -32,7 +32,10 @@ export const tipTapExtensions: AnyExtension[] = [
       class: 'text-blue-12'
     }
   }),
-  Placeholder,
+  Placeholder.configure({
+    // placeholder: 'My Custom Placeholder',
+    emptyEditorClass: 'is-editor-empty'
+  }),
   Underline,
   Subscript,
   Superscript

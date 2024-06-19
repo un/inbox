@@ -38,13 +38,17 @@ export function formatParticipantData(
             ? `${participant.contact?.emailUsername}@${participant.contact?.emailDomain}`
             : 'unnamed';
 
+  const participantAddress = participant.contact
+    ? participant.contact.emailUsername + '@' + participant.contact.emailDomain
+    : null;
+
   return {
     participantPublicId: participant.publicId,
     typePublicId: typePublicId,
     avatarProfilePublicId: avatarProfilePublicId,
     avatarTimestamp: avatarTimestampProp,
     name: nameProp,
-    color: participant.team?.color ?? null,
+    color: participant.team?.color,
     type: participant.orgMember
       ? 'orgMember'
       : participant.team
@@ -52,7 +56,8 @@ export function formatParticipantData(
         : 'contact',
     role: participant.role,
     signatureHtml: participant.contact?.signatureHtml ?? null,
-    signaturePlainText: participant.contact?.signaturePlainText ?? null
+    signaturePlainText: participant.contact?.signaturePlainText ?? null,
+    address: participantAddress
   };
 }
 
@@ -62,19 +67,29 @@ export function useAddSingleConvo$Cache() {
   const convoListApi = utils.convos.getOrgMemberConvos;
   const getOrgMemberSpecificConvoApi = utils.convos.getOrgMemberSpecificConvo;
 
-  return async (convoId: TypeId<'convos'>) => {
-    const convo = await getOrgMemberSpecificConvoApi.fetch({
-      convoPublicId: convoId,
-      orgShortCode
-    });
-    convoListApi.setInfiniteData({ orgShortCode }, (updater) => {
-      if (!updater) return;
-      const clonedUpdater = structuredClone(updater);
-      const clonedConvo = structuredClone(convo)!;
-      clonedUpdater.pages.at(0)?.data.unshift(clonedConvo);
-      return clonedUpdater;
-    });
-  };
+  return useCallback(
+    async (convoId: TypeId<'convos'>) => {
+      const convo = await getOrgMemberSpecificConvoApi.fetch({
+        convoPublicId: convoId,
+        orgShortCode
+      });
+      convoListApi.setInfiniteData({ orgShortCode }, (updater) => {
+        if (!updater) return;
+        // If convo already exists in the cache, don't add it again
+        if (
+          updater.pages.some((page) =>
+            page.data.some((c) => c.publicId === convoId)
+          )
+        )
+          return;
+        const clonedUpdater = structuredClone(updater);
+        const clonedConvo = structuredClone(convo)!;
+        clonedUpdater.pages.at(0)?.data.unshift(clonedConvo);
+        return clonedUpdater;
+      });
+    },
+    [convoListApi, getOrgMemberSpecificConvoApi, orgShortCode]
+  );
 }
 
 export function useDeleteConvo$Cache() {
@@ -100,18 +115,21 @@ export function useDeleteConvo$Cache() {
     []
   );
 
-  return async (convoId: TypeId<'convos'>) => {
-    await convoListApi.cancel({ orgShortCode });
-    await convoListApi.cancel({ orgShortCode, includeHidden: true });
+  return useCallback(
+    async (convoId: TypeId<'convos'>) => {
+      await convoListApi.cancel({ orgShortCode });
+      await convoListApi.cancel({ orgShortCode, includeHidden: true });
 
-    convoListApi.setInfiniteData({ orgShortCode }, (updater) =>
-      deleteFn(convoId, updater)
-    );
-    convoListApi.setInfiniteData(
-      { orgShortCode, includeHidden: true },
-      (updater) => deleteFn(convoId, updater)
-    );
-  };
+      convoListApi.setInfiniteData({ orgShortCode }, (updater) =>
+        deleteFn(convoId, updater)
+      );
+      convoListApi.setInfiniteData(
+        { orgShortCode, includeHidden: true },
+        (updater) => deleteFn(convoId, updater)
+      );
+    },
+    [convoListApi, deleteFn, orgShortCode]
+  );
 }
 
 // TODO: Simplify this function later, its too complex
@@ -172,70 +190,74 @@ export function useToggleConvoHidden$Cache() {
     []
   );
 
-  return async (convoId: TypeId<'convos'>, hide = false) => {
-    await convoApi.cancel({ convoPublicId: convoId, orgShortCode });
-    convoApi.setData({ convoPublicId: convoId, orgShortCode }, (updater) => {
-      if (!updater) return;
-      const clonedUpdater = structuredClone(updater);
-      const participantIndex = clonedUpdater.data.participants.findIndex(
-        (participant) => participant.publicId === updater.ownParticipantPublicId
-      );
-      if (participantIndex === -1) return;
-      clonedUpdater.data.participants[participantIndex]!.hidden = hide;
-      return clonedUpdater;
-    });
+  return useCallback(
+    async (convoId: TypeId<'convos'>, hide = false) => {
+      await convoApi.cancel({ convoPublicId: convoId, orgShortCode });
+      convoApi.setData({ convoPublicId: convoId, orgShortCode }, (updater) => {
+        if (!updater) return;
+        const clonedUpdater = structuredClone(updater);
+        const participantIndex = clonedUpdater.data.participants.findIndex(
+          (participant) =>
+            participant.publicId === updater.ownParticipantPublicId
+        );
+        if (participantIndex === -1) return;
+        clonedUpdater.data.participants[participantIndex]!.hidden = hide;
+        return clonedUpdater;
+      });
 
-    const convoToAdd = await specificConvoApi.fetch({
-      convoPublicId: convoId,
-      orgShortCode
-    });
+      const convoToAdd = await specificConvoApi.fetch({
+        convoPublicId: convoId,
+        orgShortCode
+      });
 
-    // Update both hidden and non-hidden convo lists
-    await convoListApi.cancel({ orgShortCode, includeHidden: true });
-    await convoListApi.cancel({ orgShortCode });
+      // Update both hidden and non-hidden convo lists
+      await convoListApi.cancel({ orgShortCode, includeHidden: true });
+      await convoListApi.cancel({ orgShortCode });
 
-    // if we are hiding a convo, we need to remove it from the non-hidden list and add to hidden list
-    if (hide) {
-      convoListApi.setInfiniteData({ orgShortCode }, (updater) =>
-        convoListUpdaterFn(
-          /* hide from non-hidden */ true,
-          null,
-          convoId,
-          updater
-        )
-      );
-      convoListApi.setInfiniteData(
-        { orgShortCode, includeHidden: true },
-        (updater) =>
+      // if we are hiding a convo, we need to remove it from the non-hidden list and add to hidden list
+      if (hide) {
+        convoListApi.setInfiniteData({ orgShortCode }, (updater) =>
           convoListUpdaterFn(
-            /* add from hidden */ false,
-            convoToAdd,
-            null,
-            updater
-          )
-      );
-    } else {
-      // if we are un-hiding a convo, we need to remove it from the hidden list and add to non-hidden list
-      convoListApi.setInfiniteData({ orgShortCode }, (updater) =>
-        convoListUpdaterFn(
-          /* add to non-hidden */ false,
-          convoToAdd,
-          null,
-          updater
-        )
-      );
-      convoListApi.setInfiniteData(
-        { orgShortCode, includeHidden: true },
-        (updater) =>
-          convoListUpdaterFn(
-            /* hide from hidden */ true,
+            /* hide from non-hidden */ true,
             null,
             convoId,
             updater
           )
-      );
-    }
-  };
+        );
+        convoListApi.setInfiniteData(
+          { orgShortCode, includeHidden: true },
+          (updater) =>
+            convoListUpdaterFn(
+              /* add from hidden */ false,
+              convoToAdd,
+              null,
+              updater
+            )
+        );
+      } else {
+        // if we are un-hiding a convo, we need to remove it from the hidden list and add to non-hidden list
+        convoListApi.setInfiniteData({ orgShortCode }, (updater) =>
+          convoListUpdaterFn(
+            /* add to non-hidden */ false,
+            convoToAdd,
+            null,
+            updater
+          )
+        );
+        convoListApi.setInfiniteData(
+          { orgShortCode, includeHidden: true },
+          (updater) =>
+            convoListUpdaterFn(
+              /* hide from hidden */ true,
+              null,
+              convoId,
+              updater
+            )
+        );
+      }
+    },
+    [convoApi, convoListApi, convoListUpdaterFn, orgShortCode, specificConvoApi]
+  );
 }
 
 export function useUpdateConvoMessageList$Cache() {
@@ -245,27 +267,37 @@ export function useUpdateConvoMessageList$Cache() {
   const singleConvoEntryApi = utils.convos.entries.getConvoSingleEntry;
 
   // TODO: make the reply mutation return the new convo entry, to save one API call
-  return async (
-    convoId: TypeId<'convos'>,
-    convoEntryPublicId: TypeId<'convoEntries'>
-  ) => {
-    await convoEntiresApi.cancel({ convoPublicId: convoId, orgShortCode });
-    const convo = await singleConvoEntryApi.fetch({
-      convoPublicId: convoId,
-      convoEntryPublicId,
-      orgShortCode
-    });
-    convoEntiresApi.setInfiniteData(
-      { convoPublicId: convoId, orgShortCode },
-      (updater) => {
-        if (!updater) return;
-        const clonedUpdater = structuredClone(updater);
-        const page = clonedUpdater.pages.at(-1)!;
-        if (!page || !convo) return;
-        const clonedConvo = structuredClone(convo.entry);
-        page.entries.unshift(clonedConvo);
-        return clonedUpdater;
-      }
-    );
-  };
+  return useCallback(
+    async (
+      convoId: TypeId<'convos'>,
+      convoEntryPublicId: TypeId<'convoEntries'>
+    ) => {
+      await convoEntiresApi.cancel({ convoPublicId: convoId, orgShortCode });
+      const convo = await singleConvoEntryApi.fetch({
+        convoPublicId: convoId,
+        convoEntryPublicId,
+        orgShortCode
+      });
+      convoEntiresApi.setInfiniteData(
+        { convoPublicId: convoId, orgShortCode },
+        (updater) => {
+          if (!updater) return;
+          // If convo entry already exists in the cache, don't add it again
+          if (
+            updater.pages.some((page) =>
+              page.entries.some((c) => c.publicId === convoEntryPublicId)
+            )
+          )
+            return;
+          const clonedUpdater = structuredClone(updater);
+          const page = clonedUpdater.pages.at(-1)!;
+          if (!page || !convo) return;
+          const clonedConvo = structuredClone(convo.entry);
+          page.entries.unshift(clonedConvo);
+          return clonedUpdater;
+        }
+      );
+    },
+    [convoEntiresApi, orgShortCode, singleConvoEntryApi]
+  );
 }

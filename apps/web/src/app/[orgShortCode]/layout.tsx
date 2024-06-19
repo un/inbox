@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { api } from '@/src/lib/trpc';
 import { RealtimeProvider } from '@/src/providers/realtime-provider';
 import { NewConvoSheet } from './convo/_components/new-convo-sheet';
+import { ClaimEmailIdentity } from './_components/claim-email-identity';
 
 export default function Layout({
   children,
@@ -18,6 +19,11 @@ export default function Layout({
     isLoading: storeDataLoading,
     error: storeError
   } = api.org.store.getStoreData.useQuery({ orgShortCode });
+
+  const { data: hasEmailIdentity } =
+    api.org.mail.emailIdentities.userHasEmailIdentities.useQuery({
+      orgShortCode
+    });
 
   if (storeDataLoading) {
     return (
@@ -75,6 +81,9 @@ export default function Layout({
         </div>
 
         <NewConvoSheet />
+        {hasEmailIdentity && !hasEmailIdentity.hasIdentity && (
+          <ClaimEmailIdentity />
+        )}
       </div>
     </GlobalStoreProvider>
   );

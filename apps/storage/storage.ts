@@ -8,6 +8,6 @@ const redisStorage = redisDriver({
   base: 'sessions'
 }) as Driver; // For some reason the types are wrong
 
-export const storage = createStorage({
+export const storage = createStorage<{ attributes: any }>({
   driver: redisStorage
 });

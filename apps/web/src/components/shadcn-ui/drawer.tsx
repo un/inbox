@@ -3,11 +3,24 @@ import { Drawer as DrawerPrimitive } from 'vaul';
 
 import { cn } from '@/src/lib/utils';
 
-const Drawer = ({
+//! This component has been modified
+//! styling added for Right direction #L53
+
+let direction: 'right' | 'left' | 'top' | 'bottom' = 'bottom';
+
+function Drawer({
+  shouldScaleBackground = true,
   ...props
-}: React.ComponentProps<typeof DrawerPrimitive.Root>) => (
-  <DrawerPrimitive.Root {...props} />
-);
+}: React.ComponentProps<typeof DrawerPrimitive.Root>) {
+  direction = props.direction ?? 'bottom';
+
+  return (
+    <DrawerPrimitive.Root
+      shouldScaleBackground={shouldScaleBackground}
+      {...props}
+    />
+  );
+}
 Drawer.displayName = 'Drawer';
 
 const DrawerTrigger = DrawerPrimitive.Trigger;
@@ -22,7 +35,7 @@ const DrawerOverlay = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DrawerPrimitive.Overlay
     ref={ref}
-    className={cn('fixed inset-0 z-50 bg-black/80', className)}
+    className={cn('fixed inset-0 z-50 bg-black/20', className)}
     {...props}
   />
 ));
@@ -33,11 +46,18 @@ const DrawerContent = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content>
 >(({ className, children, ...props }, ref) => (
   <DrawerPortal>
+    <DrawerOverlay />
     <DrawerPrimitive.Content
       ref={ref}
-      className={cn(className)}
+      className={cn(
+        direction === 'bottom'
+          ? ' inset-x-0 z-50 h-auto w-full rounded-t-[16px]'
+          : ' inset-y-0 right-0 z-50 h-full w-[400px] rounded-l-[16px]',
+        'bg-base-1 fixed bottom-0 flex flex-col border p-4',
+        className
+      )}
       {...props}>
-      <div className="bg-muted mx-auto mt-4 h-2 w-[100px] rounded-full" />
+      {/* <div className="bg-muted mx-auto mt-4 h-2 w-[100px] rounded-full" /> */}
       {children}
     </DrawerPrimitive.Content>
   </DrawerPortal>
@@ -49,7 +69,10 @@ const DrawerHeader = ({
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
-    className={cn('grid gap-1.5 p-4 text-center sm:text-left', className)}
+    className={cn(
+      'border-base-6 grid gap-1.5 border-b pb-4 text-center sm:text-left',
+      className
+    )}
     {...props}
   />
 );
@@ -73,7 +96,7 @@ const DrawerTitle = React.forwardRef<
   <DrawerPrimitive.Title
     ref={ref}
     className={cn(
-      'text-lg font-semibold leading-none tracking-tight',
+      'flex flex-row items-center justify-between gap-2 text-lg font-medium leading-none tracking-tight',
       className
     )}
     {...props}

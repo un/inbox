@@ -1,0 +1,2 @@
+ALTER TABLE `teams` MODIFY COLUMN `color` enum('bronze','gold','brown','orange','tomato','red','ruby','crimson','pink','plum','purple','violet','iris','indigo','blue','cyan','teal','jade','green','grass');
+ALTER TABLE `convo_entries` ADD `body_cleaned_html` text;
