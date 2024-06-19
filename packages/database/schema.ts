@@ -1282,6 +1282,7 @@ export const convoEntries = mysqlTable(
     replyToId: foreignKey('reply_to_id'),
     body: json('body').notNull(),
     bodyPlainText: text('body_plain_text').notNull(),
+    bodyCleanedHtml: text('body_cleaned_html'),
     metadata: json('metadata').$type<ConvoEntryMetadata>().default({}),
     emailMessageId: messageIdCustomType('email_message_id'),
     visibility: mysqlEnum('visibility', [

@@ -23,6 +23,7 @@ import {
 import { db } from '@u22n/database';
 import { parseMessage } from '@u22n/mailtools';
 import { parseAddressIds } from '../../utils/contactParsing';
+import { sanitize } from '../../utils/purify';
 import { tiptapCore, tiptapHtml } from '@u22n/tiptap';
 import { tipTapExtensions } from '@u22n/tiptap/extensions';
 import { sendRealtimeNotification } from '../../utils/realtime';
@@ -137,6 +138,16 @@ export const mailProcessorWorker = new Worker<
           span.addEvent('Message already processed');
           return;
         }
+
+        // Get a full version of the email
+        const fullParsedEmail = await parseMessage(messageBodyHtml, {
+          autolink: false,
+          cleanQuotations: false,
+          cleanSignatures: false,
+          enhanceLinks: false,
+          cleanStyles: false,
+          noRemoteContent: false
+        });
 
         // Get a stripped down version of the email
         const strippedEmail = await parseMessage(messageBodyHtml, {
@@ -713,6 +724,11 @@ export const mailProcessorWorker = new Worker<
           uploadedAttachments
         );
 
+        const parsedFullEmailMessageHtmlWithAttachments = replaceCidWithUrl(
+          fullParsedEmail.parsedMessageHtml,
+          uploadedAttachments
+        );
+
         const convoEntryBodyWithAttachments = tiptapHtml.generateJSON(
           parsedEmailMessageHtmlWithAttachments,
           tipTapExtensions
@@ -721,7 +737,8 @@ export const mailProcessorWorker = new Worker<
         await db
           .update(convoEntries)
           .set({
-            body: convoEntryBodyWithAttachments
+            body: convoEntryBodyWithAttachments,
+            bodyCleanedHtml: sanitize(parsedFullEmailMessageHtmlWithAttachments)
           })
           .where(eq(convoEntries.id, Number(insertNewConvoEntry.insertId)));
 
