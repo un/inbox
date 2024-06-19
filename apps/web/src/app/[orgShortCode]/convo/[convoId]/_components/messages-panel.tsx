@@ -25,6 +25,7 @@ import { ms } from '@u22n/utils/ms';
 import { Avatar } from '@/src/components/avatar';
 import { cva } from 'class-variance-authority';
 import { OriginalMessageView } from './original-message-view';
+import useTimeAgo from '@/src/hooks/use-time-ago';
 
 export function MessagesPanel({
   convoId,
@@ -149,6 +150,7 @@ function MessageItem({
   // if the message timestamp is less than a day ago, show the date instead of the time
   const isRecent =
     new Date().getTime() - message.createdAt.getTime() < 24 * 60 * 60 * 1000;
+  const timeAgo = useTimeAgo(message.createdAt);
 
   const viaAddress = message.metadata?.email?.from?.[0]?.email;
 
@@ -233,7 +235,9 @@ function MessageItem({
           </div>
           <div className={cn(isUserAuthor ? 'mr-4' : 'ml-4')}>
             {isRecent ? (
-              <span className="text-base-11 text-xs leading-none">timeAgo</span>
+              <span className="text-base-11 text-xs leading-none">
+                {timeAgo}
+              </span>
             ) : (
               <div
                 className={cn(
