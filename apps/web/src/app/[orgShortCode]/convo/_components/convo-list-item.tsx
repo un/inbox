@@ -63,8 +63,8 @@ export function ConvoItem({
     <Link
       href={link}
       className={cn(
-        'flex h-full w-full max-w-full flex-row gap-2 overflow-visible rounded-lg border-2 p-2',
-        isActive ? 'bg-accent-3 border-accent-8 ' : 'border-transparent'
+        'flex h-full w-full max-w-full flex-row gap-2 overflow-visible rounded-lg border-2 px-2 py-3',
+        isActive ? 'border-accent-8 ' : 'hover:border-base-6 border-transparent'
       )}>
       <AvatarPlus
         size="md"
