@@ -15,6 +15,7 @@
     "@hono/zod-validator": "^0.2.1",
     "@t3-oss/env-core": "^0.10.1",
     "@u22n/database": "workspace:*",
+    "@u22n/otel": "workspace:^",
     "@u22n/tsconfig": "^0.0.2",
     "@u22n/utils": "workspace:*",
     "hono": "^4.3.8",
