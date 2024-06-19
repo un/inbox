@@ -7,6 +7,7 @@ import { SpinnerGap } from '@phosphor-icons/react';
 import Link from 'next/link';
 import { api } from '@/src/lib/trpc';
 import { RealtimeProvider } from '@/src/providers/realtime-provider';
+import { ClaimEmailIdentity } from './_components/claim-email-identity';
 
 export default function Layout({
   children,
@@ -17,6 +18,11 @@ export default function Layout({
     isLoading: storeDataLoading,
     error: storeError
   } = api.org.store.getStoreData.useQuery({ orgShortCode });
+
+  const { data: hasEmailIdentity } =
+    api.org.mail.emailIdentities.userHasEmailIdentities.useQuery({
+      orgShortCode
+    });
 
   if (storeDataLoading) {
     return (
@@ -72,6 +78,9 @@ export default function Layout({
         <div className="flex h-full w-full flex-row p-0">
           <RealtimeProvider>{children}</RealtimeProvider>
         </div>
+        {hasEmailIdentity && !hasEmailIdentity.hasIdentity && (
+          <ClaimEmailIdentity />
+        )}
       </div>
     </GlobalStoreProvider>
   );
