@@ -101,9 +101,14 @@ export const mailProcessorWorker = new Worker<
             ? parsedEmail.cc.map((a) => a.value).flat()
             : parsedEmail.cc.value
           : [];
+
         const inReplyToEmailId = parsedEmail.inReplyTo
-          ? parsedEmail.inReplyTo.replace(/^<|>$/g, '')
+          ? parsedEmail.inReplyTo
+              .split(/\s+/g) // split by whitespace
+              .map((part) => part.replace(/^<|>$/g, '')) // remove < and > from the start and end of the string
+              .filter((part) => !!part)[0] ?? null // remove empty strings and get the first element or null
           : null;
+
         const subject =
           parsedEmail.subject?.replace(/^(RE:|FW:)\s*/i, '').trim() || '';
         const messageId = parsedEmail.messageId?.replace(/^<|>$/g, '') || '';
