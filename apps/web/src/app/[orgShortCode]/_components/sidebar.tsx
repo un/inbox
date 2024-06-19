@@ -7,7 +7,7 @@ import SidebarContent from './sidebar-content';
 import { sidebarSubmenuOpenAtom } from './atoms';
 import { useAtom } from 'jotai';
 import { useEffect } from 'react';
-import { useIsMobile } from '@/src/hooks/is-mobile';
+import { useIsSidebarAutoCollapsed } from '@/src/hooks/is-mobile';
 
 export default function Sidebar() {
   const {
@@ -18,7 +18,7 @@ export default function Sidebar() {
   } = usePreferencesState();
 
   const [sidebarSubmenuOpen] = useAtom(sidebarSubmenuOpenAtom);
-  const isMobile = useIsMobile();
+  const isSidebarAutoCollapsed = useIsSidebarAutoCollapsed();
   useEffect(() => {
     setSidebarExpanded(true);
 
@@ -30,13 +30,15 @@ export default function Sidebar() {
     <div
       className={cn(
         'flex h-full max-h-svh resize-x flex-row items-start gap-4 overflow-visible p-0 transition-all duration-500 ease-in-out',
-        !isMobile ? (sidebarDocked ? 'w-60' : 'w-0') : 'w-0'
+        !isSidebarAutoCollapsed ? (sidebarDocked ? 'w-60' : 'w-0') : 'w-0'
       )}>
       <div
         className={cn(
           'absolute z-[100] m-0 flex h-full flex-row items-start justify-center gap-0 p-2 transition-all duration-1000 ease-in-out',
-          !isMobile && sidebarDocked ? 'left-0 w-60 pr-0' : 'w-[252px] pr-3',
-          !sidebarDocked || isMobile
+          !isSidebarAutoCollapsed && sidebarDocked
+            ? 'left-0 w-60 pr-0'
+            : 'w-[252px] pr-3',
+          !sidebarDocked || isSidebarAutoCollapsed
             ? sidebarExpanded
               ? 'left-0'
               : '-left-[232px]'
@@ -46,13 +48,15 @@ export default function Sidebar() {
           setSidebarExpanded(true);
         }}
         onMouseLeave={() => {
-          !sidebarSubmenuOpen && !isMobile && setSidebarExpanded(false);
+          !sidebarSubmenuOpen &&
+            !isSidebarAutoCollapsed &&
+            setSidebarExpanded(false);
         }}
         onFocus={() => {
           setSidebarExpanded(true);
         }}>
         <SidebarContent />
-        {!isMobile && (
+        {!isSidebarAutoCollapsed && (
           <div
             className={cn(
               'bg-slate-3 focus-within:bg-slate-5 border-slate-5 absolute top-[34px] z-[90] flex h-6 w-4 max-w-4 cursor-pointer items-center justify-end overflow-visible rounded-br-[7px] rounded-tr-[7px] border border-l-0 transition-all duration-1000 ease-in-out ',
@@ -75,7 +79,7 @@ export default function Sidebar() {
             </div>
           </div>
         )}
-        {isMobile && (
+        {isSidebarAutoCollapsed && (
           <div
             className={cn(
               'bg-slate-3 focus-within:bg-slate-5 border-slate-5 absolute -right-[19px] top-[26px] z-[90] flex h-10 w-8 max-w-8 cursor-pointer items-center justify-end overflow-visible rounded-br-[7px] rounded-tr-[7px] border border-l-0 transition-all duration-1000 ease-in-out ',

@@ -18,6 +18,7 @@ import {
 import {
   AddressBook,
   BuildingOffice,
+  Dot,
   User,
   UsersThree
 } from '@phosphor-icons/react';
@@ -33,7 +34,7 @@ export type AvatarProps = {
 } & VariantProps<typeof avatarVariants>;
 
 const avatarVariants = cva(
-  'flex items-center justify-center font-medium aspect-square bg-base-5 text-base-11 h-6 w-6 text-sm rounded-md',
+  'flex items-center justify-center font-medium aspect-square bg-base-5 text-base-11 h-6 w-6 text-sm rounded-md overflow-hidden',
   {
     variants: {
       size: {
@@ -44,6 +45,7 @@ const avatarVariants = cva(
       },
       color: {
         base: 'bg-base-5 text-base-11',
+        accent: 'bg-accent-5 text-accent-11',
         bronze: 'bg-bronze-5 text-bronze-11',
         gold: 'bg-gold-5 text-gold-11',
         brown: 'bg-brown-5 text-brown-11',
@@ -68,7 +70,7 @@ const avatarVariants = cva(
     },
     defaultVariants: {
       size: 'md',
-      color: 'base'
+      color: 'accent'
     }
   }
 );
@@ -83,34 +85,20 @@ export function Avatar(props: AvatarProps) {
   const altText = props.name;
   const withoutTooltip = props.hideTooltip ?? false;
 
-  function AvatarIcon() {
-    const type = inferTypeId(props.avatarProfilePublicId);
-    switch (type) {
-      case 'orgMemberProfile':
-        return <User className="h-4 w-4" />;
-      case 'org':
-        return <BuildingOffice className="h-4 w-4" />;
-      case 'teams':
-        return <UsersThree className="h-4 w-4" />;
-      case 'contacts':
-        return <AddressBook className="h-4 w-4" />;
-      default:
-        return null;
-    }
-  }
-
   return withoutTooltip ? (
-    <AvatarShad
-      className={cn(
-        avatarVariants({ color: props.color, size: props.size }),
-        ''
-      )}>
-      <AvatarImage
-        src={avatarUrl}
-        alt={altText}
-      />
-      <AvatarFallback>{getInitials(altText)}</AvatarFallback>
-    </AvatarShad>
+    <div className={cn(avatarVariants({ size: props.size }), 'relative')}>
+      <AvatarShad
+        className={cn(
+          avatarVariants({ color: props.color, size: props.size }),
+          ''
+        )}>
+        <AvatarImage
+          src={avatarUrl}
+          alt={altText}
+        />
+        <AvatarFallback>{getInitials(altText)}</AvatarFallback>
+      </AvatarShad>
+    </div>
   ) : (
     <TooltipProvider>
       <Tooltip>
@@ -127,11 +115,82 @@ export function Avatar(props: AvatarProps) {
             <AvatarFallback>{getInitials(altText)}</AvatarFallback>
           </AvatarShad>
         </TooltipTrigger>
-        <TooltipContent className="flex flex-row gap-2">
-          <AvatarIcon />
+        <TooltipContent className="flex flex-col gap-1">
           {altText}
+          <AvatarIcon
+            avatarProfilePublicId={props.avatarProfilePublicId}
+            size="xs"
+            withDot
+          />
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
+  );
+}
+
+const avatarIconVariants = cva('', {
+  variants: {
+    size: {
+      xs: 'text-[10px]',
+      sm: 'text-xs',
+      md: 'text-sm',
+      lg: 'text-md',
+      xl: 'text-lg'
+    }
+  },
+  defaultVariants: {
+    size: 'md'
+  }
+});
+
+type AvatarIconProps = {
+  avatarProfilePublicId: TypeId<
+    'orgMemberProfile' | 'org' | 'teams' | 'contacts'
+  >;
+  withDot?: boolean;
+} & VariantProps<typeof avatarIconVariants>;
+
+export function AvatarIcon(iconProps: AvatarIconProps) {
+  const type = inferTypeId(iconProps.avatarProfilePublicId);
+  const AvatarTypeIcon = () => {
+    switch (type) {
+      case 'orgMemberProfile':
+        return <User />;
+      case 'org':
+        return <BuildingOffice />;
+      case 'teams':
+        return <UsersThree />;
+      case 'contacts':
+        return <AddressBook />;
+      default:
+        return null;
+    }
+  };
+
+  const text = () => {
+    switch (type) {
+      case 'orgMemberProfile':
+        return 'Org Member';
+      case 'org':
+        return 'Organization';
+      case 'teams':
+        return 'Team';
+      case 'contacts':
+        return 'Contact';
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div
+      className={cn(
+        'flex flex-row items-center gap-1',
+        avatarIconVariants({ size: iconProps.size })
+      )}>
+      {iconProps.withDot && <Dot />}
+      <AvatarTypeIcon />
+      <span className="">{text()}</span>
+    </div>
   );
 }

@@ -38,13 +38,17 @@ export function formatParticipantData(
             ? `${participant.contact?.emailUsername}@${participant.contact?.emailDomain}`
             : 'unnamed';
 
+  const participantAddress = participant.contact
+    ? participant.contact.emailUsername + '@' + participant.contact.emailDomain
+    : null;
+
   return {
     participantPublicId: participant.publicId,
     typePublicId: typePublicId,
     avatarProfilePublicId: avatarProfilePublicId,
     avatarTimestamp: avatarTimestampProp,
     name: nameProp,
-    color: participant.team?.color ?? null,
+    color: participant.team?.color,
     type: participant.orgMember
       ? 'orgMember'
       : participant.team
@@ -52,7 +56,8 @@ export function formatParticipantData(
         : 'contact',
     role: participant.role,
     signatureHtml: participant.contact?.signatureHtml ?? null,
-    signaturePlainText: participant.contact?.signaturePlainText ?? null
+    signaturePlainText: participant.contact?.signaturePlainText ?? null,
+    address: participantAddress
   };
 }
 

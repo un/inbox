@@ -1,7 +1,21 @@
 'use client';
 
-import { Dialog, IconButton, Tooltip, Skeleton } from '@radix-ui/themes';
-import { EyeSlash, Eye, Trash, ArrowLeft } from '@phosphor-icons/react';
+import { Tooltip, Skeleton } from '@radix-ui/themes';
+import {
+  EyeSlash,
+  Eye,
+  Trash,
+  CaretLeft,
+  FilePdf,
+  FileDoc,
+  FileXls,
+  FilePng,
+  FileJpg,
+  FilePpt,
+  FileZip,
+  FileTxt,
+  File
+} from '@phosphor-icons/react';
 import Link from 'next/link';
 import { useDeleteConvo$Cache, useToggleConvoHidden$Cache } from '../../utils';
 import useAwaitableModal, {
@@ -12,13 +26,31 @@ import { type TypeId } from '@u22n/utils/typeid';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/src/components/shadcn-ui/button';
+import { cn } from '@/src/lib/utils';
+import { type formatParticipantData } from '../../utils';
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle
+} from '@/src/components/shadcn-ui/dialog';
+import { Participants } from './participants';
+import { type VariantProps, cva } from 'class-variance-authority';
 
 export default function TopBar({
   isConvoLoading,
   convoId,
   convoHidden,
-  subjects
+  subjects,
+  participants,
+  attachments
 }: {
+  participants: NonNullable<ReturnType<typeof formatParticipantData>>[];
+  attachments: {
+    name: string;
+    url: string;
+    type: string;
+    publicId: TypeId<'convoAttachments'>;
+  }[];
   isConvoLoading: boolean;
   convoId: TypeId<'convos'>;
   convoHidden: boolean | null;
@@ -34,53 +66,82 @@ export default function TopBar({
   const toggleConvoHiddenState = useToggleConvoHidden$Cache();
 
   return (
-    <div className=" bg-base-2 flex h-12 w-full flex-row items-center justify-between  p-2">
-      <div className="flex flex-row items-center gap-4">
-        <Link href={`/${orgShortCode}/convo`}>
-          <IconButton
-            variant="soft"
-            size="2">
-            <ArrowLeft size={16} />
-          </IconButton>
-        </Link>
-        <Skeleton loading={isConvoLoading}>
-          <span className="w-full truncate p-1">
-            {subjects ? subjects[0]?.subject : ''}
-          </span>
-        </Skeleton>
+    <div className="border-base-5 bg-base-1 flex w-full flex-col items-center justify-between border-b p-0">
+      <div className="border-base-5 flex h-14 w-full flex-row items-center justify-between border-b p-4">
+        <div className="flex w-full max-w-full flex-row items-center gap-4 overflow-hidden">
+          <Button
+            variant={'outline'}
+            size={'icon-sm'}
+            asChild>
+            <Link href={`/${orgShortCode}/convo`}>
+              <CaretLeft size={16} />
+            </Link>
+          </Button>
+          <Skeleton loading={isConvoLoading}>
+            {subjects?.map((subject) => (
+              <span
+                key={subject.subject}
+                className="truncate text-lg font-medium leading-tight">
+                {subject.subject}
+              </span>
+            ))}
+          </Skeleton>
+        </div>
+        <div className="flex flex-row gap-2">
+          <Participants participants={participants} />
+          <Tooltip content="Delete Convo">
+            <Button
+              variant={'outline'}
+              size={'icon-sm'}
+              className={'hover:bg-red-5 hover:text-red-11 hover:border-red-8'}
+              onClick={() => {
+                openDeleteModal({ convoHidden })
+                  // Navigate to empty page on delete
+                  .then(() => router.push(`/${orgShortCode}/convo`))
+                  // Do nothing if Hide is chosen or Modal is Closed
+                  .catch(() => null);
+              }}>
+              <Trash size={16} />
+            </Button>
+          </Tooltip>
+          <Tooltip content={convoHidden ? 'Unhide Convo' : 'Hide Convo'}>
+            <Button
+              variant={'outline'}
+              size={'icon-sm'}
+              onClick={async () => {
+                await hideConvo.mutateAsync({
+                  convoPublicId: convoId,
+                  orgShortCode,
+                  unhide: convoHidden ? true : undefined
+                });
+                await toggleConvoHiddenState(convoId, !convoHidden);
+              }}>
+              {convoHidden ? <Eye size={16} /> : <EyeSlash size={16} />}
+            </Button>
+          </Tooltip>
+        </div>
       </div>
-      <div className="flex flex-row ">
-        <Tooltip content="Delete Convo">
-          <IconButton
-            color="red"
-            variant="soft"
-            disabled={convoHidden === null || hideConvo.isLoading}
-            onClick={() => {
-              openDeleteModal({ convoHidden })
-                // Navigate to empty page on delete
-                .then(() => router.push(`/${orgShortCode}/convo`))
-                // Do nothing if Hide is chosen or Modal is Closed
-                .catch(() => null);
-            }}>
-            <Trash size={16} />
-          </IconButton>
-        </Tooltip>
-        <Tooltip content={convoHidden ? 'Unhide Convo' : 'Hide Convo'}>
-          <IconButton
-            variant="soft"
-            loading={hideConvo.isLoading}
-            disabled={convoHidden === null}
-            onClick={async () => {
-              await hideConvo.mutateAsync({
-                convoPublicId: convoId,
-                orgShortCode,
-                unhide: convoHidden ? true : undefined
-              });
-              await toggleConvoHiddenState(convoId, !convoHidden);
-            }}>
-            {convoHidden ? <Eye size={16} /> : <EyeSlash size={16} />}
-          </IconButton>
-        </Tooltip>
+      <div
+        className={cn(
+          'flex w-full flex-row flex-wrap items-center justify-end gap-2 transition-all',
+          isConvoLoading ? 'max-h-0 p-0' : 'max-h-52 p-4'
+        )}>
+        <div
+          className={cn(
+            'justify-ends flex flex-wrap items-center justify-end  gap-2 transition-all',
+            isConvoLoading ? 'max-h-0' : 'max-h-52'
+          )}>
+          {attachments.length > 0 ? (
+            attachments.map((attachment) => (
+              <AttachmentBlock
+                key={attachment.publicId}
+                attachment={attachment}
+              />
+            ))
+          ) : (
+            <span className="text-xs">No Attachments</span>
+          )}
+        </div>
       </div>
       <ModalRoot />
     </div>
@@ -101,21 +162,17 @@ function DeleteModal({
   const toggleConvoHiddenState = useToggleConvoHidden$Cache();
 
   return (
-    <Dialog.Root
+    <Dialog
       open={open}
       onOpenChange={(open) => {
         if (!open && !deleteConvo.isLoading && !hideConvo.isLoading) {
           onClose();
         }
       }}>
-      <Dialog.Content className="w-full max-w-96 p-4">
-        <Dialog.Title
-          className="mx-auto w-fit py-2"
-          size="2">
-          Delete Convo?
-        </Dialog.Title>
+      <DialogContent className="w-full max-w-96 p-4">
+        <DialogTitle>Delete Convo?</DialogTitle>
 
-        <div className="flex flex-col">
+        <div className="flex flex-col gap-1">
           <span>
             This will permanently and immediately delete this conversation for
             all the participants.
@@ -126,9 +183,9 @@ function DeleteModal({
           )}
         </div>
 
-        <div className="flex flex-row ">
+        <div className="flex flex-row gap-2">
           <Button
-            variant="secondary"
+            variant="outline"
             disabled={deleteConvo.isLoading || hideConvo.isLoading}
             onClick={() => onClose()}>
             Cancel
@@ -163,7 +220,90 @@ function DeleteModal({
             Delete
           </Button>
         </div>
-      </Dialog.Content>
-    </Dialog.Root>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+type AttachmentBlockProps = {
+  name: string;
+  url: string;
+  type: string;
+  publicId: TypeId<'convoAttachments'>;
+};
+
+function AttachmentBlock({ attachment }: { attachment: AttachmentBlockProps }) {
+  const fileType = attachment.type.split('/')[1] ?? attachment.type;
+
+  const iconClasses = cva(
+    'bg-accent-9 text-accent-1 flex h-5 w-5 items-center justify-center rounded-sm',
+    {
+      variants: {
+        color: {
+          pdf: 'bg-red-9 text-red-1',
+          ppt: 'bg-pink-9 text-pink-1',
+          zip: 'bg-amber-9 text-amber-1',
+          txt: 'bg-base-9 text-base-1',
+          doc: 'bg-blue-9 text-blue-1',
+          xls: 'bg-green-9 text-green-1',
+          png: 'bg-iris-9 text-iris-1',
+          jpg: 'bg-iris-9 text-iris-1',
+          jpeg: 'bg-iris-9 text-iris-1',
+          misc: 'bg-accent-9 text-accent-1'
+        }
+      },
+      defaultVariants: {
+        color: 'misc'
+      }
+    }
+  );
+  type IconClassProps = VariantProps<typeof iconClasses>;
+
+  const FileTypeIcon = () => {
+    switch (fileType) {
+      case 'pdf':
+        return <FilePdf />;
+      case 'ppt':
+        return <FilePpt />;
+      case 'zip':
+        return <FileZip />;
+      case 'txt':
+        return <FileTxt />;
+      case 'doc':
+        return <FileDoc />;
+      case 'xls':
+        return <FileXls />;
+      case 'png':
+        return <FilePng />;
+      case 'jpg':
+        return <FileJpg />;
+      default:
+        return <File />;
+    }
+  };
+
+  // Limit the length of the attachment name to just 12 characters and replace the rest with ... and include the extension at the end
+  if (attachment.name.length > 12) {
+    const extension = attachment.name.split('.').pop();
+    attachment.name = `${attachment.name.slice(0, 12)}...` + `.${extension}`;
+  }
+
+  return (
+    <a
+      target="_blank"
+      key={attachment.publicId}
+      href={attachment.url}>
+      <div className="border-base-6 flex flex-row items-center gap-2 rounded-md border px-2 py-1.5">
+        <div
+          className={cn(
+            iconClasses({ color: fileType as IconClassProps['color'] })
+          )}>
+          <FileTypeIcon />
+        </div>
+        <div className="flex flex-col gap-0 ">
+          <span className="text-xs font-medium">{attachment.name}</span>
+        </div>
+      </div>
+    </a>
   );
 }

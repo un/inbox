@@ -69,11 +69,11 @@ export default function Layout({
   }, [client]);
 
   return (
-    <div className="grid h-full w-full grid-cols-3 gap-0">
-      <div className="col-span-1 flex w-full flex-col gap-2 overflow-visible p-4">
+    <div className="flex h-full w-full flex-row gap-0 lg:grid-cols-3 xl:grid">
+      <div className="flex h-full min-w-96 max-w-[450px] flex-col gap-2 p-4 pt-3 xl:col-span-1 xl:min-w-80">
         <div
           className={
-            'flex w-full flex-row items-center justify-between gap-2 overflow-visible p-2.5'
+            'flex w-full flex-row items-center justify-between gap-2 overflow-visible p-2.5 pt-0'
           }>
           {isMobile && (
             <Button
@@ -132,7 +132,7 @@ export default function Layout({
         </div>
         <ConvoList hidden={showHidden} />
       </div>
-      <div className="border-base-5 col-span-2  h-full max-h-full w-full rounded-2xl border-l">
+      <div className="border-base-5 h-full max-h-full w-full rounded-2xl border-l xl:col-span-2">
         {children}
       </div>
     </div>
