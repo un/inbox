@@ -1,4 +1,5 @@
 import './tracing';
+import './queue/mail-processor';
 import { env } from './env';
 import { Hono } from 'hono';
 import { db } from '@u22n/database';
