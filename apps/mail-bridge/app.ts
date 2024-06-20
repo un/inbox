@@ -56,26 +56,26 @@ app.onError((err, c) => {
   return c.json({ message: 'Something went wrong' }, 500);
 });
 
-// Development error handlers
-if (env.NODE_ENV === 'development') {
-  process.on('unhandledRejection', (err) => {
-    console.error(err);
-  });
-  process.on('uncaughtException', (err) => {
-    console.error(err);
-  });
-}
+// Handle uncaught errors
+process.on('unhandledRejection', (err) => console.error(err));
+process.on('uncaughtException', (err) => console.error(err));
 
 // Start server
-serve({
-  fetch: app.fetch,
-  port: env.PORT
-}).on('listening', () => {
-  console.info(`Server listening on port ${env.PORT}`);
-});
+const server = serve(
+  {
+    fetch: app.fetch,
+    port: env.PORT
+  },
+  () => console.info(`Server listening on port ${env.PORT}`)
+);
 
 // Clean Exit
-process.on('exit', () => {
-  console.info('Shutting down...');
-  process.exit(0);
-});
+const handleExit = () => {
+  server.close(() => {
+    console.info('Shutting down...');
+    process.exit();
+  });
+};
+
+process.on('SIGINT', handleExit);
+process.on('SIGTERM', handleExit);
