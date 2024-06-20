@@ -39,7 +39,8 @@ import {
   AddressBook,
   At,
   CaretDown,
-  Check
+  Check,
+  Paperclip
 } from '@phosphor-icons/react';
 import { z } from 'zod';
 import {
@@ -53,13 +54,11 @@ import { stringify } from 'superjson';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
-import {
-  AttachmentButton,
-  type ConvoAttachmentUpload
-} from '@/src/components/shared/attachment-button';
 import { useAddSingleConvo$Cache } from '../utils';
 import { Input } from '@/src/components/shadcn-ui/input';
 import { Button } from '@/src/components/shadcn-ui/button';
+import { useAttachmentUploader } from '@/src/components/shared/attachments';
+import { showNewConvoPanel } from '../atoms';
 
 export interface ConvoParticipantOrgMembers {
   type: 'orgMember';
@@ -110,7 +109,6 @@ export type NewConvoParticipant =
 
 const selectedParticipantsAtom = atom<NewConvoParticipant[]>([]);
 const newEmailParticipantsAtom = atom<string[]>([]);
-const attachmentsAtom = atom<ConvoAttachmentUpload[]>([]);
 
 export default function CreateConvoForm() {
   const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
@@ -130,7 +128,6 @@ export default function CreateConvoForm() {
 
   const newEmailParticipants = useAtomValue(newEmailParticipantsAtom);
   const selectedParticipants = useAtomValue(selectedParticipantsAtom);
-  const attachments = useAtomValue(attachmentsAtom);
 
   const router = useRouter();
 
@@ -138,6 +135,8 @@ export default function CreateConvoForm() {
     string | null
   >(null);
   const [topic, setTopic] = useState('');
+  const { attachments, openFilePicker, getTrpcUploadFormat, AttachmentArray } =
+    useAttachmentUploader();
 
   const allParticipantsLoaded = useMemo(
     () =>
@@ -331,12 +330,13 @@ export default function CreateConvoForm() {
       participantsContactsPublicIds,
       participantsEmails,
       message: stringify(editorText),
-      attachments,
+      attachments: getTrpcUploadFormat(),
       orgShortCode
     });
   }
 
   const addConvo = useAddSingleConvo$Cache();
+  const [, setNewPanelOpen] = useAtom(showNewConvoPanel);
 
   const { loading: isMessageLoading, run: createConvo } = useLoading(
     async () => await startConvoUnderlying('message'),
@@ -347,6 +347,7 @@ export default function CreateConvoForm() {
       onSuccess: (data) => {
         toast.success('Convo created, redirecting you to your conversion');
         void addConvo(data.publicId).then(() => {
+          setNewPanelOpen(false);
           router.push(`/${orgShortCode}/convo/${data.publicId}`);
         });
       }
@@ -410,33 +411,43 @@ export default function CreateConvoForm() {
         />
       </div>
 
-      <div className="flex w-full flex-1 flex-col gap-2 text-sm">
-        <h4 className="font-bold">Type Your Message</h4>
-        <div className="flex max-h-56 flex-1 overflow-y-scroll">
-          <Editor
-            initialValue={editorText}
-            onChange={setEditorText}
-            // eslint-disable-next-line @typescript-eslint/no-empty-function
-            setEditor={() => {}}
-          />
-        </div>
-      </div>
+      <div className="border-base-5 flex max-h-[250px] w-full flex-col gap-1 rounded-md border p-1">
+        <Editor
+          initialValue={editorText}
+          onChange={setEditorText}
+          // eslint-disable-next-line @typescript-eslint/no-empty-function
+          setEditor={() => {}}
+        />
 
-      <div className="flex justify-end gap-2">
-        <AttachmentButton attachmentsAtom={attachmentsAtom} />
-        <Button
-          variant={'secondary'}
-          loading={isCommentLoading}
-          disabled={!isFormValid || isMessageLoading}
-          onClick={() => createComment()}>
-          Comment
-        </Button>
-        <Button
-          loading={isMessageLoading}
-          disabled={!isFormValid || isCommentLoading}
-          onClick={() => createConvo()}>
-          Send
-        </Button>
+        <AttachmentArray attachments={attachments} />
+        <div className="flex flex-row items-center justify-between gap-2">
+          <div className="flex flex-row items-center gap-2">
+            <Button
+              variant={'outline'}
+              size={'icon-sm'}
+              onClick={() => {
+                openFilePicker();
+              }}>
+              <Paperclip size={16} />
+            </Button>
+          </div>
+          <div className="align-center flex justify-end gap-2">
+            <Button
+              variant="secondary"
+              size={'sm'}
+              disabled={!isFormValid || isMessageLoading}
+              onClick={() => createComment()}>
+              Comment
+            </Button>
+            <Button
+              size={'sm'}
+              loading={isMessageLoading}
+              disabled={!isFormValid || isCommentLoading}
+              onClick={() => createConvo()}>
+              Send
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );
