@@ -36,25 +36,38 @@ export function Participants({
   orderedParticipants.push(...participants.filter((p) => p.role === 'guest'));
   orderedParticipants.push(...participants.filter((p) => p.role === 'watcher'));
 
+  const assignedParticipantIds = orderedParticipants
+    .filter((p) => p.role === 'assigned')
+    .map((p) => p.participantPublicId);
+
   return (
     <Drawer direction="right">
       <DrawerTrigger asChild>
         <div
           className={
-            'border-base-7 hover:border-base-8 bg-base-1 hover:bg-base-3 hover:text-base-12 text-base-11 flex h-6 min-h-6 w-fit flex-row items-center gap-0.5 rounded-md border p-1'
+            ' hover:text-base-12 text-base-11 flex h-6 min-h-6 w-fit flex-row items-center gap-0.5  p-0'
           }>
           {orderedParticipants.map((participant) => (
             <div
-              className="flex flex-col gap-2"
+              className="flex flex-col gap-1"
               key={participant.participantPublicId}>
-              <Avatar
-                avatarProfilePublicId={participant.avatarProfilePublicId}
-                avatarTimestamp={participant.avatarTimestamp}
-                name={participant.name}
-                color={participant.color}
-                size="sm"
-                hideTooltip
-              />
+              <div
+                className={
+                  assignedParticipantIds.includes(
+                    participant.participantPublicId
+                  )
+                    ? 'ring-accent-9 border-base-1 rounded-md border ring-1'
+                    : ''
+                }>
+                <Avatar
+                  avatarProfilePublicId={participant.avatarProfilePublicId}
+                  avatarTimestamp={participant.avatarTimestamp}
+                  name={participant.name}
+                  color={participant.color}
+                  size="md"
+                  hideTooltip
+                />
+              </div>
             </div>
           ))}
         </div>
