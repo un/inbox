@@ -363,14 +363,13 @@ function AttachmentBlock({
           )}>
           <AttachmentTypeIcon />
         </div>
-        <div className="flex flex-col gap-0 ">
+        <div className="flex flex-col gap-0">
           <span className="text-xs font-medium">{fileNameShort}</span>
           <span className="text-base-11 text-[10px] uppercase">{fileType}</span>
           <div
             className={cn(
               progress
-                ? `absolute bottom-1 left-1 right-1 top-1 mr-0
-                flex flex-row items-end gap-0 rounded-md transition-all duration-200 ease-in-out`
+                ? `absolute bottom-1 left-1 right-1 top-1 mr-0 flex flex-row items-end gap-0 rounded-md transition-all duration-200 ease-in-out`
                 : 'hidden'
             )}>
             <div

@@ -50,6 +50,7 @@ export const EditorBubble = forwardRef<HTMLDivElement, EditorBubbleProps>(
           moveTransition: 'transform 0.15s ease-out',
           ...tippyOptions
         },
+        editor: currentEditor,
         ...rest
       };
     }, [rest, tippyOptions]);
@@ -60,8 +61,8 @@ export const EditorBubble = forwardRef<HTMLDivElement, EditorBubbleProps>(
       // We need to add this because of https://github.com/ueberdosis/tiptap/issues/2658
       <div ref={ref}>
         <BubbleMenu
-          editor={currentEditor}
-          {...bubbleMenuProps}>
+          {...bubbleMenuProps}
+          editor={currentEditor}>
           {children}
         </BubbleMenu>
       </div>

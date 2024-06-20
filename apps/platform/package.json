@@ -14,13 +14,13 @@
     }
   },
   "dependencies": {
-    "@hono/node-server": "^1.11.1",
+    "@hono/node-server": "^1.11.4",
     "@hono/trpc-server": "^0.3.1",
-    "@hono/zod-validator": "^0.2.1",
+    "@hono/zod-validator": "^0.2.2",
     "@simplewebauthn/server": "^9.0.3",
     "@t3-oss/env-core": "^0.10.1",
-    "@trpc/client": "10.45.2",
-    "@trpc/server": "10.45.2",
+    "@trpc/client": "11.0.0-rc.413",
+    "@trpc/server": "11.0.0-rc.413",
     "@u22n/database": "workspace:^",
     "@u22n/mail-bridge": "workspace:^",
     "@u22n/otel": "workspace:^",
@@ -28,10 +28,10 @@
     "@u22n/tiptap": "workspace:^",
     "@u22n/tsconfig": "^0.0.2",
     "@u22n/utils": "workspace:^",
-    "@unkey/ratelimit": "^0.1.3",
-    "hono": "^4.3.8",
-    "lucia": "^3.1.1",
-    "oslo": "^1.1.3",
+    "@unkey/ratelimit": "^0.1.12",
+    "hono": "^4.4.7",
+    "lucia": "^3.2.0",
+    "oslo": "^1.2.0",
     "superjson": "^2.2.1",
     "ua-parser-js": "2.0.0-beta.2",
     "unstorage": "^1.10.2",
@@ -39,9 +39,9 @@
   },
   "devDependencies": {
     "@simplewebauthn/types": "^9.0.1",
-    "@types/node": "^20.12.11",
+    "@types/node": "^20.14.6",
     "@uninbox-ee/billing": "workspace:^",
-    "tsx": "^4.7.1",
-    "typescript": "^5.4.5"
+    "tsx": "^4.15.6",
+    "typescript": "5.5.2"
   }
 }

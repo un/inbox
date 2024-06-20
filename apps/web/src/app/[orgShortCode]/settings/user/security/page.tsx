@@ -148,7 +148,7 @@ export default function Page() {
 
   const {
     mutate: disableLegacySecurity,
-    isLoading: isDisablingLegacySecurity
+    isPending: isDisablingLegacySecurity
   } = api.account.security.disableLegacySecurity.useMutation({
     onError: (err) => {
       toast.error('Something went wrong while disabling Legacy Security', {

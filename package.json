@@ -6,10 +6,10 @@
   "scripts": {
     "format": "prettier . --write",
     "check:format": "prettier . --check",
-    "check:types": "dotenv -e .env.local -- turbo run check --cache-dir=.turbo",
+    "check:types": "dotenv -e .env.local -- turbo run check --filter=!@u22n/web-app --cache-dir=.turbo",
     "check:lint": "eslint .",
     "check": "pnpm check:format && pnpm check:lint && pnpm check:types",
-    "build:all": "dotenv -e .env.local -- turbo run build --cache-dir=.turbo",
+    "build:all": "dotenv -e .env.local -- turbo run build --filter=!@u22n/web-app --cache-dir=.turbo",
     "build": "pnpm run -r build",
     "build:ee": "pnpm run -r ee:build",
     "build:web": "pnpm --filter=@u22n/web build",
@@ -57,22 +57,22 @@
   "author": "Omar McAdam - @McPizza0",
   "license": "AGPLv3",
   "devDependencies": {
-    "@nuxt/eslint-config": "^0.2.0",
-    "@types/node": "^20.12.2",
-    "dotenv-cli": "^7.4.1",
+    "@nuxt/eslint-config": "^0.3.13",
+    "@types/node": "^20.14.6",
+    "dotenv-cli": "^7.4.2",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-drizzle": "^0.2.3",
     "eslint-plugin-prettier": "^5.1.3",
     "husky": "^9.0.11",
-    "lint-staged": "^15.2.2",
-    "prettier": "^3.2.5",
-    "prettier-plugin-tailwindcss": "^0.5.13",
-    "turbo": "^1.13.0",
-    "typescript": "^5.4.3"
+    "lint-staged": "^15.2.7",
+    "prettier": "^3.3.2",
+    "prettier-plugin-tailwindcss": "^0.6.5",
+    "turbo": "^1.13.4",
+    "typescript": "5.5.2"
   },
   "lint-staged": {
     "*": "prettier --write --ignore-unknown"
   },
-  "packageManager": "pnpm@9.1.0"
+  "packageManager": "pnpm@9.4.0"
 }

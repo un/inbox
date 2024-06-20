@@ -45,7 +45,7 @@ export function Participants({
       <DrawerTrigger asChild>
         <div
           className={
-            ' hover:text-base-12 text-base-11 flex h-6 min-h-6 w-fit flex-row items-center gap-0.5  p-0'
+            'hover:text-base-12 text-base-11 flex h-6 min-h-6 w-fit flex-row items-center gap-0.5 p-0'
           }>
           {orderedParticipants.map((participant) => (
             <div
@@ -105,7 +105,7 @@ export function Participants({
                     <span className="text-md text-base-12 leading-none">
                       {participant.name}
                     </span>
-                    <div className="text-base-11 flex flex-row items-center gap-1 leading-none ">
+                    <div className="text-base-11 flex flex-row items-center gap-1 leading-none">
                       {participant.address && (
                         <span className="text-xs font-medium">
                           {participant.address}

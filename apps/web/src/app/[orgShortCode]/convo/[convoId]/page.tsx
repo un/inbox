@@ -108,7 +108,7 @@ function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
 function ConvoNotFound() {
   const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
   return (
-    <div className=" flex h-full w-full flex-col items-center justify-center">
+    <div className="flex h-full w-full flex-col items-center justify-center">
       <div>
         <span>Convo Not Found</span>
         <span>

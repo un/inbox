@@ -98,9 +98,12 @@ export function useDeleteConvo$Cache() {
   const deleteFn = useCallback(
     (
       convoId: TypeId<'convos'>,
-      updater?: InfiniteData<RouterOutputs['convos']['getOrgMemberConvos']>
+      // TODO: figure out these types later
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      updater?: InfiniteData<RouterOutputs['convos']['getOrgMemberConvos'], any>
     ) => {
       if (!updater) return;
+
       const clonedUpdater = structuredClone(updater);
       for (const page of clonedUpdater.pages) {
         const convoIndex = page.data.findIndex(
@@ -123,6 +126,7 @@ export function useDeleteConvo$Cache() {
       convoListApi.setInfiniteData({ orgShortCode }, (updater) =>
         deleteFn(convoId, updater)
       );
+      // deleteFn(convoId, updater)
       convoListApi.setInfiniteData(
         { orgShortCode, includeHidden: true },
         (updater) => deleteFn(convoId, updater)
@@ -146,7 +150,9 @@ export function useToggleConvoHidden$Cache() {
       hideFromList: boolean,
       convoToAdd: RouterOutputs['convos']['getOrgMemberSpecificConvo'] | null,
       convoToRemove: TypeId<'convos'> | null,
-      updater?: InfiniteData<RouterOutputs['convos']['getOrgMemberConvos']>
+      // TODO: figure out these types later
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      updater?: InfiniteData<RouterOutputs['convos']['getOrgMemberConvos'], any>
     ) => {
       if (!updater) return;
       const clonedUpdater = structuredClone(updater);

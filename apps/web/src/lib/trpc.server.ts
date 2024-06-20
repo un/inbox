@@ -1,18 +1,15 @@
 import 'server-only';
 import type { TrpcPlatformRouter } from '@u22n/platform/trpc';
-import { createTRPCProxyClient, httpBatchLink } from '@trpc/client';
+import { createTRPCClient, httpBatchLink } from '@trpc/client';
 import SuperJSON from 'superjson';
 import { cookies, headers as nextHeaders } from 'next/headers';
 
-export const serverApi = createTRPCProxyClient<TrpcPlatformRouter>({
-  transformer: SuperJSON,
+export const serverApi = createTRPCClient<TrpcPlatformRouter>({
   links: [
     httpBatchLink({
       url: getBaseUrl() + '/trpc',
-      headers: async () => {
-        const headers = Object.fromEntries(nextHeaders().entries());
-        return headers;
-      },
+      transformer: SuperJSON,
+      headers: async () => nextHeaders(),
       fetch: (input, init) =>
         fetch(input, { ...init, credentials: 'include', cache: 'no-store' })
     })

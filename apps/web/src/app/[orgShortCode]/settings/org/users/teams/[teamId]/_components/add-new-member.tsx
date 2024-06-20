@@ -24,7 +24,7 @@ export function AddNewMember({ teamId, existingMembers, complete }: Props) {
     api.org.users.members.getOrgMembers.useQuery({
       orgShortCode
     });
-  const { mutateAsync: addNewMember, isLoading: isAdding } =
+  const { mutateAsync: addNewMember, isPending: isAdding } =
     api.org.users.teams.addOrgMemberToTeam.useMutation({
       onError: (error) => {
         toast.error(error.message);

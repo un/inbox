@@ -10,7 +10,7 @@ export function DeleteAllSessions({
 }: ModalComponent<{ verificationToken: string }>) {
   const {
     mutateAsync: logoutAll,
-    isLoading: loggingOut,
+    isPending: loggingOut,
     error
   } = api.account.security.deleteAllSessions.useMutation();
   return (

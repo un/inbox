@@ -14,12 +14,12 @@
     }
   },
   "dependencies": {
-    "@hono/node-server": "^1.11.1",
+    "@hono/node-server": "^1.11.4",
     "@hono/trpc-server": "^0.3.1",
-    "@hono/zod-validator": "^0.2.1",
+    "@hono/zod-validator": "^0.2.2",
     "@t3-oss/env-core": "^0.10.1",
-    "@trpc/client": "^10.45.2",
-    "@trpc/server": "^10.45.2",
+    "@trpc/client": "11.0.0-rc.413",
+    "@trpc/server": "11.0.0-rc.413",
     "@types/mailparser": "^3.4.4",
     "@u22n/database": "workspace:*",
     "@u22n/mailtools": "^0.1.2",
@@ -28,24 +28,24 @@
     "@u22n/tiptap": "workspace:^",
     "@u22n/tsconfig": "^0.0.2",
     "@u22n/utils": "workspace:*",
-    "bullmq": "^5.7.15",
+    "bullmq": "^5.8.2",
     "dompurify": "^3.1.5",
-    "drizzle-orm": "^0.30.3",
-    "hono": "^4.3.8",
+    "drizzle-orm": "^0.31.2",
+    "hono": "^4.4.7",
     "jsdom": "^24.1.0",
-    "mailauth": "^4.6.5",
-    "mailparser": "^3.6.9",
-    "mysql2": "^3.9.7",
-    "nanoid": "^5.0.6",
-    "nodemailer": "^6.9.13",
+    "mailauth": "^4.6.8",
+    "mailparser": "^3.7.1",
+    "mysql2": "^3.10.1",
+    "nanoid": "^5.0.7",
+    "nodemailer": "^6.9.14",
     "superjson": "^2.2.1",
     "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/dompurify": "^3.0.5",
     "@types/jsdom": "^21.1.7",
-    "@types/node": "^20.12.7",
-    "@types/nodemailer": "^6.4.14",
-    "tsx": "^4.7.1"
+    "@types/node": "^20.14.6",
+    "@types/nodemailer": "^6.4.15",
+    "tsx": "^4.15.6"
   }
 }

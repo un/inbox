@@ -41,7 +41,7 @@ export function PasswordRecoveryModal({
     );
   const {
     mutateAsync: resetPassword,
-    isLoading: isResetting,
+    isPending: isResetting,
     error
   } = api.auth.recovery.resetPassword.useMutation();
 
@@ -155,7 +155,7 @@ export function TwoFactorModal({
   const qrCodeSecret = uri.match(/secret=([^&]+)/)?.[1] ?? '';
   const {
     mutateAsync: resetTwoFactor,
-    isLoading: isResetting,
+    isPending: isResetting,
     error
   } = api.auth.recovery.resetTwoFactor.useMutation();
 

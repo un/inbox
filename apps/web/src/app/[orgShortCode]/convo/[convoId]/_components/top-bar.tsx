@@ -128,7 +128,7 @@ export default function TopBar({
         )}>
         <div
           className={cn(
-            'justify-ends flex flex-wrap items-center justify-end  gap-2 transition-all',
+            'justify-ends flex flex-wrap items-center justify-end gap-2 transition-all',
             isConvoLoading ? 'max-h-0' : 'max-h-52'
           )}>
           {attachments.length > 0 ? (
@@ -165,7 +165,7 @@ function DeleteModal({
     <Dialog
       open={open}
       onOpenChange={(open) => {
-        if (!open && !deleteConvo.isLoading && !hideConvo.isLoading) {
+        if (!open && !deleteConvo.isPending && !hideConvo.isPending) {
           onClose();
         }
       }}>
@@ -186,14 +186,14 @@ function DeleteModal({
         <div className="flex flex-row gap-2">
           <Button
             variant="outline"
-            disabled={deleteConvo.isLoading || hideConvo.isLoading}
+            disabled={deleteConvo.isPending || hideConvo.isPending}
             onClick={() => onClose()}>
             Cancel
           </Button>
           {convoHidden ? null : (
             <Button
               variant="secondary"
-              disabled={deleteConvo.isLoading || hideConvo.isLoading}
+              disabled={deleteConvo.isPending || hideConvo.isPending}
               onClick={async () => {
                 await hideConvo.mutateAsync({
                   convoPublicId: convoId,
@@ -208,7 +208,7 @@ function DeleteModal({
           <Button
             variant="destructive"
             color="red"
-            disabled={hideConvo.isLoading || deleteConvo.isLoading}
+            disabled={hideConvo.isPending || deleteConvo.isPending}
             onClick={async () => {
               await deleteConvo.mutateAsync({
                 convoPublicId: convoId,
@@ -300,7 +300,7 @@ function AttachmentBlock({ attachment }: { attachment: AttachmentBlockProps }) {
           )}>
           <FileTypeIcon />
         </div>
-        <div className="flex flex-col gap-0 ">
+        <div className="flex flex-col gap-0">
           <span className="text-xs font-medium">{attachment.name}</span>
         </div>
       </div>

@@ -55,7 +55,7 @@ export default function Page({
             <ArrowLeft className="size-6" />
           </Link>
         </Button>
-        <div className="flex flex-1 items-center ">
+        <div className="flex flex-1 items-center">
           <h1 className="font-mono text-2xl leading-5">
             {isLoading ? 'Loading...' : domainInfo?.domainData?.domain}
           </h1>

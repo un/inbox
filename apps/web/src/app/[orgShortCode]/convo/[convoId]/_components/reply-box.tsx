@@ -137,7 +137,7 @@ export function ReplyBox({ convoId }: { convoId: TypeId<'convos'> }) {
                 !replyTo ||
                 isEditorEmpty ||
                 !emailIdentity ||
-                replyToConvoMutation.isLoading
+                replyToConvoMutation.isPending
               }
               onClick={async () => {
                 if (!replyTo || !emailIdentity) return;
@@ -159,7 +159,7 @@ export function ReplyBox({ convoId }: { convoId: TypeId<'convos'> }) {
                 !replyTo ||
                 isEditorEmpty ||
                 !emailIdentity ||
-                replyToConvoMutation.isLoading
+                replyToConvoMutation.isPending
               }
               size={'sm'}
               onClick={async () => {
