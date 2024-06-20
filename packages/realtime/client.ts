@@ -24,7 +24,7 @@ export default class RealtimeClient {
       wsPort: Number(this.config.port),
       cluster: 'default',
       forceTLS: false,
-      enabledTransports: ['ws'],
+      enabledTransports: ['ws', 'wss'],
       userAuthentication: {
         customHandler: async (params, callback) => {
           const res = await fetch(this.config.authEndpoint, {
