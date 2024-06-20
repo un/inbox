@@ -10,7 +10,7 @@ export const logger = Pino({
             colorize: true
           }
         }
-      : Pino.transport({
-          target: 'pino-opentelemetry-transport'
-        })
+      : {
+          target: 'pino-pretty'
+        }
 });

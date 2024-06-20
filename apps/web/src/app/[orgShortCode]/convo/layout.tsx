@@ -79,8 +79,8 @@ export default function Layout({
     !pathname.endsWith('/convo') && !pathname.endsWith('/convo/new');
 
   return (
-    <div className="flex h-full w-full flex-row gap-0 lg:grid-cols-3 xl:grid">
-      <div className="flex h-full min-w-96 max-w-[450px] flex-col gap-2 p-4 pt-3 xl:col-span-1 xl:min-w-80">
+    <div className="flex h-full w-full flex-row gap-0 xl:grid xl:grid-cols-3">
+      <div className="flex h-full min-w-96 flex-col gap-2 p-4 pt-3 xl:col-span-1 xl:min-w-80">
         <div
           className={
             'flex w-full flex-row items-center justify-between gap-2 overflow-visible p-2.5 pt-0'
