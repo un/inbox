@@ -30,6 +30,9 @@ import {
   useToggleConvoHidden$Cache,
   useUpdateConvoMessageList$Cache
 } from './utils';
+import { usePathname } from 'next/navigation';
+import { useAtom } from 'jotai';
+import { showNewConvoPanel } from './atoms';
 
 export default function Layout({
   children
@@ -44,6 +47,9 @@ export default function Layout({
   const deleteConvo = useDeleteConvo$Cache();
   const updateConvoMessageList = useUpdateConvoMessageList$Cache();
   const client = useRealtime();
+
+  const pathname = usePathname();
+  const [, setNewPanelOpen] = useAtom(showNewConvoPanel);
 
   useEffect(() => {
     client.on('convo:new', ({ publicId }) => addConvo(publicId));
@@ -68,6 +74,9 @@ export default function Layout({
     deleteConvo,
     updateConvoMessageList
   ]);
+
+  const isInConvo =
+    !pathname.endsWith('/convo') && !pathname.endsWith('/convo/new');
 
   return (
     <div className="flex h-full w-full flex-row gap-0 xl:grid xl:grid-cols-3">
@@ -123,12 +132,21 @@ export default function Layout({
               onClick={() => setShowHidden((prev) => !prev)}>
               {showHidden ? <EyeSlash /> : <Eye />}
             </Button>
-            <Button
-              variant="default"
-              asChild
-              size="xs">
-              <Link href={`/${orgShortCode}/convo/new`}>New</Link>
-            </Button>
+            {!isInConvo ? (
+              <Button
+                variant="default"
+                asChild
+                size="xs">
+                <Link href={`/${orgShortCode}/convo/new`}>New</Link>
+              </Button>
+            ) : (
+              <Button
+                variant="default"
+                size="xs"
+                onClick={() => isInConvo && setNewPanelOpen(true)}>
+                <span>New</span>
+              </Button>
+            )}
           </div>
         </div>
         <ConvoList hidden={showHidden} />
