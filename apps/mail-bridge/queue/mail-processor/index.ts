@@ -17,6 +17,8 @@ export const mailProcessorQueue = new Queue<{
     password
   },
   defaultJobOptions: {
-    removeOnComplete: true
+    removeOnComplete: {
+      age: env.MAILBRIDGE_QUEUE_COMPLETED_MAX_AGE_SECONDS
+    }
   }
 });

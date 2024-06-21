@@ -31,6 +31,7 @@ import { simpleParser, type EmailAddress } from 'mailparser';
 import { env } from '../../env';
 import { trace } from '@u22n/otel/exports';
 import { logger } from '@u22n/otel/logger';
+import { discord } from '@u22n/utils/discord';
 
 const { host, username, password, port } = new URL(
   env.DB_REDIS_CONNECTION_STRING
@@ -777,6 +778,7 @@ export const worker = new Worker<
         span.recordException(e as Error);
         span.setStatus({ code: 2 });
         logger.error(e, 'Error processing email');
+        await discord.info(`Mailbridge Queue Error\n${(e as Error).message}`);
         // Throw the error to be caught by the worker, and moving to failed jobs
         throw e;
       } finally {
