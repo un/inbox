@@ -24,7 +24,7 @@ export function ContextPanel({
   const [participantOpen, setParticipantOpen] = useState(false);
 
   return (
-    <div className=" flex h-full min-w-64 max-w-80 flex-col">
+    <div className="flex h-full min-w-64 max-w-80 flex-col">
       <div className="border-gray-11 flex h-full w-full flex-col">
         <div className="flex w-full flex-col">
           <div
@@ -34,7 +34,7 @@ export function ContextPanel({
             {participantOpen ? <CaretUp size={14} /> : <CaretDown size={14} />}
           </div>
           {participants.length === 0 && <span className="p-2">Loading...</span>}
-          <div className=" flex flex-col px-2">
+          <div className="flex flex-col px-2">
             {participants.map((participant, i) => (
               <div
                 className="flex flex-col gap-2"

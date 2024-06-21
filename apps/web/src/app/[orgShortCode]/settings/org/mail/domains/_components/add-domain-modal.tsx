@@ -28,7 +28,7 @@ export function AddDomainModal() {
   const {
     mutateAsync: createNewDomain,
     error: domainError,
-    isLoading: isAddingDomain
+    isPending: isAddingDomain
   } = api.org.mail.domains.createNewDomain.useMutation({
     onSuccess: () => {
       void invalidateDomains.invalidate();

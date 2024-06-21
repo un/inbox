@@ -59,7 +59,7 @@ export default function Sidebar() {
         {!isSidebarAutoCollapsed && (
           <div
             className={cn(
-              'bg-slate-3 focus-within:bg-slate-5 border-slate-5 absolute top-[34px] z-[90] flex h-6 w-4 max-w-4 cursor-pointer items-center justify-end overflow-visible rounded-br-[7px] rounded-tr-[7px] border border-l-0 transition-all duration-1000 ease-in-out ',
+              'bg-slate-3 focus-within:bg-slate-5 border-slate-5 absolute top-[34px] z-[90] flex h-6 w-4 max-w-4 cursor-pointer items-center justify-end overflow-visible rounded-br-[7px] rounded-tr-[7px] border border-l-0 transition-all duration-1000 ease-in-out',
               sidebarExpanded ? 'visible opacity-100' : 'invisible opacity-0',
               sidebarDocked ? '-right-[15px]' : '-right-[3px]'
             )}>
@@ -82,7 +82,7 @@ export default function Sidebar() {
         {isSidebarAutoCollapsed && (
           <div
             className={cn(
-              'bg-slate-3 focus-within:bg-slate-5 border-slate-5 absolute -right-[19px] top-[26px] z-[90] flex h-10 w-8 max-w-8 cursor-pointer items-center justify-end overflow-visible rounded-br-[7px] rounded-tr-[7px] border border-l-0 transition-all duration-1000 ease-in-out ',
+              'bg-slate-3 focus-within:bg-slate-5 border-slate-5 absolute -right-[19px] top-[26px] z-[90] flex h-10 w-8 max-w-8 cursor-pointer items-center justify-end overflow-visible rounded-br-[7px] rounded-tr-[7px] border border-l-0 transition-all duration-1000 ease-in-out',
               sidebarExpanded ? 'visible opacity-100' : 'invisible opacity-0'
             )}>
             <div

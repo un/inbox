@@ -450,7 +450,7 @@ export default function Page() {
 
             <div className="text-red-10">{emailIdentityError?.message}</div>
             <div className="text-red-10">{error}</div>
-            <div className="mt-2 flex  w-fit flex-wrap gap-2">
+            <div className="mt-2 flex w-fit flex-wrap gap-2">
               <form.Subscribe
                 selector={(form) => [
                   form.isTouched,

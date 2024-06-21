@@ -40,7 +40,6 @@ export function TRPCReactProvider({ children }: PropsWithChildren) {
 
   const [trpcClient] = useState(() =>
     api.createClient({
-      transformer: SuperJSON,
       links: [
         loggerLink({
           enabled: (op) =>
@@ -49,6 +48,7 @@ export function TRPCReactProvider({ children }: PropsWithChildren) {
         }),
         httpBatchLink({
           url: `${PLATFORM_URL}/trpc`,
+          transformer: SuperJSON,
           fetch: (input, init) =>
             fetch(input, { ...init, credentials: 'include' })
         })

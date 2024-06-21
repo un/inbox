@@ -97,7 +97,7 @@ export default function SettingsSidebar() {
   return (
     <Flex
       gap="4"
-      className="bg-base-2 dark:bg-slatedark-2  h-full w-[400px] flex-col  p-2 px-4">
+      className="bg-base-2 dark:bg-slatedark-2 h-full w-[400px] flex-col p-2 px-4">
       <Text
         size="5"
         weight="bold"

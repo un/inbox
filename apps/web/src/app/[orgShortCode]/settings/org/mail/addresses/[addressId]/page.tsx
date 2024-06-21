@@ -38,7 +38,7 @@ export default function Page({
             <ArrowLeft className="size-6" />
           </Link>
         </Button>
-        <div className="flex flex-1 items-center ">
+        <div className="flex flex-1 items-center">
           <h1 className="font-display text-2xl leading-5">
             Edit Email Address
           </h1>

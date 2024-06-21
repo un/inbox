@@ -53,7 +53,7 @@ export function SidebarNavButton({
     <div className={'flex w-full max-w-full flex-col gap-0 p-0'}>
       <div
         className={cn(
-          ' text-base-12 flex w-full max-w-full flex-row items-center justify-start gap-0  overflow-hidden truncate rounded-md pl-1 text-left',
+          'text-base-12 flex w-full max-w-full flex-row items-center justify-start gap-0 overflow-hidden truncate rounded-md pl-1 text-left',
           active ? 'bg-base-5' : '',
           disabled ? 'opacity-80' : 'hover:bg-base-4'
         )}
@@ -67,8 +67,8 @@ export function SidebarNavButton({
             <CaretRight
               weight="duotone"
               className={cn(
-                ' h-4 w-4 transition-transform',
-                expanded ? ' rotate-90' : 'rotate-0'
+                'h-4 w-4 transition-transform',
+                expanded ? 'rotate-90' : 'rotate-0'
               )}
             />
           </div>
@@ -113,7 +113,7 @@ export function SidebarNavButton({
           <div
             className={cn(
               'w-full p-0 transition-opacity duration-100',
-              expanded ? 'opacity-100 ' : 'opacity-0 '
+              expanded ? 'opacity-100' : 'opacity-0'
             )}>
             {children}
           </div>

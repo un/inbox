@@ -193,7 +193,7 @@
                 class="rounded-md px-6 py-1"
                 :class="
                   pricingTableBillingPeriod === 'monthly'
-                    ? 'bg-base-5  text-base-12 '
+                    ? 'bg-base-5 text-base-12'
                     : ''
                 "
                 @click="pricingTableBillingPeriod = 'monthly'">

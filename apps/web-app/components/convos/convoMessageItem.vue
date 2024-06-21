@@ -211,7 +211,7 @@
             <div class="flex w-full flex-col items-start gap-2">
               <div
                 class="flex items-center gap-2"
-                :class="userIsAuthor ? 'flex-row-reverse ' : 'flex-row '">
+                :class="userIsAuthor ? 'flex-row-reverse' : 'flex-row'">
                 <span
                   v-if="author"
                   class="text-sm leading-none">

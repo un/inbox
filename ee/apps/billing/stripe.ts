@@ -2,7 +2,7 @@ import Stripe from 'stripe';
 import { env } from './env';
 
 export const stripeSdk = new Stripe(env.BILLING_STRIPE_KEY, {
-  apiVersion: '2023-10-16'
+  apiVersion: '2024-04-10'
 });
 
 export const stripeData = {

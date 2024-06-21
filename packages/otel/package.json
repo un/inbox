@@ -2,36 +2,30 @@
   "name": "@u22n/otel",
   "version": "0.0.0",
   "type": "module",
-  "description": "",
   "exports": {
     "./logger": "./logger.ts",
     "./otel": "./otel.ts",
     "./hono": "./hono.ts",
     "./exports": "./exports.ts"
   },
-  "scripts": {},
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
-    "@opentelemetry/api": "^1.8.0",
-    "@opentelemetry/exporter-zipkin": "^1.24.1",
-    "@opentelemetry/instrumentation": "^0.51.1",
-    "@opentelemetry/instrumentation-http": "^0.51.1",
-    "@opentelemetry/resources": "^1.24.1",
-    "@opentelemetry/sdk-trace-node": "^1.24.1",
-    "@opentelemetry/semantic-conventions": "^1.24.1",
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/exporter-zipkin": "^1.25.1",
+    "@opentelemetry/instrumentation": "^0.52.1",
+    "@opentelemetry/instrumentation-http": "^0.52.1",
+    "@opentelemetry/resources": "^1.25.1",
+    "@opentelemetry/sdk-trace-node": "^1.25.1",
+    "@opentelemetry/semantic-conventions": "^1.25.1",
     "@t3-oss/env-core": "^0.10.1",
-    "pino": "^9.1.0",
-    "pino-opentelemetry-transport": "^1.0.0",
+    "pino": "^9.2.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
     "@u22n/tsconfig": "^0.0.2",
-    "hono": "^4.3.8",
-    "pino-pretty": "^11.1.0"
+    "hono": "^4.4.7",
+    "pino-pretty": "^11.2.0"
   },
   "peerDependencies": {
-    "hono": "^4.3.8"
+    "hono": "^4.4.7"
   }
 }

@@ -244,7 +244,7 @@ export function TOTPModal({
     },
     {
       enabled: open && verificationToken !== '',
-      cacheTime: ms('4 minutes'), // it can be cached for 5 minutes, using 4 to be safe
+      gcTime: ms('4 minutes'), // it can be cached for 5 minutes, using 4 to be safe
       staleTime: ms('5 minutes')
     }
   );
@@ -256,7 +256,7 @@ export function TOTPModal({
   const [twoFactorCode, setTwoFactorCode] = useState<string>('');
   const {
     mutateAsync: completeTwoFactorReset,
-    isLoading: twoFactorResetLoading,
+    isPending: twoFactorResetLoading,
     error: twoFactorResetError
   } = api.account.security.verifyTwoFactorResetChallenge.useMutation({
     onSuccess: () => onResolve(true)
@@ -377,12 +377,12 @@ export function RecoveryCodeModal({
 }: ModalComponent<{ mode: 'reset' | 'disable'; verificationToken: string }>) {
   const {
     mutateAsync: resetRecovery,
-    isLoading: resetRecoveryLoading,
+    isPending: resetRecoveryLoading,
     error: resetError
   } = api.account.security.resetRecoveryCode.useMutation();
   const {
     mutateAsync: disableRecovery,
-    isLoading: disableRecoveryLoading,
+    isPending: disableRecoveryLoading,
     error: disableError
   } = api.account.security.disableRecoveryCode.useMutation();
 

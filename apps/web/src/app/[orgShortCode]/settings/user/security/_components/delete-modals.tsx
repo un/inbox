@@ -17,7 +17,7 @@ export function DeletePasskeyModal({
 }>) {
   const {
     mutateAsync: deletePasskey,
-    isLoading: deletePasskeyLoading,
+    isPending: deletePasskeyLoading,
     error
   } = api.account.security.deletePasskey.useMutation();
 
