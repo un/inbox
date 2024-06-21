@@ -1,4 +1,5 @@
 import { createEnv } from '@t3-oss/env-core';
+import { seconds } from '@u22n/utils/ms';
 import { z } from 'zod';
 
 const stringToJSON = z.string().transform((str, ctx) => {
@@ -13,6 +14,10 @@ const stringToJSON = z.string().transform((str, ctx) => {
 export const env = createEnv({
   server: {
     MAILBRIDGE_MODE: z.enum(['handler', 'worker', 'dual']).default('dual'),
+    MAILBRIDGE_QUEUE_COMPLETED_MAX_AGE_SECONDS: z.coerce
+      .number()
+      .int()
+      .default(seconds('72 hours')),
     MAILBRIDGE_URL: z.string().url(),
     MAILBRIDGE_KEY: z.string().min(1),
     STORAGE_URL: z.string().url(),
