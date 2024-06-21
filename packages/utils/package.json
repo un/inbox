@@ -12,7 +12,8 @@
     "./dns": "./dns/index.ts",
     "./typeid": "./typeid.ts",
     "./colors": "./uiColors.ts",
-    "./zodSchemas": "./zodSchemas.ts"
+    "./zodSchemas": "./zodSchemas.ts",
+    "./discord": "./discord.ts"
   },
   "keywords": [],
   "author": "",
@@ -22,6 +23,7 @@
     "pnpm": ">=8"
   },
   "dependencies": {
+    "@discordjs/builders": "^1.8.2",
     "@zxcvbn-ts/core": "^3.0.4",
     "@zxcvbn-ts/language-common": "^3.0.4",
     "@zxcvbn-ts/matcher-pwned": "^3.0.4",
