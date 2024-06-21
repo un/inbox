@@ -38,7 +38,7 @@ const { host, username, password, port } = new URL(
 
 const tracer = trace.getTracer('mail-processor');
 
-export const mailProcessorWorker = new Worker<
+export const worker = new Worker<
   {
     rawMessage: PostalMessageSchema;
     params: MailParamsSchema;

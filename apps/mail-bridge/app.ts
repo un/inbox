@@ -1,5 +1,4 @@
 import './tracing';
-import './queue/mail-processor';
 import { env } from './env';
 import { Hono } from 'hono';
 import { db } from '@u22n/database';
@@ -13,68 +12,93 @@ import { logger } from 'hono/logger';
 import { otel } from '@u22n/otel/hono';
 import type { Ctx, TRPCContext } from './ctx';
 
-const app = new Hono<Ctx>();
-app.use(otel());
+const processCleanup: Array<() => Promise<void>> = [];
 
-// Logger middleware
-if (env.NODE_ENV === 'development') {
-  app.use(logger());
+if (env.MAILBRIDGE_MODE === 'dual' || env.MAILBRIDGE_MODE === 'handler') {
+  const app = new Hono<Ctx>();
+  app.use(otel());
+
+  // Logger middleware
+  if (env.NODE_ENV === 'development') {
+    app.use(logger());
+  }
+
+  // Health check endpoint
+  app.get('/', (c) => c.json({ status: "I'm Alive 🏝️" }));
+
+  // TRPC handler
+  app.use(
+    '/trpc/*',
+    trpcServer({
+      router: trpcMailBridgeRouter,
+      createContext: (_, c) => {
+        const authToken = c.req.header('Authorization');
+        const isServiceAuthenticated = authToken === env.MAILBRIDGE_KEY;
+        return {
+          auth: isServiceAuthenticated,
+          db,
+          config: env,
+          context: c
+        } satisfies TRPCContext;
+      }
+    })
+  );
+
+  // Postal endpoints
+  app.use('/postal/*', signatureMiddleware);
+  app.route('/postal', eventApi);
+  app.route('/postal', inboundApi);
+
+  // 404 handler
+  app.notFound((c) => c.json({ message: 'Not Found' }, 404));
+
+  // Global error handler
+  app.onError((err, c) => {
+    console.error(err);
+    return c.json({ message: 'Something went wrong' }, 500);
+  });
+
+  // Start server
+  const server = serve(
+    {
+      fetch: app.fetch,
+      port: env.PORT
+    },
+    () =>
+      console.info(`Starting mail-bridge handler server on port ${env.PORT}`)
+  );
+
+  processCleanup.push(
+    () =>
+      new Promise<void>((resolve) => {
+        server.close(() => {
+          console.info('Shutting down mail-bridge handler server');
+          resolve();
+        });
+      })
+  );
 }
 
-// Health check endpoint
-app.get('/', (c) => c.json({ status: "I'm Alive 🏝️" }));
+if (env.MAILBRIDGE_MODE === 'dual' || env.MAILBRIDGE_MODE === 'worker') {
+  const { worker } = await import('./queue/mail-processor/worker');
 
-// TRPC handler
-app.use(
-  '/trpc/*',
-  trpcServer({
-    router: trpcMailBridgeRouter,
-    createContext: (_, c) => {
-      const authToken = c.req.header('Authorization');
-      const isServiceAuthenticated = authToken === env.MAILBRIDGE_KEY;
-      return {
-        auth: isServiceAuthenticated,
-        db,
-        config: env,
-        context: c
-      } satisfies TRPCContext;
-    }
-  })
-);
+  console.info('Starting mail-bridge worker');
 
-// Postal endpoints
-app.use('/postal/*', signatureMiddleware);
-app.route('/postal', eventApi);
-app.route('/postal', inboundApi);
+  worker.on('error', (err) => console.error('[Worker] Error: ', err));
 
-// 404 handler
-app.notFound((c) => c.json({ message: 'Not Found' }, 404));
-
-// Global error handler
-app.onError((err, c) => {
-  console.error(err);
-  return c.json({ message: 'Something went wrong' }, 500);
-});
+  processCleanup.push(async () => {
+    console.info('Shutting down mail-bridge worker');
+    await worker.close();
+  });
+}
 
 // Handle uncaught errors
 process.on('unhandledRejection', (err) => console.error(err));
 process.on('uncaughtException', (err) => console.error(err));
 
-// Start server
-const server = serve(
-  {
-    fetch: app.fetch,
-    port: env.PORT
-  },
-  () => console.info(`Server listening on port ${env.PORT}`)
-);
-
-// Clean Exit
-const handleExit = () => {
-  server.close(() => {
-    console.info('Shutting down...');
-    process.exit();
-  });
+const handleExit = async () => {
+  await Promise.allSettled(processCleanup.map((fn) => fn()));
+  process.exit();
 };
 
 process.on('SIGINT', handleExit);
