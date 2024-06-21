@@ -17,6 +17,7 @@ import {
 } from './shadcn-ui/avatar';
 import {
   AddressBook,
+  At,
   BuildingOffice,
   Dot,
   User,
@@ -24,9 +25,9 @@ import {
 } from '@phosphor-icons/react';
 
 export type AvatarProps = {
-  avatarProfilePublicId: TypeId<
-    'orgMemberProfile' | 'org' | 'teams' | 'contacts'
-  >;
+  avatarProfilePublicId:
+    | 'manual_undefined'
+    | TypeId<'orgMemberProfile' | 'org' | 'teams' | 'contacts'>;
   avatarTimestamp: Date | null;
   name: string;
   hideTooltip?: boolean;
@@ -77,11 +78,13 @@ const avatarVariants = cva(
 
 export function Avatar(props: AvatarProps) {
   const avatarUrl =
-    generateAvatarUrl({
-      publicId: props.avatarProfilePublicId,
-      avatarTimestamp: props.avatarTimestamp,
-      size: props.size ?? 'lg'
-    }) ?? '';
+    props.avatarProfilePublicId === 'manual_undefined'
+      ? undefined
+      : generateAvatarUrl({
+          publicId: props.avatarProfilePublicId,
+          avatarTimestamp: props.avatarTimestamp,
+          size: props.size ?? 'lg'
+        }) ?? '';
   const altText = props.name;
   const withoutTooltip = props.hideTooltip ?? false;
 
@@ -144,14 +147,18 @@ const avatarIconVariants = cva('', {
 });
 
 type AvatarIconProps = {
-  avatarProfilePublicId: TypeId<
-    'orgMemberProfile' | 'org' | 'teams' | 'contacts'
-  >;
+  avatarProfilePublicId:
+    | 'manual_undefined'
+    | TypeId<'orgMemberProfile' | 'org' | 'teams' | 'contacts'>;
   withDot?: boolean;
+  address?: string;
 } & VariantProps<typeof avatarIconVariants>;
 
 export function AvatarIcon(iconProps: AvatarIconProps) {
-  const type = inferTypeId(iconProps.avatarProfilePublicId);
+  const type =
+    iconProps.avatarProfilePublicId === 'manual_undefined'
+      ? 'newEmail'
+      : inferTypeId(iconProps.avatarProfilePublicId);
   const AvatarTypeIcon = () => {
     switch (type) {
       case 'orgMemberProfile':
@@ -162,6 +169,8 @@ export function AvatarIcon(iconProps: AvatarIconProps) {
         return <UsersThree />;
       case 'contacts':
         return <AddressBook />;
+      case 'newEmail':
+        return <At />;
       default:
         return null;
     }
@@ -177,6 +186,8 @@ export function AvatarIcon(iconProps: AvatarIconProps) {
         return 'Team';
       case 'contacts':
         return 'Contact';
+      case 'newEmail':
+        return 'New Contact';
       default:
         return null;
     }
@@ -191,6 +202,10 @@ export function AvatarIcon(iconProps: AvatarIconProps) {
       {iconProps.withDot && <Dot />}
       <AvatarTypeIcon />
       <span className="">{text()}</span>
+      {iconProps.withDot && <Dot />}
+      {iconProps.address && (
+        <span className="text-base-11 font-normal">{iconProps.address}</span>
+      )}
     </div>
   );
 }
