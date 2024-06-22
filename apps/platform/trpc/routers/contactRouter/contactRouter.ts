@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { router, orgProcedure } from '~platform/trpc/trpc';
-import { and, eq } from '@u22n/database/orm';
+import { eq } from '@u22n/database/orm';
 import { contacts } from '@u22n/database/schema';
 
 export const contactsRouter = router({
@@ -9,7 +9,7 @@ export const contactsRouter = router({
     const orgId = org?.id;
 
     const orgContactsResponse = await db.query.contacts.findMany({
-      where: and(eq(contacts.orgId, orgId), eq(contacts.type, 'person')),
+      where: eq(contacts.orgId, orgId),
       columns: {
         publicId: true,
         avatarTimestamp: true,
@@ -20,6 +20,7 @@ export const contactsRouter = router({
         screenerStatus: true
       }
     });
+
     return { contacts: orgContactsResponse };
   })
 });

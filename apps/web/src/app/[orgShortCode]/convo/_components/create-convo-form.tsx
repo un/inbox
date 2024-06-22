@@ -1,7 +1,6 @@
 'use client';
 
 import { api } from '@/src/lib/trpc';
-import { cn, generateAvatarUrl, getInitials } from '@/src/lib/utils';
 import {
   Select,
   SelectContent,
@@ -13,13 +12,6 @@ import {
   PopoverTrigger,
   PopoverContent
 } from '@/src/components/shadcn-ui/popover';
-
-import { Badge } from '@/src/components/shadcn-ui/badge';
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage
-} from '@/src/components/shadcn-ui/avatar';
 import { type TypeId } from '@u22n/utils/typeid';
 import {
   Command,
@@ -31,17 +23,8 @@ import {
   CommandLoading,
   useCommandState
 } from 'cmdk';
-import { useState, useMemo, Fragment } from 'react';
-import {
-  type Icon,
-  User,
-  Users,
-  AddressBook,
-  At,
-  CaretDown,
-  Check,
-  Paperclip
-} from '@phosphor-icons/react';
+import { useState, useMemo } from 'react';
+import { At, CaretDown, Check, Paperclip } from '@phosphor-icons/react';
 import { z } from 'zod';
 import {
   type JSONContent,
@@ -59,46 +42,41 @@ import { Input } from '@/src/components/shadcn-ui/input';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { useAttachmentUploader } from '@/src/components/shared/attachments';
 import { showNewConvoPanel } from '../atoms';
+import { Avatar, AvatarIcon } from '@/src/components/avatar';
 
-export interface ConvoParticipantOrgMembers {
-  type: 'orgMember';
-  icon: Icon;
-  publicId: TypeId<'orgMembers'>;
+export interface ConvoParticipantShared {
   avatarTimestamp: Date | null;
-  profilePublicId: TypeId<'orgMemberProfile'>;
   name: string;
-  handle: string;
-  title: string | null;
+  address: string | null;
+  handle?: string;
+  description?: string | null;
+  title?: string | null;
   disabled?: boolean;
   keywords: string[];
-  own?: boolean;
-}
-export interface ConvoParticipantOrgTeams {
-  type: 'team';
-  icon: Icon;
-  publicId: TypeId<'teams'>;
-  avatarTimestamp: Date | null;
-  name: string;
-  description: string | null;
+  own: boolean;
   color: string | null;
-  keywords: string[];
 }
-export interface ConvoParticipantOrgContacts {
+export interface ConvoParticipantOrgMembers extends ConvoParticipantShared {
+  type: 'orgMember';
+  publicId: TypeId<'orgMembers'>;
+  avatarPublicId: TypeId<'orgMemberProfile'>;
+}
+export interface ConvoParticipantOrgTeams extends ConvoParticipantShared {
+  type: 'team';
+  publicId: TypeId<'teams'>;
+  avatarPublicId: TypeId<'teams'>;
+}
+export interface ConvoParticipantOrgContacts extends ConvoParticipantShared {
   type: 'contact';
-  icon: Icon;
   publicId: TypeId<'contacts'>;
-  avatarTimestamp: Date | null;
-  name: string | null;
-  address: string;
-  keywords: string[];
+  avatarPublicId: TypeId<'contacts'>;
   screenerStatus: 'pending' | 'approve' | 'reject' | null;
 }
-export interface NewConvoParticipantEmailAddresses {
+export interface NewConvoParticipantEmailAddresses
+  extends ConvoParticipantShared {
   type: 'email';
-  icon: Icon;
   publicId: string;
-  address: string;
-  keywords: string[];
+  avatarPublicId: null;
 }
 
 export type NewConvoParticipant =
@@ -123,6 +101,7 @@ export default function CreateConvoForm() {
     api.org.users.teams.getOrgTeams.useQuery({ orgShortCode });
   const { data: orgContacts, isLoading: orgContactsLoading } =
     api.org.contacts.getOrgContacts.useQuery({ orgShortCode });
+
   const { mutateAsync: createConvoFn } =
     api.convos.createNewConvo.useMutation();
 
@@ -166,9 +145,8 @@ export default function CreateConvoForm() {
       }
       const ownData: ConvoParticipantOrgMembers = {
         type: 'orgMember',
-        icon: User,
         publicId: ownOrgMemberData.publicId,
-        profilePublicId: ownOrgMemberData.profile.publicId,
+        avatarPublicId: ownOrgMemberData.profile.publicId,
         avatarTimestamp: ownOrgMemberData.profile.avatarTimestamp,
         name: `${ownOrgMemberData.profile?.firstName} ${ownOrgMemberData.profile?.lastName ?? ''}`,
         handle: ownOrgMemberData.profile?.handle ?? '',
@@ -180,7 +158,9 @@ export default function CreateConvoForm() {
           ownOrgMemberData.profile?.title
         ].filter(Boolean) as string[],
         disabled: true,
-        own: true
+        own: true,
+        address: null,
+        color: null
       };
       participants.push(ownData);
     }
@@ -192,9 +172,8 @@ export default function CreateConvoForm() {
         }
         participants.push({
           type: 'orgMember',
-          icon: User,
           publicId: member.publicId,
-          profilePublicId: member.profile.publicId,
+          avatarPublicId: member.profile.publicId,
           avatarTimestamp: member.profile.avatarTimestamp,
           name: `${member.profile?.firstName ?? ''} ${member.profile?.lastName ?? ''}`,
           handle: member.profile?.handle ?? '',
@@ -204,7 +183,10 @@ export default function CreateConvoForm() {
             member.profile?.lastName,
             `@${member.profile?.handle ?? ''}`,
             member.profile?.title
-          ].filter(Boolean) as string[]
+          ].filter(Boolean) as string[],
+          own: false,
+          address: null,
+          color: null
         });
       }
     }
@@ -213,13 +195,15 @@ export default function CreateConvoForm() {
       for (const team of orgTeamsData.teams) {
         participants.push({
           type: 'team',
-          icon: Users,
           publicId: team.publicId,
+          avatarPublicId: team.publicId,
           avatarTimestamp: team.avatarTimestamp,
           name: team.name,
           description: team.description,
           color: team.color,
-          keywords: [team.name, team.description].filter(Boolean) as string[]
+          keywords: [team.name, team.description].filter(Boolean) as string[],
+          address: null,
+          own: false
         });
       }
     }
@@ -228,17 +212,22 @@ export default function CreateConvoForm() {
       for (const contact of orgContacts.contacts) {
         participants.push({
           type: 'contact',
-          icon: AddressBook,
           publicId: contact.publicId,
+          avatarPublicId: contact.publicId,
           avatarTimestamp: contact.avatarTimestamp,
-          name: contact.setName ?? contact.name ?? null,
+          name:
+            contact.setName ??
+            contact.name ??
+            `${contact.emailUsername}@${contact.emailDomain}`,
           address: `${contact.emailUsername}@${contact.emailDomain}`,
           keywords: [
             contact.setName,
             contact.name,
             `${contact.emailUsername}@${contact.emailDomain}`
           ].filter(Boolean) as string[],
-          screenerStatus: contact.screenerStatus
+          screenerStatus: contact.screenerStatus,
+          color: null,
+          own: false
         });
       }
     }
@@ -247,10 +236,14 @@ export default function CreateConvoForm() {
       for (const emailParticipant of newEmailParticipants) {
         participants.push({
           type: 'email',
-          icon: At,
-          publicId: emailParticipant,
+          avatarPublicId: null,
+          avatarTimestamp: null,
+          publicId: 'manual_undefined',
           address: emailParticipant,
-          keywords: [emailParticipant]
+          keywords: [emailParticipant],
+          color: null,
+          own: false,
+          name: emailParticipant
         });
       }
     }
@@ -290,16 +283,15 @@ export default function CreateConvoForm() {
     return false;
   }, [isTextPresent, topic, selectedParticipants, selectedEmailIdentity]);
 
-  async function startConvoUnderlying(type: 'message' | 'comment') {
+  async function startConvoCreation(type: 'message' | 'comment') {
     const getPublicIdsByType = (
       type: NewConvoParticipant['type'],
-      property = 'publicId'
+      property: keyof NewConvoParticipant = 'publicId'
     ) =>
       selectedParticipants
         .filter((participant) => participant.type === type)
-        .map((participant) =>
-          participant[property as keyof NewConvoParticipant].toString()
-        );
+        .map((participant) => participant[property]?.toString())
+        .filter((v) => !!v) as string[];
 
     const participantsOrgMembersPublicIds = getPublicIdsByType('orgMember');
     const participantsTeamsPublicIds = getPublicIdsByType('team');
@@ -339,7 +331,7 @@ export default function CreateConvoForm() {
   const [, setNewPanelOpen] = useAtom(showNewConvoPanel);
 
   const { loading: isMessageLoading, run: createConvo } = useLoading(
-    async () => await startConvoUnderlying('message'),
+    async () => await startConvoCreation('message'),
     {
       onError: (err) => {
         toast.error(err.message);
@@ -355,7 +347,7 @@ export default function CreateConvoForm() {
   );
 
   const { loading: isCommentLoading, run: createComment } = useLoading(
-    async () => await startConvoUnderlying('comment'),
+    async () => await startConvoCreation('comment'),
     {
       onError: (err) => {
         toast.error(err.message);
@@ -369,6 +361,16 @@ export default function CreateConvoForm() {
     }
   );
 
+  const selectedEmailIdentityString = useMemo(() => {
+    if (!selectedEmailIdentity) return null;
+    const identity = userEmailIdentities?.emailIdentities.find(
+      (e) => e.publicId === selectedEmailIdentity
+    );
+    return identity
+      ? `${identity.sendName} (${identity.username}@${identity.domainName})`
+      : null;
+  }, [selectedEmailIdentity, userEmailIdentities]);
+
   return (
     <div className="flex w-full flex-col gap-3 p-3">
       <div className="flex w-full flex-col gap-2 text-sm">
@@ -378,7 +380,6 @@ export default function CreateConvoForm() {
           loading={allParticipantsLoaded}
         />
       </div>
-
       <div className="flex w-full flex-col gap-2 text-sm">
         <h4 className="font-bold">Email Identity</h4>
         <Select
@@ -386,7 +387,7 @@ export default function CreateConvoForm() {
             setSelectedEmailIdentity(value);
           }}>
           <SelectTrigger className="h-fit">
-            Select an Email Identity to Use
+            {selectedEmailIdentityString ?? 'Select an Email Identity to Use'}
           </SelectTrigger>
           <SelectContent>
             {userEmailIdentities?.emailIdentities.map((identity) => (
@@ -499,47 +500,51 @@ function ParticipantsComboboxPopover({
                       break;
                     case 'contact':
                       info = participant.name
-                        ? `${participant.name} (${participant.address})`
-                        : participant.address;
+                        ? `${participant.name} (${participant.address!})`
+                        : participant.address!;
                       break;
                     case 'email':
-                      info = participant.address;
+                      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                      info = participant.address!;
                       break;
                   }
                   return (
                     <div
                       key={participant.publicId}
                       className="flex items-center gap-2">
-                      <Badge
-                        color={i === 0 ? undefined : 'gray'}
-                        variant={'outline'}
-                        className="rounded-lg">
-                        <Avatar className="mr-1 h-6 w-6 rounded-full border">
-                          <AvatarImage
-                            src={
-                              participant.type === 'email'
-                                ? undefined
-                                : generateAvatarUrl({
-                                    publicId:
-                                      participant.type === 'orgMember'
-                                        ? participant.profilePublicId
-                                        : participant.publicId,
-                                    avatarTimestamp:
-                                      participant.avatarTimestamp,
-                                    size: 'sm'
-                                  }) ?? undefined
-                            }
-                          />
-                          <AvatarFallback>
-                            {getInitials(info.replace(/\(.+\)/, ''))}
-                          </AvatarFallback>
-                        </Avatar>
-                        <p>{info}</p>
-                      </Badge>
+                      <div className="flex items-center justify-center gap-2">
+                        <Avatar
+                          avatarProfilePublicId={
+                            participant.avatarPublicId ?? 'manual_undefined'
+                          }
+                          avatarTimestamp={participant.avatarTimestamp}
+                          name={participant.name ?? ''}
+                          color={
+                            participant.color
+                              ? (participant.color as 'base')
+                              : 'base'
+                          }
+                          size="sm"
+                          hideTooltip
+                        />
+                        <p className="text-muted-foreground text-sm">
+                          {participant.own && participant.own
+                            ? 'You (already a participant)'
+                            : `${participant.name} ${participant.title ? `(${participant.title})` : ''}`}
+                        </p>
+                        <AvatarIcon
+                          avatarProfilePublicId={
+                            participant.avatarPublicId ?? 'manual_undefined'
+                          }
+                          size="sm"
+                          address={participant.address ?? undefined}
+                          withDot={!!participant.address}
+                        />
+                      </div>
                       {i === 0 &&
                         selectedParticipants.length > 1 &&
                         hasExternalParticipants && (
-                          <div className="border-gray-10 dark:border-graydark-10 my-1 flex h-full items-center justify-center border-l-2 px-1">
+                          <div className="my-1 flex h-full items-center justify-center px-1">
                             CC:
                           </div>
                         )}
@@ -619,81 +624,36 @@ function ParticipantsComboboxPopover({
                       onFocus={() =>
                         setCurrentSelectValue(participant.publicId)
                       }>
-                      <participant.icon className={cn('mr-2 h-4 w-4')} />
-                      {participant.type === 'orgMember' ? (
-                        <div className="flex items-center justify-center gap-2">
-                          <Avatar className="h-6 w-6 rounded-full border">
-                            <AvatarImage
-                              src={
-                                generateAvatarUrl({
-                                  publicId: participant.profilePublicId,
-                                  avatarTimestamp: participant.avatarTimestamp,
-                                  size: 'sm'
-                                }) ?? undefined
-                              }
-                            />
-                            <AvatarFallback>
-                              {getInitials(participant.name)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <p className="text-muted-foreground text-sm">
-                            {participant.own
-                              ? 'You (already a participant)'
-                              : `${participant.name} ${participant.title ? `(${participant.title})` : ''}`}
-                          </p>
-                        </div>
-                      ) : participant.type === 'team' ? (
-                        <div className="flex items-center justify-center gap-2">
-                          <Avatar className="h-6 w-6 rounded-full border">
-                            <AvatarImage
-                              src={
-                                generateAvatarUrl({
-                                  publicId: participant.publicId,
-                                  avatarTimestamp: participant.avatarTimestamp,
-                                  size: 'sm'
-                                }) ?? undefined
-                              }
-                            />
-                            <AvatarFallback>
-                              {getInitials(participant.name)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <p className="text-sm">{participant.name}</p>
-                        </div>
-                      ) : participant.type === 'contact' ? (
-                        <div className="flex items-center justify-center gap-2">
-                          <Avatar className="h-6 w-6 rounded-full border">
-                            <AvatarImage
-                              src={
-                                generateAvatarUrl({
-                                  publicId: participant.publicId,
-                                  avatarTimestamp: participant.avatarTimestamp,
-                                  size: 'sm'
-                                }) ?? undefined
-                              }
-                            />
-                            <AvatarFallback>
-                              {getInitials(
-                                participant.name ?? participant.address
-                              )}
-                            </AvatarFallback>
-                          </Avatar>
-                          <p className="text-sm">
-                            {participant.name} {participant.name && '-'}{' '}
-                            {participant.address}
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-center gap-2">
-                          <Avatar className="h-6 w-6 rounded-full border">
-                            <AvatarFallback>
-                              {getInitials(participant.address)}
-                            </AvatarFallback>
-                          </Avatar>
+                      <div className="flex items-center justify-center gap-2">
+                        <Avatar
+                          avatarProfilePublicId={
+                            participant.avatarPublicId ?? 'manual_undefined'
+                          }
+                          avatarTimestamp={participant.avatarTimestamp}
+                          name={participant.name ?? ''}
+                          color={
+                            participant.color
+                              ? (participant.color as 'base')
+                              : 'base'
+                          }
+                          size="sm"
+                          hideTooltip
+                        />
+                        <p className="text-muted-foreground text-sm">
+                          {participant.own && participant.own
+                            ? 'You (already a participant)'
+                            : `${participant.name} ${participant.title ? `(${participant.title})` : ''}`}
+                        </p>
+                        <AvatarIcon
+                          avatarProfilePublicId={
+                            participant.avatarPublicId ?? 'manual_undefined'
+                          }
+                          size="sm"
+                          address={participant.address ?? undefined}
+                          withDot={!!participant.address}
+                        />
+                      </div>
 
-                          <p className="text-sm">{participant.address}</p>
-                        </div>
-                      )}
                       {selectedParticipants.find(
                         (p) => p.publicId === participant.publicId
                       ) ? (
@@ -731,10 +691,15 @@ function EmptyStateHandler() {
         ? prev
         : prev.concat({
             type: 'email',
-            icon: At,
+
             publicId: email,
             address: email,
-            keywords: [email]
+            keywords: [email],
+            avatarPublicId: null,
+            avatarTimestamp: null,
+            color: null,
+            own: false,
+            name: email
           })
     );
   };
