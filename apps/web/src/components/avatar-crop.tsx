@@ -1,6 +1,5 @@
 'use client';
 
-import { Button, Flex, Slider } from '@radix-ui/themes';
 import { useMemo, useRef, useState } from 'react';
 import ReactCrop, {
   centerCrop,
@@ -8,6 +7,8 @@ import ReactCrop, {
   type Crop
 } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
+import { Button } from './shadcn-ui/button';
+import { Slider } from './shadcn-ui/slider';
 
 type AvatarCropProps = {
   input: File;
@@ -79,9 +80,7 @@ export default function AvatarCrop({
   };
 
   return (
-    <Flex
-      direction="column"
-      gap="4">
+    <div className="flex w-full flex-col items-center justify-center gap-2">
       <ReactCrop
         className="select-none"
         crop={crop}
@@ -125,18 +124,14 @@ export default function AvatarCrop({
         value={[scale]}
         onValueChange={(e) => setScale(e[0] ?? 0)}
       />
-      <Flex
-        gap="2"
-        justify="center"
-        align="center">
+      <div className="grid w-full grid-cols-2 items-center gap-2">
         <Button
-          variant="surface"
-          className="flex-1"
+          variant="secondary"
           onClick={onCancel}>
           Cancel
         </Button>
         <Button
-          variant="soft"
+          variant="default"
           className="flex-1"
           onClick={async () => {
             if (!crop) return;
@@ -146,7 +141,7 @@ export default function AvatarCrop({
           }}>
           Crop
         </Button>
-      </Flex>
-    </Flex>
+      </div>
+    </div>
   );
 }

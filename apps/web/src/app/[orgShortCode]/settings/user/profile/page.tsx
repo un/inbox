@@ -1,13 +1,5 @@
 'use client';
 
-import {
-  Skeleton,
-  Button,
-  Flex,
-  Heading,
-  Text,
-  TextField
-} from '@radix-ui/themes';
 import { AvatarModal } from '@/src/components/shared/avatar-modal';
 import { Camera } from '@phosphor-icons/react';
 import { useEffect, useState, useMemo } from 'react';
@@ -16,6 +8,10 @@ import useLoading from '@/src/hooks/use-loading';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { api } from '@/src/lib/trpc';
 import useAwaitableModal from '@/src/hooks/use-awaitable-modal';
+import { Skeleton } from '@/src/components/shadcn-ui/skeleton';
+import { Button } from '@/src/components/shadcn-ui/button';
+import { Input } from '@/src/components/shadcn-ui/input';
+import { PageTitle } from '../../_components/page-title';
 
 export default function Page() {
   const profile = useGlobalStore((state) => state.currentOrg.orgMemberProfile);
@@ -87,145 +83,91 @@ export default function Page() {
   });
 
   return (
-    <Flex
-      className="p-4"
-      direction="column"
-      gap="3">
-      <Heading
-        as="h1"
-        size="5">
-        Your Profile
-      </Heading>
+    <div className="flex flex-col gap-3 p-4">
+      <PageTitle title="Your Profile" />
 
-      <Flex
-        className="my-4"
-        direction="column"
-        gap="5">
-        <Skeleton loading={isInitDataLoading}>
-          <Button
-            variant="ghost"
-            size="4"
-            loading={avatarLoading}
-            className="mx-0 aspect-square h-full max-h-[100px] w-full max-w-[100px] cursor-pointer rounded-full p-0"
-            onClick={() => {
-              openModal({});
+      <div className="flex flex-col gap-3">
+        {isInitDataLoading && <Skeleton />}
+
+        <Button
+          loading={avatarLoading}
+          className="mx-0 aspect-square h-full max-h-[100px] w-full max-w-[100px] cursor-pointer rounded-full p-0"
+          onClick={() => {
+            openModal({});
+          }}>
+          <div
+            className={cn(
+              avatarUrl ? 'bg-cover' : 'from-accent-9 to-base-9',
+              'flex h-full w-full flex-col rounded-full bg-gradient-to-r *:opacity-0 *:transition-opacity *:duration-300 *:ease-in-out *:hover:opacity-100'
+            )}
+            style={{
+              backgroundImage: avatarUrl ? `url(${avatarUrl})` : undefined
             }}>
-            <Flex
-              className={cn(
-                avatarUrl ? 'bg-cover' : 'from-yellow-9 to-red-9',
-                'h-full w-full rounded-full bg-gradient-to-r *:opacity-0 *:transition-opacity *:duration-300 *:ease-in-out *:hover:opacity-100'
-              )}
-              style={{
-                backgroundImage: avatarUrl ? `url(${avatarUrl})` : undefined
-              }}>
-              <Flex
-                align="center"
-                justify="center"
-                direction="column"
-                className="bg-gray-12/50 h-full w-full rounded-full">
-                <Camera size={24} />
-                <Text
-                  size="2"
-                  weight="bold">
-                  Upload
-                </Text>
-              </Flex>
-            </Flex>
-          </Button>
-        </Skeleton>
+            <div className="bg-gray-5 flex h-full w-full flex-col items-center justify-center rounded-full">
+              <Camera size={24} />
+              <span className="text-sm">Upload</span>
+            </div>
+          </div>
+        </Button>
+
         {avatarError && (
-          <Text
-            size="2"
-            color="red">
-            {avatarError.message}
-          </Text>
+          <span className="text-red-10 text-sm">{avatarError.message}</span>
         )}
 
-        <Flex gap="2">
-          <Skeleton loading={isInitDataLoading}>
-            <label>
-              <Text
-                as="div"
-                size="2"
-                mb="1"
-                weight="bold"
-                className="text-left">
-                First Name
-              </Text>
-              <TextField.Root
+        <div className="flex gap-2">
+          {isInitDataLoading && <Skeleton />}
+
+          <label>
+            <span className="text-sm font-medium">First Name</span>
+            <Input
+              value={firstNameValue}
+              onChange={(e) => setFirstNameValue(e.target.value)}
+            />
+            {/* <Input
                 value={firstNameValue}
                 onChange={(e) => setFirstNameValue(e.target.value)}
-              />
-            </label>
-          </Skeleton>
-          <Skeleton loading={isInitDataLoading}>
-            <label>
-              <Text
-                as="div"
-                size="2"
-                mb="1"
-                weight="bold"
-                className="text-left">
-                Last Name
-              </Text>
-              <TextField.Root
-                value={lastNameValue}
-                onChange={(e) => setLastNameValue(e.target.value)}
-              />
-            </label>
-          </Skeleton>
-        </Flex>
-        <Flex gap="2">
-          <Skeleton loading={isInitDataLoading}>
-            <label>
-              <Text
-                as="div"
-                size="2"
-                mb="1"
-                weight="bold"
-                className="text-left">
-                Title
-              </Text>
-              <TextField.Root
-                value={titleValue}
-                onChange={(e) => setTitleValue(e.target.value)}
-              />
-            </label>
-          </Skeleton>
-          <Skeleton loading={isInitDataLoading}>
-            <label>
-              <Text
-                as="div"
-                size="2"
-                mb="1"
-                weight="bold"
-                className="text-left">
-                Bio
-              </Text>
-              <TextField.Root
-                value={bioValue}
-                onChange={(e) => setBioValue(e.target.value)}
-              />
-            </label>
-          </Skeleton>
-        </Flex>
-        <Flex
-          gap="2"
-          className="w-full">
-          <Skeleton loading={isInitDataLoading}>
-            <Button
-              size="2"
-              className="flex-1"
-              loading={saveLoading}
-              onClick={() =>
-                saveProfile({ clearData: true, clearError: true })
-              }>
-              Save
-            </Button>
-          </Skeleton>
-        </Flex>
-      </Flex>
+                /> */}
+          </label>
+
+          {isInitDataLoading && <Skeleton />}
+
+          <label>
+            <span className="text-sm font-medium">Last Name</span>
+            <Input
+              value={lastNameValue}
+              onChange={(e) => setLastNameValue(e.target.value)}
+            />
+          </label>
+        </div>
+        <div className="flex gap-2">
+          {isInitDataLoading && <Skeleton />}
+          <label>
+            <span className="text-sm font-medium">Title</span>
+            <Input
+              value={titleValue}
+              onChange={(e) => setTitleValue(e.target.value)}
+            />
+          </label>
+
+          {isInitDataLoading && <Skeleton />}
+          <label>
+            <span className="text-sm font-medium">Bio</span>
+            <Input
+              value={bioValue}
+              onChange={(e) => setBioValue(e.target.value)}
+            />
+          </label>
+        </div>
+        <div className="flex w-full gap-2">
+          {isInitDataLoading && <Skeleton />}
+          <Button
+            loading={saveLoading}
+            onClick={() => saveProfile({ clearData: true, clearError: true })}>
+            Save
+          </Button>
+        </div>
+      </div>
       <AvatarModalRoot />
-    </Flex>
+    </div>
   );
 }
