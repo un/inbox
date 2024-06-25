@@ -11,9 +11,10 @@ import { TOTPController, createTOTPKeyURI } from 'oslo/otp';
 import { TRPCError } from '@trpc/server';
 import { nanoIdToken, zodSchemas } from '@u22n/utils/zodSchemas';
 import { Argon2id } from 'oslo/password';
-import { getCookie, setCookie } from 'hono/cookie';
+import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
 import { storage } from '~platform/storage';
 import { env } from '~platform/env';
+import { createLuciaSessionCookie } from '~platform/utils/session';
 
 export const twoFactorRouter = router({
   /**
@@ -218,5 +219,61 @@ export const twoFactorRouter = router({
         httpOnly: true
       });
       return { uri };
+    }),
+  verifyTwoFactorChallenge: publicRateLimitedProcedure.signInWithPassword
+    .input(
+      z.object({
+        twoFactorCode: z.string().min(6).max(6)
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      await new Promise((resolve) => setTimeout(resolve, 4000));
+      const challengeCookie = getCookie(
+        ctx.event,
+        'two-factor-login-challenge'
+      );
+
+      if (!challengeCookie) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Two Factor Challenge not found or timed out'
+        });
+      }
+
+      const challenge =
+        await storage.twoFactorLoginChallenges.getItem(challengeCookie);
+
+      if (!challenge) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Two Factor Challenge not found or timed out'
+        });
+      }
+
+      const secret = decodeHex(challenge.secret);
+      const isValid = await new TOTPController().verify(
+        input.twoFactorCode,
+        secret
+      );
+
+      if (!isValid) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'Invalid Two Factor Authentication code'
+        });
+      }
+
+      deleteCookie(ctx.event, 'two-factor-login-challenge');
+      await storage.twoFactorLoginChallenges.removeItem(challengeCookie);
+
+      await createLuciaSessionCookie(ctx.event, {
+        accountId: challenge.account.id,
+        publicId: challenge.account.publicId,
+        username: challenge.account.username
+      });
+
+      return {
+        defaultOrgSlug: challenge.defaultOrgSlug
+      };
     })
 });

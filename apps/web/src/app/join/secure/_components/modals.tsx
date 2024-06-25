@@ -16,7 +16,7 @@ import { api } from '@/src/lib/trpc';
 import useLoading from '@/src/hooks/use-loading';
 import { startRegistration } from '@simplewebauthn/browser';
 import { Check, Plus, Fingerprint, Question } from '@phosphor-icons/react';
-import TogglePasswordBox from '@/src/components/toggle-password';
+import { TogglePasswordBox } from '@/src/components/toggle-password';
 import { useDebounce } from '@uidotdev/usehooks';
 import { toDataURL } from 'qrcode';
 import CopyButton from '@/src/components/copy-button';
@@ -226,18 +226,17 @@ const PasswordModalStep1 = ({
       direction="column"
       gap="4">
       <TogglePasswordBox
-        passwordValue={password}
-        setPasswordValue={setPassword}
-        textFieldProps={{
-          autoComplete: 'new-password',
-          id: 'password',
-          color: passwordCheckData
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        autoComplete="new-password"
+        id="password"
+        color={
+          passwordCheckData
             ? 'error' in passwordCheckData || passwordCheckData.score < 3
               ? 'red'
               : 'green'
             : undefined
-        }}
-        label="Password"
+        }
       />
       {passwordCheckLoading && (
         <Flex
@@ -299,18 +298,16 @@ const PasswordModalStep1 = ({
         </Flex>
       )}
       <TogglePasswordBox
-        passwordValue={confirmPassword}
-        setPasswordValue={setConfirmPassword}
-        textFieldProps={{
-          id: 'confirm-password',
-          color:
-            confirmPassword && confirmPassword.length > 0
-              ? password === confirmPassword
-                ? 'green'
-                : 'red'
-              : undefined
-        }}
-        label="Confirm Password"
+        value={confirmPassword}
+        onChange={(e) => setConfirmPassword(e.target.value)}
+        id="confirm-password"
+        color={
+          confirmPassword && confirmPassword.length > 0
+            ? password === confirmPassword
+              ? 'green'
+              : 'red'
+            : undefined
+        }
       />
 
       <Text

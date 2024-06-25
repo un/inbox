@@ -19,6 +19,7 @@ import { TOTPController } from 'oslo/otp';
 import { setCookie, getCookie, deleteCookie } from 'hono/cookie';
 import { env } from '~platform/env';
 import { storage } from '~platform/storage';
+import { ms } from '@u22n/utils/ms';
 
 export const passwordRouter = router({
   /**
@@ -166,6 +167,9 @@ export const passwordRouter = router({
       return { success: true, error: null, recoveryCode };
     }),
 
+  /**
+   * @deprecated It was bad UX
+   */
   signInWithPassword: publicRateLimitedProcedure.signInWithPassword
     .input(
       z.object({
@@ -299,6 +303,107 @@ export const passwordRouter = router({
         message:
           'Something went wrong, you should never see this message. Please report to team immediately.'
       });
+    }),
+
+  signIn: publicRateLimitedProcedure.signInWithPassword
+    .input(
+      z.object({
+        username: zodSchemas.username(2),
+        password: z.string().min(8)
+      })
+    )
+    .output(
+      z.object({
+        status: z.enum(['NO_2FA_SETUP', '2FA_REQUIRED']),
+        defaultOrgShortCode: z.string().optional()
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { db } = ctx;
+      const userResponse = await db.query.accounts.findFirst({
+        where: eq(accounts.username, input.username),
+        columns: {
+          id: true,
+          publicId: true,
+          username: true,
+          passwordHash: true,
+          twoFactorSecret: true,
+          twoFactorEnabled: true
+        },
+        with: {
+          orgMemberships: {
+            with: {
+              org: {
+                columns: {
+                  shortcode: true,
+                  id: true
+                }
+              }
+            }
+          }
+        }
+      });
+
+      if (!userResponse) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'Incorrect username or password'
+        });
+      }
+
+      if (!userResponse.passwordHash) {
+        throw new TRPCError({
+          code: 'METHOD_NOT_SUPPORTED',
+          message: 'Password sign-in is not enabled'
+        });
+      }
+
+      const validPassword = await new Argon2id().verify(
+        userResponse.passwordHash,
+        input.password
+      );
+
+      if (!validPassword) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'Incorrect username or password'
+        });
+      }
+
+      if (userResponse.twoFactorEnabled && userResponse.twoFactorSecret) {
+        const twoFactorChallengeId = nanoIdToken();
+
+        storage.twoFactorLoginChallenges.setItem(twoFactorChallengeId, {
+          account: userResponse,
+          defaultOrgSlug: userResponse.orgMemberships[0]?.org.shortcode,
+          secret: userResponse.twoFactorSecret
+        });
+
+        setCookie(
+          ctx.event,
+          'two-factor-login-challenge',
+          twoFactorChallengeId,
+          {
+            maxAge: ms('5 minutes'),
+            domain: env.PRIMARY_DOMAIN,
+            httpOnly: true
+          }
+        );
+        return {
+          status: '2FA_REQUIRED',
+          defaultOrgShortCode: userResponse.orgMemberships[0]?.org.shortcode
+        };
+      } else {
+        await createLuciaSessionCookie(ctx.event, {
+          accountId: userResponse.id,
+          username: userResponse.username,
+          publicId: userResponse.publicId
+        });
+        return {
+          status: 'NO_2FA_SETUP',
+          defaultOrgShortCode: userResponse.orgMemberships[0]?.org.shortcode
+        };
+      }
     }),
 
   updateUserPassword: accountProcedure

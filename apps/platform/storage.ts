@@ -4,6 +4,7 @@ import redisDriver from 'unstorage/drivers/redis';
 import { createStorage, type StorageValue } from 'unstorage';
 import type { DatabaseSession } from 'lucia';
 import type { OrgContext } from './ctx';
+import type { TypeId } from '@u22n/utils/typeid';
 
 const createCachedStorage = <T extends StorageValue = StorageValue>(
   base: string,
@@ -19,9 +20,23 @@ const createCachedStorage = <T extends StorageValue = StorageValue>(
 
 export const storage = {
   auth: createCachedStorage('auth', ms('5 minutes')),
+  twoFactorLoginChallenges: createCachedStorage<twoFactorLoginChallenges>(
+    'two-factor-login-challenges',
+    ms('5 minutes')
+  ),
   orgContext: createCachedStorage<OrgContext>('org-context', ms('12 hours')),
   session: createCachedStorage<DatabaseSession>(
     'sessions',
     env.NODE_ENV === 'development' ? ms('12 hours') : ms('30 days')
   )
+};
+
+type twoFactorLoginChallenges = {
+  account: {
+    id: number;
+    username: string;
+    publicId: TypeId<'account'>;
+  };
+  defaultOrgSlug?: string;
+  secret: string;
 };

@@ -2,7 +2,7 @@ import { isAuthenticated, serverApi } from '@/src/lib/trpc.server';
 import { type NextRequest, NextResponse } from 'next/server';
 
 // Known public routes, add more as needed
-const publicRoutes = ['/', '/join', '/join/secure', '/recovery'];
+const publicRoutes = ['/', '/login', '/join', '/join/secure', '/recovery'];
 const publicDynamicRoutes = ['/join/invite'];
 
 export default async function middleware(req: NextRequest) {

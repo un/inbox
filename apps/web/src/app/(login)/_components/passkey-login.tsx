@@ -1,21 +1,22 @@
 'use client';
 
-import { Button } from '@radix-ui/themes';
+import { Button } from '@/src/components/shadcn-ui/button';
 import { Fingerprint } from '@phosphor-icons/react';
 import { api } from '@/src/lib/trpc';
 import { startAuthentication } from '@simplewebauthn/browser';
 import { useRouter } from 'next/navigation';
-import useLoading from '@/src/hooks/use-loading';
 import { toast } from 'sonner';
+import { useCallback, useState } from 'react';
 
-export default function PasskeyLoginButton() {
+export function PasskeyLoginButton() {
   const router = useRouter();
-
+  const [loading, setLoading] = useState(false);
   const generatePasskey = api.useUtils().auth.passkey.generatePasskeyChallenge;
   const verifyPasskey = api.auth.passkey.verifyPasskey.useMutation();
 
-  const { loading, run: passkeyLogin } = useLoading(
-    async () => {
+  const login = useCallback(async () => {
+    try {
+      setLoading(true);
       const data = await generatePasskey.fetch({});
       const response = await startAuthentication(data.options);
       const { defaultOrg } = await verifyPasskey.mutateAsync({
@@ -28,13 +29,13 @@ export default function PasskeyLoginButton() {
         });
         router.push('/join/org');
       }
+
       toast.success('Sign in successful!', {
         description: 'Redirecting you to your conversations'
       });
       router.push(`/${defaultOrg}/convo`);
-    },
-    {
-      onError: (error) => {
+    } catch (error) {
+      if (error instanceof Error) {
         if (error.name === 'NotAllowedError') {
           toast.warning('Passkey login either timed out or was cancelled');
         } else {
@@ -42,17 +43,19 @@ export default function PasskeyLoginButton() {
             description: error.message
           });
         }
+      } else {
+        console.error(error);
       }
+    } finally {
+      setLoading(false);
     }
-  );
+  }, [generatePasskey, router, verifyPasskey]);
 
   return (
     <Button
-      size="3"
-      onClick={() => passkeyLogin()}
+      onClick={() => login()}
       loading={loading}
-      disabled={loading}
-      className="mb-2 w-72 cursor-pointer font-semibold">
+      className="mb-2 w-72 cursor-pointer gap-2 font-semibold">
       <Fingerprint size={20} />
       <span>Login with my passkey</span>
     </Button>
