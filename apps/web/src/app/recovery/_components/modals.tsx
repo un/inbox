@@ -14,7 +14,7 @@ import {
 import CopyButton from '@/src/components/copy-button';
 import { toDataURL } from 'qrcode';
 import Image from 'next/image';
-import TogglePasswordBox from '@/src/components/toggle-password';
+import { TogglePasswordBox } from '@/src/components/toggle-password';
 import { useDebounce } from '@uidotdev/usehooks';
 import { api } from '@/src/lib/trpc';
 import { cn } from '@/src/lib/utils';
@@ -60,18 +60,17 @@ export function PasswordRecoveryModal({
         <div className="flex flex-col gap-2">
           <div className="flex flex-col">
             <TogglePasswordBox
-              passwordValue={password}
-              setPasswordValue={setPassword}
-              label="Password"
-              textFieldProps={{
-                autoComplete: 'new-password',
-                id: 'password',
-                color: passwordStrength
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="new-password"
+              id="password"
+              color={
+                passwordStrength
                   ? 'error' in passwordStrength || passwordStrength.score < 3
                     ? 'red'
                     : 'green'
                   : undefined
-              }}
+              }
             />
             {password.length > 0 && (
               <div className="flex gap-1">
@@ -105,18 +104,16 @@ export function PasswordRecoveryModal({
 
           <div className="flex flex-col">
             <TogglePasswordBox
-              passwordValue={confirmPassword}
-              setPasswordValue={setConfirmPassword}
-              label="Confirm Password"
-              textFieldProps={{
-                id: 'confirm-password',
-                color:
-                  confirmPassword && confirmPassword.length > 0
-                    ? password === confirmPassword
-                      ? 'green'
-                      : 'red'
-                    : undefined
-              }}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              id="confirm-password"
+              color={
+                confirmPassword && confirmPassword.length > 0
+                  ? password === confirmPassword
+                    ? 'green'
+                    : 'red'
+                  : undefined
+              }
             />
           </div>
 

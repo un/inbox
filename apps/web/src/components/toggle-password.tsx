@@ -1,51 +1,35 @@
 'use client';
 
-import { Text, TextField, Button } from '@radix-ui/themes';
-import { type ReactNode, useState } from 'react';
+import { Input, type InputProps } from '@/src/components/shadcn-ui/input';
+import { Button } from '@/src/components/shadcn-ui/button';
+import { type ElementRef, forwardRef, useState } from 'react';
 import { Eye, EyeSlash } from '@phosphor-icons/react';
+import { cn } from '../lib/utils';
 
-type TogglePasswordBoxProps = {
-  slot?: ReactNode;
-  label?: ReactNode;
-  textFieldProps?: TextField.RootProps;
-  passwordValue?: string;
-  setPasswordValue: (password: string) => void;
-};
-
-export default function TogglePasswordBox({
-  slot,
-  label,
-  textFieldProps = {},
-  passwordValue = '',
-  setPasswordValue
-}: TogglePasswordBoxProps) {
+export const TogglePasswordBox = forwardRef<
+  ElementRef<'input'>,
+  Omit<InputProps, 'type' | 'ref'>
+>(({ className, ...props }, ref) => {
   const [passwordShown, setPasswordShown] = useState(false);
   return (
-    <label>
-      {label && (
-        <Text
-          as="div"
-          size="2"
-          mb="2"
-          weight="bold">
-          {label}
-        </Text>
-      )}
-      <TextField.Root
-        {...textFieldProps}
+    <div className="flex">
+      <Input
+        className={cn('rounded-r-none', className)}
         type={passwordShown ? 'text' : 'password'}
-        value={passwordValue}
-        ml="2"
-        onChange={(e) => setPasswordValue(e.target.value)}>
-        <TextField.Slot>{slot}</TextField.Slot>
-        <TextField.Slot>
-          <Button
-            variant="ghost"
-            onClick={() => setPasswordShown(!passwordShown)}>
-            {passwordShown ? <Eye size={16} /> : <EyeSlash size={16} />}
-          </Button>
-        </TextField.Slot>
-      </TextField.Root>
-    </label>
+        autoComplete="current-password"
+        ref={ref}
+        {...props}
+      />
+      <Button
+        variant="outline"
+        size="icon"
+        type="button"
+        className="border-input size-10 min-h-10 min-w-10 rounded-l-none"
+        onClick={() => setPasswordShown(!passwordShown)}>
+        {passwordShown ? <Eye size={16} /> : <EyeSlash size={16} />}
+      </Button>
+    </div>
   );
-}
+});
+
+TogglePasswordBox.displayName = 'TogglePasswordBox';
