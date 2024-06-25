@@ -16,7 +16,7 @@ import { Check, Plus, Question } from '@phosphor-icons/react';
 import { TogglePasswordBox } from '@/src/components/toggle-password';
 import { useDebounce } from '@uidotdev/usehooks';
 import { toDataURL } from 'qrcode';
-import CopyButton from '@/src/components/copy-button';
+import { CopyButton } from '@/src/components/copy-button';
 import {
   InputOTP,
   InputOTPGroup,

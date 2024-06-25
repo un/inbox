@@ -2,9 +2,9 @@
 
 import { createColumnHelper, type ColumnDef } from '@tanstack/react-table';
 import type { TypeId } from '@u22n/utils/typeid';
-import CopyButton from '@/src/components/copy-button';
 import { ScrollArea, ScrollBar } from '@/src/components/shadcn-ui/scroll-area';
 import { Avatar } from '@/src/components/avatar';
+import { CopyButton } from '@/src/components/copy-button';
 
 type Identity = {
   publicId: TypeId<'emailIdentitiesPersonal'>;
@@ -62,7 +62,7 @@ export const columns: ColumnDef<Identity>[] = [
           {identity.forwardingAddress && (
             <CopyButton
               text={identity.forwardingAddress}
-              size={12}
+              iconSize={12}
             />
           )}
         </div>

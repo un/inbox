@@ -1,7 +1,12 @@
 'use client';
 
 import { datePlus } from '@u22n/utils/ms';
-import { Avatar, Button, Card, Flex, Spinner, Text } from '@radix-ui/themes';
+import { Button } from '@/src/components/shadcn-ui/button';
+import {
+  Avatar,
+  AvatarImage,
+  AvatarFallback
+} from '@/src/components/shadcn-ui/avatar';
 import Link from 'next/link';
 import { api, isAuthenticated } from '@/src/lib/trpc';
 import useLoading from '@/src/hooks/use-loading';
@@ -44,61 +49,44 @@ export default function InviteCard({ code }: { code: string }) {
 
   if (inviteLoading || (!inviteData && !inviteError) || signedInLoading) {
     return (
-      <Card className="mx-auto my-4 max-w-[450px]">
-        <Flex
-          gap="2"
-          align="center">
-          <Spinner loading />
-          <Text
-            size="2"
-            weight="bold">
-            Checking your Invite...
-          </Text>
-        </Flex>
-      </Card>
+      <div className="bg-card mx-auto my-4 max-w-[450px] rounded border p-4">
+        <div className="text-muted-foreground text-sm font-bold">
+          Checking your Invite...
+        </div>
+      </div>
     );
   }
 
   if (inviteError) {
     return (
       <>
-        <Card className="mx-auto my-4 max-w-[450px]">
-          <Flex
-            direction="column"
-            gap="2"
-            align="center">
-            <Text
-              size="3"
-              color="red"
-              weight="bold">
+        <div className="bg-card mx-auto my-4 max-w-[450px] rounded border p-4">
+          <div className="flex flex-col items-center gap-2">
+            <div className="text-red-11 text-pretty font-bold">
               You received an Invite for UnInbox, but an error occurred
-            </Text>
-            <Text
-              size="2"
-              color="red"
-              className="w-full text-balance px-2">
+            </div>
+            <div className="text-red-11 text-pretty text-sm">
               {inviteError.message}
-            </Text>
-          </Flex>
-        </Card>
+            </div>
+          </div>
+        </div>
         {signedIn ? (
-          <Button className="mx-auto my-4 max-w-[450px]">
+          <Button
+            className="mx-auto my-4 max-w-[450px]"
+            asChild>
             <Link href="/">Go Back Home</Link>
           </Button>
         ) : (
-          <Flex
-            direction="column"
-            gap="2"
-            className="my-4">
-            <Text
-              size="2"
-              weight="bold">
+          <div className="my-4 flex flex-col gap-2">
+            <div className="text-sm font-bold">
               You can still create a new UnInbox account
-            </Text>
-            <Button className="mx-auto max-w-[450px]">
+            </div>
+            <Button
+              className="mx-auto max-w-[450px]"
+              asChild>
               <Link href="/join">Create an UnInbox Account</Link>
             </Button>
-          </Flex>
+          </div>
         )}
       </>
     );
@@ -112,44 +100,33 @@ export default function InviteCard({ code }: { code: string }) {
 
     return (
       <>
-        <Card className="mx-auto my-4 max-w-[450px]">
-          <Flex
-            direction="column"
-            gap="2"
-            align="center">
-            <Text
-              size="3"
-              weight="bold">
+        <div className="bg-card mx-auto my-4 max-w-[450px] rounded border p-4">
+          <div className="flex flex-col items-center gap-2">
+            <div className="font-bold">
               You have received an Invite for UnInbox
-            </Text>
-
-            <Text
-              size="2"
-              weight="bold"
-              className="mt-4 w-full">
+            </div>
+            <div className="mt-4 w-full text-xs font-bold">
               You are invited to
-            </Text>
-            <Card className="w-full">
-              <Flex
-                align="center"
-                gap="2">
-                <Avatar
-                  src={orgAvatar ?? undefined}
-                  fallback={getInitials(inviteData.orgName)}
-                  className="h-10 w-10 rounded-full"
-                />
-                <Flex direction="column">
-                  <Text
-                    weight="bold"
-                    size="2">
-                    {inviteData.orgName}
-                  </Text>
-                  <Text size="2">{inviteData.orgShortCode}</Text>
-                </Flex>
-              </Flex>
-            </Card>
-          </Flex>
-        </Card>
+            </div>
+            <div className="bg-muted w-full">
+              <div className="flex items-center gap-2">
+                <Avatar>
+                  <AvatarImage
+                    src={orgAvatar ?? undefined}
+                    className="h-10 w-10 rounded-full"
+                  />
+                  <AvatarFallback className="h-10 w-10 rounded-full">
+                    {getInitials(inviteData.orgName)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col">
+                  <div className="text-xs font-bold">{inviteData.orgName}</div>
+                  <div className="text-xs">{inviteData.orgShortCode}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {signedIn ? (
           <Button

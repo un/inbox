@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, Flex, Text } from '@radix-ui/themes';
+import { Button } from '@/src/components/shadcn-ui/button';
 import { useCookies } from 'next-client-cookies';
 import { useRouter } from 'next/navigation';
 import Stepper from '../_components/stepper';
@@ -72,34 +72,20 @@ export default function Page() {
   );
 
   return (
-    <Flex
-      direction="column"
-      gap="3"
-      className="mx-auto w-full max-w-[560px] px-4">
-      <Text
-        mt="3"
-        size="4"
-        weight="bold">
+    <div className="mx-auto flex w-full max-w-[560px] flex-col gap-3 px-4">
+      <div className="text-bold mt-3 text-lg font-bold">
         Secure your account {username}
-      </Text>
+      </div>
       <Stepper
         step={2}
         total={4}
       />
-      <Flex
-        direction="column"
-        gap="1"
-        className="w-full">
-        <Text
-          size="3"
-          className="w-full text-start"
-          weight="medium">
+      <div className="flex w-full flex-col gap-1">
+        <div className="w-full text-start font-medium">
           How do you want to secure your account?
-        </Text>
-      </Flex>
-      <Flex
-        wrap="wrap"
-        gap="2">
+        </div>
+      </div>
+      <div className="flex flex-wrap gap-2">
         <PasskeyCard
           selected={selectedAuth}
           setSelected={setSelectedAuth}
@@ -108,7 +94,7 @@ export default function Page() {
           selected={selectedAuth}
           setSelected={setSelectedAuth}
         />
-      </Flex>
+      </div>
       <Button
         onClick={() => createAccount()}
         loading={loading}>
@@ -117,6 +103,6 @@ export default function Page() {
       <PasskeyModalRoot />
       <PasswordModalRoot />
       <RecoveryCodeModalRoot />
-    </Flex>
+    </div>
   );
 }

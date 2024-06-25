@@ -1,6 +1,13 @@
 'use client';
 
-import { Button, Card, Tabs, TextField } from '@radix-ui/themes';
+import { Button } from '@/src/components/shadcn-ui/button';
+import { Input } from '@/src/components/shadcn-ui/input';
+import {
+  Tabs,
+  TabsList,
+  TabsContent,
+  TabsTrigger
+} from '@/src/components/shadcn-ui/tabs';
 import {
   InputOTP,
   InputOTPGroup,
@@ -104,7 +111,7 @@ export default function Page() {
         e.stopPropagation();
         void form.handleSubmit();
       }}>
-      <Card className="flex w-full max-w-96 flex-col gap-2 p-4">
+      <div className="bg-card flex w-full max-w-96 flex-col gap-2 border p-4">
         <h1 className="text-center text-xl font-bold">
           Recover Your Credentials
         </h1>
@@ -119,7 +126,7 @@ export default function Page() {
             validators={{ onBlur: zodSchemas.username(2) }}
             children={(field) => (
               <>
-                <TextField.Root
+                <Input
                   id="username"
                   name={field.name}
                   value={field.state.value}
@@ -134,22 +141,22 @@ export default function Page() {
         <form.Field
           name="recoveryType"
           children={({ state, handleChange }) => (
-            <Tabs.Root
+            <Tabs
               value={state.value}
               onValueChange={handleChange}>
-              <Tabs.List className="w-full">
-                <Tabs.Trigger
-                  className="flex-1 p-2"
+              <TabsList className="w-full">
+                <TabsTrigger
+                  className="flex-1 p-1"
                   value="password">
                   Recover Password
-                </Tabs.Trigger>
-                <Tabs.Trigger
-                  className="flex-1 p-2"
+                </TabsTrigger>
+                <TabsTrigger
+                  className="flex-1 p-1"
                   value="two-fa">
                   Recover 2FA
-                </Tabs.Trigger>
-              </Tabs.List>
-              <Tabs.Content
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent
                 value="password"
                 className="py-4">
                 <div className="mx-auto flex w-fit flex-col gap-1">
@@ -205,8 +212,8 @@ export default function Page() {
                     )}
                   />
                 </div>
-              </Tabs.Content>
-              <Tabs.Content
+              </TabsContent>
+              <TabsContent
                 value="two-fa"
                 className="py-4">
                 <div className="flex flex-col gap-1">
@@ -224,7 +231,7 @@ export default function Page() {
                     }}
                     children={(field) => (
                       <>
-                        <TextField.Root
+                        <Input
                           id="known-password"
                           name={field.name}
                           value={field.state.value}
@@ -239,8 +246,8 @@ export default function Page() {
                     )}
                   />
                 </div>
-              </Tabs.Content>
-            </Tabs.Root>
+              </TabsContent>
+            </Tabs>
           )}
         />
         <div className="flex flex-col gap-1">
@@ -254,7 +261,7 @@ export default function Page() {
             validators={{ onBlur: zodSchemas.nanoIdToken() }}
             children={(field) => (
               <>
-                <TextField.Root
+                <Input
                   id="recovery-code"
                   name={field.name}
                   value={field.state.value}
@@ -282,7 +289,7 @@ export default function Page() {
             </Button>
           )}
         />
-      </Card>
+      </div>
       <PasswordModalRoot />
       <TOTPModalRoot />
     </form>

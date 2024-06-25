@@ -3,16 +3,21 @@
 import useLoading from '@/src/hooks/use-loading';
 import { api } from '@/src/lib/trpc';
 import { generateAvatarUrl, getInitials } from '@/src/lib/utils';
+import { Button } from '@/src/components/shadcn-ui/button';
+import { Input } from '@/src/components/shadcn-ui/input';
 import {
-  Button,
-  Text,
   Dialog,
-  Flex,
-  TextField,
-  Spinner,
-  Card,
-  Avatar
-} from '@radix-ui/themes';
+  DialogClose,
+  DialogContent,
+  DialogPortal,
+  DialogTitle,
+  DialogTrigger
+} from '@/src/components/shadcn-ui/dialog';
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage
+} from '@/src/components/shadcn-ui/avatar';
 import { Users } from '@phosphor-icons/react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -84,7 +89,7 @@ export default function JoinOrgButton({
     : null;
 
   return (
-    <Dialog.Root
+    <Dialog
       onOpenChange={(open) => {
         if (!open && !hasInviteCode) {
           setInviteCode('');
@@ -92,123 +97,95 @@ export default function JoinOrgButton({
         setModalOpen(open);
       }}
       open={modalOpen}>
-      <Dialog.Trigger>
+      <DialogTrigger asChild>
         <Button
-          size="3"
-          className="flex-1"
-          variant={hasInviteCode ? 'solid' : 'surface'}>
+          className="flex-1 gap-1"
+          variant={hasInviteCode ? 'default' : 'outline'}>
           <Users size={20} />
-          <Text className="whitespace-nowrap">Join an organization</Text>
+          <span className="whitespace-nowrap">Join an organization</span>
         </Button>
-      </Dialog.Trigger>
-      <Dialog.Content className="w-full max-w-96 p-4">
-        <Dialog.Title className="mx-auto w-fit py-4">
-          Join an Organization
-        </Dialog.Title>
-        <Flex
-          direction="column"
-          gap="4">
-          <label>
-            <Text
-              as="div"
-              size="2"
-              mb="1"
-              weight="bold">
-              Invite Code
-            </Text>
-            <TextField.Root
-              value={inviteCode}
-              onChange={(e) => {
-                setInviteCode(e.target.value);
-                clearInviteData();
-              }}
-            />
-          </label>
+      </DialogTrigger>
+      <DialogPortal>
+        <DialogContent>
+          <DialogTitle>Join an Organization</DialogTitle>
+          <div className="flex flex-col gap-4">
+            <label className="flex flex-col gap-1">
+              <div className="text-sm font-bold">Invite Code</div>
+              <Input
+                value={inviteCode}
+                onChange={(e) => {
+                  setInviteCode(e.target.value);
+                  clearInviteData();
+                }}
+              />
+            </label>
 
-          {!inviteData && inviteLoading && (
-            <Flex
-              align="center"
-              gap="1">
-              <Spinner loading />
-              <Text
-                weight="bold"
-                size="2">
+            {!inviteData && inviteLoading && (
+              <div className="text-muted-foreground text-sm font-bold">
                 Validating Invite Code...
-              </Text>
-            </Flex>
-          )}
+              </div>
+            )}
 
-          {inviteData && !inviteLoading && (
-            <>
-              <Text
-                size="2"
-                weight="bold">
-                You are invited to
-              </Text>
-              <Card>
-                <Flex
-                  align="center"
-                  gap="2">
-                  <Avatar
-                    src={orgAvatar ?? undefined}
-                    fallback={getInitials(inviteData.orgName)}
-                    className="h-10 w-10 rounded-full"
-                  />
-                  <Flex direction="column">
-                    <Text
-                      weight="bold"
-                      size="2">
-                      {inviteData.orgName}
-                    </Text>
-                    <Text size="2">{inviteData.orgShortCode}</Text>
-                  </Flex>
-                </Flex>
-              </Card>
-            </>
-          )}
+            {inviteData && !inviteLoading && (
+              <>
+                <div className="text-sm font-bold">You are invited to</div>
+                <div className="bg-card rounded border p-4">
+                  <div className="flex items-center gap-2">
+                    <Avatar>
+                      <AvatarImage
+                        src={orgAvatar ?? undefined}
+                        className="h-10 w-10 rounded-full"
+                      />
+                      <AvatarFallback className="h-10 w-10 rounded-full">
+                        {getInitials(inviteData.orgName)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col">
+                      <div className="text-xs font-bold">
+                        {inviteData.orgName}
+                      </div>
+                      <div className="text-xs">{inviteData.orgShortCode}</div>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
 
-          {inviteError && !inviteLoading && (
-            <Text
-              color="red"
-              weight="bold"
-              size="2">
-              {inviteError.message}
-            </Text>
-          )}
+            {inviteError && !inviteLoading && (
+              <div className="text-red-10 text-sm font-bold">
+                {inviteError.message}
+              </div>
+            )}
 
-          {joinError && !joinLoading && (
-            <Text
-              color="red"
-              weight="bold"
-              size="2">
-              {joinError.message}
-            </Text>
-          )}
+            {joinError && !joinLoading && (
+              <div className="text-red-10 text-sm font-bold">
+                {joinError.message}
+              </div>
+            )}
 
-          <Button
-            loading={inviteLoading || joinLoading}
-            size="2"
-            disabled={inviteCode.length !== 32}
-            className="mt-4"
-            onClick={() => {
-              if (!inviteData) {
-                validateInvite({ clearData: true, clearError: true });
-              } else {
-                joinOrg({ clearData: true, clearError: true });
-              }
-            }}>
-            {inviteData ? 'Join Organization' : 'Validate Invite Code'}
-          </Button>
-          <Dialog.Close>
             <Button
-              variant="soft"
-              color="gray"
-              size="2">
-              Cancel
+              loading={inviteLoading || joinLoading}
+              disabled={inviteCode.length !== 32}
+              className="mt-4"
+              onClick={() => {
+                if (!inviteData) {
+                  validateInvite({ clearData: true, clearError: true });
+                } else {
+                  joinOrg({ clearData: true, clearError: true });
+                }
+              }}>
+              {inviteData ? 'Join Organization' : 'Validate Invite Code'}
             </Button>
-          </Dialog.Close>
-        </Flex>
-      </Dialog.Content>
-    </Dialog.Root>
+            <DialogClose asChild>
+              <Button
+                variant="outline"
+                className="w-full">
+                Cancel
+              </Button>
+            </DialogClose>
+          </div>
+        </DialogContent>
+      </DialogPortal>
+    </Dialog>
   );
 }

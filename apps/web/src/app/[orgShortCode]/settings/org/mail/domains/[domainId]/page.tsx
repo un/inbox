@@ -13,7 +13,7 @@ import {
   AccordionItem,
   AccordionTrigger
 } from '@/src/components/shadcn-ui/accordion';
-import CopyButton from '@/src/components/copy-button';
+import { CopyButton } from '@/src/components/copy-button';
 import useTimeAgo from '@/src/hooks/use-time-ago';
 
 export default function Page({
@@ -304,8 +304,7 @@ export default function Page({
                           </span>
                         </div>
                         <CopyButton
-                          buttonSize="3"
-                          size={20}
+                          iconSize={20}
                           text={domainDNSRecord.dnsRecords.verification.name}
                         />
                         <div className="flex flex-col">
@@ -317,8 +316,7 @@ export default function Page({
                           </span>
                         </div>
                         <CopyButton
-                          buttonSize="3"
-                          size={20}
+                          iconSize={20}
                           text={domainDNSRecord.dnsRecords.verification.value}
                         />
                       </div>
@@ -380,8 +378,7 @@ export default function Page({
                           </span>
                         </div>
                         <CopyButton
-                          buttonSize="3"
-                          size={20}
+                          iconSize={20}
                           text={domainDNSRecord.dnsRecords.mx.value}
                         />
                       </div>
@@ -425,8 +422,7 @@ export default function Page({
                           </span>
                         </div>
                         <CopyButton
-                          buttonSize="3"
-                          size={20}
+                          iconSize={20}
                           text={domainDNSRecord.dnsRecords.dkim.name}
                         />
                       </div>
@@ -440,8 +436,7 @@ export default function Page({
                           </span>
                         </div>
                         <CopyButton
-                          buttonSize="3"
-                          size={20}
+                          iconSize={20}
                           text={domainDNSRecord.dnsRecords.dkim.value}
                         />
                       </div>
@@ -494,8 +489,7 @@ export default function Page({
                           </span>
                         </div>
                         <CopyButton
-                          buttonSize="3"
-                          size={20}
+                          iconSize={20}
                           text={domainDNSRecord.dnsRecords.spf.value}
                         />
                       </div>
@@ -540,8 +534,7 @@ export default function Page({
                           </span>
                         </div>
                         <CopyButton
-                          buttonSize="3"
-                          size={20}
+                          iconSize={20}
                           text={domainDNSRecord.dnsRecords.returnPath.name}
                         />
                         <div className="flex flex-col">
@@ -553,8 +546,7 @@ export default function Page({
                           </span>
                         </div>
                         <CopyButton
-                          buttonSize="3"
-                          size={20}
+                          iconSize={20}
                           text={domainDNSRecord.dnsRecords.returnPath.value}
                         />
                       </div>
@@ -598,8 +590,7 @@ export default function Page({
                           </span>
                         </div>
                         <CopyButton
-                          buttonSize="3"
-                          size={20}
+                          iconSize={20}
                           text={domainDNSRecord.dnsRecords.dmarc.name}
                         />
                         <div className="flex flex-col">
@@ -611,8 +602,7 @@ export default function Page({
                           </span>
                         </div>
                         <CopyButton
-                          buttonSize="3"
-                          size={20}
+                          iconSize={20}
                           text={domainDNSRecord.dnsRecords.dmarc.optimal}
                         />
                       </div>
@@ -638,8 +628,7 @@ export default function Page({
                           </span>
                         </div>
                         <CopyButton
-                          buttonSize="3"
-                          size={20}
+                          iconSize={20}
                           text={domainDNSRecord.dnsRecords.dmarc.name}
                         />
                         <div className="flex flex-col">
@@ -651,8 +640,7 @@ export default function Page({
                           </span>
                         </div>
                         <CopyButton
-                          buttonSize="3"
-                          size={20}
+                          iconSize={20}
                           text={domainDNSRecord.dnsRecords.dmarc.acceptable}
                         />
                       </div>
