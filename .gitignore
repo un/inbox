@@ -39,3 +39,11 @@ test.vue
 
 # turbo
 .turbo
+
+# next.js
+.next
+out
+next-env.d.ts
+
+# typescript
+*.tsbuildinfo
