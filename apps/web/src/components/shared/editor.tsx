@@ -10,7 +10,7 @@ import {
   // EditorCommandList,
   // EditorBubble
 } from '@u22n/tiptap/react/components';
-import { ScrollArea } from '@radix-ui/themes';
+import { ScrollArea } from '@/src/components/shadcn-ui/scroll-area';
 import {
   type Editor as EditorType,
   useCurrentEditor
@@ -24,7 +24,7 @@ interface EditorProp {
 
 export const Editor = ({ initialValue, onChange, setEditor }: EditorProp) => {
   return (
-    <ScrollArea className="">
+    <ScrollArea>
       <EditorRoot>
         <EditorContent
           className="h-full w-full p-2"

@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import localFont from 'next/font/local';
 import { cn } from '@/src/lib/utils';
-import { Theme } from '@radix-ui/themes';
 import { ThemeProvider } from 'next-themes';
 import { TRPCReactProvider } from '@/src/lib/trpc';
 import { Toaster } from '@/src/components/shadcn-ui/sonner';
@@ -55,14 +54,12 @@ export default function RootLayout({
             enableColorScheme
             defaultTheme="system"
             disableTransitionOnChange>
-            <Theme
-              className="flex h-svh w-full flex-col"
-              radius="medium">
+            <div className="flex h-svh w-full flex-col">
               <TRPCReactProvider>
                 {children}
                 <Toaster />
               </TRPCReactProvider>
-            </Theme>
+            </div>
           </ThemeProvider>
         </CookiesProvider>
       </body>

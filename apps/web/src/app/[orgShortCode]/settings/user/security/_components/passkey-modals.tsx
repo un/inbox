@@ -1,5 +1,12 @@
 import { type ModalComponent } from '@/src/hooks/use-awaitable-modal';
-import { Dialog, TextField, Button } from '@radix-ui/themes';
+import { Button } from '@/src/components/shadcn-ui/button';
+import { Input } from '@/src/components/shadcn-ui/input';
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogDescription
+} from '@/src/components/shadcn-ui/dialog';
 import { useState } from 'react';
 
 export function PasskeyNameModal({
@@ -9,17 +16,15 @@ export function PasskeyNameModal({
 }: ModalComponent<NonNullable<unknown>, string>) {
   const [name, setName] = useState('Passkey');
   return (
-    <Dialog.Root open={open}>
-      <Dialog.Content className="w-full max-w-96 p-4">
-        <Dialog.Title className="mx-auto w-fit">
-          Name your new passkey
-        </Dialog.Title>
-        <Dialog.Description className="mx-auto flex w-fit text-balance p-2 text-center text-sm font-bold">
+    <Dialog open={open}>
+      <DialogContent>
+        <DialogTitle>Name your new passkey</DialogTitle>
+        <DialogDescription>
           This will help you identify your passkey in the future. Keep it simple
           like Android Phone, Apple ID, Windows Hello, YubiKey etc.
-        </Dialog.Description>
+        </DialogDescription>
         <div className="my-6 flex flex-col gap-2">
-          <TextField.Root
+          <Input
             defaultValue={'Passkey'}
             onChange={(e) => {
               setName(e.target.value);
@@ -37,12 +42,12 @@ export function PasskeyNameModal({
           <Button
             onClick={() => onClose()}
             className="w-full"
-            variant="soft"
+            variant="outline"
             color="gray">
             Cancel
           </Button>
         </div>
-      </Dialog.Content>
-    </Dialog.Root>
+      </DialogContent>
+    </Dialog>
   );
 }

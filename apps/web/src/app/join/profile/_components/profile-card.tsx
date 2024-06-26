@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, Flex, Text, TextField } from '@radix-ui/themes';
+import { Button } from '@/src/components/shadcn-ui/button';
 import { AvatarModal } from '@/src/components/shared/avatar-modal';
 import { type RouterOutputs, api } from '@/src/lib/trpc';
 import Stepper from '../../_components/stepper';
@@ -11,13 +11,14 @@ import { Camera, Checks, SkipForward } from '@phosphor-icons/react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import useAwaitableModal from '@/src/hooks/use-awaitable-modal';
+import { Input } from '@/src/components/shadcn-ui/input';
 
 type ProfileCardProps = {
   orgData: RouterOutputs['account']['profile']['getOrgMemberProfile'];
   wasInvited: boolean;
 };
 
-export default function ProfileCard({ orgData, wasInvited }: ProfileCardProps) {
+export function ProfileCard({ orgData, wasInvited }: ProfileCardProps) {
   const [AvatarModalRoot, openAvatarModal] = useAwaitableModal(AvatarModal, {
     publicId: orgData.profile.publicId
   });
@@ -71,118 +72,74 @@ export default function ProfileCard({ orgData, wasInvited }: ProfileCardProps) {
   }, [saveError]);
 
   return (
-    <Flex
-      direction="column"
-      gap="3"
-      className="mx-auto w-full max-w-[560px] px-4">
-      <Text
-        mt="3"
-        size="4"
-        weight="bold">
+    <div className="mx-auto flex w-full max-w-[560px] flex-col gap-3 px-4">
+      <div className="mt-3 text-lg font-bold">
         {wasInvited ? 'Got time for a profile?' : 'Edit your profile'}
-      </Text>
+      </div>
       <Stepper
         step={4}
         total={4}
       />
-      <Flex
-        direction="column"
-        gap="2">
-        <Text>
+      <div className="flex flex-col gap-2">
+        <div>
           {wasInvited
             ? 'This profile has been set by the person who invited you. You can have a separate profile for each organization you join.'
             : 'You can have a different profile for each organization you join, lets start with your first one!'}
-        </Text>
-        <Text className="italic">Skip this step if you like</Text>
-      </Flex>
+        </div>
+        <div className="italic">Skip this step if you like</div>
+      </div>
 
-      <Flex
-        className="my-4 w-full"
-        align="center"
-        justify="center"
-        direction="column"
-        gap="5">
+      <div className="my-4 flex w-full flex-col items-center justify-center gap-5">
         <Button
-          variant="ghost"
-          size="4"
+          variant="outline"
           loading={avatarLoading}
           className="aspect-square h-full max-h-[100px] w-full max-w-[100px] cursor-pointer rounded-full p-0"
           onClick={() => {
             openModal({});
           }}>
-          <Flex
+          <div
             className={cn(
               avatarUrl ? 'bg-cover' : 'from-yellow-9 to-red-9',
-              'h-full w-full rounded-full bg-gradient-to-r *:opacity-0 *:transition-opacity *:duration-300 *:ease-in-out *:hover:opacity-100'
+              'flex h-full w-full rounded-full bg-gradient-to-r *:opacity-0 *:transition-opacity *:duration-300 *:ease-in-out *:hover:opacity-100'
             )}
             style={{
               backgroundImage: avatarUrl ? `url(${avatarUrl})` : undefined
             }}>
-            <Flex
-              align="center"
-              justify="center"
-              direction="column"
-              className="bg-gray-12/50 h-full w-full rounded-full">
+            <div className="bg-gray-11/50 flex h-full w-full flex-col items-center justify-center rounded-full">
               <Camera size={24} />
-              <Text
-                size="2"
-                weight="bold">
-                Upload
-              </Text>
-            </Flex>
-          </Flex>
+              <span className="text-sm font-bold">Upload</span>
+            </div>
+          </div>
         </Button>
         {avatarError && (
-          <Text
-            size="2"
-            color="red">
-            {avatarError.message}
-          </Text>
+          <div className="text-red-10 text-sm">{avatarError.message}</div>
         )}
 
-        <Flex gap="2">
+        <div className="flex gap-2">
           <label>
-            <Text
-              as="div"
-              size="2"
-              mb="1"
-              weight="bold"
-              className="text-left">
-              First Name
-            </Text>
-            <TextField.Root
+            <div className="mb-1 text-left text-sm font-bold">First Name</div>
+            <Input
               value={firstNameValue}
               onChange={(e) => setFirstNameValue(e.target.value)}
             />
           </label>
           <label>
-            <Text
-              as="div"
-              size="2"
-              mb="1"
-              weight="bold"
-              className="text-left">
-              Last Name
-            </Text>
-            <TextField.Root
+            <div className="mb-1 text-left text-sm font-bold">Last Name</div>
+            <Input
               value={lastNameValue}
               onChange={(e) => setLastNameValue(e.target.value)}
             />
           </label>
-        </Flex>
-        <Flex
-          gap="2"
-          className="w-full">
+        </div>
+        <div className="flex w-full gap-2">
           <Button
-            size="2"
             className="flex-1"
-            variant="surface"
+            variant="secondary"
             onClick={() => router.push('/')}>
             Skip
             <SkipForward size={16} />
           </Button>
           <Button
-            size="2"
             className="flex-1"
             disabled={!avatarUrl || !firstNameValue || !lastNameValue}
             loading={saveLoading}
@@ -190,9 +147,9 @@ export default function ProfileCard({ orgData, wasInvited }: ProfileCardProps) {
             Next
             <Checks size={16} />
           </Button>
-        </Flex>
-      </Flex>
+        </div>
+      </div>
       <AvatarModalRoot />
-    </Flex>
+    </div>
   );
 }

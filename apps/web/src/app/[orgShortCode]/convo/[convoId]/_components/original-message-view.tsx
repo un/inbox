@@ -1,8 +1,4 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogPortal
-} from '@/src/components/shadcn-ui/dialog';
+import { Dialog, DialogContent } from '@/src/components/shadcn-ui/dialog';
 import { ScrollArea } from '@/src/components/shadcn-ui/scroll-area';
 import { Separator } from '@/src/components/shadcn-ui/separator';
 import { api } from '@/src/lib/trpc';
@@ -30,57 +26,55 @@ export function OriginalMessageView({
     <Dialog
       open
       onOpenChange={setOpen}>
-      <DialogPortal>
-        <DialogContent className="h-[95svh] max-w-[95vw]">
-          <div className="flex h-full w-full flex-col">
-            {isLoading && (
-              <div className="flex h-full w-full flex-col items-center justify-center gap-2">
-                <SpinnerGap
-                  className="animate-spin"
-                  size={24}
-                />
-                <span className="text-lg font-bold">Loading...</span>
-              </div>
-            )}
-            {error && (
-              <div className="flex h-full w-full flex-col items-center justify-center gap-2">
-                <span className="text-lg font-bold">Error</span>
-                <span className="text-red-500">{error.message}</span>
-              </div>
-            )}
-            {data && (
-              <ScrollArea className="h-[92svh] w-[92vw]">
-                <div className="flex flex-col gap-2">
-                  <div>
-                    <span className="font-bold">Wipe Date: </span>
-                    <span>{data.rawEmailData.wipeDate.toLocaleString()}</span>
-                  </div>
-                  <span className="font-bold">Email Headers</span>
-                  <div className="flex flex-col gap-1">
-                    {Object.entries(
-                      data.rawEmailData.headers as Record<string, unknown>
-                    ).map(([key, value]) => (
-                      <div
-                        key={key}
-                        className="flex w-full gap-2 border-b font-mono">
-                        <div className="w-fit min-w-[10ch] border-r px-1 text-right font-bold">
-                          {key}
-                        </div>
-                        <div className="w-fit break-all">
-                          {JSON.stringify(value)}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <Separator className="my-4 w-full" />
-                  <span className="font-bold">Original Email</span>
-                  <OriginalMessageIframe html={data.rawEmailData.html} />
+      <DialogContent className="h-[95svh] max-w-[95vw]">
+        <div className="flex h-full w-full flex-col">
+          {isLoading && (
+            <div className="flex h-full w-full flex-col items-center justify-center gap-2">
+              <SpinnerGap
+                className="animate-spin"
+                size={24}
+              />
+              <span className="text-lg font-bold">Loading...</span>
+            </div>
+          )}
+          {error && (
+            <div className="flex h-full w-full flex-col items-center justify-center gap-2">
+              <span className="text-lg font-bold">Error</span>
+              <span className="text-red-500">{error.message}</span>
+            </div>
+          )}
+          {data && (
+            <ScrollArea className="h-[92svh] w-[92vw]">
+              <div className="flex flex-col gap-2">
+                <div>
+                  <span className="font-bold">Wipe Date: </span>
+                  <span>{data.rawEmailData.wipeDate.toLocaleString()}</span>
                 </div>
-              </ScrollArea>
-            )}
-          </div>
-        </DialogContent>
-      </DialogPortal>
+                <span className="font-bold">Email Headers</span>
+                <div className="flex flex-col gap-1">
+                  {Object.entries(
+                    data.rawEmailData.headers as Record<string, unknown>
+                  ).map(([key, value]) => (
+                    <div
+                      key={key}
+                      className="flex w-full gap-2 border-b font-mono">
+                      <div className="w-fit min-w-[10ch] border-r px-1 text-right font-bold">
+                        {key}
+                      </div>
+                      <div className="w-fit break-all">
+                        {JSON.stringify(value)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <Separator className="my-4 w-full" />
+                <span className="font-bold">Original Email</span>
+                <OriginalMessageIframe html={data.rawEmailData.html} />
+              </div>
+            </ScrollArea>
+          )}
+        </div>
+      </DialogContent>
     </Dialog>
   );
 }

@@ -9,7 +9,6 @@ import {
   Dialog,
   DialogClose,
   DialogContent,
-  DialogPortal,
   DialogTitle,
   DialogTrigger
 } from '@/src/components/shadcn-ui/dialog';
@@ -105,87 +104,86 @@ export default function JoinOrgButton({
           <span className="whitespace-nowrap">Join an organization</span>
         </Button>
       </DialogTrigger>
-      <DialogPortal>
-        <DialogContent>
-          <DialogTitle>Join an Organization</DialogTitle>
-          <div className="flex flex-col gap-4">
-            <label className="flex flex-col gap-1">
-              <div className="text-sm font-bold">Invite Code</div>
-              <Input
-                value={inviteCode}
-                onChange={(e) => {
-                  setInviteCode(e.target.value);
-                  clearInviteData();
-                }}
-              />
-            </label>
 
-            {!inviteData && inviteLoading && (
-              <div className="text-muted-foreground text-sm font-bold">
-                Validating Invite Code...
-              </div>
-            )}
+      <DialogContent>
+        <DialogTitle>Join an Organization</DialogTitle>
+        <div className="flex flex-col gap-4">
+          <label className="flex flex-col gap-1">
+            <div className="text-sm font-bold">Invite Code</div>
+            <Input
+              value={inviteCode}
+              onChange={(e) => {
+                setInviteCode(e.target.value);
+                clearInviteData();
+              }}
+            />
+          </label>
 
-            {inviteData && !inviteLoading && (
-              <>
-                <div className="text-sm font-bold">You are invited to</div>
-                <div className="bg-card rounded border p-4">
-                  <div className="flex items-center gap-2">
-                    <Avatar>
-                      <AvatarImage
-                        src={orgAvatar ?? undefined}
-                        className="h-10 w-10 rounded-full"
-                      />
-                      <AvatarFallback className="h-10 w-10 rounded-full">
-                        {getInitials(inviteData.orgName)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex flex-col">
-                      <div className="text-xs font-bold">
-                        {inviteData.orgName}
-                      </div>
-                      <div className="text-xs">{inviteData.orgShortCode}</div>
+          {!inviteData && inviteLoading && (
+            <div className="text-muted-foreground text-sm font-bold">
+              Validating Invite Code...
+            </div>
+          )}
+
+          {inviteData && !inviteLoading && (
+            <>
+              <div className="text-sm font-bold">You are invited to</div>
+              <div className="bg-card rounded border p-4">
+                <div className="flex items-center gap-2">
+                  <Avatar>
+                    <AvatarImage
+                      src={orgAvatar ?? undefined}
+                      className="h-10 w-10 rounded-full"
+                    />
+                    <AvatarFallback className="h-10 w-10 rounded-full">
+                      {getInitials(inviteData.orgName)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col">
+                    <div className="text-xs font-bold">
+                      {inviteData.orgName}
                     </div>
+                    <div className="text-xs">{inviteData.orgShortCode}</div>
                   </div>
                 </div>
-              </>
-            )}
-
-            {inviteError && !inviteLoading && (
-              <div className="text-red-10 text-sm font-bold">
-                {inviteError.message}
               </div>
-            )}
+            </>
+          )}
 
-            {joinError && !joinLoading && (
-              <div className="text-red-10 text-sm font-bold">
-                {joinError.message}
-              </div>
-            )}
+          {inviteError && !inviteLoading && (
+            <div className="text-red-10 text-sm font-bold">
+              {inviteError.message}
+            </div>
+          )}
 
+          {joinError && !joinLoading && (
+            <div className="text-red-10 text-sm font-bold">
+              {joinError.message}
+            </div>
+          )}
+
+          <Button
+            loading={inviteLoading || joinLoading}
+            disabled={inviteCode.length !== 32}
+            className="mt-4"
+            onClick={() => {
+              if (!inviteData) {
+                validateInvite({ clearData: true, clearError: true });
+              } else {
+                joinOrg({ clearData: true, clearError: true });
+              }
+            }}>
+            {inviteData ? 'Join Organization' : 'Validate Invite Code'}
+          </Button>
+          <DialogClose asChild>
             <Button
-              loading={inviteLoading || joinLoading}
-              disabled={inviteCode.length !== 32}
-              className="mt-4"
-              onClick={() => {
-                if (!inviteData) {
-                  validateInvite({ clearData: true, clearError: true });
-                } else {
-                  joinOrg({ clearData: true, clearError: true });
-                }
-              }}>
-              {inviteData ? 'Join Organization' : 'Validate Invite Code'}
+              variant="outline"
+              className="w-full">
+              Cancel
             </Button>
-            <DialogClose asChild>
-              <Button
-                variant="outline"
-                className="w-full">
-                Cancel
-              </Button>
-            </DialogClose>
-          </div>
-        </DialogContent>
-      </DialogPortal>
+          </DialogClose>
+        </div>
+      </DialogContent>
     </Dialog>
   );
 }

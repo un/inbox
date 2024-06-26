@@ -1,16 +1,8 @@
-@layer tw_base, radix_ui, tw_components_utilities;
-@import '@radix-ui/themes/styles.css' layer(radix_ui);
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-@layer tw_base {
-  @tailwind base;
-}
-
-@layer tw_components_utilities {
-  @tailwind components;
-  @tailwind utilities;
-}
-
-@layer tw_base {
+@layer base {
   :root {
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
@@ -74,7 +66,7 @@
   }
 }
 
-@layer tw_base {
+@layer base {
   * {
     @apply border-border;
   }

@@ -3,11 +3,14 @@
 import { type RouterOutputs, api } from '@/src/lib/trpc';
 import {
   DropdownMenu,
-  IconButton,
-  ScrollArea,
-  Badge,
-  Spinner
-} from '@radix-ui/themes';
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuPortal
+} from '@/src/components/shadcn-ui/dropdown-menu';
+import { Button } from '@/src/components/shadcn-ui/button';
+import { ScrollArea } from '@/src/components/shadcn-ui/scroll-area';
+import { Badge } from '@/src/components/shadcn-ui/badge';
 import { type TypeId } from '@u22n/utils/typeid';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
@@ -78,7 +81,6 @@ export function MessagesPanel({
       <div className="h-full w-full">
         {index === firstItemIndex && hasNextPage ? (
           <div className="flex w-full items-center justify-center gap-2">
-            <Spinner loading />
             <span>Loading...</span>
           </div>
         ) : null}
@@ -265,43 +267,45 @@ function MessageItem({
           <HTMLMessage html={messageHtml} />
         </div>
       </div>
-      <DropdownMenu.Root>
-        <DropdownMenu.Trigger className="opacity-0 group-hover:opacity-100">
-          <IconButton
-            variant="soft"
-            size="1"
+      <DropdownMenu>
+        <DropdownMenuTrigger className="opacity-0 group-hover:opacity-100">
+          <Button
+            variant="secondary"
+            size="icon-sm"
             className="mx-1 self-center">
             <DotsThree size={12} />
-          </IconButton>
-        </DropdownMenu.Trigger>
-        <DropdownMenu.Content sideOffset={5}>
-          <DropdownMenu.Item
-            className="flex justify-between"
-            onClick={() => {
-              setReplyTo(
-                replyTo === message.publicId ? null : message.publicId
-              );
-            }}>
-            Reply{' '}
-            {replyTo === message.publicId ? (
-              <Badge variant="soft">Replying</Badge>
-            ) : null}
-          </DropdownMenu.Item>
-          {message.rawHtml?.wipeDate && (
-            <DropdownMenu.Item onClick={() => setViewingOriginalMessage(true)}>
-              View Original Message
-            </DropdownMenu.Item>
-          )}
-          <DropdownMenu.Item
-            onClick={async () => {
-              await copyToClipboard(message.publicId);
-              toast.success('Message ID copied to clipboard');
-            }}>
-            Copy Message ID
-          </DropdownMenu.Item>
-          <DropdownMenu.Item>Report Bug</DropdownMenu.Item>
-        </DropdownMenu.Content>
-      </DropdownMenu.Root>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuPortal>
+          <DropdownMenuContent sideOffset={5}>
+            <DropdownMenuItem
+              className="flex justify-between"
+              onClick={() => {
+                setReplyTo(
+                  replyTo === message.publicId ? null : message.publicId
+                );
+              }}>
+              Reply{' '}
+              {replyTo === message.publicId ? (
+                <Badge variant="outline">Replying</Badge>
+              ) : null}
+            </DropdownMenuItem>
+            {message.rawHtml?.wipeDate && (
+              <DropdownMenuItem onClick={() => setViewingOriginalMessage(true)}>
+                View Original Message
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuItem
+              onClick={async () => {
+                await copyToClipboard(message.publicId);
+                toast.success('Message ID copied to clipboard');
+              }}>
+              Copy Message ID
+            </DropdownMenuItem>
+            <DropdownMenuItem>Report Bug</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenuPortal>
+      </DropdownMenu>
       {viewingOriginalMessage && message.rawHtml?.wipeDate ? (
         <OriginalMessageView
           setOpen={setViewingOriginalMessage}

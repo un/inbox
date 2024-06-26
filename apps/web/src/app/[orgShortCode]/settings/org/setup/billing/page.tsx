@@ -9,7 +9,7 @@ import CalEmbed from '@calcom/embed-react';
 import Link from 'next/link';
 import { cn } from '@/src/lib/utils';
 import { PageTitle } from '../../../_components/page-title';
-import { Skeleton } from '@radix-ui/themes';
+import { Skeleton } from '@/src/components/shadcn-ui/skeleton';
 
 export default function Page() {
   const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);

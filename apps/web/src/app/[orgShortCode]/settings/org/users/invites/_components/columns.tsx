@@ -10,8 +10,12 @@ import {
 } from '@/src/components/shadcn-ui/avatar';
 import { Badge } from '@/src/components/shadcn-ui/badge';
 import { format } from 'date-fns';
-import { ScrollArea } from '@radix-ui/themes';
-import { Tooltip } from '@radix-ui/themes';
+import { ScrollArea } from '@/src/components/shadcn-ui/scroll-area';
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent
+} from '@/src/components/shadcn-ui/tooltip';
 import { CopyButton } from '@/src/components/copy-button';
 import { env } from 'next-runtime-env';
 
@@ -74,7 +78,6 @@ export const columns: ColumnDef<Member>[] = [
       return inviteCode ? (
         <div className="flex w-fit items-center justify-between gap-2">
           <ScrollArea
-            scrollbars="horizontal"
             className="w-32"
             type="hover">
             <span>{inviteCode}</span>
@@ -95,7 +98,6 @@ export const columns: ColumnDef<Member>[] = [
       return inviteCode ? (
         <div className="flex w-fit items-center justify-between gap-2">
           <ScrollArea
-            scrollbars="horizontal"
             className="w-32"
             type="hover">
             <span>{`${WEBAPP_URL}/join/invite/${inviteCode}`}</span>
@@ -146,14 +148,17 @@ export const columns: ColumnDef<Member>[] = [
       const initials = getInitials(`${firstName} ${lastName}`);
       return (
         <div className="flex items-center justify-center gap-2">
-          <Tooltip content={`${firstName} ${lastName}`}>
-            <Avatar className="h-8 w-8">
-              <AvatarImage
-                src={avatarUrl ?? undefined}
-                alt={firstName ?? ''}
-              />
-              <AvatarFallback>{initials}</AvatarFallback>
-            </Avatar>
+          <Tooltip>
+            <TooltipTrigger>
+              <Avatar className="h-8 w-8">
+                <AvatarImage
+                  src={avatarUrl ?? undefined}
+                  alt={firstName ?? ''}
+                />
+                <AvatarFallback>{initials}</AvatarFallback>
+              </Avatar>
+            </TooltipTrigger>
+            <TooltipContent>{`${firstName} ${lastName}`}</TooltipContent>
           </Tooltip>
         </div>
       );

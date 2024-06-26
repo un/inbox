@@ -2,7 +2,6 @@ import { Button } from '@/src/components/shadcn-ui/button';
 import { Separator } from '@/src/components/shadcn-ui/separator';
 import {
   AlertDialog,
-  AlertDialogPortal,
   AlertDialogContent,
   AlertDialogTitle,
   AlertDialogDescription
@@ -70,32 +69,30 @@ export function PasskeyModal({
       onOpenChange={() => {
         if (open) onClose();
       }}>
-      <AlertDialogPortal>
-        <AlertDialogContent>
-          <AlertDialogTitle>Sign up with Passkey</AlertDialogTitle>
-          <AlertDialogDescription>
-            Press the button below to use your passkey to sign up
-          </AlertDialogDescription>
-          <div className="text-pretty p-2 text-center text-sm font-bold">
-            {state}
-          </div>
-          <div className="flex w-full flex-col gap-2 p-2">
-            <Button
-              loading={loading}
-              className="mx-auto w-full gap-1"
-              onClick={() => run()}>
-              <Fingerprint size={20} />
-              <span>Use your Passkey</span>
-            </Button>
-            <Button
-              variant="outline"
-              className="mx-auto w-full"
-              onClick={() => onClose()}>
-              Cancel
-            </Button>
-          </div>
-        </AlertDialogContent>
-      </AlertDialogPortal>
+      <AlertDialogContent>
+        <AlertDialogTitle>Sign up with Passkey</AlertDialogTitle>
+        <AlertDialogDescription>
+          Press the button below to use your passkey to sign up
+        </AlertDialogDescription>
+        <div className="text-pretty p-2 text-center text-sm font-bold">
+          {state}
+        </div>
+        <div className="flex w-full flex-col gap-2 p-2">
+          <Button
+            loading={loading}
+            className="mx-auto w-full gap-1"
+            onClick={() => run()}>
+            <Fingerprint size={20} />
+            <span>Use your Passkey</span>
+          </Button>
+          <Button
+            variant="outline"
+            className="mx-auto w-full"
+            onClick={() => onClose()}>
+            Cancel
+          </Button>
+        </div>
+      </AlertDialogContent>
     </AlertDialog>
   );
 }
@@ -116,34 +113,32 @@ export function PasswordModal({
       onOpenChange={() => {
         if (open) onClose();
       }}>
-      <AlertDialogPortal>
-        <AlertDialogContent>
-          <AlertDialogTitle>Sign up with Password</AlertDialogTitle>
-          <AlertDialogDescription>
-            <span className="p-2 font-bold">
-              {step === 1 ? 'Choose a password' : 'Setup 2FA'}
-            </span>
-          </AlertDialogDescription>
-          {step === 1 && (
-            <PasswordModalStep1
-              password={password}
-              setPassword={setPassword}
-              onClose={onClose}
-              setStep={setStep}
-            />
-          )}
-          {step === 2 && (
-            <PasswordModalStep2
-              username={username}
-              password={password}
-              twoFactorCode={twoFactorCode}
-              setTwoFactorCode={setTwoFactorCode}
-              onResolve={onResolve}
-              setStep={setStep}
-            />
-          )}
-        </AlertDialogContent>
-      </AlertDialogPortal>
+      <AlertDialogContent>
+        <AlertDialogTitle>Sign up with Password</AlertDialogTitle>
+        <AlertDialogDescription>
+          <span className="p-2 font-bold">
+            {step === 1 ? 'Choose a password' : 'Setup 2FA'}
+          </span>
+        </AlertDialogDescription>
+        {step === 1 && (
+          <PasswordModalStep1
+            password={password}
+            setPassword={setPassword}
+            onClose={onClose}
+            setStep={setStep}
+          />
+        )}
+        {step === 2 && (
+          <PasswordModalStep2
+            username={username}
+            password={password}
+            twoFactorCode={twoFactorCode}
+            setTwoFactorCode={setTwoFactorCode}
+            onResolve={onResolve}
+            setStep={setStep}
+          />
+        )}
+      </AlertDialogContent>
     </AlertDialog>
   );
 }
@@ -424,43 +419,39 @@ export function RecoveryCodeModal({
 
   return (
     <AlertDialog open={open}>
-      <AlertDialogPortal>
-        <AlertDialogContent>
-          <AlertDialogTitle>Recovery Code</AlertDialogTitle>
-          <div className="flex w-full flex-col gap-4 p-2">
-            <div className="text-pretty text-center text-sm font-bold">
-              Save this recovery code in a safe place, without this code you
-              would not be able to recover your account
-            </div>
-            <div className="bg-card rounded border">
-              <div className="flex gap-1">
-                <div className="w-full break-words font-mono">
-                  {recoveryCode}
-                </div>
-                <CopyButton
-                  text={recoveryCode}
-                  onCopy={() => {
-                    setDownloaded(true);
-                  }}
-                />
-              </div>
-            </div>
-            <Button
-              onClick={() => {
-                downloadAsFile(`${username}-recovery-code.txt`, recoveryCode);
-                setDownloaded(true);
-              }}>
-              {!downloaded ? 'Download' : 'Download Again'}
-            </Button>
-            <Button
-              variant="outline"
-              disabled={!downloaded}
-              onClick={() => onResolve(null)}>
-              Close
-            </Button>
+      <AlertDialogContent>
+        <AlertDialogTitle>Recovery Code</AlertDialogTitle>
+        <div className="flex w-full flex-col gap-4 p-2">
+          <div className="text-pretty text-center text-sm font-bold">
+            Save this recovery code in a safe place, without this code you would
+            not be able to recover your account
           </div>
-        </AlertDialogContent>
-      </AlertDialogPortal>
+          <div className="bg-card rounded border">
+            <div className="flex gap-1">
+              <div className="w-full break-words font-mono">{recoveryCode}</div>
+              <CopyButton
+                text={recoveryCode}
+                onCopy={() => {
+                  setDownloaded(true);
+                }}
+              />
+            </div>
+          </div>
+          <Button
+            onClick={() => {
+              downloadAsFile(`${username}-recovery-code.txt`, recoveryCode);
+              setDownloaded(true);
+            }}>
+            {!downloaded ? 'Download' : 'Download Again'}
+          </Button>
+          <Button
+            variant="outline"
+            disabled={!downloaded}
+            onClick={() => onResolve(null)}>
+            Close
+          </Button>
+        </div>
+      </AlertDialogContent>
     </AlertDialog>
   );
 }

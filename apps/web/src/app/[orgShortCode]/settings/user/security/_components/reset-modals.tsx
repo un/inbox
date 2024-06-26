@@ -1,31 +1,27 @@
+import { Button } from '@/src/components/shadcn-ui/button';
 import {
-  AlertDialog as Dialog, // Alert Dialogs don't close on outside click
-  Flex,
-  Button,
-  Text,
-  Spinner,
-  Tooltip,
-  TextField,
-  Separator
-} from '@radix-ui/themes';
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogTitle
+} from '@/src/components/shadcn-ui/alert-dialog';
+import { Separator } from '@/src/components/shadcn-ui/separator';
 import { type ModalComponent } from '@/src/hooks/use-awaitable-modal';
-import { useEffect, useState, Suspense, memo } from 'react';
+import { useEffect, useState } from 'react';
 import { api } from '@/src/lib/trpc';
 import useLoading from '@/src/hooks/use-loading';
-import { Check, Plus, Question } from '@phosphor-icons/react';
+import { Check, Plus } from '@phosphor-icons/react';
 import { TogglePasswordBox } from '@/src/components/toggle-password';
 import { useDebounce } from '@uidotdev/usehooks';
-import { toDataURL } from 'qrcode';
+import { QRCodeSVG } from 'qrcode.react';
 import { CopyButton } from '@/src/components/copy-button';
 import {
   InputOTP,
   InputOTPGroup,
-  InputOTPSeparator,
   InputOTPSlot
 } from '@/src/components/shadcn-ui/input-otp';
 import { ms } from '@u22n/utils/ms';
-import Image from 'next/image';
-import { downloadAsFile } from '@/src/lib/utils';
+import { cn, downloadAsFile } from '@/src/lib/utils';
 import { toast } from 'sonner';
 
 export function PasswordModal({
@@ -95,61 +91,30 @@ export function PasswordModal({
   );
 
   return (
-    <Dialog.Root open={open}>
-      <Dialog.Content className="w-full max-w-96 p-4">
-        <Dialog.Title className="mx-auto w-fit">Set your Password</Dialog.Title>
-        <Dialog.Description>
-          <Text
-            weight="bold"
-            size="2"
-            align="center"
-            className="p-2">
-            Choose a Password
-          </Text>
-        </Dialog.Description>
-
-        <Flex
-          className="w-full p-2"
-          direction="column"
-          gap="4">
+    <AlertDialog open={open}>
+      <AlertDialogContent>
+        <AlertDialogTitle>Set your Password</AlertDialogTitle>
+        <AlertDialogDescription>Choose a Password</AlertDialogDescription>
+        <div className="flex w-full flex-col gap-4 p-2">
           <TogglePasswordBox
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             autoComplete="new-password"
             id="password"
-            color={
-              passwordCheckData
-                ? 'error' in passwordCheckData || passwordCheckData.score < 3
-                  ? 'red'
-                  : 'green'
-                : undefined
-            }
+            placeholder="Password"
           />
           {passwordCheckLoading && (
-            <Flex
-              align="center"
-              gap="2"
-              className="w-full">
-              <Spinner loading />
-              <Text
-                size="2"
-                weight="bold">
-                Checking password strength
-              </Text>
-            </Flex>
+            <div className="text-muted-foreground w-full font-bold">
+              Checking password strength...
+            </div>
           )}
           {passwordCheckData && 'error' in passwordCheckData && (
-            <Text
-              size="2"
-              color="red"
-              weight="bold">
+            <div className="text-red-10 text-sm font-bold">
               {passwordCheckData.error}
-            </Text>
+            </div>
           )}
           {passwordCheckData && 'score' in passwordCheckData && (
-            <Flex
-              gap="1"
-              align="center">
+            <div className="flex items-center gap-1">
               {passwordCheckData.score >= 3 ? (
                 <Check
                   size={16}
@@ -161,67 +126,45 @@ export function PasswordModal({
                   className="stroke-red-10 rotate-45"
                 />
               )}
-              <Text
-                size="2"
-                weight="bold"
-                className="flex-1"
-                color={passwordCheckData.score >= 3 ? 'green' : 'red'}>
+              <span
+                className={cn(
+                  'flex-1 text-sm font-bold',
+                  passwordCheckData.score >= 3 ? 'text-green-10' : 'text-red-10'
+                )}>
                 Your password is{' '}
                 {
                   ['very weak', 'weak', 'fair', 'strong', 'very strong'][
                     passwordCheckData.score
                   ]
                 }
-              </Text>
-              <Tooltip
-                content={
-                  <Text size="2">
-                    It would take a computer {passwordCheckData.crackTime} to
-                    crack it
-                  </Text>
-                }>
-                <Question />
-              </Tooltip>
-            </Flex>
+              </span>
+            </div>
           )}
           <TogglePasswordBox
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             id="confirm-password"
-            color={
-              confirmPassword && confirmPassword.length > 0
-                ? password === confirmPassword
-                  ? 'green'
-                  : 'red'
-                : undefined
-            }
+            placeholder="Confirm Password"
           />
 
-          <Text
-            as="div"
-            size="2"
-            color="red"
-            className="text-center">
-            {error}
-          </Text>
+          <div className="text-red-10 text-center text-sm">{error}</div>
 
           <Button
-            size="2"
             disabled={!passwordValid}
             loading={passwordLoading}
+            className="w-full"
             onClick={() => updatePassword()}>
             Set Password
           </Button>
           <Button
-            variant="soft"
-            color="gray"
-            size="2"
+            variant="outline"
+            className="w-full"
             onClick={() => onClose()}>
             Cancel
           </Button>
-        </Flex>
-      </Dialog.Content>
-    </Dialog.Root>
+        </div>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
 
@@ -260,37 +203,39 @@ export function TOTPModal({
   });
 
   return (
-    <Dialog.Root open={open}>
-      <Dialog.Content className="w-full max-w-96 p-4">
-        <Dialog.Title className="mx-auto w-fit">Set up 2FA</Dialog.Title>
-        <Dialog.Description className="mx-auto flex w-fit p-2 text-center text-sm font-bold">
+    <AlertDialog open={open}>
+      <AlertDialogContent>
+        <AlertDialogTitle>Set up 2FA</AlertDialogTitle>
+        <AlertDialogDescription>
           Setup your 2FA app and enter the code
-        </Dialog.Description>
+        </AlertDialogDescription>
 
         <div className="flex w-full flex-col gap-2 p-2">
           {twoFaChallengeLoading && (
             <div className="flex w-full items-center justify-center gap-2">
-              <Spinner loading />
-              <span className="font-bold">Generating 2FA challenge</span>
+              <span className="font-bold">Generating 2FA challenge...</span>
             </div>
           )}
 
-          <MemoizedQrCode text={twoFaChallenge?.uri} />
+          <QRCodeSVG
+            value={twoFaChallenge?.uri ?? ''}
+            size={200}
+            className="mx-auto rounded bg-white p-2"
+          />
 
           {qrCodeSecret && (
-            <TextField.Root
-              defaultValue={qrCodeSecret}
-              readOnly
-              className="w-full font-mono"
-              size="3">
-              <TextField.Slot className="p-1" />
-              <TextField.Slot>
-                <CopyButton text={qrCodeSecret} />
-              </TextField.Slot>
-            </TextField.Root>
+            <div className="border-muted/80 flex w-full rounded border">
+              <div className="bg-muted text-muted-foreground text-bold flex w-[32ch] flex-1 items-center overflow-hidden truncate text-clip rounded rounded-r-none p-1 font-mono">
+                {qrCodeSecret}
+              </div>
+              <CopyButton
+                text={qrCodeSecret}
+                className="bg-muted size-10 min-h-10 min-w-10 rounded rounded-l-none border-none"
+              />
+            </div>
           )}
 
-          <Separator size="4" />
+          <Separator className="w-full" />
           <span className="text-center font-bold">
             Enter the 6-digit code from your 2FA app
           </span>
@@ -298,14 +243,11 @@ export function TOTPModal({
             maxLength={6}
             value={twoFactorCode}
             onChange={setTwoFactorCode}
-            containerClassName="mx-auto">
+            containerClassName="mx-auto w-fit">
             <InputOTPGroup>
               <InputOTPSlot index={0} />
               <InputOTPSlot index={1} />
               <InputOTPSlot index={2} />
-            </InputOTPGroup>
-            <InputOTPSeparator />
-            <InputOTPGroup>
               <InputOTPSlot index={3} />
               <InputOTPSlot index={4} />
               <InputOTPSlot index={5} />
@@ -317,7 +259,6 @@ export function TOTPModal({
           </div>
 
           <Button
-            size="2"
             disabled={twoFaChallengeLoading || twoFactorCode.length !== 6}
             loading={twoFactorResetLoading}
             onClick={() =>
@@ -326,44 +267,15 @@ export function TOTPModal({
             Complete 2FA Setup
           </Button>
           <Button
-            variant="soft"
-            color="gray"
-            size="2"
+            variant="outline"
             onClick={() => onClose()}>
             Cancel
           </Button>
         </div>
-      </Dialog.Content>
-    </Dialog.Root>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
-
-const MemoizedQrCode = memo(
-  function QRCode({ text }: { text?: string }) {
-    const qrCode = !text
-      ? Promise.resolve(null)
-      : toDataURL(text, { margin: 2 });
-
-    return (
-      <div className="mx-auto flex h-[200px] w-[200px] items-center justify-center rounded p-4">
-        <Suspense fallback={<Spinner loading />}>
-          {qrCode.then((src) =>
-            src ? (
-              <Image
-                src={src}
-                width={200}
-                height={200}
-                alt="QrCode for 2FA"
-                className="h-full w-full rounded"
-              />
-            ) : null
-          )}
-        </Suspense>
-      </div>
-    );
-  },
-  (prev, next) => prev.text === next.text
-);
 
 export function RecoveryCodeModal({
   open,
@@ -386,12 +298,12 @@ export function RecoveryCodeModal({
   const [code, setCode] = useState<string>('');
 
   return (
-    <Dialog.Root open={open}>
-      <Dialog.Content className="w-full max-w-96 p-4">
-        <Dialog.Title className="mx-auto w-fit">
+    <AlertDialog open={open}>
+      <AlertDialogContent>
+        <AlertDialogTitle>
           {mode === 'reset' ? 'Set up Recovery' : 'Disable Recovery'}
-        </Dialog.Title>
-        <Dialog.Description className="mx-auto flex w-fit text-balance p-2 text-center text-sm font-bold">
+        </AlertDialogTitle>
+        <AlertDialogDescription>
           {mode === 'reset' ? (
             <span>
               You are going to setup/reset your Recovery Code, If you already
@@ -400,7 +312,7 @@ export function RecoveryCodeModal({
           ) : (
             <span>Are you sure you want to disable your Recovery Code?</span>
           )}
-        </Dialog.Description>
+        </AlertDialogDescription>
         <div className="flex w-full flex-col gap-2">
           <div className="text-red-10 p-1">
             {resetError?.message ?? disableError?.message}
@@ -435,14 +347,13 @@ export function RecoveryCodeModal({
           )}
           <Button
             className="w-full"
-            variant="soft"
+            variant="outline"
             disabled={resetRecoveryLoading || disableRecoveryLoading}
-            color="gray"
             onClick={() => (code ? onResolve(null) : onClose())}>
             {code ? 'Close' : 'Cancel'}
           </Button>
         </div>
-      </Dialog.Content>
-    </Dialog.Root>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

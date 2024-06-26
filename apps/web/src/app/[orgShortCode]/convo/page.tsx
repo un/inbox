@@ -9,11 +9,11 @@ export default function Page() {
   return (
     <div className="flex h-full w-full flex-col items-center justify-center gap-2 p-4">
       <span className="font-medium">
-        Select a Convo from the Sidebar or Create a New One
+        Select a Convo from Sidebar or Create a New One
       </span>
-      <Link href={`/${orgShortCode}/convo/new`}>
-        <Button>Create New Convo</Button>
-      </Link>
+      <Button asChild>
+        <Link href={`/${orgShortCode}/convo/new`}>Create New Convo</Link>
+      </Button>
     </div>
   );
 }
