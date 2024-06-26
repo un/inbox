@@ -2,7 +2,6 @@
 
 import { type ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
-import { Flex, Text, Container } from '@radix-ui/themes';
 import Link from 'next/link';
 import { cn } from '@/src/lib/utils';
 import { api } from '@/src/lib/trpc';
@@ -28,7 +27,6 @@ type NavLinks = {
 
 export default function SettingsSidebar() {
   const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
-  const pathname = usePathname();
 
   const { data: isAdmin } = api.org.users.members.isOrgMemberAdmin.useQuery({
     orgShortCode
@@ -95,124 +93,87 @@ export default function SettingsSidebar() {
   ];
 
   return (
-    <Flex
-      gap="4"
-      className="bg-base-2 dark:bg-slatedark-2 h-full w-[400px] flex-col p-2 px-4">
-      <Text
-        size="5"
-        weight="bold"
-        color="gray">
-        Personal
-      </Text>
-      <Flex
-        className="flex-col"
-        gap="1">
-        {personalLinks.map(({ label, to, icon }) => (
-          <Link
-            key={to}
-            href={to}>
-            <Flex
-              gap="4"
-              className={cn(
-                pathname === to ? 'dark:bg-gray-10 bg-gray-4' : '',
-                'rounded p-1 pl-2'
-              )}>
-              {icon}
-              <div>{label}</div>
-            </Flex>
-          </Link>
-        ))}
-      </Flex>
+    <div className="bg-base-2 flex h-full w-[400px] flex-col gap-4 p-2 px-4">
+      <NavBlock
+        title="Personal"
+        items={personalLinks}
+      />
+
       {isAdmin && (
-        <Container className="border-t pt-1">
-          <Text
-            size="5"
-            weight="bold"
-            color="gray">
-            Organization
-          </Text>
-
-          <Flex
-            className="flex-col pt-4"
-            gap="1">
-            <Text
-              className="pb-1 pl-1"
-              size="3"
-              weight="bold"
-              color="cyan">
-              Setup
-            </Text>
-            {orgSetupLinks.map(({ label, to, icon }) => (
-              <Link
-                key={to}
-                href={to}>
-                <Flex
-                  gap="4"
-                  className={cn(
-                    pathname === to ? 'dark:bg-gray-10 bg-gray-4' : '',
-                    'rounded p-1 pl-2'
-                  )}>
-                  {icon}
-                  <div>{label}</div>
-                </Flex>
-              </Link>
-            ))}
-          </Flex>
-          <Flex
-            className="flex-col"
-            gap="1">
-            <Text
-              className="pb-1 pl-1"
-              size="3"
-              weight="bold"
-              color="cyan">
-              Users
-            </Text>
-            {orgUserLinks.map(({ label, to, icon }) => (
-              <Link
-                key={to}
-                href={to}>
-                <Flex
-                  gap="4"
-                  className={cn(
-                    pathname === to ? 'dark:bg-gray-10 bg-gray-4' : '',
-                    'rounded p-1 pl-2'
-                  )}>
-                  {icon}
-                  <div>{label}</div>
-                </Flex>
-              </Link>
-            ))}
-          </Flex>
-
-          <Flex
-            className="flex-col"
-            gap="1">
-            <Text
-              className="pb-1 pl-1"
-              size="3"
-              weight="bold"
-              color="cyan">
-              Mail
-            </Text>
-            {orgMailLinks.map(({ label, to, icon }) => (
-              <Link
-                key={to}
-                href={to}>
-                <Flex
-                  gap="4"
-                  className={cn(
-                    pathname === to ? 'dark:bg-gray-10 bg-gray-4' : '',
-                    'rounded p-1 pl-2'
-                  )}>
-                  {icon}
-                  <div>{label}</div>
-                </Flex>
-              </Link>
-            ))}
-          </Flex>
-        </Container>
+        <NavSection title="Organization">
+          <NavBlock
+            title="Setup"
+            items={orgSetupLinks}
+          />
+          <NavBlock
+            title="Users"
+            items={orgUserLinks}
+          />
+          <NavBlock
+            title="Mail"
+            items={orgMailLinks}
+          />
+        </NavSection>
       )}
-    </Flex>
+    </div>
+  );
+}
+
+type NavSectionProps = {
+  title: string;
+  children: ReactNode;
+};
+
+function NavSection({ title, children }: NavSectionProps) {
+  return (
+    <div className="flex flex-col gap-4">
+      <span className="font-medium">{title}</span>
+      {children}
+    </div>
+  );
+}
+
+type NavBlockProps = {
+  title: string;
+  items: NavLinks[];
+};
+
+function NavBlock({ title, items }: NavBlockProps) {
+  return (
+    <div className="flex flex-col gap-0">
+      <span className="font-medium">{title}</span>
+      {items.map(({ label, to, icon }) => (
+        <NavItem
+          label={label}
+          to={to}
+          icon={icon}
+          key={label + to}
+        />
+      ))}
+    </div>
+  );
+}
+
+type NavItemProps = {
+  label: string;
+  to: string;
+  icon: ReactNode;
+};
+
+function NavItem({ label, to, icon }: NavItemProps) {
+  const pathname = usePathname();
+  return (
+    <Link
+      key={to}
+      href={to}>
+      <div
+        className={cn(
+          pathname === to ? 'bg-gray-4' : '',
+          'flex flex-row items-center gap-2 rounded p-1 pl-2'
+        )}>
+        {icon}
+        <div>{label}</div>
+      </div>
+    </Link>
   );
 }
