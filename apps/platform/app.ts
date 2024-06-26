@@ -34,7 +34,15 @@ app.use(
 app.use('*', authMiddleware);
 
 // Health check endpoint
-app.get('/', (c) => c.json({ status: "I'm Alive 🏝️" }));
+app.get('/health', (c) => {
+  const memoryUsage = process.memoryUsage();
+  const uptime = process.uptime();
+  return c.json({
+    service: `Platform`,
+    memoryUsage,
+    uptime
+  });
+});
 
 // Routes
 app.route('/auth', authApi);

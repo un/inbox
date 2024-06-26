@@ -24,7 +24,15 @@ if (env.MAILBRIDGE_MODE === 'dual' || env.MAILBRIDGE_MODE === 'handler') {
   }
 
   // Health check endpoint
-  app.get('/', (c) => c.json({ status: "I'm Alive 🏝️" }));
+  app.get('/health', (c) => {
+    const memoryUsage = process.memoryUsage();
+    const uptime = process.uptime();
+    return c.json({
+      service: `Mail Bridge [${env.MAILBRIDGE_MODE === 'handler' ? 'Handler' : 'Dual'}]`,
+      memoryUsage,
+      uptime
+    });
+  });
 
   // TRPC handler
   app.use(
