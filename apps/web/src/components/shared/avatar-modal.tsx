@@ -4,16 +4,12 @@ import AvatarCrop from '@/src/components/avatar-crop';
 import { type ModalComponent } from '@/src/hooks/use-awaitable-modal';
 import uploadTracker from '@/src/lib/upload';
 import { cn } from '@/src/lib/utils';
-import {
-  Text,
-  Button,
-  AlertDialog as Dialog,
-  Flex,
-  Progress
-} from '@radix-ui/themes';
 import { type TypeId } from '@u22n/utils/typeid';
 import { Camera } from '@phosphor-icons/react';
 import { useRef, useState } from 'react';
+import { Dialog, DialogContent, DialogTitle } from '../shadcn-ui/dialog';
+import { Button } from '../shadcn-ui/button';
+import { Progress } from '../shadcn-ui/progress';
 
 export function AvatarModal({
   open,
@@ -93,46 +89,33 @@ export function AvatarModal({
   };
 
   return (
-    <Dialog.Root open={open}>
-      <Dialog.Content className="w-full max-w-96 p-4">
-        <Dialog.Title className="mx-auto w-fit py-2">
+    <Dialog open={open}>
+      <DialogContent className="w-full max-w-96 p-4">
+        <DialogTitle className="mx-auto w-fit py-2">
           Change Your Avatar
-        </Dialog.Title>
+        </DialogTitle>
 
-        <Flex
-          direction="column"
-          className="w-full"
-          align="center"
-          gap="4">
+        <div className="flex w-full flex-col items-center justify-center gap-2 p-2">
           {!editing && (
             <Button
-              variant="ghost"
-              size="4"
+              variant="secondary"
               className="aspect-square h-full max-h-[100px] w-full max-w-[100px] cursor-pointer rounded-full p-0"
               onClick={() => {
                 openFilePicker();
               }}>
-              <Flex
+              <div
                 className={cn(
-                  croppedUrl ? 'bg-cover' : 'from-yellow-9 to-red-9',
-                  'h-full w-full rounded-full bg-gradient-to-r *:opacity-0 *:transition-opacity *:duration-300 *:ease-in-out *:hover:opacity-100'
+                  croppedUrl ? 'bg-cover' : 'from-accent-9 to-base-9',
+                  'flex h-full w-full flex-col rounded-full bg-gradient-to-r *:opacity-0 *:transition-opacity *:duration-300 *:ease-in-out *:hover:opacity-100'
                 )}
                 style={{
                   backgroundImage: croppedUrl ? `url(${croppedUrl})` : undefined
                 }}>
-                <Flex
-                  align="center"
-                  justify="center"
-                  direction="column"
-                  className="bg-gray-12/50 h-full w-full rounded-full">
+                <div className="bg-gray-5 flex h-full w-full flex-col items-center justify-center rounded-full">
                   <Camera size={24} />
-                  <Text
-                    size="2"
-                    weight="bold">
-                    Upload
-                  </Text>
-                </Flex>
-              </Flex>
+                  <span className="text-sm">Upload</span>
+                </div>
+              </div>
             </Button>
           )}
 
@@ -152,25 +135,9 @@ export function AvatarModal({
             />
           )}
 
-          {croppedUrl && (
-            <Button
-              size="2"
-              className="w-full"
-              loading={uploading}
-              onClick={() => {
-                upload();
-              }}>
-              Upload
-            </Button>
-          )}
-
           {uploading && Math.floor(progress) !== 100 && (
             <>
-              <Text
-                size="2"
-                weight="bold">
-                Uploading {Math.floor(progress)}%
-              </Text>
+              <span className="text-sm">Uploading {Math.floor(progress)}%</span>
               <Progress
                 className="w-full"
                 value={progress}
@@ -180,30 +147,32 @@ export function AvatarModal({
           )}
 
           {uploading && Math.floor(progress) === 100 && (
-            <Text
-              size="2"
-              weight="bold">
-              Waiting for server to process...
-            </Text>
+            <span className="text-sm">Waiting for server to process...</span>
           )}
 
           {uploadError && (
-            <Text
-              size="2"
-              color="red">
-              {uploadError}
-            </Text>
+            <span className="text-red-9 text-sm">{uploadError}</span>
           )}
-
-          <Button
-            size="2"
-            variant="ghost"
-            onClick={() => onClose()}
-            className="mt-4 w-full">
-            Cancel
-          </Button>
-        </Flex>
-      </Dialog.Content>
-    </Dialog.Root>
+          <div className="flex w-full flex-row items-center justify-between gap-2">
+            <Button
+              variant="secondary"
+              onClick={() => onClose()}
+              className="mt-4 w-full">
+              Cancel
+            </Button>
+            {croppedUrl && (
+              <Button
+                className="w-full"
+                loading={uploading}
+                onClick={() => {
+                  upload();
+                }}>
+                Upload
+              </Button>
+            )}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
