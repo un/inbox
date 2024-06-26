@@ -1,14 +1,5 @@
 'use client';
 
-import {
-  Flex,
-  Heading,
-  Spinner,
-  Text,
-  Switch,
-  Button,
-  IconButton
-} from '@radix-ui/themes';
 import { useEffect, useState } from 'react';
 import { api } from '@/src/lib/trpc';
 import { VerificationModal } from './_components/verification-modal';
@@ -27,6 +18,11 @@ import { startRegistration } from '@simplewebauthn/browser';
 import { useRouter } from 'next/navigation';
 import { DeleteAllSessions } from './_components/session-modals';
 import { useQueryClient } from '@tanstack/react-query';
+import { PageTitle } from '../../_components/page-title';
+import { Skeleton } from '@/src/components/shadcn-ui/skeleton';
+import { Toggle } from '@/src/components/shadcn-ui/toggle';
+import { Switch } from '@/src/components/shadcn-ui/switch';
+import { Button } from '@/src/components/shadcn-ui/button';
 // import { PasskeyNameModal } from './_components/passkey-modals';
 
 export default function Page() {
@@ -162,39 +158,24 @@ export default function Page() {
     (initData?.passkeys.length ?? 0) > 1 || isPassword2FaEnabled;
 
   return (
-    <Flex
-      className="p-4"
-      direction="column"
-      gap="3">
-      <Heading
-        as="h1"
-        size="5">
-        Your Account Security
-      </Heading>
+    <div className="flex flex-col gap-4 p-4">
+      <PageTitle
+        title="Security"
+        description="Manage your account security"
+      />
 
       {isInitDataLoading && (
-        <Flex
-          align="center"
-          justify="center"
-          className="h-20 w-56">
-          <Spinner loading />
-        </Flex>
+        <Skeleton className="flex h-20 w-56 items-center justify-center" />
       )}
 
       {!isInitDataLoading && initData && (
         <div className="my-4 flex flex-col gap-5">
           <div className="flex flex-col gap-3">
             <span className="text-lg font-bold">Legacy Security</span>
-            <Text
-              as="label"
-              size="3"
-              weight="medium">
-              <Flex
-                gap="2"
-                align="center">
-                Enable Password and 2FA Login
+            <span className="text-sm">
+              <div className="flex flex-col gap-3">
+                <span>Enable Password and 2FA Login</span>
                 <Switch
-                  size="2"
                   checked={isPassword2FaEnabled}
                   disabled={
                     isDisablingLegacySecurity ||
@@ -223,9 +204,11 @@ export default function Page() {
                     }
                   }}
                 />
-                {isDisablingLegacySecurity && <Spinner loading />}
-              </Flex>
-            </Text>
+                {isDisablingLegacySecurity && (
+                  <Skeleton className="h-20 w-40" />
+                )}
+              </div>
+            </span>
 
             <div className="flex gap-2">
               {initData?.passwordSet && (
@@ -291,9 +274,9 @@ export default function Page() {
                     </span>
                   </div>
                   <div>
-                    <IconButton
-                      size="2"
-                      variant="soft"
+                    <Button
+                      size="icon"
+                      variant="destructive"
                       disabled={!canDeletePasskey}
                       onClick={async () => {
                         const token = await waitForVerification();
@@ -307,7 +290,7 @@ export default function Page() {
                           .catch(() => null);
                       }}>
                       <Trash size={16} />
-                    </IconButton>
+                    </Button>
                   </div>
                 </div>
               ))}
@@ -339,9 +322,9 @@ export default function Page() {
                     </span>
                   </div>
                   <div>
-                    <IconButton
-                      size="2"
-                      variant="soft"
+                    <Button
+                      size="icon"
+                      variant="destructive"
                       onClick={async () => {
                         const token = await waitForVerification();
                         if (!token) return;
@@ -353,7 +336,7 @@ export default function Page() {
                           .catch(() => null);
                       }}>
                       <Trash size={16} />
-                    </IconButton>
+                    </Button>
                   </div>
                 </div>
               ))}
@@ -385,6 +368,6 @@ export default function Page() {
       <DeletePasskeyModalRoot />
       {/* <PasskeyNameModalRoot /> */}
       <DeleteAllSessionsModalRoot />
-    </Flex>
+    </div>
   );
 }
