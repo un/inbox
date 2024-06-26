@@ -2,14 +2,6 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, useMemo } from 'react';
-import {
-  Flex,
-  Heading,
-  Button,
-  Text,
-  TextField,
-  Spinner
-} from '@radix-ui/themes';
 import { Camera, FloppyDisk } from '@phosphor-icons/react';
 import { api } from '@/src/lib/trpc';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
@@ -17,6 +9,10 @@ import useLoading from '@/src/hooks/use-loading';
 import { cn, generateAvatarUrl } from '@/src/lib/utils';
 import useAwaitableModal from '@/src/hooks/use-awaitable-modal';
 import { AvatarModal } from '@/src/components/shared/avatar-modal';
+import { PageTitle } from '../_components/page-title';
+import { Skeleton } from '@/src/components/shadcn-ui/skeleton';
+import { Button } from '@/src/components/shadcn-ui/button';
+import { Input } from '@/src/components/shadcn-ui/input';
 
 export default function ProfileComponent() {
   const router = useRouter();
@@ -65,107 +61,60 @@ export default function ProfileComponent() {
     updateOrg(orgShortCode, { name: orgNameValue });
   });
 
-  if (adminLoading) {
-    return (
-      <Flex
-        align="center"
-        justify="center"
-        className="h-fit">
-        <Text
-          weight="bold"
-          className="flex items-center gap-2 p-4">
-          <Spinner loading /> Loading...
-        </Text>
-      </Flex>
-    );
-  }
-
   if (!adminLoading && !isAdmin) {
     router.push(`/${orgShortCode}/settings`);
   }
 
   return (
-    <Flex
-      className="p-4"
-      direction="column"
-      gap="3">
-      <Heading
-        as="h1"
-        size="5">
-        Organization Profile
-      </Heading>
-      <Flex
-        className="my-4"
-        direction="column"
-        gap="5">
+    <div className="flex h-full w-full flex-col items-start gap-4 overflow-y-auto p-4">
+      <PageTitle title="Your Profile" />
+
+      <div className="flex flex-col gap-3">
+        {adminLoading && (
+          <Skeleton className="h-20 w-56 items-center justify-center" />
+        )}
         <Button
-          variant="ghost"
-          size="4"
           loading={avatarLoading}
           className="mx-0 aspect-square h-full max-h-[100px] w-full max-w-[100px] cursor-pointer rounded-full p-0"
           onClick={() => {
             openModal({});
           }}>
-          <Flex
+          <div
             className={cn(
-              avatarUrl ? 'bg-cover' : 'from-yellow-9 to-red-9',
-              'h-full w-full rounded-full bg-gradient-to-r *:opacity-0 *:transition-opacity *:duration-300 *:ease-in-out *:hover:opacity-100'
+              avatarUrl ? 'bg-cover' : 'from-accent-9 to-base-9',
+              'flex h-full w-full flex-col rounded-full bg-gradient-to-r *:opacity-0 *:transition-opacity *:duration-300 *:ease-in-out *:hover:opacity-100'
             )}
             style={{
               backgroundImage: avatarUrl ? `url(${avatarUrl})` : undefined
             }}>
-            <Flex
-              align="center"
-              justify="center"
-              direction="column"
-              className="bg-gray-12/50 h-full w-full rounded-full">
+            <div className="bg-gray-5 flex h-full w-full flex-col items-center justify-center rounded-full">
               <Camera size={24} />
-              <Text
-                size="2"
-                weight="bold">
-                Upload
-              </Text>
-            </Flex>
-          </Flex>
+              <span className="text-sm">Upload</span>
+            </div>
+          </div>
         </Button>
         {avatarError && (
-          <Text
-            size="2"
-            color="red">
-            {avatarError.message}
-          </Text>
+          <span className="text-red-10 text-sm">{avatarError.message}</span>
         )}
 
-        <Flex gap="2">
+        <div className="flex flex-row gap-2">
           <label>
-            <Text
-              as="div"
-              size="2"
-              mb="1"
-              weight="bold"
-              className="text-left">
-              Organization Name
-            </Text>
-            <TextField.Root
+            <span>Organization Name</span>
+            <Input
               value={orgNameValue}
               onChange={(e) => setOrgNameValue(e.target.value)}
             />
           </label>
-        </Flex>
-        <Flex gap="2">
-          <Button
-            size="2"
-            className="flex-1"
-            loading={saveLoading}
-            onClick={() =>
-              saveOrgProfile({ clearData: true, clearError: true })
-            }>
-            <FloppyDisk size={20} />
-            Save
-          </Button>
-        </Flex>
-      </Flex>
+        </div>
+
+        <Button
+          loading={saveLoading}
+          onClick={() => saveOrgProfile({ clearData: true, clearError: true })}>
+          <FloppyDisk size={20} />
+          Save
+        </Button>
+      </div>
       <AvatarModalRoot />
-    </Flex>
+    </div>
   );
 }
