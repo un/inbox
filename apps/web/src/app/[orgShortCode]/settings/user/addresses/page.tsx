@@ -1,12 +1,14 @@
 'use client';
 
-import { Button, Flex, Heading, Text, Card, Spinner } from '@radix-ui/themes';
 import { DataTable } from '@/src/components/shared/table';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { api } from '@/src/lib/trpc';
 import { columns } from './_components/columns';
 import useAwaitableModal from '@/src/hooks/use-awaitable-modal';
 import { ClaimAddressModal } from './_components/claim-address-modal';
+import { PageTitle } from '../../_components/page-title';
+import { Skeleton } from '@/src/components/shadcn-ui/skeleton';
+import { Button } from '@/src/components/shadcn-ui/button';
 
 export default function Page() {
   const username = useGlobalStore((state) => state.user.username);
@@ -29,106 +31,78 @@ export default function Page() {
   );
 
   return (
-    <Flex
-      className="p-4"
-      direction="column"
-      gap="4">
-      <Heading
-        as="h1"
-        size="5">
-        Your Personal Addresses
-      </Heading>
+    <div className="flex flex-col gap-4 p-4">
+      <PageTitle title="Your Addresses" />
 
-      {personalAddressesLoading && <Spinner loading />}
+      {personalAddressesLoading && <Skeleton className="h-10 w-full" />}
 
       {personalAddressesError && (
-        <Card>
-          <Text
-            color="red"
-            size="2">
+        <div className="flex flex-col gap-2 p-2">
+          <span className="text-red-10 text-sm">
             An error occurred while fetching addresses.
-          </Text>
+          </span>
           {personalAddressesError?.message}
-        </Card>
+        </div>
       )}
 
       {personalAddresses && personalAddresses.available.free.length > 0 && (
-        <Flex
-          direction="column"
-          gap="2">
-          <Heading
-            as="h2"
-            size="3">
-            Available Free Addresses
-          </Heading>
+        <div className="flex flex-col gap-2 p-2">
+          <span>Available Free Addresses</span>
           {personalAddresses.available.free.map((domain) => (
-            <Card key={domain}>
-              <Flex
-                direction="row"
-                gap="3"
-                align="center"
-                justify="between">
-                <Text className="font-mono">
-                  {username}@{domain}
-                </Text>
-                <Button
-                  variant="solid"
-                  size="2"
-                  onClick={() => {
-                    void claimAddress({
-                      address: `${username}@${domain}`
-                    })
-                      .then(() => refetchPersonalAddresses())
-                      .catch(() => null);
-                  }}>
-                  Claim
-                </Button>
-              </Flex>
-            </Card>
+            // <Card key={domain}>
+            <div
+              className="flex flex-row items-center justify-between gap-2"
+              key={domain}>
+              <span className="font-mono">
+                {username}@{domain}
+              </span>
+              <Button
+                variant="default"
+                onClick={() => {
+                  void claimAddress({
+                    address: `${username}@${domain}`
+                  })
+                    .then(() => refetchPersonalAddresses())
+                    .catch(() => null);
+                }}>
+                Claim
+              </Button>
+            </div>
+            // </Card>
           ))}
-        </Flex>
+        </div>
       )}
 
       {personalAddresses && personalAddresses.available.premium.length > 0 && (
-        <Flex
-          direction="column"
-          gap="2">
-          <Heading
-            as="h2"
-            size="3">
-            Available Premium Addresses
-          </Heading>
+        <div className="flex flex-col gap-2">
+          <span>
+            Available Premium Addresses{' '}
+            <span className="text-base-11 text-sm">
+              (with a pro subscription)
+            </span>
+          </span>
+
           {personalAddresses.available.premium.map((domain) => (
-            <Card key={domain}>
-              <Flex
-                direction="row"
-                gap="3"
-                align="center"
-                justify="between">
-                <Text className="font-mono">
-                  {username}@{domain}
-                </Text>
-                <Button
-                  variant="solid"
-                  size="2"
-                  disabled={
-                    !proStatus?.isPro || !personalAddresses.hasUninBonus
-                  }>
-                  Claim
-                </Button>
-              </Flex>
-            </Card>
+            // <Card key={domain}>
+            <div
+              className="flex flex-row items-center justify-between gap-2"
+              key={domain}>
+              <span className="font-mono">
+                {username}@{domain}
+              </span>
+              <Button
+                disabled={!proStatus?.isPro || !personalAddresses.hasUninBonus}>
+                Claim
+              </Button>
+            </div>
+            // </Card>
           ))}
-        </Flex>
+        </div>
       )}
 
       {personalAddresses && personalAddresses.identities.length > 0 && (
         <>
-          <Heading
-            as="h2"
-            size="3">
-            Your claimed addresses
-          </Heading>
+          <span>Your claimed addresses</span>
           <DataTable
             columns={columns}
             data={personalAddresses.identities}
@@ -137,6 +111,6 @@ export default function Page() {
       )}
 
       <ClaimAddressModalRoot />
-    </Flex>
+    </div>
   );
 }

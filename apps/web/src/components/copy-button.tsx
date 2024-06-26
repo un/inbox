@@ -1,9 +1,10 @@
 'use client';
-import { IconButton } from '@radix-ui/themes';
 import { type Responsive } from '@radix-ui/themes/props';
 import { useCopyToClipboard } from '@uidotdev/usehooks';
 import { Check, Copy } from '@phosphor-icons/react';
 import { useState } from 'react';
+import { Button } from './shadcn-ui/button';
+import { cn } from '../lib/utils';
 
 export default function CopyButton({
   text,
@@ -20,16 +21,19 @@ export default function CopyButton({
   const [, copyToClipboard] = useCopyToClipboard();
 
   return (
-    <IconButton
-      size={buttonSize}
+    <Button
+      variant="secondary"
+      size="icon-sm"
       onClick={() => {
         setHasCopied(true);
         void copyToClipboard(text);
         onCopy?.(text);
         setTimeout(() => setHasCopied(false), 1500);
       }}
-      variant="soft">
+      className={cn(
+        hasCopied ? 'bg-green-5 hover:bg-green-5 text-green-11' : ''
+      )}>
       {hasCopied ? <Check size={size} /> : <Copy size={size} />}
-    </IconButton>
+    </Button>
   );
 }

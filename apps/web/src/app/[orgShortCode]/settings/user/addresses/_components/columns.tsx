@@ -1,9 +1,10 @@
 'use client';
 
 import { createColumnHelper, type ColumnDef } from '@tanstack/react-table';
-import { ScrollArea, Text, Flex } from '@radix-ui/themes';
 import type { TypeId } from '@u22n/utils/typeid';
 import CopyButton from '@/src/components/copy-button';
+import { ScrollArea, ScrollBar } from '@/src/components/shadcn-ui/scroll-area';
+import { Avatar } from '@/src/components/avatar';
 
 type Identity = {
   publicId: TypeId<'emailIdentitiesPersonal'>;
@@ -42,11 +43,7 @@ export const columns: ColumnDef<Identity>[] = [
     header: 'Send Name',
     cell: ({ row }) => {
       const identity = row.original.emailIdentity;
-      return (
-        <Text color={identity.sendName ? undefined : 'gray'}>
-          {identity.sendName ?? 'None'}
-        </Text>
-      );
+      return <span>{identity.sendName ?? 'None'}</span>;
     }
   }),
   columnHelper.display({
@@ -55,17 +52,12 @@ export const columns: ColumnDef<Identity>[] = [
     cell: ({ row }) => {
       const identity = row.original.emailIdentity;
       return (
-        <Flex
-          gap="2"
-          align="center"
-          justify="center">
+        <div className="flex items-center justify-center gap-2">
           <ScrollArea
-            scrollbars="horizontal"
             className="w-32"
             type="hover">
-            <Text color={identity.forwardingAddress ? undefined : 'gray'}>
-              {identity.forwardingAddress ?? 'None'}
-            </Text>
+            <span>{identity.forwardingAddress ?? 'None'}</span>
+            <ScrollBar orientation="horizontal" />
           </ScrollArea>
           {identity.forwardingAddress && (
             <CopyButton
@@ -73,7 +65,7 @@ export const columns: ColumnDef<Identity>[] = [
               size={12}
             />
           )}
-        </Flex>
+        </div>
       );
     }
   }),
@@ -82,7 +74,17 @@ export const columns: ColumnDef<Identity>[] = [
     header: 'Assigned to',
     cell: ({ row }) => {
       const org = row.original.org;
-      return <Flex className="flex items-center">{org.name}</Flex>;
+      return (
+        <div className="flex flex-row items-center gap-1">
+          <Avatar
+            avatarProfilePublicId={org.publicId}
+            avatarTimestamp={org.avatarTimestamp}
+            name={org.name}
+            size="sm"
+          />
+          <span>{org.name}</span>
+        </div>
+      );
     }
   })
 ];
