@@ -69,13 +69,11 @@ Instead, we're detaching from its legacy underpinnings, to build something moder
 
 `UnInbox` is built with the following epic technologies & tools:
 
-- [Nuxt JS](https://nuxt.com) Vue based FrontEnd & Backend + modules
-- [Nitro](https://nitro.unjs.io/) Public API + Misc tooling
+- [Next JS](https://nextjs.org/) Vue based FrontEnd & Backend + modules
+- [Hono](https://hono.dev/) Public API + Misc tooling
 - [Tailwind](https://tailwindcss.com/) CSS Engine
 - [tRPC](https://trpc.io/) Typesafe APIs
 - [DrizzleORM](https://orm.drizzle.team/) ORM + MySQL
-
-_p.s. Things will change over time!_
 
 ## Running Locally
 

@@ -123,10 +123,6 @@ export default function Page() {
               value={firstNameValue}
               onChange={(e) => setFirstNameValue(e.target.value)}
             />
-            {/* <Input
-                value={firstNameValue}
-                onChange={(e) => setFirstNameValue(e.target.value)}
-                /> */}
           </label>
 
           {isInitDataLoading && <Skeleton />}

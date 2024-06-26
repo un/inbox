@@ -4,10 +4,12 @@ import { Button } from '@/src/components/shadcn-ui/button';
 import { api } from '@/src/lib/trpc';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { useState } from 'react';
-import { PlansTable } from './_components/plans-table';
+import { PricingTable } from './_components/plans-table';
 import CalEmbed from '@calcom/embed-react';
 import Link from 'next/link';
 import { cn } from '@/src/lib/utils';
+import { PageTitle } from '../../../_components/page-title';
+import { Skeleton } from '@radix-ui/themes';
 
 export default function Page() {
   const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
@@ -28,22 +30,26 @@ export default function Page() {
 
   return (
     <div className="flex w-full flex-col gap-2 p-4">
-      <h1 className="font-display text-3xl leading-5">Billing</h1>
-      <div>Manage your organization&apos;s subscription</div>
-      {isLoading && <div>Loading...</div>}
+      <PageTitle
+        title="Billing"
+        description="Manage your organization's billing"
+      />
+      {isLoading && (
+        <Skeleton className="h-20 w-56 items-center justify-center" />
+      )}
       {data && (
         <>
           <div className="my-2 flex gap-8">
             <div className="flex flex-col">
-              <div className="text-muted-foreground">Current Plan</div>
-              <div className="font-display text-2xl">
+              <div className="">Current Plan</div>
+              <div className="font-display text-xl">
                 {data.currentPlan === 'pro' ? 'Pro' : 'Free'}
               </div>
             </div>
             {data.totalUsers && (
               <div className="flex flex-col">
-                <div className="text-muted-foreground">Users</div>
-                <div className="font-display text-right text-2xl">
+                <div className="">Users</div>
+                <div className="font-display text-right text-xl">
                   {data.totalUsers}
                 </div>
               </div>
@@ -51,7 +57,7 @@ export default function Page() {
             {data.currentPlan === 'pro' && (
               <div className="flex flex-col">
                 <div className="text-muted-foreground">Billing Period</div>
-                <div className="font-display text-2xl">
+                <div className="font-display text-xl">
                   {data.currentPeriod === 'monthly' ? 'Monthly' : 'Yearly'}
                 </div>
               </div>
@@ -64,7 +70,7 @@ export default function Page() {
               Upgrade
             </Button>
           )}
-          {showPlan && <PlansTable />}
+          {showPlan && <PricingTable />}
           {data.currentPlan === 'pro' && (
             <Button
               className={cn(
