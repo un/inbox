@@ -80,7 +80,8 @@ export async function parseAddressIds(input: {
           addressType: input.addressType,
           domain: emailDomain,
           username: emailUsername,
-          orgId: input.orgId
+          orgId: input.orgId,
+          saidName: addressObject.name
         });
 
         return newContact;
