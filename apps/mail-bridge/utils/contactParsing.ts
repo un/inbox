@@ -66,7 +66,8 @@ export async function parseAddressIds(input: {
           addressType: input.addressType,
           domain: emailDomain,
           username: emailUsername,
-          orgId: input.orgId
+          orgId: input.orgId,
+          saidName: addressObject.name
         });
 
         return newContact;
@@ -109,7 +110,13 @@ async function tryParsingAsContact({
     }
   });
   if (contactQuery) {
-    if (contactQuery.name === null && saidName) {
+    // If the contact name is null or the same as the email address, update it to the name said in the email
+    if (
+      (contactQuery.name === null ||
+        contactQuery.name ===
+          `${contactQuery.emailUsername}@${contactQuery.emailDomain}`) &&
+      saidName
+    ) {
       await db
         .update(contacts)
         .set({
