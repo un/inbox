@@ -64,3 +64,4 @@ export const lookupNS = async (domain: string) =>
   );
 
 export * from './txtParsers';
+export { dnsVerifier } from './verifier';
