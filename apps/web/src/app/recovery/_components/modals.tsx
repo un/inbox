@@ -1,24 +1,25 @@
 import { type ModalComponent } from '@/src/hooks/use-awaitable-modal';
+import { Button } from '@/src/components/shadcn-ui/button';
 import {
-  AlertDialog as Dialog,
-  Button,
-  TextField,
-  Spinner
-} from '@radix-ui/themes';
-import { memo, Suspense, useState } from 'react';
+  AlertDialog,
+  AlertDialogPortal,
+  AlertDialogContent,
+  AlertDialogTitle,
+  AlertDialogDescription
+} from '@/src/components/shadcn-ui/alert-dialog';
+import { useState } from 'react';
 import {
   InputOTP,
   InputOTPGroup,
   InputOTPSlot
 } from '@/src/components/shadcn-ui/input-otp';
-import CopyButton from '@/src/components/copy-button';
-import { toDataURL } from 'qrcode';
-import Image from 'next/image';
+import { CopyButton } from '@/src/components/copy-button';
 import { TogglePasswordBox } from '@/src/components/toggle-password';
 import { useDebounce } from '@uidotdev/usehooks';
 import { api } from '@/src/lib/trpc';
 import { cn } from '@/src/lib/utils';
 import { type TypeId } from '@u22n/utils/typeid';
+import { QRCodeSVG } from 'qrcode.react';
 
 export function PasswordRecoveryModal({
   open,
@@ -49,96 +50,109 @@ export function PasswordRecoveryModal({
     password === confirmPassword && passwordStrength?.allowed;
 
   return (
-    <Dialog.Root open={open}>
-      <Dialog.Content className="w-full max-w-96 p-4">
-        <Dialog.Title className="mx-auto w-fit">
-          Reset Your Password
-        </Dialog.Title>
-        <Dialog.Description className="mx-auto w-fit">
-          Enter Your New Password
-        </Dialog.Description>
-        <div className="flex flex-col gap-2">
-          <div className="flex flex-col">
-            <TogglePasswordBox
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete="new-password"
-              id="password"
-              color={
-                passwordStrength
-                  ? 'error' in passwordStrength || passwordStrength.score < 3
-                    ? 'red'
-                    : 'green'
-                  : undefined
-              }
-            />
-            {password.length > 0 && (
-              <div className="flex gap-1">
-                {strengthLoading ? (
-                  <>
-                    <Spinner loading />
-                    <span>Checking...</span>
-                  </>
-                ) : (
-                  passwordStrength && (
-                    <div
-                      className={cn(
-                        'text-xs font-bold',
-                        passwordStrength.allowed
-                          ? 'text-green-500'
-                          : 'text-red-500'
-                      )}>
-                      Your Password is{' '}
-                      {
-                        ['very weak', 'weak', 'fair', 'strong', 'very strong'][
-                          passwordStrength.score
-                        ]
-                      }
-                      . It would take {passwordStrength.crackTime} to crack.
-                    </div>
-                  )
-                )}
+    <AlertDialog open={open}>
+      <AlertDialogPortal>
+        <AlertDialogContent className="w-full">
+          <AlertDialogTitle>Reset Your Password</AlertDialogTitle>
+          <AlertDialogDescription>
+            Enter Your New Password
+          </AlertDialogDescription>
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-1">
+              <TogglePasswordBox
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="new-password"
+                id="password"
+                placeholder="Password"
+                className={
+                  passwordStrength
+                    ? 'error' in passwordStrength || passwordStrength.score < 3
+                      ? 'red'
+                      : 'green'
+                    : undefined
+                }
+              />
+              {password.length > 0 && (
+                <div className="flex gap-1">
+                  {strengthLoading ? (
+                    <>
+                      <span className="text-muted-foreground text-xs font-bold">
+                        Checking...
+                      </span>
+                    </>
+                  ) : (
+                    passwordStrength && (
+                      <div
+                        className={cn(
+                          'text-xs font-bold',
+                          passwordStrength.allowed
+                            ? 'text-green-500'
+                            : 'text-red-500'
+                        )}>
+                        Your Password is{' '}
+                        {
+                          [
+                            'very weak',
+                            'weak',
+                            'fair',
+                            'strong',
+                            'very strong'
+                          ][passwordStrength.score]
+                        }
+                        . It would take {passwordStrength.crackTime} to crack.
+                      </div>
+                    )
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <TogglePasswordBox
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                id="confirm-password"
+                placeholder="Confirm Password"
+                color={
+                  confirmPassword && confirmPassword.length > 0
+                    ? password === confirmPassword
+                      ? 'green'
+                      : 'red'
+                    : undefined
+                }
+              />
+
+              {confirmPassword && confirmPassword.length > 0 && (
+                <div className="text-muted-foreground text-xs font-bold">
+                  {password !== confirmPassword && 'Passwords do not match'}
+                </div>
+              )}
+            </div>
+
+            {error && (
+              <div className="text-xs font-bold text-red-500">
+                {error.message}
               </div>
             )}
+
+            <Button
+              disabled={!passwordValid || isResetting}
+              loading={isResetting}
+              className="w-full"
+              onClick={async () => {
+                await resetPassword({
+                  accountPublicId,
+                  newPassword: password
+                });
+                onResolve(null);
+              }}>
+              Submit
+            </Button>
           </div>
-
-          <div className="flex flex-col">
-            <TogglePasswordBox
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              id="confirm-password"
-              color={
-                confirmPassword && confirmPassword.length > 0
-                  ? password === confirmPassword
-                    ? 'green'
-                    : 'red'
-                  : undefined
-              }
-            />
-          </div>
-
-          {error && (
-            <div className="text-xs font-bold text-red-500">
-              {error.message}
-            </div>
-          )}
-
-          <Button
-            disabled={!passwordValid}
-            loading={isResetting}
-            className="w-full"
-            onClick={async () => {
-              await resetPassword({
-                accountPublicId,
-                newPassword: password
-              });
-              onResolve(null);
-            }}>
-            Submit
-          </Button>
-        </div>
-      </Dialog.Content>
-    </Dialog.Root>
+        </AlertDialogContent>
+      </AlertDialogPortal>
+    </AlertDialog>
   );
 }
 
@@ -157,117 +171,75 @@ export function TwoFactorModal({
   } = api.auth.recovery.resetTwoFactor.useMutation();
 
   return (
-    <Dialog.Root open={open}>
-      <Dialog.Content className="w-full max-w-96 p-4">
-        <Dialog.Title className="mx-auto w-fit">
-          Setup Your Two Factor Auth
-        </Dialog.Title>
-        <Dialog.Description className="mx-auto w-fit">
-          Scan the QR Code with your Authenticator App and enter the code
-        </Dialog.Description>
-        <div className="flex flex-col gap-2">
-          <div className="flex flex-col gap-1">
-            <MemoizedQrCode text={uri} />
-            <TextField.Root
-              defaultValue={qrCodeSecret}
-              readOnly
-              className="w-full font-mono"
-              size="3">
-              <TextField.Slot className="p-1" />
-              <TextField.Slot>
-                <CopyButton text={qrCodeSecret} />
-              </TextField.Slot>
-            </TextField.Root>
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <label
-              htmlFor="code"
-              className="text-xs font-bold">
-              Two Factor Code
-            </label>
-            <InputOTP
-              id="code"
-              maxLength={6}
-              value={otp}
-              onChange={setOtp}>
-              <InputOTPGroup className="w-fit justify-center gap-2">
-                <InputOTPSlot
-                  index={0}
-                  className="rounded-md border"
+    <AlertDialog open={open}>
+      <AlertDialogPortal>
+        <AlertDialogContent className="w-fit">
+          <AlertDialogTitle>Setup Your Two Factor Auth</AlertDialogTitle>
+          <AlertDialogDescription>
+            Scan the QR Code with your Authenticator App and enter the code
+          </AlertDialogDescription>
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-4">
+              <QRCodeSVG
+                value={uri}
+                size={200}
+                className="mx-auto rounded bg-white p-2"
+              />
+              <div className="border-muted/80 flex w-full rounded border">
+                <div className="bg-muted text-muted-foreground text-bold flex w-[32ch] flex-1 items-center overflow-hidden truncate text-clip rounded rounded-r-none p-1 font-mono">
+                  {qrCodeSecret}
+                </div>
+                <CopyButton
+                  text={qrCodeSecret}
+                  className="bg-muted size-10 min-h-10 min-w-10 rounded rounded-l-none border-none"
                 />
-                <InputOTPSlot
-                  index={1}
-                  className="rounded-md border"
-                />
-                <InputOTPSlot
-                  index={2}
-                  className="rounded-md border"
-                />
-                <InputOTPSlot
-                  index={3}
-                  className="rounded-md border"
-                />
-                <InputOTPSlot
-                  index={4}
-                  className="rounded-md border"
-                />
-                <InputOTPSlot
-                  index={5}
-                  className="rounded-md border"
-                />
-              </InputOTPGroup>
-            </InputOTP>
-          </div>
-
-          {error && (
-            <div className="text-xs font-bold text-red-500">
-              {error.message}
+              </div>
             </div>
-          )}
 
-          <Button
-            disabled={otp.length < 6}
-            loading={isResetting}
-            className="w-full"
-            onClick={async () => {
-              await resetTwoFactor({
-                accountPublicId,
-                twoFactorCode: otp
-              });
-              onResolve(null);
-            }}>
-            Submit
-          </Button>
-        </div>
-      </Dialog.Content>
-    </Dialog.Root>
+            <div className="mx-auto flex w-fit flex-col gap-1">
+              <label
+                htmlFor="code"
+                className="text-xs font-bold">
+                Two Factor Code
+              </label>
+              <InputOTP
+                id="code"
+                maxLength={6}
+                value={otp}
+                onChange={setOtp}>
+                <InputOTPGroup className="mx-auto w-fit">
+                  <InputOTPSlot index={0} />
+                  <InputOTPSlot index={1} />
+                  <InputOTPSlot index={2} />
+                  <InputOTPSlot index={3} />
+                  <InputOTPSlot index={4} />
+                  <InputOTPSlot index={5} />
+                </InputOTPGroup>
+              </InputOTP>
+            </div>
+
+            {error && (
+              <div className="text-xs font-bold text-red-500">
+                {error.message}
+              </div>
+            )}
+
+            <Button
+              disabled={otp.length < 6 || isResetting}
+              loading={isResetting}
+              className="w-full"
+              onClick={async () => {
+                await resetTwoFactor({
+                  accountPublicId,
+                  twoFactorCode: otp
+                });
+                onResolve(null);
+              }}>
+              Submit
+            </Button>
+          </div>
+        </AlertDialogContent>
+      </AlertDialogPortal>
+    </AlertDialog>
   );
 }
-
-const MemoizedQrCode = memo(
-  function QRCode({ text }: { text?: string }) {
-    const qrCode = !text
-      ? Promise.resolve(null)
-      : toDataURL(text, { margin: 2 });
-
-    return (
-      <div className="mx-auto flex h-[200px] w-[200px] items-center justify-center rounded p-4">
-        <Suspense fallback={<Spinner loading />}>
-          {qrCode.then((src) =>
-            src ? (
-              <Image
-                src={src}
-                width={200}
-                height={200}
-                alt="QrCode for 2FA"
-                className="h-full w-full rounded"
-              />
-            ) : null
-          )}
-        </Suspense>
-      </div>
-    );
-  },
-  (prev, next) => prev.text === next.text
-);

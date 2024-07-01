@@ -12,7 +12,7 @@ import { Badge } from '@/src/components/shadcn-ui/badge';
 import { format } from 'date-fns';
 import { ScrollArea } from '@radix-ui/themes';
 import { Tooltip } from '@radix-ui/themes';
-import CopyButton from '@/src/components/copy-button';
+import { CopyButton } from '@/src/components/copy-button';
 import { env } from 'next-runtime-env';
 
 const WEBAPP_URL = env('NEXT_PUBLIC_WEBAPP_URL');
@@ -81,7 +81,7 @@ export const columns: ColumnDef<Member>[] = [
           </ScrollArea>
           <CopyButton
             text={inviteCode}
-            size={12}
+            iconSize={12}
           />
         </div>
       ) : null;
@@ -102,7 +102,7 @@ export const columns: ColumnDef<Member>[] = [
           </ScrollArea>
           <CopyButton
             text={`${WEBAPP_URL}/join/invite/${inviteCode}`}
-            size={12}
+            iconSize={12}
           />
         </div>
       ) : null;

@@ -1,14 +1,12 @@
 'use client';
 
 import {
-  Button,
-  Flex,
-  Spinner,
-  Text,
-  TextField,
   Tooltip,
-  Checkbox
-} from '@radix-ui/themes';
+  TooltipContent,
+  TooltipTrigger
+} from '@/src/components/shadcn-ui/tooltip';
+import { Button } from '@/src/components/shadcn-ui/button';
+import { Checkbox } from '@/src/components/shadcn-ui/checkbox';
 import Stepper from './_components/stepper';
 import { Check, Plus, Info } from '@phosphor-icons/react';
 import { useDebounce } from '@uidotdev/usehooks';
@@ -20,6 +18,10 @@ import { useCookies } from 'next-client-cookies';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import useLoading from '@/src/hooks/use-loading';
+import { Input } from '@/src/components/shadcn-ui/input';
+import { cn } from '@/src/lib/utils';
+import { Label } from '@/src/components/shadcn-ui/label';
+import { datePlus } from '@u22n/utils/ms';
 
 export default function Page() {
   const [username, setUsername] = useState<string>();
@@ -63,128 +65,86 @@ export default function Page() {
 
   function nextStep() {
     if (!username) return;
-    cookies.set('un-join-username', username);
+    cookies.set('un-join-username', username, {
+      expires: datePlus('15 minutes')
+    });
     router.push('/join/secure');
   }
 
   return (
-    <Flex
-      direction="column"
-      gap="3"
-      className="mx-auto w-full max-w-[560px] px-4">
-      <Text
-        mt="3"
-        size="4"
-        weight="bold">
+    <div className="mx-auto flex w-full max-w-[560px] flex-col gap-3 px-4">
+      <span className="text-bold mt-3 text-lg font-bold">
         Choose Your Username
-      </Text>
+      </span>
       <Stepper
         step={1}
         total={4}
       />
-      <Flex
-        direction="column"
-        gap="1">
-        <Text
-          size="3"
-          className="text-pretty"
-          weight="medium">
+      <div className="flex flex-col gap-1">
+        <span className="text-pretty font-medium">
           This will be your username across the whole Un ecosystem.
-        </Text>
-        <Text
-          size="3"
-          className="text-pretty"
-          weight="medium">
+        </span>
+        <span className="text-pretty font-medium">
           It&apos;s yours personally and can join as many organizations as you
           want.
-        </Text>
-      </Flex>
-      <Flex
-        direction="column"
-        align="start"
-        className="py-4"
-        gap="1">
-        <Text
-          size="3"
-          weight="bold">
-          Username
-        </Text>
-
-        <TextField.Root
-          className="w-full"
-          onChange={(e) => setUsername(e.target.value)}
-          color={
-            usernameData
-              ? usernameData.available
-                ? 'green'
-                : 'red'
-              : undefined
-          }>
-          <TextField.Slot />
-          <TextField.Slot>
-            <Tooltip content="Can contain only letters, numbers, dots, hyphens and underscore">
-              <Info size={16} />
-            </Tooltip>
-          </TextField.Slot>
-        </TextField.Root>
+        </span>
+      </div>
+      <div className="flex-col items-start gap-2 py-4 text-start">
+        <span className="text-sm font-bold">Username</span>
+        <div className="flex">
+          <Input
+            className="w-full"
+            onChange={(e) => setUsername(e.target.value)}
+          />
+          <Tooltip>
+            <TooltipTrigger className="p-2">
+              <Info size={20} />
+            </TooltipTrigger>
+            <TooltipContent>
+              Username can only contain letters, numbers, and underscores.
+            </TooltipContent>
+          </Tooltip>
+        </div>
 
         {!usernameData && usernameLoading && (
-          <Flex
-            align="center"
-            gap="1">
-            <Spinner loading />
-            <Text
-              weight="bold"
-              size="2">
-              Checking...
-            </Text>
-          </Flex>
+          <div className="text-muted-foreground text-sm font-bold">
+            Checking...
+          </div>
         )}
 
         {usernameData && !usernameLoading && (
-          <Flex
-            align="center"
-            gap="1">
+          <div className="flex items-center gap-1">
             {usernameData.available ? (
               <Check
                 size={16}
-                className="stroke-green-10"
+                className="text-green-10"
               />
             ) : (
               <Plus
                 size={16}
-                className="stroke-red-10 rotate-45"
+                className="text-red-10 rotate-45"
               />
             )}
-
-            <Text
-              color={!usernameData.available ? 'red' : 'green'}
-              weight="bold"
-              size="2">
+            <div
+              className={cn(
+                'text-sm font-bold',
+                usernameData.available ? 'text-green-10' : 'text-red-10'
+              )}>
               {usernameData.available ? 'Looks good!' : usernameData.error}
-            </Text>
-          </Flex>
+            </div>
+          </div>
         )}
 
         {usernameError && !usernameLoading && (
-          <Text
-            color="red"
-            weight="bold"
-            size="2">
+          <div className="text-red-10 text-sm font-bold">
             {usernameError.message}
-          </Text>
+          </div>
         )}
-      </Flex>
+      </div>
 
-      <Text
-        as="label"
-        size="2"
-        className="mx-auto py-3">
-        <Flex
-          as="span"
-          gap="2">
+      <Label className="mx-auto py-3">
+        <div className="flex gap-2">
           <Checkbox
-            size="1"
             checked={agree}
             onCheckedChange={(e) => setAgree(!!e)}
             disabled={!usernameData?.available}
@@ -206,8 +166,8 @@ export default function Page() {
             </a>
             .
           </span>
-        </Flex>
-      </Text>
+        </div>
+      </Label>
 
       <Button
         disabled={!usernameData?.available || !agree}
@@ -215,11 +175,10 @@ export default function Page() {
         I like it!
       </Button>
       <Button
-        variant="ghost"
-        my="2"
-        className="mx-auto w-fit p-2">
+        variant="link"
+        className="mx-auto my-2 w-fit p-2">
         <Link href="/">Sign in instead</Link>
       </Button>
-    </Flex>
+    </div>
   );
 }

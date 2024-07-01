@@ -1,33 +1,28 @@
+import { Button } from '@/src/components/shadcn-ui/button';
+import { Separator } from '@/src/components/shadcn-ui/separator';
 import {
-  AlertDialog as Dialog, // Alert Dialogs don't close on outside click
-  Flex,
-  Button,
-  Text,
-  Spinner,
-  Tooltip,
-  Box,
-  TextField,
-  Separator,
-  Card
-} from '@radix-ui/themes';
+  AlertDialog,
+  AlertDialogPortal,
+  AlertDialogContent,
+  AlertDialogTitle,
+  AlertDialogDescription
+} from '@/src/components/shadcn-ui/alert-dialog';
 import { type ModalComponent } from '@/src/hooks/use-awaitable-modal';
 import { type Dispatch, type SetStateAction, useEffect, useState } from 'react';
 import { api } from '@/src/lib/trpc';
 import useLoading from '@/src/hooks/use-loading';
 import { startRegistration } from '@simplewebauthn/browser';
-import { Check, Plus, Fingerprint, Question } from '@phosphor-icons/react';
+import { Check, Plus, Fingerprint } from '@phosphor-icons/react';
 import { TogglePasswordBox } from '@/src/components/toggle-password';
 import { useDebounce } from '@uidotdev/usehooks';
-import { toDataURL } from 'qrcode';
-import CopyButton from '@/src/components/copy-button';
+import { QRCodeSVG } from 'qrcode.react';
+import { CopyButton } from '@/src/components/copy-button';
 import {
   InputOTP,
   InputOTPGroup,
-  InputOTPSeparator,
   InputOTPSlot
 } from '@/src/components/shadcn-ui/input-otp';
-import { downloadAsFile } from '@/src/lib/utils';
-import Image from 'next/image';
+import { cn, downloadAsFile } from '@/src/lib/utils';
 
 export function PasskeyModal({
   open,
@@ -70,50 +65,38 @@ export function PasskeyModal({
   }, [error]);
 
   return (
-    <Dialog.Root
+    <AlertDialog
       open={open}
       onOpenChange={() => {
         if (open) onClose();
       }}>
-      <Dialog.Content className="w-full max-w-96 p-4">
-        <Dialog.Title className="mx-auto w-fit py-4">
-          Sign up with Passkey
-        </Dialog.Title>
-        <Flex
-          gap="2"
-          justify="center">
-          <Spinner loading={loading && !error} />
-          <Text
-            as="div"
-            size="2"
-            mb="1"
-            weight="bold">
+      <AlertDialogPortal>
+        <AlertDialogContent>
+          <AlertDialogTitle>Sign up with Passkey</AlertDialogTitle>
+          <AlertDialogDescription>
+            Press the button below to use your passkey to sign up
+          </AlertDialogDescription>
+          <div className="text-pretty p-2 text-center text-sm font-bold">
             {state}
-          </Text>
-        </Flex>
-
-        <Flex
-          className="w-full p-2"
-          direction="column"
-          gap="4">
-          <Button
-            loading={loading}
-            size="3"
-            className="mx-auto my-4"
-            onClick={() => run()}>
-            <Fingerprint size={20} />
-            <Text>Use your Passkey</Text>
-          </Button>
-          <Button
-            variant="soft"
-            color="gray"
-            size="3"
-            onClick={() => onClose()}>
-            Cancel
-          </Button>
-        </Flex>
-      </Dialog.Content>
-    </Dialog.Root>
+          </div>
+          <div className="flex w-full flex-col gap-2 p-2">
+            <Button
+              loading={loading}
+              className="mx-auto w-full gap-1"
+              onClick={() => run()}>
+              <Fingerprint size={20} />
+              <span>Use your Passkey</span>
+            </Button>
+            <Button
+              variant="outline"
+              className="mx-auto w-full"
+              onClick={() => onClose()}>
+              Cancel
+            </Button>
+          </div>
+        </AlertDialogContent>
+      </AlertDialogPortal>
+    </AlertDialog>
   );
 }
 
@@ -128,44 +111,40 @@ export function PasswordModal({
   const [step, setStep] = useState(1);
 
   return (
-    <Dialog.Root
+    <AlertDialog
       open={open}
       onOpenChange={() => {
         if (open) onClose();
       }}>
-      <Dialog.Content className="w-full max-w-96 p-4">
-        <Dialog.Title className="mx-auto w-fit">
-          Sign up with Password
-        </Dialog.Title>
-        <Dialog.Description>
-          <Text
-            weight="bold"
-            size="2"
-            align="center"
-            className="p-2">
-            {step === 1 ? 'Choose a password' : 'Setup 2FA'}
-          </Text>
-        </Dialog.Description>
-        {step === 1 && (
-          <PasswordModalStep1
-            password={password}
-            setPassword={setPassword}
-            onClose={onClose}
-            setStep={setStep}
-          />
-        )}
-        {step === 2 && (
-          <PasswordModalStep2
-            username={username}
-            password={password}
-            twoFactorCode={twoFactorCode}
-            setTwoFactorCode={setTwoFactorCode}
-            onResolve={onResolve}
-            setStep={setStep}
-          />
-        )}
-      </Dialog.Content>
-    </Dialog.Root>
+      <AlertDialogPortal>
+        <AlertDialogContent>
+          <AlertDialogTitle>Sign up with Password</AlertDialogTitle>
+          <AlertDialogDescription>
+            <span className="p-2 font-bold">
+              {step === 1 ? 'Choose a password' : 'Setup 2FA'}
+            </span>
+          </AlertDialogDescription>
+          {step === 1 && (
+            <PasswordModalStep1
+              password={password}
+              setPassword={setPassword}
+              onClose={onClose}
+              setStep={setStep}
+            />
+          )}
+          {step === 2 && (
+            <PasswordModalStep2
+              username={username}
+              password={password}
+              twoFactorCode={twoFactorCode}
+              setTwoFactorCode={setTwoFactorCode}
+              onResolve={onResolve}
+              setStep={setStep}
+            />
+          )}
+        </AlertDialogContent>
+      </AlertDialogPortal>
+    </AlertDialog>
   );
 }
 
@@ -221,117 +200,73 @@ const PasswordModalStep1 = ({
     password === confirmPassword;
 
   return (
-    <Flex
-      className="w-full p-2"
-      direction="column"
-      gap="4">
+    <div className="flex w-full flex-col gap-2 p-2">
       <TogglePasswordBox
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         autoComplete="new-password"
         id="password"
-        color={
-          passwordCheckData
-            ? 'error' in passwordCheckData || passwordCheckData.score < 3
-              ? 'red'
-              : 'green'
-            : undefined
-        }
+        placeholder="Password"
       />
       {passwordCheckLoading && (
-        <Flex
-          align="center"
-          gap="2"
-          className="w-full">
-          <Spinner loading />
-          <Text
-            size="2"
-            weight="bold">
-            Checking password strength
-          </Text>
-        </Flex>
+        <div className="text-muted-foreground w-full text-sm font-bold">
+          Checking password strength...
+        </div>
       )}
+
       {passwordCheckData && 'error' in passwordCheckData && (
-        <Text
-          size="2"
-          color="red"
-          weight="bold">
+        <div className="text-red-10 w-full text-sm font-bold">
           {passwordCheckData.error}
-        </Text>
+        </div>
       )}
+
       {passwordCheckData && 'score' in passwordCheckData && (
-        <Flex
-          gap="1"
-          align="center">
+        <div className="flex items-center gap-1">
           {passwordCheckData.score >= 3 ? (
             <Check
               size={16}
-              className="stroke-green-10"
+              className="text-green-10"
             />
           ) : (
             <Plus
               size={16}
-              className="stroke-red-10 rotate-45"
+              className="text-red-10 rotate-45"
             />
           )}
-          <Text
-            size="2"
-            weight="bold"
-            className="flex-1"
-            color={passwordCheckData.score >= 3 ? 'green' : 'red'}>
+          <div
+            className={cn(
+              'text-red-10 w-full flex-1 text-sm font-bold',
+              passwordCheckData.score >= 3 ? 'text-green-10' : 'text-red-10'
+            )}>
             Your password is{' '}
             {
               ['very weak', 'weak', 'fair', 'strong', 'very strong'][
                 passwordCheckData.score
               ]
             }
-          </Text>
-          <Tooltip
-            content={
-              <Text size="2">
-                It would take a computer {passwordCheckData.crackTime} to crack
-                it
-              </Text>
-            }>
-            <Question size={14} />
-          </Tooltip>
-        </Flex>
+          </div>
+        </div>
       )}
       <TogglePasswordBox
         value={confirmPassword}
         onChange={(e) => setConfirmPassword(e.target.value)}
         id="confirm-password"
-        color={
-          confirmPassword && confirmPassword.length > 0
-            ? password === confirmPassword
-              ? 'green'
-              : 'red'
-            : undefined
-        }
+        placeholder="Confirm Password"
       />
 
-      <Text
-        as="div"
-        size="2"
-        color="red"
-        className="text-center">
-        {error}
-      </Text>
+      <div className="text-red-10 text-center text-sm">{error}</div>
 
       <Button
-        size="2"
         disabled={!passwordValid}
         onClick={() => setStep(2)}>
         Next
       </Button>
       <Button
-        variant="soft"
-        color="gray"
-        size="2"
+        variant="outline"
         onClick={() => onClose()}>
         Cancel
       </Button>
-    </Flex>
+    </div>
   );
 };
 
@@ -351,7 +286,6 @@ const PasswordModalStep2 = ({
   setStep: Dispatch<SetStateAction<number>>;
 }) => {
   const [error, setError] = useState<Error | null>(null);
-  const [qrCode, setQrCode] = useState<string | null>(null);
 
   const twoFaChallenge =
     api.useUtils().auth.twoFactorAuthentication.createTwoFactorChallenge;
@@ -362,21 +296,14 @@ const PasswordModalStep2 = ({
     data: twoFaData,
     loading: twoFaLoading,
     run: generate2Fa
-  } = useLoading(
-    async (signal) => {
-      return await twoFaChallenge
-        .fetch({ username }, { signal })
-        .catch((e: Error) => {
-          setError(e);
-          throw e;
-        });
-    },
-    {
-      onSuccess({ uri }) {
-        void toDataURL(uri, { margin: 3 }).then((qr) => setQrCode(qr));
-      }
-    }
-  );
+  } = useLoading(async (signal) => {
+    return await twoFaChallenge
+      .fetch({ username }, { signal })
+      .catch((e: Error) => {
+        setError(e);
+        throw e;
+      });
+  });
 
   const totpSecret = twoFaData
     ? twoFaData.uri.match(/secret=([^&]+)/)?.[1] ?? ''
@@ -407,112 +334,83 @@ const PasswordModalStep2 = ({
   const inputValid = Boolean(password) && twoFactorCode.length === 6;
 
   return (
-    <Flex
-      className="w-full p-2"
-      direction="column"
-      gap="4">
+    <div className="flex w-full flex-col gap-2 p-2">
       {twoFaLoading && (
-        <Flex
-          align="center"
-          gap="2"
-          className="w-full">
-          <Spinner loading />
-          <Text
-            size="2"
-            weight="bold">
-            Generating 2FA challenge
-          </Text>
-        </Flex>
+        <div className="text-muted-foreground w-full font-bold">
+          Generating 2FA challenge
+        </div>
       )}
 
       {twoFaData && !twoFaLoading && (
-        <Flex
-          className="w-full"
-          direction="column"
-          gap="4">
-          <Text
-            size="2"
-            weight="bold">
+        <div className="flex w-full flex-col gap-4">
+          <div className="text-bold text-sm">
             Scan this QR code with your 2FA app
-          </Text>
-          <Box className="mx-auto w-full max-w-48">
+          </div>
+          <div className="mx-auto w-full max-w-48">
             <>
-              {qrCode && (
-                <Image
-                  src={qrCode}
-                  width={200}
-                  height={200}
-                  alt="QrCode for 2FA"
-                  className="w-fit rounded"
+              {twoFaData && (
+                <QRCodeSVG
+                  value={twoFaData.uri}
+                  size={200}
+                  className="mx-auto rounded bg-white p-2"
                 />
               )}
             </>
-          </Box>
+          </div>
 
-          <TextField.Root
-            defaultValue={totpSecret}
-            readOnly
-            className="w-full font-mono"
-            size="3">
-            <TextField.Slot className="p-1" />
-            <TextField.Slot>
-              <CopyButton text={totpSecret} />
-            </TextField.Slot>
-          </TextField.Root>
+          <div className="border-muted/80 flex rounded border">
+            <div className="bg-muted text-muted-foreground text-bold flex w-[32ch] flex-1 items-center overflow-hidden truncate text-clip rounded rounded-r-none p-1 font-mono">
+              {totpSecret}
+            </div>
+            <CopyButton
+              text={totpSecret}
+              className="bg-muted size-10 min-h-10 min-w-10 rounded rounded-l-none border-none"
+            />
+          </div>
 
-          <Separator size="4" />
-          <Flex
-            gap="2"
-            direction="column">
-            <Text
-              size="2"
-              weight="bold">
-              Enter the 6-digit code from your 2FA app
-            </Text>
+          <Separator className="w-full" />
+          <div className="mx-auto flex w-fit flex-col gap-1">
+            <label
+              htmlFor="code"
+              className="text-xs font-bold">
+              Two Factor Code
+            </label>
             <InputOTP
+              id="code"
               maxLength={6}
               value={twoFactorCode}
               onChange={setTwoFactorCode}>
-              <InputOTPGroup>
+              <InputOTPGroup className="mx-auto w-fit">
                 <InputOTPSlot index={0} />
                 <InputOTPSlot index={1} />
                 <InputOTPSlot index={2} />
-              </InputOTPGroup>
-              <InputOTPSeparator />
-              <InputOTPGroup>
                 <InputOTPSlot index={3} />
                 <InputOTPSlot index={4} />
                 <InputOTPSlot index={5} />
               </InputOTPGroup>
             </InputOTP>
-          </Flex>
+          </div>
 
           {error && (
-            <Text
-              size="2"
-              color="red"
-              weight="bold">
+            <div className="text-xs font-bold text-red-500">
               {error.message}
-            </Text>
+            </div>
           )}
-        </Flex>
+        </div>
       )}
 
       <Button
-        size="2"
-        disabled={!inputValid}
+        disabled={!inputValid || signUpLoading}
         loading={signUpLoading}
         onClick={() => signUp({ clearData: true, clearError: true })}>
         Finish
       </Button>
       <Button
-        variant="soft"
-        color="gray"
-        size="2"
+        variant="outline"
         onClick={() => setStep(1)}>
         Back
       </Button>
-    </Flex>
+    </div>
   );
 };
 
@@ -525,51 +423,44 @@ export function RecoveryCodeModal({
   const [downloaded, setDownloaded] = useState(false);
 
   return (
-    <Dialog.Root open={open}>
-      <Dialog.Content className="w-full max-w-96 p-4">
-        <Dialog.Title className="mx-auto w-fit py-2">
-          Recovery Code
-        </Dialog.Title>
-        <Flex
-          className="w-full p-2"
-          direction="column"
-          gap="4">
-          <Text
-            size="2"
-            weight="bold"
-            align="center">
-            Save this recovery code in a safe place, without this code you would
-            not be able to recover your account
-          </Text>
-          <Card>
-            <div className="flex gap-1">
-              <Text className="w-full break-words font-mono">
-                {recoveryCode}
-              </Text>
-              <CopyButton
-                text={recoveryCode}
-                onCopy={() => {
-                  setDownloaded(true);
-                }}
-              />
+    <AlertDialog open={open}>
+      <AlertDialogPortal>
+        <AlertDialogContent>
+          <AlertDialogTitle>Recovery Code</AlertDialogTitle>
+          <div className="flex w-full flex-col gap-4 p-2">
+            <div className="text-pretty text-center text-sm font-bold">
+              Save this recovery code in a safe place, without this code you
+              would not be able to recover your account
             </div>
-          </Card>
-          <Button
-            size="2"
-            onClick={() => {
-              downloadAsFile(`${username}-recovery-code.txt`, recoveryCode);
-              setDownloaded(true);
-            }}>
-            {!downloaded ? 'Download' : 'Download Again'}
-          </Button>
-          <Button
-            size="2"
-            disabled={!downloaded}
-            onClick={() => onResolve(null)}>
-            Close
-          </Button>
-        </Flex>
-      </Dialog.Content>
-    </Dialog.Root>
+            <div className="bg-card rounded border">
+              <div className="flex gap-1">
+                <div className="w-full break-words font-mono">
+                  {recoveryCode}
+                </div>
+                <CopyButton
+                  text={recoveryCode}
+                  onCopy={() => {
+                    setDownloaded(true);
+                  }}
+                />
+              </div>
+            </div>
+            <Button
+              onClick={() => {
+                downloadAsFile(`${username}-recovery-code.txt`, recoveryCode);
+                setDownloaded(true);
+              }}>
+              {!downloaded ? 'Download' : 'Download Again'}
+            </Button>
+            <Button
+              variant="outline"
+              disabled={!downloaded}
+              onClick={() => onResolve(null)}>
+              Close
+            </Button>
+          </div>
+        </AlertDialogContent>
+      </AlertDialogPortal>
+    </AlertDialog>
   );
 }

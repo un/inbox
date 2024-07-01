@@ -1,5 +1,6 @@
-import { Flex, Button, Text, Badge } from '@radix-ui/themes';
 import { Fingerprint, Key } from '@phosphor-icons/react';
+import { Button } from '@/src/components/shadcn-ui/button';
+import { Badge } from '@/src/components/shadcn-ui/badge';
 
 type Selected = {
   selected: 'passkey' | 'password';
@@ -10,29 +11,18 @@ export function PasskeyCard({ selected, setSelected }: Selected) {
   return (
     <Button
       onClick={() => setSelected('passkey')}
-      variant="soft"
-      color={selected === 'passkey' ? undefined : 'gray'}
+      variant={selected === 'passkey' ? 'secondary' : 'outline'}
       className="min-h-48 flex-1 p-4">
-      <Flex
-        direction="column"
-        align="center"
-        justify="center"
-        gap="1"
-        className="h-full w-full">
+      <div className="flex h-full w-full flex-col items-center justify-center gap-2">
         <Fingerprint size={36} />
-        <Text
-          size="3"
-          weight="bold">
-          Passkey
-        </Text>
-        <Text size="2">Fingerprint, Face ID, etc</Text>
+        <span className="font-bold">Passkey</span>
+        <span className="text-sm">Fingerprint, Face ID, etc</span>
         <Badge
-          color="grass"
-          variant="surface"
-          my="1">
+          variant="secondary"
+          className="border-green-7 bg-green-3">
           More Secure and Convenient
         </Badge>
-      </Flex>
+      </div>
     </Button>
   );
 }
@@ -41,30 +31,18 @@ export function PasswordCard({ selected, setSelected }: Selected) {
   return (
     <Button
       onClick={() => setSelected('password')}
-      variant="soft"
-      color={selected === 'password' ? undefined : 'gray'}
+      variant={selected === 'passkey' ? 'outline' : 'secondary'}
       className="min-h-48 flex-1 p-4">
-      <Flex
-        direction="column"
-        align="center"
-        justify="center"
-        gap="1"
-        className="h-full w-full">
+      <div className="flex h-full w-full flex-col items-center justify-center gap-2">
         <Key size={32} />
-
-        <Text
-          size="3"
-          weight="bold">
-          Password & 2FA
-        </Text>
-        <Text size="2">Alphanumeric and Rolling Codes</Text>
+        <span className="font-bold">Password & 2FA</span>
+        <span className="text-sm">Alphanumeric and Rolling Codes</span>
         <Badge
-          color="yellow"
-          variant="surface"
-          my="1">
+          variant="secondary"
+          className="border-yellow-7 bg-yellow-3">
           Less Secure and Inconvenient
         </Badge>
-      </Flex>
+      </div>
     </Button>
   );
 }
