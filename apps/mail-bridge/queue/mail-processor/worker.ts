@@ -32,6 +32,7 @@ import { env } from '../../env';
 import { trace } from '@u22n/otel/exports';
 import { logger } from '@u22n/otel/logger';
 import { discord } from '@u22n/utils/discord';
+import mime from 'mime';
 
 const { host, username, password, port } = new URL(
   env.DB_REDIS_CONNECTION_STRING
@@ -694,7 +695,15 @@ export const worker = new Worker<
             uploadAndAttachAttachment(
               {
                 orgId: orgId,
-                fileName: attachment.filename || 'No_Filename',
+                fileName:
+                  attachment.filename ||
+                  generateFileName({
+                    identifier:
+                      messageFrom[0]?.name ||
+                      messageFrom[0]?.address ||
+                      'Unknown',
+                    fileType: attachment.contentType
+                  }),
                 fileType: attachment.contentType,
                 fileContent: attachment.content,
                 convoId: convoId,
@@ -984,4 +993,19 @@ function replaceCidWithUrl(
         acc.replaceAll(`cid:${attachment.cid}`, attachment.attachmentUrl),
       html
     );
+}
+
+// Expand this function to handle more automatic filename generation
+type GenerationContext = {
+  fileType: string;
+  identifier: string;
+};
+
+function generateFileName({ identifier, fileType }: GenerationContext) {
+  switch (fileType) {
+    case 'text/calendar':
+      return `${identifier} Calender Invite.ics`;
+    default:
+      return `Attachment (${identifier}) ${new Date().toDateString()}.${mime.getExtension(fileType) || 'bin'}`;
+  }
 }
