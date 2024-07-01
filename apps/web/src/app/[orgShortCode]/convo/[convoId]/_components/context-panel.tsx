@@ -1,7 +1,17 @@
 'use client';
 
 import { cn, generateAvatarUrl, getInitials } from '@/src/lib/utils';
-import { Avatar, Box, HoverCard } from '@radix-ui/themes';
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage
+} from '@/src/components/shadcn-ui/avatar';
+import {
+  HoverCard,
+  HoverCardTrigger,
+  HoverCardContent,
+  HoverCardPortal
+} from '@/src/components/shadcn-ui/hover-card';
 import { CaretUp, CaretDown } from '@phosphor-icons/react';
 import { useState } from 'react';
 import { type formatParticipantData } from '../../utils';
@@ -39,41 +49,47 @@ export function ContextPanel({
               <div
                 className="flex flex-col gap-2"
                 key={participant.participantPublicId}>
-                <HoverCard.Root>
-                  <HoverCard.Trigger>
-                    <Box
+                <HoverCard>
+                  <HoverCardTrigger>
+                    <div
                       style={{ zIndex: 100 + i }}
                       className={cn(
                         !participantOpen && i !== 0 ? '-ml-2' : '',
                         'dark:outline-graydark-1 dark:bg-graydark-1 outline-gray-1 bg-gray-1 w-fit rounded-full outline'
                       )}>
-                      <Avatar
-                        src={
-                          generateAvatarUrl({
-                            avatarTimestamp: participant.avatarTimestamp,
-                            publicId: participant.avatarProfilePublicId,
-                            size: 'lg'
-                          }) ?? undefined
-                        }
-                        fallback={getInitials(participant.name)}
-                        radius="full"
-                      />
-                    </Box>
-                  </HoverCard.Trigger>
-                  <HoverCard.Content
-                    className="max-w-[300px] px-2 py-1"
-                    side={participantOpen ? 'left' : 'bottom'}>
-                    <div className="flex flex-col">
-                      <span className="truncate">{participant.name}</span>
-                      {participantOpen && participant.signatureHtml && (
-                        <div className="flex flex-col">
-                          <span className="uppercase">Signature</span>
-                          <SignatureHTML html={participant.signatureHtml} />
-                        </div>
-                      )}
+                      <Avatar>
+                        <AvatarImage
+                          src={
+                            generateAvatarUrl({
+                              avatarTimestamp: participant.avatarTimestamp,
+                              publicId: participant.avatarProfilePublicId,
+                              size: 'lg'
+                            }) ?? undefined
+                          }
+                          className="rounded-full"
+                        />
+                        <AvatarFallback className="rounded-full">
+                          {getInitials(participant.name)}
+                        </AvatarFallback>
+                      </Avatar>
                     </div>
-                  </HoverCard.Content>
-                </HoverCard.Root>
+                  </HoverCardTrigger>
+                  <HoverCardPortal>
+                    <HoverCardContent
+                      className="max-w-[300px] px-2 py-1"
+                      side={participantOpen ? 'left' : 'bottom'}>
+                      <div className="flex flex-col">
+                        <span className="truncate">{participant.name}</span>
+                        {participantOpen && participant.signatureHtml && (
+                          <div className="flex flex-col">
+                            <span className="uppercase">Signature</span>
+                            <SignatureHTML html={participant.signatureHtml} />
+                          </div>
+                        )}
+                      </div>
+                    </HoverCardContent>
+                  </HoverCardPortal>
+                </HoverCard>
                 {participantOpen && (
                   <span className="truncate">{participant.name}</span>
                 )}
@@ -106,7 +122,7 @@ export function ContextPanel({
 }
 
 const SignatureHTML = memo(
-  function SIgnatureHTML({ html }: { html: string }) {
+  function SignatureHTML({ html }: { html: string }) {
     return (
       <div
         dangerouslySetInnerHTML={{ __html: html }}

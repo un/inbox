@@ -1,6 +1,12 @@
 import { type ModalComponent } from '@/src/hooks/use-awaitable-modal';
 import { api } from '@/src/lib/trpc';
-import { Button, Dialog } from '@radix-ui/themes';
+import { Button } from '@/src/components/shadcn-ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle
+} from '@/src/components/shadcn-ui/dialog';
 
 export function DeleteAllSessions({
   open,
@@ -14,19 +20,17 @@ export function DeleteAllSessions({
     error
   } = api.account.security.deleteAllSessions.useMutation();
   return (
-    <Dialog.Root open={open}>
-      <Dialog.Content className="w-full max-w-96 p-4">
-        <Dialog.Title className="mx-auto w-fit">
-          Delete All Sessions
-        </Dialog.Title>
-        <Dialog.Description className="mx-auto flex w-fit text-balance p-2 text-center text-sm font-bold">
+    <Dialog open={open}>
+      <DialogContent>
+        <DialogTitle>Delete All Sessions</DialogTitle>
+        <DialogDescription>
           This will log you out of all devices and sessions including the
           current device. Are you sure you want to continue?
-        </Dialog.Description>
+        </DialogDescription>
         <div className="text-red-10 w-full">{error?.message}</div>
         <div className="flex flex-col gap-2">
           <Button
-            color="red"
+            className="bg-red-10 w-full"
             onClick={async () => {
               await logoutAll({ verificationToken });
               onResolve(null);
@@ -35,13 +39,13 @@ export function DeleteAllSessions({
             Logout of all sessions
           </Button>
           <Button
-            color="gray"
-            variant="soft"
+            variant="outline"
+            className="w-full"
             onClick={() => onClose()}>
             Cancel
           </Button>
         </div>
-      </Dialog.Content>
-    </Dialog.Root>
+      </DialogContent>
+    </Dialog>
   );
 }

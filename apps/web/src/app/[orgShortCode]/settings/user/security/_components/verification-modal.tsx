@@ -7,7 +7,15 @@ import { TogglePasswordBox } from '@/src/components/toggle-password';
 import { type ModalComponent } from '@/src/hooks/use-awaitable-modal';
 import useLoading from '@/src/hooks/use-loading';
 import { api } from '@/src/lib/trpc';
-import { Badge, Button, Dialog, Flex, Separator, Text } from '@radix-ui/themes';
+import { Button } from '@/src/components/shadcn-ui/button';
+import { Badge } from '@/src/components/shadcn-ui/badge';
+import { Separator } from '@/src/components/shadcn-ui/separator';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle
+} from '@/src/components/shadcn-ui/dialog';
 import { startAuthentication } from '@simplewebauthn/browser';
 import { useState } from 'react';
 
@@ -69,23 +77,16 @@ export function VerificationModal({
   );
 
   return (
-    <Dialog.Root open={open}>
-      <Dialog.Content className="w-full max-w-96 p-4">
-        <Dialog.Title
-          className="mx-auto w-fit py-2"
-          size="3">
-          Verification Needed
-        </Dialog.Title>
-        <Flex
-          gap="3"
-          direction="column"
-          align="center">
-          <Text size="3">
-            We need to verify your identity before you can proceed changing your
-            Security settings.
-          </Text>
+    <Dialog open={open}>
+      <DialogContent>
+        <DialogTitle>Verification Needed</DialogTitle>
+        <DialogDescription>
+          We need to verify your identity before you can proceed changing your
+          Security settings.
+        </DialogDescription>
+        <div className="flex flex-col items-center gap-3">
           {hasPasskey && (
-            <Flex>
+            <div className="flex">
               <Button
                 onClick={() =>
                   verifyWithPasskey({ clearError: true, clearData: true })
@@ -93,24 +94,15 @@ export function VerificationModal({
                 loading={passkeyVerificationLoading}>
                 Verify with Passkey
               </Button>
-            </Flex>
+            </div>
           )}
 
           {hasPasskey && hasPassword ? (
-            <Flex
-              align="center"
-              gap="2"
-              className="py-4">
-              <Separator
-                size="4"
-                color="grass"
-              />
+            <div className="flex w-fit items-center gap-2 py-4">
+              <Separator className="bg-green-8 flex-1" />
               <Badge className="uppercase">or</Badge>
-              <Separator
-                size="4"
-                color="grass"
-              />
-            </Flex>
+              <Separator className="bg-green-8 flex-1" />
+            </div>
           ) : null}
 
           {hasPassword && (
@@ -150,29 +142,23 @@ export function VerificationModal({
           )}
 
           {passkeyVerificationError && (
-            <Text
-              size="3"
-              color="red">
+            <span className="text-red-10">
               {passkeyVerificationError.message}
-            </Text>
+            </span>
           )}
 
           {passwordError && (
-            <Text
-              size="3"
-              color="red">
-              {passwordError.message}
-            </Text>
+            <span className="text-red-10">{passwordError.message}</span>
           )}
 
           <Button
             onClick={() => onClose()}
-            className="mt-4"
-            variant="soft">
+            className="mt-4 w-full"
+            variant="outline">
             Cancel
           </Button>
-        </Flex>
-      </Dialog.Content>
-    </Dialog.Root>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

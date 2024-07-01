@@ -4,10 +4,14 @@ import AvatarCrop from '@/src/components/avatar-crop';
 import { type ModalComponent } from '@/src/hooks/use-awaitable-modal';
 import uploadTracker from '@/src/lib/upload';
 import { cn } from '@/src/lib/utils';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogTitle
+} from '@/src/components/shadcn-ui/alert-dialog';
 import { type TypeId } from '@u22n/utils/typeid';
 import { Camera } from '@phosphor-icons/react';
 import { useRef, useState } from 'react';
-import { Dialog, DialogContent, DialogTitle } from '../shadcn-ui/dialog';
 import { Button } from '../shadcn-ui/button';
 import { Progress } from '../shadcn-ui/progress';
 
@@ -89,13 +93,10 @@ export function AvatarModal({
   };
 
   return (
-    <Dialog open={open}>
-      <DialogContent className="w-full max-w-96 p-4">
-        <DialogTitle className="mx-auto w-fit py-2">
-          Change Your Avatar
-        </DialogTitle>
-
-        <div className="flex w-full flex-col items-center justify-center gap-2 p-2">
+    <AlertDialog open={open}>
+      <AlertDialogContent>
+        <AlertDialogTitle>Change Your Avatar</AlertDialogTitle>
+        <div className="flex w-full flex-col items-center gap-4">
           {!editing && (
             <Button
               variant="secondary"
@@ -172,7 +173,7 @@ export function AvatarModal({
             )}
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

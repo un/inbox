@@ -5,7 +5,6 @@ import {
   DialogContent,
   DialogFooter,
   DialogHeader,
-  DialogPortal,
   DialogTitle
 } from '@/src/components/shadcn-ui/dialog';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
@@ -16,37 +15,35 @@ export function ClaimEmailIdentity() {
   return (
     // This dialog should be opened when it is mounted
     <Dialog defaultOpen>
-      <DialogPortal>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="text-base">
-              No Associated Email found for your account
-            </DialogTitle>
-          </DialogHeader>
-          <div className="flex flex-col gap-2">
-            <p>
-              You don&apos;t have any email addresses assigned to your account.
-              <br />
-              Do you want to claim a free @uninbox.me email address?
-            </p>
-            <p className="text-muted-foreground text-sm">
-              You can also ask your Organization admin to assign a email to you
-            </p>
-          </div>
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button variant="secondary">Ignore for now</Button>
-            </DialogClose>
-            <DialogClose asChild>
-              <Button asChild>
-                <Link href={`/${orgShortCode}/settings/user/addresses`}>
-                  Claim Free @uninbox.me Address
-                </Link>
-              </Button>
-            </DialogClose>
-          </DialogFooter>
-        </DialogContent>
-      </DialogPortal>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle className="text-base">
+            No Associated Email found for your account
+          </DialogTitle>
+        </DialogHeader>
+        <div className="flex flex-col gap-2">
+          <p>
+            You don&apos;t have any email addresses assigned to your account.
+            <br />
+            Do you want to claim a free @uninbox.me email address?
+          </p>
+          <p className="text-muted-foreground text-sm">
+            You can also ask your Organization admin to assign a email to you
+          </p>
+        </div>
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button variant="secondary">Ignore for now</Button>
+          </DialogClose>
+          <DialogClose asChild>
+            <Button asChild>
+              <Link href={`/${orgShortCode}/settings/user/addresses`}>
+                Claim Free @uninbox.me Address
+              </Link>
+            </Button>
+          </DialogClose>
+        </DialogFooter>
+      </DialogContent>
     </Dialog>
   );
 }

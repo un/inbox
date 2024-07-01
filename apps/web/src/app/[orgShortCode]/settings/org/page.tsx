@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, useMemo } from 'react';
+import { Button } from '@/src/components/shadcn-ui/button';
 import { Camera, FloppyDisk } from '@phosphor-icons/react';
 import { api } from '@/src/lib/trpc';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
@@ -11,7 +12,6 @@ import useAwaitableModal from '@/src/hooks/use-awaitable-modal';
 import { AvatarModal } from '@/src/components/shared/avatar-modal';
 import { PageTitle } from '../_components/page-title';
 import { Skeleton } from '@/src/components/shadcn-ui/skeleton';
-import { Button } from '@/src/components/shadcn-ui/button';
 import { Input } from '@/src/components/shadcn-ui/input';
 
 export default function ProfileComponent() {

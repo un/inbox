@@ -1,7 +1,12 @@
 import { type ModalComponent } from '@/src/hooks/use-awaitable-modal';
 import { api } from '@/src/lib/trpc';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
-import { Dialog, Flex, Text, Button } from '@radix-ui/themes';
+import { Button } from '@/src/components/shadcn-ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle
+} from '@/src/components/shadcn-ui/dialog';
 import Link from 'next/link';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -24,40 +29,30 @@ export function ClaimAddressModal({
     });
 
   return (
-    <Dialog.Root
+    <Dialog
       open={open}
       onOpenChange={(open) => {
         if (!open) {
           onClose();
         }
       }}>
-      <Dialog.Content className="w-full max-w-96 p-4">
-        <Dialog.Title
-          className="mx-auto w-fit py-2"
-          size="2">
+      <DialogContent>
+        <DialogTitle>
           Do you want to claim <span className="underline">{address}</span> ?
-        </Dialog.Title>
+        </DialogTitle>
 
-        <Flex
-          gap="4"
-          direction="column">
-          <Text
-            size="2"
-            as="div">
+        <div className="flex flex-col gap-4">
+          <div className="text-sm">
             You are about to link {address} to the Org {currentOrgName}. This
             action is irreversible.
-          </Text>
-          <Text
-            size="2"
-            as="div">
+          </div>
+          <div className="text-sm">
             If you&apos;re removed from this organization in the future,
             you&apos;ll lose all associated conversations. Our support team may
             be able to reset the address for use in another organization.
-          </Text>
+          </div>
 
-          <Text
-            size="2"
-            as="div">
+          <div className="text-sm">
             We suggest to claim your personal addresses with a personal Org. You
             can{' '}
             <Link
@@ -66,31 +61,22 @@ export function ClaimAddressModal({
               create a personal Org
             </Link>{' '}
             if you don&apos;t have one already.
-          </Text>
+          </div>
 
-          <Text
-            size="2"
-            as="div"
-            color="red">
+          <div className="text-red-10 text-sm">
             Make sure you want to claim this address with {currentOrgName}, if
             not Cancel this action, change the selected Org and try again.
-          </Text>
-        </Flex>
+          </div>
+        </div>
 
-        <Flex
-          gap="3"
-          align="center"
-          justify="end"
-          className="mt-4">
+        <div className="mt-4 flex items-center justify-end gap-3">
           <Button
-            size="2"
-            variant="surface"
+            variant="outline"
             onClick={() => onClose()}>
             Cancel
           </Button>
           <Button
-            size="2"
-            variant="solid"
+            variant="default"
             onClick={() => {
               if (address === '') return;
               setIsClaiming(true);
@@ -109,8 +95,8 @@ export function ClaimAddressModal({
             loading={isClaiming}>
             I Understand, Claim Address
           </Button>
-        </Flex>
-      </Dialog.Content>
-    </Dialog.Root>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

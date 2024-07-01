@@ -1,5 +1,11 @@
 import { type ModalComponent } from '@/src/hooks/use-awaitable-modal';
-import { Button, Dialog } from '@radix-ui/themes';
+import { Button } from '@/src/components/shadcn-ui/button';
+import {
+  Dialog,
+  DialogDescription,
+  DialogTitle,
+  DialogContent
+} from '@/src/components/shadcn-ui/dialog';
 import { type TypeId } from '@u22n/utils/typeid';
 import { api } from '@/src/lib/trpc';
 
@@ -22,13 +28,13 @@ export function DeletePasskeyModal({
   } = api.account.security.deletePasskey.useMutation();
 
   return (
-    <Dialog.Root open={open}>
-      <Dialog.Content className="w-full max-w-96 p-4">
-        <Dialog.Title className="mx-auto w-fit">Delete Passkey</Dialog.Title>
-        <Dialog.Description className="mx-auto my-6 flex w-fit text-balance p-2 text-center text-sm font-bold">
+    <Dialog open={open}>
+      <DialogContent>
+        <DialogTitle>Delete Passkey</DialogTitle>
+        <DialogDescription>
           This action is irreversible. You will not be able to recover this
           passkey. Are you sure you want to delete {name}?
-        </Dialog.Description>
+        </DialogDescription>
         <div className="text-red-10 w-full">{error?.message}</div>
         <div className="flex flex-col gap-3">
           <Button
@@ -48,12 +54,12 @@ export function DeletePasskeyModal({
             disabled={deletePasskeyLoading}
             onClick={() => onClose()}
             className="w-full"
-            variant="soft"
+            variant="outline"
             color="gray">
             Cancel
           </Button>
         </div>
-      </Dialog.Content>
-    </Dialog.Root>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -3,6 +3,12 @@ import { Button } from '@/src/components/shadcn-ui/button';
 import { api } from '@/src/lib/trpc';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogTitle
+} from '@/src/components/shadcn-ui/alert-dialog';
 import useAwaitableModal, {
   type ModalComponent
 } from '@/src/hooks/use-awaitable-modal';
@@ -369,14 +375,14 @@ function StripeWatcher({
   }, [open, paymentLinkInfo, paymentLinkCache, checkPayment]);
 
   return (
-    <Dialog open={open}>
-      <DialogContent>
-        <DialogTitle className="p-2">Upgrade to Pro</DialogTitle>
-        <DialogDescription className="space-y-2 p-2">
+    <AlertDialog open={open}>
+      <AlertDialogContent>
+        <AlertDialogTitle>Upgrade to Pro</AlertDialogTitle>
+        <AlertDialogDescription className="space-y-2 p-2">
           {paymentLinkLoading
             ? 'Generating Payment Link'
             : 'Waiting For you to complete your Payment (This may take a few seconds)'}
-        </DialogDescription>
+        </AlertDialogDescription>
         <div className="flex flex-col gap-2 p-2">
           We are waiting for you to complete your payment, If you have already
           done the payment, please wait for a few seconds for the payment to
@@ -390,7 +396,7 @@ function StripeWatcher({
         <div className="flex flex-col gap-2 py-2">
           <Button onClick={() => onClose()}>Close</Button>
         </div>
-      </DialogContent>
-    </Dialog>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

@@ -20,7 +20,6 @@ import { DeleteAllSessions } from './_components/session-modals';
 import { useQueryClient } from '@tanstack/react-query';
 import { PageTitle } from '../../_components/page-title';
 import { Skeleton } from '@/src/components/shadcn-ui/skeleton';
-import { Toggle } from '@/src/components/shadcn-ui/toggle';
 import { Switch } from '@/src/components/shadcn-ui/switch';
 import { Button } from '@/src/components/shadcn-ui/button';
 // import { PasskeyNameModal } from './_components/passkey-modals';

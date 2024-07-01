@@ -49,7 +49,6 @@ export default function Page() {
         <div className="flex flex-col gap-2 p-2">
           <span>Available Free Addresses</span>
           {personalAddresses.available.free.map((domain) => (
-            // <Card key={domain}>
             <div
               className="flex flex-row items-center justify-between gap-2"
               key={domain}>
@@ -68,7 +67,6 @@ export default function Page() {
                 Claim
               </Button>
             </div>
-            // </Card>
           ))}
         </div>
       )}
@@ -83,7 +81,6 @@ export default function Page() {
           </span>
 
           {personalAddresses.available.premium.map((domain) => (
-            // <Card key={domain}>
             <div
               className="flex flex-row items-center justify-between gap-2"
               key={domain}>
@@ -95,7 +92,6 @@ export default function Page() {
                 Claim
               </Button>
             </div>
-            // </Card>
           ))}
         </div>
       )}

@@ -7,7 +7,6 @@ import {
   Dialog,
   DialogContent,
   DialogTrigger,
-  DialogPortal,
   DialogTitle,
   DialogClose
 } from '@/src/components/shadcn-ui/dialog';
@@ -104,88 +103,87 @@ export default function CreateOrgButton({
           <span className="whitespace-nowrap">Create a new Organization</span>
         </Button>
       </DialogTrigger>
-      <DialogPortal>
-        <DialogContent>
-          <DialogTitle>Create a new organization</DialogTitle>
-          <div className="flex flex-col gap-4">
-            <label className="flex flex-col gap-1">
-              <div className="text-sm font-bold">Organization Name</div>
-              <Input
-                value={orgName}
-                onChange={(e) => setOrgName(e.target.value)}
-              />
-            </label>
-            <label>
-              <div className="text-sm font-bold">Organization Short Code</div>
-              <Input
-                value={orgShortCode}
-                onChange={(e) => {
-                  setOrgShortCode(e.target.value);
-                  setCustomShortCode(true);
-                }}
-              />
-            </label>
-            {!orgShortCodeData && orgShortCodeDataLoading && (
-              <div className="text-muted-foreground text-sm font-bold">
-                Checking...
+
+      <DialogContent>
+        <DialogTitle>Create a new organization</DialogTitle>
+        <div className="flex flex-col gap-4">
+          <label className="flex flex-col gap-1">
+            <div className="text-sm font-bold">Organization Name</div>
+            <Input
+              value={orgName}
+              onChange={(e) => setOrgName(e.target.value)}
+            />
+          </label>
+          <label>
+            <div className="text-sm font-bold">Organization Short Code</div>
+            <Input
+              value={orgShortCode}
+              onChange={(e) => {
+                setOrgShortCode(e.target.value);
+                setCustomShortCode(true);
+              }}
+            />
+          </label>
+          {!orgShortCodeData && orgShortCodeDataLoading && (
+            <div className="text-muted-foreground text-sm font-bold">
+              Checking...
+            </div>
+          )}
+
+          {orgShortCodeData && !orgShortCodeDataLoading && (
+            <div className="flex items-center gap-1">
+              {orgShortCodeData.available ? (
+                <Check
+                  size={16}
+                  className="text-green-10"
+                />
+              ) : (
+                <Plus
+                  size={16}
+                  className="text-red-10 rotate-45"
+                />
+              )}
+
+              <div
+                className={cn(
+                  'text-sm font-bold',
+                  orgShortCodeData.available ? 'text-green-10' : 'text-red-10'
+                )}>
+                {orgShortCodeData.available
+                  ? 'Looks good!'
+                  : orgShortCodeData.error}
               </div>
-            )}
+            </div>
+          )}
 
-            {orgShortCodeData && !orgShortCodeDataLoading && (
-              <div className="flex items-center gap-1">
-                {orgShortCodeData.available ? (
-                  <Check
-                    size={16}
-                    className="text-green-10"
-                  />
-                ) : (
-                  <Plus
-                    size={16}
-                    className="text-red-10 rotate-45"
-                  />
-                )}
+          {orgShortCodeError && !orgShortCodeDataLoading && (
+            <div className="text-red-10 text-sm font-bold">
+              {orgShortCodeError.message}
+            </div>
+          )}
 
-                <div
-                  className={cn(
-                    'text-sm font-bold',
-                    orgShortCodeData.available ? 'text-green-10' : 'text-red-10'
-                  )}>
-                  {orgShortCodeData.available
-                    ? 'Looks good!'
-                    : orgShortCodeData.error}
-                </div>
-              </div>
-            )}
+          {createOrgError && !createOrgLoading && (
+            <div className="text-red-10 text-sm font-bold">
+              {createOrgError.message}
+            </div>
+          )}
 
-            {orgShortCodeError && !orgShortCodeDataLoading && (
-              <div className="text-red-10 text-sm font-bold">
-                {orgShortCodeError.message}
-              </div>
-            )}
-
-            {createOrgError && !createOrgLoading && (
-              <div className="text-red-10 text-sm font-bold">
-                {createOrgError.message}
-              </div>
-            )}
-
+          <Button
+            disabled={!orgShortCodeData?.available || createOrgLoading}
+            loading={createOrgLoading}
+            className="mt-4"
+            onClick={() => createOrg()}>
+            Create My Organization
+          </Button>
+          <DialogClose asChild>
             <Button
-              disabled={!orgShortCodeData?.available || createOrgLoading}
-              loading={createOrgLoading}
-              className="mt-4"
-              onClick={() => createOrg()}>
-              Create My Organization
+              variant="outline"
+              className="w-full">
+              Cancel
             </Button>
-            <DialogClose asChild>
-              <Button
-                variant="outline"
-                className="w-full">
-                Cancel
-              </Button>
-            </DialogClose>
-          </div>
-        </DialogContent>
-      </DialogPortal>
+          </DialogClose>
+        </div>
+      </DialogContent>
     </Dialog>
   );
 }

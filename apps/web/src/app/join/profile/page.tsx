@@ -1,8 +1,8 @@
 'use client';
 
-import { Button, Card, Flex, Spinner, Text } from '@radix-ui/themes';
+import { Button } from '@/src/components/shadcn-ui/button';
 import Link from 'next/link';
-import ProfileCard from './_components/profile-card';
+import { ProfileCard } from './_components/profile-card';
 import { api } from '@/src/lib/trpc';
 import { useCookies } from 'next-client-cookies';
 
@@ -15,24 +15,19 @@ export default function Page({
 
   if (!searchParams.org) {
     return (
-      <Card className="mx-auto my-4 max-w-[450px]">
-        <Flex
-          gap="2"
-          align="center"
-          direction="column">
-          <Text
-            size="2"
-            weight="bold">
-            Missing Org Parameter
-          </Text>
-          <Text size="2">
+      <div className="bg-card mx-auto my-4 max-w-[450px] rounded border p-4">
+        <div className="flex flex-col items-center gap-2">
+          <div className="text-sm font-bold">Missing Org Parameter</div>
+          <div className="text-sm">
             If you think this is an error, please contact support.
-          </Text>
-          <Button className="mt-4">
+          </div>
+          <Button
+            className="mt-4"
+            asChild>
             <Link href="/">Back to Home</Link>
           </Button>
-        </Flex>
-      </Card>
+        </div>
+      </div>
     );
   }
 
@@ -43,51 +38,35 @@ export default function Page({
 
   if (orgDataLoading) {
     return (
-      <Card className="mx-auto my-4 max-w-[450px]">
-        <Flex
-          gap="2"
-          align="center"
-          justify="center">
-          <Flex>
-            <Spinner loading />
-            <Text
-              size="2"
-              weight="bold">
-              Loading Profile
-            </Text>
-          </Flex>
-        </Flex>
-      </Card>
+      <div className="bg-card mx-auto my-4 max-w-[450px] rounded border p-4">
+        <div className="flex items-center justify-center gap-2">
+          <div className="text-muted-foreground text-sm font-bold">
+            Loading Profile
+          </div>
+        </div>
+      </div>
     );
   }
 
   if (!orgData) {
     return (
-      <Card className="mx-auto my-4 max-w-[450px]">
-        <Flex
-          gap="2"
-          align="center"
-          justify="center"
-          direction="column">
-          <Text
-            size="2"
-            weight="bold">
-            Invalid Org Parameter
-          </Text>
-          <Text
-            size="2"
-            color="red">
+      <div className="bg-card mx-auto my-4 max-w-[450px] rounded border p-4">
+        <div className="flex flex-col items-center justify-center gap-2">
+          <div className="text-sm font-bold">Invalid Org Parameter</div>
+          <div className="text-red-10 text-sm">
             The Org you are trying to setup a profile for does not exist or you
             do not have permission to access it.
-          </Text>
-          <Text size="2">
+          </div>
+          <div className="text-sm">
             If you think this is an error, please contact support.
-          </Text>
-          <Button className="mt-2">
+          </div>
+          <Button
+            className="mt-2"
+            asChild>
             <Link href="/">Back to Home</Link>
           </Button>
-        </Flex>
-      </Card>
+        </div>
+      </div>
     );
   }
 

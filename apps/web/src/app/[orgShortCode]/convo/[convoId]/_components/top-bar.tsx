@@ -1,6 +1,10 @@
 'use client';
 
-import { Tooltip, Skeleton } from '@radix-ui/themes';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger
+} from '@/src/components/shadcn-ui/tooltip';
 import {
   EyeSlash,
   Eye,
@@ -77,47 +81,55 @@ export default function TopBar({
               <CaretLeft size={16} />
             </Link>
           </Button>
-          <Skeleton loading={isConvoLoading}>
-            {subjects?.map((subject) => (
-              <span
-                key={subject.subject}
-                className="truncate text-lg font-medium leading-tight">
-                {subject.subject}
-              </span>
-            ))}
-          </Skeleton>
+          {subjects?.map((subject) => (
+            <span
+              key={subject.subject}
+              className="truncate text-lg font-medium leading-tight">
+              {subject.subject}
+            </span>
+          ))}
         </div>
         <div className="flex flex-row gap-2">
           <Participants participants={participants} />
-          <Tooltip content="Delete Convo">
-            <Button
-              variant={'outline'}
-              size={'icon-sm'}
-              className={'hover:bg-red-5 hover:text-red-11 hover:border-red-8'}
-              onClick={() => {
-                openDeleteModal({ convoHidden })
-                  // Navigate to empty page on delete
-                  .then(() => router.push(`/${orgShortCode}/convo`))
-                  // Do nothing if Hide is chosen or Modal is Closed
-                  .catch(() => null);
-              }}>
-              <Trash size={16} />
-            </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant={'outline'}
+                size={'icon-sm'}
+                className={
+                  'hover:bg-red-5 hover:text-red-11 hover:border-red-8'
+                }
+                onClick={() => {
+                  openDeleteModal({ convoHidden })
+                    // Navigate to empty page on delete
+                    .then(() => router.push(`/${orgShortCode}/convo`))
+                    // Do nothing if Hide is chosen or Modal is Closed
+                    .catch(() => null);
+                }}>
+                <Trash size={16} />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Delete Convo</TooltipContent>
           </Tooltip>
-          <Tooltip content={convoHidden ? 'Unhide Convo' : 'Hide Convo'}>
-            <Button
-              variant={'outline'}
-              size={'icon-sm'}
-              onClick={async () => {
-                await hideConvo.mutateAsync({
-                  convoPublicId: convoId,
-                  orgShortCode,
-                  unhide: convoHidden ? true : undefined
-                });
-                await toggleConvoHiddenState(convoId, !convoHidden);
-              }}>
-              {convoHidden ? <Eye size={16} /> : <EyeSlash size={16} />}
-            </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant={'outline'}
+                size={'icon-sm'}
+                onClick={async () => {
+                  await hideConvo.mutateAsync({
+                    convoPublicId: convoId,
+                    orgShortCode,
+                    unhide: convoHidden ? true : undefined
+                  });
+                  await toggleConvoHiddenState(convoId, !convoHidden);
+                }}>
+                {convoHidden ? <Eye size={16} /> : <EyeSlash size={16} />}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              {convoHidden ? 'Unhide Convo' : 'Hide Convo'}
+            </TooltipContent>
           </Tooltip>
         </div>
       </div>
