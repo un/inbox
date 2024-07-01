@@ -638,6 +638,64 @@ importers:
         specifier: 2.0.0-beta.7
         version: 2.0.0-beta.7(@radix-ui/colors@3.0.0)(tailwindcss@3.4.4)
 
+  apps/worker:
+    dependencies:
+      '@hono/node-server':
+        specifier: ^1.11.4
+        version: 1.11.4
+      '@hono/trpc-server':
+        specifier: ^0.3.1
+        version: 0.3.1(@trpc/server@11.0.0-rc.421)(hono@4.4.7)
+      '@t3-oss/env-core':
+        specifier: ^0.10.1
+        version: 0.10.1(typescript@5.5.2)(zod@3.23.8)
+      '@trpc/client':
+        specifier: 11.0.0-rc.421
+        version: 11.0.0-rc.421(@trpc/server@11.0.0-rc.421)
+      '@trpc/server':
+        specifier: 11.0.0-rc.421
+        version: 11.0.0-rc.421
+      '@u22n/database':
+        specifier: workspace:^
+        version: link:../../packages/database
+      '@u22n/mail-bridge':
+        specifier: workspace:^
+        version: link:../mail-bridge
+      '@u22n/otel':
+        specifier: workspace:^
+        version: link:../../packages/otel
+      '@u22n/utils':
+        specifier: workspace:^
+        version: link:../../packages/utils
+      bullmq:
+        specifier: ^5.8.2
+        version: 5.8.2
+      cron:
+        specifier: ^3.1.7
+        version: 3.1.7
+      hono:
+        specifier: ^4.4.7
+        version: 4.4.7
+      superjson:
+        specifier: ^2.2.1
+        version: 2.2.1
+      zod:
+        specifier: ^3.23.8
+        version: 3.23.8
+    devDependencies:
+      '@types/node':
+        specifier: ^20.14.9
+        version: 20.14.9
+      '@u22n/tsconfig':
+        specifier: ^0.0.2
+        version: 0.0.2
+      tsx:
+        specifier: ^4.15.6
+        version: 4.15.6
+      typescript:
+        specifier: ^5.5.2
+        version: 5.5.2
+
   ee/apps/billing:
     dependencies:
       '@hono/node-server':
@@ -4424,6 +4482,9 @@ packages:
   '@types/linkify-it@3.0.5':
     resolution: {integrity: sha512-yg6E+u0/+Zjva+buc3EIb+29XEg4wltq7cSmd4Uc2EE/1nUVmxyzpX6gUXD0V8jIrG0r7YeOGVIbYRkxeooCtw==}
 
+  '@types/luxon@3.4.2':
+    resolution: {integrity: sha512-TifLZlFudklWlMBfhubvgqTXRzLDI5pCbGa4P8a3wPyUQSW+1xQ5eDsreP9DWHX3tjq1ke96uYG/nwundroWcA==}
+
   '@types/mailparser@3.4.4':
     resolution: {integrity: sha512-C6Znp2QVS25JqtuPyxj38Qh+QoFcLycdxsvcc6IZCGekhaMBzbdTXzwGzhGoYb3TfKu8IRCNV0sV1o3Od97cEQ==}
 
@@ -4438,6 +4499,9 @@ packages:
 
   '@types/node@20.14.6':
     resolution: {integrity: sha512-JbA0XIJPL1IiNnU7PFxDXyfAwcwVVrOoqyzzyQTyMeVhBzkJVMSkC1LlVsRQ2lpqiY4n6Bb9oCS6lzDKVQxbZw==}
+
+  '@types/node@20.14.9':
+    resolution: {integrity: sha512-06OCtnTXtWOZBJlRApleWndH4JsRVs1pDCc8dLSQp+7PpUpX3ePdHyeNSFTeSe7FtKyQkrlPvHwJOW3SLd8Oyg==}
 
   '@types/nodemailer@6.4.15':
     resolution: {integrity: sha512-0EBJxawVNjPkng1zm2vopRctuWVCxk34JcIlRuXSf54habUWdz1FB7wHDqOqvDa8Mtpt0Q3LTXQkAs2LNyK5jQ==}
@@ -5341,6 +5405,9 @@ packages:
   cron-parser@4.9.0:
     resolution: {integrity: sha512-p0SaNjrHOnQeR8/VnfGbmg9te2kfyYSQ7Sc/j/6DtPL3JQvKxmjO9TSjNFpujqV3vEYYBvNNvXSxzyksBWAx1Q==}
     engines: {node: '>=12.0.0'}
+
+  cron@3.1.7:
+    resolution: {integrity: sha512-tlBg7ARsAMQLzgwqVxy8AZl/qlTc5nibqYwtNGoCrd+cV+ugI+tvZC1oT/8dFH8W455YrywGykx/KMmAqOr7Jw==}
 
   croner@8.0.1:
     resolution: {integrity: sha512-Hq1+lXVgjJjcS/U+uk6+yVmtxami0r0b+xVtlGyABgdz110l/kOnHWvlSI7nVzrTl8GCdZHwZS4pbBFT7hSL/g==}
@@ -11039,6 +11106,11 @@ snapshots:
       '@trpc/server': 11.0.0-rc.413
       hono: 4.4.7
 
+  '@hono/trpc-server@0.3.1(@trpc/server@11.0.0-rc.421)(hono@4.4.7)':
+    dependencies:
+      '@trpc/server': 11.0.0-rc.421
+      hono: 4.4.7
+
   '@hono/zod-validator@0.2.2(hono@4.4.7)(zod@3.23.8)':
     dependencies:
       hono: 4.4.7
@@ -13745,6 +13817,8 @@ snapshots:
 
   '@types/linkify-it@3.0.5': {}
 
+  '@types/luxon@3.4.2': {}
+
   '@types/mailparser@3.4.4':
     dependencies:
       '@types/node': 20.14.6
@@ -13763,6 +13837,10 @@ snapshots:
       form-data: 4.0.0
 
   '@types/node@20.14.6':
+    dependencies:
+      undici-types: 5.26.5
+
+  '@types/node@20.14.9':
     dependencies:
       undici-types: 5.26.5
 
@@ -14851,6 +14929,11 @@ snapshots:
 
   cron-parser@4.9.0:
     dependencies:
+      luxon: 3.4.4
+
+  cron@3.1.7:
+    dependencies:
+      '@types/luxon': 3.4.2
       luxon: 3.4.4
 
   croner@8.0.1: {}
