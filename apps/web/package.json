@@ -38,7 +38,6 @@
     "@tanstack/react-form": "^0.19.5",
     "@tanstack/react-query": "^5.45.1",
     "@tanstack/react-table": "^8.17.3",
-    "@tanstack/react-virtual": "^3.5.1",
     "@tanstack/zod-form-adapter": "^0.19.5",
     "@trpc/client": "11.0.0-rc.413",
     "@trpc/react-query": "11.0.0-rc.413",
