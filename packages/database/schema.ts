@@ -22,8 +22,6 @@ import { relations } from 'drizzle-orm';
 import { typeIdDataType as publicId } from '@u22n/utils/typeid';
 import { uiColors } from '@u22n/utils/colors';
 
-// TODO: we need to make this separated from nuxt apps, imports from "#import" breaks everything
-
 // import { stripeBillingPeriods, stripePlanNames } from '../../ee/apps/billing';
 const stripeBillingPeriods = ['monthly', 'yearly'] as const;
 const stripePlanNames = ['starter', 'pro'] as const;
@@ -151,6 +149,7 @@ export const authenticators = mysqlTable(
       .$defaultFn(() => new Date())
   },
   (table) => ({
+    publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
     accountCredentialIdIndex: index('provider_account_id_idx').on(
       table.accountCredentialId
     ),
@@ -188,6 +187,7 @@ export const sessions = mysqlTable(
       .$defaultFn(() => new Date())
   },
   (table) => ({
+    publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
     accountIdIndex: index('account_id_idx').on(table.accountId),
     sessionTokenIndex: uniqueIndex('session_token_idx').on(table.sessionToken),
     expiryIndex: index('expires_at_idx').on(table.expiresAt)
@@ -338,7 +338,6 @@ export const orgPostalConfigs = mysqlTable(
   {
     id: serial('id').primaryKey(),
     orgId: foreignKey('org_id').notNull(),
-
     host: varchar('host', { length: 32 }).notNull(),
     ipPools: json('ip_pools').notNull().$type<string[]>(),
     defaultIpPool: varchar('default_ip_pool', { length: 32 }).notNull()
@@ -382,7 +381,7 @@ export const orgMembers = mysqlTable(
     publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
     accountIdIndex: index('account_id_idx').on(table.accountId),
     orgIdIndex: index('org_id_idx').on(table.orgId),
-    orgaccountIndex: uniqueIndex('org_account_idx').on(
+    orgAccountIndex: uniqueIndex('org_account_idx').on(
       table.orgId,
       table.accountId
     )
@@ -759,7 +758,11 @@ export const emailRoutingRulesDestinations = mysqlTable(
       .$defaultFn(() => new Date())
   },
   (table) => ({
-    orgIdIndex: index('org_id_idx').on(table.orgId)
+    orgIdIndex: index('org_id_idx').on(table.orgId),
+    publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
+    ruleIdIndex: index('rule_id_idx').on(table.ruleId),
+    teamIdIndex: index('team_id_idx').on(table.teamId),
+    orgMemberIdIndex: index('org_member_id_idx').on(table.orgMemberId)
     //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit : orgMemberId//teamId
   })
 );
@@ -993,7 +996,8 @@ export const convos = mysqlTable(
   },
   (table) => ({
     orgIdIndex: index('org_id_idx').on(table.orgId),
-    publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId)
+    publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
+    createdAtIndex: index('created_at_idx').on(table.createdAt)
   })
 );
 export const convosRelations = relations(convos, ({ one, many }) => ({
@@ -1298,9 +1302,13 @@ export const convoEntries = mysqlTable(
   (table) => ({
     orgIdIndex: index('org_id_idx').on(table.orgId),
     convoIdIndex: index('convo_id_idx').on(table.convoId),
+    subjectIdIndex: index('subject_id_idx').on(table.subjectId),
+    authorIndex: index('author_idx').on(table.author),
     publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
     typeIndex: index('type_idx').on(table.type),
-    replyToIdIndex: index('reply_to_id_idx').on(table.replyToId)
+    replyToIdIndex: index('reply_to_id_idx').on(table.replyToId),
+    createdAtIndex: index('created_at_idx').on(table.createdAt),
+    emailMessageIdIndex: index('email_message_id_idx').on(table.emailMessageId)
   })
 );
 
@@ -1351,8 +1359,11 @@ export const convoEntryReplies = mysqlTable(
       .notNull()
       .$defaultFn(() => new Date())
   },
-  () => ({
-    //TODO: Add indexes
+  (table) => ({
+    orgIdIndex: index('org_id_idx').on(table.orgId),
+    entrySourceIdIndex: index('entry_source_id_idx').on(table.entrySourceId),
+    entryReplyIdIndex: index('entry_reply_id_idx').on(table.entryReplyId),
+    createdAtIndex: index('created_at_idx').on(table.createdAt)
   })
 );
 
@@ -1384,7 +1395,9 @@ export const convoEntryPrivateVisibilityParticipants = mysqlTable(
       .$defaultFn(() => new Date())
   },
   (table) => ({
-    entryIdIndex: index('entry_id_idx').on(table.entryId)
+    orgIdIndex: index('org_id_idx').on(table.orgId),
+    entryIdIndex: index('entry_id_idx').on(table.entryId),
+    convoMemberIdIndex: index('convo_member_id_idx').on(table.convoMemberId)
   })
 );
 
@@ -1415,7 +1428,9 @@ export const convoEntryRawHtmlEmails = mysqlTable(
     wiped: boolean('wiped').notNull().default(false)
   },
   (table) => ({
-    entryIdIndex: index('entry_id_idx').on(table.entryId)
+    orgIdIndex: index('org_id_idx').on(table.orgId),
+    entryIdIndex: index('entry_id_idx').on(table.entryId),
+    wipeDateIndex: index('wipe_date_idx').on(table.wipeDate)
   })
 );
 
@@ -1450,7 +1465,8 @@ export const convoSeenTimestamps = mysqlTable(
         columns: [table.convoId, table.participantId, table.orgMemberId]
       }),
       convoIdIndex: index('convo_id_idx').on(table.convoId),
-      seenAt: index('seen_at_idx').on(table.seenAt)
+      seenAt: index('seen_at_idx').on(table.seenAt),
+      participantIdIndex: index('participant_id_idx').on(table.participantId)
     };
   }
 );
@@ -1489,6 +1505,7 @@ export const convoEntrySeenTimestamps = mysqlTable(
         columns: [table.convoEntryId, table.participantId, table.orgMemberId]
       }),
       convoEntryIdIndex: index('convo_entry_id_idx').on(table.convoEntryId),
+      participantIdIndex: index('participant_id_idx').on(table.participantId),
       seenAt: index('seen_at_idx').on(table.seenAt)
     };
   }

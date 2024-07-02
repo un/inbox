@@ -43,6 +43,20 @@
       "when": 1713798774189,
       "tag": "0005_flowery_frog_thor",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1719913661310,
+      "tag": "0006_sleep_karma",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "5",
+      "when": 1719914169414,
+      "tag": "0007_spooky_roland_deschain",
+      "breakpoints": true
     }
   ]
 }
