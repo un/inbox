@@ -2,11 +2,13 @@
 
 import { Button } from '@/src/components/shadcn-ui/button';
 import { Plus, X } from '@phosphor-icons/react';
-
 import CreateConvoForm from './create-convo-form';
 import {
   Drawer,
   DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
   DrawerTrigger
 } from '@/src/components/shadcn-ui/drawer';
 import { showNewConvoPanel } from '@/src/app/[orgShortCode]/convo/atoms';
@@ -31,6 +33,14 @@ export function NewConvoSheet() {
         </div>
       </DrawerTrigger>
       <DrawerContent className="left-auto flex w-full flex-col overflow-hidden md:max-w-[30rem]">
+        {/* Everything inside Drawer Header is visually hidden and is used for accessibility purposes */}
+        <DrawerHeader className="sr-only">
+          <DrawerTitle>Create a new conversation</DrawerTitle>
+          <DrawerDescription>
+            Start a new conversation with your contacts and teams
+          </DrawerDescription>
+        </DrawerHeader>
+
         <Button
           variant={'ghost'}
           onClick={() => setOpen(false)}
