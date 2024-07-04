@@ -26,7 +26,7 @@ import {
 
 export type AvatarProps = {
   avatarProfilePublicId:
-    | 'manual_undefined'
+    | 'no_avatar'
     | TypeId<'orgMemberProfile' | 'org' | 'teams' | 'contacts'>;
   avatarTimestamp: Date | null;
   name: string;
@@ -78,7 +78,7 @@ const avatarVariants = cva(
 
 export function Avatar(props: AvatarProps) {
   const avatarUrl =
-    props.avatarProfilePublicId === 'manual_undefined'
+    props.avatarProfilePublicId === 'no_avatar'
       ? undefined
       : generateAvatarUrl({
           publicId: props.avatarProfilePublicId,
@@ -91,10 +91,7 @@ export function Avatar(props: AvatarProps) {
   return withoutTooltip ? (
     <div className={cn(avatarVariants({ size: props.size }), 'relative')}>
       <AvatarShad
-        className={cn(
-          avatarVariants({ color: props.color, size: props.size }),
-          ''
-        )}>
+        className={avatarVariants({ color: props.color, size: props.size })}>
         <AvatarImage
           src={avatarUrl}
           alt={altText}
@@ -107,10 +104,10 @@ export function Avatar(props: AvatarProps) {
       <Tooltip>
         <TooltipTrigger className="w-fit">
           <AvatarShad
-            className={cn(
-              avatarVariants({ color: props.color, size: props.size }),
-              ''
-            )}>
+            className={avatarVariants({
+              color: props.color,
+              size: props.size
+            })}>
             <AvatarImage
               src={avatarUrl}
               alt={altText}
@@ -148,7 +145,7 @@ const avatarIconVariants = cva('', {
 
 type AvatarIconProps = {
   avatarProfilePublicId:
-    | 'manual_undefined'
+    | 'no_avatar'
     | TypeId<'orgMemberProfile' | 'org' | 'teams' | 'contacts'>;
   withDot?: boolean;
   address?: string;
@@ -156,8 +153,8 @@ type AvatarIconProps = {
 
 export function AvatarIcon(iconProps: AvatarIconProps) {
   const type =
-    iconProps.avatarProfilePublicId === 'manual_undefined'
-      ? 'newEmail'
+    iconProps.avatarProfilePublicId === 'no_avatar'
+      ? 'email'
       : inferTypeId(iconProps.avatarProfilePublicId);
   const AvatarTypeIcon = () => {
     switch (type) {
@@ -169,7 +166,7 @@ export function AvatarIcon(iconProps: AvatarIconProps) {
         return <UsersThree />;
       case 'contacts':
         return <AddressBook />;
-      case 'newEmail':
+      case 'email':
         return <At />;
       default:
         return null;
@@ -186,7 +183,7 @@ export function AvatarIcon(iconProps: AvatarIconProps) {
         return 'Team';
       case 'contacts':
         return 'Contact';
-      case 'newEmail':
+      case 'email':
         return 'New Contact';
       default:
         return null;
@@ -196,14 +193,15 @@ export function AvatarIcon(iconProps: AvatarIconProps) {
   return (
     <div
       className={cn(
-        'flex flex-row items-center gap-1',
+        'flex flex-row items-center gap-1 truncate',
         avatarIconVariants({ size: iconProps.size })
       )}>
       {iconProps.withDot && <Dot />}
       <AvatarTypeIcon />
-      <span className="">{text()}</span>
-      {iconProps.withDot && <Dot />}
-      {iconProps.address && (
+      <span>{text()}</span>
+      {/* Don't show the address in email as its already in name */}
+      {iconProps.withDot && type !== 'email' && <Dot />}
+      {iconProps.address && type !== 'email' && (
         <span className="text-base-11 font-normal">{iconProps.address}</span>
       )}
     </div>

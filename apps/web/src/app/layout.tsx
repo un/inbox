@@ -5,9 +5,9 @@ import { cn } from '@/src/lib/utils';
 import { ThemeProvider } from 'next-themes';
 import { TRPCReactProvider } from '@/src/lib/trpc';
 import { Toaster } from '@/src/components/shadcn-ui/sonner';
+import { TooltipProvider } from '@/src/components/shadcn-ui/tooltip';
 import { CookiesProvider } from 'next-client-cookies/server';
 import { PublicEnvScript } from 'next-runtime-env';
-
 import '@/src/styles/globals.css';
 
 const inter = Inter({
@@ -55,10 +55,12 @@ export default function RootLayout({
             defaultTheme="system"
             disableTransitionOnChange>
             <div className="flex h-svh w-full flex-col">
-              <TRPCReactProvider>
-                {children}
-                <Toaster />
-              </TRPCReactProvider>
+              <TooltipProvider>
+                <TRPCReactProvider>
+                  {children}
+                  <Toaster />
+                </TRPCReactProvider>
+              </TooltipProvider>
             </div>
           </ThemeProvider>
         </CookiesProvider>

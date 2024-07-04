@@ -5,7 +5,8 @@ import {
   Select,
   SelectContent,
   SelectItem,
-  SelectTrigger
+  SelectTrigger,
+  SelectValue
 } from '@/src/components/shadcn-ui/select';
 import {
   Popover,
@@ -23,7 +24,7 @@ import {
   CommandLoading,
   useCommandState
 } from 'cmdk';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { At, CaretDown, Check, Paperclip } from '@phosphor-icons/react';
 import { z } from 'zod';
 import {
@@ -43,6 +44,8 @@ import { Button } from '@/src/components/shadcn-ui/button';
 import { useAttachmentUploader } from '@/src/components/shared/attachments';
 import { showNewConvoPanel } from '../atoms';
 import { Avatar, AvatarIcon } from '@/src/components/avatar';
+import { cn } from '@/src/lib/utils';
+import { Badge } from '@/src/components/shadcn-ui/badge';
 
 export interface ConvoParticipantShared {
   avatarTimestamp: Date | null;
@@ -116,6 +119,14 @@ export default function CreateConvoForm() {
   const [topic, setTopic] = useState('');
   const { attachments, openFilePicker, getTrpcUploadFormat, AttachmentArray } =
     useAttachmentUploader();
+
+  // Set default email identity on load
+  useEffect(() => {
+    setSelectedEmailIdentity((prev) => {
+      if (prev) return prev;
+      return userEmailIdentities?.emailIdentities[0]?.publicId ?? null;
+    });
+  }, [userEmailIdentities]);
 
   const allParticipantsLoaded = useMemo(
     () =>
@@ -238,8 +249,8 @@ export default function CreateConvoForm() {
           type: 'email',
           avatarPublicId: null,
           avatarTimestamp: null,
-          publicId: 'manual_undefined',
-          address: emailParticipant,
+          publicId: emailParticipant,
+          address: null,
           keywords: [emailParticipant],
           color: null,
           own: false,
@@ -296,7 +307,7 @@ export default function CreateConvoForm() {
     const participantsOrgMembersPublicIds = getPublicIdsByType('orgMember');
     const participantsTeamsPublicIds = getPublicIdsByType('team');
     const participantsContactsPublicIds = getPublicIdsByType('contact');
-    const participantsEmails = getPublicIdsByType('email', 'address');
+    const participantsEmails = getPublicIdsByType('email');
 
     const firstParticipant = selectedParticipants[0]!;
     const toParticipant:
@@ -383,13 +394,16 @@ export default function CreateConvoForm() {
       <div className="flex w-full flex-col gap-2 text-sm">
         <h4 className="font-bold">Email Identity</h4>
         <Select
+          value={selectedEmailIdentity ?? undefined}
           onValueChange={(value) => {
             setSelectedEmailIdentity(value);
           }}>
           <SelectTrigger className="h-fit">
-            {selectedEmailIdentityString ?? 'Select an Email Identity to Use'}
+            <SelectValue>
+              {selectedEmailIdentityString ?? 'Select an Email Identity to Use'}
+            </SelectValue>
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent side="bottom">
             {userEmailIdentities?.emailIdentities.map((identity) => (
               <SelectItem
                 key={identity.publicId}
@@ -515,7 +529,7 @@ function ParticipantsComboboxPopover({
                       <div className="flex items-center justify-center gap-2">
                         <Avatar
                           avatarProfilePublicId={
-                            participant.avatarPublicId ?? 'manual_undefined'
+                            participant.avatarPublicId ?? 'no_avatar'
                           }
                           avatarTimestamp={participant.avatarTimestamp}
                           name={participant.name ?? ''}
@@ -534,7 +548,7 @@ function ParticipantsComboboxPopover({
                         </p>
                         <AvatarIcon
                           avatarProfilePublicId={
-                            participant.avatarPublicId ?? 'manual_undefined'
+                            participant.avatarPublicId ?? 'no_avatar'
                           }
                           size="sm"
                           address={participant.address ?? undefined}
@@ -544,9 +558,7 @@ function ParticipantsComboboxPopover({
                       {i === 0 &&
                         selectedParticipants.length > 1 &&
                         hasExternalParticipants && (
-                          <div className="my-1 flex h-full items-center justify-center px-1">
-                            CC:
-                          </div>
+                          <Badge variant="outline">CC:</Badge>
                         )}
                     </div>
                   );
@@ -591,9 +603,8 @@ function ParticipantsComboboxPopover({
                 }}
               />
             </CommandInput>
-            <CommandList>
+            <CommandList className="max-h-[calc(var(--radix-popover-content-available-height)*0.9)] overflow-scroll">
               {loading && <CommandLoading>Loading Participants</CommandLoading>}
-
               <CommandGroup className="flex flex-col gap-2 px-1">
                 {!loading && <EmptyStateHandler />}
                 {participants.map((participant) => (
@@ -610,14 +621,14 @@ function ParticipantsComboboxPopover({
                     }}>
                     <Button
                       variant={'ghost'}
-                      className="my-1 w-full justify-start px-1"
-                      color={
+                      className={cn(
+                        'my-1 w-full justify-start px-1',
                         selectedParticipants.find(
                           (p) => p.publicId === participant.publicId
                         )
-                          ? undefined
-                          : 'gray'
-                      }
+                          ? 'text-gray-10'
+                          : 'text-muted-foreground'
+                      )}
                       disabled={
                         participant.type === 'orgMember' && participant.disabled
                       }
@@ -627,7 +638,7 @@ function ParticipantsComboboxPopover({
                       <div className="flex items-center justify-center gap-2">
                         <Avatar
                           avatarProfilePublicId={
-                            participant.avatarPublicId ?? 'manual_undefined'
+                            participant.avatarPublicId ?? 'no_avatar'
                           }
                           avatarTimestamp={participant.avatarTimestamp}
                           name={participant.name ?? ''}
@@ -646,7 +657,7 @@ function ParticipantsComboboxPopover({
                         </p>
                         <AvatarIcon
                           avatarProfilePublicId={
-                            participant.avatarPublicId ?? 'manual_undefined'
+                            participant.avatarPublicId ?? 'no_avatar'
                           }
                           size="sm"
                           address={participant.address ?? undefined}
@@ -691,7 +702,6 @@ function EmptyStateHandler() {
         ? prev
         : prev.concat({
             type: 'email',
-
             publicId: email,
             address: email,
             keywords: [email],
