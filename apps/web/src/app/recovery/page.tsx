@@ -22,6 +22,10 @@ import useAwaitableModal from '@/src/hooks/use-awaitable-modal';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { PasswordRecoveryModal, TwoFactorModal } from './_components/modals';
+import {
+  TurnstileComponent,
+  turnstileEnabled
+} from '@/src/components/turnstile';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function FieldInfo({ field }: { field: FieldApi<any, any, any, any> }) {
@@ -59,7 +63,8 @@ export default function Page() {
       password: '',
       twoFactorCode: '',
       recoveryCode: '',
-      recoveryType: 'password'
+      recoveryType: 'password',
+      turnstileToken: undefined as string | undefined
     },
     onSubmit: async ({ value }) => {
       if (value.recoveryType === 'password') {
@@ -67,7 +72,8 @@ export default function Page() {
           .fetch({
             username: value.username,
             twoFactorCode: value.twoFactorCode,
-            recoveryCode: value.recoveryCode
+            recoveryCode: value.recoveryCode,
+            turnstileToken: value.turnstileToken
           })
           .catch((err: Error) => {
             toast.error(err.message);
@@ -273,6 +279,25 @@ export default function Page() {
             )}
           />
         </div>
+        <form.Field
+          name="turnstileToken"
+          validators={{
+            onSubmit: turnstileEnabled
+              ? z.string({
+                  required_error:
+                    'Waiting for Captcha. If you can see the Captcha, complete it manually'
+                })
+              : z.undefined()
+          }}
+          children={(field) => (
+            <>
+              <TurnstileComponent
+                onSuccess={(value) => field.setValue(value)}
+              />
+              <FieldInfo field={field} />
+            </>
+          )}
+        />
         <form.Subscribe
           selector={(state) => [
             state.isTouched,

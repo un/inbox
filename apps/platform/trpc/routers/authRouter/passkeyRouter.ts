@@ -1,5 +1,9 @@
 import { z } from 'zod';
-import { router, publicRateLimitedProcedure } from '~platform/trpc/trpc';
+import {
+  router,
+  publicRateLimitedProcedure,
+  turnstileProcedure
+} from '~platform/trpc/trpc';
 import { eq } from '@u22n/database/orm';
 import { accounts } from '@u22n/database/schema';
 import { TRPCError } from '@trpc/server';
@@ -23,7 +27,9 @@ import { env } from '~platform/env';
 import { getCookie, setCookie } from 'hono/cookie';
 
 export const passkeyRouter = router({
+  // We use turnstile at start because there is no time to interact between starting and finishing the passkey registration
   signUpWithPasskeyStart: publicRateLimitedProcedure.signUpPasskeyStart
+    .unstable_concat(turnstileProcedure)
     .input(
       z.object({
         username: zodSchemas.username()
@@ -145,7 +151,9 @@ export const passkeyRouter = router({
       return { success: true };
     }),
 
+  // Same reason as  SignUp with passkey start
   generatePasskeyChallenge: publicRateLimitedProcedure.generatePasskeyChallenge
+    .unstable_concat(turnstileProcedure)
     .input(z.object({}))
     .query(async ({ ctx }) => {
       const { event } = ctx;

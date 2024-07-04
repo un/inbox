@@ -1,6 +1,10 @@
 import { z } from 'zod';
 import { Argon2id } from 'oslo/password';
-import { router, publicRateLimitedProcedure } from '~platform/trpc/trpc';
+import {
+  router,
+  publicRateLimitedProcedure,
+  turnstileProcedure
+} from '~platform/trpc/trpc';
 import { eq } from '@u22n/database/orm';
 import { accounts } from '@u22n/database/schema';
 import { nanoIdToken, zodSchemas } from '@u22n/utils/zodSchemas';
@@ -163,7 +167,10 @@ export const recoveryRouter = router({
           'Something went wrong, you should never see this message. Please report to team immediately.'
       });
     }),
+
+  // we only need to make sure that generate function is not abused
   getRecoveryVerificationToken: publicRateLimitedProcedure.recoverAccount
+    .unstable_concat(turnstileProcedure)
     .input(
       z
         .object({

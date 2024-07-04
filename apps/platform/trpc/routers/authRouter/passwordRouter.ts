@@ -3,7 +3,8 @@ import { Argon2id } from 'oslo/password';
 import {
   router,
   accountProcedure,
-  publicRateLimitedProcedure
+  publicRateLimitedProcedure,
+  turnstileProcedure
 } from '~platform/trpc/trpc';
 import { eq } from '@u22n/database/orm';
 import { accounts } from '@u22n/database/schema';
@@ -74,6 +75,7 @@ export const passwordRouter = router({
     }),
 
   signUpWithPassword2FA: publicRateLimitedProcedure.signUpWithPassword
+    .unstable_concat(turnstileProcedure)
     .input(
       z.object({
         username: zodSchemas.username(),
@@ -306,6 +308,7 @@ export const passwordRouter = router({
     }),
 
   signIn: publicRateLimitedProcedure.signInWithPassword
+    .unstable_concat(turnstileProcedure)
     .input(
       z.object({
         username: zodSchemas.username(2),

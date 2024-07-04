@@ -171,6 +171,38 @@ export const orgProcedure = publicProcedure
       })
   );
 
+export const turnstileProcedure = publicProcedure
+  .input(z.object({ turnstileToken: z.string().optional() }))
+  .use(async ({ input, ctx, next }) => {
+    if (!env.TURNSTILE_SECRET_KEY) return next();
+    const { turnstileToken } = input;
+    if (!turnstileToken)
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: 'Missing turnstile token'
+      });
+    const res = await fetch(
+      'https://challenges.cloudflare.com/turnstile/v0/siteverify',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          response: turnstileToken,
+          secret: env.TURNSTILE_SECRET_KEY,
+          remoteip: ctx.event.env.incoming.socket.remoteAddress
+        })
+      }
+    ).then((res) => res.json());
+    if (!res.success)
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: 'Failed to verify turnstileToken'
+      });
+    return next();
+  });
+
 export const eeProcedure = orgProcedure.use(isEeEnabled);
 
 export const router = trpcContext.router;
