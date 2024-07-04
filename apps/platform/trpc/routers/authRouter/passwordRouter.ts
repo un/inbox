@@ -3,8 +3,8 @@ import { Argon2id } from 'oslo/password';
 import {
   router,
   accountProcedure,
-  publicRateLimitedProcedure,
-  turnstileProcedure
+  turnstileProcedure,
+  publicProcedure
 } from '~platform/trpc/trpc';
 import { eq } from '@u22n/database/orm';
 import { accounts } from '@u22n/database/schema';
@@ -21,12 +21,14 @@ import { setCookie, getCookie, deleteCookie } from 'hono/cookie';
 import { env } from '~platform/env';
 import { storage } from '~platform/storage';
 import { ms } from '@u22n/utils/ms';
+import { ratelimiter } from '~platform/trpc/ratelimit';
 
 export const passwordRouter = router({
   /**
    * @deprecated remove with Nuxt Webapp
    */
-  signUpWithPassword: publicRateLimitedProcedure.signUpWithPassword
+  signUpWithPassword: publicProcedure
+    .use(ratelimiter({ limit: 10, namespace: 'signUp.password' }))
     .input(
       z.object({
         username: zodSchemas.username(),
@@ -74,8 +76,9 @@ export const passwordRouter = router({
       return { success: true };
     }),
 
-  signUpWithPassword2FA: publicRateLimitedProcedure.signUpWithPassword
+  signUpWithPassword2FA: publicProcedure
     .unstable_concat(turnstileProcedure)
+    .use(ratelimiter({ limit: 10, namespace: 'signUp.password' }))
     .input(
       z.object({
         username: zodSchemas.username(),
@@ -172,7 +175,8 @@ export const passwordRouter = router({
   /**
    * @deprecated It was bad UX
    */
-  signInWithPassword: publicRateLimitedProcedure.signInWithPassword
+  signInWithPassword: publicProcedure
+    .use(ratelimiter({ limit: 20, namespace: 'signIn.password' }))
     .input(
       z.object({
         // we allow min length of 2 for username if we plan to provide them in the future
@@ -307,8 +311,9 @@ export const passwordRouter = router({
       });
     }),
 
-  signIn: publicRateLimitedProcedure.signInWithPassword
+  signIn: publicProcedure
     .unstable_concat(turnstileProcedure)
+    .use(ratelimiter({ limit: 20, namespace: 'signIn.password' }))
     .input(
       z.object({
         username: zodSchemas.username(2),

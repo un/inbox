@@ -1,9 +1,5 @@
 import { z } from 'zod';
-import {
-  router,
-  accountProcedure,
-  publicRateLimitedProcedure
-} from '~platform/trpc/trpc';
+import { router, accountProcedure, publicProcedure } from '~platform/trpc/trpc';
 import { eq } from '@u22n/database/orm';
 import { accounts } from '@u22n/database/schema';
 import { decodeHex, encodeHex } from 'oslo/encoding';
@@ -15,6 +11,7 @@ import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
 import { storage } from '~platform/storage';
 import { env } from '~platform/env';
 import { createLuciaSessionCookie } from '~platform/utils/session';
+import { ratelimiter } from '~platform/trpc/ratelimit';
 
 export const twoFactorRouter = router({
   /**
@@ -185,7 +182,8 @@ export const twoFactorRouter = router({
       return {};
     }),
 
-  createTwoFactorChallenge: publicRateLimitedProcedure.createTwoFactorChallenge
+  createTwoFactorChallenge: publicProcedure
+    .use(ratelimiter({ limit: 10, namespace: 'signUp.twoFactor.generate' }))
     .input(z.object({ username: zodSchemas.username() }))
     .query(async ({ ctx, input }) => {
       const authStorage = storage.auth;
@@ -220,7 +218,8 @@ export const twoFactorRouter = router({
       });
       return { uri };
     }),
-  verifyTwoFactorChallenge: publicRateLimitedProcedure.signInWithPassword
+  verifyTwoFactorChallenge: publicProcedure
+    .use(ratelimiter({ limit: 20, namespace: 'signIn.twoFactor.verify' }))
     .input(
       z.object({
         twoFactorCode: z.string().min(6).max(6)

@@ -3,7 +3,7 @@ import {
   router,
   orgProcedure,
   accountProcedure,
-  publicRateLimitedProcedure
+  publicProcedure
 } from '~platform/trpc/trpc';
 import { eq } from '@u22n/database/orm';
 import {
@@ -26,6 +26,7 @@ import { billingTrpcClient } from '~platform/utils/tRPCServerClients';
 import { addOrgMemberToTeamHandler } from './teamsHandler';
 import { sendInviteEmail } from '~platform/utils/mail/transactional';
 import { env } from '~platform/env';
+import { ratelimiter } from '~platform/trpc/ratelimit';
 
 export const invitesRouter = router({
   createNewInvite: orgProcedure
@@ -273,7 +274,8 @@ export const invitesRouter = router({
     };
   }),
 
-  validateInvite: publicRateLimitedProcedure.validateInvite
+  validateInvite: publicProcedure
+    .use(ratelimiter({ limit: 10, namespace: 'invite.validate' }))
     .input(
       z.object({
         inviteToken: zodSchemas.nanoIdToken()
