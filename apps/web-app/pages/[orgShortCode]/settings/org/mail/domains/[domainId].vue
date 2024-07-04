@@ -8,6 +8,11 @@
     watch
   } from '#imports';
   import { useTimeAgo } from '@vueuse/core';
+  import { useHead } from 'unhead';
+
+  useHead({
+    title: 'Org Settings - Domains'
+  });
 
   const orgShortCode = (useRoute().params.orgShortCode ?? '') as string;
 

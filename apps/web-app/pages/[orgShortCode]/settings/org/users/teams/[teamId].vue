@@ -9,6 +9,11 @@
   } from '#imports';
   import type { TypeId } from '@u22n/utils/typeid';
   import type { UiColor } from '@u22n/utils/colors';
+  import { useHead } from 'unhead';
+
+  useHead({
+    title: 'Org Settings - Teams'
+  });
   const orgShortCode = (useRoute().params.orgShortCode ?? '') as string;
 
   const { $trpc } = useNuxtApp();

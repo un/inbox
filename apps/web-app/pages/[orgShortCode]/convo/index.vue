@@ -2,6 +2,12 @@
   import { navigateTo, useRoute, ref } from '#imports';
   import { breakpointsTailwind, useBreakpoints } from '@vueuse/core';
 
+  import { useHead } from 'unhead';
+
+  useHead({
+    title: 'UnInbox'
+  });
+
   const breakpoints = useBreakpoints(breakpointsTailwind);
   const isMobile = breakpoints.smaller('lg'); // only smaller than lg
 

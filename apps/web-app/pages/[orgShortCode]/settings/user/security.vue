@@ -24,6 +24,11 @@
   import type { TypeId } from '@u22n/utils/typeid';
   import { navigateTo } from '#app';
   import { breakpointsTailwind, useBreakpoints } from '@vueuse/core';
+  import { useHead } from 'unhead';
+
+  useHead({
+    title: 'Settings - Security'
+  });
 
   const breakpoints = useBreakpoints(breakpointsTailwind);
   const isMobile = breakpoints.smaller('lg'); // only smaller than lg

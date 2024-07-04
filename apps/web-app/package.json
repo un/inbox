@@ -54,6 +54,7 @@
     "superjson": "^2.2.1",
     "tailwindcss": "^3.4.3",
     "trpc-nuxt": "^0.10.21",
+    "unhead": "^1.9.14",
     "vue-virtual-scroller": "2.0.0-beta.8",
     "zod": "^3.23.8"
   }

@@ -2,6 +2,12 @@
   import { navigateTo, useNuxtApp, useRoute } from '#imports';
   import type { UiColor } from '@u22n/types/ui';
 
+  import { useHead } from 'unhead';
+
+  useHead({
+    title: 'Org Settings - Addresses'
+  });
+
   const orgShortCode = (useRoute().params.orgShortCode ?? '') as string;
 
   const { $trpc } = useNuxtApp();

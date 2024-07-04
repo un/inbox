@@ -15,6 +15,12 @@
   import { useUtils } from '~/composables/utils';
   import { breakpointsTailwind, useBreakpoints } from '@vueuse/core';
 
+  import { useHead } from 'unhead';
+
+  useHead({
+    title: 'Org Settings - Profile'
+  });
+
   const breakpoints = useBreakpoints(breakpointsTailwind);
   const isMobile = breakpoints.smaller('lg'); // only smaller than lg
   const { $trpc } = useNuxtApp();
