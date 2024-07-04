@@ -1,7 +1,6 @@
 import { TRPCError, initTRPC } from '@trpc/server';
 import superjson from 'superjson';
 import { validateOrgShortCode } from '~platform/utils/orgShortCode';
-import { type Duration, Ratelimit, NoopRatelimit } from '@unkey/ratelimit';
 import type { TrpcContext } from '~platform/ctx';
 import { z } from 'zod';
 import { env } from '~platform/env';
@@ -33,68 +32,6 @@ const isEeEnabled = trpcContext.middleware(({ next }) => {
   return next();
 });
 
-const publicRateLimits = {
-  checkUsernameAvailability: [30, '1h'],
-  checkPasswordStrength: [50, '1h'],
-  generatePasskeyChallenge: [20, '1h'],
-  signUpPasskeyStart: [10, '1h'],
-  signUpPasskeyFinish: [10, '1h'],
-  verifyPasskey: [30, '1h'],
-  createTwoFactorChallenge: [10, '1h'],
-  signUpWithPassword: [10, '1h'],
-  signInWithPassword: [20, '1h'],
-  recoverAccount: [10, '1h'],
-  completeRecovery: [20, '1h'],
-  validateInvite: [10, '1h']
-} satisfies Record<string, [number, Duration]>;
-
-function createRatelimiter({
-  limit,
-  duration,
-  namespace
-}: {
-  limit: number;
-  duration: Duration;
-  namespace: string;
-}) {
-  const rootKey = env.UNKEY_ROOT_KEY;
-  const unkey = rootKey
-    ? new Ratelimit({
-        async: true,
-        limit,
-        duration,
-        namespace,
-        rootKey
-      })
-    : new NoopRatelimit();
-
-  return trpcContext.middleware(async ({ ctx, next }) =>
-    ctx.event
-      .get('otel')
-      .tracer.startActiveSpan(`Ratelimiter ${namespace}`, async (span) => {
-        const ip = ctx.event.env.incoming.socket.remoteAddress;
-        const result = await unkey.limit(ip ?? 'unknown');
-        span.setAttributes({
-          ip,
-          limit,
-          duration,
-          namespace,
-          remaining: result.remaining,
-          reset: result.reset
-        });
-        if (!result.success) {
-          span.end();
-          throw new TRPCError({
-            code: 'TOO_MANY_REQUESTS',
-            message: 'Too many requests, please try again later'
-          });
-        }
-        span.end();
-        return next();
-      })
-  );
-}
-
 export const publicProcedure = trpcContext.procedure.use(
   async ({ ctx, type, path, next }) =>
     ctx.event
@@ -107,18 +44,6 @@ export const publicProcedure = trpcContext.procedure.use(
         span.end();
         return result;
       })
-);
-
-export const publicRateLimitedProcedure = Object.entries(
-  publicRateLimits
-).reduce(
-  (acc, [key, [limit, duration]]) => {
-    acc[key as keyof typeof publicRateLimits] = publicProcedure.use(
-      createRatelimiter({ limit, duration, namespace: `public.${key}` })
-    );
-    return acc;
-  },
-  {} as Record<keyof typeof publicRateLimits, typeof publicProcedure>
 );
 
 export const accountProcedure = publicProcedure.use(isAccountAuthenticated);

@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import {
   router,
-  publicRateLimitedProcedure,
-  turnstileProcedure
+  turnstileProcedure,
+  publicProcedure
 } from '~platform/trpc/trpc';
 import { eq } from '@u22n/database/orm';
 import { accounts } from '@u22n/database/schema';
@@ -25,11 +25,13 @@ import { validateUsername } from './signupRouter';
 import { createLuciaSessionCookie } from '~platform/utils/session';
 import { env } from '~platform/env';
 import { getCookie, setCookie } from 'hono/cookie';
+import { ratelimiter } from '~platform/trpc/ratelimit';
 
 export const passkeyRouter = router({
   // We use turnstile at start because there is no time to interact between starting and finishing the passkey registration
-  signUpWithPasskeyStart: publicRateLimitedProcedure.signUpPasskeyStart
+  signUpWithPasskeyStart: publicProcedure
     .unstable_concat(turnstileProcedure)
+    .use(ratelimiter({ limit: 10, namespace: 'signUp.passkey.start' }))
     .input(
       z.object({
         username: zodSchemas.username()
@@ -54,7 +56,8 @@ export const passkeyRouter = router({
       });
       return { publicId, options: passkeyOptions };
     }),
-  signUpWithPasskeyFinish: publicRateLimitedProcedure.signUpPasskeyFinish
+  signUpWithPasskeyFinish: publicProcedure
+    .use(ratelimiter({ limit: 10, namespace: 'signUp.passkey.finish' }))
     .input(
       z.object({
         registrationResponseRaw: z.any(),
@@ -152,8 +155,11 @@ export const passkeyRouter = router({
     }),
 
   // Same reason as  SignUp with passkey start
-  generatePasskeyChallenge: publicRateLimitedProcedure.generatePasskeyChallenge
+  generatePasskeyChallenge: publicProcedure
     .unstable_concat(turnstileProcedure)
+    .use(
+      ratelimiter({ limit: 20, namespace: 'signIn.passkey.generateChallenge' })
+    )
     .input(z.object({}))
     .query(async ({ ctx }) => {
       const { event } = ctx;
@@ -174,7 +180,10 @@ export const passkeyRouter = router({
       return { options: passkeyOptions };
     }),
 
-  verifyPasskey: publicRateLimitedProcedure.verifyPasskey
+  verifyPasskey: publicProcedure
+    .use(
+      ratelimiter({ limit: 30, namespace: 'signIn.passkey.verifyChallenge' })
+    )
     .input(
       z.object({
         verificationResponseRaw: z.any()
