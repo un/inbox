@@ -1,5 +1,6 @@
 'use client';
 
+import Metadata from '@/src/components/metadata';
 import { DataTable } from '@/src/components/shared/table';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { api } from '@/src/lib/trpc';
@@ -32,6 +33,10 @@ export default function Page() {
 
   return (
     <div className="flex flex-col gap-4 p-4">
+      <Metadata
+        title="Settings - Addresses"
+        description="Manage your account"
+      />
       <PageTitle title="Your Addresses" />
 
       {personalAddressesLoading && <Skeleton className="h-10 w-full" />}

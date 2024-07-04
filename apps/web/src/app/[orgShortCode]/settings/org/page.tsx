@@ -1,5 +1,6 @@
 'use client';
 
+import Metadata from '@/src/components/metadata';
 import { useRouter } from 'next/navigation';
 import { useState, useMemo } from 'react';
 import { Button } from '@/src/components/shadcn-ui/button';
@@ -67,6 +68,10 @@ export default function ProfileComponent() {
 
   return (
     <div className="flex h-full w-full flex-col items-start gap-4 overflow-y-auto p-4">
+      <Metadata
+        title="Org Settings - Profile"
+        description="Manage your organization"
+      />
       <PageTitle title="Your Profile" />
 
       <div className="flex flex-col gap-3">

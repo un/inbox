@@ -1,5 +1,6 @@
 'use client';
 
+import Metadata from '@/src/components/metadata';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { api } from '@/src/lib/trpc';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
@@ -30,6 +31,10 @@ export default function Page() {
 
   return (
     <div className="flex w-full flex-col gap-2 p-4">
+      <Metadata
+        title="Org Settings - Billing"
+        description="Manage your organization"
+      />
       <PageTitle
         title="Billing"
         description="Manage your organization's billing"

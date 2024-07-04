@@ -11,6 +11,7 @@ import { MessagesPanel } from './_components/messages-panel';
 import TopBar from './_components/top-bar';
 import { ReplyBox } from './_components/reply-box';
 import { Button } from '@/src/components/shadcn-ui/button';
+import Metadata from '@/src/components/metadata';
 
 const STORAGE_URL = env('NEXT_PUBLIC_STORAGE_URL');
 
@@ -79,6 +80,15 @@ function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
 
   return (
     <div className="flex h-full max-h-full w-full max-w-full flex-col overflow-hidden rounded-2xl">
+      <Metadata
+        title={
+          'Convo' +
+          (convoData?.data.subjects.length
+            ? ` - ${convoData?.data.subjects.map((s) => s.subject).join(', ')}`
+            : ' - UnInbox')
+        }
+        description=""
+      />
       <TopBar
         isConvoLoading={convoDataLoading}
         convoId={convoId}

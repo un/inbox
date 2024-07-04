@@ -1,5 +1,6 @@
 'use client';
 
+import Metadata from '@/src/components/metadata';
 import { useEffect, useState } from 'react';
 import { api } from '@/src/lib/trpc';
 import { VerificationModal } from './_components/verification-modal';
@@ -158,6 +159,10 @@ export default function Page() {
 
   return (
     <div className="flex flex-col gap-4 p-4">
+      <Metadata
+        title="Settings - Security"
+        description="Manage your account"
+      />
       <PageTitle
         title="Security"
         description="Manage your account security"

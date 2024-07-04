@@ -1,5 +1,6 @@
 'use client';
 
+import Metadata from '@/src/components/metadata';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { DataTable } from '@/src/components/shared/table';
 import { api } from '@/src/lib/trpc';
@@ -32,6 +33,10 @@ export default function Page({
 
   return (
     <div className="flex h-full w-full flex-col gap-2 p-4">
+      <Metadata
+        title="Org Settings - Teams"
+        description="Manage your organization"
+      />
       <div className="flex w-full gap-4">
         <Button
           asChild

@@ -1,5 +1,6 @@
 'use client';
 
+import Metadata from '@/src/components/metadata';
 import { AvatarModal } from '@/src/components/shared/avatar-modal';
 import { Camera } from '@phosphor-icons/react';
 import { useEffect, useState, useMemo } from 'react';
@@ -84,6 +85,10 @@ export default function Page() {
 
   return (
     <div className="flex flex-col gap-3 p-4">
+      <Metadata
+        title="Settings - Profile"
+        description="Manage your account"
+      />
       <PageTitle title="Your Profile" />
 
       <div className="flex flex-col gap-3">

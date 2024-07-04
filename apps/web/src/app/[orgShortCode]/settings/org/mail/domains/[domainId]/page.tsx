@@ -1,5 +1,6 @@
 'use client';
 
+import Metadata from '@/src/components/metadata';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { api } from '@/src/lib/trpc';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
@@ -46,6 +47,10 @@ export default function Page({
 
   return (
     <div className="flex h-full w-full flex-col gap-2 p-4">
+      <Metadata
+        title="Org Settings - Domains"
+        description="Manage your organization"
+      />
       <div className="flex w-full gap-4 py-2">
         <Button
           asChild

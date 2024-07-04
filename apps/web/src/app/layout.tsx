@@ -1,3 +1,4 @@
+import { TooltipProvider } from '@/src/components/shadcn-ui/tooltip';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import localFont from 'next/font/local';
@@ -55,10 +56,12 @@ export default function RootLayout({
             defaultTheme="system"
             disableTransitionOnChange>
             <div className="flex h-svh w-full flex-col">
-              <TRPCReactProvider>
-                {children}
-                <Toaster />
-              </TRPCReactProvider>
+              <TooltipProvider>
+                <TRPCReactProvider>
+                  {children}
+                  <Toaster />
+                </TRPCReactProvider>
+              </TooltipProvider>
             </div>
           </ThemeProvider>
         </CookiesProvider>
