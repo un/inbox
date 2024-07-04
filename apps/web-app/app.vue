@@ -1,6 +1,4 @@
 <script setup lang="ts">
-  import { createHead } from 'unhead';
-  const head = createHead();
   // import { navigateTo } from '#imports';
 </script>
 <template>

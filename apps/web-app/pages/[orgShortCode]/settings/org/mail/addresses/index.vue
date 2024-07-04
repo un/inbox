@@ -2,12 +2,6 @@
   import { navigateTo, ref, useNuxtApp, useRoute, watch } from '#imports';
   import { breakpointsTailwind, useBreakpoints } from '@vueuse/core';
 
-  import { useHead } from 'unhead';
-
-  useHead({
-    title: 'Org Settings - Addresses'
-  });
-
   const breakpoints = useBreakpoints(breakpointsTailwind);
   const isMobile = breakpoints.smaller('lg'); // only smaller than lg
 

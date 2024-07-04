@@ -14,12 +14,6 @@
   import { useUtils } from '~/composables/utils';
   import { breakpointsTailwind, useBreakpoints } from '@vueuse/core';
 
-  import { useHead } from 'unhead';
-
-  useHead({
-    title: 'Settings - Profiles'
-  });
-
   const breakpoints = useBreakpoints(breakpointsTailwind);
   const isMobile = breakpoints.smaller('lg'); // only smaller than lg
 

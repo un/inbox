@@ -21,7 +21,6 @@
   import { stringify } from 'superjson';
   import { validateTypeId, type TypeId } from '@u22n/utils/typeid';
   import type { UnEditor } from '#components';
-  import { useHead } from 'unhead';
 
   const { $trpc } = useNuxtApp();
 
@@ -88,13 +87,6 @@
       }
     }
 
-    useHead({
-      title:
-        `Convo - ` +
-        convoDetails.value?.data?.subjects
-          .map((subject) => subject.subject)
-          .join(', ')
-    });
     createDate.value = convoDetails.value?.data?.createdAt || new Date();
     updateDate.value =
       convoDetails.value?.data?.lastUpdatedAt ||
