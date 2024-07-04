@@ -27,8 +27,9 @@ export function PasskeyModal({
   open,
   onClose,
   onResolve,
-  username
-}: ModalComponent<{ username: string }>) {
+  username,
+  turnstileToken
+}: ModalComponent<{ username: string; turnstileToken?: string }>) {
   const [state, setState] = useState<string | null>(null);
 
   const getPasskeyChallenge =
@@ -39,7 +40,8 @@ export function PasskeyModal({
   const { error, loading, run } = useLoading(async () => {
     setState('Getting a passkey challenge from server');
     const { options, publicId } = await getPasskeyChallenge.fetch({
-      username
+      username,
+      turnstileToken
     });
     setState('Waiting for your passkey to respond');
     const passkeyData = await startRegistration(options).catch((e: Error) => {
@@ -101,8 +103,12 @@ export function PasswordModal({
   open,
   onClose,
   onResolve,
-  username
-}: ModalComponent<{ username: string }, { recoveryCode: string }>) {
+  username,
+  turnstileToken
+}: ModalComponent<
+  { username: string; turnstileToken?: string },
+  { recoveryCode: string }
+>) {
   const [password, setPassword] = useState<string>();
   const [twoFactorCode, setTwoFactorCode] = useState<string>('');
   const [step, setStep] = useState(1);
@@ -134,6 +140,7 @@ export function PasswordModal({
             password={password}
             twoFactorCode={twoFactorCode}
             setTwoFactorCode={setTwoFactorCode}
+            turnstileToken={turnstileToken}
             onResolve={onResolve}
             setStep={setStep}
           />
@@ -271,7 +278,8 @@ const PasswordModalStep2 = ({
   twoFactorCode,
   setTwoFactorCode,
   onResolve,
-  setStep
+  setStep,
+  turnstileToken
 }: {
   username: string;
   password?: string;
@@ -279,6 +287,7 @@ const PasswordModalStep2 = ({
   setTwoFactorCode: Dispatch<SetStateAction<string>>;
   onResolve: (e: { recoveryCode: string }) => void;
   setStep: Dispatch<SetStateAction<number>>;
+  turnstileToken?: string;
 }) => {
   const [error, setError] = useState<Error | null>(null);
 
@@ -309,7 +318,8 @@ const PasswordModalStep2 = ({
     const data = await signUpWithPassword.mutateAsync({
       username,
       password,
-      twoFactorCode
+      twoFactorCode,
+      turnstileToken
     });
 
     if (data.success) {

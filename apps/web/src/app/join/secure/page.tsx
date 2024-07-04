@@ -14,6 +14,11 @@ import {
   RecoveryCodeModal
 } from './_components/modals';
 import useAwaitableModal from '@/src/hooks/use-awaitable-modal';
+import {
+  TurnstileComponent,
+  turnstileEnabled
+} from '@/src/components/turnstile';
+import { useState } from 'react';
 
 export default function Page() {
   const cookie = useCookies();
@@ -22,6 +27,7 @@ export default function Page() {
     'auth',
     parseAsStringLiteral(['passkey', 'password']).withDefault('passkey')
   );
+  const [turnstileToken, setTurnstileToken] = useState<string | undefined>();
   const router = useRouter();
 
   if (!username) {
@@ -30,12 +36,18 @@ export default function Page() {
 
   const [PasskeyModalRoot, signUpWithPasskey] = useAwaitableModal(
     PasskeyModal,
-    { username: username ?? '' }
+    {
+      username: username ?? '',
+      turnstileToken: undefined as string | undefined
+    }
   );
 
   const [PasswordModalRoot, signUpWithPassword] = useAwaitableModal(
     PasswordModal,
-    { username: username ?? '' }
+    {
+      username: username ?? '',
+      turnstileToken: undefined as string | undefined
+    }
   );
 
   const [RecoveryCodeModalRoot, showRecoveryCode] = useAwaitableModal(
@@ -45,13 +57,19 @@ export default function Page() {
 
   const { loading, run: createAccount } = useLoading(
     async () => {
+      if (turnstileEnabled && !turnstileToken) {
+        toast.error('Turnstile token not found');
+        return;
+      }
       if (selectedAuth === 'passkey') {
         await signUpWithPasskey({
-          username: username ?? ''
+          username: username ?? '',
+          turnstileToken
         });
       } else {
         const { recoveryCode } = await signUpWithPassword({
-          username: username ?? ''
+          username: username ?? '',
+          turnstileToken
         });
         await showRecoveryCode({
           recoveryCode
@@ -95,9 +113,11 @@ export default function Page() {
           setSelected={setSelectedAuth}
         />
       </div>
+      <TurnstileComponent onSuccess={setTurnstileToken} />
       <Button
         onClick={() => createAccount()}
-        loading={loading}>
+        loading={loading}
+        disabled={loading || (turnstileEnabled && !turnstileToken)}>
         Create my account
       </Button>
       <PasskeyModalRoot />

@@ -42,6 +42,7 @@ export const env = createEnv({
     STORAGE_URL: z.string().url(),
     STORAGE_KEY: z.string().min(1),
     DB_REDIS_CONNECTION_STRING: z.string().min(1),
+    TURNSTILE_SECRET_KEY: z.string().nullable().default(null),
     UNKEY_ROOT_KEY: z.string().nullable().default(null),
     EE_LICENSE_KEY: z.string().nullable().default(null),
     BILLING_KEY: z.string().nullable().default(null),
