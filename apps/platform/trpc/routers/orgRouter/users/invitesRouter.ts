@@ -7,7 +7,9 @@ import {
   orgInvitations,
   orgMembers,
   orgMemberProfiles,
-  accounts
+  accounts,
+  spaces,
+  spaceMembers
 } from '@u22n/database/schema';
 import {
   router,
@@ -20,6 +22,7 @@ import { refreshOrgShortcodeCache } from '~platform/utils/orgShortcode';
 import { billingTrpcClient } from '~platform/utils/tRPCServerClients';
 import { typeIdGenerator, typeIdValidator } from '@u22n/utils/typeid';
 import { sendInviteEmail } from '~platform/utils/mail/transactional';
+import { validateSpaceShortCode } from '../../spaceRouter/utils';
 import { nanoIdToken, zodSchemas } from '@u22n/utils/zodSchemas';
 import { addOrgMemberToTeamHandler } from './teamsHandler';
 import { ratelimiter } from '~platform/trpc/ratelimit';
@@ -90,6 +93,52 @@ export const invitesRouter = router({
           role: newOrgMember.role,
           orgMemberProfileId: orgMemberProfileId
         });
+
+        const spaceShortcode = await validateSpaceShortCode({
+          db: db,
+          shortcode: `${newOrgMember.firstName}${newOrgMember.lastName ? '-' + newOrgMember.lastName : ''}`,
+          orgId: orgId
+        });
+
+        const newSpaceResponse = await db.insert(spaces).values({
+          orgId: orgId,
+          publicId: typeIdGenerator('spaces'),
+          name: 'Personal',
+          type: 'private',
+          personalSpace: true,
+          color: 'cyan',
+          icon: 'house',
+          createdByOrgMemberId: Number(orgMemberResponse.insertId),
+          shortcode: spaceShortcode.shortcode
+        });
+
+        await db.insert(spaceMembers).values({
+          orgId: orgId,
+          spaceId: Number(newSpaceResponse.insertId),
+          publicId: typeIdGenerator('spaceMembers'),
+          orgMemberId: Number(orgMemberResponse.insertId),
+          addedByOrgMemberId: Number(orgMemberResponse.insertId),
+          role: 'admin',
+          canCreate: true,
+          canRead: true,
+          canComment: true,
+          canReply: true,
+          canDelete: true,
+          canChangeStatus: true,
+          canSetStatusToClosed: true,
+          canAddTags: true,
+          canMoveToAnotherSpace: true,
+          canAddToAnotherSpace: true,
+          canMergeConvos: true,
+          canAddParticipants: true
+        });
+
+        await db
+          .update(orgMembers)
+          .set({
+            personalSpaceId: Number(newSpaceResponse.insertId)
+          })
+          .where(eq(orgMembers.id, Number(orgMemberResponse.insertId)));
 
         // Insert teamMemberships - save ID
         if (teamsInput) {

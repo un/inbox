@@ -18,6 +18,7 @@ import { addressRouter } from './routers/userRouter/addressRouter';
 import { storeRouter } from './routers/orgRouter/orgStoreRouter';
 import { signupRouter } from './routers/authRouter/signupRouter';
 import { convoRouter } from './routers/convoRouter/convoRouter';
+import { spaceRouter } from './routers/spaceRouter/spaceRouter';
 import { crudRouter } from './routers/orgRouter/orgCrudRouter';
 import { router } from './trpc';
 
@@ -64,7 +65,8 @@ export const trpcPlatformRouter = router({
   auth: trpcPlatformAuthRouter,
   account: trpcPlatformAccountRouter,
   org: trpcPlatformOrgRouter,
-  convos: convoRouter
+  convos: convoRouter,
+  spaces: spaceRouter
 });
 
 export type TrpcPlatformRouter = typeof trpcPlatformRouter;
