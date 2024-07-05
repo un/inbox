@@ -1,4 +1,5 @@
 import { domains, orgBilling, orgs } from '@u22n/database/schema';
+import type { SpaceStatus } from '@u22n/utils/spaces';
 import { router, protectedProcedure } from '../trpc';
 import { TRPCError } from '@trpc/server';
 import { eq } from '@u22n/database/orm';
@@ -81,5 +82,80 @@ export const iCanHazRouter = router({
         return true;
       }
       return false;
+    }),
+  space: protectedProcedure
+    .input(z.object({ orgId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const { db } = ctx;
+
+      const orgId = input.orgId;
+
+      const orgBillingResponse = await db.query.orgBilling.findFirst({
+        where: eq(orgBilling.orgId, orgId),
+        columns: {
+          plan: true
+        }
+      });
+      if (orgBillingResponse && orgBillingResponse.plan === 'pro') {
+        return {
+          open: true,
+          private: true
+        };
+      }
+      return {
+        open: true,
+        private: false
+      };
+    }),
+  spaceStatus: protectedProcedure
+    .input(z.object({ orgId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const { db } = ctx;
+      const orgId = input.orgId;
+
+      let allowedStatuses: Record<SpaceStatus, number> = {
+        open: 1,
+        active: 1,
+        closed: 1
+      };
+
+      const orgBillingResponse = await db.query.orgBilling.findFirst({
+        where: eq(orgBilling.orgId, orgId),
+        columns: {
+          plan: true
+        }
+      });
+      if (orgBillingResponse && orgBillingResponse.plan === 'pro') {
+        allowedStatuses = {
+          open: 1,
+          active: 1,
+          closed: 1
+        };
+      }
+      return allowedStatuses;
+    }),
+  spaceTag: protectedProcedure
+    .input(z.object({ orgId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const { db } = ctx;
+
+      const orgId = input.orgId;
+
+      const orgBillingResponse = await db.query.orgBilling.findFirst({
+        where: eq(orgBilling.orgId, orgId),
+        columns: {
+          plan: true
+        }
+      });
+      if (orgBillingResponse && orgBillingResponse.plan === 'pro') {
+        return {
+          open: true,
+          private: true
+        };
+      }
+      return {
+        open: true,
+        private: false
+      };
     })
 });
