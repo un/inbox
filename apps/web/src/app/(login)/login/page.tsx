@@ -29,10 +29,20 @@ import {
   InputOTPGroup,
   InputOTPSlot
 } from '@/src/components/shadcn-ui/input-otp';
+import {
+  TurnstileComponent,
+  turnstileEnabled
+} from '@/src/components/turnstile';
 
 const loginSchema = z.object({
   username: zodSchemas.username(2),
-  password: z.string().min(8, 'Password must be at least 8 characters')
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+  turnstileToken: turnstileEnabled
+    ? z.string({
+        required_error:
+          'Waiting for Captcha. If you can see the Captcha, complete it manually'
+      })
+    : z.undefined()
 });
 
 export default function Page() {
@@ -109,6 +119,24 @@ export default function Page() {
                 )}
               />
               {error && <FormMessage>{error.message}</FormMessage>}
+
+              <FormField
+                control={form.control}
+                name="turnstileToken"
+                render={() => (
+                  <FormItem>
+                    <FormControl>
+                      <TurnstileComponent
+                        onSuccess={(value) =>
+                          form.setValue('turnstileToken', value)
+                        }
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <Button
                 className="w-full"
                 loading={isPending}

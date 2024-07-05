@@ -47,11 +47,9 @@ import { useMemo } from 'react';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import React from 'react';
-
 import { useTheme } from 'next-themes';
 import { sidebarSubmenuOpenAtom } from './atoms';
 import { useAtom } from 'jotai';
-
 import {
   ToggleGroup,
   ToggleGroupItem
@@ -182,7 +180,7 @@ function OrgMenu() {
             <CaretUpDown className={'h-4 w-4'} />
           </div>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="bg-slate-1 border-slate-5 flex w-[214px] flex-col gap-0 p-0">
+        <DropdownMenuContent className="bg-slate-1 border-slate-5 z-[101] flex w-[214px] flex-col gap-0 p-0">
           <DropdownMenuLabel className={'px-0 py-0'}>
             <div className="flex flex-col items-start justify-start gap-2 p-3">
               <span className={'text-slate-11 text-xs font-medium uppercase'}>
@@ -343,7 +341,7 @@ function OrgMenu() {
                 </div>
               </DropdownMenuSubTrigger>
               <DropdownMenuPortal>
-                <DropdownMenuSubContent>
+                <DropdownMenuSubContent className="z-[102]">
                   <DropdownMenuItem>
                     <div
                       className={

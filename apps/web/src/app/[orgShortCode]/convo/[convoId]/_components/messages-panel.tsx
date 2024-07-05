@@ -9,7 +9,6 @@ import {
   DropdownMenuPortal
 } from '@/src/components/shadcn-ui/dropdown-menu';
 import { Button } from '@/src/components/shadcn-ui/button';
-import { ScrollArea } from '@/src/components/shadcn-ui/scroll-area';
 import { Badge } from '@/src/components/shadcn-ui/badge';
 import { type TypeId } from '@u22n/utils/typeid';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
@@ -48,7 +47,6 @@ export function MessagesPanel({
   const [firstItemIndex, setFirstItemIndex] = useState(
     INVERSE_LIST_START_INDEX
   );
-  const [scrollParent, setScrollParent] = useState<HTMLElement | null>(null);
   const [, setReplyTo] = useAtom(replyToMessageAtom);
 
   const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } =
@@ -101,23 +99,18 @@ export function MessagesPanel({
     </div>
   ) : (
     <div className="flex h-full w-full flex-col items-center justify-center gap-2 px-4">
-      <ScrollArea
-        ref={setScrollParent}
-        className="pb-4">
-        <Virtuoso
-          startReached={() => {
-            if (isFetchingNextPage || !hasNextPage) return;
-            void fetchNextPage();
-          }}
-          data={allMessages}
-          initialTopMostItemIndex={Math.max(0, allMessages.length - 1)}
-          firstItemIndex={firstItemIndex}
-          itemContent={itemRenderer}
-          customScrollParent={scrollParent ?? undefined}
-          style={{ overscrollBehavior: 'contain' }}
-          className=""
-        />
-      </ScrollArea>
+      <Virtuoso
+        startReached={() => {
+          if (isFetchingNextPage || !hasNextPage) return;
+          void fetchNextPage();
+        }}
+        data={allMessages}
+        initialTopMostItemIndex={Math.max(0, allMessages.length - 1)}
+        firstItemIndex={firstItemIndex}
+        itemContent={itemRenderer}
+        style={{ overscrollBehavior: 'contain' }}
+        className="w-full"
+      />
     </div>
   );
 }
@@ -268,7 +261,9 @@ function MessageItem({
         </div>
       </div>
       <DropdownMenu>
-        <DropdownMenuTrigger className="opacity-0 group-hover:opacity-100">
+        <DropdownMenuTrigger
+          className="opacity-0 group-hover:opacity-100"
+          asChild>
           <Button
             variant="secondary"
             size="icon-sm"

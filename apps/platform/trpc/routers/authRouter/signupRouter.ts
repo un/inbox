@@ -1,7 +1,8 @@
 import { z } from 'zod';
-import { router, publicRateLimitedProcedure } from '~platform/trpc/trpc';
+import { router, publicProcedure } from '~platform/trpc/trpc';
 import type { DBType } from '@u22n/database';
 import { eq } from '@u22n/database/orm';
+import { ratelimiter } from '~platform/trpc/ratelimit';
 import { accounts } from '@u22n/database/schema';
 import { blockedUsernames, reservedUsernames } from '~platform/utils/signup';
 import { calculatePasswordStrength } from '@u22n/utils/password';
@@ -44,17 +45,18 @@ export async function validateUsername(
 }
 
 export const signupRouter = router({
-  checkUsernameAvailability:
-    publicRateLimitedProcedure.checkUsernameAvailability
-      .input(
-        z.object({
-          username: zodSchemas.username()
-        })
-      )
-      .query(async ({ ctx, input }) => {
-        return await validateUsername(ctx.db, input.username);
-      }),
-  checkPasswordStrength: publicRateLimitedProcedure.checkPasswordStrength
+  checkUsernameAvailability: publicProcedure
+    .use(ratelimiter({ limit: 30, namespace: 'check.username' }))
+    .input(
+      z.object({
+        username: zodSchemas.username()
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      return await validateUsername(ctx.db, input.username);
+    }),
+  checkPasswordStrength: publicProcedure
+    .use(ratelimiter({ limit: 50, namespace: 'check.password' }))
     .input(
       z.object({
         password: z.string()

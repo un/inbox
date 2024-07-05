@@ -7,17 +7,28 @@ import { startAuthentication } from '@simplewebauthn/browser';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useCallback, useState } from 'react';
+import {
+  TurnstileComponent,
+  turnstileEnabled
+} from '@/src/components/turnstile';
 
 export function PasskeyLoginButton() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | undefined>();
   const generatePasskey = api.useUtils().auth.passkey.generatePasskeyChallenge;
   const verifyPasskey = api.auth.passkey.verifyPasskey.useMutation();
 
   const login = useCallback(async () => {
+    if (turnstileEnabled && !turnstileToken) {
+      toast.error('Turnstile token not found');
+      return;
+    }
     try {
       setLoading(true);
-      const data = await generatePasskey.fetch({});
+      const data = await generatePasskey.fetch({
+        turnstileToken
+      });
       const response = await startAuthentication(data.options);
       const { defaultOrg } = await verifyPasskey.mutateAsync({
         verificationResponseRaw: response
@@ -49,15 +60,19 @@ export function PasskeyLoginButton() {
     } finally {
       setLoading(false);
     }
-  }, [generatePasskey, router, verifyPasskey]);
+  }, [generatePasskey, router, turnstileToken, verifyPasskey]);
 
   return (
-    <Button
-      onClick={() => login()}
-      loading={loading}
-      className="mb-2 w-72 cursor-pointer gap-2 font-semibold">
-      <Fingerprint size={20} />
-      <span>Login with my passkey</span>
-    </Button>
+    <div className="flex flex-col gap-2">
+      <Button
+        onClick={() => login()}
+        loading={loading}
+        disabled={loading || (turnstileEnabled && !turnstileToken)}
+        className="mb-2 w-72 cursor-pointer gap-2 font-semibold">
+        <Fingerprint size={20} />
+        <span>Login with my passkey</span>
+      </Button>
+      <TurnstileComponent onSuccess={setTurnstileToken} />
+    </div>
   );
 }

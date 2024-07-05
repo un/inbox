@@ -1,6 +1,10 @@
 import { z } from 'zod';
 import { Argon2id } from 'oslo/password';
-import { router, publicRateLimitedProcedure } from '~platform/trpc/trpc';
+import {
+  router,
+  turnstileProcedure,
+  publicProcedure
+} from '~platform/trpc/trpc';
 import { eq } from '@u22n/database/orm';
 import { accounts } from '@u22n/database/schema';
 import { nanoIdToken, zodSchemas } from '@u22n/utils/zodSchemas';
@@ -14,12 +18,14 @@ import { TOTPController, createTOTPKeyURI } from 'oslo/otp';
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
 import { env } from '~platform/env';
 import { storage } from '~platform/storage';
+import { ratelimiter } from '~platform/trpc/ratelimit';
 
 export const recoveryRouter = router({
   /**
    * @deprecated use `getRecoveryVerificationToken` instead
    */
-  recoverAccount: publicRateLimitedProcedure.recoverAccount
+  recoverAccount: publicProcedure
+    .use(ratelimiter({ limit: 10, namespace: 'recovery.start' }))
     .input(
       z.object({
         username: zodSchemas.username(2),
@@ -163,7 +169,11 @@ export const recoveryRouter = router({
           'Something went wrong, you should never see this message. Please report to team immediately.'
       });
     }),
-  getRecoveryVerificationToken: publicRateLimitedProcedure.recoverAccount
+
+  // we only need to make sure that generate function is not abused
+  getRecoveryVerificationToken: publicProcedure
+    .unstable_concat(turnstileProcedure)
+    .use(ratelimiter({ limit: 10, namespace: 'recovery.start' }))
     .input(
       z
         .object({
@@ -286,7 +296,8 @@ export const recoveryRouter = router({
         return { resetting, accountPublicId: account.publicId };
       }
     }),
-  resetPassword: publicRateLimitedProcedure.completeRecovery
+  resetPassword: publicProcedure
+    .use(ratelimiter({ limit: 20, namespace: 'recovery.finish.password' }))
     .input(
       z.object({
         accountPublicId: typeIdValidator('account'),
@@ -339,7 +350,8 @@ export const recoveryRouter = router({
 
       return { success: true };
     }),
-  resetTwoFactor: publicRateLimitedProcedure.completeRecovery
+  resetTwoFactor: publicProcedure
+    .use(ratelimiter({ limit: 20, namespace: 'recovery.finish.twoFactor' }))
     .input(
       z.object({
         accountPublicId: typeIdValidator('account'),
