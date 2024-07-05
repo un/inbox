@@ -30,7 +30,9 @@ import {
   Monitor,
   Question,
   User,
-  SpinnerGap
+  SpinnerGap,
+  SquaresFour,
+  DotsThree
 } from '@phosphor-icons/react';
 import {
   Tooltip,
@@ -42,22 +44,26 @@ import {
   ToggleGroupItem
 } from '@/src/components/shadcn-ui/toggle-group';
 import { useOrgScopedRouter, useOrgShortcode } from '@/src/hooks/use-params';
+import { type InferQueryLikeData } from '@trpc/react-query/shared';
+import { Button } from '@/src/components/shadcn-ui/button';
 import { useIsMobile } from '@/src/hooks/use-is-mobile';
 import { useMutation } from '@tanstack/react-query';
+import { NewSpaceModal } from './new-space-modal';
 import { Avatar } from '@/src/components/avatar';
 import { sidebarSubmenuOpenAtom } from './atoms';
 import { useRouter } from 'next/navigation';
 import { platform } from '@/src/lib/trpc';
 import { useTheme } from 'next-themes';
 import { cn } from '@/src/lib/utils';
+import { use, useMemo } from 'react';
 import { ms } from '@u22n/utils/ms';
 import { useSetAtom } from 'jotai';
 import { env } from '@/src/env';
-import { useMemo } from 'react';
 import Link from 'next/link';
 
 export function SidebarContent() {
   const isMobile = useIsMobile();
+
   return (
     <div
       className={cn(
@@ -67,6 +73,130 @@ export function SidebarContent() {
       {!isMobile && <OrgMenu />}
       <SpacesNav />
       <NavAppVersion />
+      <OrgMenu />
+      {/* <div
+        className={cn(
+          'flex w-full grow flex-col items-start justify-start gap-4 p-0'
+        )}>
+        <div className="flex w-full flex-col gap-0 p-0">
+          <div className="flex w-full flex-row items-center justify-between gap-2">
+            <span className="text-slate-10 p-1 text-[10px] font-semibold uppercase">
+              Spaces
+            </span>
+            <NewSpaceModal />
+          </div>
+          {spaceData?.map((space) => (
+            <SpaceItem
+              space={space}
+              key={space.publicId}
+              isPersonal={space.publicId === unsortedSpaceData?.personalSpaceId}
+            />
+          ))}
+          <Link
+            className="hover:bg-base-1 flex w-full max-w-full flex-row items-center gap-2 truncate rounded-lg p-1.5"
+            href={`/${orgShortcode}/convo`}>
+            <div className="bg-blue-4 text-blue-9 flex h-6 w-6 items-center justify-center rounded-sm">
+              <User
+                weight="bold"
+                className={'h-4 w-4'}
+              />
+            </div>
+            <span className="text-base-12 font-medium">My personal space</span>
+          </Link>
+        </div>
+      </div> */}
+      <div className="flex w-full flex-row items-center justify-between p-1">
+        <span className={cn('font-display text-slate-11 text-sm')}>
+          UnInbox
+        </span>
+        <span className={cn('text-slate-11 text-xs')}>
+          v{env.NEXT_PUBLIC_APP_VERSION}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+type SingleSpaceResponse = InferQueryLikeData<
+  typeof platform.spaces.getOrgMemberSpaces
+>['spaces'][number];
+
+function SpaceItem({
+  space: spaceData,
+  isPersonal
+}: {
+  space: SingleSpaceResponse;
+  isPersonal: boolean;
+}) {
+  const router = useRouter();
+  const orgShortCode = useOrgShortcode();
+
+  const SpaceIcon = () => {
+    return (
+      <SquaresFour
+        className="h-4 w-4"
+        weight="bold"
+      />
+    );
+  };
+
+  return (
+    <div className="hover:bg-slate-1 group flex w-full max-w-full flex-row items-center gap-2 truncate rounded-lg p-0.5">
+      <Link
+        className="flex w-full max-w-full flex-row items-center gap-4 truncate p-1"
+        href={`/${orgShortCode}/${spaceData.shortcode}/convos`}>
+        <div
+          className="flex h-6 min-h-6 w-6 min-w-6 items-center justify-center rounded-sm"
+          style={{
+            backgroundColor: `var(--${spaceData.color}4)`,
+            color: `var(--${spaceData.color}9)`
+          }}>
+          <SpaceIcon />
+        </div>
+        <span className="text-slate-12 h-full truncate font-medium">
+          {isPersonal ? 'My Personal Space' : spaceData.name || 'Unnamed Space'}
+        </span>
+      </Link>
+      <div className="w-0 overflow-hidden transition-all group-hover:w-8">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              size="icon-sm"
+              variant="ghost">
+              <DotsThree />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            {/* TODO: Add in with the notifications
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>Notifications</DropdownMenuSubTrigger>
+              <DropdownMenuPortal>
+                <DropdownMenuSubContent>
+                  <DropdownMenuRadioGroup>
+                    <DropdownMenuRadioItem value="top">
+                      Top
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="bottom">
+                      Bottom
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="right">
+                      Right
+                    </DropdownMenuRadioItem>
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuSubContent>
+              </DropdownMenuPortal>
+            </DropdownMenuSub> 
+            <DropdownMenuSeparator />
+            */}
+            <DropdownMenuItem
+              onSelect={() => {
+                router.push(`/${orgShortCode}/${spaceData.shortcode}/settings`);
+              }}>
+              Space Settings
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     </div>
   );
 }
@@ -460,6 +590,23 @@ export function OrgMenuContent() {
 
 export function SpacesNav() {
   const { scopedUrl } = useOrgScopedRouter();
+  const orgShortcode = useOrgShortcode();
+
+  const { data: unsortedSpaceData } =
+    platform.spaces.getOrgMemberSpaces.useQuery({
+      orgShortcode
+    });
+
+  // sort the spaceData to have the personal space at the top
+  const spaceData = unsortedSpaceData?.spaces.sort((a, b) => {
+    if (a.publicId === unsortedSpaceData.personalSpaceId) {
+      return -1;
+    }
+    if (b.publicId === unsortedSpaceData.personalSpaceId) {
+      return 1;
+    }
+    return 0;
+  });
 
   return (
     <div
@@ -467,9 +614,19 @@ export function SpacesNav() {
         'flex w-full grow flex-col items-start justify-start gap-4 p-0'
       )}>
       <div className="flex w-full flex-col gap-0 p-0">
-        <span className="text-base-10 p-1 text-[10px] font-semibold uppercase">
-          Spaces
-        </span>
+        <div className="flex w-full flex-row items-center justify-between gap-2">
+          <span className="text-slate-10 p-1 text-[10px] font-semibold uppercase">
+            Spaces
+          </span>
+          <NewSpaceModal />
+        </div>
+        {spaceData?.map((space) => (
+          <SpaceItem
+            space={space}
+            key={space.publicId}
+            isPersonal={space.publicId === unsortedSpaceData?.personalSpaceId}
+          />
+        ))}
         <Link
           className="hover:bg-base-1 flex w-full max-w-full flex-row items-center gap-2 truncate rounded-lg p-1.5"
           href={scopedUrl('/convo')}>
@@ -483,6 +640,27 @@ export function SpacesNav() {
         </Link>
       </div>
     </div>
+    // <div
+    //   className={cn(
+    //     'flex w-full grow flex-col items-start justify-start gap-4 p-0'
+    //   )}>
+    //   <div className="flex w-full flex-col gap-0 p-0">
+    //     <span className="text-base-10 p-1 text-[10px] font-semibold uppercase">
+    //       Spaces
+    //     </span>
+    //     <Link
+    //       className="hover:bg-base-1 flex w-full max-w-full flex-row items-center gap-2 truncate rounded-lg p-1.5"
+    //       href={`/${orgShortcode}/convo`}>
+    //       <div className="bg-blue-4 text-blue-9 flex h-6 w-6 items-center justify-center rounded-sm">
+    //         <User
+    //           weight="bold"
+    //           className={'h-4 w-4'}
+    //         />
+    //       </div>
+    //       <span className="text-base-12 font-medium">My personal space</span>
+    //     </Link>
+    //   </div>
+    // </div>
   );
 }
 
