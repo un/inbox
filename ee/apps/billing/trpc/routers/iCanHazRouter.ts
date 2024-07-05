@@ -81,5 +81,29 @@ export const iCanHazRouter = router({
         return true;
       }
       return false;
+    }),
+  space: protectedProcedure
+    .input(z.object({ orgId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const { db } = ctx;
+
+      const orgId = input.orgId;
+
+      const orgBillingResponse = await db.query.orgBilling.findFirst({
+        where: eq(orgBilling.orgId, orgId),
+        columns: {
+          plan: true
+        }
+      });
+      if (orgBillingResponse && orgBillingResponse.plan === 'pro') {
+        return {
+          open: true,
+          shared: true
+        };
+      }
+      return {
+        open: true,
+        shared: false
+      };
     })
 });

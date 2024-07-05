@@ -21,6 +21,7 @@ import { twoFactorRouter } from './routers/authRouter/twoFactorRouter';
 import { securityRouter } from './routers/userRouter/securityRouter';
 import { storeRouter } from './routers/orgRouter/orgStoreRouter';
 import { iCanHazRouter } from './routers/orgRouter/iCanHaz/iCanHazRouter';
+import { spaceRouter } from './routers/spaceRouter/spaceRouter';
 
 const trpcPlatformAuthRouter = router({
   signup: signupRouter,
@@ -66,7 +67,8 @@ export const trpcPlatformRouter = router({
   auth: trpcPlatformAuthRouter,
   account: trpcPlatformAccountRouter,
   org: trpcPlatformOrgRouter,
-  convos: convoRouter
+  convos: convoRouter,
+  spaces: spaceRouter
 });
 
 export type TrpcPlatformRouter = typeof trpcPlatformRouter;

@@ -1,48 +1,17 @@
 import { z } from 'zod';
 import { router, accountProcedure } from '~platform/trpc/trpc';
 import { and, eq } from '@u22n/database/orm';
-import { orgMemberProfiles, orgs, orgMembers } from '@u22n/database/schema';
+import {
+  orgMemberProfiles,
+  orgs,
+  orgMembers,
+  spaces
+} from '@u22n/database/schema';
 import { typeIdValidator } from '@u22n/utils/typeid';
 import { TRPCError } from '@trpc/server';
+import { validateSpaceShortCode } from '../spaceRouter/spaceRouter';
 
 export const profileRouter = router({
-  // createProfile: accountProcedure
-  //   .input(
-  //     z.object({
-  //       fName: z.string(),
-  //       lName: z.string(),
-  //       handle: z.string().min(2).max(20),
-  //       defaultProfile: z.boolean().optional().default(false)
-  //     })
-  //   )
-  //   .mutation(async ({ ctx, input }) => {
-  //     const { db, user } = ctx;
-  //     const userId = user.id;
-
-  //     const newPublicId = typeIdGenerator('orgMemberProfile');
-  //     const insertUserProfileResponse = await db.insert(orgMemberProfiles).values({
-  //       userId: userId,
-  //       publicId: newPublicId,
-  //       firstName: input.fName,
-  //       lastName: input.lName,
-  //       defaultProfile: input.defaultProfile,
-  //       handle: input.handle
-  //     });
-
-  //     if (!insertUserProfileResponse.insertId) {
-  //       return {
-  //         success: false,
-  //         profileId: null,
-  //         error:
-  //           'Something went wrong, please retry. Contact our team if it persists'
-  //       };
-  //     }
-  //     return {
-  //       success: true,
-  //       profileId: newPublicId,
-  //       error: null
-  //     };
-  //   }),
   getOrgMemberProfile: accountProcedure
     .input(
       z.object({
@@ -128,6 +97,33 @@ export const profileRouter = router({
       const { db, account } = ctx;
       const accountId = account.id;
 
+      const orgMemberProfileQuery = await db.query.orgMemberProfiles.findFirst({
+        where: and(
+          eq(orgMemberProfiles.accountId, accountId),
+          eq(orgMemberProfiles.publicId, input.profilePublicId)
+        ),
+        columns: {
+          id: true,
+          orgId: true,
+          handle: true
+        },
+        with: {
+          orgMember: {
+            columns: {
+              id: true,
+              personalSpace: true
+            }
+          }
+        }
+      });
+
+      if (!orgMemberProfileQuery) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Profile not found'
+        });
+      }
+
       await db
         .update(orgMemberProfiles)
         .set({
@@ -137,12 +133,25 @@ export const profileRouter = router({
           blurb: input.blurb,
           handle: input.handle
         })
-        .where(
-          and(
-            eq(orgMemberProfiles.publicId, input.profilePublicId),
-            eq(orgMemberProfiles.accountId, accountId)
-          )
-        );
+        .where(eq(orgMemberProfiles.id, orgMemberProfileQuery.id));
+
+      if (orgMemberProfileQuery.orgMember.personalSpace) {
+        const validatedShortcode = await validateSpaceShortCode({
+          db: db,
+          shortcode: `${input.handle}-personal`,
+          orgId: orgMemberProfileQuery.orgId,
+          spaceId: orgMemberProfileQuery.orgMember.personalSpace
+        });
+
+        await db
+          .update(spaces)
+          .set({
+            name: `${input.fName}'s Personal Space`,
+            shortcode: validatedShortcode.shortcode,
+            description: `${input.fName}${input.lName ? ' ' + input.lName : ''}'s Personal Space`
+          })
+          .where(eq(spaces.id, orgMemberProfileQuery.orgMember.personalSpace));
+      }
 
       return {
         success: true

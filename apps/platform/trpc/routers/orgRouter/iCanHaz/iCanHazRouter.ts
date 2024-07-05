@@ -16,6 +16,16 @@ export const iCanHazRouter = router({
       return true;
     }
     return await billingTrpcClient.iCanHaz.team.query({ orgId: org.id });
+  }),
+  space: orgProcedure.query(async ({ ctx }) => {
+    const { org, selfHosted } = ctx;
+    if (selfHosted) {
+      return {
+        open: true,
+        shared: true
+      };
+    }
+    return await billingTrpcClient.iCanHaz.space.query({ orgId: org.id });
   })
 });
 

@@ -37,7 +37,8 @@ import {
   Palette,
   Monitor,
   Question,
-  User
+  User,
+  SquaresFour
 } from '@phosphor-icons/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -53,9 +54,34 @@ import {
   ToggleGroupItem
 } from '@/src/components/shadcn-ui/toggle-group';
 import { env } from '@/src/env';
+import { api } from '@/src/lib/trpc';
+import { type InferQueryLikeData } from '@trpc/react-query/shared';
+import { Button } from '@/src/components/shadcn-ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from '@/src/components/shadcn-ui/tooltip';
+import { NewSpaceModal } from './new-space-modal';
 
 export default function SidebarContent() {
   const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  const { data: unsortedSpaceData } = api.spaces.getOrgMemberSpaces.useQuery({
+    orgShortCode
+  });
+
+  // sort the spaceData to have the personal space at the top
+  const spaceData = unsortedSpaceData?.spaces.sort((a, b) => {
+    if (a.publicId === unsortedSpaceData.personalSpaceId) {
+      return -1;
+    }
+    if (b.publicId === unsortedSpaceData.personalSpaceId) {
+      return 1;
+    }
+    return 0;
+  });
+
   return (
     <div
       className={cn(
@@ -67,9 +93,19 @@ export default function SidebarContent() {
           'flex w-full grow flex-col items-start justify-start gap-4 p-0'
         )}>
         <div className="flex w-full flex-col gap-0 p-0">
-          <span className="text-slate-10 p-1 text-[10px] font-semibold uppercase">
-            Spaces
-          </span>
+          <div className="flex w-full flex-row items-center justify-between gap-2">
+            <span className="text-slate-10 p-1 text-[10px] font-semibold uppercase">
+              Spaces
+            </span>
+            <NewSpaceModal />
+          </div>
+          {spaceData?.map((space) => (
+            <SpaceItem
+              space={space}
+              key={space.publicId}
+              isPersonal={space.publicId === unsortedSpaceData?.personalSpaceId}
+            />
+          ))}
           <Link
             className="hover:bg-slate-1 flex w-full max-w-full flex-row items-center gap-2 truncate rounded-lg p-1.5"
             href={`/${orgShortCode}/convo`}>
@@ -90,6 +126,45 @@ export default function SidebarContent() {
         <span className={cn('text-slate-11 text-xs')}>v0.1.0</span>
       </div>
     </div>
+  );
+}
+
+type SingleSpaceResponse = InferQueryLikeData<
+  typeof api.spaces.getOrgMemberSpaces
+>['spaces'][number];
+
+function SpaceItem({
+  space: spaceData,
+  isPersonal
+}: {
+  space: SingleSpaceResponse;
+  isPersonal: boolean;
+}) {
+  const SpaceIcon = () => {
+    return (
+      <SquaresFour
+        className="h-4 w-4"
+        weight="bold"
+      />
+    );
+  };
+
+  return (
+    <Link
+      className="hover:bg-slate-1 flex w-full max-w-full flex-row items-center gap-2 truncate rounded-lg p-1.5"
+      href={`/lala/convo`}>
+      <div
+        className="flex h-6 min-h-6 w-6 min-w-6 items-center justify-center rounded-sm"
+        style={{
+          backgroundColor: `var(--${spaceData.color}4)`,
+          color: `var(--${spaceData.color}9)`
+        }}>
+        <SpaceIcon />
+      </div>
+      <span className="text-slate-12 truncate font-medium">
+        {isPersonal ? 'My Personal Space' : spaceData.name}
+      </span>
+    </Link>
   );
 }
 

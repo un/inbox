@@ -1377,19 +1377,6 @@ export const convoRouter = router({
       };
     }),
 
-  //* get convo entries
-  // getConvoEntries: orgProcedure
-  //   .input(
-  //     z.object({
-  //       convoPublicId: typeIdValidator('convos'),
-  //       cursor: z.object({
-  //         lastUpdatedAt: z.date().optional(),
-  //         lastPublicId: typeIdValidator('convos').optional()
-  //       })
-  //     })
-  //   )
-  //   .query(async () => {}),
-
   getOrgMemberConvos: orgProcedure
     .input(
       z.object({

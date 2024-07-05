@@ -6,7 +6,9 @@ import {
   orgs,
   orgMembers,
   orgMemberProfiles,
-  accounts
+  accounts,
+  spaces,
+  spaceMembers
 } from '@u22n/database/schema';
 import { typeIdGenerator } from '@u22n/utils/typeid';
 import { TRPCError } from '@trpc/server';
@@ -94,17 +96,15 @@ export const crudRouter = router({
         });
       }
 
-      const newPublicId = typeIdGenerator('org');
+      const newOrgPublicId = typeIdGenerator('org');
 
       const insertOrgResponse = await db.insert(orgs).values({
         ownerId: accountId,
         name: input.orgName,
         shortcode: input.orgShortCode,
-        publicId: newPublicId
+        publicId: newOrgPublicId
       });
-      const orgId = +insertOrgResponse.insertId;
-
-      const newProfilePublicId = typeIdGenerator('orgMemberProfile');
+      const orgId = Number(insertOrgResponse.insertId);
 
       const { username } =
         (await db.query.accounts.findFirst({
@@ -125,7 +125,7 @@ export const crudRouter = router({
         .insert(orgMemberProfiles)
         .values({
           orgId: orgId,
-          publicId: newProfilePublicId,
+          publicId: typeIdGenerator('orgMemberProfile'),
           accountId: accountId,
           firstName: username,
           lastName: '',
@@ -135,7 +135,7 @@ export const crudRouter = router({
         });
 
       const newOrgMemberPublicId = typeIdGenerator('orgMembers');
-      await db.insert(orgMembers).values({
+      const orgMemberResponse = await db.insert(orgMembers).values({
         orgId: orgId,
         publicId: newOrgMemberPublicId,
         role: 'admin',
@@ -144,8 +144,48 @@ export const crudRouter = router({
         orgMemberProfileId: Number(newOrgMemberProfileInsert.insertId)
       });
 
+      const newSpaceResponse = await db.insert(spaces).values({
+        orgId: orgId,
+        publicId: typeIdGenerator('spaces'),
+        name: `${username}'s Personal Space`,
+        type: 'shared',
+        personalSpace: true,
+        color: 'cyan',
+        icon: 'house',
+        createdByOrgMemberId: Number(orgMemberResponse.insertId),
+        shortcode: `${username}-personal`
+      });
+
+      await db.insert(spaceMembers).values({
+        orgId: orgId,
+        spaceId: Number(newSpaceResponse.insertId),
+        publicId: typeIdGenerator('spaceMembers'),
+        orgMemberId: Number(orgMemberResponse.insertId),
+        addedByOrgMemberId: Number(orgMemberResponse.insertId),
+        role: 'admin',
+        canCreate: true,
+        canRead: true,
+        canComment: true,
+        canReply: true,
+        canDelete: true,
+        canChangeStatus: true,
+        canSetStatusToClosed: true,
+        canAddTags: true,
+        canMoveToAnotherSpace: true,
+        canAddToAnotherSpace: true,
+        canMergeConvos: true,
+        canAddParticipants: true
+      });
+
+      await db
+        .update(orgMembers)
+        .set({
+          personalSpaceId: Number(newSpaceResponse.insertId)
+        })
+        .where(eq(orgMembers.id, Number(orgMemberResponse.insertId)));
+
       return {
-        orgId: newPublicId,
+        orgId: newOrgPublicId,
         orgName: input.orgName
       };
     }),
