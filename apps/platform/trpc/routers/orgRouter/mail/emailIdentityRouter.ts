@@ -561,7 +561,7 @@ export const emailIdentityRouter = router({
             eq(emailIdentitiesAuthorizedOrgMembers.orgMemberId, orgMemberId),
             inArray(
               emailIdentitiesAuthorizedOrgMembers.teamId,
-              uniqueUserTeamIds || [0]
+              uniqueUserTeamIds
             )
           ),
           columns: {
@@ -576,6 +576,14 @@ export const emailIdentityRouter = router({
                 username: true,
                 domainName: true,
                 sendName: true
+              },
+              with: {
+                domain: {
+                  columns: {
+                    domainStatus: true,
+                    sendingMode: true
+                  }
+                }
               }
             }
           }
@@ -592,16 +600,28 @@ export const emailIdentityRouter = router({
         | undefined = authorizedEmailIdentities.find(
         (emailIdentityAuthorization) =>
           emailIdentityAuthorization.default &&
-          emailIdentityAuthorization.emailIdentity?.publicId
+          emailIdentityAuthorization.emailIdentity?.publicId &&
+          emailIdentityAuthorization.emailIdentity.domain
+            ? emailIdentityAuthorization.emailIdentity.domain.domainStatus ===
+                'active' &&
+              emailIdentityAuthorization.emailIdentity.domain.sendingMode !==
+                'disabled'
+            : true
       )?.emailIdentity.publicId;
+
       const emailIdentities = authorizedEmailIdentities
         .map((emailIdentityAuthorization) => {
           const emailIdentity = emailIdentityAuthorization.emailIdentity;
+          const sendingEnabled = emailIdentity?.domain
+            ? emailIdentity.domain.domainStatus === 'active' &&
+              emailIdentity.domain.sendingMode !== 'disabled'
+            : true;
           return {
             publicId: emailIdentity.publicId,
             username: emailIdentity.username,
             domainName: emailIdentity.domainName,
-            sendName: emailIdentity.sendName
+            sendName: emailIdentity.sendName,
+            sendingEnabled
           };
         })
         .filter(
@@ -609,7 +629,6 @@ export const emailIdentityRouter = router({
             index === self.findIndex((t) => t.publicId === identity.publicId)
         );
 
-      // TODO: Check if domains are enabled/validated, if not return invalid, but display the email address in the list with a tooltip
       return {
         emailIdentities: emailIdentities,
         defaultEmailIdentity: defaultEmailIdentityPublicId

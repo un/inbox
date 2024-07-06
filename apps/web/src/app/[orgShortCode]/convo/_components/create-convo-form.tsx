@@ -25,7 +25,13 @@ import {
   useCommandState
 } from 'cmdk';
 import { useState, useMemo, useEffect } from 'react';
-import { At, CaretDown, Check, Paperclip } from '@phosphor-icons/react';
+import {
+  At,
+  CaretDown,
+  Check,
+  Paperclip,
+  Question
+} from '@phosphor-icons/react';
 import { z } from 'zod';
 import {
   type JSONContent,
@@ -46,6 +52,11 @@ import { showNewConvoPanel } from '../atoms';
 import { Avatar, AvatarIcon } from '@/src/components/avatar';
 import { cn } from '@/src/lib/utils';
 import { Badge } from '@/src/components/shadcn-ui/badge';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger
+} from '@/src/components/shadcn-ui/tooltip';
 
 export interface ConvoParticipantShared {
   avatarTimestamp: Date | null;
@@ -104,6 +115,9 @@ export default function CreateConvoForm() {
     api.org.users.teams.getOrgTeams.useQuery({ orgShortCode });
   const { data: orgContacts, isLoading: orgContactsLoading } =
     api.org.contacts.getOrgContacts.useQuery({ orgShortCode });
+  const { data: isAdmin } = api.org.users.members.isOrgMemberAdmin.useQuery({
+    orgShortCode
+  });
 
   const { mutateAsync: createConvoFn } =
     api.convos.createNewConvo.useMutation();
@@ -124,7 +138,11 @@ export default function CreateConvoForm() {
   useEffect(() => {
     setSelectedEmailIdentity((prev) => {
       if (prev) return prev;
-      return userEmailIdentities?.emailIdentities[0]?.publicId ?? null;
+      return (
+        userEmailIdentities?.defaultEmailIdentity ??
+        userEmailIdentities?.emailIdentities[0]?.publicId ??
+        null
+      );
     });
   }, [userEmailIdentities]);
 
@@ -396,6 +414,13 @@ export default function CreateConvoForm() {
         <Select
           value={selectedEmailIdentity ?? undefined}
           onValueChange={(value) => {
+            if (
+              userEmailIdentities?.emailIdentities.find(
+                (e) => e.publicId === value
+              )?.sendingEnabled === false
+            ) {
+              return;
+            }
             setSelectedEmailIdentity(value);
           }}>
           <SelectTrigger className="h-fit">
@@ -407,8 +432,33 @@ export default function CreateConvoForm() {
             {userEmailIdentities?.emailIdentities.map((identity) => (
               <SelectItem
                 key={identity.publicId}
-                value={identity.publicId}>
-                {identity.sendName} ({identity.username}@{identity.domainName})
+                value={identity.publicId}
+                className="[&>span:last-child]:w-full">
+                <span className="flex items-center justify-between">
+                  <span
+                    className={cn(
+                      !identity.sendingEnabled && 'text-muted-foreground'
+                    )}>
+                    {`${identity.sendName} (${identity.username}@${identity.domainName})`}
+                  </span>
+                  {!identity.sendingEnabled && (
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <Question size={14} />
+                      </TooltipTrigger>
+                      <TooltipContent className="flex flex-col">
+                        <span>
+                          Sending from this email identity is disabled.
+                        </span>
+                        <span>
+                          {isAdmin
+                            ? 'Please check that the DNS records are correctly set up.'
+                            : 'Please contact your admin for assistance.'}
+                        </span>
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+                </span>
               </SelectItem>
             ))}
           </SelectContent>

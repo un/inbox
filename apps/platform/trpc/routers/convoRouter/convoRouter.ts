@@ -110,6 +110,45 @@ export const convoRouter = router({
         firstMessageType
       } = input;
 
+      // if there is a send as email identity, check if that email identity is enabled
+      if (sendAsEmailIdentityPublicId) {
+        const emailIdentityResponse = await db.query.emailIdentities.findFirst({
+          where: and(
+            eq(emailIdentities.orgId, orgId),
+            eq(emailIdentities.publicId, sendAsEmailIdentityPublicId)
+          ),
+          columns: {},
+          with: {
+            domain: {
+              columns: {
+                domainStatus: true,
+                sendingMode: true
+              }
+            }
+          }
+        });
+
+        if (!emailIdentityResponse) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Send as email identity not found'
+          });
+        }
+
+        if (emailIdentityResponse.domain) {
+          if (
+            emailIdentityResponse.domain.domainStatus !== 'active' ||
+            emailIdentityResponse.domain.sendingMode === 'disabled'
+          ) {
+            throw new TRPCError({
+              code: 'UNPROCESSABLE_CONTENT',
+              message:
+                'You cant send from that email address due to a configuration issue. Please contact your administrator or select a different email identity.'
+            });
+          }
+        }
+      }
+
       const message: tiptapVue3.JSONContent = parse(messageString);
       let convoParticipantToPublicId: TypeId<'convoParticipants'>;
       let convoMessageToNewContactPublicId: TypeId<'contacts'>;
@@ -763,6 +802,45 @@ export const convoRouter = router({
         message: messageString,
         messageType
       } = input;
+
+      // if there is a send as email identity, check if that email identity is enabled
+      if (sendAsEmailIdentityPublicId) {
+        const emailIdentityResponse = await db.query.emailIdentities.findFirst({
+          where: and(
+            eq(emailIdentities.orgId, orgId),
+            eq(emailIdentities.publicId, sendAsEmailIdentityPublicId)
+          ),
+          columns: {},
+          with: {
+            domain: {
+              columns: {
+                domainStatus: true,
+                sendingMode: true
+              }
+            }
+          }
+        });
+
+        if (!emailIdentityResponse) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Send as email identity not found'
+          });
+        }
+
+        if (emailIdentityResponse.domain) {
+          if (
+            emailIdentityResponse.domain.domainStatus !== 'active' ||
+            emailIdentityResponse.domain.sendingMode === 'disabled'
+          ) {
+            throw new TRPCError({
+              code: 'UNPROCESSABLE_CONTENT',
+              message:
+                'You cant send from that email address due to a configuration issue. Please contact your administrator or select a different email identity.'
+            });
+          }
+        }
+      }
 
       const message: tiptapVue3.JSONContent = parse(messageString);
 
