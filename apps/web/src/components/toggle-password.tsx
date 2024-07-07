@@ -16,7 +16,7 @@ export const TogglePasswordBox = forwardRef<
       <Input
         className={cn('rounded-r-none', className)}
         type={passwordShown ? 'text' : 'password'}
-        autoComplete="current-password"
+        autoComplete={props.autoComplete}
         ref={ref}
         {...props}
       />
@@ -24,7 +24,7 @@ export const TogglePasswordBox = forwardRef<
         variant="outline"
         size="icon"
         type="button"
-        className="border-input size-10 min-h-10 min-w-10 rounded-l-none"
+        className="border-input size-9 min-h-9 min-w-9 rounded-l-none"
         onClick={() => setPasswordShown(!passwordShown)}>
         {passwordShown ? <Eye size={16} /> : <EyeSlash size={16} />}
       </Button>

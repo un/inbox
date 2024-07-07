@@ -30,7 +30,7 @@ export function PasswordModal({
   onResolve,
   verificationToken
 }: ModalComponent<{ verificationToken: string }, boolean>) {
-  const [password, setPassword] = useState<string>();
+  const [password, setPassword] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [confirmPassword, setConfirmPassword] = useState<string>(
     password ?? ''
@@ -145,6 +145,7 @@ export function PasswordModal({
             onChange={(e) => setConfirmPassword(e.target.value)}
             id="confirm-password"
             placeholder="Confirm Password"
+            autoComplete="new-password"
           />
 
           <div className="text-red-10 text-center text-sm">{error}</div>
