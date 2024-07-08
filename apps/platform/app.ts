@@ -9,9 +9,10 @@ import { realtimeApi } from './routes/realtime';
 import { trpcPlatformRouter } from './trpc';
 import { db } from '@u22n/database';
 import { trpcServer } from '@hono/trpc-server';
-import { authMiddleware } from './middlewares';
+import { authMiddleware, serviceMiddleware } from './middlewares';
 import { otel } from '@u22n/otel/hono';
 import { logger } from 'hono/logger';
+import { servicesApi } from './routes/services';
 
 const app = new Hono<Ctx>();
 app.use(otel());
@@ -47,6 +48,10 @@ app.get('/health', (c) => {
 // Routes
 app.route('/auth', authApi);
 app.route('/realtime', realtimeApi);
+
+// Service Endpoints
+app.use('/services/*', serviceMiddleware);
+app.route('/services', servicesApi);
 
 // TRPC handler
 app.use(

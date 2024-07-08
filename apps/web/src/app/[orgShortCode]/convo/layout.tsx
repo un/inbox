@@ -33,6 +33,8 @@ import {
 import { usePathname } from 'next/navigation';
 import { useAtom } from 'jotai';
 import { showNewConvoPanel } from './atoms';
+import { api } from '@/src/lib/trpc';
+import { OrgIssueAlerts } from './_components/org-issue-alerts';
 
 export default function Layout({
   children
@@ -41,6 +43,10 @@ export default function Layout({
   const { setSidebarExpanded } = usePreferencesState();
   const isMobile = useIsMobile();
   const [showHidden, setShowHidden] = useState(false);
+  const { data: issueData, refetch: refetchIssues } =
+    api.org.store.getOrgIssues.useQuery({
+      orgShortCode
+    });
 
   const addConvo = useAddSingleConvo$Cache();
   const toggleConvoHidden = useToggleConvoHidden$Cache();
@@ -60,19 +66,22 @@ export default function Layout({
     client.on('convo:entry:new', ({ convoPublicId, convoEntryPublicId }) =>
       updateConvoMessageList(convoPublicId, convoEntryPublicId)
     );
+    client.on('admin:issue:refresh', async () => void refetchIssues());
 
     return () => {
       client.off('convo:new');
       client.off('convo:hidden');
       client.off('convo:deleted');
       client.off('convo:entry:new');
+      client.off('admin:issue:refresh');
     };
   }, [
     client,
     addConvo,
     toggleConvoHidden,
     deleteConvo,
-    updateConvoMessageList
+    updateConvoMessageList,
+    refetchIssues
   ]);
 
   const isInConvo =
@@ -152,6 +161,9 @@ export default function Layout({
         <ConvoList hidden={showHidden} />
       </div>
       <div className="border-base-5 h-full max-h-full w-full rounded-2xl border-l xl:col-span-2">
+        {issueData && issueData.issues.length > 0 && (
+          <OrgIssueAlerts issues={issueData.issues} />
+        )}
         {children}
       </div>
     </div>

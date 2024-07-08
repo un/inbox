@@ -546,9 +546,6 @@ importers:
       '@u22n/database':
         specifier: workspace:^
         version: link:../../packages/database
-      '@u22n/mail-bridge':
-        specifier: workspace:^
-        version: link:../mail-bridge
       '@u22n/otel':
         specifier: workspace:^
         version: link:../../packages/otel

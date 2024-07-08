@@ -2,6 +2,7 @@ import { getCookie } from 'hono/cookie';
 import { storage } from './storage';
 import { createMiddleware } from 'hono/factory';
 import type { Ctx } from './ctx';
+import { env } from './env';
 
 export const authMiddleware = createMiddleware<Ctx>(async (c, next) =>
   c.get('otel').tracer.startActiveSpan('authMiddleware', async (span) => {
@@ -28,6 +29,19 @@ export const authMiddleware = createMiddleware<Ctx>(async (c, next) =>
               session: sessionObject
             }
       );
+    }
+    span.end();
+    return next();
+  })
+);
+
+export const serviceMiddleware = createMiddleware<Ctx>(async (c, next) =>
+  c.get('otel').tracer.startActiveSpan('serviceMiddleware', async (span) => {
+    const authToken = c.req.header('Authorization');
+    span.setAttribute('auth.has_header', !!authToken);
+    if (authToken !== env.WORKER_ACCESS_KEY) {
+      span.end();
+      return c.text('Unauthorized', 401);
     }
     span.end();
     return next();
