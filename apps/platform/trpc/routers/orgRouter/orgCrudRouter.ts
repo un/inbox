@@ -82,6 +82,18 @@ export const crudRouter = router({
       const { db, account } = ctx;
       const accountId = account.id;
 
+      const shortcodeAvailability = await validateOrgShortCode(
+        db,
+        input.orgShortCode
+      );
+
+      if (!shortcodeAvailability.available) {
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: shortcodeAvailability.error || 'Org shortcode not available'
+        });
+      }
+
       const newPublicId = typeIdGenerator('org');
 
       const insertOrgResponse = await db.insert(orgs).values({
