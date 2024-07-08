@@ -22,7 +22,13 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/src/components/shadcn-ui/select';
-import { Paperclip } from '@phosphor-icons/react';
+import { Paperclip, Question } from '@phosphor-icons/react';
+import { cn } from '@/src/lib/utils';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger
+} from '@/src/components/shadcn-ui/tooltip';
 
 const selectedEmailIdentityAtom = atom<null | TypeId<'emailIdentities'>>(null);
 
@@ -66,11 +72,18 @@ export function ReplyBox({ convoId }: { convoId: TypeId<'convos'> }) {
     api.org.mail.emailIdentities.getUserEmailIdentities.useQuery({
       orgShortCode
     });
+  const { data: isAdmin } = api.org.users.members.isOrgMemberAdmin.useQuery({
+    orgShortCode
+  });
 
   useEffect(() => {
     setEmailIdentity((prev) => {
-      if (!emailIdentities) return prev;
-      return prev ?? emailIdentities.emailIdentities[0]?.publicId ?? null;
+      if (prev) return prev;
+      return (
+        emailIdentities?.defaultEmailIdentity ??
+        emailIdentities?.emailIdentities[0]?.publicId ??
+        null
+      );
     });
   }, [emailIdentities, setEmailIdentity]);
 
@@ -96,9 +109,16 @@ export function ReplyBox({ convoId }: { convoId: TypeId<'convos'> }) {
                 <div className="max-w-80">
                   <Select
                     value={emailIdentity ?? undefined}
-                    onValueChange={(email) =>
-                      setEmailIdentity(email as TypeId<'emailIdentities'>)
-                    }>
+                    onValueChange={(email) => {
+                      if (
+                        emailIdentities?.emailIdentities.find(
+                          (e) => e.publicId === email
+                        )?.sendingEnabled === false
+                      ) {
+                        return;
+                      }
+                      setEmailIdentity(email as TypeId<'emailIdentities'>);
+                    }}>
                     <SelectTrigger
                       size={'sm'}
                       width={'fit'}
@@ -109,9 +129,33 @@ export function ReplyBox({ convoId }: { convoId: TypeId<'convos'> }) {
                       {emailIdentities?.emailIdentities.map((email) => (
                         <SelectItem
                           key={email.publicId}
-                          value={email.publicId}>
-                          <span>
-                            {email.username}@{email.domainName}
+                          value={email.publicId}
+                          className="[&>span:last-child]:w-full">
+                          <span className="flex items-center justify-between">
+                            <span
+                              className={cn(
+                                !email.sendingEnabled && 'text-muted-foreground'
+                              )}>
+                              {`${email.sendName} (${email.username}@${email.domainName})`}
+                            </span>
+                            {!email.sendingEnabled && (
+                              <Tooltip>
+                                <TooltipTrigger>
+                                  <Question size={14} />
+                                </TooltipTrigger>
+                                <TooltipContent className="flex flex-col">
+                                  <span>
+                                    Sending from this email identity is
+                                    disabled.
+                                  </span>
+                                  <span>
+                                    {isAdmin
+                                      ? 'Please check that the DNS records are correctly set up.'
+                                      : 'Please contact your admin for assistance.'}
+                                  </span>
+                                </TooltipContent>
+                              </Tooltip>
+                            )}
                           </span>
                         </SelectItem>
                       ))}
