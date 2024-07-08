@@ -13,7 +13,7 @@ import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Input } from '@/src/components/shadcn-ui/input';
-import { TogglePasswordBox } from '@/src/components/toggle-password';
+import { PasswordInput } from '@/src/components/password-input';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { api } from '@/src/lib/trpc';
 import { useRouter } from 'next/navigation';
@@ -112,7 +112,7 @@ export default function Page() {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <TogglePasswordBox {...field} />
+                      <PasswordInput {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

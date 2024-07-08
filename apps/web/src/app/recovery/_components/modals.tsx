@@ -13,7 +13,7 @@ import {
   InputOTPSlot
 } from '@/src/components/shadcn-ui/input-otp';
 import { CopyButton } from '@/src/components/copy-button';
-import { TogglePasswordBox } from '@/src/components/toggle-password';
+import { PasswordInput } from '@/src/components/password-input';
 import { useDebounce } from '@uidotdev/usehooks';
 import { api } from '@/src/lib/trpc';
 import { cn } from '@/src/lib/utils';
@@ -55,7 +55,7 @@ export function PasswordRecoveryModal({
         <AlertDialogDescription>Enter Your New Password</AlertDialogDescription>
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-1">
-            <TogglePasswordBox
+            <PasswordInput
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="new-password"
@@ -101,7 +101,7 @@ export function PasswordRecoveryModal({
           </div>
 
           <div className="flex flex-col gap-2">
-            <TogglePasswordBox
+            <PasswordInput
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               id="confirm-password"

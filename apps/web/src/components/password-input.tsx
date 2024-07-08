@@ -6,7 +6,7 @@ import { type ElementRef, forwardRef, useState } from 'react';
 import { Eye, EyeSlash } from '@phosphor-icons/react';
 import { cn } from '../lib/utils';
 
-export const TogglePasswordBox = forwardRef<
+export const PasswordInput = forwardRef<
   ElementRef<'input'>,
   Omit<InputProps, 'type' | 'ref'>
 >(({ className, ...props }, ref) => {
@@ -45,4 +45,4 @@ export const TogglePasswordBox = forwardRef<
   );
 });
 
-TogglePasswordBox.displayName = 'TogglePasswordBox';
+PasswordInput.displayName = 'PasswordInput';

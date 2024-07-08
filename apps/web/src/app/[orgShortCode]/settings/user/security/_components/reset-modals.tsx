@@ -11,7 +11,7 @@ import { useEffect, useState } from 'react';
 import { api } from '@/src/lib/trpc';
 import useLoading from '@/src/hooks/use-loading';
 import { Check, Plus } from '@phosphor-icons/react';
-import { TogglePasswordBox } from '@/src/components/toggle-password';
+import { PasswordInput } from '@/src/components/password-input';
 import { useDebounce } from '@uidotdev/usehooks';
 import { QRCodeSVG } from 'qrcode.react';
 import { CopyButton } from '@/src/components/copy-button';
@@ -96,7 +96,7 @@ export function PasswordModal({
         <AlertDialogTitle>Set your Password</AlertDialogTitle>
         <AlertDialogDescription>Choose a Password</AlertDialogDescription>
         <div className="flex w-full flex-col gap-4 p-2">
-          <TogglePasswordBox
+          <PasswordInput
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             autoComplete="new-password"
@@ -140,7 +140,7 @@ export function PasswordModal({
               </span>
             </div>
           )}
-          <TogglePasswordBox
+          <PasswordInput
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             id="confirm-password"
