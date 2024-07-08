@@ -12,7 +12,7 @@ import { api } from '@/src/lib/trpc';
 import useLoading from '@/src/hooks/use-loading';
 import { startRegistration } from '@simplewebauthn/browser';
 import { Check, Plus, Fingerprint } from '@phosphor-icons/react';
-import { TogglePasswordBox } from '@/src/components/toggle-password';
+import { PasswordInput } from '@/src/components/password-input';
 import { useDebounce } from '@uidotdev/usehooks';
 import { QRCodeSVG } from 'qrcode.react';
 import { CopyButton } from '@/src/components/copy-button';
@@ -203,7 +203,7 @@ const PasswordModalStep1 = ({
 
   return (
     <div className="flex w-full flex-col gap-2 p-2">
-      <TogglePasswordBox
+      <PasswordInput
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         autoComplete="new-password"
@@ -249,7 +249,7 @@ const PasswordModalStep1 = ({
           </div>
         </div>
       )}
-      <TogglePasswordBox
+      <PasswordInput
         value={confirmPassword}
         onChange={(e) => setConfirmPassword(e.target.value)}
         id="confirm-password"

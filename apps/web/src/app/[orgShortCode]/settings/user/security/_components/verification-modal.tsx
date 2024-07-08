@@ -3,7 +3,7 @@ import {
   InputOTPGroup,
   InputOTPSlot
 } from '@/src/components/shadcn-ui/input-otp';
-import { TogglePasswordBox } from '@/src/components/toggle-password';
+import { PasswordInput } from '@/src/components/password-input';
 import { type ModalComponent } from '@/src/hooks/use-awaitable-modal';
 import useLoading from '@/src/hooks/use-loading';
 import { api } from '@/src/lib/trpc';
@@ -106,7 +106,7 @@ export function VerificationModal({
           ) : null}
 
           {hasPassword && (
-            <TogglePasswordBox
+            <PasswordInput
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               disabled={passwordLoading}
