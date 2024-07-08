@@ -10,23 +10,36 @@ export const TogglePasswordBox = forwardRef<
   ElementRef<'input'>,
   Omit<InputProps, 'type' | 'ref'>
 >(({ className, ...props }, ref) => {
-  const [passwordShown, setPasswordShown] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
   return (
-    <div className="flex">
+    <div className="relative">
       <Input
-        className={cn('rounded-r-none', className)}
-        type={passwordShown ? 'text' : 'password'}
-        autoComplete={props.autoComplete}
+        type={showPassword ? 'text' : 'password'}
+        className={cn('hide-password-toggle pr-10', className)}
         ref={ref}
         {...props}
       />
       <Button
-        variant="outline"
-        size="icon"
         type="button"
-        className="border-input size-9 min-h-9 min-w-9 rounded-l-none"
-        onClick={() => setPasswordShown(!passwordShown)}>
-        {passwordShown ? <Eye size={16} /> : <EyeSlash size={16} />}
+        variant="ghost"
+        size="sm"
+        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+        onClick={() => setShowPassword((prev) => !prev)}>
+        {showPassword ? (
+          <Eye
+            className="h-4 w-4"
+            aria-hidden="true"
+          />
+        ) : (
+          <EyeSlash
+            className="h-4 w-4"
+            aria-hidden="true"
+          />
+        )}
+        <span className="sr-only">
+          {showPassword ? 'Hide password' : 'Show password'}
+        </span>
       </Button>
     </div>
   );
