@@ -1,6 +1,7 @@
 module.exports = {
   root: true,
-  plugins: ['prettier', 'drizzle'],
+  parser: '@typescript-eslint/parser',
+  plugins: ['@typescript-eslint', 'prettier', 'drizzle'],
   extends: ['prettier', 'plugin:drizzle/all'],
   rules: {
     semi: [2, 'always']

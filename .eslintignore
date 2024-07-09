@@ -1,7 +1,3 @@
-# ignore generate imports
-auto-imports.d.ts
-components.d.ts
-
 # other artefacts
 .output
 node_modules

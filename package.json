@@ -6,10 +6,10 @@
   "scripts": {
     "format": "prettier . --write",
     "check:format": "prettier . --check",
-    "check:types": "dotenv -e .env.local -- turbo run check --filter=!@u22n/web --cache-dir=.turbo",
+    "check:types": "dotenv -e .env.local -- turbo run check --cache-dir=.turbo",
     "check:lint": "eslint .",
     "check": "pnpm check:format && pnpm check:lint && pnpm check:types",
-    "build:all": "dotenv -e .env.local -- turbo run build --filter=!@u22n/web --cache-dir=.turbo",
+    "build:all": "dotenv -e .env.local -- turbo run build --cache-dir=.turbo",
     "build": "pnpm run -r build",
     "build:ee": "pnpm run -r ee:build",
     "build:web": "pnpm --filter=@u22n/web build",
@@ -56,6 +56,8 @@
   "license": "AGPLv3",
   "devDependencies": {
     "@types/node": "^20.14.6",
+    "@typescript-eslint/eslint-plugin": "^7.16.0",
+    "@typescript-eslint/parser": "^7.16.0",
     "dotenv-cli": "^7.4.2",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
