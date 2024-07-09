@@ -3,7 +3,6 @@
   "editor.codeActionsOnSave": {},
   "i18n-ally.dirStructure": "auto",
   "i18n-ally.enabledFrameworks": ["vue", "vue-sfc"],
-  "unocss.root": ["apps/web-app"],
   "prettier.bracketSameLine": true,
   "prettier.enableDebugLogs": true,
   "prettier.singleQuote": true,

@@ -1,10 +1,8 @@
 # ignore generate imports
 auto-imports.d.ts
 components.d.ts
-nuxt.d.ts
 
-# nuxt and other artefacts
-.nuxt
+# other artefacts
 .output
 node_modules
 dist

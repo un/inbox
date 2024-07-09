@@ -7,12 +7,9 @@ node_modules
 package-lock.json
 
 # nuxt specific
-.nuxt
-.nitro
 .cache
 .output
 dist
-nuxt.d.ts
 framework
 
 # misc
