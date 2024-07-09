@@ -526,6 +526,7 @@ export const domains = mysqlTable(
     id: serial('id').primaryKey(),
     publicId: publicId('domains', 'public_id').notNull(),
     orgId: foreignKey('org_id').notNull(),
+    disabled: boolean('disabled').notNull().default(false),
     catchAllAddress: foreignKey('catch_all_address'),
     postalHost: varchar('postal_host', { length: 32 }).notNull(),
     domain: varchar('domain', { length: 256 }).notNull(),
@@ -568,7 +569,8 @@ export const domains = mysqlTable(
   (table) => ({
     publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
     orgIdIndex: index('org_id_idx').on(table.orgId),
-    domainIndex: uniqueIndex('domain_idx').on(table.domain),
+    domainNameIndex: index('domain_name_idx').on(table.domain),
+    domainOrgIndex: uniqueIndex('domain_org_idx').on(table.domain, table.orgId),
     postalIdIndex: uniqueIndex('postal_id_idx').on(table.postalId)
   })
 );

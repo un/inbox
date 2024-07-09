@@ -15,6 +15,11 @@ import {
 } from '@/src/components/shadcn-ui/accordion';
 import { CopyButton } from '@/src/components/copy-button';
 import useTimeAgo from '@/src/hooks/use-time-ago';
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle
+} from '@/src/components/shadcn-ui/alert';
 
 export default function Page({
   params
@@ -36,6 +41,7 @@ export default function Page({
     data: domainDNSRecord,
     isLoading: dnsLoading,
     refetch: recheckDNS,
+    error: dnsError,
     isRefetching: isRecheckingDNS
   } = api.org.mail.domains.getDomainDns.useQuery({
     orgShortCode,
@@ -45,7 +51,7 @@ export default function Page({
   const lastChecked = useTimeAgo(domainDNSRecord?.checked ?? new Date());
 
   return (
-    <div className="flex h-full w-full flex-col gap-2 p-4">
+    <div className="flex h-full w-full flex-col gap-2 overflow-y-auto p-4">
       <div className="flex w-full gap-4 py-2">
         <Button
           asChild
@@ -100,6 +106,17 @@ export default function Page({
                   using your domain.
                 </span>
               </>
+            )}
+
+            {domainDNSRecord?.error && (
+              <Alert>
+                <AlertTitle className="font-bold">
+                  We have detected an error with your DNS settings
+                </AlertTitle>
+                <AlertDescription className="text-red-10">
+                  {domainDNSRecord.error}
+                </AlertDescription>
+              </Alert>
             )}
           </div>
           <div className="text-muted-foreground font-bold uppercase">Mail</div>
@@ -264,6 +281,16 @@ export default function Page({
               />
             </Button>
           </div>
+
+          {dnsError && (
+            <Alert>
+              <AlertTitle className="font-bold">
+                There was an error while fetching DNS records
+              </AlertTitle>
+              <AlertDescription>{dnsError.message}</AlertDescription>
+            </Alert>
+          )}
+
           {domainDNSRecord?.dnsRecords && (
             <div>
               <Accordion
@@ -553,7 +580,7 @@ export default function Page({
                     </div>
                   </AccordionContent>
                 </AccordionItem>
-                <AccordionItem value="return-path">
+                <AccordionItem value="dmarc">
                   <AccordionTrigger>
                     <div className="flex w-full justify-between px-2">
                       <span className="font-bold">DMARC Record</span>
