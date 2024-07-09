@@ -69,7 +69,7 @@ Instead, we're detaching from its legacy underpinnings, to build something moder
 
 `UnInbox` is built with the following epic technologies & tools:
 
-- [Next JS](https://nextjs.org/) Vue based FrontEnd & Backend + modules
+- [Next JS](https://nextjs.org/) React based FrontEnd & Backend + modules
 - [Hono](https://hono.dev/) Public API + Misc tooling
 - [Tailwind](https://tailwindcss.com/) CSS Engine
 - [tRPC](https://trpc.io/) Typesafe APIs

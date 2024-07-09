@@ -6,11 +6,10 @@ node_modules
 .pnp.js
 package-lock.json
 
-# nuxt specific
+# common build outputs
 .cache
 .output
 dist
-framework
 
 # misc
 .DS_Store
@@ -23,9 +22,6 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 *.log*
-test.get.ts
-test.post.ts
-test.vue
 
 # local env files
 .env

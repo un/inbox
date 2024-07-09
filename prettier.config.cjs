@@ -11,6 +11,5 @@ module.exports = {
   arrowParens: 'always',
   plugins: ['prettier-plugin-tailwindcss'],
   overrides: [],
-  vueIndentScriptAndStyle: true,
   singleAttributePerLine: true
 };
