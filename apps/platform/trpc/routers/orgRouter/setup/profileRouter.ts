@@ -48,7 +48,14 @@ export const orgProfileRouter = router({
   setOrgProfile: orgProcedure
     .input(
       z.object({
-        orgName: z.string().min(3).max(32)
+        orgName: z.string().min(3).max(32),
+        orgShortCodeNew: z
+          .string()
+          .min(5)
+          .max(64)
+          .regex(/^[a-z0-9]*$/, {
+            message: 'Only lowercase letters and numbers'
+          })
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -60,7 +67,7 @@ export const orgProfileRouter = router({
       }
       const { db, org } = ctx;
       const orgId = org?.id;
-      const { orgName } = input;
+      const { orgName, orgShortCodeNew } = input;
 
       const isAdmin = await isAccountAdminOfOrg(org);
       if (!isAdmin) {
@@ -73,7 +80,8 @@ export const orgProfileRouter = router({
       await db
         .update(orgs)
         .set({
-          name: orgName
+          name: orgName,
+          shortcode: orgShortCodeNew
         })
         .where(eq(orgs.id, orgId));
 
