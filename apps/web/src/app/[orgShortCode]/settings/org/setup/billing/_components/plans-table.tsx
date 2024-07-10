@@ -23,12 +23,6 @@ import {
   CardTitle
 } from '@/src/components/shadcn-ui/card';
 import { cn } from '@/src/lib/utils';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogTitle
-} from '@/src/components/shadcn-ui/dialog';
 
 type PricingSwitchProps = {
   onSwitch: (value: string) => void;

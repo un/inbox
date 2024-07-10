@@ -17,7 +17,8 @@ import {
 } from '@u22n/database/schema';
 import { typeIdValidator } from '@u22n/utils/typeid';
 import { and, eq, inArray } from '@u22n/database/orm';
-import { tiptapHtml, tiptapVue3 } from '@u22n/tiptap';
+import { tiptapHtml } from '@u22n/tiptap';
+import { type JSONContent } from '@u22n/tiptap/react';
 import { tipTapExtensions } from '@u22n/tiptap/extensions';
 import { sendEmail } from '../../smtp/sendEmail';
 
@@ -599,7 +600,7 @@ export const sendMailRouter = router({
       //* Prep and Send email
 
       const emailBodyHTML = tiptapHtml.generateHTML(
-        convoEntryResponse.body as tiptapVue3.JSONContent,
+        convoEntryResponse.body as JSONContent,
         tipTapExtensions
       );
       const emailBodyPlainText = convoEntryResponse.bodyPlainText;

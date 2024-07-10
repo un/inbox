@@ -1,7 +1,8 @@
 module.exports = {
   root: true,
-  plugins: ['prettier', 'drizzle'],
-  extends: ['@nuxt/eslint-config', 'prettier', 'plugin:drizzle/all'],
+  parser: '@typescript-eslint/parser',
+  plugins: ['@typescript-eslint', 'prettier', 'drizzle'],
+  extends: ['prettier', 'plugin:drizzle/all'],
   rules: {
     semi: [2, 'always']
   },

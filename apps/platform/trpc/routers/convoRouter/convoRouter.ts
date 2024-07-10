@@ -38,7 +38,8 @@ import {
 } from '@u22n/utils/typeid';
 import { TRPCError } from '@trpc/server';
 import { tipTapExtensions } from '@u22n/tiptap/extensions';
-import { tiptapCore, type tiptapVue3 } from '@u22n/tiptap';
+import { tiptapCore } from '@u22n/tiptap';
+import { type JSONContent } from '@u22n/tiptap/react';
 import { convoEntryRouter } from './entryRouter';
 import { realtime, sendRealtimeNotification } from '~platform/utils/realtime';
 import { env } from '~platform/env';
@@ -149,7 +150,7 @@ export const convoRouter = router({
         }
       }
 
-      const message: tiptapVue3.JSONContent = parse(messageString);
+      const message: JSONContent = parse(messageString);
       let convoParticipantToPublicId: TypeId<'convoParticipants'>;
       let convoMessageToNewContactPublicId: TypeId<'contacts'>;
 
@@ -842,7 +843,7 @@ export const convoRouter = router({
         }
       }
 
-      const message: tiptapVue3.JSONContent = parse(messageString);
+      const message: JSONContent = parse(messageString);
 
       const convoEntryToReplyToQueryResponse =
         await db.query.convoEntries.findFirst({

@@ -1,13 +1,10 @@
 {
   "name": "@u22n/tiptap",
   "version": "0.1.0",
-  "description": "",
-  "main": "index.js",
   "type": "module",
   "exports": {
     ".": "./index.ts",
     "./extensions": "./extensions.ts",
-    "./vue": "./vue.ts",
     "./react": "./react/index.ts",
     "./react/components": "./react/components/index.ts"
   },
@@ -31,7 +28,6 @@
     "@tiptap/html": "^2.4.0",
     "@tiptap/react": "^2.4.0",
     "@tiptap/starter-kit": "^2.4.0",
-    "@tiptap/vue-3": "^2.4.0",
     "@u22n/tsconfig": "^0.0.2",
     "cmdk": "^1.0.0",
     "jotai": "^2.8.3",
