@@ -48,8 +48,7 @@
     "db:drop:r": "infisical run --env=remote -- turbo run db:drop",
     "ee:dev:r": "infisical run --env=remote -- turbo run ee:dev",
     "ee:check": "infisical run --env=remote -- turbo run ee:check",
-    "ee:build:all": "dotenv -e .env.local -- turbo run ee:build --cache-dir=.turbo",
-    "prepare": "husky"
+    "ee:build:all": "dotenv -e .env.local -- turbo run ee:build --cache-dir=.turbo"
   },
   "keywords": [],
   "author": "Omar McAdam - @McPizza0",
@@ -64,15 +63,10 @@
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-drizzle": "^0.2.3",
     "eslint-plugin-prettier": "^5.1.3",
-    "husky": "^9.0.11",
-    "lint-staged": "^15.2.7",
     "prettier": "^3.3.2",
     "prettier-plugin-tailwindcss": "^0.6.5",
     "turbo": "^1.13.4",
     "typescript": "5.5.2"
-  },
-  "lint-staged": {
-    "*": "prettier --write --ignore-unknown"
   },
   "packageManager": "pnpm@9.4.0"
 }
