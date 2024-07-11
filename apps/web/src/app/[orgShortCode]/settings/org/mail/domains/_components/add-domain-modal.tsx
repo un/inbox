@@ -15,15 +15,22 @@ import {
   DialogClose
 } from '@/src/components/shadcn-ui/dialog';
 import { useState } from 'react';
+import { isEnterpriseEdition } from '@/src/lib/utils';
 
 export function AddDomainModal() {
   const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
   const invalidateDomains = api.useUtils().org.mail.domains.getOrgDomains;
+  const isEE = isEnterpriseEdition();
 
   const { data: domainStatus, isLoading } =
-    api.org.setup.billing.canAddDomain.useQuery({
-      orgShortCode
-    });
+    api.org.setup.billing.canAddDomain.useQuery(
+      {
+        orgShortCode
+      },
+      {
+        enabled: isEE
+      }
+    );
 
   const {
     mutateAsync: createNewDomain,
@@ -58,7 +65,7 @@ export function AddDomainModal() {
         </DialogHeader>
         {isLoading ? (
           <div>Loading...</div>
-        ) : domainStatus?.canAddDomain ? (
+        ) : !isEE || domainStatus?.canAddDomain ? (
           <div className="my-2 flex w-fit flex-col gap-2">
             <div className="flex flex-col">
               <label

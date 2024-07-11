@@ -28,9 +28,11 @@ import {
 } from '@/src/components/shadcn-ui/dialog';
 import { useState } from 'react';
 import { type UiColor, uiColors } from '@u22n/utils/colors';
+import { isEnterpriseEdition } from '@/src/lib/utils';
 
 export function NewTeamModal() {
   const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  const isEE = isEnterpriseEdition();
   const invalidateTeams = api.useUtils().org.users.teams.getOrgTeams;
 
   const utils = api.useUtils();
@@ -39,9 +41,14 @@ export function NewTeamModal() {
 
   const [formError, setFormError] = useState<string | null>(null);
 
-  const { data: proStatus, isLoading } = api.org.setup.billing.isPro.useQuery({
-    orgShortCode
-  });
+  const { data: proStatus, isLoading } = api.org.setup.billing.isPro.useQuery(
+    {
+      orgShortCode
+    },
+    {
+      enabled: isEE
+    }
+  );
 
   const { mutateAsync: createTeam, error: teamError } =
     api.org.users.teams.createTeam.useMutation({
@@ -128,7 +135,7 @@ export function NewTeamModal() {
         </DialogHeader>
         {isLoading ? (
           <div>Loading...</div>
-        ) : proStatus?.isPro ? (
+        ) : !isEE || proStatus?.isPro ? (
           <form
             className="my-2 flex w-fit flex-col gap-2"
             onSubmit={(e) => {

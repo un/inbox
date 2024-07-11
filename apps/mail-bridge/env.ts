@@ -69,7 +69,10 @@ export const env = createEnv({
       })
     ),
     MAILBRIDGE_POSTAL_SERVERS_DNS_ROOT_URL: z.string().min(1),
-    MAILBRIDGE_POSTAL_LOCAL_MODE: z.coerce.boolean().default(false),
+    MAILBRIDGE_POSTAL_LOCAL_MODE: z
+      .literal('true')
+      .optional()
+      .transform((value) => value === 'true'),
     REALTIME_HOST: z.string().min(1),
     REALTIME_PORT: z.string(),
     REALTIME_APP_ID: z.string().min(1),

@@ -7,22 +7,29 @@ import { useState } from 'react';
 import { PricingTable } from './_components/plans-table';
 import CalEmbed from '@calcom/embed-react';
 import Link from 'next/link';
-import { cn } from '@/src/lib/utils';
+import { cn, isEnterpriseEdition } from '@/src/lib/utils';
 import { PageTitle } from '../../../_components/page-title';
 import { Skeleton } from '@/src/components/shadcn-ui/skeleton';
 
 export default function Page() {
   const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  const isEE = isEnterpriseEdition();
+
   const { data, isLoading } =
-    api.org.setup.billing.getOrgBillingOverview.useQuery({
-      orgShortCode
-    });
+    api.org.setup.billing.getOrgBillingOverview.useQuery(
+      {
+        orgShortCode
+      },
+      {
+        enabled: isEE
+      }
+    );
 
   const { data: portalLink } =
     api.org.setup.billing.getOrgStripePortalLink.useQuery(
       { orgShortCode },
       {
-        enabled: data?.currentPlan === 'pro'
+        enabled: isEE && data?.currentPlan === 'pro'
       }
     );
 
@@ -37,18 +44,26 @@ export default function Page() {
       {isLoading && (
         <Skeleton className="h-20 w-56 items-center justify-center" />
       )}
+      {!isEE && (
+        <div className="my-2 flex gap-8">
+          <div className="flex flex-col">
+            <div>Current Plan</div>
+            <div className="font-display text-xl">Self Hosted</div>
+          </div>
+        </div>
+      )}
       {data && (
         <>
           <div className="my-2 flex gap-8">
             <div className="flex flex-col">
-              <div className="">Current Plan</div>
+              <div>Current Plan</div>
               <div className="font-display text-xl">
                 {data.currentPlan === 'pro' ? 'Pro' : 'Free'}
               </div>
             </div>
             {data.totalUsers && (
               <div className="flex flex-col">
-                <div className="">Users</div>
+                <div>Users</div>
                 <div className="font-display text-right text-xl">
                   {data.totalUsers}
                 </div>

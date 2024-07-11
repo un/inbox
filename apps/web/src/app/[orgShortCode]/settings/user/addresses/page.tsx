@@ -9,14 +9,21 @@ import { ClaimAddressModal } from './_components/claim-address-modal';
 import { PageTitle } from '../../_components/page-title';
 import { Skeleton } from '@/src/components/shadcn-ui/skeleton';
 import { Button } from '@/src/components/shadcn-ui/button';
+import { isEnterpriseEdition } from '@/src/lib/utils';
 
 export default function Page() {
   const username = useGlobalStore((state) => state.user.username);
   const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  const isEE = isEnterpriseEdition();
 
-  const { data: proStatus } = api.org.setup.billing.isPro.useQuery({
-    orgShortCode
-  });
+  const { data: proStatus } = api.org.setup.billing.isPro.useQuery(
+    {
+      orgShortCode
+    },
+    {
+      enabled: isEE
+    }
+  );
 
   const {
     data: personalAddresses,
@@ -88,7 +95,18 @@ export default function Page() {
                 {username}@{domain}
               </span>
               <Button
-                disabled={!proStatus?.isPro || !personalAddresses.hasUninBonus}>
+                onClick={() => {
+                  void claimAddress({
+                    address: `${username}@${domain}`
+                  })
+                    .then(() => refetchPersonalAddresses())
+                    .catch(() => null);
+                }}
+                disabled={
+                  isEE
+                    ? !proStatus?.isPro || !personalAddresses.hasUninBonus
+                    : false
+                }>
                 Claim
               </Button>
             </div>

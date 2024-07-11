@@ -22,7 +22,7 @@ import {
   CardHeader,
   CardTitle
 } from '@/src/components/shadcn-ui/card';
-import { cn } from '@/src/lib/utils';
+import { cn, isEnterpriseEdition } from '@/src/lib/utils';
 
 type PricingSwitchProps = {
   onSwitch: (value: string) => void;
@@ -321,6 +321,8 @@ function StripeWatcher({
   onResolve
 }: ModalComponent<{ isYearly: boolean; plan: 'pro' }>) {
   const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  const isEE = isEnterpriseEdition();
+
   const {
     data: paymentLinkInfo,
     error: linkError,
@@ -331,7 +333,7 @@ function StripeWatcher({
       period: isYearly ? 'yearly' : 'monthly',
       plan: plan
     },
-    { enabled: open }
+    { enabled: isEE && open }
   );
   const paymentLinkCache =
     api.useUtils().org.setup.billing.getOrgSubscriptionPaymentLink;
@@ -355,7 +357,7 @@ function StripeWatcher({
   }, [onResolve, orgShortCode, overviewApi]);
 
   useEffect(() => {
-    if (!open || !paymentLinkInfo) return;
+    if (!isEE || !open || !paymentLinkInfo) return;
     window.open(paymentLinkInfo.subLink, '_blank');
     timeout.current = setTimeout(() => {
       void checkPayment();
