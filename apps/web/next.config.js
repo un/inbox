@@ -1,3 +1,5 @@
+import { join } from 'path';
+
 // import the env file to validate the environment variables before starting the app
 await import('./src/env.js');
 
@@ -9,6 +11,16 @@ const config = {
   },
   eslint: {
     ignoreDuringBuilds: true
+  },
+  output: 'standalone',
+  experimental: {
+    outputFileTracingRoot: join(
+      new URL('.', import.meta.url).pathname,
+      '../../'
+    ),
+    outputFileTracingIncludes: {
+      '/': ['./public/*']
+    }
   }
 };
 
