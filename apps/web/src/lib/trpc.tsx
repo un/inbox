@@ -10,7 +10,7 @@ import { type PropsWithChildren, useState } from 'react';
 import SuperJSON from 'superjson';
 import type { TrpcPlatformRouter } from '@u22n/platform/trpc';
 import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server';
-import { env } from 'next-runtime-env';
+import { env } from '../env';
 
 const createQueryClient = () =>
   new QueryClient({
@@ -36,7 +36,6 @@ export const api = createTRPCReact<TrpcPlatformRouter>();
 
 export function TRPCReactProvider({ children }: PropsWithChildren) {
   const queryClient = getQueryClient();
-  const PLATFORM_URL = env('NEXT_PUBLIC_PLATFORM_URL');
 
   const [trpcClient] = useState(() =>
     api.createClient({
@@ -47,7 +46,7 @@ export function TRPCReactProvider({ children }: PropsWithChildren) {
             (op.direction === 'down' && op.result instanceof Error)
         }),
         httpBatchLink({
-          url: `${PLATFORM_URL}/trpc`,
+          url: `${env.NEXT_PUBLIC_PLATFORM_URL}/trpc`,
           transformer: SuperJSON,
           fetch: (input, init) =>
             fetch(input, { ...init, credentials: 'include' })
@@ -68,9 +67,8 @@ export function TRPCReactProvider({ children }: PropsWithChildren) {
 }
 
 export async function isAuthenticated() {
-  const PLATFORM_URL = env('NEXT_PUBLIC_PLATFORM_URL');
   try {
-    const data = (await fetch(`${PLATFORM_URL}/auth/status`, {
+    const data = (await fetch(`${env.NEXT_PUBLIC_PLATFORM_URL}/auth/status`, {
       credentials: 'include'
     }).then((r) => r.json())) as {
       authStatus: 'authenticated' | 'unauthenticated';

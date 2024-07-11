@@ -3,11 +3,11 @@ import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { type TypeId } from '@u22n/utils/typeid';
 import { type PrimitiveAtom, useAtom } from 'jotai';
 import { Plus } from '@phosphor-icons/react';
-import { env } from 'next-runtime-env';
 import { useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { Badge } from '@/src/components/shadcn-ui/badge';
 import { Button } from '@/src/components/shadcn-ui/button';
+import { env } from '@/src/env';
 
 export type ConvoAttachmentUpload = {
   fileName: string;
@@ -25,7 +25,6 @@ type PreSignedData = {
   signedUrl: string;
 };
 
-const STORAGE_URL = env('NEXT_PUBLIC_STORAGE_URL');
 const FILE_SIZE_LIMIT = 15_000_000; // 15MB
 
 export function AttachmentButton({ attachmentsAtom }: AttachmentButtonProps) {
@@ -62,7 +61,7 @@ export function AttachmentButton({ attachmentsAtom }: AttachmentButtonProps) {
     const results = await Promise.allSettled(
       files.map(async (file) => {
         const preSignedData = (await fetch(
-          `${STORAGE_URL}/api/attachments/presign?orgShortCode=${currentOrgShortCode}&filename=${file.name}`,
+          `${env.NEXT_PUBLIC_STORAGE_URL}/api/attachments/presign?orgShortCode=${currentOrgShortCode}&filename=${file.name}`,
           {
             method: 'GET',
             credentials: 'include'

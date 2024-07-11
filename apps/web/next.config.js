@@ -1,3 +1,6 @@
+// import the env file to validate the environment variables before starting the app
+await import('./src/env.js');
+
 /** @type {import("next").NextConfig} */
 const config = {
   // Checked in CI anyways
@@ -6,15 +9,6 @@ const config = {
   },
   eslint: {
     ignoreDuringBuilds: true
-  },
-  experimental: {
-    staleTimes: {
-      dynamic: 0,
-      static: 0
-    }
-  },
-  env: {
-    NEXT_PUBLIC_EE_ENABLED: process.env.EE_LICENSE_KEY ? 'true' : 'false'
   }
 };
 
