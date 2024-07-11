@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "PORT=3000 next dev --turbo",
-    "build": "next build",
-    "start": "next start",
+    "build": "next build && cp -r .next/static .next/standalone/apps/web/.next",
+    "start": "node .next/standalone/apps/web/server.js",
     "check": "tsc --noEmit && next lint"
   },
   "dependencies": {
