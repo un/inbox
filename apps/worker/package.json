@@ -14,7 +14,7 @@
     }
   },
   "dependencies": {
-    "@hono/node-server": "^1.11.4",
+    "@hono/node-server": "^1.12.0",
     "@hono/trpc-server": "^0.3.2",
     "@t3-oss/env-core": "^0.10.1",
     "@trpc/client": "11.0.0-rc.421",
@@ -23,16 +23,16 @@
     "@u22n/mail-bridge": "workspace:^",
     "@u22n/otel": "workspace:^",
     "@u22n/utils": "workspace:^",
-    "bullmq": "^5.8.2",
+    "bullmq": "^5.8.7",
     "cron": "^3.1.7",
-    "hono": "^4.4.7",
+    "hono": "^4.4.13",
     "superjson": "^2.2.1",
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@types/node": "^20.14.9",
+    "@types/node": "^20.14.10",
     "@u22n/tsconfig": "^0.0.2",
-    "tsx": "^4.15.6",
-    "typescript": "^5.5.2"
+    "tsx": "^4.16.2",
+    "typescript": "^5.5.3"
   }
 }

@@ -14,7 +14,7 @@
     }
   },
   "dependencies": {
-    "@hono/node-server": "^1.11.4",
+    "@hono/node-server": "^1.12.0",
     "@hono/trpc-server": "^0.3.2",
     "@hono/zod-validator": "^0.2.2",
     "@simplewebauthn/server": "^9.0.3",
@@ -28,10 +28,10 @@
     "@u22n/tiptap": "workspace:^",
     "@u22n/tsconfig": "^0.0.2",
     "@u22n/utils": "workspace:^",
-    "@unkey/ratelimit": "^0.1.12",
-    "hono": "^4.4.7",
+    "@unkey/ratelimit": "^0.3.1",
+    "hono": "^4.4.13",
     "lucia": "^3.2.0",
-    "oslo": "^1.2.0",
+    "oslo": "^1.2.1",
     "superjson": "^2.2.1",
     "ua-parser-js": "2.0.0-beta.2",
     "unstorage": "^1.10.2",
@@ -39,9 +39,9 @@
   },
   "devDependencies": {
     "@simplewebauthn/types": "^9.0.1",
-    "@types/node": "^20.14.6",
+    "@types/node": "^20.14.10",
     "@uninbox-ee/billing": "workspace:^",
-    "tsx": "^4.15.6",
-    "typescript": "5.5.2"
+    "tsx": "^4.16.2",
+    "typescript": "5.5.3"
   }
 }
