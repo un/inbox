@@ -11,6 +11,7 @@ import { lookupNS } from '@u22n/utils/dns';
 import { TRPCError } from '@trpc/server';
 import { isAccountAdminOfOrg } from '~platform/utils/account';
 import { mailBridgeTrpcClient } from '~platform/utils/tRPCServerClients';
+import { ms } from '@u22n/utils/ms';
 
 export const domainsRouter = router({
   createNewDomain: orgProcedure
@@ -20,12 +21,6 @@ export const domainsRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.account || !ctx.org) {
-        throw new TRPCError({
-          code: 'UNPROCESSABLE_CONTENT',
-          message: 'Account or Organization is not defined'
-        });
-      }
       const { db, org } = ctx;
       const orgId = org.id;
       const orgPublicId = org.publicId;
@@ -52,23 +47,36 @@ export const domainsRouter = router({
         });
       }
 
-      const existingDomains = await db.query.domains.findFirst({
+      const existingDomain = await db.query.domains.findFirst({
         where: eq(domains.domain, domainName),
         columns: {
           id: true,
-          domainStatus: true
+          disabled: true,
+          domainStatus: true,
+          orgId: true
         }
       });
 
-      if (
-        existingDomains &&
-        (existingDomains.domainStatus === 'active' ||
-          existingDomains.domainStatus === 'pending')
-      ) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'Domain already in use'
-        });
+      if (existingDomain) {
+        if (existingDomain.orgId === orgId) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'Your organization already owns this domain'
+          });
+        }
+
+        // if domain is disabled, any other org can use it, so the DNS checks are used for active domains only
+        if (!existingDomain.disabled) {
+          if (
+            existingDomain.domainStatus === 'active' ||
+            existingDomain.domainStatus === 'pending'
+          ) {
+            throw new TRPCError({
+              code: 'FORBIDDEN',
+              message: 'Domain already in use'
+            });
+          }
+        }
       }
 
       // check if org has a postal server, if not create one
@@ -157,8 +165,7 @@ export const domainsRouter = router({
   getDomain: orgProcedure
     .input(
       z.object({
-        domainPublicId: typeIdValidator('domains'),
-        newDomain: z.boolean().optional()
+        domainPublicId: typeIdValidator('domains')
       })
     )
     .query(async ({ ctx, input }) => {
@@ -209,17 +216,10 @@ export const domainsRouter = router({
   getDomainDns: orgProcedure
     .input(
       z.object({
-        domainPublicId: typeIdValidator('domains'),
-        isNewDomain: z.boolean().optional()
+        domainPublicId: typeIdValidator('domains')
       })
     )
     .query(async ({ ctx, input }) => {
-      if (!ctx.account || !ctx.org) {
-        throw new TRPCError({
-          code: 'UNPROCESSABLE_CONTENT',
-          message: 'Account or Organization is not defined'
-        });
-      }
       const { db, org } = ctx;
       const orgId = org?.id;
       const { domainPublicId } = input;
@@ -243,6 +243,7 @@ export const domainsRouter = router({
         columns: {
           id: true,
           domain: true,
+          disabled: true,
           dkimKey: true,
           dkimValue: true,
           postalHost: true,
@@ -259,9 +260,35 @@ export const domainsRouter = router({
       });
 
       if (!domainResponse) {
-        return {
-          error: 'Domain not found'
-        };
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Domain not found'
+        });
+      }
+
+      if (domainResponse.disabled) {
+        // if domain is manually disabled, update the DNS status if needed
+        if (
+          ![
+            domainResponse.domainStatus,
+            domainResponse.sendingMode,
+            domainResponse.receivingMode
+          ].every((_) => _ === 'disabled')
+        ) {
+          await db
+            .update(domains)
+            .set({
+              receivingMode: 'disabled',
+              sendingMode: 'disabled',
+              domainStatus: 'disabled'
+            })
+            .where(eq(domains.id, domainResponse.id));
+        }
+
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Domain is disabled'
+        });
       }
 
       if (
@@ -269,132 +296,151 @@ export const domainsRouter = router({
         !domainResponse.dkimValue ||
         !domainResponse.postalId
       ) {
-        return {
-          error: 'Domain not ready'
-        };
+        throw new TRPCError({
+          code: 'UNPROCESSABLE_CONTENT',
+          message: 'Domain is not setup properly. Contact support for help'
+        });
       }
 
-      let domainStatus: 'unverified' | 'active' | 'pending' | 'disabled' =
-        domainResponse.domainStatus;
-      let domainSendingMode: 'native' | 'external' | 'disabled' =
-        domainResponse.sendingMode;
-      let domainReceivingMode: 'native' | 'forwarding' | 'disabled' =
-        domainResponse.receivingMode;
+      let {
+        domainStatus,
+        sendingMode: domainSendingMode,
+        receivingMode: domainReceivingMode,
+        verifiedAt
+      } = domainResponse;
 
-      const dnsRecords =
+      const currentDNSRecords =
         await mailBridgeTrpcClient.postal.domains.refreshDomainDns.query({
           postalDomainId: domainResponse.postalId,
           postalServerUrl: domainResponse.postalHost
         });
 
-      if ('error' in dnsRecords) {
-        return {
-          error: dnsRecords.error
-        };
+      if ('error' in currentDNSRecords) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: currentDNSRecords.error
+        });
       }
 
       const dnsStatus = {
-        mxDnsValid: dnsRecords.mx.valid,
-        dkimDnsValid: dnsRecords.dkim.valid,
-        spfDnsValid: dnsRecords.spf.valid,
-        returnPathDnsValid: dnsRecords.returnPath.valid,
-        verification: dnsRecords.verification.valid,
-        dmarkPolicy: dnsRecords.dmarc.policy
+        mxDnsValid: currentDNSRecords.mx.valid,
+        dkimDnsValid: currentDNSRecords.dkim.valid,
+        spfDnsValid: currentDNSRecords.spf.valid,
+        returnPathDnsValid: currentDNSRecords.returnPath.valid,
+        verification: currentDNSRecords.verification.valid,
+        dmarcPolicy: currentDNSRecords.dmarc.policy
       };
 
-      // take all dns Records and count how many are valid, if all are valid then allOk
-      const allOk =
-        Object.entries(dnsStatus)
-          .map(([, _]) => _)
-          .filter((x) => x).length === Object.keys(dnsStatus).length;
-
-      const threeDaysInMilliseconds = 3 * 24 * 60 * 60 * 1000; // 3 days in milliseconds
-      const domainOlderThanThreeDays =
-        new Date().getTime() - domainResponse.createdAt.getTime() >
-        threeDaysInMilliseconds;
-
-      if (domainOlderThanThreeDays) {
-        if (allOk) {
-          domainStatus = 'active';
+      // check if domain is verified
+      if (currentDNSRecords.verification.valid) {
+        // if domain is verified, update the status and verifiedAt
+        if (domainStatus === 'unverified') domainStatus = 'pending';
+        verifiedAt = new Date();
+      } else {
+        // if domain is not verified, check if it was verified before
+        if (verifiedAt) {
+          // if verifiedAt is older than 7 days, set the domain to disabled
+          if (Date.now() - verifiedAt.getTime() > ms('7 days')) {
+            await db
+              .update(domains)
+              .set({
+                domainStatus: 'disabled',
+                receivingMode: 'disabled',
+                sendingMode: 'disabled',
+                lastDnsCheckAt: new Date(),
+                disabledAt: new Date()
+              })
+              .where(eq(domains.id, domainResponse.id));
+            return {
+              error:
+                'Your Domain has been Disabled due to Incorrect verification',
+              dnsRecords: currentDNSRecords
+            };
+            // if verifiedAt is newer than 7 days, set the domain to unverified
+          } else {
+            domainStatus = 'unverified';
+          }
+          // if domain was never verified, check if 3 days have passed since creation
         } else {
-          domainStatus = 'disabled';
-          domainSendingMode = 'disabled';
-          domainReceivingMode = 'disabled';
+          // if domain is older than 3 days, set the domain to disabled
+          if (Date.now() - domainResponse.createdAt.getTime() > ms('3 days')) {
+            await db
+              .update(domains)
+              .set({
+                domainStatus: 'disabled',
+                receivingMode: 'disabled',
+                sendingMode: 'disabled',
+                lastDnsCheckAt: new Date(),
+                disabledAt: new Date()
+              })
+              .where(eq(domains.id, domainResponse.id));
+
+            return {
+              error: 'Your Domain has been Disabled',
+              dnsRecords: currentDNSRecords
+            };
+            // if domain is newer than 3 days, set the domain to unverified
+          } else {
+            await db
+              .update(domains)
+              .set({
+                lastDnsCheckAt: new Date(),
+                domainStatus: 'unverified'
+              })
+              .where(eq(domains.id, domainResponse.id));
+            return {
+              error: 'Your Domain is not verified',
+              dnsRecords: currentDNSRecords
+            };
+          }
         }
       }
 
-      if (domainStatus !== 'disabled') {
-        if (!domainResponse.verifiedAt && dnsRecords.verification.valid) {
-          domainStatus = 'pending';
-        }
-        const validSendingRecords =
-          dnsStatus.spfDnsValid &&
-          dnsStatus.dkimDnsValid &&
-          dnsStatus.returnPathDnsValid;
+      // Check if Sending mode is valid
+      const sendingModeValid =
+        dnsStatus.spfDnsValid &&
+        dnsStatus.dkimDnsValid &&
+        dnsStatus.returnPathDnsValid;
 
-        const validReceivingRecords = dnsStatus.mxDnsValid;
+      domainSendingMode = sendingModeValid ? 'native' : 'disabled';
 
-        // if one of the record is valid
-        const anyValidRecords =
-          Object.entries(dnsStatus)
-            .map(([, _]) => _)
-            .filter((x) => x).length !== 0;
+      // Check if Receiving mode is valid
+      const receivingModeValid = dnsStatus.mxDnsValid;
 
-        !validSendingRecords
-          ? (domainSendingMode = 'disabled')
-          : (domainSendingMode = 'native');
-
-        if (!validReceivingRecords) {
-          domainReceivingMode !== 'disabled'
-            ? (domainReceivingMode = 'forwarding')
-            : (domainReceivingMode = 'disabled');
-        } else {
-          domainReceivingMode = 'native';
-        }
-
-        if (
-          anyValidRecords &&
-          (domainStatus === 'pending' || domainStatus === 'unverified')
-        ) {
-          domainStatus = 'active';
-        }
-
-        const updateVerifiedAt = !domainResponse.verifiedAt;
-
-        await db
-          .update(domains)
-          .set({
-            mxDnsValid: dnsStatus.mxDnsValid,
-            dkimDnsValid: dnsStatus.dkimDnsValid,
-            spfDnsValid: dnsStatus.spfDnsValid,
-            returnPathDnsValid: dnsStatus.returnPathDnsValid,
-            receivingMode: domainReceivingMode,
-            sendingMode: domainSendingMode,
-            lastDnsCheckAt: new Date(),
-            domainStatus: domainStatus,
-            verifiedAt: updateVerifiedAt
-              ? new Date()
-              : domainResponse.verifiedAt
-          })
-          .where(eq(domains.id, domainResponse.id));
+      if (receivingModeValid) {
+        domainReceivingMode = 'native';
+      } else if (domainReceivingMode !== 'disabled') {
+        domainReceivingMode = 'forwarding';
+      } else {
+        domainReceivingMode = 'disabled';
       }
 
-      if (domainStatus === 'disabled') {
-        await db
-          .update(domains)
-          .set({
-            receivingMode: 'disabled',
-            sendingMode: 'disabled',
-            lastDnsCheckAt: new Date(),
-            domainStatus: 'disabled',
-            disabledAt: new Date()
-          })
-          .where(eq(domains.id, domainResponse.id));
+      // if either of the modes are valid, set the domain to active if it is pending
+      if (
+        domainStatus === 'pending' &&
+        (sendingModeValid || receivingModeValid)
+      ) {
+        domainStatus = 'active';
       }
+
+      await db
+        .update(domains)
+        .set({
+          mxDnsValid: dnsStatus.mxDnsValid,
+          dkimDnsValid: dnsStatus.dkimDnsValid,
+          spfDnsValid: dnsStatus.spfDnsValid,
+          returnPathDnsValid: dnsStatus.returnPathDnsValid,
+          receivingMode: domainReceivingMode,
+          sendingMode: domainSendingMode,
+          lastDnsCheckAt: new Date(),
+          domainStatus,
+          verifiedAt
+        })
+        .where(eq(domains.id, domainResponse.id));
 
       return {
         dnsStatus: dnsStatus,
-        dnsRecords: dnsRecords,
+        dnsRecords: currentDNSRecords,
         domainStatus: domainStatus,
         domainSendingMode: domainSendingMode,
         domainReceivingMode: domainReceivingMode,
