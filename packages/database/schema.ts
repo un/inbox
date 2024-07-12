@@ -58,6 +58,7 @@ export type AccountMetadata = {
 
 export const accounts = mysqlTable(
   'accounts',
+  // eslint-disable-next-line @u22n/custom/table-needs-org-id
   {
     id: serial('id').primaryKey(),
     publicId: publicId('account', 'public_id').notNull(),
@@ -92,6 +93,7 @@ export const accountsRelations = relations(accounts, ({ one, many }) => ({
 //* Auth tables
 export const accountCredentials = mysqlTable(
   'account_credentials',
+  // eslint-disable-next-line @u22n/custom/table-needs-org-id
   {
     id: serial('id').primaryKey(),
     accountId: foreignKey('account_id').notNull(),
@@ -119,6 +121,7 @@ export const accountAuthRelationships = relations(
 // transports type comes from @simplewebauthn/types AuthenticatorTransportFuture
 export const authenticators = mysqlTable(
   'authenticators',
+  // eslint-disable-next-line @u22n/custom/table-needs-org-id
   {
     id: serial('id').primaryKey(),
     publicId: publicId('accountPasskey', 'public_id').notNull(),
@@ -173,6 +176,7 @@ export const authenticatorRelationships = relations(
 
 export const sessions = mysqlTable(
   'sessions',
+  // eslint-disable-next-line @u22n/custom/table-needs-org-id
   {
     id: serial('id').primaryKey(),
     publicId: publicId('accountSession', 'public_id').notNull(),
@@ -217,6 +221,7 @@ export type OrgMetadata = {
 
 export const orgs = mysqlTable(
   'orgs',
+  // eslint-disable-next-line @u22n/custom/table-needs-org-id
   {
     id: serial('id').primaryKey(),
     publicId: publicId('org', 'public_id').notNull(),
@@ -683,6 +688,7 @@ export const contactsRelations = relations(contacts, ({ one, many }) => ({
 
 export const contactGlobalReputations = mysqlTable(
   'contact_global_reputations',
+  // eslint-disable-next-line @u22n/custom/table-needs-org-id
   {
     id: serial('id').primaryKey(),
     emailAddress: varchar('email_address', { length: 128 }).notNull(),
