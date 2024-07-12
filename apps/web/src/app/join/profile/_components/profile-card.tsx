@@ -141,7 +141,7 @@ export function ProfileCard({ orgData, wasInvited }: ProfileCardProps) {
           </Button>
           <Button
             className="flex-1"
-            disabled={!avatarUrl || !firstNameValue || !lastNameValue}
+            disabled={!firstNameValue || !lastNameValue}
             loading={saveLoading}
             onClick={() => saveProfile({ clearData: true, clearError: true })}>
             Next
