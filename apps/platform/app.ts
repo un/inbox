@@ -27,7 +27,8 @@ app.use(
   '*',
   cors({
     origin: env.WEBAPP_URL,
-    credentials: true
+    credentials: true,
+    exposeHeaders: ['Location']
   })
 );
 
