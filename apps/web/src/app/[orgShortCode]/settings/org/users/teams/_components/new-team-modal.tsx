@@ -163,6 +163,7 @@ export function NewTeamModal() {
                         value={field.state.value ?? ''}
                         onChange={(e) => field.handleChange(e.target.value)}
                         onBlur={field.handleBlur}
+                        className="w-72"
                       />
                       {field.state.meta.errorMap.onBlur && (
                         <span className="text-red-10">
@@ -216,6 +217,7 @@ export function NewTeamModal() {
                       </SelectTrigger>
                       <SelectContent
                         id={field.name}
+                        className="z-[550]"
                         onBlur={field.handleBlur}>
                         <SelectGroup>
                           {uiColors.map((color) => (
