@@ -1,12 +1,12 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { api } from '@/lib/trpc';
+import { platform } from '@/lib/trpc';
 import { toast } from 'sonner';
 
 export default function Page() {
   const { isPending, error, mutateAsync } =
-    api.internal.removeExpiredSessions.useMutation({
+    platform.internal.removeExpiredSessions.useMutation({
       onSuccess: (data) => {
         toast.success(`Removed ${data.count} expired sessions`);
       },

@@ -2,17 +2,17 @@
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { api } from '@/lib/trpc';
+import { platform } from '@/lib/trpc';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
 export default function Page() {
   const [orgShortCode, setOrgShortCode] = useState<string>('');
-  const { data, error, isLoading, refetch } = api.orgs.getOrgData.useQuery(
+  const { data, error, isLoading, refetch } = platform.orgs.getOrgData.useQuery(
     { orgShortCode },
     { enabled: false }
   );
-  const { isPending, mutateAsync } = api.orgs.addSkiffOffer.useMutation({
+  const { isPending, mutateAsync } = platform.orgs.addSkiffOffer.useMutation({
     onSuccess: () => {
       toast.success('Skiff offer added');
       refetch();

@@ -2,23 +2,25 @@
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { api } from '@/lib/trpc';
+import { platform } from '@/lib/trpc';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
 export default function Page() {
   const [username, setUsername] = useState<string>('');
   const { data, error, isLoading, refetch } =
-    api.accounts.getAccountData.useQuery({ username }, { enabled: false });
-  const { isPending, mutateAsync } = api.accounts.addUninOffer.useMutation({
-    onSuccess: () => {
-      toast.success('Unin offer added');
-      refetch();
-    },
-    onError: (error) => {
-      toast.error(error.message);
+    platform.accounts.getAccountData.useQuery({ username }, { enabled: false });
+  const { isPending, mutateAsync } = platform.accounts.addUninOffer.useMutation(
+    {
+      onSuccess: () => {
+        toast.success('Unin offer added');
+        refetch();
+      },
+      onError: (error) => {
+        toast.error(error.message);
+      }
     }
-  });
+  );
 
   return (
     <div className="flex h-full flex-col gap-4 p-4">

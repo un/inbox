@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { api } from '@/lib/trpc';
+import { platform } from '@/lib/trpc';
 import { Suspense, useState } from 'react';
 import { toast } from 'sonner';
 import { serialize } from 'superjson';
@@ -12,13 +12,16 @@ import Image from 'next/image';
 export default function Page() {
   const [username, setUsername] = useState<string>('');
   const { data, error, isLoading, refetch } =
-    api.accounts.getFullAccountData.useQuery({ username }, { enabled: false });
+    platform.accounts.getFullAccountData.useQuery(
+      { username },
+      { enabled: false }
+    );
 
   const {
     data: passwordData,
     mutateAsync: resetPassword,
     isPending: isPendingPassword
-  } = api.accounts.resetPassword.useMutation({
+  } = platform.accounts.resetPassword.useMutation({
     onSuccess: () => {
       toast.success('Password reset successful');
       refetch();
@@ -32,7 +35,7 @@ export default function Page() {
     data: twoFaData,
     isPending: isPending2Fa,
     mutateAsync: reset2Fa
-  } = api.accounts.reset2fa.useMutation({
+  } = platform.accounts.reset2fa.useMutation({
     onSuccess: () => {
       toast.success('2FA reset successful');
       refetch();
