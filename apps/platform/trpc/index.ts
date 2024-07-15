@@ -20,6 +20,7 @@ import { defaultsRouter } from './routers/userRouter/defaultsRouter';
 import { twoFactorRouter } from './routers/authRouter/twoFactorRouter';
 import { securityRouter } from './routers/userRouter/securityRouter';
 import { storeRouter } from './routers/orgRouter/orgStoreRouter';
+import { iCanHazRouter } from './routers/orgRouter/iCanHaz/iCanHazRouter';
 
 const trpcPlatformAuthRouter = router({
   signup: signupRouter,
@@ -57,7 +58,8 @@ const trpcPlatformOrgRouter = router({
   setup: trpcPlatformOrgSetupRouter,
   users: trpcPlatformOrgUsersRouter,
   mail: trpcPlatformOrgMailRouter,
-  store: storeRouter
+  store: storeRouter,
+  iCanHaz: iCanHazRouter
 });
 
 export const trpcPlatformRouter = router({

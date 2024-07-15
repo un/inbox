@@ -36,4 +36,5 @@ export type TrpcContext = {
   account: AccountContext;
   org: OrgContext;
   event: Context<Ctx>;
+  selfHosted: boolean;
 };

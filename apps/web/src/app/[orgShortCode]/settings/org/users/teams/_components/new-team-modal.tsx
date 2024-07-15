@@ -39,9 +39,14 @@ export function NewTeamModal() {
 
   const [formError, setFormError] = useState<string | null>(null);
 
-  const { data: proStatus, isLoading } = api.org.setup.billing.isPro.useQuery({
-    orgShortCode
-  });
+  const { data: canAddTeam, isLoading } = api.org.iCanHaz.team.useQuery(
+    {
+      orgShortCode: orgShortCode
+    },
+    {
+      staleTime: 1000
+    }
+  );
 
   const { mutateAsync: createTeam, error: teamError } =
     api.org.users.teams.createTeam.useMutation({
@@ -128,7 +133,11 @@ export function NewTeamModal() {
         </DialogHeader>
         {isLoading ? (
           <div>Loading...</div>
-        ) : proStatus?.isPro ? (
+        ) : !canAddTeam ? (
+          <div>
+            Your Current Billing Plan does not allow you to create Teams
+          </div>
+        ) : (
           <form
             className="my-2 flex w-fit flex-col gap-2"
             onSubmit={(e) => {
@@ -384,10 +393,6 @@ export function NewTeamModal() {
               </DialogClose>
             </div>
           </form>
-        ) : (
-          <div>
-            Your Current Billing Plan does not allow you to create Teams
-          </div>
         )}
       </DialogContent>
     </Dialog>
