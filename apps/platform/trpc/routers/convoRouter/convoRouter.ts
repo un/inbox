@@ -1644,13 +1644,6 @@ export const convoRouter = router({
                   name: true,
                   color: true,
                   avatarTimestamp: true
-                },
-                with: {
-                  members: {
-                    columns: {
-                      orgMemberId: true
-                    }
-                  }
                 }
               },
               contact: {
@@ -1728,16 +1721,12 @@ export const convoRouter = router({
       // Find the participant.publicId for the accountOrgMemberId
       let participantPublicId: string | undefined;
 
-      // If not found, check if the user's orgMemberId is in any participant's team members
-      if (!participantPublicId) {
-        convoQuery?.participants.forEach((participant) => {
-          participant.team?.members.forEach((teamMember) => {
-            if (teamMember.orgMemberId === accountOrgMemberId) {
-              participantPublicId = participant.publicId;
-            }
-          });
-        });
-      }
+      // Check if the user's orgMemberId is in the conversation participants
+      convoQuery?.participants.forEach((participant) => {
+        if (participant.orgMember?.id === accountOrgMemberId) {
+          participantPublicId = participant.publicId;
+        }
+      });
 
       // If participantPublicId is still not found, the user is not a participant of this conversation
       if (!participantPublicId) {
@@ -1746,14 +1735,6 @@ export const convoRouter = router({
           message: 'You are not a participant of this conversation'
         });
       }
-
-      // strip the user IDs from the response
-      convoQuery.participants.forEach((participant) => {
-        if (participant.orgMember?.id) participant.orgMember.id = 0;
-        participant.team?.members.forEach((teamMember) => {
-          if (teamMember.orgMemberId) teamMember.orgMemberId = 0;
-        });
-      });
 
       // updates the lastReadAt of the participant
       await db
