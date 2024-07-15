@@ -64,7 +64,8 @@ app.use(
         db,
         account: c.get('account'),
         org: null,
-        event: c
+        event: c,
+        selfHosted: !env.EE_LICENSE_KEY
       }) satisfies TrpcContext
   })
 );

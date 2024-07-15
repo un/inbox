@@ -9,6 +9,8 @@ export const trpcContext = initTRPC
   .context<TrpcContext>()
   .create({ transformer: superjson });
 
+export const createCallerFactory = trpcContext.createCallerFactory;
+
 const isAccountAuthenticated = trpcContext.middleware(({ next, ctx }) => {
   if (!ctx.account) {
     ctx.event.header('Location', '/');

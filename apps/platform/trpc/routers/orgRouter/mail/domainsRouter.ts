@@ -11,8 +11,8 @@ import { lookupNS } from '@u22n/utils/dns';
 import { TRPCError } from '@trpc/server';
 import { isAccountAdminOfOrg } from '~platform/utils/account';
 import { mailBridgeTrpcClient } from '~platform/utils/tRPCServerClients';
-import { ms } from '@u22n/utils/ms';
 import { updateDnsRecords } from '~platform/utils/updateDnsRecords';
+import { iCanHazCallerFactory } from '../iCanHaz/iCanHazRouter';
 
 export const domainsRouter = router({
   createNewDomain: orgProcedure
@@ -25,8 +25,20 @@ export const domainsRouter = router({
       const { db, org } = ctx;
       const orgId = org.id;
       const orgPublicId = org.publicId;
-      const newPublicId = typeIdGenerator('domains');
 
+      const iCanHazCaller = iCanHazCallerFactory(ctx);
+
+      const canHazDomain = await iCanHazCaller.domain({
+        orgShortCode: input.orgShortCode
+      });
+      if (!canHazDomain) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'You cannot add a domain on your current plan'
+        });
+      }
+
+      const newPublicId = typeIdGenerator('domains');
       const domainName = input.domainName.toLowerCase();
 
       const isAdmin = await isAccountAdminOfOrg(org);
