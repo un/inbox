@@ -1,18 +1,17 @@
-'use client';
-
 import { api } from '@/src/lib/trpc';
 import Link from 'next/link';
 import { type TypeId } from '@u22n/utils/typeid';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { useMemo } from 'react';
-import { formatParticipantData } from '../utils';
-import { MessagesPanel } from './_components/messages-panel';
-import TopBar from './_components/top-bar';
-import { ReplyBox } from './_components/reply-box';
+import { formatParticipantData } from '../../utils';
+import { MessagesPanel } from './messages-panel';
+import TopBar from './top-bar';
+import { ReplyBox } from './reply-box';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { env } from '@/src/env';
+import { usePageTitle } from '@/src/hooks/use-page-title';
 
-export default function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
+export function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
   const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
   const {
     data: convoData,
@@ -22,6 +21,8 @@ export default function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
     orgShortCode,
     convoPublicId: convoId
   });
+
+  usePageTitle(convoData?.data.subjects[0]?.subject ?? 'UnInbox');
 
   const attachments = useMemo(() => {
     if (!convoData) return [];
@@ -94,6 +95,8 @@ export default function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
 
 export function ConvoNotFound() {
   const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  usePageTitle('Convo Not Found');
+
   return (
     <div className="flex h-full w-full flex-col items-center justify-center">
       <div>
