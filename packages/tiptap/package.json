@@ -30,7 +30,7 @@
     "@tiptap/starter-kit": "^2.4.0",
     "@u22n/tsconfig": "^0.0.2",
     "cmdk": "^1.0.0",
-    "jotai": "^2.8.3",
+    "jotai": "^2.9.0",
     "tippy.js": "^6.3.7",
     "tiptap-markdown": "^0.8.10",
     "tunnel-rat": "^0.1.2"

@@ -55,7 +55,7 @@
   "author": "Omar McAdam - @McPizza0",
   "license": "AGPLv3",
   "devDependencies": {
-    "@types/node": "^20.14.6",
+    "@types/node": "^20.14.10",
     "@typescript-eslint/eslint-plugin": "^7.16.0",
     "@typescript-eslint/parser": "^7.16.0",
     "@u22n/eslint-plugin-custom": "workspace:^",
@@ -69,10 +69,10 @@
     "prettier": "^3.3.2",
     "prettier-plugin-tailwindcss": "^0.6.5",
     "turbo": "^1.13.4",
-    "typescript": "5.5.2"
+    "typescript": "5.5.3"
   },
   "lint-staged": {
     "*": "prettier --write --ignore-unknown"
   },
-  "packageManager": "pnpm@9.4.0"
+  "packageManager": "pnpm@9.5.0"
 }
