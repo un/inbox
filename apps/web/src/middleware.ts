@@ -1,4 +1,7 @@
-import { isAuthenticated, serverApi } from '@/src/lib/trpc.server';
+import {
+  isAuthenticated,
+  getAuthRedirection
+} from '@/src/lib/middleware-utils';
 import { type NextRequest, NextResponse } from 'next/server';
 
 // Known public routes, add more as needed
@@ -14,9 +17,7 @@ export default async function middleware(req: NextRequest) {
   // Redirect if already logged in on login page
   if (path === '/') {
     if (await isAuthenticated()) {
-      const redirectData = await serverApi.account.defaults.redirectionData
-        .query({})
-        .catch(() => null);
+      const redirectData = await getAuthRedirection().catch(() => null);
       if (redirectData) {
         return NextResponse.redirect(
           new URL(redirectData.defaultOrgShortCode ?? '/join/org', req.nextUrl)
