@@ -1718,18 +1718,12 @@ export const convoRouter = router({
         return null;
       }
 
-      // Find the participant.publicId for the accountOrgMemberId
-      let participantPublicId: string | undefined;
-
-      // Check if the user's orgMemberId is in the conversation participants
-      convoQuery?.participants.forEach((participant) => {
-        if (participant.orgMember?.id === accountOrgMemberId) {
-          participantPublicId = participant.publicId;
-        }
+      const participant = convoQuery?.participants.find((participant) => {
+        return participant.orgMember?.id === accountOrgMemberId;
       });
 
-      // If participantPublicId is still not found, the user is not a participant of this conversation
-      if (!participantPublicId) {
+      // If participant is still not found, the user is not a participant of this conversation
+      if (!participant) {
         throw new TRPCError({
           code: 'UNAUTHORIZED',
           message: 'You are not a participant of this conversation'
@@ -1743,7 +1737,7 @@ export const convoRouter = router({
           lastReadAt: new Date()
         })
         .where(
-          eq(convoParticipants.publicId, participantPublicId as `cp_${string}`)
+          eq(convoParticipants.publicId, participant.publicId as `cp_${string}`)
         );
 
       return convoQuery;
