@@ -1360,6 +1360,17 @@ export const convoRouter = router({
           if (teamMember.orgMemberId) teamMember.orgMemberId = 0;
         });
       });
+
+      // updates the lastReadAt of the participant
+      await db
+        .update(convoParticipants)
+        .set({
+          lastReadAt: new Date()
+        })
+        .where(
+          eq(convoParticipants.publicId, participantPublicId as `cp_${string}`)
+        );
+
       return {
         data: convoDetails,
         ownParticipantPublicId: participantPublicId
@@ -1585,6 +1596,7 @@ export const convoRouter = router({
     .query(async ({ ctx, input }) => {
       const { db, org } = ctx;
       const { convoPublicId } = input;
+      const accountOrgMemberId = org.memberId;
 
       const convoQuery = await db.query.convos.findFirst({
         columns: {
@@ -1610,7 +1622,10 @@ export const convoRouter = router({
             },
             with: {
               orgMember: {
-                columns: { publicId: true },
+                columns: {
+                  publicId: true,
+                  id: true
+                },
                 with: {
                   profile: {
                     columns: {
@@ -1702,6 +1717,28 @@ export const convoRouter = router({
       if (!convoQuery || !convoQuery?.publicId) {
         return null;
       }
+
+      const participant = convoQuery?.participants.find((participant) => {
+        return participant.orgMember?.id === accountOrgMemberId;
+      });
+
+      // If participant is still not found, the user is not a participant of this conversation
+      if (!participant) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'You are not a participant of this conversation'
+        });
+      }
+
+      // updates the lastReadAt of the participant
+      await db
+        .update(convoParticipants)
+        .set({
+          lastReadAt: new Date()
+        })
+        .where(
+          eq(convoParticipants.publicId, participant.publicId as `cp_${string}`)
+        );
 
       return convoQuery;
     }),
