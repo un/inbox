@@ -20,7 +20,6 @@
     "@trpc/client": "11.0.0-rc.421",
     "@trpc/server": "11.0.0-rc.421",
     "@u22n/database": "workspace:^",
-    "@u22n/mail-bridge": "workspace:^",
     "@u22n/otel": "workspace:^",
     "@u22n/utils": "workspace:^",
     "bullmq": "^5.8.7",

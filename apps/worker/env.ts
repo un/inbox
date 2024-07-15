@@ -3,8 +3,7 @@ import { z } from 'zod';
 
 export const env = createEnv({
   server: {
-    MAILBRIDGE_URL: z.string().url(),
-    MAILBRIDGE_KEY: z.string().min(1),
+    PLATFORM_URL: z.string().url(),
     DB_REDIS_CONNECTION_STRING: z.string().min(1),
     WORKER_ACCESS_KEY: z.string().min(32),
     PORT: z.coerce.number().int().min(1).max(65535).default(3400),
