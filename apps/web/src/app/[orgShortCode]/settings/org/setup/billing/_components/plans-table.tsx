@@ -1,6 +1,6 @@
 'use client';
 import { Button } from '@/src/components/shadcn-ui/button';
-import { api } from '@/src/lib/trpc';
+import { platform } from '@/src/lib/trpc';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
@@ -325,7 +325,7 @@ function StripeWatcher({
     data: paymentLinkInfo,
     error: linkError,
     isLoading: paymentLinkLoading
-  } = api.org.setup.billing.getOrgSubscriptionPaymentLink.useQuery(
+  } = platform.org.setup.billing.getOrgSubscriptionPaymentLink.useQuery(
     {
       orgShortCode,
       period: isYearly ? 'yearly' : 'monthly',
@@ -334,9 +334,10 @@ function StripeWatcher({
     { enabled: open }
   );
   const paymentLinkCache =
-    api.useUtils().org.setup.billing.getOrgSubscriptionPaymentLink;
+    platform.useUtils().org.setup.billing.getOrgSubscriptionPaymentLink;
 
-  const overviewApi = api.useUtils().org.setup.billing.getOrgBillingOverview;
+  const overviewApi =
+    platform.useUtils().org.setup.billing.getOrgBillingOverview;
   const timeout = useRef<NodeJS.Timeout | null>(null);
   const checkPayment = useCallback(async () => {
     const overview = await overviewApi.fetch({ orgShortCode });

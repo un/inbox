@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useMemo } from 'react';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { Camera, FloppyDisk } from '@phosphor-icons/react';
-import { api } from '@/src/lib/trpc';
+import { platform } from '@/src/lib/trpc';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import useLoading from '@/src/hooks/use-loading';
 import { cn, generateAvatarUrl } from '@/src/lib/utils';
@@ -21,7 +21,7 @@ export default function ProfileComponent() {
   const updateOrg = useGlobalStore((state) => state.updateOrg);
 
   const { data: isAdmin, isLoading: adminLoading } =
-    api.org.users.members.isOrgMemberAdmin.useQuery({
+    platform.org.users.members.isOrgMemberAdmin.useQuery({
       orgShortCode
     });
 
@@ -52,7 +52,8 @@ export default function ProfileComponent() {
     updateOrg(orgShortCode, { avatarTimestamp });
   });
 
-  const updateOrgProfileApi = api.org.setup.profile.setOrgProfile.useMutation();
+  const updateOrgProfileApi =
+    platform.org.setup.profile.setOrgProfile.useMutation();
   const { loading: saveLoading, run: saveOrgProfile } = useLoading(async () => {
     await updateOrgProfileApi.mutateAsync({
       orgName: orgNameValue,

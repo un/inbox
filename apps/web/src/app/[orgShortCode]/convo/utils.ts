@@ -1,4 +1,4 @@
-import { api, type RouterOutputs } from '@/src/lib/trpc';
+import { platform, type RouterOutputs } from '@/src/lib/trpc';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { type TypeId } from '@u22n/utils/typeid';
 import { type InfiniteData } from '@tanstack/react-query';
@@ -63,7 +63,7 @@ export function formatParticipantData(
 
 export function useAddSingleConvo$Cache() {
   const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
-  const utils = api.useUtils();
+  const utils = platform.useUtils();
   const convoListApi = utils.convos.getOrgMemberConvos;
   const getOrgMemberSpecificConvoApi = utils.convos.getOrgMemberSpecificConvo;
 
@@ -94,7 +94,7 @@ export function useAddSingleConvo$Cache() {
 
 export function useDeleteConvo$Cache() {
   const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
-  const convoListApi = api.useUtils().convos.getOrgMemberConvos;
+  const convoListApi = platform.useUtils().convos.getOrgMemberConvos;
   const deleteFn = useCallback(
     (
       convoId: TypeId<'convos'>,
@@ -139,7 +139,7 @@ export function useDeleteConvo$Cache() {
 // TODO: Simplify this function later, its too complex
 export function useToggleConvoHidden$Cache() {
   const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
-  const utils = api.useUtils();
+  const utils = platform.useUtils();
   const convoApi = utils.convos.getConvo;
   const convoListApi = utils.convos.getOrgMemberConvos;
   const specificConvoApi = utils.convos.getOrgMemberSpecificConvo;
@@ -268,7 +268,7 @@ export function useToggleConvoHidden$Cache() {
 
 export function useUpdateConvoMessageList$Cache() {
   const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
-  const utils = api.useUtils();
+  const utils = platform.useUtils();
   const convoEntiresApi = utils.convos.entries.getConvoEntries;
   const singleConvoEntryApi = utils.convos.entries.getConvoSingleEntry;
 

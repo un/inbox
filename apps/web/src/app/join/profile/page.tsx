@@ -3,7 +3,7 @@
 import { Button } from '@/src/components/shadcn-ui/button';
 import Link from 'next/link';
 import { ProfileCard } from './_components/profile-card';
-import { api } from '@/src/lib/trpc';
+import { platform } from '@/src/lib/trpc';
 import { useCookies } from 'next-client-cookies';
 
 export default function Page({
@@ -32,7 +32,7 @@ export default function Page({
   }
 
   const { data: orgData, isLoading: orgDataLoading } =
-    api.account.profile.getOrgMemberProfile.useQuery({
+    platform.account.profile.getOrgMemberProfile.useQuery({
       orgShortCode: searchParams.org
     });
 

@@ -1,5 +1,5 @@
 import { Button } from '@/src/components/shadcn-ui/button';
-import { api } from '@/src/lib/trpc';
+import { platform } from '@/src/lib/trpc';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { type TypeId } from '@u22n/utils/typeid';
 import {
@@ -21,11 +21,11 @@ type Props = {
 export function AddNewMember({ teamId, existingMembers, complete }: Props) {
   const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
   const { data: allMembers, isLoading } =
-    api.org.users.members.getOrgMembers.useQuery({
+    platform.org.users.members.getOrgMembers.useQuery({
       orgShortCode
     });
   const { mutateAsync: addNewMember, isPending: isAdding } =
-    api.org.users.teams.addOrgMemberToTeam.useMutation({
+    platform.org.users.teams.addOrgMemberToTeam.useMutation({
       onError: (error) => {
         toast.error(error.message);
       }

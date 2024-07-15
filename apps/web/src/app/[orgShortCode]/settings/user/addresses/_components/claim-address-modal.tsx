@@ -1,5 +1,5 @@
 import { type ModalComponent } from '@/src/hooks/use-awaitable-modal';
-import { api } from '@/src/lib/trpc';
+import { platform } from '@/src/lib/trpc';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { Button } from '@/src/components/shadcn-ui/button';
 import {
@@ -22,7 +22,7 @@ export function ClaimAddressModal({
   const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
 
   const { mutateAsync: claimAddressConfirm } =
-    api.account.addresses.claimPersonalAddress.useMutation({
+    platform.account.addresses.claimPersonalAddress.useMutation({
       onSuccess: async () => {
         setIsClaiming(false);
       }

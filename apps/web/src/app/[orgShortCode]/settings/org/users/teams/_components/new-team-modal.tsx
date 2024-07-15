@@ -1,6 +1,6 @@
 'use client';
 
-import { api } from '@/src/lib/trpc';
+import { platform } from '@/src/lib/trpc';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { useForm } from '@tanstack/react-form';
 import { Input } from '@/src/components/shadcn-ui/input';
@@ -31,15 +31,15 @@ import { type UiColor, uiColors } from '@u22n/utils/colors';
 
 export function NewTeamModal() {
   const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
-  const invalidateTeams = api.useUtils().org.users.teams.getOrgTeams;
+  const invalidateTeams = platform.useUtils().org.users.teams.getOrgTeams;
 
-  const utils = api.useUtils();
+  const utils = platform.useUtils();
   const checkEmailAvailability =
     utils.org.mail.emailIdentities.checkEmailAvailability;
 
   const [formError, setFormError] = useState<string | null>(null);
 
-  const { data: canAddTeam, isLoading } = api.org.iCanHaz.team.useQuery(
+  const { data: canAddTeam, isLoading } = platform.org.iCanHaz.team.useQuery(
     {
       orgShortCode: orgShortCode
     },
@@ -49,14 +49,14 @@ export function NewTeamModal() {
   );
 
   const { mutateAsync: createTeam, error: teamError } =
-    api.org.users.teams.createTeam.useMutation({
+    platform.org.users.teams.createTeam.useMutation({
       onSuccess: () => {
         void invalidateTeams.invalidate();
       }
     });
 
   const { mutateAsync: createEmailIdentity, error: emailError } =
-    api.org.mail.emailIdentities.createNewEmailIdentity.useMutation({
+    platform.org.mail.emailIdentities.createNewEmailIdentity.useMutation({
       onSuccess: () => {
         setOpen(false);
       }
@@ -109,7 +109,7 @@ export function NewTeamModal() {
   });
 
   const { data: orgDomains, isLoading: orgDomainsLoading } =
-    api.org.mail.domains.getOrgDomains.useQuery({
+    platform.org.mail.domains.getOrgDomains.useQuery({
       orgShortCode
     });
 

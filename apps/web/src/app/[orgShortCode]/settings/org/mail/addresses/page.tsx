@@ -1,7 +1,7 @@
 'use client';
 
 import { DataTable } from '@/src/components/shared/table';
-import { api } from '@/src/lib/trpc';
+import { platform } from '@/src/lib/trpc';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { columns } from './_components/columns';
 import { AddEmailModal } from './_components/add-address-modal';
@@ -9,7 +9,7 @@ import { AddEmailModal } from './_components/add-address-modal';
 export default function Page() {
   const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
   const { data: emailsList, isLoading } =
-    api.org.mail.emailIdentities.getOrgEmailIdentities.useQuery({
+    platform.org.mail.emailIdentities.getOrgEmailIdentities.useQuery({
       orgShortCode
     });
 

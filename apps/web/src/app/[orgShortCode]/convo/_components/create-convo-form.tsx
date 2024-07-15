@@ -1,6 +1,6 @@
 'use client';
 
-import { api } from '@/src/lib/trpc';
+import { platform } from '@/src/lib/trpc';
 import {
   Select,
   SelectContent,
@@ -106,21 +106,22 @@ export default function CreateConvoForm() {
   const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
 
   const { data: userEmailIdentities, isLoading: emailIdentitiesLoading } =
-    api.org.mail.emailIdentities.getUserEmailIdentities.useQuery({
+    platform.org.mail.emailIdentities.getUserEmailIdentities.useQuery({
       orgShortCode
     });
   const { data: orgMemberList, isLoading: orgMemberListLoading } =
-    api.org.users.members.getOrgMembersList.useQuery({ orgShortCode });
+    platform.org.users.members.getOrgMembersList.useQuery({ orgShortCode });
   const { data: orgTeamsData, isLoading: orgTeamsLoading } =
-    api.org.users.teams.getOrgTeams.useQuery({ orgShortCode });
+    platform.org.users.teams.getOrgTeams.useQuery({ orgShortCode });
   const { data: orgContacts, isLoading: orgContactsLoading } =
-    api.org.contacts.getOrgContacts.useQuery({ orgShortCode });
-  const { data: isAdmin } = api.org.users.members.isOrgMemberAdmin.useQuery({
-    orgShortCode
-  });
+    platform.org.contacts.getOrgContacts.useQuery({ orgShortCode });
+  const { data: isAdmin } =
+    platform.org.users.members.isOrgMemberAdmin.useQuery({
+      orgShortCode
+    });
 
   const { mutateAsync: createConvoFn } =
-    api.convos.createNewConvo.useMutation();
+    platform.convos.createNewConvo.useMutation();
 
   const newEmailParticipants = useAtomValue(newEmailParticipantsAtom);
   const selectedParticipants = useAtomValue(selectedParticipantsAtom);

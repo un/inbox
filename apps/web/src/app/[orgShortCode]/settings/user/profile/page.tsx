@@ -6,7 +6,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { cn, generateAvatarUrl } from '@/src/lib/utils';
 import useLoading from '@/src/hooks/use-loading';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
-import { api } from '@/src/lib/trpc';
+import { platform } from '@/src/lib/trpc';
 import useAwaitableModal from '@/src/hooks/use-awaitable-modal';
 import { Skeleton } from '@/src/components/shadcn-ui/skeleton';
 import { Button } from '@/src/components/shadcn-ui/button';
@@ -22,7 +22,7 @@ export default function Page() {
     data: initData,
     isLoading: isInitDataLoading,
     refetch: revalidateProfile
-  } = api.account.profile.getOrgMemberProfile.useQuery({
+  } = platform.account.profile.getOrgMemberProfile.useQuery({
     orgShortCode: currentOrg.shortCode
   });
 
@@ -68,7 +68,7 @@ export default function Page() {
   });
 
   const updateProfileApi =
-    api.account.profile.updateOrgMemberProfile.useMutation();
+    platform.account.profile.updateOrgMemberProfile.useMutation();
   const { loading: saveLoading, run: saveProfile } = useLoading(async () => {
     if (!initData) return;
     await updateProfileApi.mutateAsync({

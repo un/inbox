@@ -1,7 +1,7 @@
 import { Dialog, DialogContent } from '@/src/components/shadcn-ui/dialog';
 import { ScrollArea } from '@/src/components/shadcn-ui/scroll-area';
 import { Separator } from '@/src/components/shadcn-ui/separator';
-import { api } from '@/src/lib/trpc';
+import { platform } from '@/src/lib/trpc';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { SpinnerGap } from '@phosphor-icons/react';
 import { type TypeId } from '@u22n/utils/typeid';
@@ -16,7 +16,7 @@ export function OriginalMessageView({
 }) {
   const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
   const { data, isLoading, error } =
-    api.convos.entries.getConvoSingleEntryRawEmail.useQuery({
+    platform.convos.entries.getConvoSingleEntryRawEmail.useQuery({
       orgShortCode,
       convoEntryPublicId: messagePublicId
     });

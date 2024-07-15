@@ -15,7 +15,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Input } from '@/src/components/shadcn-ui/input';
 import { PasswordInput } from '@/src/components/password-input';
 import { Button } from '@/src/components/shadcn-ui/button';
-import { api } from '@/src/lib/trpc';
+import { platform } from '@/src/lib/trpc';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import {
@@ -61,7 +61,7 @@ export default function Page() {
     mutateAsync: login,
     error,
     isPending
-  } = api.auth.password.signIn.useMutation();
+  } = platform.auth.password.signIn.useMutation();
 
   const handleLogin = async (values: z.infer<typeof loginSchema>) => {
     try {
@@ -156,7 +156,7 @@ function TwoFactorDialog({ open }: { open: boolean }) {
   const [code, setCode] = useState('');
   const router = useRouter();
   const { isSuccess, error, mutateAsync, isPending } =
-    api.auth.twoFactorAuthentication.verifyTwoFactorChallenge.useMutation();
+    platform.auth.twoFactorAuthentication.verifyTwoFactorChallenge.useMutation();
 
   return (
     <AlertDialog open={open}>

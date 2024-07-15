@@ -2,7 +2,7 @@
 
 import { DataTable } from '@/src/components/shared/table';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
-import { api } from '@/src/lib/trpc';
+import { platform } from '@/src/lib/trpc';
 import { columns } from './_components/columns';
 import useAwaitableModal from '@/src/hooks/use-awaitable-modal';
 import { ClaimAddressModal } from './_components/claim-address-modal';
@@ -14,7 +14,7 @@ export default function Page() {
   const username = useGlobalStore((state) => state.user.username);
   const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
 
-  const { data: proStatus } = api.org.setup.billing.isPro.useQuery({
+  const { data: proStatus } = platform.org.setup.billing.isPro.useQuery({
     orgShortCode
   });
 
@@ -23,7 +23,7 @@ export default function Page() {
     isLoading: personalAddressesLoading,
     error: personalAddressesError,
     refetch: refetchPersonalAddresses
-  } = api.account.addresses.getPersonalAddresses.useQuery({});
+  } = platform.account.addresses.getPersonalAddresses.useQuery({});
 
   const [ClaimAddressModalRoot, claimAddress] = useAwaitableModal(
     ClaimAddressModal,

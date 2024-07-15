@@ -1,6 +1,6 @@
 'use client';
 
-import { api } from '@/src/lib/trpc';
+import { platform } from '@/src/lib/trpc';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { Input } from '@/src/components/shadcn-ui/input';
 import { Button } from '@/src/components/shadcn-ui/button';
@@ -18,27 +18,28 @@ import { useState } from 'react';
 
 export function AddDomainModal() {
   const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
-  const invalidateDomains = api.useUtils().org.mail.domains.getOrgDomains;
+  const invalidateDomains = platform.useUtils().org.mail.domains.getOrgDomains;
 
   const {
     mutateAsync: createNewDomain,
     error: domainError,
     isPending: isAddingDomain
-  } = api.org.mail.domains.createNewDomain.useMutation({
+  } = platform.org.mail.domains.createNewDomain.useMutation({
     onSuccess: () => {
       void invalidateDomains.invalidate();
       setOpen(false);
     }
   });
 
-  const { data: canAddDomain, isLoading } = api.org.iCanHaz.domain.useQuery(
-    {
-      orgShortCode: orgShortCode
-    },
-    {
-      staleTime: 1000
-    }
-  );
+  const { data: canAddDomain, isLoading } =
+    platform.org.iCanHaz.domain.useQuery(
+      {
+        orgShortCode: orgShortCode
+      },
+      {
+        staleTime: 1000
+      }
+    );
 
   const [open, setOpen] = useState(false);
   const [domain, setDomain] = useState('');

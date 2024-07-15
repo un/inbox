@@ -1,6 +1,6 @@
 'use client';
 
-import { api } from '@/src/lib/trpc';
+import { platform } from '@/src/lib/trpc';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { useForm } from '@tanstack/react-form';
 import { Input } from '@/src/components/shadcn-ui/input';
@@ -31,10 +31,10 @@ import { useState } from 'react';
 
 export function InviteModal() {
   const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
-  const invalidateInvites = api.useUtils().org.users.invites.viewInvites;
+  const invalidateInvites = platform.useUtils().org.users.invites.viewInvites;
 
   const { mutateAsync: createInvite, error: inviteError } =
-    api.org.users.invites.createNewInvite.useMutation({
+    platform.org.users.invites.createNewInvite.useMutation({
       onSuccess: () => {
         void invalidateInvites.invalidate();
         setOpen(false);
@@ -90,12 +90,12 @@ export function InviteModal() {
   });
 
   const { data: orgDomains, isLoading: orgDomainsLoading } =
-    api.org.mail.domains.getOrgDomains.useQuery({
+    platform.org.mail.domains.getOrgDomains.useQuery({
       orgShortCode
     });
 
   const { data: orgTeams, isLoading: orgTeamsLoading } =
-    api.org.users.teams.getOrgTeams.useQuery({ orgShortCode });
+    platform.org.users.teams.getOrgTeams.useQuery({ orgShortCode });
 
   const [open, setOpen] = useState(false);
 

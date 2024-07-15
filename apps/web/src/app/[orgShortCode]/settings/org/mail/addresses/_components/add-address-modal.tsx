@@ -1,6 +1,6 @@
 'use client';
 
-import { api } from '@/src/lib/trpc';
+import { platform } from '@/src/lib/trpc';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { useForm } from '@tanstack/react-form';
 import { Input } from '@/src/components/shadcn-ui/input';
@@ -32,10 +32,10 @@ import Link from 'next/link';
 export function AddEmailModal() {
   const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
   const invalidateEmails =
-    api.useUtils().org.mail.emailIdentities.getOrgEmailIdentities;
+    platform.useUtils().org.mail.emailIdentities.getOrgEmailIdentities;
 
   const { mutateAsync: createEmailIdentity, error: emailIdentityError } =
-    api.org.mail.emailIdentities.createNewEmailIdentity.useMutation({
+    platform.org.mail.emailIdentities.createNewEmailIdentity.useMutation({
       onSuccess: () => {
         void invalidateEmails.invalidate();
         setOpen(false);
@@ -73,17 +73,17 @@ export function AddEmailModal() {
   });
 
   const { data: orgDomains, isLoading: orgDomainsLoading } =
-    api.org.mail.domains.getOrgDomains.useQuery({
+    platform.org.mail.domains.getOrgDomains.useQuery({
       orgShortCode
     });
 
   const { data: orgMembers, isLoading: orgMembersLoading } =
-    api.org.users.members.getOrgMembers.useQuery({
+    platform.org.users.members.getOrgMembers.useQuery({
       orgShortCode
     });
 
   const { data: orgTeams, isLoading: orgTeamsLoading } =
-    api.org.users.teams.getOrgTeams.useQuery({ orgShortCode });
+    platform.org.users.teams.getOrgTeams.useQuery({ orgShortCode });
 
   const [open, setOpen] = useState(false);
 
