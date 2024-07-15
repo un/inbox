@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { env } from 'next-runtime-env';
 import {
   Turnstile,
   type TurnstileProps,
@@ -9,9 +8,9 @@ import {
 } from '@marsidev/react-turnstile';
 import { useTheme } from 'next-themes';
 import { forwardRef } from 'react';
+import { env } from '../env';
 
-const TURNSTILE_SITE_KEY = env('NEXT_PUBLIC_TURNSTILE_SITE_KEY');
-export const turnstileEnabled = Boolean(TURNSTILE_SITE_KEY);
+export const turnstileEnabled = Boolean(env.NEXT_PUBLIC_TURNSTILE_SITE_KEY);
 
 export const TurnstileComponent = forwardRef<
   TurnstileInstance,
@@ -22,7 +21,7 @@ export const TurnstileComponent = forwardRef<
     <div className="flex items-center justify-center">
       <Turnstile
         ref={ref}
-        siteKey={TURNSTILE_SITE_KEY!}
+        siteKey={env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
         options={{
           theme: (resolvedTheme as 'dark' | 'light') ?? 'auto',
           ...options

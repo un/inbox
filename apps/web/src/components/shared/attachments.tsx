@@ -1,6 +1,5 @@
 import { type TypeId } from '@u22n/utils/typeid';
 import { useCallback, useMemo, useState } from 'react';
-import { env } from 'next-runtime-env';
 import { toast } from 'sonner';
 import { cn, prettyBytes } from '../../lib/utils';
 import { useGlobalStore } from '../../providers/global-store-provider';
@@ -18,6 +17,7 @@ import {
   X
 } from '@phosphor-icons/react';
 import { type VariantProps, cva } from 'class-variance-authority';
+import { env } from '@/src/env';
 
 export type Attachment = {
   filename: string;
@@ -35,7 +35,6 @@ export type ConvoAttachmentUpload = {
   type: string;
 };
 
-const STORAGE_URL = env('NEXT_PUBLIC_STORAGE_URL');
 const FILE_SIZE_LIMIT = 15_000_000; // 15MB
 
 export function toTrpcUploadFormat(attachments: Attachment[]) {
@@ -71,7 +70,7 @@ export function useAttachmentUploader(defaultList?: Attachment[]) {
     async (file: File) => {
       setPrefetching(true);
       const preSignedData = (await fetch(
-        `${STORAGE_URL}/api/attachments/presign?orgShortCode=${orgShortCode}&filename=${file.name}`,
+        `${env.NEXT_PUBLIC_STORAGE_URL}/api/attachments/presign?orgShortCode=${orgShortCode}&filename=${file.name}`,
         {
           method: 'GET',
           credentials: 'include'

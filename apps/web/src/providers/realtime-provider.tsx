@@ -7,15 +7,10 @@ import {
 } from 'react';
 import RealtimeClient from '@u22n/realtime/client';
 import { useGlobalStore } from './global-store-provider';
-import { env } from 'next-runtime-env';
 import { toast } from 'sonner';
+import { env } from '../env';
 
 const realtimeContext = createContext<RealtimeClient | null>(null);
-
-const appKey = env('NEXT_PUBLIC_REALTIME_APP_KEY')!;
-const host = env('NEXT_PUBLIC_REALTIME_HOST')!;
-const port = Number(env('NEXT_PUBLIC_REALTIME_PORT')!);
-const PLATFORM_URL = env('NEXT_PUBLIC_PLATFORM_URL')!;
 
 export function RealtimeProvider({ children }: PropsWithChildren) {
   const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
@@ -23,10 +18,10 @@ export function RealtimeProvider({ children }: PropsWithChildren) {
   const [client] = useState(
     () =>
       new RealtimeClient({
-        appKey,
-        host,
-        port,
-        authEndpoint: `${PLATFORM_URL}/realtime/auth`
+        appKey: env.NEXT_PUBLIC_REALTIME_APP_KEY,
+        host: env.NEXT_PUBLIC_REALTIME_HOST,
+        port: env.NEXT_PUBLIC_REALTIME_PORT,
+        authEndpoint: `${env.NEXT_PUBLIC_PLATFORM_URL}/realtime/auth`
       })
   );
 

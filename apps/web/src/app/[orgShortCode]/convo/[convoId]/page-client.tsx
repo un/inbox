@@ -6,13 +6,11 @@ import { type TypeId } from '@u22n/utils/typeid';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { useMemo } from 'react';
 import { formatParticipantData } from '../utils';
-import { env } from 'next-runtime-env';
 import { MessagesPanel } from './_components/messages-panel';
 import TopBar from './_components/top-bar';
 import { ReplyBox } from './_components/reply-box';
 import { Button } from '@/src/components/shadcn-ui/button';
-
-const STORAGE_URL = env('NEXT_PUBLIC_STORAGE_URL');
+import { env } from '@/src/env';
 
 export default function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
   const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
@@ -31,7 +29,7 @@ export default function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
       .filter((f) => !f.inline)
       .map((attachment) => ({
         name: attachment.fileName,
-        url: `${STORAGE_URL}/attachment/${orgShortCode}/${attachment.publicId}/${attachment.fileName}`,
+        url: `${env.NEXT_PUBLIC_STORAGE_URL}/attachment/${orgShortCode}/${attachment.publicId}/${attachment.fileName}`,
         type: attachment.type,
         publicId: attachment.publicId
       }));

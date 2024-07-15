@@ -35,6 +35,7 @@
     "@radix-ui/react-toggle-group": "^1.1.0",
     "@radix-ui/react-tooltip": "^1.1.0",
     "@simplewebauthn/browser": "^10.0.0",
+    "@t3-oss/env-core": "^0.10.1",
     "@tailwindcss/typography": "^0.5.13",
     "@tanstack/react-form": "^0.19.5",
     "@tanstack/react-query": "^5.45.1",

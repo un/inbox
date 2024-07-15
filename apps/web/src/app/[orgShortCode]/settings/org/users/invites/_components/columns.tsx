@@ -17,9 +17,7 @@ import {
   TooltipContent
 } from '@/src/components/shadcn-ui/tooltip';
 import { CopyButton } from '@/src/components/copy-button';
-import { env } from 'next-runtime-env';
-
-const WEBAPP_URL = env('NEXT_PUBLIC_WEBAPP_URL');
+import { env } from '@/src/env';
 
 type Member =
   RouterOutputs['org']['users']['invites']['viewInvites']['invites'][number];
@@ -100,10 +98,10 @@ export const columns: ColumnDef<Member>[] = [
           <ScrollArea
             className="w-32"
             type="hover">
-            <span>{`${WEBAPP_URL}/join/invite/${inviteCode}`}</span>
+            <span>{`${env.NEXT_PUBLIC_WEBAPP_URL}/join/invite/${inviteCode}`}</span>
           </ScrollArea>
           <CopyButton
-            text={`${WEBAPP_URL}/join/invite/${inviteCode}`}
+            text={`${env.NEXT_PUBLIC_WEBAPP_URL}/join/invite/${inviteCode}`}
             iconSize={12}
           />
         </div>
