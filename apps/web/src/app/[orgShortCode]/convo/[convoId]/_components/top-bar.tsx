@@ -67,7 +67,6 @@ export default function TopBar({
   });
   const hideConvo = api.convos.hideConvo.useMutation();
   const router = useRouter();
-  const toggleConvoHiddenState = useToggleConvoHidden$Cache();
 
   return (
     <div className="border-base-5 bg-base-1 flex w-full flex-col items-center justify-between border-b p-0">
@@ -122,7 +121,6 @@ export default function TopBar({
                     orgShortCode,
                     unhide: convoHidden ? true : undefined
                   });
-                  await toggleConvoHiddenState(convoId, !convoHidden);
                 }}>
                 {convoHidden ? <Eye size={16} /> : <EyeSlash size={16} />}
               </Button>
@@ -171,7 +169,6 @@ function DeleteModal({
   const hideConvo = api.convos.hideConvo.useMutation();
   const deleteConvo = api.convos.deleteConvo.useMutation();
   const removeConvoFromList = useDeleteConvo$Cache();
-  const toggleConvoHiddenState = useToggleConvoHidden$Cache();
 
   return (
     <Dialog
@@ -211,7 +208,6 @@ function DeleteModal({
                   convoPublicId: convoId,
                   orgShortCode
                 });
-                await toggleConvoHiddenState(convoId, true);
                 onClose();
               }}>
               Hide Instead

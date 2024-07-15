@@ -21,7 +21,6 @@ import {
   DropdownMenuPortal,
   DropdownMenuGroup
 } from '@/src/components/shadcn-ui/dropdown-menu';
-
 import {
   Check,
   SignOut,
@@ -40,7 +39,6 @@ import {
   Question,
   User
 } from '@phosphor-icons/react';
-import { env } from 'next-runtime-env';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMemo } from 'react';
@@ -54,6 +52,7 @@ import {
   ToggleGroup,
   ToggleGroupItem
 } from '@/src/components/shadcn-ui/toggle-group';
+import { env } from '@/src/env';
 
 export default function SidebarContent() {
   const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
@@ -94,8 +93,6 @@ export default function SidebarContent() {
   );
 }
 
-const PLATFORM_URL = env('NEXT_PUBLIC_PLATFORM_URL');
-
 function OrgMenu() {
   const setCurrentOrg = useGlobalStore((state) => state.setCurrentOrg);
   const currentOrg = useGlobalStore((state) => state.currentOrg);
@@ -132,7 +129,7 @@ function OrgMenu() {
 
   const { run: logOut, loading: loggingOut } = useLoading(
     async () => {
-      await fetch(`${PLATFORM_URL}/auth/logout`, {
+      await fetch(`${env.NEXT_PUBLIC_PLATFORM_URL}/auth/logout`, {
         method: 'POST',
         credentials: 'include'
       });

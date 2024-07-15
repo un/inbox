@@ -20,11 +20,6 @@ export function AddDomainModal() {
   const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
   const invalidateDomains = api.useUtils().org.mail.domains.getOrgDomains;
 
-  const { data: domainStatus, isLoading } =
-    api.org.setup.billing.canAddDomain.useQuery({
-      orgShortCode
-    });
-
   const {
     mutateAsync: createNewDomain,
     error: domainError,
@@ -35,6 +30,15 @@ export function AddDomainModal() {
       setOpen(false);
     }
   });
+
+  const { data: canAddDomain, isLoading } = api.org.iCanHaz.domain.useQuery(
+    {
+      orgShortCode: orgShortCode
+    },
+    {
+      staleTime: 1000
+    }
+  );
 
   const [open, setOpen] = useState(false);
   const [domain, setDomain] = useState('');
@@ -58,7 +62,11 @@ export function AddDomainModal() {
         </DialogHeader>
         {isLoading ? (
           <div>Loading...</div>
-        ) : domainStatus?.canAddDomain ? (
+        ) : !canAddDomain ? (
+          <div>
+            Your Current Billing Plan does not allow you to add more domains.
+          </div>
+        ) : (
           <div className="my-2 flex w-fit flex-col gap-2">
             <div className="flex flex-col">
               <label
@@ -98,10 +106,6 @@ export function AddDomainModal() {
                 Add Domain
               </Button>
             </div>
-          </div>
-        ) : (
-          <div>
-            Your Current Billing Plan does not allow you to add more domains.
           </div>
         )}
       </DialogContent>

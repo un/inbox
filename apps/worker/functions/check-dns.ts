@@ -3,8 +3,8 @@ import { eq } from '@u22n/database/orm';
 import { domains } from '@u22n/database/schema';
 import { dnsVerifier } from '@u22n/utils/dns';
 import type { TypeId } from '@u22n/utils/typeid';
-import { mailBridgeTrpcClient } from '../utils/trpc-server-clients';
 import { discord } from '@u22n/utils/discord';
+import { env } from '../env';
 
 export async function checkDns(publicId: TypeId<'domains'>) {
   const now = performance.now();
@@ -54,9 +54,23 @@ export async function checkDns(publicId: TypeId<'domains'>) {
       return;
     }
 
-    await mailBridgeTrpcClient.postal.domains.refreshDomainDns.query({
-      postalDomainId: domainInfo.postalId,
-      postalServerUrl: domainInfo.postalHost
+    // Trigger a DNS check on Platform which will take care of updating the records
+    await fetch(`${env.PLATFORM_URL}/services/dns-check`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: env.WORKER_ACCESS_KEY
+      },
+      body: JSON.stringify({
+        orgId: domainInfo.orgId,
+        domainPublicId: domainInfo.publicId
+      })
+    }).then((res) => {
+      if (!res.ok) {
+        discord.alert(
+          `An error occurred while Communicating with Platform Services for DNS records of Domain ${domainInfo.domain}(${domainInfo.publicId}). The Platform responded with status ${res.status}.`
+        );
+      }
     });
 
     await discord.info(

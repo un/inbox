@@ -1,20 +1,17 @@
-'use client';
-
 import { api } from '@/src/lib/trpc';
 import Link from 'next/link';
 import { type TypeId } from '@u22n/utils/typeid';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { useMemo } from 'react';
-import { formatParticipantData } from '../utils';
-import { env } from 'next-runtime-env';
-import { MessagesPanel } from './_components/messages-panel';
-import TopBar from './_components/top-bar';
-import { ReplyBox } from './_components/reply-box';
+import { formatParticipantData } from '../../utils';
+import { MessagesPanel } from './messages-panel';
+import TopBar from './top-bar';
+import { ReplyBox } from './reply-box';
 import { Button } from '@/src/components/shadcn-ui/button';
+import { env } from '@/src/env';
+import { usePageTitle } from '@/src/hooks/use-page-title';
 
-const STORAGE_URL = env('NEXT_PUBLIC_STORAGE_URL');
-
-export default function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
+export function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
   const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
   const {
     data: convoData,
@@ -25,13 +22,15 @@ export default function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
     convoPublicId: convoId
   });
 
+  usePageTitle(convoData?.data.subjects[0]?.subject ?? 'UnInbox');
+
   const attachments = useMemo(() => {
     if (!convoData) return [];
     return convoData.data.attachments
       .filter((f) => !f.inline)
       .map((attachment) => ({
         name: attachment.fileName,
-        url: `${STORAGE_URL}/attachment/${orgShortCode}/${attachment.publicId}/${attachment.fileName}`,
+        url: `${env.NEXT_PUBLIC_STORAGE_URL}/attachment/${orgShortCode}/${attachment.publicId}/${attachment.fileName}`,
         type: attachment.type,
         publicId: attachment.publicId
       }));
@@ -96,6 +95,8 @@ export default function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
 
 export function ConvoNotFound() {
   const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  usePageTitle('Convo Not Found');
+
   return (
     <div className="flex h-full w-full flex-col items-center justify-center">
       <div>

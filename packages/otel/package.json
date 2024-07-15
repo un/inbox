@@ -22,7 +22,7 @@
   },
   "devDependencies": {
     "@u22n/tsconfig": "^0.0.2",
-    "hono": "^4.4.7",
+    "hono": "^4.4.13",
     "pino-pretty": "^11.2.0"
   },
   "peerDependencies": {
