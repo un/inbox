@@ -1360,6 +1360,17 @@ export const convoRouter = router({
           if (teamMember.orgMemberId) teamMember.orgMemberId = 0;
         });
       });
+
+      // updates the lastReadAt of the participant
+      await db
+        .update(convoParticipants)
+        .set({
+          lastReadAt: new Date()
+        })
+        .where(
+          eq(convoParticipants.publicId, participantPublicId as `cp_${string}`)
+        );
+
       return {
         data: convoDetails,
         ownParticipantPublicId: participantPublicId
@@ -1585,6 +1596,7 @@ export const convoRouter = router({
     .query(async ({ ctx, input }) => {
       const { db, org } = ctx;
       const { convoPublicId } = input;
+      const accountOrgMemberId = org.memberId;
 
       const convoQuery = await db.query.convos.findFirst({
         columns: {
@@ -1610,7 +1622,10 @@ export const convoRouter = router({
             },
             with: {
               orgMember: {
-                columns: { publicId: true },
+                columns: {
+                  publicId: true,
+                  id: true
+                },
                 with: {
                   profile: {
                     columns: {
@@ -1629,6 +1644,13 @@ export const convoRouter = router({
                   name: true,
                   color: true,
                   avatarTimestamp: true
+                },
+                with: {
+                  members: {
+                    columns: {
+                      orgMemberId: true
+                    }
+                  }
                 }
               },
               contact: {
@@ -1702,6 +1724,46 @@ export const convoRouter = router({
       if (!convoQuery || !convoQuery?.publicId) {
         return null;
       }
+
+      // Find the participant.publicId for the accountOrgMemberId
+      let participantPublicId: string | undefined;
+
+      // If not found, check if the user's orgMemberId is in any participant's team members
+      if (!participantPublicId) {
+        convoQuery?.participants.forEach((participant) => {
+          participant.team?.members.forEach((teamMember) => {
+            if (teamMember.orgMemberId === accountOrgMemberId) {
+              participantPublicId = participant.publicId;
+            }
+          });
+        });
+      }
+
+      // If participantPublicId is still not found, the user is not a participant of this conversation
+      if (!participantPublicId) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'You are not a participant of this conversation'
+        });
+      }
+
+      // strip the user IDs from the response
+      convoQuery.participants.forEach((participant) => {
+        if (participant.orgMember?.id) participant.orgMember.id = 0;
+        participant.team?.members.forEach((teamMember) => {
+          if (teamMember.orgMemberId) teamMember.orgMemberId = 0;
+        });
+      });
+
+      // updates the lastReadAt of the participant
+      await db
+        .update(convoParticipants)
+        .set({
+          lastReadAt: new Date()
+        })
+        .where(
+          eq(convoParticipants.publicId, participantPublicId as `cp_${string}`)
+        );
 
       return convoQuery;
     }),
