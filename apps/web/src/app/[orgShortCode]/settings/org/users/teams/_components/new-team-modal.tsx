@@ -217,7 +217,6 @@ export function NewTeamModal() {
                       </SelectTrigger>
                       <SelectContent
                         id={field.name}
-                        className="z-[550]"
                         onBlur={field.handleBlur}>
                         <SelectGroup>
                           {uiColors.map((color) => (
