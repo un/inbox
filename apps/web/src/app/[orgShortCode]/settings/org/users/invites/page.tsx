@@ -1,7 +1,7 @@
 'use client';
 
 import { DataTable } from '@/src/components/shared/table';
-import { api } from '@/src/lib/trpc';
+import { platform } from '@/src/lib/trpc';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { columns } from './_components/columns';
 import { InviteModal } from './_components/invite-modal';
@@ -9,7 +9,7 @@ import { InviteModal } from './_components/invite-modal';
 export default function Page() {
   const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
   const { data: inviteList, isLoading } =
-    api.org.users.invites.viewInvites.useQuery({
+    platform.org.users.invites.viewInvites.useQuery({
       orgShortCode
     });
 

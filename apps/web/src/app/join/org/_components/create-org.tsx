@@ -1,7 +1,7 @@
 'use client';
 
 import useLoading from '@/src/hooks/use-loading';
-import { api } from '@/src/lib/trpc';
+import { platform } from '@/src/lib/trpc';
 import { Button } from '@/src/components/shadcn-ui/button';
 import {
   Dialog,
@@ -31,8 +31,8 @@ export default function CreateOrgButton({
 
   const debouncedOrgShortCode = useDebounce(orgShortCode, 1000);
   const checkOrgShortCodeApi =
-    api.useUtils().org.crud.checkShortCodeAvailability;
-  const createOrgApi = api.org.crud.createNewOrg.useMutation();
+    platform.useUtils().org.crud.checkShortCodeAvailability;
+  const createOrgApi = platform.org.crud.createNewOrg.useMutation();
 
   const {
     loading: orgShortCodeDataLoading,

@@ -8,7 +8,7 @@ import {
   AvatarFallback
 } from '@/src/components/shadcn-ui/avatar';
 import Link from 'next/link';
-import { api, isAuthenticated } from '@/src/lib/trpc';
+import { platform, isAuthenticated } from '@/src/lib/trpc';
 import useLoading from '@/src/hooks/use-loading';
 import { useCookies } from 'next-client-cookies';
 import { useEffect } from 'react';
@@ -17,7 +17,7 @@ import { generateAvatarUrl, getInitials } from '@/src/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 
 export default function InviteCard({ code }: { code: string }) {
-  const inviteDataApi = api.useUtils().org.users.invites.validateInvite;
+  const inviteDataApi = platform.useUtils().org.users.invites.validateInvite;
   const router = useRouter();
   const cookies = useCookies();
 

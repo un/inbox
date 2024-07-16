@@ -8,7 +8,7 @@ import {
 import { Separator } from '@/src/components/shadcn-ui/separator';
 import { type ModalComponent } from '@/src/hooks/use-awaitable-modal';
 import { useEffect, useState } from 'react';
-import { api } from '@/src/lib/trpc';
+import { platform } from '@/src/lib/trpc';
 import useLoading from '@/src/hooks/use-loading';
 import { Check, Plus } from '@phosphor-icons/react';
 import { PasswordInput } from '@/src/components/password-input';
@@ -38,7 +38,7 @@ export function PasswordModal({
   const debouncedPassword = useDebounce(password, 1000);
 
   const checkPasswordStrength =
-    api.useUtils().auth.signup.checkPasswordStrength;
+    platform.useUtils().auth.signup.checkPasswordStrength;
 
   const {
     data: passwordCheckData,
@@ -71,7 +71,7 @@ export function PasswordModal({
     passwordCheckData.score >= 3 &&
     password === confirmPassword;
 
-  const setPasswordApi = api.account.security.resetPassword.useMutation();
+  const setPasswordApi = platform.account.security.resetPassword.useMutation();
   const { loading: passwordLoading, run: updatePassword } = useLoading(
     async () => {
       if (verificationToken === '')
@@ -179,7 +179,7 @@ export function TOTPModal({
     data: twoFaChallenge,
     isLoading: twoFaChallengeLoading,
     error: twoFaChallengeError
-  } = api.account.security.generateTwoFactorResetChallenge.useQuery(
+  } = platform.account.security.generateTwoFactorResetChallenge.useQuery(
     {
       verificationToken
     },
@@ -199,7 +199,7 @@ export function TOTPModal({
     mutateAsync: completeTwoFactorReset,
     isPending: twoFactorResetLoading,
     error: twoFactorResetError
-  } = api.account.security.verifyTwoFactorResetChallenge.useMutation({
+  } = platform.account.security.verifyTwoFactorResetChallenge.useMutation({
     onSuccess: () => onResolve(true)
   });
 
@@ -289,12 +289,12 @@ export function RecoveryCodeModal({
     mutateAsync: resetRecovery,
     isPending: resetRecoveryLoading,
     error: resetError
-  } = api.account.security.resetRecoveryCode.useMutation();
+  } = platform.account.security.resetRecoveryCode.useMutation();
   const {
     mutateAsync: disableRecovery,
     isPending: disableRecoveryLoading,
     error: disableError
-  } = api.account.security.disableRecoveryCode.useMutation();
+  } = platform.account.security.disableRecoveryCode.useMutation();
 
   const [code, setCode] = useState<string>('');
 

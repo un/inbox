@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@/src/components/shadcn-ui/button';
-import { api } from '@/src/lib/trpc';
+import { platform } from '@/src/lib/trpc';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { ArrowLeft, ArrowClockwise } from '@phosphor-icons/react';
 import Link from 'next/link';
@@ -32,7 +32,7 @@ export default function Page({
     data: domainInfo,
     isLoading,
     refetch
-  } = api.org.mail.domains.getDomain.useQuery({
+  } = platform.org.mail.domains.getDomain.useQuery({
     orgShortCode,
     domainPublicId: params.domainId
   });
@@ -43,7 +43,7 @@ export default function Page({
     refetch: recheckDNS,
     error: dnsError,
     isRefetching: isRecheckingDNS
-  } = api.org.mail.domains.getDomainDns.useQuery({
+  } = platform.org.mail.domains.getDomainDns.useQuery({
     orgShortCode,
     domainPublicId: params.domainId
   });

@@ -15,7 +15,7 @@ import {
 import { CopyButton } from '@/src/components/copy-button';
 import { PasswordInput } from '@/src/components/password-input';
 import { useDebounce } from '@uidotdev/usehooks';
-import { api } from '@/src/lib/trpc';
+import { platform } from '@/src/lib/trpc';
 import { cn } from '@/src/lib/utils';
 import { type TypeId } from '@u22n/utils/typeid';
 import { QRCodeSVG } from 'qrcode.react';
@@ -31,7 +31,7 @@ export function PasswordRecoveryModal({
   const debouncedPassword = useDebounce(password, 1000);
 
   const { data: passwordStrength, isLoading: strengthLoading } =
-    api.auth.signup.checkPasswordStrength.useQuery(
+    platform.auth.signup.checkPasswordStrength.useQuery(
       {
         password: debouncedPassword
       },
@@ -43,7 +43,7 @@ export function PasswordRecoveryModal({
     mutateAsync: resetPassword,
     isPending: isResetting,
     error
-  } = api.auth.recovery.resetPassword.useMutation();
+  } = platform.auth.recovery.resetPassword.useMutation();
 
   const passwordValid =
     password === confirmPassword && passwordStrength?.allowed;
@@ -159,7 +159,7 @@ export function TwoFactorModal({
     mutateAsync: resetTwoFactor,
     isPending: isResetting,
     error
-  } = api.auth.recovery.resetTwoFactor.useMutation();
+  } = platform.auth.recovery.resetTwoFactor.useMutation();
 
   return (
     <AlertDialog open={open}>

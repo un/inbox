@@ -1,5 +1,5 @@
 import { type ModalComponent } from '@/src/hooks/use-awaitable-modal';
-import { api } from '@/src/lib/trpc';
+import { platform } from '@/src/lib/trpc';
 import { Button } from '@/src/components/shadcn-ui/button';
 import {
   Dialog,
@@ -18,7 +18,7 @@ export function DeleteAllSessions({
     mutateAsync: logoutAll,
     isPending: loggingOut,
     error
-  } = api.account.security.deleteAllSessions.useMutation();
+  } = platform.account.security.deleteAllSessions.useMutation();
   return (
     <Dialog open={open}>
       <DialogContent>

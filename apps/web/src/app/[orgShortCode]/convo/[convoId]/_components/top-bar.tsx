@@ -25,7 +25,7 @@ import { useDeleteConvo$Cache, useToggleConvoHidden$Cache } from '../../utils';
 import useAwaitableModal, {
   type ModalComponent
 } from '@/src/hooks/use-awaitable-modal';
-import { type RouterOutputs, api } from '@/src/lib/trpc';
+import { type RouterOutputs, platform } from '@/src/lib/trpc';
 import { type TypeId } from '@u22n/utils/typeid';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { useRouter } from 'next/navigation';
@@ -65,7 +65,7 @@ export default function TopBar({
     convoId,
     convoHidden
   });
-  const hideConvo = api.convos.hideConvo.useMutation();
+  const hideConvo = platform.convos.hideConvo.useMutation();
   const router = useRouter();
 
   return (
@@ -166,8 +166,8 @@ function DeleteModal({
   convoHidden
 }: ModalComponent<{ convoId: TypeId<'convos'>; convoHidden: boolean | null }>) {
   const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
-  const hideConvo = api.convos.hideConvo.useMutation();
-  const deleteConvo = api.convos.deleteConvo.useMutation();
+  const hideConvo = platform.convos.hideConvo.useMutation();
+  const deleteConvo = platform.convos.deleteConvo.useMutation();
   const removeConvoFromList = useDeleteConvo$Cache();
 
   return (

@@ -7,7 +7,7 @@ import {
   DialogContent
 } from '@/src/components/shadcn-ui/dialog';
 import { type TypeId } from '@u22n/utils/typeid';
-import { api } from '@/src/lib/trpc';
+import { platform } from '@/src/lib/trpc';
 
 export function DeletePasskeyModal({
   open,
@@ -25,7 +25,7 @@ export function DeletePasskeyModal({
     mutateAsync: deletePasskey,
     isPending: deletePasskeyLoading,
     error
-  } = api.account.security.deletePasskey.useMutation();
+  } = platform.account.security.deletePasskey.useMutation();
 
   return (
     <Dialog open={open}>

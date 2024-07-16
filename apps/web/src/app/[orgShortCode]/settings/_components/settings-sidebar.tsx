@@ -4,7 +4,7 @@ import { type ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { cn } from '@/src/lib/utils';
-import { api } from '@/src/lib/trpc';
+import { platform } from '@/src/lib/trpc';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import {
   User,
@@ -28,9 +28,10 @@ type NavLinks = {
 export default function SettingsSidebar() {
   const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
 
-  const { data: isAdmin } = api.org.users.members.isOrgMemberAdmin.useQuery({
-    orgShortCode
-  });
+  const { data: isAdmin } =
+    platform.org.users.members.isOrgMemberAdmin.useQuery({
+      orgShortCode
+    });
 
   const personalLinks: NavLinks[] = [
     {

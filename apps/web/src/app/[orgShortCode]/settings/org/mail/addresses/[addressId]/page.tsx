@@ -1,6 +1,6 @@
 'use client';
 
-import { api } from '@/src/lib/trpc';
+import { platform } from '@/src/lib/trpc';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { type TypeId } from '@u22n/utils/typeid';
 import { Button } from '@/src/components/shadcn-ui/button';
@@ -22,7 +22,7 @@ export default function Page({
   const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
 
   const { data: emailInfo, isLoading } =
-    api.org.mail.emailIdentities.getEmailIdentity.useQuery({
+    platform.org.mail.emailIdentities.getEmailIdentity.useQuery({
       orgShortCode,
       emailIdentityPublicId: params.addressId
     });

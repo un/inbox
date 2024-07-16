@@ -10,7 +10,7 @@ import { Checkbox } from '@/src/components/shadcn-ui/checkbox';
 import Stepper from './_components/stepper';
 import { Check, Plus, Info } from '@phosphor-icons/react';
 import { useDebounce } from '@uidotdev/usehooks';
-import { api } from '@/src/lib/trpc';
+import { platform } from '@/src/lib/trpc';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { zodSchemas } from '@u22n/utils/zodSchemas';
@@ -28,7 +28,8 @@ export default function Page() {
   const [agree, setAgree] = useState(false);
   const cookies = useCookies();
   const router = useRouter();
-  const checkUsernameApi = api.useUtils().auth.signup.checkUsernameAvailability;
+  const checkUsernameApi =
+    platform.useUtils().auth.signup.checkUsernameAvailability;
   const debouncedUsername = useDebounce(username, 1000);
 
   const {

@@ -8,7 +8,7 @@ import {
 } from '@/src/components/shadcn-ui/alert-dialog';
 import { type ModalComponent } from '@/src/hooks/use-awaitable-modal';
 import { type Dispatch, type SetStateAction, useEffect, useState } from 'react';
-import { api } from '@/src/lib/trpc';
+import { platform } from '@/src/lib/trpc';
 import useLoading from '@/src/hooks/use-loading';
 import { startRegistration } from '@simplewebauthn/browser';
 import { Check, Plus, Fingerprint } from '@phosphor-icons/react';
@@ -33,9 +33,9 @@ export function PasskeyModal({
   const [state, setState] = useState<string | null>(null);
 
   const getPasskeyChallenge =
-    api.useUtils().auth.passkey.signUpWithPasskeyStart;
+    platform.useUtils().auth.passkey.signUpWithPasskeyStart;
   const verifyPasskeyChallenge =
-    api.auth.passkey.signUpWithPasskeyFinish.useMutation();
+    platform.auth.passkey.signUpWithPasskeyFinish.useMutation();
 
   const { error, loading, run } = useLoading(async () => {
     setState('Getting a passkey challenge from server');
@@ -168,7 +168,7 @@ const PasswordModalStep1 = ({
   const debouncedPassword = useDebounce(password, 1000);
 
   const checkPasswordStrength =
-    api.useUtils().auth.signup.checkPasswordStrength;
+    platform.useUtils().auth.signup.checkPasswordStrength;
 
   const {
     data: passwordCheckData,
@@ -292,9 +292,9 @@ const PasswordModalStep2 = ({
   const [error, setError] = useState<Error | null>(null);
 
   const twoFaChallenge =
-    api.useUtils().auth.twoFactorAuthentication.createTwoFactorChallenge;
+    platform.useUtils().auth.twoFactorAuthentication.createTwoFactorChallenge;
   const signUpWithPassword =
-    api.auth.password.signUpWithPassword2FA.useMutation();
+    platform.auth.password.signUpWithPassword2FA.useMutation();
 
   const {
     data: twoFaData,

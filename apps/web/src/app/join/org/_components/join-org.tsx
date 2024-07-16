@@ -1,7 +1,7 @@
 'use client';
 
 import useLoading from '@/src/hooks/use-loading';
-import { api } from '@/src/lib/trpc';
+import { platform } from '@/src/lib/trpc';
 import { generateAvatarUrl, getInitials } from '@/src/lib/utils';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { Input } from '@/src/components/shadcn-ui/input';
@@ -30,8 +30,9 @@ export default function JoinOrgButton({
   inviteCode?: string;
 }) {
   const [inviteCode, setInviteCode] = useState(initialInviteCode ?? '');
-  const validateInviteCodeApi = api.useUtils().org.users.invites.validateInvite;
-  const joinOrgApi = api.org.users.invites.redeemInvite.useMutation();
+  const validateInviteCodeApi =
+    platform.useUtils().org.users.invites.validateInvite;
+  const joinOrgApi = platform.org.users.invites.redeemInvite.useMutation();
   const router = useRouter();
   const [modalOpen, setModalOpen] = useState(false);
 

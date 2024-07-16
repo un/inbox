@@ -2,7 +2,7 @@
 
 import { Button } from '@/src/components/shadcn-ui/button';
 import { Fingerprint } from '@phosphor-icons/react';
-import { api } from '@/src/lib/trpc';
+import { platform } from '@/src/lib/trpc';
 import { startAuthentication } from '@simplewebauthn/browser';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -16,8 +16,9 @@ export function PasskeyLoginButton() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | undefined>();
-  const generatePasskey = api.useUtils().auth.passkey.generatePasskeyChallenge;
-  const verifyPasskey = api.auth.passkey.verifyPasskey.useMutation();
+  const generatePasskey =
+    platform.useUtils().auth.passkey.generatePasskeyChallenge;
+  const verifyPasskey = platform.auth.passkey.verifyPasskey.useMutation();
 
   const login = useCallback(async () => {
     if (turnstileEnabled && !turnstileToken) {

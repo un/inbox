@@ -1,6 +1,6 @@
 'use client';
 
-import { api } from '@/src/lib/trpc';
+import { platform } from '@/src/lib/trpc';
 import { type TypeId } from '@u22n/utils/typeid';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -44,7 +44,7 @@ export function ReplyBox({ convoId }: { convoId: TypeId<'convos'> }) {
   // TODO: Find a better way to handle this
   const [, setLoadingType] = useState<'comment' | 'message'>('message');
 
-  const replyToConvoMutation = api.convos.replyToConvo.useMutation({
+  const replyToConvoMutation = platform.convos.replyToConvo.useMutation({
     onSuccess: () => {
       editorRef.current?.commands.clearContent();
       setEditorText(emptyTiptapEditorContent);
@@ -69,12 +69,13 @@ export function ReplyBox({ convoId }: { convoId: TypeId<'convos'> }) {
   const [emailIdentity, setEmailIdentity] = useAtom(selectedEmailIdentityAtom);
 
   const { data: emailIdentities, isLoading: emailIdentitiesLoading } =
-    api.org.mail.emailIdentities.getUserEmailIdentities.useQuery({
+    platform.org.mail.emailIdentities.getUserEmailIdentities.useQuery({
       orgShortCode
     });
-  const { data: isAdmin } = api.org.users.members.isOrgMemberAdmin.useQuery({
-    orgShortCode
-  });
+  const { data: isAdmin } =
+    platform.org.users.members.isOrgMemberAdmin.useQuery({
+      orgShortCode
+    });
 
   useEffect(() => {
     setEmailIdentity((prev) => {
