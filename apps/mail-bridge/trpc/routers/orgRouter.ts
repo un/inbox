@@ -26,7 +26,7 @@ export const orgRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { config } = ctx;
       const { orgId, orgPublicId } = input;
-      const localMode = config.MAILBRIDGE_POSTAL_LOCAL_MODE;
+      const localMode = config.MAILBRIDGE_LOCAL_MODE;
       const limits = config.MAILBRIDGE_POSTAL_SERVER_LIMITS;
 
       if (localMode) {

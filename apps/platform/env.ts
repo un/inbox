@@ -23,7 +23,10 @@ export const env = createEnv({
     MAILBRIDGE_URL: z.string().url(),
     MAILBRIDGE_KEY: z.string().min(1),
     MAILBRIDGE_POSTAL_SERVERS_DNS_ROOT_URL: z.string().min(1),
-    MAILBRIDGE_POSTAL_LOCAL_MODE: z.coerce.boolean().default(false),
+    MAILBRIDGE_LOCAL_MODE: z
+      .string()
+      .optional()
+      .transform((val) => val === 'true'),
     MAIL_DOMAINS: stringToJSON.pipe(
       z.object({
         free: z.array(z.string()),
