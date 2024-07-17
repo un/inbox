@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { createEnv } from '@t3-oss/env-core';
 
 const IS_BROWSER = typeof window !== 'undefined';
+const IS_DEV = process.env.NODE_ENV === 'development';
 
 // Don't worry about this block, it is tree-shaken out in the browser
 if (!IS_BROWSER) {
@@ -38,13 +39,11 @@ export const env = createEnv({
     NEXT_PUBLIC_REALTIME_HOST: z.string(),
     NEXT_PUBLIC_REALTIME_PORT: z.coerce.number(),
     NEXT_PUBLIC_TURNSTILE_SITE_KEY: z.string().optional(),
-    NEXT_PUBLIC_EE_ENABLED: z
-      .enum(['true', 'false'])
-      .optional()
-      .transform((value) => value === 'true')
+    NEXT_PUBLIC_EE_ENABLED: z.enum(['true', 'false'])
   },
   // process.env is added here to allow access while on server, it is tree-shaken out in the browser
   // if you check in the browser, you will see runtimeEnv is set to window.__ENV only
   runtimeEnv: IS_BROWSER ? window.__ENV : process.env,
-  clientPrefix: 'NEXT_PUBLIC_'
+  clientPrefix: 'NEXT_PUBLIC_',
+  skipValidation: IS_BROWSER && IS_DEV
 });

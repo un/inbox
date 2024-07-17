@@ -11,7 +11,7 @@ export function LoadingSpinner({
     <div
       {...props}
       className={cn(
-        'bg-muted flex h-full w-full items-center justify-center rounded border',
+        'flex h-full w-full items-center justify-center rounded border',
         className
       )}>
       <SpinnerBall

@@ -49,3 +49,5 @@ export default function uploadTracker({
     xhr.send(formData);
   });
 }
+
+export { uploadTracker };
