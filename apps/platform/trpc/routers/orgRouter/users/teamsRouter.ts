@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { router, orgProcedure } from '~platform/trpc/trpc';
+import { router, orgProcedure, orgAdminProcedure } from '~platform/trpc/trpc';
 import { eq, and } from '@u22n/database/orm';
 import { teams } from '@u22n/database/schema';
 import { typeIdGenerator, typeIdValidator } from '@u22n/utils/typeid';
@@ -9,7 +9,7 @@ import { TRPCError } from '@trpc/server';
 import { addOrgMemberToTeamHandler } from './teamsHandler';
 
 export const teamsRouter = router({
-  createTeam: orgProcedure
+  createTeam: orgAdminProcedure
     .input(
       z.object({
         teamName: z.string().min(2).max(50),
@@ -29,14 +29,6 @@ export const teamsRouter = router({
       const orgId = org?.id;
       const { teamName, teamDescription, teamColor } = input;
       const newPublicId = typeIdGenerator('teams');
-
-      const isAdmin = await isAccountAdminOfOrg(org);
-      if (!isAdmin) {
-        throw new TRPCError({
-          code: 'UNAUTHORIZED',
-          message: 'You are not an admin'
-        });
-      }
 
       await db.insert(teams).values({
         publicId: newPublicId,
@@ -176,7 +168,7 @@ export const teamsRouter = router({
         team: teamQuery
       };
     }),
-  addOrgMemberToTeam: orgProcedure
+  addOrgMemberToTeam: orgAdminProcedure
     .input(
       z.object({
         teamPublicId: typeIdValidator('teams'),
@@ -193,14 +185,6 @@ export const teamsRouter = router({
       const { org, db } = ctx;
       const { teamPublicId, orgMemberPublicId } = input;
 
-      const isAdmin = await isAccountAdminOfOrg(org);
-      if (!isAdmin) {
-        throw new TRPCError({
-          code: 'UNAUTHORIZED',
-          message: 'You are not an admin'
-        });
-      }
-
       const newTeamMemberPublicId = await addOrgMemberToTeamHandler(db, {
         orgId: org.id,
         teamPublicId: teamPublicId,
@@ -212,7 +196,7 @@ export const teamsRouter = router({
         publicId: newTeamMemberPublicId
       };
     }),
-  updateTeamMembers: orgProcedure
+  updateTeamMembers: orgAdminProcedure
     .input(
       z.object({
         teamPublicId: typeIdValidator('teams'),
@@ -229,13 +213,6 @@ export const teamsRouter = router({
       const { org, db } = ctx;
       const { teamPublicId, orgMemberPublicIds } = input;
 
-      const isAdmin = await isAccountAdminOfOrg(org);
-      if (!isAdmin) {
-        throw new TRPCError({
-          code: 'UNAUTHORIZED',
-          message: 'You are not an admin'
-        });
-      }
       const teamMembers = await db.query.teams.findFirst({
         where: and(eq(teams.publicId, teamPublicId), eq(teams.orgId, org.id)),
         columns: {},

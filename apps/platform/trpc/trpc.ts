@@ -4,6 +4,7 @@ import { validateOrgShortCode } from '~platform/utils/orgShortCode';
 import type { TrpcContext } from '~platform/ctx';
 import { z } from 'zod';
 import { env } from '~platform/env';
+import { isAccountAdminOfOrg } from '~platform/utils/account';
 
 export const trpcContext = initTRPC
   .context<TrpcContext>()
@@ -49,6 +50,7 @@ export const publicProcedure = trpcContext.procedure.use(
 );
 
 export const accountProcedure = publicProcedure.use(isAccountAuthenticated);
+
 export const orgProcedure = publicProcedure
   .use(isAccountAuthenticated)
   .input(z.object({ orgShortCode: z.string() }))
@@ -97,6 +99,17 @@ export const orgProcedure = publicProcedure
         });
       })
   );
+
+export const orgAdminProcedure = orgProcedure.use(async ({ ctx, next }) => {
+  const isAdmin = await isAccountAdminOfOrg(ctx.org);
+  if (!isAdmin) {
+    throw new TRPCError({
+      code: 'UNAUTHORIZED',
+      message: 'You need to be an administrator'
+    });
+  }
+  return next();
+});
 
 export const turnstileProcedure = publicProcedure
   .input(z.object({ turnstileToken: z.string().optional() }))
