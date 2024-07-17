@@ -27,7 +27,7 @@ export const domainRouter = router({
       const { orgId, orgPublicId, domainName } = input;
       const postalOrgId = orgPublicId;
 
-      const localMode = config.MAILBRIDGE_POSTAL_LOCAL_MODE;
+      const localMode = config.MAILBRIDGE_LOCAL_MODE;
 
       if (localMode) {
         return {
@@ -143,7 +143,7 @@ export const domainRouter = router({
       const { config } = ctx;
       const { postalDomainId, postalServerUrl } = input;
 
-      const localMode = config.MAILBRIDGE_POSTAL_LOCAL_MODE;
+      const localMode = config.MAILBRIDGE_LOCAL_MODE;
       if (localMode) {
         return {
           verification: {
