@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { router, orgProcedure } from '~platform/trpc/trpc';
+import { router, orgProcedure, orgAdminProcedure } from '~platform/trpc/trpc';
 import { and, eq } from '@u22n/database/orm';
 import {
   domains,
@@ -15,7 +15,7 @@ import { updateDnsRecords } from '~platform/utils/updateDnsRecords';
 import { iCanHazCallerFactory } from '../iCanHaz/iCanHazRouter';
 
 export const domainsRouter = router({
-  createNewDomain: orgProcedure
+  createNewDomain: orgAdminProcedure
     .input(
       z.object({
         domainName: z.string().min(3).max(255)
@@ -40,14 +40,6 @@ export const domainsRouter = router({
 
       const newPublicId = typeIdGenerator('domains');
       const domainName = input.domainName.toLowerCase();
-
-      const isAdmin = await isAccountAdminOfOrg(org);
-      if (!isAdmin) {
-        throw new TRPCError({
-          code: 'UNAUTHORIZED',
-          message: 'You are not an admin'
-        });
-      }
 
       const dnsData = await lookupNS(domainName);
       if (
@@ -175,7 +167,7 @@ export const domainsRouter = router({
       };
     }),
 
-  getDomain: orgProcedure
+  getDomain: orgAdminProcedure
     .input(
       z.object({
         domainPublicId: typeIdValidator('domains')
@@ -195,14 +187,6 @@ export const domainsRouter = router({
 
       // Handle when adding database replicas
       const dbReplica = db;
-
-      const isAdmin = await isAccountAdminOfOrg(org);
-      if (!isAdmin) {
-        throw new TRPCError({
-          code: 'UNAUTHORIZED',
-          message: 'You are not an admin'
-        });
-      }
 
       const domainResponse = await dbReplica.query.domains.findFirst({
         where: and(
@@ -226,7 +210,7 @@ export const domainsRouter = router({
       };
     }),
 
-  getDomainDns: orgProcedure
+  getDomainDns: orgAdminProcedure
     .input(
       z.object({
         domainPublicId: typeIdValidator('domains')
@@ -236,14 +220,6 @@ export const domainsRouter = router({
       const { db, org } = ctx;
       const orgId = org?.id;
       const { domainPublicId } = input;
-
-      const isAdmin = await isAccountAdminOfOrg(org);
-      if (!isAdmin) {
-        throw new TRPCError({
-          code: 'UNAUTHORIZED',
-          message: 'You are not an admin'
-        });
-      }
 
       return updateDnsRecords({ domainPublicId, orgId }, db);
     }),

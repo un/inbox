@@ -3,7 +3,8 @@ import {
   router,
   orgProcedure,
   accountProcedure,
-  publicProcedure
+  publicProcedure,
+  orgAdminProcedure
 } from '~platform/trpc/trpc';
 import { eq } from '@u22n/database/orm';
 import {
@@ -472,7 +473,7 @@ export const invitesRouter = router({
         orgShortCode: queryInvitesResponse.org.shortcode
       };
     }),
-  invalidateInvite: orgProcedure
+  invalidateInvite: orgAdminProcedure
     .input(
       z.object({
         invitePublicId: typeIdValidator('orgInvitations')
@@ -487,14 +488,6 @@ export const invitesRouter = router({
       }
       const { db, org } = ctx;
 
-      const isAdmin = await isAccountAdminOfOrg(org);
-      if (!isAdmin) {
-        throw new TRPCError({
-          code: 'UNAUTHORIZED',
-          message: 'You are not an admin'
-        });
-      }
-
       await db
         .update(orgInvitations)
         .set({
@@ -506,7 +499,7 @@ export const invitesRouter = router({
         success: true
       };
     }),
-  refreshInvite: orgProcedure
+  refreshInvite: orgAdminProcedure
     .input(
       z.object({
         invitePublicId: typeIdValidator('orgInvitations')
@@ -520,14 +513,6 @@ export const invitesRouter = router({
         });
       }
       const { db, org } = ctx;
-
-      const isAdmin = await isAccountAdminOfOrg(org);
-      if (!isAdmin) {
-        throw new TRPCError({
-          code: 'UNAUTHORIZED',
-          message: 'You are not an admin'
-        });
-      }
 
       await db
         .update(orgInvitations)

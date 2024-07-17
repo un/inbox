@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { router, orgProcedure } from '~platform/trpc/trpc';
+import { router, orgProcedure, orgAdminProcedure } from '~platform/trpc/trpc';
 import { eq } from '@u22n/database/orm';
 import { orgs } from '@u22n/database/schema';
 import { typeIdValidator } from '@u22n/utils/typeid';
@@ -45,7 +45,7 @@ export const orgProfileRouter = router({
       };
     }),
 
-  setOrgProfile: orgProcedure
+  setOrgProfile: orgAdminProcedure
     .input(
       z.object({
         orgName: z.string().min(3).max(32)
@@ -61,14 +61,6 @@ export const orgProfileRouter = router({
       const { db, org } = ctx;
       const orgId = org?.id;
       const { orgName } = input;
-
-      const isAdmin = await isAccountAdminOfOrg(org);
-      if (!isAdmin) {
-        throw new TRPCError({
-          code: 'UNAUTHORIZED',
-          message: 'You are not an admin'
-        });
-      }
 
       await db
         .update(orgs)
