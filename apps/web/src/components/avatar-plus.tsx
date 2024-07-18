@@ -43,7 +43,7 @@ export default function AvatarPlus({ size, users }: AvatarPlusProps) {
         </HoverCardTrigger>
         <HoverCardPortal>
           <HoverCardContent
-            className="absolute z-50"
+            className="absolute"
             side="right">
             <div className="flex gap-2">
               {rest.map((user) => (

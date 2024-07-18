@@ -163,6 +163,7 @@ export function NewTeamModal() {
                         value={field.state.value ?? ''}
                         onChange={(e) => field.handleChange(e.target.value)}
                         onBlur={field.handleBlur}
+                        className="w-72"
                       />
                       {field.state.meta.errorMap.onBlur && (
                         <span className="text-red-10">
