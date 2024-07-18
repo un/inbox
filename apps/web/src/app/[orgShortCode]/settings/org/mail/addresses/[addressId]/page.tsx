@@ -19,11 +19,11 @@ export default function Page({
 }: {
   params: { addressId: TypeId<'emailIdentities'> };
 }) {
-  const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
 
   const { data: emailInfo, isLoading } =
     platform.org.mail.emailIdentities.getEmailIdentity.useQuery({
-      orgShortCode,
+      orgShortcode,
       emailIdentityPublicId: params.addressId
     });
 

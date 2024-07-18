@@ -39,13 +39,13 @@ import { OrgIssueAlerts } from './_components/org-issue-alerts';
 export default function Layout({
   children
 }: Readonly<{ children: React.ReactNode }>) {
-  const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
   const { setSidebarExpanded } = usePreferencesState();
   const isMobile = useIsMobile();
   const [showHidden, setShowHidden] = useState(false);
   const { data: issueData, refetch: refetchIssues } =
     platform.org.store.getOrgIssues.useQuery({
-      orgShortCode
+      orgShortcode
     });
 
   const addConvo = useAddSingleConvo$Cache();
@@ -127,7 +127,7 @@ export default function Layout({
                       className="h-4 w-4"
                     />
                   </div>
-                  <BreadcrumbLink href={`/${orgShortCode}/convo`}>
+                  <BreadcrumbLink href={`/${orgShortcode}/convo`}>
                     {showHidden ? 'Hidden Conversations' : 'Conversations'}
                   </BreadcrumbLink>
                 </BreadcrumbItem>
@@ -146,7 +146,7 @@ export default function Layout({
                 variant="default"
                 asChild
                 size="xs">
-                <Link href={`/${orgShortCode}/convo/new`}>New</Link>
+                <Link href={`/${orgShortcode}/convo/new`}>New</Link>
               </Button>
             ) : (
               <Button

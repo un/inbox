@@ -12,17 +12,17 @@ import { convoAttachments, orgMembers, orgs } from '@u22n/database/schema';
 import type { Ctx } from '../ctx';
 
 export const attachmentProxy = new Hono<Ctx>().get(
-  '/:orgShortCode/:attachmentId/:filename',
+  '/:orgShortcode/:attachmentId/:filename',
   zValidator(
     'param',
     z.object({
       filename: z.string().transform((f) => decodeURIComponent(f)),
       attachmentId: typeIdValidator('convoAttachments'),
-      orgShortCode: z.string()
+      orgShortcode: z.string()
     })
   ),
   async (c) => {
-    const { filename, attachmentId, orgShortCode } = c.req.valid('param');
+    const { filename, attachmentId, orgShortcode } = c.req.valid('param');
 
     const attachmentQueryResponse = await db.query.convoAttachments.findFirst({
       where: eq(convoAttachments.publicId, attachmentId),
@@ -44,7 +44,7 @@ export const attachmentProxy = new Hono<Ctx>().get(
     }
 
     const orgQueryResponse = await db.query.orgs.findFirst({
-      where: eq(orgs.shortcode, orgShortCode),
+      where: eq(orgs.shortcode, orgShortcode),
       columns: {
         id: true,
         publicId: true

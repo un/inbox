@@ -7,10 +7,10 @@ import { columns } from './_components/columns';
 import { NewTeamModal } from './_components/new-team-modal';
 
 export default function Page() {
-  const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
   const { data: teamList, isLoading } =
     platform.org.users.teams.getOrgTeams.useQuery({
-      orgShortCode
+      orgShortcode
     });
 
   return (
@@ -28,7 +28,7 @@ export default function Page() {
           columns={columns}
           data={teamList.teams ?? []}
           linkTo={(row) =>
-            `/${orgShortCode}/settings/org/users/teams/${row.publicId}`
+            `/${orgShortcode}/settings/org/users/teams/${row.publicId}`
           }
         />
       )}

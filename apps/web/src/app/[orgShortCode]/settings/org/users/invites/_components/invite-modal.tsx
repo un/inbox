@@ -30,7 +30,7 @@ import {
 import { useState } from 'react';
 
 export function InviteModal() {
-  const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
   const invalidateInvites = platform.useUtils().org.users.invites.viewInvites;
 
   const { mutateAsync: createInvite, error: inviteError } =
@@ -65,7 +65,7 @@ export function InviteModal() {
     validatorAdapter: zodValidator,
     onSubmit: async ({ value }) => {
       await createInvite({
-        orgShortCode,
+        orgShortcode,
         newOrgMember: {
           firstName: value.firstName,
           lastName: value.lastName.length ? value.lastName : undefined,
@@ -91,11 +91,11 @@ export function InviteModal() {
 
   const { data: orgDomains, isLoading: orgDomainsLoading } =
     platform.org.mail.domains.getOrgDomains.useQuery({
-      orgShortCode
+      orgShortcode
     });
 
   const { data: orgTeams, isLoading: orgTeamsLoading } =
-    platform.org.users.teams.getOrgTeams.useQuery({ orgShortCode });
+    platform.org.users.teams.getOrgTeams.useQuery({ orgShortcode });
 
   const [open, setOpen] = useState(false);
 

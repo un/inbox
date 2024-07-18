@@ -11,7 +11,7 @@ import {
   DrawerTitle,
   DrawerTrigger
 } from '@/src/components/shadcn-ui/drawer';
-import { showNewConvoPanel } from '@/src/app/[orgShortCode]/convo/atoms';
+import { showNewConvoPanel } from '@/src/app/[orgShortcode]/convo/atoms';
 import { useAtom } from 'jotai';
 
 export function NewConvoSheet() {

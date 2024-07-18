@@ -55,7 +55,7 @@ import {
 import { env } from '@/src/env';
 
 export default function SidebarContent() {
-  const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
   return (
     <div
       className={cn(
@@ -72,7 +72,7 @@ export default function SidebarContent() {
           </span>
           <Link
             className="hover:bg-slate-1 flex w-full max-w-full flex-row items-center gap-2 truncate rounded-lg p-1.5"
-            href={`/${orgShortCode}/convo`}>
+            href={`/${orgShortcode}/convo`}>
             <div className="bg-blue-4 text-blue-9 flex h-6 w-6 items-center justify-center rounded-sm">
               <User
                 weight="bold"
@@ -223,8 +223,8 @@ function OrgMenu() {
                 asChild>
                 <div
                   onClick={() => {
-                    setCurrentOrg(org.shortCode);
-                    router.push(`/${org.shortCode}/convo`);
+                    setCurrentOrg(org.shortcode);
+                    router.push(`/${org.shortcode}/convo`);
                   }}
                   className={
                     'flex w-full cursor-pointer flex-row items-center justify-between gap-2'
@@ -246,7 +246,7 @@ function OrgMenu() {
                       {org.name}
                     </span>
                   </div>
-                  {org.shortCode === currentOrg.shortCode && <Check />}
+                  {org.shortcode === currentOrg.shortcode && <Check />}
                 </div>
               </DropdownMenuItem>
             ))}
@@ -282,7 +282,7 @@ function OrgMenu() {
           <DropdownMenuGroup className={'p-2'}>
             <DropdownMenuItem asChild>
               <Link
-                href={`/${currentOrg.shortCode}/settings`}
+                href={`/${currentOrg.shortcode}/settings`}
                 className="text-slate-11 flex w-full flex-row items-center gap-2 font-medium">
                 <Gear className={'h-4 w-4'} />
                 <span>Settings</span>

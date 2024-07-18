@@ -25,7 +25,7 @@ export function OrgIssueAlerts({ issues }: { issues: Issues }) {
 }
 
 function RenderAlert({ issue }: { issue: Issues[number] }) {
-  const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
   const [issueType, issuePublicId] = issue.id.split(':') as SplitIssue<
     typeof issue.id
   >;
@@ -45,7 +45,7 @@ function RenderAlert({ issue }: { issue: Issues[number] }) {
           <AlertTitle className="text-red-9 font-bold">
             DNS issue detected for your Org domain{' '}
             <Link
-              href={`/${orgShortCode}/settings/org/mail/domains/${issuePublicId}`}
+              href={`/${orgShortcode}/settings/org/mail/domains/${issuePublicId}`}
               className="underline">
               {issue.data.domain}
             </Link>

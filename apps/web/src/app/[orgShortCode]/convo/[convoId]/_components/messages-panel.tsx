@@ -40,7 +40,7 @@ export function MessagesPanel({
     ReturnType<typeof formatParticipantData>
   >[];
 }) {
-  const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
   // This is the index of the first item in the list. It is set to a high number to ensure that the list starts at the bottom
   // This also means the list can't be longer than 10000 items (which is fine for our most cases)
   const INVERSE_LIST_START_INDEX = 10000;
@@ -53,7 +53,7 @@ export function MessagesPanel({
     platform.convos.entries.getConvoEntries.useInfiniteQuery(
       {
         convoPublicId: convoId,
-        orgShortCode
+        orgShortcode
       },
       {
         getNextPageParam: (lastPage) => lastPage.cursor ?? undefined,

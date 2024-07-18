@@ -20,7 +20,7 @@ import {
 } from '@u22n/database/schema';
 import { typeIdGenerator, typeIdValidator } from '@u22n/utils/typeid';
 import { nanoIdToken, zodSchemas } from '@u22n/utils/zodSchemas';
-import { refreshOrgShortCodeCache } from '~platform/utils/orgShortCode';
+import { refreshOrgShortcodeCache } from '~platform/utils/orgShortcode';
 import { isAccountAdminOfOrg } from '~platform/utils/account';
 import { TRPCError } from '@trpc/server';
 import { billingTrpcClient } from '~platform/utils/tRPCServerClients';
@@ -343,7 +343,7 @@ export const invitesRouter = router({
         orgPublicId: queryInvitesResponse.org.publicId,
         orgAvatarTimestamp: queryInvitesResponse.org.avatarTimestamp,
         orgName: queryInvitesResponse.org.name,
-        orgShortCode: queryInvitesResponse.org.shortcode,
+        orgShortcode: queryInvitesResponse.org.shortcode,
         loggedIn: userLoggedIn,
         username: username
       };
@@ -466,11 +466,11 @@ export const invitesRouter = router({
         });
       }
 
-      await refreshOrgShortCodeCache(+queryInvitesResponse.orgId);
+      await refreshOrgShortcodeCache(+queryInvitesResponse.orgId);
 
       return {
         success: true,
-        orgShortCode: queryInvitesResponse.org.shortcode
+        orgShortcode: queryInvitesResponse.org.shortcode
       };
     }),
   invalidateInvite: orgAdminProcedure

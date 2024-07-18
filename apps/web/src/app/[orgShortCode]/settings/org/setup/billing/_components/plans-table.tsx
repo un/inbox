@@ -320,14 +320,14 @@ function StripeWatcher({
   onClose,
   onResolve
 }: ModalComponent<{ isYearly: boolean; plan: 'pro' }>) {
-  const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
   const {
     data: paymentLinkInfo,
     error: linkError,
     isLoading: paymentLinkLoading
   } = platform.org.setup.billing.getOrgSubscriptionPaymentLink.useQuery(
     {
-      orgShortCode,
+      orgShortcode,
       period: isYearly ? 'yearly' : 'monthly',
       plan: plan
     },
@@ -340,9 +340,9 @@ function StripeWatcher({
     platform.useUtils().org.setup.billing.getOrgBillingOverview;
   const timeout = useRef<NodeJS.Timeout | null>(null);
   const checkPayment = useCallback(async () => {
-    const overview = await overviewApi.fetch({ orgShortCode });
+    const overview = await overviewApi.fetch({ orgShortcode });
     if (overview.currentPlan === 'pro') {
-      await overviewApi.invalidate({ orgShortCode });
+      await overviewApi.invalidate({ orgShortcode });
       if (timeout.current) {
         clearTimeout(timeout.current);
       }
@@ -353,7 +353,7 @@ function StripeWatcher({
         void checkPayment();
       }, 7500);
     }
-  }, [onResolve, orgShortCode, overviewApi]);
+  }, [onResolve, orgShortcode, overviewApi]);
 
   useEffect(() => {
     if (!open || !paymentLinkInfo) return;

@@ -648,14 +648,14 @@ export const worker = new Worker<
           }
         };
 
-        const orgShortCode = await db.query.orgs.findFirst({
+        const orgShortcode = await db.query.orgs.findFirst({
           where: eq(orgs.id, orgId),
           columns: {
             shortcode: true
           }
         });
 
-        if (!orgShortCode) {
+        if (!orgShortcode) {
           throw new Error('No org shortcode found');
         }
 
@@ -714,7 +714,7 @@ export const worker = new Worker<
                 cid: attachment.cid || null
               },
               orgPublicId,
-              orgShortCode.shortcode
+              orgShortcode.shortcode
             )
           )
         ).then(
@@ -922,7 +922,7 @@ type PreSignedData = {
 async function uploadAndAttachAttachment(
   input: UploadAndAttachAttachmentInput,
   orgPublicId: TypeId<'org'>,
-  orgShortCode: string
+  orgShortcode: string
 ) {
   const preUpload = (await fetch(
     `${env.STORAGE_URL}/api/attachments/internalPresign`,
@@ -976,7 +976,7 @@ async function uploadAndAttachAttachment(
   });
 
   return {
-    attachmentUrl: `${env.STORAGE_URL}/attachment/${orgShortCode}/${attachmentPublicId}/${input.fileName}`,
+    attachmentUrl: `${env.STORAGE_URL}/attachment/${orgShortcode}/${attachmentPublicId}/${input.fileName}`,
     cid: input.cid,
     inline: input.inline
   };

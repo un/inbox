@@ -49,7 +49,7 @@ export function toTrpcUploadFormat(attachments: Attachment[]) {
 }
 
 export function useAttachmentUploader(defaultList?: Attachment[]) {
-  const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
   const [attachments, setAttachments] = useState(defaultList ?? []);
   const totalAttachmentSize = useMemo(
     () => attachments.reduce((acc, { size }) => acc + size, 0),
@@ -70,7 +70,7 @@ export function useAttachmentUploader(defaultList?: Attachment[]) {
     async (file: File) => {
       setPrefetching(true);
       const preSignedData = (await fetch(
-        `${env.NEXT_PUBLIC_STORAGE_URL}/api/attachments/presign?orgShortCode=${orgShortCode}&filename=${file.name}`,
+        `${env.NEXT_PUBLIC_STORAGE_URL}/api/attachments/presign?orgShortcode=${orgShortcode}&filename=${file.name}`,
         {
           method: 'GET',
           credentials: 'include'
@@ -134,7 +134,7 @@ export function useAttachmentUploader(defaultList?: Attachment[]) {
           throw new Error(`Failed to upload attachment ${file.name}`);
         });
     },
-    [orgShortCode]
+    [orgShortcode]
   );
 
   const uploadAttachments = useCallback(

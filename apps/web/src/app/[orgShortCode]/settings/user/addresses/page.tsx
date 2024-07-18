@@ -12,10 +12,10 @@ import { Button } from '@/src/components/shadcn-ui/button';
 
 export default function Page() {
   const username = useGlobalStore((state) => state.user.username);
-  const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
 
   const { data: proStatus } = platform.org.setup.billing.isPro.useQuery({
-    orgShortCode
+    orgShortcode
   });
 
   const {

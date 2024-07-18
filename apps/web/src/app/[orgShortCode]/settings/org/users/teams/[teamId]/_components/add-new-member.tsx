@@ -19,10 +19,10 @@ type Props = {
 };
 
 export function AddNewMember({ teamId, existingMembers, complete }: Props) {
-  const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
   const { data: allMembers, isLoading } =
     platform.org.users.members.getOrgMembers.useQuery({
-      orgShortCode
+      orgShortcode
     });
   const { mutateAsync: addNewMember, isPending: isAdding } =
     platform.org.users.teams.addOrgMemberToTeam.useMutation({
@@ -61,7 +61,7 @@ export function AddNewMember({ teamId, existingMembers, complete }: Props) {
         // loading={isAdding}
         onClick={async () => {
           await addNewMember({
-            orgShortCode,
+            orgShortcode,
             teamPublicId: teamId,
             orgMemberPublicId: selectedMember
           });

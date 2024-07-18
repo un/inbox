@@ -23,7 +23,7 @@ import Link from 'next/link';
 import { ArrowLeft } from '@phosphor-icons/react';
 
 export default function Page() {
-  const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
   const invalidateEmails =
     platform.useUtils().org.mail.emailIdentities.getOrgEmailIdentities;
   const { mutateAsync: checkSMTPConnection } =
@@ -66,7 +66,7 @@ export default function Page() {
     validatorAdapter: zodValidator,
     onSubmit: async ({ value }) => {
       const smtpValid = await checkSMTPConnection({
-        orgShortCode,
+        orgShortcode,
         ...value.smtp
       })
         .then((e) => e.valid)
@@ -78,7 +78,7 @@ export default function Page() {
       }
 
       await createExternalEmailIdentity({
-        orgShortCode,
+        orgShortcode,
         sendName: value.sendName,
         emailAddress: value.fullEmail,
         smtp: value.smtp,
@@ -94,11 +94,11 @@ export default function Page() {
 
   const { data: orgMembers, isLoading: orgMembersLoading } =
     platform.org.users.members.getOrgMembers.useQuery({
-      orgShortCode
+      orgShortcode
     });
 
   const { data: orgTeams, isLoading: orgTeamsLoading } =
-    platform.org.users.teams.getOrgTeams.useQuery({ orgShortCode });
+    platform.org.users.teams.getOrgTeams.useQuery({ orgShortcode });
 
   return (
     <div className="flex w-full flex-col gap-2 p-4">

@@ -103,21 +103,21 @@ const selectedParticipantsAtom = atom<NewConvoParticipant[]>([]);
 const newEmailParticipantsAtom = atom<string[]>([]);
 
 export default function CreateConvoForm() {
-  const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
 
   const { data: userEmailIdentities, isLoading: emailIdentitiesLoading } =
     platform.org.mail.emailIdentities.getUserEmailIdentities.useQuery({
-      orgShortCode
+      orgShortcode
     });
   const { data: orgMemberList, isLoading: orgMemberListLoading } =
-    platform.org.users.members.getOrgMembersList.useQuery({ orgShortCode });
+    platform.org.users.members.getOrgMembersList.useQuery({ orgShortcode });
   const { data: orgTeamsData, isLoading: orgTeamsLoading } =
-    platform.org.users.teams.getOrgTeams.useQuery({ orgShortCode });
+    platform.org.users.teams.getOrgTeams.useQuery({ orgShortcode });
   const { data: orgContacts, isLoading: orgContactsLoading } =
-    platform.org.contacts.getOrgContacts.useQuery({ orgShortCode });
+    platform.org.contacts.getOrgContacts.useQuery({ orgShortcode });
   const { data: isAdmin } =
     platform.org.users.members.isOrgMemberAdmin.useQuery({
-      orgShortCode
+      orgShortcode
     });
 
   const { mutateAsync: createConvoFn } =
@@ -353,7 +353,7 @@ export default function CreateConvoForm() {
       participantsEmails,
       message: stringify(editorText),
       attachments: getTrpcUploadFormat(),
-      orgShortCode
+      orgShortcode
     });
   }
 
@@ -370,7 +370,7 @@ export default function CreateConvoForm() {
         toast.success('Convo created, redirecting you to your conversion');
         void addConvo(data.publicId).then(() => {
           setNewPanelOpen(false);
-          router.push(`/${orgShortCode}/convo/${data.publicId}`);
+          router.push(`/${orgShortcode}/convo/${data.publicId}`);
         });
       }
     }
@@ -385,7 +385,7 @@ export default function CreateConvoForm() {
       onSuccess: (data) => {
         toast.success('Convo created, redirecting you to your conversion');
         void addConvo(data.publicId).then(() => {
-          router.push(`/${orgShortCode}/convo/${data.publicId}`);
+          router.push(`/${orgShortcode}/convo/${data.publicId}`);
         });
       }
     }

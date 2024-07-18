@@ -3,7 +3,7 @@ import { type NextRequest } from 'next/server';
 
 export function GET(
   _: NextRequest,
-  { params }: { params: { orgShortCode: string } }
+  { params }: { params: { orgShortcode: string } }
 ) {
-  redirect(`/${params.orgShortCode}/convo`);
+  redirect(`/${params.orgShortcode}/convo`);
 }

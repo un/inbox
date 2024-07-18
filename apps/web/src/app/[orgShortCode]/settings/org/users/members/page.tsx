@@ -8,10 +8,10 @@ import { Button } from '@/src/components/shadcn-ui/button';
 import Link from 'next/link';
 
 export default function Page() {
-  const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
   const { data: memberList, isLoading } =
     platform.org.users.members.getOrgMembers.useQuery({
-      orgShortCode
+      orgShortcode
     });
 
   return (
@@ -22,7 +22,7 @@ export default function Page() {
           <div>Manage Your Org Members</div>
         </div>
         <Button asChild>
-          <Link href={`/${orgShortCode}/settings/org/users/invites`}>
+          <Link href={`/${orgShortcode}/settings/org/users/invites`}>
             Invite a Member
           </Link>
         </Button>

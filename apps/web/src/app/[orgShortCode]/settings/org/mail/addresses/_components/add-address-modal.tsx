@@ -30,7 +30,7 @@ import { Separator } from '@/src/components/shadcn-ui/separator';
 import Link from 'next/link';
 
 export function AddEmailModal() {
-  const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
   const invalidateEmails =
     platform.useUtils().org.mail.emailIdentities.getOrgEmailIdentities;
 
@@ -57,7 +57,7 @@ export function AddEmailModal() {
     onSubmit: async ({ value }) => {
       if (!value.domain) return;
       await createEmailIdentity({
-        orgShortCode,
+        orgShortcode,
         domainPublicId: value.domain,
         emailUsername: value.address,
         sendName: value.sendName,
@@ -74,16 +74,16 @@ export function AddEmailModal() {
 
   const { data: orgDomains, isLoading: orgDomainsLoading } =
     platform.org.mail.domains.getOrgDomains.useQuery({
-      orgShortCode
+      orgShortcode
     });
 
   const { data: orgMembers, isLoading: orgMembersLoading } =
     platform.org.users.members.getOrgMembers.useQuery({
-      orgShortCode
+      orgShortcode
     });
 
   const { data: orgTeams, isLoading: orgTeamsLoading } =
-    platform.org.users.teams.getOrgTeams.useQuery({ orgShortCode });
+    platform.org.users.teams.getOrgTeams.useQuery({ orgShortcode });
 
   const [open, setOpen] = useState(false);
 
@@ -315,7 +315,7 @@ export function AddEmailModal() {
                 className="flex-1"
                 asChild>
                 <Link
-                  href={`/${orgShortCode}/settings/org/mail/addresses/external`}>
+                  href={`/${orgShortcode}/settings/org/mail/addresses/external`}>
                   Add External Email Instead
                 </Link>
               </Button>

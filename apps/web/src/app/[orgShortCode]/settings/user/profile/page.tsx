@@ -23,7 +23,7 @@ export default function Page() {
     isLoading: isInitDataLoading,
     refetch: revalidateProfile
   } = platform.account.profile.getOrgMemberProfile.useQuery({
-    orgShortCode: currentOrg.shortCode
+    orgShortcode: currentOrg.shortcode
   });
 
   const [avatarTimestamp, setAvatarTimestamp] = useState<Date | null>(null);
@@ -47,7 +47,7 @@ export default function Page() {
 
   useEffect(() => {
     if (initData) {
-      updateOrg(currentOrg.shortCode, { orgMemberProfile: initData.profile });
+      updateOrg(currentOrg.shortcode, { orgMemberProfile: initData.profile });
       setFirstNameValue(initData.profile.firstName ?? '');
       setLastNameValue(initData.profile.lastName ?? '');
       setTitleValue(initData.profile.title ?? '');

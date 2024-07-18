@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import type { Ctx } from '~platform/ctx';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
-import { validateOrgShortCode } from '~platform/utils/orgShortCode';
+import { validateOrgShortcode } from '~platform/utils/orgShortcode';
 import { db } from '@u22n/database';
 import { and, eq } from '@u22n/database/orm';
 import { orgMembers } from '@u22n/database/schema';
@@ -16,7 +16,7 @@ realtimeApi.post(
   zValidator('header', z.object({ 'org-shortcode': z.string() })),
   async (c) => {
     const accountContext = c.get('account');
-    const orgContext = await validateOrgShortCode(
+    const orgContext = await validateOrgShortcode(
       c.req.valid('header')['org-shortcode']
     );
 

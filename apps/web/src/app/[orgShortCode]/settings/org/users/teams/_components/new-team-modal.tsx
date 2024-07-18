@@ -30,7 +30,7 @@ import { useState } from 'react';
 import { type UiColor, uiColors } from '@u22n/utils/colors';
 
 export function NewTeamModal() {
-  const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
   const invalidateTeams = platform.useUtils().org.users.teams.getOrgTeams;
 
   const utils = platform.useUtils();
@@ -41,7 +41,7 @@ export function NewTeamModal() {
 
   const { data: canAddTeam, isLoading } = platform.org.iCanHaz.team.useQuery(
     {
-      orgShortCode: orgShortCode
+      orgShortcode: orgShortcode
     },
     {
       staleTime: 1000
@@ -78,7 +78,7 @@ export function NewTeamModal() {
     onSubmit: async ({ value }) => {
       if (value.email.create) {
         const emailAvailable = await checkEmailAvailability.fetch({
-          orgShortCode,
+          orgShortcode,
           emailUsername: value.email.address,
           domainPublicId: value.email.domain
         });
@@ -89,7 +89,7 @@ export function NewTeamModal() {
       }
 
       const team = await createTeam({
-        orgShortCode,
+        orgShortcode,
         teamName: value.teamName,
         teamColor: value.color,
         teamDescription: value.description ?? undefined
@@ -97,7 +97,7 @@ export function NewTeamModal() {
 
       if (value.email.create) {
         await createEmailIdentity({
-          orgShortCode,
+          orgShortcode,
           domainPublicId: value.email.domain,
           emailUsername: value.email.address,
           sendName: value.email.sendName,
@@ -110,7 +110,7 @@ export function NewTeamModal() {
 
   const { data: orgDomains, isLoading: orgDomainsLoading } =
     platform.org.mail.domains.getOrgDomains.useQuery({
-      orgShortCode
+      orgShortcode
     });
 
   const [open, setOpen] = useState(false);

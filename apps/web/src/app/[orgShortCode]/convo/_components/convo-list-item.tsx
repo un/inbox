@@ -16,7 +16,7 @@ export function ConvoItem({
 }: {
   convo: RouterOutputs['convos']['getOrgMemberConvos']['data'][number];
 }) {
-  const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
 
   const timeAgo = useTimeAgo(convo.lastUpdatedAt);
 
@@ -55,7 +55,7 @@ export function ConvoItem({
   }, [participantData]);
 
   const currentPath = usePathname();
-  const link = `/${orgShortCode}/convo/${convo.publicId}`;
+  const link = `/${orgShortcode}/convo/${convo.publicId}`;
 
   const isActive = currentPath === link;
 

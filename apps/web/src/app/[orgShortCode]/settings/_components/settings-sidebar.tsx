@@ -26,39 +26,39 @@ type NavLinks = {
 };
 
 export default function SettingsSidebar() {
-  const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
 
   const { data: isAdmin } =
     platform.org.users.members.isOrgMemberAdmin.useQuery({
-      orgShortCode
+      orgShortcode
     });
 
   const personalLinks: NavLinks[] = [
     {
       label: 'Profile',
-      to: `/${orgShortCode}/settings/user/profile`,
+      to: `/${orgShortcode}/settings/user/profile`,
       icon: <User />
     },
     {
       label: 'Personal Addresses',
-      to: `/${orgShortCode}/settings/user/addresses`,
+      to: `/${orgShortcode}/settings/user/addresses`,
       icon: <Envelope />
     },
     {
       label: 'Security',
-      to: `/${orgShortCode}/settings/user/security`,
+      to: `/${orgShortcode}/settings/user/security`,
       icon: <Lock />
     }
   ];
   const orgSetupLinks: NavLinks[] = [
     {
       label: 'Org Profile',
-      to: `/${orgShortCode}/settings/org`,
+      to: `/${orgShortcode}/settings/org`,
       icon: <Buildings />
     },
     {
       label: 'Billing',
-      to: `/${orgShortCode}/settings/org/setup/billing`,
+      to: `/${orgShortcode}/settings/org/setup/billing`,
       icon: <CreditCard />
     }
   ];
@@ -66,29 +66,29 @@ export default function SettingsSidebar() {
   const orgUserLinks: NavLinks[] = [
     {
       label: 'Members',
-      to: `/${orgShortCode}/settings/org/users/members`,
+      to: `/${orgShortcode}/settings/org/users/members`,
       icon: <Users />
     },
     {
       label: 'Invites',
-      to: `/${orgShortCode}/settings/org/users/invites`,
+      to: `/${orgShortcode}/settings/org/users/invites`,
       icon: <UserPlus />
     },
     {
       label: 'Teams',
-      to: `/${orgShortCode}/settings/org/users/teams`,
+      to: `/${orgShortcode}/settings/org/users/teams`,
       icon: <HandHeart />
     }
   ];
   const orgMailLinks: NavLinks[] = [
     {
       label: 'Domains',
-      to: `/${orgShortCode}/settings/org/mail/domains`,
+      to: `/${orgShortcode}/settings/org/mail/domains`,
       icon: <Globe />
     },
     {
       label: 'Email Addresses',
-      to: `/${orgShortCode}/settings/org/mail/addresses`,
+      to: `/${orgShortcode}/settings/org/mail/addresses`,
       icon: <At />
     }
   ];

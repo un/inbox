@@ -7,10 +7,10 @@ import { columns } from './_components/columns';
 import { AddEmailModal } from './_components/add-address-modal';
 
 export default function Page() {
-  const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
   const { data: emailsList, isLoading } =
     platform.org.mail.emailIdentities.getOrgEmailIdentities.useQuery({
-      orgShortCode
+      orgShortcode
     });
 
   return (
@@ -28,7 +28,7 @@ export default function Page() {
           columns={columns}
           data={emailsList.emailIdentityData ?? []}
           linkTo={(row) =>
-            `/${orgShortCode}/settings/org/mail/addresses/${row.publicId}`
+            `/${orgShortcode}/settings/org/mail/addresses/${row.publicId}`
           }
         />
       )}

@@ -16,13 +16,13 @@ import { Input } from '@/src/components/shadcn-ui/input';
 
 export default function ProfileComponent() {
   const router = useRouter();
-  const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
   const currentOrg = useGlobalStore((state) => state.currentOrg);
   const updateOrg = useGlobalStore((state) => state.updateOrg);
 
   const { data: isAdmin, isLoading: adminLoading } =
     platform.org.users.members.isOrgMemberAdmin.useQuery({
-      orgShortCode
+      orgShortcode
     });
 
   const [orgNameValue, setOrgNameValue] = useState<string>(currentOrg.name);
@@ -49,7 +49,7 @@ export default function ProfileComponent() {
         publicId: currentOrg.publicId
       })
     );
-    updateOrg(orgShortCode, { avatarTimestamp });
+    updateOrg(orgShortcode, { avatarTimestamp });
   });
 
   const updateOrgProfileApi =
@@ -57,13 +57,13 @@ export default function ProfileComponent() {
   const { loading: saveLoading, run: saveOrgProfile } = useLoading(async () => {
     await updateOrgProfileApi.mutateAsync({
       orgName: orgNameValue,
-      orgShortCode
+      orgShortcode
     });
-    updateOrg(orgShortCode, { name: orgNameValue });
+    updateOrg(orgShortcode, { name: orgNameValue });
   });
 
   if (!adminLoading && !isAdmin) {
-    router.push(`/${orgShortCode}/settings`);
+    router.push(`/${orgShortcode}/settings`);
   }
 
   return (
