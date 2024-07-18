@@ -1,6 +1,6 @@
 import { TRPCError, initTRPC } from '@trpc/server';
 import superjson from 'superjson';
-import { validateOrgShortCode } from '~platform/utils/orgShortCode';
+import { validateOrgShortcode } from '~platform/utils/orgShortcode';
 import type { TrpcContext } from '~platform/ctx';
 import { z } from 'zod';
 import { env } from '~platform/env';
@@ -51,14 +51,14 @@ export const publicProcedure = trpcContext.procedure.use(
 export const accountProcedure = publicProcedure.use(isAccountAuthenticated);
 export const orgProcedure = publicProcedure
   .use(isAccountAuthenticated)
-  .input(z.object({ orgShortCode: z.string() }))
+  .input(z.object({ orgShortcode: z.string() }))
   .use(({ input, ctx, next }) =>
     ctx.event
       .get('otel')
-      .tracer.startActiveSpan(`Validate orgShortCode`, async (span) => {
-        const { orgShortCode } = input;
-        span.setAttribute('org.shortCode', orgShortCode);
-        const orgData = await validateOrgShortCode(orgShortCode);
+      .tracer.startActiveSpan(`Validate orgShortcode`, async (span) => {
+        const { orgShortcode } = input;
+        span.setAttribute('org.shortcode', orgShortcode);
+        const orgData = await validateOrgShortcode(orgShortcode);
 
         if (!orgData) {
           span.setAttributes({ 'org.found': false });

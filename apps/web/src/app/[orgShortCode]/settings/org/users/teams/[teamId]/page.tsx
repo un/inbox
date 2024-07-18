@@ -18,7 +18,7 @@ export default function Page({
 }: {
   params: { teamId: TypeId<'teams'> };
 }) {
-  const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
   const [editMode, setEditMode] = useState(false);
 
   const {
@@ -26,7 +26,7 @@ export default function Page({
     isLoading,
     refetch
   } = platform.org.users.teams.getTeam.useQuery({
-    orgShortCode,
+    orgShortcode,
     teamPublicId: params.teamId
   });
 

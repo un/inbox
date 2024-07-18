@@ -21,6 +21,8 @@ import {
   File
 } from '@phosphor-icons/react';
 import Link from 'next/link';
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { useDeleteConvo$Cache, useToggleConvoHidden$Cache } from '../../utils';
 import useAwaitableModal, {
   type ModalComponent
@@ -60,7 +62,7 @@ export default function TopBar({
   convoHidden: boolean | null;
   subjects: RouterOutputs['convos']['getConvo']['data']['subjects'] | undefined;
 }) {
-  const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
   const [ModalRoot, openDeleteModal] = useAwaitableModal(DeleteModal, {
     convoId,
     convoHidden
@@ -76,7 +78,7 @@ export default function TopBar({
             variant={'outline'}
             size={'icon-sm'}
             asChild>
-            <Link href={`/${orgShortCode}/convo`}>
+            <Link href={`/${orgShortcode}/convo`}>
               <CaretLeft size={16} />
             </Link>
           </Button>
@@ -101,7 +103,7 @@ export default function TopBar({
                 onClick={() => {
                   openDeleteModal({ convoHidden })
                     // Navigate to empty page on delete
-                    .then(() => router.push(`/${orgShortCode}/convo`))
+                    .then(() => router.push(`/${orgShortcode}/convo`))
                     // Do nothing if Hide is chosen or Modal is Closed
                     .catch(() => null);
                 }}>
@@ -118,7 +120,7 @@ export default function TopBar({
                 onClick={async () => {
                   await hideConvo.mutateAsync({
                     convoPublicId: convoId,
-                    orgShortCode,
+                    orgShortcode,
                     unhide: convoHidden ? true : undefined
                   });
                 }}>
@@ -165,7 +167,7 @@ function DeleteModal({
   convoId,
   convoHidden
 }: ModalComponent<{ convoId: TypeId<'convos'>; convoHidden: boolean | null }>) {
-  const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
   const hideConvo = platform.convos.hideConvo.useMutation();
   const deleteConvo = platform.convos.deleteConvo.useMutation();
   const removeConvoFromList = useDeleteConvo$Cache();
@@ -206,7 +208,7 @@ function DeleteModal({
               onClick={async () => {
                 await hideConvo.mutateAsync({
                   convoPublicId: convoId,
-                  orgShortCode
+                  orgShortcode
                 });
                 onClose();
               }}>
@@ -220,7 +222,7 @@ function DeleteModal({
             onClick={async () => {
               await deleteConvo.mutateAsync({
                 convoPublicId: convoId,
-                orgShortCode
+                orgShortcode
               });
               await removeConvoFromList(convoId);
               onResolve(null);

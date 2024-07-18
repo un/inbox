@@ -17,7 +17,7 @@ import {
 import { useState } from 'react';
 
 export function AddDomainModal() {
-  const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
   const invalidateDomains = platform.useUtils().org.mail.domains.getOrgDomains;
 
   const {
@@ -34,7 +34,7 @@ export function AddDomainModal() {
   const { data: canAddDomain, isLoading } =
     platform.org.iCanHaz.domain.useQuery(
       {
-        orgShortCode: orgShortCode
+        orgShortcode: orgShortcode
       },
       {
         staleTime: 1000
@@ -99,7 +99,7 @@ export function AddDomainModal() {
                   }
                   setInputError(null);
                   await createNewDomain({
-                    orgShortCode,
+                    orgShortcode,
                     domainName: domain
                   });
                 }}

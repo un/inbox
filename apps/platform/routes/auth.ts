@@ -19,7 +19,7 @@ authApi.get('/status', async (c) => {
 authApi.get('/redirection', async (c) => {
   const account = c.get('account');
   if (!account) {
-    return c.json({ defaultOrgShortCode: null }, 401);
+    return c.json({ defaultOrgShortcode: null }, 401);
   }
 
   const accountId = account.id;
@@ -45,7 +45,7 @@ authApi.get('/redirection', async (c) => {
   }
 
   return c.json({
-    defaultOrgShortCode:
+    defaultOrgShortcode:
       accountResponse?.orgMemberships[0]?.org?.shortcode || null
   });
 });

@@ -62,7 +62,7 @@ export function formatParticipantData(
 }
 
 export function useAddSingleConvo$Cache() {
-  const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
   const utils = platform.useUtils();
   const convoListApi = utils.convos.getOrgMemberConvos;
   const getOrgMemberSpecificConvoApi = utils.convos.getOrgMemberSpecificConvo;
@@ -71,9 +71,9 @@ export function useAddSingleConvo$Cache() {
     async (convoId: TypeId<'convos'>) => {
       const convo = await getOrgMemberSpecificConvoApi.fetch({
         convoPublicId: convoId,
-        orgShortCode
+        orgShortcode
       });
-      convoListApi.setInfiniteData({ orgShortCode }, (updater) => {
+      convoListApi.setInfiniteData({ orgShortcode }, (updater) => {
         if (!updater) return;
         // If convo already exists in the cache, don't add it again
         if (
@@ -88,12 +88,12 @@ export function useAddSingleConvo$Cache() {
         return clonedUpdater;
       });
     },
-    [convoListApi, getOrgMemberSpecificConvoApi, orgShortCode]
+    [convoListApi, getOrgMemberSpecificConvoApi, orgShortcode]
   );
 }
 
 export function useDeleteConvo$Cache() {
-  const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
   const convoListApi = platform.useUtils().convos.getOrgMemberConvos;
   const deleteFn = useCallback(
     (
@@ -120,25 +120,25 @@ export function useDeleteConvo$Cache() {
 
   return useCallback(
     async (convoId: TypeId<'convos'>) => {
-      await convoListApi.cancel({ orgShortCode });
-      await convoListApi.cancel({ orgShortCode, includeHidden: true });
+      await convoListApi.cancel({ orgShortcode });
+      await convoListApi.cancel({ orgShortcode, includeHidden: true });
 
-      convoListApi.setInfiniteData({ orgShortCode }, (updater) =>
+      convoListApi.setInfiniteData({ orgShortcode }, (updater) =>
         deleteFn(convoId, updater)
       );
       // deleteFn(convoId, updater)
       convoListApi.setInfiniteData(
-        { orgShortCode, includeHidden: true },
+        { orgShortcode, includeHidden: true },
         (updater) => deleteFn(convoId, updater)
       );
     },
-    [convoListApi, deleteFn, orgShortCode]
+    [convoListApi, deleteFn, orgShortcode]
   );
 }
 
 // TODO: Simplify this function later, its too complex
 export function useToggleConvoHidden$Cache() {
-  const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
   const utils = platform.useUtils();
   const convoApi = utils.convos.getConvo;
   const convoListApi = utils.convos.getOrgMemberConvos;
@@ -198,8 +198,8 @@ export function useToggleConvoHidden$Cache() {
 
   return useCallback(
     async (convoId: TypeId<'convos'>, hide = false) => {
-      await convoApi.cancel({ convoPublicId: convoId, orgShortCode });
-      convoApi.setData({ convoPublicId: convoId, orgShortCode }, (updater) => {
+      await convoApi.cancel({ convoPublicId: convoId, orgShortcode });
+      convoApi.setData({ convoPublicId: convoId, orgShortcode }, (updater) => {
         if (!updater) return;
         const clonedUpdater = structuredClone(updater);
         const participantIndex = clonedUpdater.data.participants.findIndex(
@@ -213,16 +213,16 @@ export function useToggleConvoHidden$Cache() {
 
       const convoToAdd = await specificConvoApi.fetch({
         convoPublicId: convoId,
-        orgShortCode
+        orgShortcode
       });
 
       // Update both hidden and non-hidden convo lists
-      await convoListApi.cancel({ orgShortCode, includeHidden: true });
-      await convoListApi.cancel({ orgShortCode });
+      await convoListApi.cancel({ orgShortcode, includeHidden: true });
+      await convoListApi.cancel({ orgShortcode });
 
       // if we are hiding a convo, we need to remove it from the non-hidden list and add to hidden list
       if (hide) {
-        convoListApi.setInfiniteData({ orgShortCode }, (updater) =>
+        convoListApi.setInfiniteData({ orgShortcode }, (updater) =>
           convoListUpdaterFn(
             /* hide from non-hidden */ true,
             null,
@@ -231,7 +231,7 @@ export function useToggleConvoHidden$Cache() {
           )
         );
         convoListApi.setInfiniteData(
-          { orgShortCode, includeHidden: true },
+          { orgShortcode, includeHidden: true },
           (updater) =>
             convoListUpdaterFn(
               /* add from hidden */ false,
@@ -242,7 +242,7 @@ export function useToggleConvoHidden$Cache() {
         );
       } else {
         // if we are un-hiding a convo, we need to remove it from the hidden list and add to non-hidden list
-        convoListApi.setInfiniteData({ orgShortCode }, (updater) =>
+        convoListApi.setInfiniteData({ orgShortcode }, (updater) =>
           convoListUpdaterFn(
             /* add to non-hidden */ false,
             convoToAdd,
@@ -251,7 +251,7 @@ export function useToggleConvoHidden$Cache() {
           )
         );
         convoListApi.setInfiniteData(
-          { orgShortCode, includeHidden: true },
+          { orgShortcode, includeHidden: true },
           (updater) =>
             convoListUpdaterFn(
               /* hide from hidden */ true,
@@ -262,12 +262,12 @@ export function useToggleConvoHidden$Cache() {
         );
       }
     },
-    [convoApi, convoListApi, convoListUpdaterFn, orgShortCode, specificConvoApi]
+    [convoApi, convoListApi, convoListUpdaterFn, orgShortcode, specificConvoApi]
   );
 }
 
 export function useUpdateConvoMessageList$Cache() {
-  const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
   const utils = platform.useUtils();
   const convoEntiresApi = utils.convos.entries.getConvoEntries;
   const singleConvoEntryApi = utils.convos.entries.getConvoSingleEntry;
@@ -278,14 +278,14 @@ export function useUpdateConvoMessageList$Cache() {
       convoId: TypeId<'convos'>,
       convoEntryPublicId: TypeId<'convoEntries'>
     ) => {
-      await convoEntiresApi.cancel({ convoPublicId: convoId, orgShortCode });
+      await convoEntiresApi.cancel({ convoPublicId: convoId, orgShortcode });
       const convo = await singleConvoEntryApi.fetch({
         convoPublicId: convoId,
         convoEntryPublicId,
-        orgShortCode
+        orgShortcode
       });
       convoEntiresApi.setInfiniteData(
-        { convoPublicId: convoId, orgShortCode },
+        { convoPublicId: convoId, orgShortcode },
         (updater) => {
           if (!updater) return;
           // If convo entry already exists in the cache, don't add it again
@@ -304,6 +304,6 @@ export function useUpdateConvoMessageList$Cache() {
         }
       );
     },
-    [convoEntiresApi, orgShortCode, singleConvoEntryApi]
+    [convoEntiresApi, orgShortcode, singleConvoEntryApi]
   );
 }

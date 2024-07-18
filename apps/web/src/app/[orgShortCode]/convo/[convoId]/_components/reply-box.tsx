@@ -36,7 +36,7 @@ export function ReplyBox({ convoId }: { convoId: TypeId<'convos'> }) {
   const [editorText, setEditorText] = useState<JSONContent>(
     emptyTiptapEditorContent
   );
-  const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
   const replyTo = useAtomValue(replyToMessageAtom);
   const addConvoToCache = useUpdateConvoMessageList$Cache();
   const editorRef = useRef<EditorType | null>(null);
@@ -70,11 +70,11 @@ export function ReplyBox({ convoId }: { convoId: TypeId<'convos'> }) {
 
   const { data: emailIdentities, isLoading: emailIdentitiesLoading } =
     platform.org.mail.emailIdentities.getUserEmailIdentities.useQuery({
-      orgShortCode
+      orgShortcode
     });
   const { data: isAdmin } =
     platform.org.users.members.isOrgMemberAdmin.useQuery({
-      orgShortCode
+      orgShortcode
     });
 
   useEffect(() => {
@@ -189,7 +189,7 @@ export function ReplyBox({ convoId }: { convoId: TypeId<'convos'> }) {
                 setLoadingType('comment');
                 const { publicId } = await replyToConvoMutation.mutateAsync({
                   attachments: getTrpcUploadFormat(),
-                  orgShortCode,
+                  orgShortcode,
                   message: stringify(editorText),
                   replyToMessagePublicId: replyTo,
                   messageType: 'comment'
@@ -212,7 +212,7 @@ export function ReplyBox({ convoId }: { convoId: TypeId<'convos'> }) {
                 setLoadingType('message');
                 const { publicId } = await replyToConvoMutation.mutateAsync({
                   attachments: getTrpcUploadFormat(),
-                  orgShortCode,
+                  orgShortcode,
                   message: stringify(editorText),
                   replyToMessagePublicId: replyTo,
                   messageType: 'message',

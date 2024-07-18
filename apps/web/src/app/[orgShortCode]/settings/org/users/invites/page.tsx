@@ -7,10 +7,10 @@ import { columns } from './_components/columns';
 import { InviteModal } from './_components/invite-modal';
 
 export default function Page() {
-  const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
   const { data: inviteList, isLoading } =
     platform.org.users.invites.viewInvites.useQuery({
-      orgShortCode
+      orgShortcode
     });
 
   return (

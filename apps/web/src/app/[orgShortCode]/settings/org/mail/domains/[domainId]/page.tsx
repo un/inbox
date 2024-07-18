@@ -26,14 +26,14 @@ export default function Page({
 }: {
   params: { domainId: TypeId<'domains'> };
 }) {
-  const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
 
   const {
     data: domainInfo,
     isLoading,
     refetch
   } = platform.org.mail.domains.getDomain.useQuery({
-    orgShortCode,
+    orgShortcode,
     domainPublicId: params.domainId
   });
 
@@ -44,7 +44,7 @@ export default function Page({
     error: dnsError,
     isRefetching: isRecheckingDNS
   } = platform.org.mail.domains.getDomainDns.useQuery({
-    orgShortCode,
+    orgShortcode,
     domainPublicId: params.domainId
   });
 

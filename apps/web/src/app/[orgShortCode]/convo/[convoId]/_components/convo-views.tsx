@@ -12,13 +12,13 @@ import { env } from '@/src/env';
 import { usePageTitle } from '@/src/hooks/use-page-title';
 
 export function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
-  const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
   const {
     data: convoData,
     isLoading: convoDataLoading,
     error: convoError
   } = platform.convos.getConvo.useQuery({
-    orgShortCode,
+    orgShortcode,
     convoPublicId: convoId
   });
 
@@ -30,11 +30,11 @@ export function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
       .filter((f) => !f.inline)
       .map((attachment) => ({
         name: attachment.fileName,
-        url: `${env.NEXT_PUBLIC_STORAGE_URL}/attachment/${orgShortCode}/${attachment.publicId}/${attachment.fileName}`,
+        url: `${env.NEXT_PUBLIC_STORAGE_URL}/attachment/${orgShortcode}/${attachment.publicId}/${attachment.fileName}`,
         type: attachment.type,
         publicId: attachment.publicId
       }));
-  }, [convoData, orgShortCode]);
+  }, [convoData, orgShortcode]);
 
   const participantOwnPublicId = convoData?.ownParticipantPublicId;
   const convoHidden = useMemo(
@@ -94,7 +94,7 @@ export function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
 }
 
 export function ConvoNotFound() {
-  const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
   usePageTitle('Convo Not Found');
 
   return (
@@ -105,7 +105,7 @@ export function ConvoNotFound() {
           The convo you are looking for does not exist. Please check the URL and
           try again.
         </span>
-        <Link href={`/${orgShortCode}/convo`}>
+        <Link href={`/${orgShortcode}/convo`}>
           <Button>Go back to Convos</Button>
         </Link>
       </div>

@@ -12,7 +12,7 @@ type Props = {
 };
 
 export function ConvoList(props: Props) {
-  const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
 
   const {
     data: convos,
@@ -22,7 +22,7 @@ export function ConvoList(props: Props) {
     isFetchingNextPage
   } = platform.convos.getOrgMemberConvos.useInfiniteQuery(
     {
-      orgShortCode,
+      orgShortcode,
       includeHidden: props.hidden ? true : undefined
     },
     {

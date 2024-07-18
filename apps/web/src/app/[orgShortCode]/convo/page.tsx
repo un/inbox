@@ -4,7 +4,7 @@ import { useGlobalStore } from '@/src/providers/global-store-provider';
 import Link from 'next/link';
 
 export default function Page() {
-  const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
 
   return (
     <div className="flex h-full w-full flex-col items-center justify-center gap-2 p-4">
@@ -12,7 +12,7 @@ export default function Page() {
         Select a Convo from Sidebar or Create a New One
       </span>
       <Button asChild>
-        <Link href={`/${orgShortCode}/convo/new`}>Create New Convo</Link>
+        <Link href={`/${orgShortcode}/convo/new`}>Create New Convo</Link>
       </Button>
     </div>
   );

@@ -19,7 +19,7 @@ export function ClaimAddressModal({
 }: ModalComponent<{ address: string }>) {
   const [isClaiming, setIsClaiming] = useState(false);
   const currentOrgName = useGlobalStore((state) => state.currentOrg.name);
-  const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
 
   const { mutateAsync: claimAddressConfirm } =
     platform.account.addresses.claimPersonalAddress.useMutation({
@@ -82,7 +82,7 @@ export function ClaimAddressModal({
               setIsClaiming(true);
               claimAddressConfirm({
                 emailIdentity: address,
-                orgShortCode
+                orgShortcode
               })
                 .then(() => {
                   onResolve(null);

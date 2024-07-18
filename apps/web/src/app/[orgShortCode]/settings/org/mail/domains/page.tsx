@@ -7,10 +7,10 @@ import { columns } from './_components/columns';
 import { AddDomainModal } from './_components/add-domain-modal';
 
 export default function Page() {
-  const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
   const { data: domainList, isLoading } =
     platform.org.mail.domains.getOrgDomains.useQuery({
-      orgShortCode
+      orgShortcode
     });
 
   return (
@@ -28,7 +28,7 @@ export default function Page() {
           columns={columns}
           data={domainList.domainData ?? []}
           linkTo={(row) =>
-            `/${orgShortCode}/settings/org/mail/domains/${row.publicId}`
+            `/${orgShortcode}/settings/org/mail/domains/${row.publicId}`
           }
         />
       )}

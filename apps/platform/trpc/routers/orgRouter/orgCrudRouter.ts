@@ -12,7 +12,7 @@ import { typeIdGenerator } from '@u22n/utils/typeid';
 import { TRPCError } from '@trpc/server';
 import { blockedUsernames, reservedUsernames } from '~platform/utils/signup';
 
-async function validateOrgShortCode(
+async function validateOrgShortcode(
   db: DBType,
   shortcode: string
 ): Promise<{
@@ -49,7 +49,7 @@ async function validateOrgShortCode(
 }
 
 export const crudRouter = router({
-  checkShortCodeAvailability: accountProcedure
+  checkShortcodeAvailability: accountProcedure
     .input(
       z.object({
         shortcode: z
@@ -62,14 +62,14 @@ export const crudRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      return await validateOrgShortCode(ctx.db, input.shortcode);
+      return await validateOrgShortcode(ctx.db, input.shortcode);
     }),
 
   createNewOrg: accountProcedure
     .input(
       z.object({
         orgName: z.string().min(3).max(32),
-        orgShortCode: z
+        orgShortcode: z
           .string()
           .min(5)
           .max(64)
@@ -82,9 +82,9 @@ export const crudRouter = router({
       const { db, account } = ctx;
       const accountId = account.id;
 
-      const shortcodeAvailability = await validateOrgShortCode(
+      const shortcodeAvailability = await validateOrgShortcode(
         db,
-        input.orgShortCode
+        input.orgShortcode
       );
 
       if (!shortcodeAvailability.available) {
@@ -99,7 +99,7 @@ export const crudRouter = router({
       const insertOrgResponse = await db.insert(orgs).values({
         ownerId: accountId,
         name: input.orgName,
-        shortcode: input.orgShortCode,
+        shortcode: input.orgShortcode,
         publicId: newPublicId
       });
       const orgId = +insertOrgResponse.insertId;
@@ -184,13 +184,13 @@ export const crudRouter = router({
         }
       });
 
-      const adminOrgShortCodes = orgMembersQuery
+      const adminOrgShortcodes = orgMembersQuery
         .filter((orgMember) => orgMember.role === 'admin')
         .map((orgMember) => orgMember.org.shortcode);
 
       return {
         userOrgs: orgMembersQuery,
-        adminOrgShortCodes: adminOrgShortCodes
+        adminOrgShortcodes: adminOrgShortcodes
       };
     })
 });

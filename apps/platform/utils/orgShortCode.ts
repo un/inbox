@@ -4,17 +4,17 @@ import { orgs } from '@u22n/database/schema';
 import type { OrgContext } from '~platform/ctx';
 import { storage } from '~platform/storage';
 
-export async function validateOrgShortCode(orgShortCode: string) {
-  if (!orgShortCode) return null;
+export async function validateOrgShortcode(orgShortcode: string) {
+  if (!orgShortcode) return null;
 
-  const cachedShortCodeOrgContext =
-    await storage.orgContext.getItem(orgShortCode);
-  if (cachedShortCodeOrgContext) {
-    return cachedShortCodeOrgContext;
+  const cachedShortcodeOrgContext =
+    await storage.orgContext.getItem(orgShortcode);
+  if (cachedShortcodeOrgContext) {
+    return cachedShortcodeOrgContext;
   }
 
   const orgLookupResult = await db.query.orgs.findFirst({
-    where: eq(orgs.shortcode, orgShortCode),
+    where: eq(orgs.shortcode, orgShortcode),
     columns: { id: true, publicId: true, name: true },
     with: {
       members: {
@@ -38,11 +38,11 @@ export async function validateOrgShortCode(orgShortCode: string) {
     name: orgLookupResult.name
   };
 
-  await storage.orgContext.setItem(orgShortCode, orgContext);
+  await storage.orgContext.setItem(orgShortcode, orgContext);
   return orgContext;
 }
 
-export async function refreshOrgShortCodeCache(orgId: number) {
+export async function refreshOrgShortcodeCache(orgId: number) {
   const orgLookupResult = await db.query.orgs.findFirst({
     where: eq(orgs.id, orgId),
     columns: { id: true, publicId: true, shortcode: true, name: true },

@@ -16,10 +16,10 @@ type Props = {
 };
 
 export function EditMemberList({ teamId, existingMembers, complete }: Props) {
-  const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
   const { data: allMembers, isLoading } =
     platform.org.users.members.getOrgMembers.useQuery({
-      orgShortCode
+      orgShortcode
     });
   const { mutateAsync: saveList } =
     platform.org.users.teams.updateTeamMembers.useMutation();
@@ -70,7 +70,7 @@ export function EditMemberList({ teamId, existingMembers, complete }: Props) {
         className="w-fit"
         onClick={async () => {
           await saveList({
-            orgShortCode,
+            orgShortcode,
             teamPublicId: teamId,
             orgMemberPublicIds: selectedMembers
           });

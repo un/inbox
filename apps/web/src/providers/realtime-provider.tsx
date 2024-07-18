@@ -13,7 +13,7 @@ import { env } from '../env';
 const realtimeContext = createContext<RealtimeClient | null>(null);
 
 export function RealtimeProvider({ children }: PropsWithChildren) {
-  const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
 
   const [client] = useState(
     () =>
@@ -26,7 +26,7 @@ export function RealtimeProvider({ children }: PropsWithChildren) {
   );
 
   useEffect(() => {
-    void client.connect({ orgShortCode }).catch(() => {
+    void client.connect({ orgShortcode }).catch(() => {
       toast.error(
         'UnInbox encountered an error while trying to connect to the realtime server'
       );
@@ -34,7 +34,7 @@ export function RealtimeProvider({ children }: PropsWithChildren) {
     return () => {
       client.disconnect();
     };
-  }, [client, orgShortCode]);
+  }, [client, orgShortcode]);
 
   return (
     <realtimeContext.Provider value={client}>

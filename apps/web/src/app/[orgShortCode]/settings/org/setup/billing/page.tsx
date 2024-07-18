@@ -12,15 +12,15 @@ import { PageTitle } from '../../../_components/page-title';
 import { Skeleton } from '@/src/components/shadcn-ui/skeleton';
 
 export default function Page() {
-  const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
   const { data, isLoading } =
     platform.org.setup.billing.getOrgBillingOverview.useQuery({
-      orgShortCode
+      orgShortcode
     });
 
   const { data: portalLink } =
     platform.org.setup.billing.getOrgStripePortalLink.useQuery(
-      { orgShortCode },
+      { orgShortcode },
       {
         enabled: data?.currentPlan === 'pro'
       }

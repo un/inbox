@@ -14,10 +14,11 @@ export function OriginalMessageView({
   setOpen: (open: boolean) => void;
   messagePublicId: TypeId<'convoEntries'>;
 }) {
-  const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+
   const { data, isLoading, error } =
     platform.convos.entries.getConvoSingleEntryRawEmail.useQuery({
-      orgShortCode,
+      orgShortcode: orgShortcode,
       convoEntryPublicId: messagePublicId
     });
 
@@ -98,6 +99,7 @@ const OriginalMessageIframe = memo(
 
     return (
       <iframe
+        title="Raw Email"
         ref={frameRef}
         onLoad={onLoad}
         className="w-full"

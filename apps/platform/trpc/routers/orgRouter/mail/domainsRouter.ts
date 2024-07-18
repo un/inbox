@@ -29,7 +29,7 @@ export const domainsRouter = router({
       const iCanHazCaller = iCanHazCallerFactory(ctx);
 
       const canHazDomain = await iCanHazCaller.domain({
-        orgShortCode: input.orgShortCode
+        orgShortcode: input.orgShortcode
       });
       if (!canHazDomain) {
         throw new TRPCError({

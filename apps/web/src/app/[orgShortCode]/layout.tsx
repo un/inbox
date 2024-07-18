@@ -12,17 +12,17 @@ import { ClaimEmailIdentity } from './_components/claim-email-identity';
 
 export default function Layout({
   children,
-  params: { orgShortCode }
-}: Readonly<{ children: React.ReactNode; params: { orgShortCode: string } }>) {
+  params: { orgShortcode }
+}: Readonly<{ children: React.ReactNode; params: { orgShortcode: string } }>) {
   const {
     data: storeData,
     isLoading: storeDataLoading,
     error: storeError
-  } = platform.org.store.getStoreData.useQuery({ orgShortCode });
+  } = platform.org.store.getStoreData.useQuery({ orgShortcode });
 
   const { data: hasEmailIdentity } =
     platform.org.mail.emailIdentities.userHasEmailIdentities.useQuery({
-      orgShortCode
+      orgShortcode
     });
 
   if (storeDataLoading) {
@@ -56,8 +56,8 @@ export default function Layout({
         <h1 className="text-red-11 text-2xl font-bold">Invalid Org</h1>
 
         <span className="whitespace-pre text-xl">
-          Org with ShortCode{' '}
-          <span className="font-mono underline">{orgShortCode}</span> either
+          Org with Shortcode{' '}
+          <span className="font-mono underline">{orgShortcode}</span> either
           does not exists or you are not part of that org!
         </span>
 

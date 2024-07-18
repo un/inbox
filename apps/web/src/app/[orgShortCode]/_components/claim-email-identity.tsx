@@ -11,7 +11,7 @@ import { useGlobalStore } from '@/src/providers/global-store-provider';
 import Link from 'next/link';
 
 export function ClaimEmailIdentity() {
-  const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
+  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
   return (
     // This dialog should be opened when it is mounted
     <Dialog defaultOpen>
@@ -37,7 +37,7 @@ export function ClaimEmailIdentity() {
           </DialogClose>
           <DialogClose asChild>
             <Button asChild>
-              <Link href={`/${orgShortCode}/settings/user/addresses`}>
+              <Link href={`/${orgShortcode}/settings/user/addresses`}>
                 Claim Free @uninbox.me Address
               </Link>
             </Button>

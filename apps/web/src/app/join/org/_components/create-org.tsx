@@ -25,22 +25,22 @@ export default function CreateOrgButton({
   hasInviteCode: boolean;
 }) {
   const [orgName, setOrgName] = useState('');
-  const [orgShortCode, setOrgShortCode] = useState('');
-  const [customShortCode, setCustomShortCode] = useState(false);
+  const [orgShortcode, setOrgShortcode] = useState('');
+  const [customShortcode, setCustomShortcode] = useState(false);
   const router = useRouter();
 
-  const debouncedOrgShortCode = useDebounce(orgShortCode, 1000);
-  const checkOrgShortCodeApi =
-    platform.useUtils().org.crud.checkShortCodeAvailability;
+  const debouncedOrgShortcode = useDebounce(orgShortcode, 1000);
+  const checkOrgShortcodeApi =
+    platform.useUtils().org.crud.checkShortcodeAvailability;
   const createOrgApi = platform.org.crud.createNewOrg.useMutation();
 
   const {
-    loading: orgShortCodeDataLoading,
-    data: orgShortCodeData,
-    error: orgShortCodeError,
-    run: checkOrgShortCode
+    loading: orgShortcodeDataLoading,
+    data: orgShortcodeData,
+    error: orgShortcodeError,
+    run: checkOrgShortcode
   } = useLoading(async (signal) => {
-    if (!debouncedOrgShortCode) return;
+    if (!debouncedOrgShortcode) return;
     const parsed = z
       .string()
       .min(5)
@@ -48,7 +48,7 @@ export default function CreateOrgButton({
       .regex(/^[a-z0-9]*$/, {
         message: 'Only lowercase letters and numbers'
       })
-      .safeParse(debouncedOrgShortCode);
+      .safeParse(debouncedOrgShortcode);
 
     if (!parsed.success) {
       return {
@@ -56,8 +56,8 @@ export default function CreateOrgButton({
         available: false
       };
     }
-    return await checkOrgShortCodeApi.fetch(
-      { shortcode: debouncedOrgShortCode },
+    return await checkOrgShortcodeApi.fetch(
+      { shortcode: debouncedOrgShortcode },
       { signal }
     );
   });
@@ -67,32 +67,32 @@ export default function CreateOrgButton({
     error: createOrgError,
     run: createOrg
   } = useLoading(async () => {
-    if (!orgShortCodeData?.available) return;
+    if (!orgShortcodeData?.available) return;
     await createOrgApi.mutateAsync({
       orgName,
-      orgShortCode: debouncedOrgShortCode
+      orgShortcode: debouncedOrgShortcode
     });
     toast.success('Organization created successfully.');
-    router.push(`/join/profile?org=${debouncedOrgShortCode}`);
+    router.push(`/join/profile?org=${debouncedOrgShortcode}`);
   });
 
   useEffect(() => {
-    if (customShortCode) return;
-    setOrgShortCode(orgName?.toLowerCase().replace(/[^a-z0-9]/g, '') || '');
-  }, [orgName, customShortCode]);
+    if (customShortcode) return;
+    setOrgShortcode(orgName?.toLowerCase().replace(/[^a-z0-9]/g, '') || '');
+  }, [orgName, customShortcode]);
 
   useEffect(() => {
-    checkOrgShortCode({ clearData: true, clearError: true });
+    checkOrgShortcode({ clearData: true, clearError: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedOrgShortCode]);
+  }, [debouncedOrgShortcode]);
 
   return (
     <Dialog
       onOpenChange={(open) => {
         if (!open) {
           setOrgName('');
-          setOrgShortCode('');
-          setCustomShortCode(false);
+          setOrgShortcode('');
+          setCustomShortcode(false);
         }
       }}>
       <DialogTrigger asChild>
@@ -117,22 +117,22 @@ export default function CreateOrgButton({
           <label>
             <div className="text-sm font-bold">Organization Short Code</div>
             <Input
-              value={orgShortCode}
+              value={orgShortcode}
               onChange={(e) => {
-                setOrgShortCode(e.target.value);
-                setCustomShortCode(true);
+                setOrgShortcode(e.target.value);
+                setCustomShortcode(true);
               }}
             />
           </label>
-          {!orgShortCodeData && orgShortCodeDataLoading && (
+          {!orgShortcodeData && orgShortcodeDataLoading && (
             <div className="text-muted-foreground text-sm font-bold">
               Checking...
             </div>
           )}
 
-          {orgShortCodeData && !orgShortCodeDataLoading && (
+          {orgShortcodeData && !orgShortcodeDataLoading && (
             <div className="flex items-center gap-1">
-              {orgShortCodeData.available ? (
+              {orgShortcodeData.available ? (
                 <Check
                   size={16}
                   className="text-green-10"
@@ -147,18 +147,18 @@ export default function CreateOrgButton({
               <div
                 className={cn(
                   'text-sm font-bold',
-                  orgShortCodeData.available ? 'text-green-10' : 'text-red-10'
+                  orgShortcodeData.available ? 'text-green-10' : 'text-red-10'
                 )}>
-                {orgShortCodeData.available
+                {orgShortcodeData.available
                   ? 'Looks good!'
-                  : orgShortCodeData.error}
+                  : orgShortcodeData.error}
               </div>
             </div>
           )}
 
-          {orgShortCodeError && !orgShortCodeDataLoading && (
+          {orgShortcodeError && !orgShortcodeDataLoading && (
             <div className="text-red-10 text-sm font-bold">
-              {orgShortCodeError.message}
+              {orgShortcodeError.message}
             </div>
           )}
 
@@ -169,7 +169,7 @@ export default function CreateOrgButton({
           )}
 
           <Button
-            disabled={!orgShortCodeData?.available || createOrgLoading}
+            disabled={!orgShortcodeData?.available || createOrgLoading}
             loading={createOrgLoading}
             className="mt-4"
             onClick={() => createOrg()}>
