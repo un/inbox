@@ -53,14 +53,14 @@ export const storeRouter = router({
       ({ org, profile }) => ({
         name: org.name,
         publicId: org.publicId,
-        shortCode: org.shortcode,
+        shortcode: org.shortcode,
         avatarTimestamp: org.avatarTimestamp,
         orgMemberProfile: profile
       })
     );
 
     const currentOrg = orgsTransformed.find(
-      (o) => o.shortCode === input.orgShortCode
+      (o) => o.shortcode === input.orgShortcode
     );
 
     if (!currentOrg) {

@@ -46,7 +46,7 @@ export const defaultsRouter = router({
       const userHasOrgMembership = accountResponse.orgMemberships.length > 0;
 
       return {
-        defaultOrgShortCode:
+        defaultOrgShortcode:
           accountResponse?.orgMemberships[0]?.org?.shortcode || null,
         twoFactorEnabledCorrectly: twoFactorEnabledCorrectly,
         userHasOrgMembership: userHasOrgMembership,

@@ -20,7 +20,7 @@ export default async function middleware(req: NextRequest) {
       const redirectData = await getAuthRedirection().catch(() => null);
       if (redirectData) {
         return NextResponse.redirect(
-          new URL(redirectData.defaultOrgShortCode ?? '/join/org', req.nextUrl)
+          new URL(redirectData.defaultOrgShortcode ?? '/join/org', req.nextUrl)
         );
       }
     } else {

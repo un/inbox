@@ -121,7 +121,7 @@ export default function InviteCard({ code }: { code: string }) {
                 </Avatar>
                 <div className="flex flex-col">
                   <div className="text-xs font-bold">{inviteData.orgName}</div>
-                  <div className="text-xs">{inviteData.orgShortCode}</div>
+                  <div className="text-xs">{inviteData.orgShortcode}</div>
                 </div>
               </div>
             </div>

@@ -2,7 +2,7 @@ import { type TypeId } from '@u22n/utils/typeid';
 import { createStore } from 'zustand/vanilla';
 
 type Org = {
-  shortCode: string;
+  shortcode: string;
   name: string;
   publicId: TypeId<'org'>;
   avatarTimestamp: Date | null;
@@ -28,9 +28,9 @@ export type GlobalStoreState = {
 };
 
 export type GlobalStoreActions = {
-  setCurrentOrg: (shortCode: string) => void;
+  setCurrentOrg: (shortcode: string) => void;
   addOrg: (...orgs: Org[]) => void;
-  updateOrg: (shortCode: string, data: Partial<Org>) => void;
+  updateOrg: (shortcode: string, data: Partial<Org>) => void;
 };
 
 export type GlobalStore = GlobalStoreState & GlobalStoreActions;
@@ -38,19 +38,19 @@ export type GlobalStore = GlobalStoreState & GlobalStoreActions;
 export const createGlobalStore = (initState: GlobalStoreState) =>
   createStore<GlobalStore>()((set) => ({
     ...initState,
-    setCurrentOrg: (shortCode: string) =>
+    setCurrentOrg: (shortcode: string) =>
       set((state) => ({
-        currentOrg: state.orgs.find((org) => org.shortCode === shortCode)
+        currentOrg: state.orgs.find((org) => org.shortcode === shortcode)
       })),
     addOrg: (...orgs: Org[]) =>
       set((state) => ({ orgs: state.orgs.concat(orgs) })),
-    updateOrg: (shortCode: string, data: Partial<Org>) =>
+    updateOrg: (shortcode: string, data: Partial<Org>) =>
       set((state) => ({
         orgs: state.orgs.map((org) =>
-          org.shortCode === shortCode ? { ...org, ...data } : org
+          org.shortcode === shortcode ? { ...org, ...data } : org
         ),
         currentOrg:
-          state.currentOrg.shortCode === shortCode
+          state.currentOrg.shortcode === shortcode
             ? { ...state.currentOrg, ...data }
             : state.currentOrg
       }))
