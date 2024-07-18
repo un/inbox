@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { router, orgProcedure } from '~platform/trpc/trpc';
+import { router, orgProcedure, orgAdminProcedure } from '~platform/trpc/trpc';
 import {
   and,
   eq,
@@ -87,7 +87,7 @@ export const emailIdentityRouter = router({
         available: true
       };
     }),
-  createNewEmailIdentity: orgProcedure
+  createNewEmailIdentity: orgAdminProcedure
     .input(
       z.object({
         emailUsername: z.string().min(1).max(255),
@@ -118,14 +118,6 @@ export const emailIdentityRouter = router({
       } = input;
 
       const emailUsername = input.emailUsername.toLowerCase();
-
-      const isAdmin = await isAccountAdminOfOrg(org);
-      if (!isAdmin) {
-        throw new TRPCError({
-          code: 'UNAUTHORIZED',
-          message: 'You are not an admin'
-        });
-      }
 
       if (!routeToOrgMemberPublicIds && !routeToTeamsPublicIds) {
         throw new TRPCError({
