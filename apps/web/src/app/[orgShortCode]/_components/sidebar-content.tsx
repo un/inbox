@@ -59,7 +59,7 @@ export default function SidebarContent() {
   return (
     <div
       className={cn(
-        'bg-slate-3 border-slate-5 z-40 flex h-full w-full min-w-56 resize-x flex-col items-start gap-4 rounded-2xl border p-2'
+        'bg-slate-3 border-slate-5 z-[1] flex h-full w-full min-w-56 resize-x flex-col items-start gap-4 rounded-2xl border p-2'
       )}>
       <OrgMenu />
       <div
