@@ -8,7 +8,7 @@ import { useEffect, useState } from 'react';
 import { cn, generateAvatarUrl } from '@/src/lib/utils';
 import useLoading from '@/src/hooks/use-loading';
 import { Camera, Checks, SkipForward } from '@phosphor-icons/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import useAwaitableModal from '@/src/hooks/use-awaitable-modal';
 import { Input } from '@/src/components/shadcn-ui/input';
@@ -31,6 +31,8 @@ export function ProfileCard({ orgData, wasInvited }: ProfileCardProps) {
   );
 
   const router = useRouter();
+  const query = useSearchParams();
+  const orgShortCode = query.get('org');
 
   const {
     error: avatarError,
@@ -62,7 +64,6 @@ export function ProfileCard({ orgData, wasInvited }: ProfileCardProps) {
       profilePublicId: orgData.profile.publicId,
       title: orgData.profile.title ?? ''
     });
-    router.push('/');
   });
 
   useEffect(() => {
@@ -70,6 +71,14 @@ export function ProfileCard({ orgData, wasInvited }: ProfileCardProps) {
       toast.error(saveError.message);
     }
   }, [saveError]);
+
+  const handleSkip = () => {
+    router.push(`/${orgShortCode}`);
+  };
+  const handleSave = () => {
+    saveProfile({ clearData: true, clearError: true });
+    router.push(`/${orgShortCode}`);
+  };
 
   return (
     <div className="mx-auto flex w-full max-w-[560px] flex-col gap-3 px-4">
@@ -135,7 +144,7 @@ export function ProfileCard({ orgData, wasInvited }: ProfileCardProps) {
           <Button
             className="flex-1"
             variant="secondary"
-            onClick={() => router.push('/')}>
+            onClick={handleSkip}>
             Skip
             <SkipForward size={16} />
           </Button>
@@ -143,7 +152,7 @@ export function ProfileCard({ orgData, wasInvited }: ProfileCardProps) {
             className="flex-1"
             disabled={!firstNameValue || !lastNameValue}
             loading={saveLoading}
-            onClick={() => saveProfile({ clearData: true, clearError: true })}>
+            onClick={handleSave}>
             Next
             <Checks size={16} />
           </Button>
