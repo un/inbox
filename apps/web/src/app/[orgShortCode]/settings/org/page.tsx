@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { Camera, FloppyDisk } from '@phosphor-icons/react';
 import { platform } from '@/src/lib/trpc';
@@ -13,6 +13,9 @@ import { AvatarModal } from '@/src/components/shared/avatar-modal';
 import { PageTitle } from '../_components/page-title';
 import { Skeleton } from '@/src/components/shadcn-ui/skeleton';
 import { Input } from '@/src/components/shadcn-ui/input';
+import { useDebounce } from '@uidotdev/usehooks';
+import { z } from 'zod';
+import { Check, Plus } from '@phosphor-icons/react';
 
 export default function ProfileComponent() {
   const router = useRouter();
@@ -26,6 +29,45 @@ export default function ProfileComponent() {
     });
 
   const [orgNameValue, setOrgNameValue] = useState<string>(currentOrg.name);
+  const [orgShortCodeValue, setOrgShortCodeValue] = useState<string>(
+    currentOrg.shortCode
+  );
+
+  const debouncedOrgShortCode = useDebounce(orgShortCodeValue, 500);
+  const checkOrgShortCodeApi =
+    api.useUtils().org.crud.checkShortCodeAvailability;
+
+  const {
+    loading: orgShortCodeDataLoading,
+    data: orgShortCodeData,
+    error: orgShortCodeError,
+    run: checkOrgShortCode
+  } = useLoading(async (signal) => {
+    if (!debouncedOrgShortCode) return;
+    //set to initial state
+    if (debouncedOrgShortCode === orgShortCode) {
+      return null;
+    }
+    const parsed = z
+      .string()
+      .min(5)
+      .max(64)
+      .regex(/^[a-z0-9]*$/, {
+        message: 'Only lowercase letters and numbers'
+      })
+      .safeParse(debouncedOrgShortCode);
+
+    if (!parsed.success) {
+      return {
+        error: parsed.error.issues[0]?.message ?? null,
+        available: null
+      };
+    }
+    return await checkOrgShortCodeApi.fetch(
+      { shortcode: debouncedOrgShortCode },
+      { signal }
+    );
+  });
 
   const avatarUrl = useMemo(() => {
     return generateAvatarUrl({
@@ -57,14 +99,24 @@ export default function ProfileComponent() {
   const { loading: saveLoading, run: saveOrgProfile } = useLoading(async () => {
     await updateOrgProfileApi.mutateAsync({
       orgName: orgNameValue,
-      orgShortCode
+      orgShortCode,
+      orgShortCodeNew: orgShortCodeValue
     });
-    updateOrg(orgShortCode, { name: orgNameValue });
+    updateOrg(orgShortCode, {
+      name: orgNameValue,
+      shortCode: orgShortCodeValue
+    });
   });
 
   if (!adminLoading && !isAdmin) {
     router.push(`/${orgShortCode}/settings`);
   }
+
+  useEffect(() => {
+    if (!debouncedOrgShortCode) return;
+    checkOrgShortCode({ clearData: true, clearError: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedOrgShortCode]);
 
   return (
     <div className="flex h-full w-full flex-col items-start gap-4 overflow-y-auto p-4">
@@ -108,8 +160,62 @@ export default function ProfileComponent() {
           </label>
         </div>
 
+        <div className="flex flex-row gap-2">
+          <label>
+            <span>Organization Short Code</span>
+            <Input
+              value={orgShortCodeValue}
+              onChange={(e) => setOrgShortCodeValue(e.target.value)}
+            />
+          </label>
+        </div>
+
+        {!orgShortCodeData && orgShortCodeDataLoading && (
+          <div className="text-muted-foreground text-sm font-bold">
+            Checking...
+          </div>
+        )}
+
+        {orgShortCodeData && !orgShortCodeDataLoading && (
+          <div className="flex items-center gap-1">
+            {orgShortCodeData.available ? (
+              <Check
+                size={16}
+                className="text-green-10"
+              />
+            ) : (
+              <Plus
+                size={16}
+                className="text-red-10 rotate-45"
+              />
+            )}
+
+            <div
+              className={cn(
+                'text-sm font-bold',
+                orgShortCodeData.available ? 'text-green-10' : 'text-red-10'
+              )}>
+              {orgShortCodeData.available
+                ? 'Looks good!'
+                : orgShortCodeData.error}
+            </div>
+          </div>
+        )}
+
+        {orgShortCodeError && !orgShortCodeDataLoading && (
+          <div className="text-red-10 text-sm font-bold">
+            {orgShortCodeError.message}
+          </div>
+        )}
+
         <Button
+          className="w-48"
           loading={saveLoading}
+          disabled={
+            (!orgShortCodeData?.available &&
+              currentOrg.name === orgNameValue) ||
+            saveLoading
+          }
           onClick={() => saveOrgProfile({ clearData: true, clearError: true })}>
           <FloppyDisk size={20} />
           Save
