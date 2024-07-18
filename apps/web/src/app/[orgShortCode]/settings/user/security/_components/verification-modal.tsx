@@ -6,7 +6,7 @@ import {
 import { PasswordInput } from '@/src/components/password-input';
 import { type ModalComponent } from '@/src/hooks/use-awaitable-modal';
 import useLoading from '@/src/hooks/use-loading';
-import { api } from '@/src/lib/trpc';
+import { platform } from '@/src/lib/trpc';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { Badge } from '@/src/components/shadcn-ui/badge';
 import { Separator } from '@/src/components/shadcn-ui/separator';
@@ -31,9 +31,9 @@ export function VerificationModal({
   string
 >) {
   const getPasskeyVerificationChallenge =
-    api.useUtils().account.security.generatePasskeyVerificationChallenge;
+    platform.useUtils().account.security.generatePasskeyVerificationChallenge;
   const getVerificationToken =
-    api.useUtils().account.security.getVerificationToken;
+    platform.useUtils().account.security.getVerificationToken;
 
   const [password, setPassword] = useState('');
   const [otp, setOtp] = useState('');

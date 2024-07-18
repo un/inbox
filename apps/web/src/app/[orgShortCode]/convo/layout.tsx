@@ -33,7 +33,7 @@ import {
 import { usePathname } from 'next/navigation';
 import { useAtom } from 'jotai';
 import { showNewConvoPanel } from './atoms';
-import { api } from '@/src/lib/trpc';
+import { platform } from '@/src/lib/trpc';
 import { OrgIssueAlerts } from './_components/org-issue-alerts';
 
 export default function Layout({
@@ -44,7 +44,7 @@ export default function Layout({
   const isMobile = useIsMobile();
   const [showHidden, setShowHidden] = useState(false);
   const { data: issueData, refetch: refetchIssues } =
-    api.org.store.getOrgIssues.useQuery({
+    platform.org.store.getOrgIssues.useQuery({
       orgShortCode
     });
 

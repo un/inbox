@@ -2,7 +2,7 @@
 
 import { Button } from '@/src/components/shadcn-ui/button';
 import { AvatarModal } from '@/src/components/shared/avatar-modal';
-import { type RouterOutputs, api } from '@/src/lib/trpc';
+import { type RouterOutputs, platform } from '@/src/lib/trpc';
 import Stepper from '../../_components/stepper';
 import { useEffect, useState } from 'react';
 import { cn, generateAvatarUrl } from '@/src/lib/utils';
@@ -48,7 +48,7 @@ export function ProfileCard({ orgData, wasInvited }: ProfileCardProps) {
   });
 
   const updateProfileApi =
-    api.account.profile.updateOrgMemberProfile.useMutation();
+    platform.account.profile.updateOrgMemberProfile.useMutation();
   const {
     loading: saveLoading,
     error: saveError,

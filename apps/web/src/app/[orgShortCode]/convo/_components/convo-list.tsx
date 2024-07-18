@@ -1,6 +1,6 @@
 'use client';
 
-import { api } from '@/src/lib/trpc';
+import { platform } from '@/src/lib/trpc';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { useCallback } from 'react';
 import { Virtuoso } from 'react-virtuoso';
@@ -20,7 +20,7 @@ export function ConvoList(props: Props) {
     isLoading,
     hasNextPage,
     isFetchingNextPage
-  } = api.convos.getOrgMemberConvos.useInfiniteQuery(
+  } = platform.convos.getOrgMemberConvos.useInfiniteQuery(
     {
       orgShortCode,
       includeHidden: props.hidden ? true : undefined

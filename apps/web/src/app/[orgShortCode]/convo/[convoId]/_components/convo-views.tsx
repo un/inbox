@@ -1,4 +1,4 @@
-import { api } from '@/src/lib/trpc';
+import { platform } from '@/src/lib/trpc';
 import Link from 'next/link';
 import { type TypeId } from '@u22n/utils/typeid';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
@@ -17,7 +17,7 @@ export function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
     data: convoData,
     isLoading: convoDataLoading,
     error: convoError
-  } = api.convos.getConvo.useQuery({
+  } = platform.convos.getConvo.useQuery({
     orgShortCode,
     convoPublicId: convoId
   });

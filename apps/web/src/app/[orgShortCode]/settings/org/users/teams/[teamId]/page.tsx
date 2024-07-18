@@ -2,7 +2,7 @@
 
 import { Button } from '@/src/components/shadcn-ui/button';
 import { DataTable } from '@/src/components/shared/table';
-import { api } from '@/src/lib/trpc';
+import { platform } from '@/src/lib/trpc';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { ArrowLeft } from '@phosphor-icons/react';
 import { columns } from './_components/columns';
@@ -25,7 +25,7 @@ export default function Page({
     data: teamInfo,
     isLoading,
     refetch
-  } = api.org.users.teams.getTeam.useQuery({
+  } = platform.org.users.teams.getTeam.useQuery({
     orgShortCode,
     teamPublicId: params.teamId
   });

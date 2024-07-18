@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { api } from '@/src/lib/trpc';
+import { platform } from '@/src/lib/trpc';
 import { VerificationModal } from './_components/verification-modal';
 import { DeletePasskeyModal } from './_components/delete-modals';
 import {
@@ -32,7 +32,7 @@ export default function Page() {
     data: initData,
     isLoading: isInitDataLoading,
     refetch: refreshSecurityData
-  } = api.account.security.getSecurityOverview.useQuery({});
+  } = platform.account.security.getSecurityOverview.useQuery({});
 
   const [verificationToken, setVerificationToken] = useState<null | string>(
     null
@@ -92,9 +92,9 @@ export default function Page() {
   // );
 
   const fetchPasskeyChallengeApi =
-    api.useUtils().account.security.generateNewPasskeyChallenge;
+    platform.useUtils().account.security.generateNewPasskeyChallenge;
   const { mutateAsync: addNewPasskey } =
-    api.account.security.addNewPasskey.useMutation({
+    platform.account.security.addNewPasskey.useMutation({
       onSuccess: () => {
         void refreshSecurityData();
       },
@@ -127,7 +127,7 @@ export default function Page() {
   );
 
   const { mutateAsync: logoutSingle } =
-    api.account.security.deleteSession.useMutation();
+    platform.account.security.deleteSession.useMutation();
 
   async function waitForVerification() {
     if (!initData) throw new Error('No init data');
@@ -144,7 +144,7 @@ export default function Page() {
   const {
     mutate: disableLegacySecurity,
     isPending: isDisablingLegacySecurity
-  } = api.account.security.disableLegacySecurity.useMutation({
+  } = platform.account.security.disableLegacySecurity.useMutation({
     onError: (err) => {
       toast.error('Something went wrong while disabling Legacy Security', {
         description: err.message

@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@/src/components/shadcn-ui/button';
-import { api } from '@/src/lib/trpc';
+import { platform } from '@/src/lib/trpc';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { useState } from 'react';
 import { PricingTable } from './_components/plans-table';
@@ -14,12 +14,12 @@ import { Skeleton } from '@/src/components/shadcn-ui/skeleton';
 export default function Page() {
   const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
   const { data, isLoading } =
-    api.org.setup.billing.getOrgBillingOverview.useQuery({
+    platform.org.setup.billing.getOrgBillingOverview.useQuery({
       orgShortCode
     });
 
   const { data: portalLink } =
-    api.org.setup.billing.getOrgStripePortalLink.useQuery(
+    platform.org.setup.billing.getOrgStripePortalLink.useQuery(
       { orgShortCode },
       {
         enabled: data?.currentPlan === 'pro'

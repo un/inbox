@@ -36,7 +36,7 @@ export const sendMailRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const { config, db } = ctx;
-      const localMode = config.MAILBRIDGE_POSTAL_LOCAL_MODE;
+      const localMode = config.MAILBRIDGE_LOCAL_MODE;
 
       if (localMode) {
         return {

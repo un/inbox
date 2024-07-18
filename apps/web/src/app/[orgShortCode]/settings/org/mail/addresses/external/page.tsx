@@ -1,6 +1,6 @@
 'use client';
 
-import { api } from '@/src/lib/trpc';
+import { platform } from '@/src/lib/trpc';
 import { useForm } from '@tanstack/react-form';
 import { Input } from '@/src/components/shadcn-ui/input';
 import {
@@ -25,9 +25,9 @@ import { ArrowLeft } from '@phosphor-icons/react';
 export default function Page() {
   const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
   const invalidateEmails =
-    api.useUtils().org.mail.emailIdentities.getOrgEmailIdentities;
+    platform.useUtils().org.mail.emailIdentities.getOrgEmailIdentities;
   const { mutateAsync: checkSMTPConnection } =
-    api.org.mail.emailIdentities.external.validateExternalSmtpCredentials.useMutation();
+    platform.org.mail.emailIdentities.external.validateExternalSmtpCredentials.useMutation();
 
   const [error, setError] = useState<string | null>(null);
 
@@ -37,7 +37,7 @@ export default function Page() {
     mutateAsync: createExternalEmailIdentity,
     error: emailIdentityError
   } =
-    api.org.mail.emailIdentities.external.createNewExternalIdentity.useMutation(
+    platform.org.mail.emailIdentities.external.createNewExternalIdentity.useMutation(
       {
         onSuccess: () => {
           void invalidateEmails.invalidate();
@@ -93,12 +93,12 @@ export default function Page() {
   });
 
   const { data: orgMembers, isLoading: orgMembersLoading } =
-    api.org.users.members.getOrgMembers.useQuery({
+    platform.org.users.members.getOrgMembers.useQuery({
       orgShortCode
     });
 
   const { data: orgTeams, isLoading: orgTeamsLoading } =
-    api.org.users.teams.getOrgTeams.useQuery({ orgShortCode });
+    platform.org.users.teams.getOrgTeams.useQuery({ orgShortCode });
 
   return (
     <div className="flex w-full flex-col gap-2 p-4">

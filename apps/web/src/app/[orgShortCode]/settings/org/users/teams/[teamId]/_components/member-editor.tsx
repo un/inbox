@@ -4,7 +4,7 @@
 
 import { Button } from '@/src/components/shadcn-ui/button';
 import { MultiSelect } from '@/src/components/shared/multiselect';
-import { api } from '@/src/lib/trpc';
+import { platform } from '@/src/lib/trpc';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { type TypeId } from '@u22n/utils/typeid';
 import { useState, useEffect } from 'react';
@@ -18,11 +18,11 @@ type Props = {
 export function EditMemberList({ teamId, existingMembers, complete }: Props) {
   const orgShortCode = useGlobalStore((state) => state.currentOrg.shortCode);
   const { data: allMembers, isLoading } =
-    api.org.users.members.getOrgMembers.useQuery({
+    platform.org.users.members.getOrgMembers.useQuery({
       orgShortCode
     });
   const { mutateAsync: saveList } =
-    api.org.users.teams.updateTeamMembers.useMutation();
+    platform.org.users.teams.updateTeamMembers.useMutation();
 
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
 

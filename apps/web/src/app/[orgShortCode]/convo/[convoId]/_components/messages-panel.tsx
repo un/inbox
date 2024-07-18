@@ -1,6 +1,6 @@
 'use client';
 
-import { type RouterOutputs, api } from '@/src/lib/trpc';
+import { type RouterOutputs, platform } from '@/src/lib/trpc';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,7 +50,7 @@ export function MessagesPanel({
   const [, setReplyTo] = useAtom(replyToMessageAtom);
 
   const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } =
-    api.convos.entries.getConvoEntries.useInfiniteQuery(
+    platform.convos.entries.getConvoEntries.useInfiniteQuery(
       {
         convoPublicId: convoId,
         orgShortCode

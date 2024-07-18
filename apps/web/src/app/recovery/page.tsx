@@ -16,7 +16,7 @@ import {
 import { type FieldApi, useForm } from '@tanstack/react-form';
 import { zodValidator } from '@tanstack/zod-form-adapter';
 import { zodSchemas } from '@u22n/utils/zodSchemas';
-import { api } from '@/src/lib/trpc';
+import { platform } from '@/src/lib/trpc';
 import { z } from 'zod';
 import useAwaitableModal from '@/src/hooks/use-awaitable-modal';
 import { useRouter } from 'next/navigation';
@@ -41,7 +41,7 @@ function FieldInfo({ field }: { field: FieldApi<any, any, any, any> }) {
 
 export default function Page() {
   const recoveryVerificationTokenApi =
-    api.useUtils().auth.recovery.getRecoveryVerificationToken;
+    platform.useUtils().auth.recovery.getRecoveryVerificationToken;
 
   const router = useRouter();
 

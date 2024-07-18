@@ -5,7 +5,7 @@ import { GlobalStoreProvider } from '@/src/providers/global-store-provider';
 import { buttonVariants } from '@/src/components/shadcn-ui/button';
 import { SpinnerGap } from '@phosphor-icons/react';
 import Link from 'next/link';
-import { api } from '@/src/lib/trpc';
+import { platform } from '@/src/lib/trpc';
 import { RealtimeProvider } from '@/src/providers/realtime-provider';
 import { NewConvoSheet } from './convo/_components/new-convo-sheet';
 import { ClaimEmailIdentity } from './_components/claim-email-identity';
@@ -18,10 +18,10 @@ export default function Layout({
     data: storeData,
     isLoading: storeDataLoading,
     error: storeError
-  } = api.org.store.getStoreData.useQuery({ orgShortCode });
+  } = platform.org.store.getStoreData.useQuery({ orgShortCode });
 
   const { data: hasEmailIdentity } =
-    api.org.mail.emailIdentities.userHasEmailIdentities.useQuery({
+    platform.org.mail.emailIdentities.userHasEmailIdentities.useQuery({
       orgShortCode
     });
 
