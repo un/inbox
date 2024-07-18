@@ -33,7 +33,7 @@ export default function Page({
 
   const { data: orgData, isLoading: orgDataLoading } =
     platform.account.profile.getOrgMemberProfile.useQuery({
-      orgShortCode: searchParams.org
+      orgShortcode: searchParams.org
     });
 
   if (orgDataLoading) {

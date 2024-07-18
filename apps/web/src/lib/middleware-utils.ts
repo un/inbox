@@ -8,11 +8,11 @@ function getBaseUrl() {
 }
 
 export async function getAuthRedirection() {
-  if (!cookies().has('unsession')) return { defaultOrgShortCode: null };
+  if (!cookies().has('unsession')) return { defaultOrgShortcode: null };
   return fetch(`${getBaseUrl()}/auth/redirection`, {
     headers: nextHeaders()
-  }).then((r) => (r.ok ? r.json() : { defaultOrgShortCode: null })) as Promise<{
-    defaultOrgShortCode: string | null;
+  }).then((r) => (r.ok ? r.json() : { defaultOrgShortcode: null })) as Promise<{
+    defaultOrgShortcode: string | null;
   }>;
 }
 

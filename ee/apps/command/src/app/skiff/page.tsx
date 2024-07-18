@@ -7,9 +7,9 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 
 export default function Page() {
-  const [orgShortCode, setOrgShortCode] = useState<string>('');
+  const [orgShortcode, setOrgShortcode] = useState<string>('');
   const { data, error, isLoading, refetch } = api.orgs.getOrgData.useQuery(
-    { orgShortCode },
+    { orgShortcode },
     { enabled: false }
   );
   const { isPending, mutateAsync } = api.orgs.addSkiffOffer.useMutation({
@@ -27,8 +27,8 @@ export default function Page() {
       <h1 className="text-2xl font-bold">Skiff Offer</h1>
       <div className="flex w-fit gap-2">
         <Input
-          value={orgShortCode}
-          onChange={(e) => setOrgShortCode(e.target.value)}
+          value={orgShortcode}
+          onChange={(e) => setOrgShortcode(e.target.value)}
           placeholder="Enter Org Shortcode"
         />
         <Button

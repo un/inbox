@@ -47,7 +47,7 @@ export const profileRouter = router({
     .input(
       z.object({
         orgPublicId: typeIdValidator('org').optional(),
-        orgShortCode: z.string().min(1).max(32).optional()
+        orgShortcode: z.string().min(1).max(32).optional()
       })
     )
     .query(async ({ ctx, input }) => {
@@ -55,12 +55,12 @@ export const profileRouter = router({
       const accountId = account.id;
 
       let orgId: number | null = null;
-      if (input.orgPublicId || input.orgShortCode) {
+      if (input.orgPublicId || input.orgShortcode) {
         const orgQuery = await db.query.orgs.findFirst({
           where: input.orgPublicId
             ? eq(orgs.publicId, input.orgPublicId)
-            : input.orgShortCode
-              ? eq(orgs.shortcode, input.orgShortCode)
+            : input.orgShortcode
+              ? eq(orgs.shortcode, input.orgShortcode)
               : eq(orgs.id, 0),
           columns: {
             id: true
@@ -68,7 +68,7 @@ export const profileRouter = router({
         });
         orgId = orgQuery?.id || null;
       }
-      if ((input.orgPublicId || input.orgShortCode) && !orgId) {
+      if ((input.orgPublicId || input.orgShortcode) && !orgId) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message:

@@ -65,13 +65,13 @@ export default function Page() {
 
   const handleLogin = async (values: z.infer<typeof loginSchema>) => {
     try {
-      const { status, defaultOrgShortCode } = await login(values);
+      const { status, defaultOrgShortcode } = await login(values);
       if (status === 'NO_2FA_SETUP') {
-        if (!defaultOrgShortCode) {
+        if (!defaultOrgShortcode) {
           router.push('/join/org');
         } else {
           router.push(
-            `/${defaultOrgShortCode}/settings/user/security?code=NO_2FA_SETUP`
+            `/${defaultOrgShortcode}/settings/user/security?code=NO_2FA_SETUP`
           );
         }
       } else {

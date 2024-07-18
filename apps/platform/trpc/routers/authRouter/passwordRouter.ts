@@ -131,7 +131,7 @@ export const passwordRouter = router({
     .output(
       z.object({
         status: z.enum(['NO_2FA_SETUP', '2FA_REQUIRED']),
-        defaultOrgShortCode: z.string().optional()
+        defaultOrgShortcode: z.string().optional()
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -207,7 +207,7 @@ export const passwordRouter = router({
         );
         return {
           status: '2FA_REQUIRED',
-          defaultOrgShortCode: userResponse.orgMemberships[0]?.org.shortcode
+          defaultOrgShortcode: userResponse.orgMemberships[0]?.org.shortcode
         };
       } else {
         await createLuciaSessionCookie(ctx.event, {
@@ -217,7 +217,7 @@ export const passwordRouter = router({
         });
         return {
           status: 'NO_2FA_SETUP',
-          defaultOrgShortCode: userResponse.orgMemberships[0]?.org.shortcode
+          defaultOrgShortcode: userResponse.orgMemberships[0]?.org.shortcode
         };
       }
     }),
