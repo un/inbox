@@ -4,8 +4,8 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch --clear-screen=false app.ts",
-    "start": "node --import=tsx app.ts",
-    "build": "echo 'No Build Step Needed'",
+    "start": "node .output/app.js",
+    "build": "tsup",
     "check": "tsc --noEmit"
   },
   "exports": {
@@ -47,6 +47,7 @@
     "@types/jsdom": "^21.1.7",
     "@types/node": "^20.14.10",
     "@types/nodemailer": "^6.4.15",
+    "tsup": "^8.1.2",
     "tsx": "^4.16.2"
   }
 }

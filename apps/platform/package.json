@@ -4,8 +4,8 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch --clear-screen=false app.ts",
-    "start": "node --import=tsx app.ts",
-    "build": "echo 'No Build Step Needed'",
+    "start": "node .output/app.js",
+    "build": "tsup",
     "check": "tsc --noEmit"
   },
   "exports": {
@@ -41,6 +41,7 @@
     "@simplewebauthn/types": "^9.0.1",
     "@types/node": "^20.14.10",
     "@uninbox-ee/billing": "workspace:^",
+    "tsup": "^8.1.2",
     "tsx": "^4.16.2",
     "typescript": "5.5.3"
   }

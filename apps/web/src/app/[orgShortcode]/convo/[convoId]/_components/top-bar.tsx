@@ -21,9 +21,7 @@ import {
   File
 } from '@phosphor-icons/react';
 import Link from 'next/link';
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { useDeleteConvo$Cache, useToggleConvoHidden$Cache } from '../../utils';
+import { useDeleteConvo$Cache } from '../../utils';
 import useAwaitableModal, {
   type ModalComponent
 } from '@/src/hooks/use-awaitable-modal';
