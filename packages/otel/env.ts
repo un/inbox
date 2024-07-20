@@ -3,7 +3,13 @@ import { z } from 'zod';
 
 export const env = createEnv({
   server: {
-    OTEL_ENABLED: z.coerce.boolean().default(false),
+    OTEL_ENABLED: z
+      .string()
+      .optional()
+      .transform((v) => v === 'true'),
+    OTEL_EXPORTER_TRACES_ENDPOINT: z.string().url().optional(),
+    OTEL_EXPORTER_LOGS_ENDPOINT: z.string().url().optional(),
+    OTEL_EXPORTER_METRICS_ENDPOINT: z.string().url().optional(),
     NODE_ENV: z.enum(['development', 'production']).default('development')
   },
   runtimeEnv: process.env

@@ -1,8 +1,8 @@
 {
   "name": "@u22n/web",
-  "version": "0.1.0",
   "private": true,
   "type": "module",
+  "version": "0.0.0-dev",
   "scripts": {
     "dev": "PORT=3000 next dev --turbo",
     "build": "next build && cp -r .next/static .next/standalone/apps/web/.next",
@@ -41,9 +41,10 @@
     "@tanstack/react-query": "^5.51.1",
     "@tanstack/react-table": "^8.19.2",
     "@tanstack/zod-form-adapter": "^0.19.5",
-    "@trpc/client": "11.0.0-rc.413",
-    "@trpc/react-query": "11.0.0-rc.413",
-    "@trpc/server": "11.0.0-rc.413",
+    "@trpc/client": "11.0.0-rc.466",
+    "@trpc/react-query": "11.0.0-rc.466",
+    "@trpc/server": "11.0.0-rc.466",
+    "@u22n/otel": "workspace:^",
     "@u22n/platform": "workspace:^",
     "@u22n/realtime": "workspace:^",
     "@u22n/tiptap": "workspace:^",

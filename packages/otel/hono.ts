@@ -1,56 +1,31 @@
-import {
-  type Context as HonoContext,
-  createMiddleware
-} from '@u22n/hono/helpers';
-import { trace, type Tracer } from '@opentelemetry/api';
+import { getTracer, inActiveSpan } from './helpers';
+import { createMiddleware } from '@u22n/hono/helpers';
 
-export type Otel = {
-  tracer: Tracer;
-};
+function formatHeaders(headers: Record<string, string> | Headers) {
+  return Object.entries(headers).map(([key, value]) => `${key}: ${value}`);
+}
 
-type HonoEnvContext = {
-  Variables: {
-    otel: Otel;
-  };
-};
-
-const formatRequest = (req: HonoContext<HonoEnvContext>['req']) => ({
-  'req.headers': JSON.stringify(req.header()),
-  'req.query': JSON.stringify(req.query())
-});
-
-const formatError = (error: Error) => ({
-  'error.name': error.name,
-  'error.message': error.message,
-  'error.stack': error.stack
-});
-
-const formatResponse = (res: HonoContext<HonoEnvContext>['res']) => ({
-  'res.status': res.status,
-  'res.headers': JSON.stringify(res.headers)
-});
-
-export const otel = () => {
-  const tracer = trace.getTracer('hono');
-  const openTelemetryMiddleware = createMiddleware<HonoEnvContext>(
-    async (c, next) => {
-      trace
-        .getActiveSpan()
-        ?.updateName(`HTTP Request ${c.req.method} ${c.req.path}`);
+export function opentelemetry(name?: string) {
+  const { startActiveSpan } = getTracer(name ?? 'hono');
+  return createMiddleware<{ Variables: { requestId: string } }>((c, next) =>
+    inActiveSpan(async (parent) => {
+      parent?.updateName(`HTTP ${c.req.method} ${c.req.path}`);
       if (c.req.method === 'OPTIONS') return next();
-
-      return tracer.startActiveSpan(`Hono Handler`, async (span) => {
-        span.setAttributes(formatRequest(c.req));
-        c.set('otel', { tracer });
-        await next().catch((e) => {
-          if (e instanceof Error) span.setAttributes(formatError(e));
+      return startActiveSpan(`Hono Handler`, async (span) => {
+        span?.addEvent('hono.start');
+        span?.setAttributes({
+          'hono.req.headers': formatHeaders(c.req.header())
         });
-        if (c.error) span.setAttributes(formatError(c.error));
-        span.setAttributes(formatResponse(c.res));
-        span.end();
+        await next().catch((e) => {
+          if (e instanceof Error) span?.recordException(e);
+          throw e;
+        });
+        span?.setAttributes({
+          'hono.res.status': c.res.status,
+          'hono.res.headers': formatHeaders(c.res.headers)
+        });
+        span?.addEvent('hono.end');
       });
-    }
+    })
   );
-
-  return openTelemetryMiddleware;
-};
+}

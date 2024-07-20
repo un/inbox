@@ -2,9 +2,10 @@
   "name": "@u22n/mail-bridge",
   "private": true,
   "type": "module",
+  "version": "0.0.0-dev",
   "scripts": {
-    "dev": "tsx watch --clear-screen=false app.ts",
-    "start": "node .output/app.js",
+    "dev": "tsx watch --clear-screen=false --import ./tracing.ts app.ts",
+    "start": "node --import ./.output/tracing.js .output/app.js",
     "build": "tsup",
     "check": "tsc --noEmit"
   },
@@ -15,8 +16,8 @@
   },
   "dependencies": {
     "@t3-oss/env-core": "^0.10.1",
-    "@trpc/client": "11.0.0-rc.413",
-    "@trpc/server": "11.0.0-rc.413",
+    "@trpc/client": "11.0.0-rc.466",
+    "@trpc/server": "11.0.0-rc.466",
     "@u22n/database": "workspace:*",
     "@u22n/hono": "workspace:^",
     "@u22n/mailtools": "^0.1.2",

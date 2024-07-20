@@ -1,4 +1,3 @@
-import './tracing';
 import type { Ctx, TrpcContext } from './ctx';
 import { env } from './env';
 import {
@@ -16,12 +15,12 @@ import { realtimeApi } from './routes/realtime';
 import { trpcPlatformRouter } from './trpc';
 import { db } from '@u22n/database';
 import { authMiddleware, serviceMiddleware } from './middlewares';
-import { otel } from '@u22n/otel/hono';
+import { opentelemetry } from '@u22n/otel/hono';
 import { servicesApi } from './routes/services';
 
 const app = createHonoApp<Ctx>();
 
-app.use(otel());
+app.use(opentelemetry('platform/hono'));
 
 setupRouteLogger(app, env.NODE_ENV === 'development');
 setupCors(app, { origin: [env.WEBAPP_URL], exposeHeaders: ['Location'] });
