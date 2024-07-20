@@ -314,17 +314,30 @@ function OrgMenu() {
                   }}>
                   <ToggleGroupItem
                     value="light"
-                    aria-label="Toggle light mode">
+                    aria-label="Toggle light mode"
+                    className={
+                      theme === 'light'
+                        ? 'border-slate-7 rounded-md border'
+                        : ''
+                    }>
                     <Sun className={'h-4 w-4'} />
                   </ToggleGroupItem>
                   <ToggleGroupItem
                     value="dark"
-                    aria-label="Toggle dark mode">
+                    aria-label="Toggle dark mode"
+                    className={
+                      theme === 'dark' ? 'border-slate-7 rounded-md border' : ''
+                    }>
                     <MoonStars className={'h-4 w-4'} />
                   </ToggleGroupItem>
                   <ToggleGroupItem
                     value="system"
-                    aria-label="Toggle system default">
+                    aria-label="Toggle system default"
+                    className={
+                      theme === 'system'
+                        ? 'border-slate-7 rounded-md border'
+                        : ''
+                    }>
                     <Monitor className={'h-4 w-4'} />
                   </ToggleGroupItem>
                 </ToggleGroup>
