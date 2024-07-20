@@ -1,5 +1,7 @@
-import type { Context as HonoContext } from 'hono';
-import { createMiddleware } from 'hono/factory';
+import {
+  type Context as HonoContext,
+  createMiddleware
+} from '@u22n/hono/helpers';
 import { trace, type Tracer } from '@opentelemetry/api';
 
 export type Otel = {

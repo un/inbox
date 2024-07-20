@@ -1,17 +1,17 @@
 import { z } from 'zod';
-import { Hono } from 'hono';
 import { env } from '../env';
 import { s3Client } from '../s3';
 import { db } from '@u22n/database';
 import { and, eq } from '@u22n/database/orm';
 import { typeIdValidator } from '@u22n/utils/typeid';
-import { zValidator } from '@hono/zod-validator';
 import { GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { convoAttachments, orgMembers, orgs } from '@u22n/database/schema';
 import type { Ctx } from '../ctx';
+import { createHonoApp } from '@u22n/hono';
+import { zValidator } from '@u22n/hono/helpers';
 
-export const attachmentProxy = new Hono<Ctx>().get(
+export const attachmentProxy = createHonoApp<Ctx>().get(
   '/:orgShortcode/:attachmentId/:filename',
   zValidator(
     'param',

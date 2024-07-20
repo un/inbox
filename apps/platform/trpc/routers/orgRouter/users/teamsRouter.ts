@@ -4,7 +4,6 @@ import { eq, and } from '@u22n/database/orm';
 import { teams } from '@u22n/database/schema';
 import { typeIdGenerator, typeIdValidator } from '@u22n/utils/typeid';
 import { uiColors } from '@u22n/utils/colors';
-import { isAccountAdminOfOrg } from '../../../../utils/account';
 import { TRPCError } from '@trpc/server';
 import { addOrgMemberToTeamHandler } from './teamsHandler';
 

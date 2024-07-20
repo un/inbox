@@ -10,7 +10,7 @@ importers:
     devDependencies:
       '@types/node':
         specifier: ^20.14.10
-        version: 20.14.10
+        version: 20.14.11
       '@typescript-eslint/eslint-plugin':
         specifier: ^7.16.0
         version: 7.16.0(@typescript-eslint/parser@7.16.0(eslint@8.57.0)(typescript@5.5.3))(eslint@8.57.0)(typescript@5.5.3)
@@ -56,15 +56,6 @@ importers:
 
   apps/mail-bridge:
     dependencies:
-      '@hono/node-server':
-        specifier: ^1.12.0
-        version: 1.12.0
-      '@hono/trpc-server':
-        specifier: ^0.3.2
-        version: 0.3.2(@trpc/server@11.0.0-rc.413)(hono@4.4.13)
-      '@hono/zod-validator':
-        specifier: ^0.2.2
-        version: 0.2.2(hono@4.4.13)(zod@3.23.8)
       '@t3-oss/env-core':
         specifier: ^0.10.1
         version: 0.10.1(typescript@5.5.3)(zod@3.23.8)
@@ -74,12 +65,12 @@ importers:
       '@trpc/server':
         specifier: 11.0.0-rc.413
         version: 11.0.0-rc.413
-      '@types/mailparser':
-        specifier: ^3.4.4
-        version: 3.4.4
       '@u22n/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@u22n/hono':
+        specifier: workspace:^
+        version: link:../../packages/hono
       '@u22n/mailtools':
         specifier: ^0.1.2
         version: 0.1.2
@@ -107,9 +98,6 @@ importers:
       drizzle-orm:
         specifier: ^0.32.0
         version: 0.32.0(@opentelemetry/api@1.9.0)(@planetscale/database@1.18.0)(@types/react@18.3.3)(mysql2@3.10.2)(react@18.3.1)
-      hono:
-        specifier: ^4.4.13
-        version: 4.4.13
       jsdom:
         specifier: ^24.1.0
         version: 24.1.0
@@ -144,9 +132,12 @@ importers:
       '@types/jsdom':
         specifier: ^21.1.7
         version: 21.1.7
+      '@types/mailparser':
+        specifier: ^3.4.4
+        version: 3.4.4
       '@types/node':
         specifier: ^20.14.10
-        version: 20.14.10
+        version: 20.14.11
       '@types/nodemailer':
         specifier: ^6.4.15
         version: 6.4.15
@@ -159,15 +150,6 @@ importers:
 
   apps/platform:
     dependencies:
-      '@hono/node-server':
-        specifier: ^1.12.0
-        version: 1.12.0
-      '@hono/trpc-server':
-        specifier: ^0.3.2
-        version: 0.3.2(@trpc/server@11.0.0-rc.413)(hono@4.4.13)
-      '@hono/zod-validator':
-        specifier: ^0.2.2
-        version: 0.2.2(hono@4.4.13)(zod@3.23.8)
       '@simplewebauthn/server':
         specifier: ^9.0.3
         version: 9.0.3(encoding@0.1.13)
@@ -183,6 +165,9 @@ importers:
       '@u22n/database':
         specifier: workspace:^
         version: link:../../packages/database
+      '@u22n/hono':
+        specifier: workspace:^
+        version: link:../../packages/hono
       '@u22n/mail-bridge':
         specifier: workspace:^
         version: link:../mail-bridge
@@ -204,9 +189,6 @@ importers:
       '@unkey/ratelimit':
         specifier: ^0.3.1
         version: 0.3.1
-      hono:
-        specifier: ^4.4.13
-        version: 4.4.13
       lucia:
         specifier: ^3.2.0
         version: 3.2.0
@@ -231,7 +213,7 @@ importers:
         version: 9.0.1
       '@types/node':
         specifier: ^20.14.10
-        version: 20.14.10
+        version: 20.14.11
       '@uninbox-ee/billing':
         specifier: workspace:^
         version: link:../../ee/apps/billing
@@ -253,18 +235,15 @@ importers:
       '@aws-sdk/s3-request-presigner':
         specifier: ^3.614.0
         version: 3.614.0
-      '@hono/node-server':
-        specifier: ^1.12.0
-        version: 1.12.0
-      '@hono/zod-validator':
-        specifier: ^0.2.2
-        version: 0.2.2(hono@4.4.13)(zod@3.23.8)
       '@t3-oss/env-core':
         specifier: ^0.10.1
         version: 0.10.1(typescript@5.5.3)(zod@3.23.8)
       '@u22n/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@u22n/hono':
+        specifier: workspace:^
+        version: link:../../packages/hono
       '@u22n/otel':
         specifier: workspace:^
         version: link:../../packages/otel
@@ -274,9 +253,6 @@ importers:
       '@u22n/utils':
         specifier: workspace:*
         version: link:../../packages/utils
-      hono:
-        specifier: ^4.4.13
-        version: 4.4.13
       sharp:
         specifier: ^0.33.4
         version: 0.33.4
@@ -289,7 +265,7 @@ importers:
     devDependencies:
       '@types/node':
         specifier: ^20.14.10
-        version: 20.14.10
+        version: 20.14.11
       tsup:
         specifier: ^8.1.2
         version: 8.1.2(jiti@1.21.6)(postcss@8.4.39)(tsx@4.16.2)(typescript@5.5.3)(yaml@2.4.5)
@@ -506,7 +482,7 @@ importers:
         version: 3.0.0
       '@types/node':
         specifier: ^20.14.10
-        version: 20.14.10
+        version: 20.14.11
       '@types/qrcode':
         specifier: ^1.5.5
         version: 1.5.5
@@ -537,12 +513,6 @@ importers:
 
   apps/worker:
     dependencies:
-      '@hono/node-server':
-        specifier: ^1.12.0
-        version: 1.12.0
-      '@hono/trpc-server':
-        specifier: ^0.3.2
-        version: 0.3.2(@trpc/server@11.0.0-rc.421)(hono@4.4.13)
       '@t3-oss/env-core':
         specifier: ^0.10.1
         version: 0.10.1(typescript@5.5.3)(zod@3.23.8)
@@ -555,6 +525,9 @@ importers:
       '@u22n/database':
         specifier: workspace:^
         version: link:../../packages/database
+      '@u22n/hono':
+        specifier: workspace:^
+        version: link:../../packages/hono
       '@u22n/otel':
         specifier: workspace:^
         version: link:../../packages/otel
@@ -567,9 +540,6 @@ importers:
       cron:
         specifier: ^3.1.7
         version: 3.1.7
-      hono:
-        specifier: ^4.4.13
-        version: 4.4.13
       superjson:
         specifier: ^2.2.1
         version: 2.2.1
@@ -579,7 +549,7 @@ importers:
     devDependencies:
       '@types/node':
         specifier: ^20.14.10
-        version: 20.14.10
+        version: 20.14.11
       '@u22n/tsconfig':
         specifier: ^0.0.2
         version: 0.0.2
@@ -595,15 +565,6 @@ importers:
 
   ee/apps/billing:
     dependencies:
-      '@hono/node-server':
-        specifier: ^1.11.4
-        version: 1.12.0
-      '@hono/trpc-server':
-        specifier: ^0.3.2
-        version: 0.3.2(@trpc/server@11.0.0-rc.413)(hono@4.4.13)
-      '@hono/zod-validator':
-        specifier: ^0.2.2
-        version: 0.2.2(hono@4.4.13)(zod@3.23.8)
       '@t3-oss/env-core':
         specifier: ^0.10.1
         version: 0.10.1(typescript@5.5.2)(zod@3.23.8)
@@ -616,15 +577,15 @@ importers:
       '@u22n/database':
         specifier: workspace:*
         version: link:../../../packages/database
+      '@u22n/hono':
+        specifier: workspace:^
+        version: link:../../../packages/hono
       '@u22n/tsconfig':
         specifier: ^0.0.2
         version: 0.0.2
       '@u22n/utils':
         specifier: workspace:*
         version: link:../../../packages/utils
-      hono:
-        specifier: ^4.4.7
-        version: 4.4.13
       stripe:
         specifier: ^15.12.0
         version: 15.12.0
@@ -637,7 +598,7 @@ importers:
     devDependencies:
       '@types/node':
         specifier: ^20.14.6
-        version: 20.14.10
+        version: 20.14.11
       tsup:
         specifier: ^8.1.2
         version: 8.1.2(jiti@1.21.6)(postcss@8.4.39)(tsx@4.16.2)(typescript@5.5.2)(yaml@2.4.5)
@@ -716,7 +677,7 @@ importers:
     devDependencies:
       '@types/node':
         specifier: ^20
-        version: 20.14.10
+        version: 20.14.11
       '@types/qrcode':
         specifier: ^1.5.5
         version: 1.5.5
@@ -772,6 +733,31 @@ importers:
 
   packages/eslint-plugin: {}
 
+  packages/hono:
+    dependencies:
+      '@hono/node-server':
+        specifier: ^1.12.0
+        version: 1.12.0
+      '@hono/trpc-server':
+        specifier: ^0.3.2
+        version: 0.3.2(@trpc/server@11.0.0-rc.421)(hono@4.5.0)
+      '@hono/zod-validator':
+        specifier: ^0.2.2
+        version: 0.2.2(hono@4.5.0)(zod@3.23.8)
+      hono:
+        specifier: ^4.5.0
+        version: 4.5.0
+    devDependencies:
+      '@types/node':
+        specifier: ^20.14.11
+        version: 20.14.11
+      '@u22n/tsconfig':
+        specifier: ^0.0.2
+        version: 0.0.2
+      typescript:
+        specifier: ^5.5.3
+        version: 5.5.3
+
   packages/otel:
     dependencies:
       '@opentelemetry/api':
@@ -792,6 +778,9 @@ importers:
       '@t3-oss/env-core':
         specifier: ^0.10.1
         version: 0.10.1(typescript@5.5.3)(zod@3.23.8)
+      '@u22n/hono':
+        specifier: workspace:^
+        version: link:../hono
       zod:
         specifier: ^3.23.8
         version: 3.23.8
@@ -799,9 +788,6 @@ importers:
       '@u22n/tsconfig':
         specifier: ^0.0.2
         version: 0.0.2
-      hono:
-        specifier: ^4.4.13
-        version: 4.4.13
 
   packages/realtime:
     dependencies:
@@ -3793,8 +3779,8 @@ packages:
   '@types/node-fetch@2.6.11':
     resolution: {integrity: sha512-24xFj9R5+rfQJLRyM56qh+wnVSYhyXC2tkoBndtY0U+vubqNsYXGjufB2nn8Q6gt0LrARwL6UBtMCSVCwl4B1g==}
 
-  '@types/node@20.14.10':
-    resolution: {integrity: sha512-MdiXf+nDuMvY0gJKxyfZ7/6UFsETO7mGKF54MVD/ekJS6HdFtpZFBgrh6Pseu64XTb2MLyFPlbW6hj8HYRQNOQ==}
+  '@types/node@20.14.11':
+    resolution: {integrity: sha512-kprQpL8MMeszbz6ojB5/tU8PLN4kesnN8Gjzw349rDlNgsSzg90lAVj3llK99Dh7JON+t9AuscPPFW6mPbTnSA==}
 
   '@types/nodemailer@6.4.15':
     resolution: {integrity: sha512-0EBJxawVNjPkng1zm2vopRctuWVCxk34JcIlRuXSf54habUWdz1FB7wHDqOqvDa8Mtpt0Q3LTXQkAs2LNyK5jQ==}
@@ -4982,8 +4968,8 @@ packages:
     resolution: {integrity: sha512-F/1DnUGPopORZi0ni+CvrCgHQ5FyEAHRLSApuYWMmrbSwoN2Mn/7k+Gl38gJnR7yyDZk6WLXwiGod1JOWNDKGw==}
     hasBin: true
 
-  hono@4.4.13:
-    resolution: {integrity: sha512-c6qqenclmQ6wpXzqiElMa2jt423PVCmgBreDfC5s2lPPpGk7d0lOymd8QTzFZyYC5mSSs6imiTMPip+gLwuW/g==}
+  hono@4.5.0:
+    resolution: {integrity: sha512-ZbezypZfn4odyApjCCv+Fw5OgweBqRLA/EsMyc4FUknFvBJcBIKhHy4sqmD1rWpBc/3wUlaQ6tqOPjk36R1ckg==}
     engines: {node: '>=16.0.0'}
 
   html-encoding-sniffer@4.0.0:
@@ -7910,19 +7896,14 @@ snapshots:
 
   '@hono/node-server@1.12.0': {}
 
-  '@hono/trpc-server@0.3.2(@trpc/server@11.0.0-rc.413)(hono@4.4.13)':
-    dependencies:
-      '@trpc/server': 11.0.0-rc.413
-      hono: 4.4.13
-
-  '@hono/trpc-server@0.3.2(@trpc/server@11.0.0-rc.421)(hono@4.4.13)':
+  '@hono/trpc-server@0.3.2(@trpc/server@11.0.0-rc.421)(hono@4.5.0)':
     dependencies:
       '@trpc/server': 11.0.0-rc.421
-      hono: 4.4.13
+      hono: 4.5.0
 
-  '@hono/zod-validator@0.2.2(hono@4.4.13)(zod@3.23.8)':
+  '@hono/zod-validator@0.2.2(hono@4.5.0)(zod@3.23.8)':
     dependencies:
-      hono: 4.4.13
+      hono: 4.5.0
       zod: 3.23.8
 
   '@hookform/resolvers@3.9.0(react-hook-form@7.52.1(react@18.3.1))':
@@ -9911,7 +9892,7 @@ snapshots:
 
   '@types/jsdom@21.1.7':
     dependencies:
-      '@types/node': 20.14.10
+      '@types/node': 20.14.11
       '@types/tough-cookie': 4.0.5
       parse5: 7.1.2
 
@@ -9926,7 +9907,7 @@ snapshots:
 
   '@types/mailparser@3.4.4':
     dependencies:
-      '@types/node': 20.14.10
+      '@types/node': 20.14.11
       iconv-lite: 0.6.3
 
   '@types/markdown-it@13.0.8':
@@ -9938,22 +9919,22 @@ snapshots:
 
   '@types/node-fetch@2.6.11':
     dependencies:
-      '@types/node': 20.14.10
+      '@types/node': 20.14.11
       form-data: 4.0.0
 
-  '@types/node@20.14.10':
+  '@types/node@20.14.11':
     dependencies:
       undici-types: 5.26.5
 
   '@types/nodemailer@6.4.15':
     dependencies:
-      '@types/node': 20.14.10
+      '@types/node': 20.14.11
 
   '@types/prop-types@15.7.12': {}
 
   '@types/qrcode@1.5.5':
     dependencies:
-      '@types/node': 20.14.10
+      '@types/node': 20.14.11
 
   '@types/react-dom@18.3.0':
     dependencies:
@@ -10948,8 +10929,8 @@ snapshots:
       '@typescript-eslint/parser': 7.2.0(eslint@8.57.0)(typescript@5.5.3)
       eslint: 8.57.0
       eslint-import-resolver-node: 0.3.9
-      eslint-import-resolver-typescript: 3.6.1(@typescript-eslint/parser@7.2.0(eslint@8.57.0)(typescript@5.5.3))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.29.1(@typescript-eslint/parser@7.16.0(eslint@8.57.0)(typescript@5.5.3))(eslint@8.57.0))(eslint@8.57.0)
-      eslint-plugin-import: 2.29.1(@typescript-eslint/parser@7.2.0(eslint@8.57.0)(typescript@5.5.3))(eslint-import-resolver-typescript@3.6.1)(eslint@8.57.0)
+      eslint-import-resolver-typescript: 3.6.1(@typescript-eslint/parser@7.2.0(eslint@8.57.0)(typescript@5.5.3))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.29.1)(eslint@8.57.0)
+      eslint-plugin-import: 2.29.1(@typescript-eslint/parser@7.16.0(eslint@8.57.0)(typescript@5.5.3))(eslint@8.57.0)
       eslint-plugin-jsx-a11y: 6.9.0(eslint@8.57.0)
       eslint-plugin-react: 7.34.3(eslint@8.57.0)
       eslint-plugin-react-hooks: 4.6.2(eslint@8.57.0)
@@ -10971,13 +10952,13 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-import-resolver-typescript@3.6.1(@typescript-eslint/parser@7.2.0(eslint@8.57.0)(typescript@5.5.3))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.29.1(@typescript-eslint/parser@7.16.0(eslint@8.57.0)(typescript@5.5.3))(eslint@8.57.0))(eslint@8.57.0):
+  eslint-import-resolver-typescript@3.6.1(@typescript-eslint/parser@7.2.0(eslint@8.57.0)(typescript@5.5.3))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.29.1)(eslint@8.57.0):
     dependencies:
       debug: 4.3.5
       enhanced-resolve: 5.17.0
       eslint: 8.57.0
-      eslint-module-utils: 2.8.1(@typescript-eslint/parser@7.2.0(eslint@8.57.0)(typescript@5.5.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.1(@typescript-eslint/parser@7.2.0(eslint@8.57.0)(typescript@5.5.3))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.29.1(@typescript-eslint/parser@7.16.0(eslint@8.57.0)(typescript@5.5.3))(eslint@8.57.0))(eslint@8.57.0))(eslint@8.57.0)
-      eslint-plugin-import: 2.29.1(@typescript-eslint/parser@7.2.0(eslint@8.57.0)(typescript@5.5.3))(eslint-import-resolver-typescript@3.6.1)(eslint@8.57.0)
+      eslint-module-utils: 2.8.1(@typescript-eslint/parser@7.2.0(eslint@8.57.0)(typescript@5.5.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.1(@typescript-eslint/parser@7.2.0(eslint@8.57.0)(typescript@5.5.3))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.29.1)(eslint@8.57.0))(eslint@8.57.0)
+      eslint-plugin-import: 2.29.1(@typescript-eslint/parser@7.16.0(eslint@8.57.0)(typescript@5.5.3))(eslint@8.57.0)
       fast-glob: 3.3.2
       get-tsconfig: 4.7.5
       is-core-module: 2.14.0
@@ -10988,14 +10969,24 @@ snapshots:
       - eslint-import-resolver-webpack
       - supports-color
 
-  eslint-module-utils@2.8.1(@typescript-eslint/parser@7.2.0(eslint@8.57.0)(typescript@5.5.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.1(@typescript-eslint/parser@7.2.0(eslint@8.57.0)(typescript@5.5.3))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.29.1(@typescript-eslint/parser@7.16.0(eslint@8.57.0)(typescript@5.5.3))(eslint@8.57.0))(eslint@8.57.0))(eslint@8.57.0):
+  eslint-module-utils@2.8.1(@typescript-eslint/parser@7.16.0(eslint@8.57.0)(typescript@5.5.3))(eslint-import-resolver-node@0.3.9)(eslint@8.57.0):
+    dependencies:
+      debug: 3.2.7
+    optionalDependencies:
+      '@typescript-eslint/parser': 7.16.0(eslint@8.57.0)(typescript@5.5.3)
+      eslint: 8.57.0
+      eslint-import-resolver-node: 0.3.9
+    transitivePeerDependencies:
+      - supports-color
+
+  eslint-module-utils@2.8.1(@typescript-eslint/parser@7.2.0(eslint@8.57.0)(typescript@5.5.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.1(@typescript-eslint/parser@7.2.0(eslint@8.57.0)(typescript@5.5.3))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.29.1)(eslint@8.57.0))(eslint@8.57.0):
     dependencies:
       debug: 3.2.7
     optionalDependencies:
       '@typescript-eslint/parser': 7.2.0(eslint@8.57.0)(typescript@5.5.3)
       eslint: 8.57.0
       eslint-import-resolver-node: 0.3.9
-      eslint-import-resolver-typescript: 3.6.1(@typescript-eslint/parser@7.2.0(eslint@8.57.0)(typescript@5.5.3))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.29.1(@typescript-eslint/parser@7.16.0(eslint@8.57.0)(typescript@5.5.3))(eslint@8.57.0))(eslint@8.57.0)
+      eslint-import-resolver-typescript: 3.6.1(@typescript-eslint/parser@7.2.0(eslint@8.57.0)(typescript@5.5.3))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.29.1)(eslint@8.57.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -11003,7 +10994,7 @@ snapshots:
     dependencies:
       eslint: 8.57.0
 
-  eslint-plugin-import@2.29.1(@typescript-eslint/parser@7.2.0(eslint@8.57.0)(typescript@5.5.3))(eslint-import-resolver-typescript@3.6.1)(eslint@8.57.0):
+  eslint-plugin-import@2.29.1(@typescript-eslint/parser@7.16.0(eslint@8.57.0)(typescript@5.5.3))(eslint@8.57.0):
     dependencies:
       array-includes: 3.1.8
       array.prototype.findlastindex: 1.2.5
@@ -11013,7 +11004,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 8.57.0
       eslint-import-resolver-node: 0.3.9
-      eslint-module-utils: 2.8.1(@typescript-eslint/parser@7.2.0(eslint@8.57.0)(typescript@5.5.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.1(@typescript-eslint/parser@7.2.0(eslint@8.57.0)(typescript@5.5.3))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.29.1(@typescript-eslint/parser@7.16.0(eslint@8.57.0)(typescript@5.5.3))(eslint@8.57.0))(eslint@8.57.0))(eslint@8.57.0)
+      eslint-module-utils: 2.8.1(@typescript-eslint/parser@7.16.0(eslint@8.57.0)(typescript@5.5.3))(eslint-import-resolver-node@0.3.9)(eslint@8.57.0)
       hasown: 2.0.2
       is-core-module: 2.14.0
       is-glob: 4.0.3
@@ -11024,7 +11015,7 @@ snapshots:
       semver: 6.3.1
       tsconfig-paths: 3.15.0
     optionalDependencies:
-      '@typescript-eslint/parser': 7.2.0(eslint@8.57.0)(typescript@5.5.3)
+      '@typescript-eslint/parser': 7.16.0(eslint@8.57.0)(typescript@5.5.3)
     transitivePeerDependencies:
       - eslint-import-resolver-typescript
       - eslint-import-resolver-webpack
@@ -11402,7 +11393,7 @@ snapshots:
 
   he@1.2.0: {}
 
-  hono@4.4.13: {}
+  hono@4.5.0: {}
 
   html-encoding-sniffer@4.0.0:
     dependencies:
@@ -12965,7 +12956,7 @@ snapshots:
 
   stripe@15.12.0:
     dependencies:
-      '@types/node': 20.14.10
+      '@types/node': 20.14.11
       qs: 6.12.1
 
   strnum@1.0.5: {}

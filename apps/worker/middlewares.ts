@@ -1,6 +1,6 @@
-import { createMiddleware } from 'hono/factory';
 import { env } from './env';
 import type { Ctx } from './ctx';
+import { createMiddleware } from '@u22n/hono/helpers';
 
 export const commandControlAuthMiddleware = createMiddleware<Ctx>(
   async (c, next) => {

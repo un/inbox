@@ -1,12 +1,12 @@
-import { zValidator } from '@hono/zod-validator';
+import { zValidator } from '@u22n/hono/helpers';
 import { db } from '@u22n/database';
 import { typeIdValidator } from '@u22n/utils/typeid';
-import { Hono } from 'hono';
 import { z } from 'zod';
 import type { Ctx } from '~platform/ctx';
 import { updateDnsRecords } from '~platform/utils/updateDnsRecords';
+import { createHonoApp } from '@u22n/hono';
 
-export const servicesApi = new Hono<Ctx>();
+export const servicesApi = createHonoApp<Ctx>();
 
 servicesApi.post(
   '/dns-check',

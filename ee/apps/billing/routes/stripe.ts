@@ -1,11 +1,11 @@
-import { Hono } from 'hono';
 import type { Ctx } from '../ctx';
 import type Stripe from 'stripe';
 import { db } from '@u22n/database';
 import { eq } from '@u22n/database/orm';
 import { orgBilling } from '@u22n/database/schema';
+import { createHonoApp } from '@u22n/hono';
 
-export const stripeApi = new Hono<Ctx>();
+export const stripeApi = createHonoApp<Ctx>();
 
 stripeApi.post('/webhooks', async (c) => {
   const stripeEvent = c.get('stripeEvent');

@@ -1,15 +1,15 @@
-import { Hono } from 'hono';
 import type { Ctx } from '../ctx';
 import { checkAuthorizedService } from '../middlewares';
-import { zValidator } from '@hono/zod-validator';
 import { typeIdGenerator } from '@u22n/utils/typeid';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { env } from '../env';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { s3Client } from '../s3';
 import { z } from 'zod';
+import { createHonoApp } from '@u22n/hono';
+import { zValidator } from '@u22n/hono/helpers';
 
-export const internalPresignApi = new Hono<Ctx>().post(
+export const internalPresignApi = createHonoApp<Ctx>().post(
   '/attachments/internalPresign',
   checkAuthorizedService,
   zValidator(

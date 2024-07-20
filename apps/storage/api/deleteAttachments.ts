@@ -1,13 +1,13 @@
-import { Hono } from 'hono';
 import { checkAuthorizedService } from '../middlewares';
-import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
 import { DeleteObjectsCommand } from '@aws-sdk/client-s3';
 import { env } from '../env';
 import { s3Client } from '../s3';
 import type { Ctx } from '../ctx';
+import { createHonoApp } from '@u22n/hono';
+import { zValidator } from '@u22n/hono/helpers';
 
-export const deleteAttachmentsApi = new Hono<Ctx>().post(
+export const deleteAttachmentsApi = createHonoApp<Ctx>().post(
   '/attachments/deleteAttachments',
   checkAuthorizedService,
   zValidator(

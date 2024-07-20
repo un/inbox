@@ -1,7 +1,7 @@
 import { env } from '../env';
-import { createMiddleware } from 'hono/factory';
 import { validatePostalWebhookSignature } from '../utils/validatePostalWebhookSignature';
 import type { Ctx } from '../ctx';
+import { createMiddleware } from '@u22n/hono/helpers';
 
 export const signatureMiddleware = createMiddleware<Ctx>(async (c, next) =>
   c

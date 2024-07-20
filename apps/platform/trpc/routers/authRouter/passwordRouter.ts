@@ -17,7 +17,7 @@ import { validateUsername } from './signupRouter';
 import { createLuciaSessionCookie } from '~platform/utils/session';
 import { decodeHex } from 'oslo/encoding';
 import { TOTPController } from 'oslo/otp';
-import { setCookie, getCookie, deleteCookie } from 'hono/cookie';
+import { setCookie, getCookie, deleteCookie } from '@u22n/hono/helpers';
 import { env } from '~platform/env';
 import { storage } from '~platform/storage';
 import { ms } from '@u22n/utils/ms';

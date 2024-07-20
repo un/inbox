@@ -1,14 +1,14 @@
-import { Hono } from 'hono';
 import type { Ctx } from '../ctx';
 import { checkAuthorizedService } from '../middlewares';
-import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
 import { GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { s3Client } from '../s3';
 import { env } from '../env';
+import { createHonoApp } from '@u22n/hono';
+import { zValidator } from '@u22n/hono/helpers';
 
-export const mailfetchApi = new Hono<Ctx>().post(
+export const mailfetchApi = createHonoApp<Ctx>().post(
   '/attachments/mailfetch',
   checkAuthorizedService,
   zValidator(

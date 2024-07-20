@@ -1,12 +1,12 @@
-import { Hono } from 'hono';
+import { createHonoApp } from '@u22n/hono';
 import type { Ctx } from '~platform/ctx';
 import { lucia } from '~platform/utils/auth';
-import { setCookie } from 'hono/cookie';
+import { setCookie } from '@u22n/hono/helpers';
 import { db } from '@u22n/database';
 import { accounts } from '@u22n/database/schema';
 import { eq } from '@u22n/database/orm';
 
-export const authApi = new Hono<Ctx>();
+export const authApi = createHonoApp<Ctx>();
 
 authApi.get('/status', async (c) => {
   const account = c.get('account');
