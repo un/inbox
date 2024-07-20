@@ -6,6 +6,7 @@ import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 
 export const iCanHazRouter = router({
+  billing: protectedProcedure.query(() => true),
   domain: protectedProcedure
     .input(z.object({ orgId: z.number() }))
     .query(async ({ ctx, input }) => {

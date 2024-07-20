@@ -1,16 +1,24 @@
 'use client';
 
+import { useOrgShortcode, useOrgScopedRouter } from '@/src/hooks/use-params';
 import { Skeleton } from '@/src/components/shadcn-ui/skeleton';
 import { PageTitle } from '../../../_components/page-title';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { PricingTable } from './_components/plans-table';
-import { useOrgShortcode } from '@/src/hooks/use-params';
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import CalEmbed from '@calcom/embed-react';
 import { platform } from '@/src/lib/trpc';
 
 export default function Page() {
   const orgShortcode = useOrgShortcode();
+  const { scopedRedirect } = useOrgScopedRouter();
+
+  const { data: hasBilling } = platform.org.iCanHaz.billing.useQuery({
+    orgShortcode
+  });
+
+  if (hasBilling === false) scopedRedirect(`/settings`);
+
   const { data, isLoading } =
     platform.org.setup.billing.getOrgBillingOverview.useQuery({
       orgShortcode

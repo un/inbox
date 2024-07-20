@@ -126,7 +126,7 @@ export const billingRouter = router({
         plan: true
       }
     });
-    const orgPlan = orgBillingResponse?.plan ?? 'free';
+    const orgPlan = orgBillingResponse?.plan;
     return {
       isPro: orgPlan === 'pro'
     };
