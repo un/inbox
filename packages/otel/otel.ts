@@ -1,12 +1,9 @@
+// TODO: add OpenTelemetry exporter
+
 import { HttpInstrumentation } from '@opentelemetry/instrumentation-http';
-import { ZipkinExporter } from '@opentelemetry/exporter-zipkin';
 import { Resource } from '@opentelemetry/resources';
 import {
-  SEMRESATTRS_SERVICE_NAME,
-  SEMRESATTRS_SERVICE_VERSION
-} from '@opentelemetry/semantic-conventions';
-import {
-  BatchSpanProcessor,
+  // BatchSpanProcessor,
   NodeTracerProvider
 } from '@opentelemetry/sdk-trace-node';
 import { registerInstrumentations } from '@opentelemetry/instrumentation';
@@ -22,12 +19,12 @@ export const setupTracer = ({
   if (!env.OTEL_ENABLED) return;
   const provider = new NodeTracerProvider({
     resource: new Resource({
-      [SEMRESATTRS_SERVICE_NAME]: name,
-      [SEMRESATTRS_SERVICE_VERSION]: version
+      'service.name': name,
+      'service.version': version
     })
   });
 
-  provider.addSpanProcessor(new BatchSpanProcessor(new ZipkinExporter()));
+  // provider.addSpanProcessor(new BatchSpanProcessor(EXPORTER));
   provider.register();
 
   registerInstrumentations({
