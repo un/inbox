@@ -37,7 +37,7 @@ export const passkeyRouter = router({
         username: zodSchemas.username()
       })
     )
-    .query(async ({ input, ctx }) => {
+    .mutation(async ({ input, ctx }) => {
       const { db } = ctx;
       const { username } = input;
       const { available, error } = await validateUsername(db, input.username);

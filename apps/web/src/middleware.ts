@@ -15,7 +15,7 @@ export default async function middleware(req: NextRequest) {
     Boolean(publicDynamicRoutes.find((e) => path.startsWith(e)));
 
   // Redirect if already logged in on login page
-  if (path === '/') {
+  if (['/', '/join', '/join/secure'].includes(path)) {
     if (await isAuthenticated()) {
       const redirectData = await getAuthRedirection().catch(() => null);
       if (redirectData) {

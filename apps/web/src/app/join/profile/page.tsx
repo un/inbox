@@ -1,10 +1,11 @@
 'use client';
 
-import { Button } from '@/src/components/shadcn-ui/button';
 import Link from 'next/link';
+import { Button } from '@/src/components/shadcn-ui/button';
 import { ProfileCard } from './_components/profile-card';
 import { platform } from '@/src/lib/trpc';
 import { useCookies } from 'next-client-cookies';
+import { LoadingSpinner } from '@/src/components/shared/loading-spinner';
 
 export default function Page({
   searchParams
@@ -31,24 +32,15 @@ export default function Page({
     );
   }
 
-  const { data: orgData, isLoading: orgDataLoading } =
-    platform.account.profile.getOrgMemberProfile.useQuery({
-      orgShortcode: searchParams.org
-    });
+  const {
+    data: orgData,
+    error,
+    isLoading
+  } = platform.account.profile.getOrgMemberProfile.useQuery({
+    orgShortcode: searchParams.org
+  });
 
-  if (orgDataLoading) {
-    return (
-      <div className="bg-card mx-auto my-4 max-w-[450px] rounded border p-4">
-        <div className="flex items-center justify-center gap-2">
-          <div className="text-muted-foreground text-sm font-bold">
-            Loading Profile
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!orgData) {
+  if (error && !orgData) {
     return (
       <div className="bg-card mx-auto my-4 max-w-[450px] rounded border p-4">
         <div className="flex flex-col items-center justify-center gap-2">
@@ -71,6 +63,10 @@ export default function Page({
   }
 
   const wasInvited = Boolean(cookies.get('un-invite-code'));
+  if (isLoading || !orgData) {
+    return <LoadingSpinner spinnerSize={32} />;
+  }
+
   return (
     <ProfileCard
       orgData={orgData}

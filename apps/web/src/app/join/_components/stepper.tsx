@@ -1,5 +1,5 @@
-import { Separator } from '@/src/components/shadcn-ui/separator';
 import { cn } from '@/src/lib/utils';
+import { Check } from '@phosphor-icons/react';
 
 export default function Stepper({
   step,
@@ -9,15 +9,25 @@ export default function Stepper({
   total: number;
 }) {
   return (
-    <div className="mx-auto flex w-full max-w-96 items-center justify-center gap-2">
+    <div className="flex gap-1">
+      <span className="sr-only">{`This is step ${step} of ${total}`}</span>
       {Array.from({ length: total }).map((_, i) => (
-        <Separator
+        <div
           key={i}
           className={cn(
-            'my-4 h-2 flex-1 rounded-md',
-            i < step ? 'bg-grass-6' : 'bg-gray-6'
+            'text-base-11 bg-base-1 border-base-7 flex h-5 w-5 select-none items-center justify-center rounded-full border text-center text-xs font-semibold',
+            step === i + 1 && 'bg-accent-9 border-none text-white',
+            step > i + 1 && 'bg-green-9 border-none text-white'
+          )}>
+          {step > i + 1 ? (
+            <Check
+              size={12}
+              weight="bold"
+            />
+          ) : (
+            i + 1
           )}
-        />
+        </div>
       ))}
     </div>
   );

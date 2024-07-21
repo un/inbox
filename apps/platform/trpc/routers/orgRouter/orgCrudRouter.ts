@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { router, accountProcedure } from '~platform/trpc/trpc';
 import type { DBType } from '@u22n/database';
-import { eq, and } from '@u22n/database/orm';
+import { eq, and, like } from '@u22n/database/orm';
 import {
   orgs,
   orgMembers,
@@ -56,13 +56,53 @@ export const crudRouter = router({
           .string()
           .min(5)
           .max(64)
-          .regex(/^[a-z0-9]*$/, {
+          .regex(/^[a-z0-9\-]*$/, {
             message: 'Only lowercase letters and numbers'
           })
       })
     )
     .query(async ({ ctx, input }) => {
       return await validateOrgShortcode(ctx.db, input.shortcode);
+    }),
+
+  generateOrgShortcode: accountProcedure
+    .input(
+      z.object({
+        orgName: z.string().min(5)
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const autoShortcode = input.orgName
+        .toLowerCase()
+        .replace(/[^a-z0-9\-]/g, '');
+      const existingOrgs = await ctx.db.query.orgs.findMany({
+        where: like(orgs.shortcode, `${autoShortcode}%`),
+        columns: {
+          shortcode: true
+        }
+      });
+
+      if (existingOrgs.length === 0) {
+        return { shortcode: autoShortcode.substring(0, 32) };
+      }
+      const existingShortcodeList = existingOrgs.map((org) => org.shortcode);
+      let currentSuffix = existingShortcodeList.length;
+      let retries = 0;
+      let newShortcode = `${autoShortcode.substring(0, 28)}-${currentSuffix}`;
+
+      while (existingShortcodeList.includes(newShortcode)) {
+        currentSuffix++;
+        newShortcode = `${autoShortcode.substring(0, 28)}-${currentSuffix}`;
+        retries++;
+        if (retries > 30) {
+          throw new TRPCError({
+            code: 'CONFLICT',
+            message:
+              'Failed to generate unique shortcode, please type one manually'
+          });
+        }
+      }
+      return { shortcode: newShortcode };
     }),
 
   createNewOrg: accountProcedure

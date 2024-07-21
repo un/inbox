@@ -72,8 +72,7 @@ export default function Page() {
   const { loading: saveLoading, run: saveProfile } = useLoading(async () => {
     if (!initData) return;
     await updateProfileApi.mutateAsync({
-      fName: firstNameValue,
-      lName: lastNameValue,
+      name: `${firstNameValue} ${lastNameValue}`,
       blurb: bioValue,
       title: titleValue,
       handle: initData.profile.handle ?? '',

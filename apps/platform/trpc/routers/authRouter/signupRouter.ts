@@ -52,9 +52,7 @@ export const signupRouter = router({
         username: zodSchemas.username()
       })
     )
-    .query(async ({ ctx, input }) => {
-      return await validateUsername(ctx.db, input.username);
-    }),
+    .query(({ ctx, input }) => validateUsername(ctx.db, input.username)),
   checkPasswordStrength: publicProcedure
     .use(ratelimiter({ limit: 50, namespace: 'check.password' }))
     .input(
