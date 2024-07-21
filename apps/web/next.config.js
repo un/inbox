@@ -20,7 +20,8 @@ const config = {
     ),
     outputFileTracingIncludes: {
       '/': ['./public/*']
-    }
+    },
+    instrumentationHook: true
   }
 };
 

@@ -1,2 +1,4 @@
-import { setupTracer } from '@u22n/otel/otel';
-setupTracer({ name: `@u22n/mail-bridge`, version: `0.0.0-dev` });
+import { setupOpentelemetry } from '@u22n/otel';
+import { name, version } from './package.json';
+
+setupOpentelemetry({ name, version });

@@ -2,9 +2,10 @@
   "name": "@u22n/storage",
   "private": true,
   "type": "module",
+  "version": "0.0.0-dev",
   "scripts": {
-    "dev": "tsx watch --clear-screen=false app.ts",
-    "start": "node .output/app.js",
+    "dev": "tsx watch --clear-screen=false --import ./tracing.ts app.ts",
+    "start": "node --import ./.output/tracing.js .output/app.js",
     "build": "tsup",
     "check": "tsc --noEmit"
   },

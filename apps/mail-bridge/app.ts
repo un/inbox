@@ -1,11 +1,10 @@
-import './tracing';
 import { env } from './env';
 import { db } from '@u22n/database';
 import { trpcMailBridgeRouter } from './trpc';
 import { eventApi } from './postal-routes/events';
 import { inboundApi } from './postal-routes/inbound';
 import { signatureMiddleware } from './postal-routes/signature-middleware';
-import { otel } from '@u22n/otel/hono';
+import { opentelemetry } from '@u22n/otel/hono';
 import type { Ctx, TRPCContext } from './ctx';
 import {
   createHonoApp,
@@ -21,9 +20,9 @@ const processCleanup: Array<() => Promise<void>> = [];
 
 if (env.MAILBRIDGE_MODE === 'dual' || env.MAILBRIDGE_MODE === 'handler') {
   const app = createHonoApp<Ctx>();
-  app.use(otel());
+  app.use(opentelemetry('mail-bridge/hono'));
 
-  setupRouteLogger(app, process.env.NODE_ENV === 'development');
+  setupRouteLogger(app, env.NODE_ENV === 'development');
 
   setupHealthReporting(app, {
     service: `Mail Bridge [${env.MAILBRIDGE_MODE === 'handler' ? 'Handler' : 'Dual'}]`

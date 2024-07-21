@@ -1,7 +1,7 @@
 import { defineConfig } from 'tsup';
 
 export default defineConfig({
-  entry: ['app.ts'],
+  entry: ['app.ts', './tracing.ts'],
   outDir: '.output',
   format: 'esm',
   target: 'esnext',
@@ -9,8 +9,6 @@ export default defineConfig({
   bundle: true,
   treeshake: true,
   noExternal: [/^@u22n\/.*/],
-  cjsInterop: true,
-  shims: true,
   minify: false,
   banner: {
     js: [
