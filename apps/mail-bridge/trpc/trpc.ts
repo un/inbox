@@ -1,8 +1,8 @@
 import { TRPCError, initTRPC } from '@trpc/server';
-import superjson from 'superjson';
-import type { TRPCContext } from '../ctx';
 import { getTracer } from '@u22n/otel/helpers';
 import { flatten } from '@u22n/otel/exports';
+import type { TRPCContext } from '../ctx';
+import superjson from 'superjson';
 
 export const trpcContext = initTRPC
   .context<TRPCContext>()

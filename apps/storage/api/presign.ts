@@ -1,16 +1,16 @@
-import type { Ctx } from '../ctx';
-import { checkSignedIn } from '../middlewares';
-import { z } from 'zod';
 import { orgMembers, orgs, pendingAttachments } from '@u22n/database/schema';
-import { and, eq } from '@u22n/database/orm';
-import { db } from '@u22n/database';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { typeIdGenerator } from '@u22n/utils/typeid';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { env } from '../env';
-import { s3Client } from '../s3';
-import { createHonoApp } from '@u22n/hono';
 import { zValidator } from '@u22n/hono/helpers';
+import { checkSignedIn } from '../middlewares';
+import { and, eq } from '@u22n/database/orm';
+import { createHonoApp } from '@u22n/hono';
+import { db } from '@u22n/database';
+import type { Ctx } from '../ctx';
+import { s3Client } from '../s3';
+import { env } from '../env';
+import { z } from 'zod';
 
 export const presignApi = createHonoApp<Ctx>().get(
   '/attachments/presign',
@@ -20,7 +20,7 @@ export const presignApi = createHonoApp<Ctx>().get(
     z.object({ filename: z.string(), orgShortcode: z.string() })
   ),
   async (c) => {
-    const accountId = c.get('account')?.id!; // we know it's not null here, checked in the middleware
+    const accountId = c.get('account')!.id; // we know it's not null here, checked in the middleware
     const data = c.req.valid('query');
 
     const orgQueryResponse = await db.query.orgs.findFirst({

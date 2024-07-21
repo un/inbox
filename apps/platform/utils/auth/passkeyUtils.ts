@@ -1,9 +1,9 @@
-import { eq } from '@u22n/database/orm';
-import { db } from '@u22n/database';
-import { accounts, authenticators } from '@u22n/database/schema';
 import type { AuthenticatorTransportFuture } from '@simplewebauthn/types';
+import { accounts, authenticators } from '@u22n/database/schema';
 import { isoBase64URL } from '@simplewebauthn/server/helpers';
 import { typeIdGenerator } from '@u22n/utils/typeid';
+import { eq } from '@u22n/database/orm';
+import { db } from '@u22n/database';
 
 export type CredentialDeviceType = 'singleDevice' | 'multiDevice';
 export interface Authenticator {
@@ -169,7 +169,7 @@ export async function listAuthenticatorsByAccountId(accountId: number) {
       }
     }
   });
-  if (!dbQuery || !dbQuery.authenticators) return [];
+  if (!dbQuery?.authenticators) return [];
   return await Promise.all(
     dbQuery.authenticators.map(transformDbToAuthAuthenticator)
   );

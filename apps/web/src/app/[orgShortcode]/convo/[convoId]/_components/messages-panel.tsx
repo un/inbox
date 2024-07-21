@@ -1,6 +1,5 @@
 'use client';
 
-import { type RouterOutputs, platform } from '@/src/lib/trpc';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,10 +7,6 @@ import {
   DropdownMenuTrigger,
   DropdownMenuPortal
 } from '@/src/components/shadcn-ui/dropdown-menu';
-import { Button } from '@/src/components/shadcn-ui/button';
-import { Badge } from '@/src/components/shadcn-ui/badge';
-import { type TypeId } from '@u22n/utils/typeid';
-import { useGlobalStore } from '@/src/providers/global-store-provider';
 import {
   forwardRef,
   memo,
@@ -20,21 +15,26 @@ import {
   useMemo,
   useState
 } from 'react';
+import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { type JSONContent, generateHTML } from '@u22n/tiptap/react';
-import { tipTapExtensions } from '@u22n/tiptap/extensions';
-import { type formatParticipantData } from '../../utils';
-import { cn } from '@/src/lib/utils';
-import { DotsThree, SpinnerGap } from '@phosphor-icons/react';
-import { useAtom, useSetAtom } from 'jotai';
-import { useCopyToClipboard } from '@uidotdev/usehooks';
-import { toast } from 'sonner';
 import { Virtuoso, type VirtuosoHandle } from 'react-virtuoso';
-import { replyToMessageAtom } from '../atoms';
-import { ms } from '@u22n/utils/ms';
-import { Avatar } from '@/src/components/avatar';
-import { cva } from 'class-variance-authority';
 import { OriginalMessageView } from './original-message-view';
+import { DotsThree, SpinnerGap } from '@phosphor-icons/react';
+import { type RouterOutputs, platform } from '@/src/lib/trpc';
+import { Button } from '@/src/components/shadcn-ui/button';
+import { tipTapExtensions } from '@u22n/tiptap/extensions';
+import { Badge } from '@/src/components/shadcn-ui/badge';
+import { type formatParticipantData } from '../../utils';
+import { useCopyToClipboard } from '@uidotdev/usehooks';
 import { useTimeAgo } from '@/src/hooks/use-time-ago';
+import { Avatar } from '@/src/components/avatar';
+import { type TypeId } from '@u22n/utils/typeid';
+import { cva } from 'class-variance-authority';
+import { replyToMessageAtom } from '../atoms';
+import { useAtom, useSetAtom } from 'jotai';
+import { cn } from '@/src/lib/utils';
+import { ms } from '@u22n/utils/ms';
+import { toast } from 'sonner';
 
 type MessagesPanelProps = {
   convoId: TypeId<'convos'>;

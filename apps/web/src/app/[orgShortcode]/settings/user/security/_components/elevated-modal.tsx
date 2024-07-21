@@ -1,4 +1,3 @@
-import { Button } from '@/src/components/shadcn-ui/button';
 import {
   Dialog,
   DialogContent,
@@ -6,17 +5,6 @@ import {
   DialogDescription,
   DialogTitle
 } from '@/src/components/shadcn-ui/dialog';
-import { platform, type RouterOutputs } from '@/src/lib/trpc';
-import { Fingerprint } from '@phosphor-icons/react';
-import { useMutation } from '@tanstack/react-query';
-import { startAuthentication } from '@simplewebauthn/browser';
-import { toast } from 'sonner';
-import { Separator } from '@/src/components/shadcn-ui/separator';
-import { Badge } from '@/src/components/shadcn-ui/badge';
-import { PasswordInput } from '@/src/components/password-input';
-import { z } from 'zod';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Form,
   FormControl,
@@ -30,6 +18,18 @@ import {
   InputOTPGroup,
   InputOTPSlot
 } from '@/src/components/shadcn-ui/input-otp';
+import { Separator } from '@/src/components/shadcn-ui/separator';
+import { PasswordInput } from '@/src/components/password-input';
+import { startAuthentication } from '@simplewebauthn/browser';
+import { platform, type RouterOutputs } from '@/src/lib/trpc';
+import { Button } from '@/src/components/shadcn-ui/button';
+import { Badge } from '@/src/components/shadcn-ui/badge';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Fingerprint } from '@phosphor-icons/react';
+import { useMutation } from '@tanstack/react-query';
+import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
+import { z } from 'zod';
 
 type OverviewData = RouterOutputs['account']['security']['getOverview'];
 

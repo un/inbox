@@ -1,6 +1,6 @@
 'use client';
-import { Button } from '@/src/components/shadcn-ui/button';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
+import { Button } from '@/src/components/shadcn-ui/button';
 import Link from 'next/link';
 
 export default function Page() {

@@ -1,10 +1,10 @@
-import { env } from './env';
-import { ms } from '@u22n/utils/ms';
+import { createStorage, type Driver, type StorageValue } from 'unstorage';
 import redisDriver from 'unstorage/drivers/redis';
-import { createStorage, type StorageValue } from 'unstorage';
+import type { TypeId } from '@u22n/utils/typeid';
 import type { DatabaseSession } from 'lucia';
 import type { OrgContext } from './ctx';
-import type { TypeId } from '@u22n/utils/typeid';
+import { ms } from '@u22n/utils/ms';
+import { env } from './env';
 
 const createCachedStorage = <T extends StorageValue = StorageValue>(
   base: string,
@@ -15,7 +15,7 @@ const createCachedStorage = <T extends StorageValue = StorageValue>(
       url: env.DB_REDIS_CONNECTION_STRING,
       ttl,
       base
-    })
+    }) as Driver
   });
 
 export const storage = {

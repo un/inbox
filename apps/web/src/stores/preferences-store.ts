@@ -1,6 +1,6 @@
+import { persist } from 'zustand/middleware';
 import { ms } from '@u22n/utils/ms';
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 
 export type PreferencesStoreState = {
   sidebarDocked: boolean;

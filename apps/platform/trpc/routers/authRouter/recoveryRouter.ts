@@ -1,23 +1,23 @@
-import { z } from 'zod';
-import { Argon2id } from 'oslo/password';
 import {
   router,
   turnstileProcedure,
   publicProcedure
 } from '~platform/trpc/trpc';
-import { eq } from '@u22n/database/orm';
-import { accounts } from '@u22n/database/schema';
+import { deleteCookie, getCookie, setCookie } from '@u22n/hono/helpers';
 import { nanoIdToken, zodSchemas } from '@u22n/utils/zodSchemas';
 import { strongPasswordSchema } from '@u22n/utils/password';
-import { typeIdValidator } from '@u22n/utils/typeid';
-import { ms } from '@u22n/utils/ms';
-import { TRPCError } from '@trpc/server';
-import { decodeHex, encodeHex } from 'oslo/encoding';
 import { TOTPController, createTOTPKeyURI } from 'oslo/otp';
-import { deleteCookie, getCookie, setCookie } from '@u22n/hono/helpers';
-import { env } from '~platform/env';
-import { storage } from '~platform/storage';
 import { ratelimiter } from '~platform/trpc/ratelimit';
+import { typeIdValidator } from '@u22n/utils/typeid';
+import { decodeHex, encodeHex } from 'oslo/encoding';
+import { accounts } from '@u22n/database/schema';
+import { storage } from '~platform/storage';
+import { Argon2id } from 'oslo/password';
+import { TRPCError } from '@trpc/server';
+import { eq } from '@u22n/database/orm';
+import { ms } from '@u22n/utils/ms';
+import { env } from '~platform/env';
+import { z } from 'zod';
 
 export const recoveryRouter = router({
   // we only need to make sure that generate function is not abused
@@ -54,8 +54,7 @@ export const recoveryRouter = router({
       });
 
       if (
-        !account ||
-        !account.recoveryCode ||
+        !account?.recoveryCode ||
         !account.passwordHash ||
         !account.twoFactorSecret
       ) {
@@ -97,7 +96,7 @@ export const recoveryRouter = router({
       }
 
       if ('twoFactorCode' in input) {
-        const secret = decodeHex(account.twoFactorSecret!);
+        const secret = decodeHex(account.twoFactorSecret);
         const otpValid = await new TOTPController().verify(
           input.twoFactorCode,
           secret

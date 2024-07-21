@@ -1,6 +1,6 @@
-import * as React from 'react';
-import { cn } from '@/src/lib/utils';
 import type { Icon } from '@phosphor-icons/react';
+import { cn } from '@/src/lib/utils';
+import * as React from 'react';
 
 export type InputProps = React.InputHTMLAttributes<HTMLInputElement> & {
   label: string;

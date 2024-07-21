@@ -1,19 +1,10 @@
 'use client';
-import { Button } from '@/src/components/shadcn-ui/button';
-import { platform } from '@/src/lib/trpc';
-import { useGlobalStore } from '@/src/providers/global-store-provider';
-import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   AlertDialog,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogTitle
 } from '@/src/components/shadcn-ui/alert-dialog';
-import useAwaitableModal, {
-  type ModalComponent
-} from '@/src/hooks/use-awaitable-modal';
-import { Check } from '@phosphor-icons/react';
-import { Tabs, TabsList, TabsTrigger } from '@/src/components/shadcn-ui/tabs';
 import {
   Card,
   CardContent,
@@ -22,6 +13,15 @@ import {
   CardHeader,
   CardTitle
 } from '@/src/components/shadcn-ui/card';
+import useAwaitableModal, {
+  type ModalComponent
+} from '@/src/hooks/use-awaitable-modal';
+import { Tabs, TabsList, TabsTrigger } from '@/src/components/shadcn-ui/tabs';
+import { useGlobalStore } from '@/src/providers/global-store-provider';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Button } from '@/src/components/shadcn-ui/button';
+import { Check } from '@phosphor-icons/react';
+import { platform } from '@/src/lib/trpc';
 import { cn } from '@/src/lib/utils';
 
 type PricingSwitchProps = {

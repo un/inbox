@@ -102,6 +102,10 @@ export default async function lookup(
     }
     return result.data;
   } catch (e) {
-    throw new Error(`Unhandled DNS query error: ${e}`);
+    if (e instanceof Error) {
+      throw new Error(`Unhandled DNS query error: ${e.message}`);
+    } else {
+      throw e;
+    }
   }
 }

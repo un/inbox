@@ -1,15 +1,15 @@
 'use client';
 
-import { type RouterOutputs } from '@/src/lib/trpc';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
-import { useMemo } from 'react';
-import { useTimeAgo } from '@/src/hooks/use-time-ago';
-import { formatParticipantData } from '../utils';
-import Link from 'next/link';
 import AvatarPlus from '@/src/components/avatar-plus';
+import { useTimeAgo } from '@/src/hooks/use-time-ago';
+import { type RouterOutputs } from '@/src/lib/trpc';
 import { Avatar } from '@/src/components/avatar';
-import { cn } from '@/src/lib/utils';
+import { formatParticipantData } from '../utils';
 import { usePathname } from 'next/navigation';
+import { cn } from '@/src/lib/utils';
+import { useMemo } from 'react';
+import Link from 'next/link';
 
 export function ConvoItem({
   convo

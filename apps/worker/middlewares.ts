@@ -1,8 +1,8 @@
-import { env } from './env';
-import type { Ctx } from './ctx';
 import { createMiddleware } from '@u22n/hono/helpers';
 import { getTracer } from '@u22n/otel/helpers';
 import { logger } from '@u22n/otel/logger';
+import type { Ctx } from './ctx';
+import { env } from './env';
 
 const middlewareTracer = getTracer('worker/hono/middleware');
 

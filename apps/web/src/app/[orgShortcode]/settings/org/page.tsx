@@ -1,15 +1,5 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { useState, useMemo } from 'react';
-import { Button } from '@/src/components/shadcn-ui/button';
-import { Camera, FloppyDisk } from '@phosphor-icons/react';
-import { platform } from '@/src/lib/trpc';
-import { useGlobalStore } from '@/src/providers/global-store-provider';
-import { cn, generateAvatarUrl, openFilePicker } from '@/src/lib/utils';
-import { PageTitle } from '../_components/page-title';
-import { Skeleton } from '@/src/components/shadcn-ui/skeleton';
-import { Input } from '@/src/components/shadcn-ui/input';
 import {
   AlertDialog,
   AlertDialogContent,
@@ -17,8 +7,18 @@ import {
   AlertDialogHeader,
   AlertDialogTitle
 } from '@/src/components/shadcn-ui/alert-dialog';
-import AvatarCrop from '@/src/components/avatar-crop';
+import { cn, generateAvatarUrl, openFilePicker } from '@/src/lib/utils';
+import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { useAvatarUploader } from '@/src/hooks/use-avatar-uploader';
+import { Skeleton } from '@/src/components/shadcn-ui/skeleton';
+import { Button } from '@/src/components/shadcn-ui/button';
+import { Camera, FloppyDisk } from '@phosphor-icons/react';
+import { Input } from '@/src/components/shadcn-ui/input';
+import AvatarCrop from '@/src/components/avatar-crop';
+import { PageTitle } from '../_components/page-title';
+import { useRouter } from 'next/navigation';
+import { platform } from '@/src/lib/trpc';
+import { useState, useMemo } from 'react';
 import { toast } from 'sonner';
 
 export default function ProfileComponent() {

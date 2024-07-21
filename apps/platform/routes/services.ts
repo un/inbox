@@ -1,10 +1,10 @@
-import { zValidator } from '@u22n/hono/helpers';
-import { db } from '@u22n/database';
-import { typeIdValidator } from '@u22n/utils/typeid';
-import { z } from 'zod';
-import type { Ctx } from '~platform/ctx';
 import { updateDnsRecords } from '~platform/utils/updateDnsRecords';
+import { typeIdValidator } from '@u22n/utils/typeid';
+import { zValidator } from '@u22n/hono/helpers';
 import { createHonoApp } from '@u22n/hono';
+import type { Ctx } from '~platform/ctx';
+import { db } from '@u22n/database';
+import { z } from 'zod';
 
 export const servicesApi = createHonoApp<Ctx>();
 
@@ -20,7 +20,7 @@ servicesApi.post(
   async (c) => {
     const { orgId, domainPublicId } = c.req.valid('json');
     const results = await updateDnsRecords({ domainPublicId, orgId }, db).catch(
-      (e) => ({ error: e.message })
+      (e: Error) => ({ error: e.message })
     );
     return c.json({ results });
   }

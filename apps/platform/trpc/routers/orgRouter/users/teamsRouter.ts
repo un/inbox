@@ -1,11 +1,11 @@
-import { z } from 'zod';
 import { router, orgProcedure, orgAdminProcedure } from '~platform/trpc/trpc';
-import { eq, and } from '@u22n/database/orm';
-import { teams } from '@u22n/database/schema';
 import { typeIdGenerator, typeIdValidator } from '@u22n/utils/typeid';
-import { uiColors } from '@u22n/utils/colors';
-import { TRPCError } from '@trpc/server';
 import { addOrgMemberToTeamHandler } from './teamsHandler';
+import { teams } from '@u22n/database/schema';
+import { uiColors } from '@u22n/utils/colors';
+import { eq, and } from '@u22n/database/orm';
+import { TRPCError } from '@trpc/server';
+import { z } from 'zod';
 
 export const teamsRouter = router({
   createTeam: orgAdminProcedure
@@ -210,7 +210,7 @@ export const teamsRouter = router({
         });
       }
       const { org, db } = ctx;
-      const { teamPublicId, orgMemberPublicIds } = input;
+      const { teamPublicId } = input;
 
       const teamMembers = await db.query.teams.findFirst({
         where: and(eq(teams.publicId, teamPublicId), eq(teams.orgId, org.id)),
@@ -234,15 +234,15 @@ export const teamsRouter = router({
           message: 'Team not found'
         });
       }
-      const currentMembers = teamMembers.members.map(
-        (m) => m.orgMember.publicId
-      );
-      const newMembers = orgMemberPublicIds.filter(
-        (m) => !currentMembers.includes(m)
-      );
-      const removedMembers = currentMembers.filter(
-        (m) => !orgMemberPublicIds.includes(m)
-      );
+      // const currentMembers = teamMembers.members.map(
+      //   (m) => m.orgMember.publicId
+      // );
+      // const newMembers = orgMemberPublicIds.filter(
+      //   (m) => !currentMembers.includes(m)
+      // );
+      // const removedMembers = currentMembers.filter(
+      //   (m) => !orgMemberPublicIds.includes(m)
+      // );
 
       throw new TRPCError({
         code: 'NOT_IMPLEMENTED',

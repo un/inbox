@@ -1,12 +1,12 @@
-import type { Ctx } from '../ctx';
-import { checkAuthorizedService } from '../middlewares';
-import { z } from 'zod';
-import { GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { checkAuthorizedService } from '../middlewares';
+import { GetObjectCommand } from '@aws-sdk/client-s3';
+import { zValidator } from '@u22n/hono/helpers';
+import { createHonoApp } from '@u22n/hono';
+import type { Ctx } from '../ctx';
 import { s3Client } from '../s3';
 import { env } from '../env';
-import { createHonoApp } from '@u22n/hono';
-import { zValidator } from '@u22n/hono/helpers';
+import { z } from 'zod';
 
 export const mailfetchApi = createHonoApp<Ctx>().post(
   '/attachments/mailfetch',

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { getAccount } from './lib/get-account';
 
 export default async function middleware(req: NextRequest) {

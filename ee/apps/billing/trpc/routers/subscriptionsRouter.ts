@@ -1,8 +1,8 @@
-import { z } from 'zod';
+import { orgBilling, orgMembers } from '@u22n/database/schema';
 import { router, protectedProcedure } from '../trpc';
 import { and, eq, sql } from '@u22n/database/orm';
-import { orgBilling, orgMembers } from '@u22n/database/schema';
 import { stripeSdk } from '../../stripe';
+import { z } from 'zod';
 
 export const subscriptionsRouter = router({
   updateOrgUserCount: protectedProcedure
@@ -37,7 +37,7 @@ export const subscriptionsRouter = router({
           and(eq(orgMembers.orgId, orgId), eq(orgMembers.status, 'active'))
         );
 
-      const totalOrgUsers = activeOrgMembersCount[0]?.count || 1;
+      const totalOrgUsers = activeOrgMembersCount[0]?.count ?? 1;
 
       if (orgSubscriptionQuery.stripeSubscriptionId) {
         const stripeGetSubscriptionResult =
@@ -47,8 +47,7 @@ export const subscriptionsRouter = router({
 
         if (
           stripeGetSubscriptionResult &&
-          stripeGetSubscriptionResult.items &&
-          stripeGetSubscriptionResult.items.data
+          stripeGetSubscriptionResult.items?.data
         ) {
           await stripeSdk.subscriptions.update(
             orgSubscriptionQuery.stripeSubscriptionId,
@@ -64,9 +63,9 @@ export const subscriptionsRouter = router({
               metadata: {
                 orgId,
                 product: 'subscription',
-                plan: stripeGetSubscriptionResult.metadata.plan || 'starter',
+                plan: stripeGetSubscriptionResult.metadata.plan ?? 'starter',
                 period:
-                  stripeGetSubscriptionResult.metadata.period || 'monthly',
+                  stripeGetSubscriptionResult.metadata.period ?? 'monthly',
                 totalUsers: totalOrgUsers
               }
             }

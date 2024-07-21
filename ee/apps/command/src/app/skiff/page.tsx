@@ -15,7 +15,7 @@ export default function Page() {
   const { isPending, mutateAsync } = api.orgs.addSkiffOffer.useMutation({
     onSuccess: () => {
       toast.success('Skiff offer added');
-      refetch();
+      void refetch();
     },
     onError: (error) => {
       toast.error(error.message);

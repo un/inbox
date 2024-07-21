@@ -1,6 +1,15 @@
 'use client';
 
-import { platform } from '@/src/lib/trpc';
+import {
+  Command,
+  CommandInput,
+  CommandList,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem,
+  CommandLoading,
+  useCommandState
+} from 'cmdk';
 import {
   Select,
   SelectContent,
@@ -13,18 +22,17 @@ import {
   PopoverTrigger,
   PopoverContent
 } from '@/src/components/shadcn-ui/popover';
-import { type TypeId } from '@u22n/utils/typeid';
 import {
-  Command,
-  CommandInput,
-  CommandList,
-  CommandEmpty,
-  CommandGroup,
-  CommandItem,
-  CommandLoading,
-  useCommandState
-} from 'cmdk';
-import { useState, useMemo, useEffect } from 'react';
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger
+} from '@/src/components/shadcn-ui/tooltip';
+
+import {
+  type JSONContent,
+  emptyTiptapEditorContent
+} from '@u22n/tiptap/react/components';
+
 import {
   At,
   CaretDown,
@@ -32,31 +40,25 @@ import {
   Paperclip,
   Question
 } from '@phosphor-icons/react';
-import { z } from 'zod';
-import {
-  type JSONContent,
-  emptyTiptapEditorContent
-} from '@u22n/tiptap/react/components';
-import { Editor } from '@/src/components/shared/editor';
-import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { stringify } from 'superjson';
-import { toast } from 'sonner';
-import { useRouter } from 'next/navigation';
-import { useGlobalStore } from '@/src/providers/global-store-provider';
-import { useAddSingleConvo$Cache } from '../utils';
-import { Input } from '@/src/components/shadcn-ui/input';
-import { Button } from '@/src/components/shadcn-ui/button';
 import { useAttachmentUploader } from '@/src/components/shared/attachments';
-import { showNewConvoPanel } from '../atoms';
+import { useGlobalStore } from '@/src/providers/global-store-provider';
+import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { Avatar, AvatarIcon } from '@/src/components/avatar';
-import { cn } from '@/src/lib/utils';
+import { Button } from '@/src/components/shadcn-ui/button';
+import { Input } from '@/src/components/shadcn-ui/input';
 import { Badge } from '@/src/components/shadcn-ui/badge';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger
-} from '@/src/components/shadcn-ui/tooltip';
+import { Editor } from '@/src/components/shared/editor';
+import { useState, useMemo, useEffect } from 'react';
 import { useMutation } from '@tanstack/react-query';
+import { useAddSingleConvo$Cache } from '../utils';
+import { type TypeId } from '@u22n/utils/typeid';
+import { showNewConvoPanel } from '../atoms';
+import { useRouter } from 'next/navigation';
+import { platform } from '@/src/lib/trpc';
+import { stringify } from 'superjson';
+import { cn } from '@/src/lib/utils';
+import { toast } from 'sonner';
+import { z } from 'zod';
 
 export interface ConvoParticipantShared {
   avatarTimestamp: Date | null;

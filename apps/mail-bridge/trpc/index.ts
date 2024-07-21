@@ -1,9 +1,9 @@
 export * from '@trpc/server';
-import { router } from './trpc';
-import { orgRouter } from './routers/orgRouter';
-import { domainRouter } from './routers/domainRouter';
 import { sendMailRouter } from './routers/sendMailRouter';
+import { domainRouter } from './routers/domainRouter';
 import { smtpRouter } from './routers/smtpRouter';
+import { orgRouter } from './routers/orgRouter';
+import { router } from './trpc';
 
 export const trpcMailBridgePostalRouter = router({
   org: orgRouter,

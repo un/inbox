@@ -1,20 +1,5 @@
 'use client';
 
-import { platform } from '@/src/lib/trpc';
-import { useGlobalStore } from '@/src/providers/global-store-provider';
-import { Input } from '@/src/components/shadcn-ui/input';
-import { Switch } from '@/src/components/shadcn-ui/switch';
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/src/components/shadcn-ui/select';
-import { Button } from '@/src/components/shadcn-ui/button';
-import { z } from 'zod';
-import { type TypeId } from '@u22n/utils/typeid';
 import {
   Dialog,
   DialogContent,
@@ -24,11 +9,14 @@ import {
   DialogDescription,
   DialogClose
 } from '@/src/components/shadcn-ui/dialog';
-import { useState } from 'react';
-import { type UiColor, uiColors } from '@u22n/utils/colors';
-import { At, SpinnerGap } from '@phosphor-icons/react';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/src/components/shadcn-ui/select';
 import {
   Form,
   FormField,
@@ -37,6 +25,18 @@ import {
   FormControl,
   FormMessage
 } from '@/src/components/shadcn-ui/form';
+import { useGlobalStore } from '@/src/providers/global-store-provider';
+import { type UiColor, uiColors } from '@u22n/utils/colors';
+import { Switch } from '@/src/components/shadcn-ui/switch';
+import { Button } from '@/src/components/shadcn-ui/button';
+import { Input } from '@/src/components/shadcn-ui/input';
+import { At, SpinnerGap } from '@phosphor-icons/react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { type TypeId } from '@u22n/utils/typeid';
+import { useForm } from 'react-hook-form';
+import { platform } from '@/src/lib/trpc';
+import { useState } from 'react';
+import { z } from 'zod';
 
 const teamFormSchema = z.object({
   teamName: z.string().min(2, 'Team name must be at least 2 characters'),

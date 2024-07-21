@@ -1,7 +1,7 @@
-import { getAccount } from '@/lib/get-account';
 import { TRPCError, initTRPC } from '@trpc/server';
-import type { db } from '@u22n/database';
+import { getAccount } from '@/lib/get-account';
 import type { NextRequest } from 'next/server';
+import type { db } from '@u22n/database';
 import superjson from 'superjson';
 
 export const trpcContext = initTRPC
@@ -15,7 +15,7 @@ export const trpcContext = initTRPC
 const isAccountAuthenticated = trpcContext.middleware(async ({ next, ctx }) => {
   const account = await getAccount(ctx.event);
 
-  if (!account || !account.id || !account.username) {
+  if (!account?.id || !account.username) {
     throw new TRPCError({
       code: 'UNAUTHORIZED',
       message: 'You are not logged in, redirecting...'

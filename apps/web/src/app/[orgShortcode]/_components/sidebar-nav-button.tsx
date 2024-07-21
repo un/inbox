@@ -1,13 +1,13 @@
 'use client';
 
+import { Button } from '@/src/components/shadcn-ui/button';
 import { Badge } from '@/src/components/shadcn-ui/badge';
-import { cn } from '@/src/lib/utils';
 import { CaretRight, Dot } from '@phosphor-icons/react';
 import { usePathname } from 'next/navigation';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Button } from '@/src/components/shadcn-ui/button';
 import type { ReactNode } from 'react';
+import { cn } from '@/src/lib/utils';
 
 export function SidebarNavButton({
   link,

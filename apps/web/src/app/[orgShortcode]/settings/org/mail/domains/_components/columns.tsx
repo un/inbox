@@ -1,8 +1,8 @@
 'use client';
 
 import { createColumnHelper, type ColumnDef } from '@tanstack/react-table';
-import type { RouterOutputs } from '@/src/lib/trpc';
 import { Badge } from '@/src/components/shadcn-ui/badge';
+import type { RouterOutputs } from '@/src/lib/trpc';
 
 type Domain =
   RouterOutputs['org']['mail']['domains']['getOrgDomains']['domainData'][number];

@@ -1,7 +1,3 @@
-import { z } from 'zod';
-import { router, protectedProcedure } from '../trpc';
-import { eq } from '@u22n/database/orm';
-import { typeIdGenerator, typeIdValidator } from '@u22n/utils/typeid';
 import {
   addMailServer,
   createOrg,
@@ -11,9 +7,13 @@ import {
   setMailServerRoutingHttpEndpoint,
   setOrgIpPools
 } from '../../postal-db/functions';
-import { postalDB } from '../../postal-db';
+import { typeIdGenerator, typeIdValidator } from '@u22n/utils/typeid';
+import { router, protectedProcedure } from '../trpc';
 import { ipPools } from '../../postal-db/schema';
 import { activePostalServer } from '../../env';
+import { postalDB } from '../../postal-db';
+import { eq } from '@u22n/database/orm';
+import { z } from 'zod';
 
 export const orgRouter = router({
   createPostalOrg: protectedProcedure
@@ -54,7 +54,7 @@ export const orgRouter = router({
         }
       });
 
-      if (!postalIpPoolQuery || !postalIpPoolQuery.id) {
+      if (!postalIpPoolQuery?.id) {
         return {
           error: 'IP Pool not found'
         };

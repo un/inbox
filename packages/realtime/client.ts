@@ -2,10 +2,12 @@ import Pusher, { type UserAuthenticationCallback } from 'pusher-js';
 import { eventDataMaps, type EventDataMap } from './events';
 import type { z } from 'zod';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type EventHandler = (...args: any[]) => any;
 export default class RealtimeClient {
   private client: Pusher | null = null;
-  #preConnectEventHandlers = new Map<keyof EventDataMap, Function[]>();
-  #preConnectBroadcastHandlers = new Map<keyof EventDataMap, Function[]>();
+  #preConnectEventHandlers = new Map<keyof EventDataMap, EventHandler[]>();
+  #preConnectBroadcastHandlers = new Map<keyof EventDataMap, EventHandler[]>();
   #connectionTimeout: NodeJS.Timeout | null = null;
 
   constructor(
@@ -26,6 +28,7 @@ export default class RealtimeClient {
       forceTLS: false,
       enabledTransports: ['ws', 'wss'],
       userAuthentication: {
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
         customHandler: async (params, callback) => {
           const res = await fetch(this.config.authEndpoint, {
             body: JSON.stringify(params),
@@ -127,6 +130,7 @@ export default class RealtimeClient {
       handlers.forEach((handler) => {
         if (!this.client) return;
         this.client.bind(event, (e: unknown) =>
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-return
           handler(eventDataMaps[event].parse(e))
         );
       });
@@ -136,6 +140,7 @@ export default class RealtimeClient {
         if (!this.client) return;
         this.client
           .subscribe('broadcasts')
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-return
           .bind(event, (e: unknown) => handler(eventDataMaps[event].parse(e)));
       });
     }

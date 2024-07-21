@@ -1,7 +1,7 @@
+import { activePostalServer, env } from '../env';
 import { drizzle } from 'drizzle-orm/mysql2';
 import mysql from 'mysql2/promise';
 import * as schema from './schema';
-import { activePostalServer, env } from '../env';
 
 const isLocal = env.MAILBRIDGE_LOCAL_MODE;
 export const connection = mysql.createPool({

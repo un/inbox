@@ -1,10 +1,10 @@
+import { accounts } from '@u22n/database/schema';
+import { setCookie } from '@u22n/hono/helpers';
+import { lucia } from '~platform/utils/auth';
 import { createHonoApp } from '@u22n/hono';
 import type { Ctx } from '~platform/ctx';
-import { lucia } from '~platform/utils/auth';
-import { setCookie } from '@u22n/hono/helpers';
-import { db } from '@u22n/database';
-import { accounts } from '@u22n/database/schema';
 import { eq } from '@u22n/database/orm';
+import { db } from '@u22n/database';
 
 export const authApi = createHonoApp<Ctx>();
 
@@ -46,7 +46,7 @@ authApi.get('/redirection', async (c) => {
 
   return c.json({
     defaultOrgShortcode:
-      accountResponse?.orgMemberships[0]?.org?.shortcode || null
+      accountResponse?.orgMemberships[0]?.org?.shortcode ?? null
   });
 });
 

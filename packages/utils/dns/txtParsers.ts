@@ -1,6 +1,6 @@
 export const parseSpfIncludes = (data: string) => {
   const spf = data.match(/v=spf1 (.*)/);
-  if (!spf || !spf[1]) {
+  if (!spf?.[1]) {
     return null;
   }
   const includes = spf[1].match(/include:([^\s]+)/g);
@@ -23,9 +23,10 @@ export const buildSpfRecord = (includes: string[], all: string) =>
 
 export const parseDkim = (data: string) => {
   const dkim = data.replaceAll(' ', '').match(/v=DKIM1;(.*)/);
-  if (!dkim || !dkim[1]) {
+  if (!dkim?.[1]) {
     return null;
   }
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const values: Record<string, string> = Object.fromEntries(
     dkim[1].split(';').map((_) => _.split('='))
   );
@@ -39,9 +40,10 @@ export const buildDkimRecord = (data: Record<string, string>) =>
 
 export const parseDmarc = (data: string) => {
   const dmarc = data.replaceAll(' ', '').match(/v=DMARC1;(.*)/);
-  if (!dmarc || !dmarc[1]) {
+  if (!dmarc?.[1]) {
     return null;
   }
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const values: Record<string, string> = Object.fromEntries(
     dmarc[1].split(';').map((_) => _.split('='))
   );

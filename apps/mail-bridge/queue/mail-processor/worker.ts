@@ -1,5 +1,3 @@
-import { Worker } from 'bullmq';
-import type { MailParamsSchema, PostalMessageSchema } from './schemas';
 import {
   contacts,
   convoAttachments,
@@ -14,25 +12,27 @@ import {
   postalServers,
   type ConvoEntryMetadata
 } from '@u22n/database/schema';
-import { eq, and, inArray } from '@u22n/database/orm';
 import {
   typeIdGenerator,
   validateTypeId,
   type TypeId
 } from '@u22n/utils/typeid';
-import { db } from '@u22n/database';
-import { parseMessage } from '@u22n/mailtools';
-import { parseAddressIds } from '../../utils/contactParsing';
-import { sanitize } from '../../utils/purify';
-import { tiptapCore, tiptapHtml } from '@u22n/tiptap';
-import { tipTapExtensions } from '@u22n/tiptap/extensions';
+import type { MailParamsSchema, PostalMessageSchema } from './schemas';
 import { sendRealtimeNotification } from '../../utils/realtime';
+import { parseAddressIds } from '../../utils/contactParsing';
 import { simpleParser, type EmailAddress } from 'mailparser';
-import { env } from '../../env';
-import { discord } from '@u22n/utils/discord';
-import mime from 'mime';
+import { tipTapExtensions } from '@u22n/tiptap/extensions';
+import { eq, and, inArray } from '@u22n/database/orm';
+import { tiptapCore, tiptapHtml } from '@u22n/tiptap';
 import { getTracer } from '@u22n/otel/helpers';
+import { parseMessage } from '@u22n/mailtools';
+import { discord } from '@u22n/utils/discord';
+import { sanitize } from '../../utils/purify';
 import { logger } from '@u22n/otel/logger';
+import { db } from '@u22n/database';
+import { env } from '../../env';
+import { Worker } from 'bullmq';
+import mime from 'mime';
 
 const { host, username, password, port } = new URL(
   env.DB_REDIS_CONNECTION_STRING
@@ -68,7 +68,7 @@ export const worker = new Worker<
         span?.addEvent('mail-processor.resolved_org_mailserver', {
           orgId,
           orgPublicId,
-          forwardedEmailAddress: forwardedEmailAddress || '<null>'
+          forwardedEmailAddress: forwardedEmailAddress ?? '<null>'
         });
 
         const payloadEmail = base64
@@ -115,9 +115,9 @@ export const worker = new Worker<
           parsedEmail.subject?.replace(/^(RE:|FW:)\s*/i, '').trim() || '';
         const messageId = parsedEmail.messageId?.replace(/^<|>$/g, '') || '';
         const messageBodyHtml = parsedEmail.html
-          ? (parsedEmail.html as string).replace(/\n/g, '')
+          ? parsedEmail.html.replace(/\n/g, '')
           : parsedEmail.textAsHtml
-            ? (parsedEmail.textAsHtml as string).replace(/\n/g, '')
+            ? parsedEmail.textAsHtml.replace(/\n/g, '')
             : '';
         const attachments = parsedEmail.attachments || [];
 
@@ -191,12 +191,7 @@ export const worker = new Worker<
             : Promise.resolve([])
         ]);
 
-        if (
-          !messageToPlatformObject ||
-          !messageToPlatformObject[0] ||
-          !messageFromPlatformObject ||
-          !messageFromPlatformObject[0]
-        ) {
+        if (!messageToPlatformObject?.[0] || !messageFromPlatformObject?.[0]) {
           span?.setAttributes({
             'message.toObject': JSON.stringify(messageToPlatformObject),
             'message.fromObject': JSON.stringify(messageFromPlatformObject)
@@ -306,14 +301,14 @@ export const worker = new Worker<
               return values;
             },
             {
-              routingRuleTeamIds: <number[]>[],
-              routingRuleOrgMemberIds: <number[]>[]
+              routingRuleTeamIds: [] as number[],
+              routingRuleOrgMemberIds: [] as number[]
             }
           );
 
         //* start to process the conversation
         let hasReplyToButIsNewConvo: boolean | null = null;
-        let convoId: number = -1;
+        let convoId = -1;
         let replyToId: number | null = null;
         let subjectId: number | null = null;
 
@@ -595,7 +590,7 @@ export const worker = new Worker<
                   where: and(
                     eq(convoParticipants.orgId, orgId),
                     eq(convoParticipants.convoId, convoId || 0),
-                    eq(convoParticipants.teamId, firstDestination!.teamId)
+                    eq(convoParticipants.teamId, firstDestination.teamId)
                   ),
                   columns: {
                     id: true
@@ -696,11 +691,11 @@ export const worker = new Worker<
               {
                 orgId: orgId,
                 fileName:
-                  attachment.filename ||
+                  attachment.filename ??
                   generateFileName({
                     identifier:
-                      messageFrom[0]?.name ||
-                      messageFrom[0]?.address ||
+                      messageFrom[0]?.name ??
+                      messageFrom[0]?.address ??
                       'Unknown',
                     fileType: attachment.contentType
                   }),
@@ -708,10 +703,10 @@ export const worker = new Worker<
                 fileContent: attachment.content,
                 convoId: convoId,
                 convoEntryId: Number(insertNewConvoEntry.insertId),
-                convoParticipantId: fromAddressParticipantId || 0,
+                convoParticipantId: fromAddressParticipantId ?? 0,
                 fileSize: attachment.size,
                 inline: attachment.contentDisposition === 'inline',
-                cid: attachment.cid || null
+                cid: attachment.cid ?? null
               },
               orgPublicId,
               orgShortcode.shortcode
@@ -766,7 +761,7 @@ export const worker = new Worker<
         }
 
         const originalEmailWithAttachments = replaceCidWithUrl(
-          parsedEmail.html || parsedEmail.textAsHtml || '',
+          (parsedEmail.html || parsedEmail.textAsHtml) ?? '',
           uploadedAttachments
         );
 
@@ -779,7 +774,7 @@ export const worker = new Worker<
         });
 
         await sendRealtimeNotification({
-          newConvo: !inReplyToEmailId || hasReplyToButIsNewConvo || false,
+          newConvo: (!inReplyToEmailId || hasReplyToButIsNewConvo) ?? false,
           convoId: convoId,
           convoEntryId: +insertNewConvoEntry.insertId
         });
@@ -936,7 +931,7 @@ async function uploadAndAttachAttachment(
     }
   ).then((r) => r.json())) as PreSignedData;
 
-  if (!preUpload || !preUpload.publicId || !preUpload.signedUrl) {
+  if (!preUpload?.publicId || !preUpload.signedUrl) {
     throw new Error('Missing attachmentPublicId or presignedUrl');
   }
 
@@ -1003,6 +998,6 @@ function generateFileName({ identifier, fileType }: GenerationContext) {
     case 'text/calendar':
       return `${identifier} Calender Invite.ics`;
     default:
-      return `Attachment (${identifier}) ${new Date().toDateString()}.${mime.getExtension(fileType) || 'bin'}`;
+      return `Attachment (${identifier}) ${new Date().toDateString()}.${mime.getExtension(fileType) ?? 'bin'}`;
   }
 }

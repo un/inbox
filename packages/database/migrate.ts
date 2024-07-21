@@ -1,6 +1,6 @@
-import { drizzle } from 'drizzle-orm/mysql2';
 import { migrate } from 'drizzle-orm/mysql2/migrator';
 import { createConnection } from 'mysql2/promise';
+import { drizzle } from 'drizzle-orm/mysql2';
 import { env } from './env';
 
 const connection = await createConnection({

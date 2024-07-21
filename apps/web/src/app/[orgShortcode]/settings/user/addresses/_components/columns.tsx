@@ -1,10 +1,10 @@
 'use client';
 
-import { createColumnHelper, type ColumnDef } from '@tanstack/react-table';
-import type { TypeId } from '@u22n/utils/typeid';
 import { ScrollArea, ScrollBar } from '@/src/components/shadcn-ui/scroll-area';
-import { Avatar } from '@/src/components/avatar';
+import { createColumnHelper, type ColumnDef } from '@tanstack/react-table';
 import { CopyButton } from '@/src/components/copy-button';
+import { Avatar } from '@/src/components/avatar';
+import type { TypeId } from '@u22n/utils/typeid';
 
 type Identity = {
   publicId: TypeId<'emailIdentitiesPersonal'>;

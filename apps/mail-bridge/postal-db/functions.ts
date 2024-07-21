@@ -1,22 +1,3 @@
-import { connection as rawMySqlConnection, postalDB } from '.';
-import {
-  organizations,
-  domains,
-  credentials,
-  organizationIpPools,
-  servers,
-  webhooks,
-  httpEndpoints,
-  routes
-} from './schema';
-import { randomUUID } from 'node:crypto';
-import {
-  generateDKIMKeyPair,
-  generatePublicKey,
-  getUniqueDKIMSelector,
-  randomAlphaNumeric
-} from './generators';
-import { and, eq, sql } from 'drizzle-orm';
 import {
   lookupCNAME,
   lookupMX,
@@ -28,6 +9,25 @@ import {
   parseDmarc,
   buildDmarcRecord
 } from '@u22n/utils/dns';
+import {
+  organizations,
+  domains,
+  credentials,
+  organizationIpPools,
+  servers,
+  webhooks,
+  httpEndpoints,
+  routes
+} from './schema';
+import {
+  generateDKIMKeyPair,
+  generatePublicKey,
+  getUniqueDKIMSelector,
+  randomAlphaNumeric
+} from './generators';
+import { connection as rawMySqlConnection, postalDB } from '.';
+import { and, eq, sql } from 'drizzle-orm';
+import { randomUUID } from 'node:crypto';
 import { env } from '../env';
 
 export type CreateOrgInput = {
@@ -125,7 +125,7 @@ export type GetDomainDNSRecordsOutput =
 export async function getDomainDNSRecords(
   domainId: string,
   postalServerUrl: string,
-  forceReverify: boolean = false
+  forceReverify = false
 ): Promise<GetDomainDNSRecordsOutput> {
   const domainInfo = await postalDB.query.domains.findFirst({
     where: eq(domains.uuid, domainId)
@@ -204,27 +204,27 @@ export async function getDomainDNSRecords(
 
   const spfDomains = txtRecords.success
     ? parseSpfIncludes(
-        txtRecords.data.find((_) => _.startsWith('v=spf1')) || ''
+        txtRecords.data.find((_) => _.startsWith('v=spf1')) ?? ''
       )
     : null;
   records.spf.name = '@';
   records.spf.extraSenders =
     (spfDomains &&
       spfDomains.includes.filter((x) => x !== `_spf.${dnsRootUrl}`).length >
-        0) ||
+        0) ??
     false;
 
   // We need to resolve duplicate entries incase the spf record is already included, so that we don't have duplicate entries
   const allSenders = Array.from(
     new Set([
       `_spf.${dnsRootUrl}`,
-      ...(records.spf.extraSenders ? spfDomains?.includes || [] : [])
+      ...(records.spf.extraSenders ? spfDomains?.includes ?? [] : [])
     ]).values()
   );
 
   records.spf.value = buildSpfRecord(allSenders, '~all');
   records.spf.valid =
-    (spfDomains && spfDomains.includes.includes(`_spf.${dnsRootUrl}`)) || false;
+    spfDomains?.includes.includes(`_spf.${dnsRootUrl}`) ?? false;
 
   if (!records.spf.valid || domainInfo.spfStatus !== 'OK' || forceReverify) {
     await postalDB
@@ -262,13 +262,9 @@ export async function getDomainDNSRecords(
         .where(eq(domains.uuid, domainId));
     } else {
       const domainKey = parseDkim(
-        domainKeyRecords.data.find((_) => _.startsWith('v=DKIM1')) || ''
+        domainKeyRecords.data.find((_) => _.startsWith('v=DKIM1')) ?? ''
       );
-      if (
-        !domainKey ||
-        domainKey['h'] !== 'sha256' ||
-        domainKey['p'] !== publicKey
-      ) {
+      if (!domainKey || domainKey.h !== 'sha256' || domainKey.p !== publicKey) {
         records.dkim.valid = false;
         await postalDB
           .update(domains)
@@ -350,11 +346,11 @@ export async function getDomainDNSRecords(
   const dmarcRecord = await lookupTXT(`_dmarc.${domainInfo.name}`);
   if (dmarcRecord.success && dmarcRecord.data.length > 0) {
     const dmarcValues = parseDmarc(
-      dmarcRecord.data.find((_) => _.startsWith('v=DMARC1')) || ''
+      dmarcRecord.data.find((_) => _.startsWith('v=DMARC1')) ?? ''
     );
     if (dmarcValues) {
       records.dmarc.policy =
-        (dmarcValues['p'] as 'reject' | 'quarantine' | 'none') || null;
+        (dmarcValues.p as 'reject' | 'quarantine' | 'none') || null;
     }
   }
   records.dmarc.name = '_dmarc';
@@ -524,7 +520,7 @@ export async function setMailServerRouteForDomain(
       id: true
     }
   });
-  if (!domainQuery || !domainQuery.id) {
+  if (!domainQuery?.id) {
     throw new Error('Domain not found');
   }
   const domainId = domainQuery.id;

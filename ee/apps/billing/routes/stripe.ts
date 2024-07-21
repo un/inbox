@@ -1,9 +1,9 @@
-import type { Ctx } from '../ctx';
-import type Stripe from 'stripe';
-import { db } from '@u22n/database';
-import { eq } from '@u22n/database/orm';
 import { orgBilling } from '@u22n/database/schema';
 import { createHonoApp } from '@u22n/hono';
+import { eq } from '@u22n/database/orm';
+import { db } from '@u22n/database';
+import type { Ctx } from '../ctx';
+import type Stripe from 'stripe';
 
 export const stripeApi = createHonoApp<Ctx>();
 
@@ -25,7 +25,7 @@ stripeApi.post('/webhooks', async (c) => {
 const handleCustomerSubscriptionUpdated = async (stripeEvent: Stripe.Event) => {
   const data = stripeEvent.data.object as Stripe.Subscription;
   const orgsId = Number(data.metadata.orgId);
-  const subId = data.id as string;
+  const subId = data.id;
   const customerId = data.customer as string;
   const status = data.status;
   const plan = data.metadata.plan as 'starter' | 'pro';

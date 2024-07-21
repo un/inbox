@@ -1,12 +1,12 @@
-import { TRPCError, initTRPC } from '@trpc/server';
-import superjson from 'superjson';
 import { validateOrgShortcode } from '~platform/utils/orgShortcode';
-import type { TrpcContext } from '~platform/ctx';
-import { z } from 'zod';
-import { env } from '~platform/env';
 import { isAccountAdminOfOrg } from '~platform/utils/account';
+import { TRPCError, initTRPC } from '@trpc/server';
+import type { TrpcContext } from '~platform/ctx';
 import { getTracer } from '@u22n/otel/helpers';
 import { flatten } from '@u22n/otel/exports';
+import { env } from '~platform/env';
+import superjson from 'superjson';
+import { z } from 'zod';
 
 export const trpcContext = initTRPC
   .context<TrpcContext>()
@@ -141,7 +141,7 @@ export const turnstileProcedure = publicProcedure
           });
         }
 
-        const res = await fetch(
+        const res = (await fetch(
           'https://challenges.cloudflare.com/turnstile/v0/siteverify',
           {
             method: 'POST',
@@ -154,7 +154,7 @@ export const turnstileProcedure = publicProcedure
               remoteip: ctx.event.env.incoming.socket.remoteAddress
             })
           }
-        ).then((res) => res.json());
+        ).then((res) => res.json())) as { success: boolean };
 
         span?.addEvent('trpc.turnstileMiddleware.end');
         span?.setAttributes(

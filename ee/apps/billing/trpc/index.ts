@@ -1,8 +1,8 @@
 export * from '@trpc/server';
-import { router } from './trpc';
-import { stripeLinksRouter } from './routers/stripeLinksRouter';
 import { subscriptionsRouter } from './routers/subscriptionsRouter';
+import { stripeLinksRouter } from './routers/stripeLinksRouter';
 import { iCanHazRouter } from './routers/iCanHazRouter';
+import { router } from './trpc';
 
 const stripeRouter = router({
   links: stripeLinksRouter,

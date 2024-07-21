@@ -1,6 +1,6 @@
 'use client';
-import { validateTypeId } from '@u22n/utils/typeid';
 import { ConvoView, ConvoNotFound } from './_components/convo-views';
+import { validateTypeId } from '@u22n/utils/typeid';
 
 export default function ConvoPage({
   params

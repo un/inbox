@@ -1,15 +1,5 @@
 'use client';
 
-import * as React from 'react';
-import { cva, type VariantProps } from 'class-variance-authority';
-import { cn, generateAvatarUrl, getInitials } from '@/src/lib/utils';
-import { type TypeId, inferTypeId } from '@u22n/utils/typeid';
-import { Tooltip, TooltipContent, TooltipTrigger } from './shadcn-ui/tooltip';
-import {
-  Avatar as AvatarShad,
-  AvatarFallback,
-  AvatarImage
-} from './shadcn-ui/avatar';
 import {
   AddressBook,
   At,
@@ -18,6 +8,16 @@ import {
   User,
   UsersThree
 } from '@phosphor-icons/react';
+import {
+  Avatar as AvatarShad,
+  AvatarFallback,
+  AvatarImage
+} from './shadcn-ui/avatar';
+import { Tooltip, TooltipContent, TooltipTrigger } from './shadcn-ui/tooltip';
+import { cn, generateAvatarUrl, getInitials } from '@/src/lib/utils';
+import { cva, type VariantProps } from 'class-variance-authority';
+import { type TypeId, inferTypeId } from '@u22n/utils/typeid';
+import * as React from 'react';
 
 export type AvatarProps = {
   avatarProfilePublicId:

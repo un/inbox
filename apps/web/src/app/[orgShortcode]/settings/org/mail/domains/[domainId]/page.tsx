@@ -1,25 +1,25 @@
 'use client';
 
-import { Button } from '@/src/components/shadcn-ui/button';
-import { platform } from '@/src/lib/trpc';
-import { useGlobalStore } from '@/src/providers/global-store-provider';
-import { ArrowLeft, ArrowClockwise } from '@phosphor-icons/react';
-import Link from 'next/link';
-import { type TypeId } from '@u22n/utils/typeid';
-import { Badge } from '@/src/components/shadcn-ui/badge';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger
 } from '@/src/components/shadcn-ui/accordion';
-import { CopyButton } from '@/src/components/copy-button';
-import { useTimeAgo } from '@/src/hooks/use-time-ago';
 import {
   Alert,
   AlertDescription,
   AlertTitle
 } from '@/src/components/shadcn-ui/alert';
+import { useGlobalStore } from '@/src/providers/global-store-provider';
+import { ArrowLeft, ArrowClockwise } from '@phosphor-icons/react';
+import { Button } from '@/src/components/shadcn-ui/button';
+import { CopyButton } from '@/src/components/copy-button';
+import { Badge } from '@/src/components/shadcn-ui/badge';
+import { useTimeAgo } from '@/src/hooks/use-time-ago';
+import { type TypeId } from '@u22n/utils/typeid';
+import { platform } from '@/src/lib/trpc';
+import Link from 'next/link';
 
 export default function Page({
   params

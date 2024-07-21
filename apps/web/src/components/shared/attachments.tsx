@@ -1,9 +1,3 @@
-import { type TypeId } from '@u22n/utils/typeid';
-import { useCallback, useMemo, useState } from 'react';
-import { toast } from 'sonner';
-import { cn, prettyBytes } from '../../lib/utils';
-import { useGlobalStore } from '../../providers/global-store-provider';
-import uploadTracker from '../../lib/upload';
 import {
   FileDoc,
   FileJpg,
@@ -16,8 +10,14 @@ import {
   File,
   X
 } from '@phosphor-icons/react';
+import { useGlobalStore } from '../../providers/global-store-provider';
 import { type VariantProps, cva } from 'class-variance-authority';
+import { useCallback, useMemo, useState } from 'react';
+import { cn, prettyBytes } from '../../lib/utils';
+import { type TypeId } from '@u22n/utils/typeid';
+import uploadTracker from '../../lib/upload';
 import { env } from '@/src/env';
+import { toast } from 'sonner';
 
 export type Attachment = {
   filename: string;

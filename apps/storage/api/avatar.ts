@@ -1,21 +1,21 @@
-import type { Ctx } from '../ctx';
-import { checkSignedIn } from '../middlewares';
-import { z } from 'zod';
-import { typeIdValidator, type TypeId } from '@u22n/utils/typeid';
 import {
   orgMemberProfiles,
   orgMembers,
   orgs,
   teams
 } from '@u22n/database/schema';
-import { eq } from '@u22n/database/orm';
+import { typeIdValidator, type TypeId } from '@u22n/utils/typeid';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
-import { db } from '@u22n/database';
-import { s3Client } from '../s3';
-import sharp from 'sharp';
-import { env } from '../env';
-import { createHonoApp } from '@u22n/hono';
 import { zValidator } from '@u22n/hono/helpers';
+import { checkSignedIn } from '../middlewares';
+import { createHonoApp } from '@u22n/hono';
+import { eq } from '@u22n/database/orm';
+import { db } from '@u22n/database';
+import type { Ctx } from '../ctx';
+import { s3Client } from '../s3';
+import { env } from '../env';
+import sharp from 'sharp';
+import { z } from 'zod';
 
 export const avatarApi = createHonoApp<Ctx>().post(
   '/avatar',
@@ -59,7 +59,7 @@ export const avatarApi = createHonoApp<Ctx>().post(
       )
   ),
   async (c) => {
-    const accountId = c.get('account')?.id!; // we know it's not null here, checked in the middleware
+    const accountId = c.get('account')!.id; // we know it's not null here, checked in the middleware
     const type = c.req.valid('form').type;
     const publicId = c.req.valid('form').publicId;
     const file = c.req.valid('form').file;
@@ -78,7 +78,7 @@ export const avatarApi = createHonoApp<Ctx>().post(
             avatarTimestamp: true
           }
         });
-        if (!profileResponse || !profileResponse.accountId)
+        if (!profileResponse?.accountId)
           return c.json({ error: 'Invalid profile' }, { status: 400 });
 
         if (profileResponse.accountId !== accountId)

@@ -1,9 +1,9 @@
-import { db } from '@u22n/database';
-import { eq } from '@u22n/database/orm';
-import { domains } from '@u22n/database/schema';
-import { dnsVerifier } from '@u22n/utils/dns';
 import type { TypeId } from '@u22n/utils/typeid';
+import { domains } from '@u22n/database/schema';
 import { discord } from '@u22n/utils/discord';
+import { dnsVerifier } from '@u22n/utils/dns';
+import { eq } from '@u22n/database/orm';
+import { db } from '@u22n/database';
 import { env } from '../env';
 
 export async function checkDns(publicId: TypeId<'domains'>) {
@@ -67,7 +67,7 @@ export async function checkDns(publicId: TypeId<'domains'>) {
       })
     }).then((res) => {
       if (!res.ok) {
-        discord.alert(
+        void discord.alert(
           `An error occurred while Communicating with Platform Services for DNS records of Domain ${domainInfo.domain}(${domainInfo.publicId}). The Platform responded with status ${res.status}.`
         );
       }

@@ -1,19 +1,19 @@
 'use client';
 
-import { datePlus } from '@u22n/utils/ms';
-import { Button } from '@/src/components/shadcn-ui/button';
 import {
   Avatar,
   AvatarImage,
   AvatarFallback
 } from '@/src/components/shadcn-ui/avatar';
-import Link from 'next/link';
+import { generateAvatarUrl, getInitials } from '@/src/lib/utils';
+import { Button } from '@/src/components/shadcn-ui/button';
 import { platform, isAuthenticated } from '@/src/lib/trpc';
+import { SpinnerGap } from '@phosphor-icons/react';
+import { useQuery } from '@tanstack/react-query';
 import { useCookies } from 'next-client-cookies';
 import { useRouter } from 'next/navigation';
-import { generateAvatarUrl, getInitials } from '@/src/lib/utils';
-import { useQuery } from '@tanstack/react-query';
-import { SpinnerGap } from '@phosphor-icons/react';
+import { datePlus } from '@u22n/utils/ms';
+import Link from 'next/link';
 
 export default function InviteCard({ code }: { code: string }) {
   const router = useRouter();

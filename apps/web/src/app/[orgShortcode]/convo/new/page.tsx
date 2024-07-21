@@ -1,6 +1,6 @@
+import CreateConvoForm from '../_components/create-convo-form';
 import type { Metadata } from 'next';
 import React from 'react';
-import CreateConvoForm from '../_components/create-convo-form';
 
 export const metadata: Metadata = {
   title: 'UnInbox | Create Convo',

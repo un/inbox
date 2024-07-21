@@ -1,8 +1,8 @@
-import { z } from 'zod';
 import { router, accountProcedure, orgProcedure } from '~platform/trpc/trpc';
-import { and, eq } from '@u22n/database/orm';
 import { accounts, orgMembers } from '@u22n/database/schema';
+import { and, eq } from '@u22n/database/orm';
 import { TRPCError } from '@trpc/server';
+import { z } from 'zod';
 
 export const defaultsRouter = router({
   redirectionData: accountProcedure
@@ -47,7 +47,7 @@ export const defaultsRouter = router({
 
       return {
         defaultOrgShortcode:
-          accountResponse?.orgMemberships[0]?.org?.shortcode || null,
+          accountResponse?.orgMemberships[0]?.org?.shortcode ?? null,
         twoFactorEnabledCorrectly: twoFactorEnabledCorrectly,
         userHasOrgMembership: userHasOrgMembership,
         username: accountResponse.username
@@ -70,7 +70,7 @@ export const defaultsRouter = router({
       }
     });
 
-    if (!dbQuery || !dbQuery?.org?.publicId || !dbQuery?.publicId) {
+    if (!dbQuery?.org?.publicId || !dbQuery?.publicId) {
       throw new TRPCError({
         code: 'FORBIDDEN',
         message: 'User not in org'

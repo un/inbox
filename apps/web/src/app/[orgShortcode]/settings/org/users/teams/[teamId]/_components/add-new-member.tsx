@@ -1,7 +1,3 @@
-import { Button } from '@/src/components/shadcn-ui/button';
-import { platform } from '@/src/lib/trpc';
-import { useGlobalStore } from '@/src/providers/global-store-provider';
-import { type TypeId } from '@u22n/utils/typeid';
 import {
   Select,
   SelectContent,
@@ -9,6 +5,10 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/src/components/shadcn-ui/select';
+import { useGlobalStore } from '@/src/providers/global-store-provider';
+import { Button } from '@/src/components/shadcn-ui/button';
+import { type TypeId } from '@u22n/utils/typeid';
+import { platform } from '@/src/lib/trpc';
 import { useState } from 'react';
 import { toast } from 'sonner';
 

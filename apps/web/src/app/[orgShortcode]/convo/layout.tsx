@@ -1,16 +1,4 @@
 'use client';
-import { Button } from '@/src/components/shadcn-ui/button';
-import { ConvoList } from './_components/convo-list';
-import { usePreferencesState } from '@/src/stores/preferences-store';
-import { useIsMobile } from '@/src/hooks/is-mobile';
-import {
-  CaretRight,
-  ChatCircle,
-  Eye,
-  EyeSlash,
-  List,
-  User
-} from '@phosphor-icons/react';
 import {
   Breadcrumb,
   BreadcrumbEllipsis,
@@ -19,22 +7,34 @@ import {
   BreadcrumbList,
   BreadcrumbSeparator
 } from '@/src/components/shadcn-ui/breadcrumb';
-import { useState } from 'react';
-import Link from 'next/link';
-import { useGlobalStore } from '@/src/providers/global-store-provider';
-import { useEffect } from 'react';
-import { useRealtime } from '@/src/providers/realtime-provider';
 import {
   useAddSingleConvo$Cache,
   useDeleteConvo$Cache,
   useToggleConvoHidden$Cache,
   useUpdateConvoMessageList$Cache
 } from './utils';
+import {
+  CaretRight,
+  ChatCircle,
+  Eye,
+  EyeSlash,
+  List,
+  User
+} from '@phosphor-icons/react';
+import { useGlobalStore } from '@/src/providers/global-store-provider';
+import { usePreferencesState } from '@/src/stores/preferences-store';
+import { useRealtime } from '@/src/providers/realtime-provider';
+import { OrgIssueAlerts } from './_components/org-issue-alerts';
+import { Button } from '@/src/components/shadcn-ui/button';
+import { ConvoList } from './_components/convo-list';
+import { useIsMobile } from '@/src/hooks/is-mobile';
 import { usePathname } from 'next/navigation';
-import { useAtom } from 'jotai';
 import { showNewConvoPanel } from './atoms';
 import { platform } from '@/src/lib/trpc';
-import { OrgIssueAlerts } from './_components/org-issue-alerts';
+import { useEffect } from 'react';
+import { useState } from 'react';
+import { useAtom } from 'jotai';
+import Link from 'next/link';
 
 export default function Layout({
   children

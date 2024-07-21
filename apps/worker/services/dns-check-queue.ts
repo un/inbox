@@ -1,8 +1,8 @@
-import type { TypeId } from '@u22n/utils/typeid';
 import { createQueue, createWorker } from '../utils/queue-helpers';
 import { checkDns } from '../functions/check-dns';
-import { CronJob } from 'cron';
+import type { TypeId } from '@u22n/utils/typeid';
 import { db } from '@u22n/database';
+import { CronJob } from 'cron';
 
 const QUEUE_NAME = 'dns-check';
 

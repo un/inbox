@@ -1,10 +1,10 @@
-import { z } from 'zod';
-import { router, accountProcedure } from '../trpc';
-import { eq } from '@u22n/database/orm';
-import { typeIdValidator } from '@u22n/utils/typeid';
-import { db } from '@u22n/database';
 import { orgs, type OrgMetadata } from '@u22n/database/schema';
+import { typeIdValidator } from '@u22n/utils/typeid';
+import { router, accountProcedure } from '../trpc';
 import { TRPCError } from '@trpc/server';
+import { eq } from '@u22n/database/orm';
+import { db } from '@u22n/database';
+import { z } from 'zod';
 
 export const orgRouter = router({
   getOrgData: accountProcedure
@@ -72,8 +72,8 @@ export const orgRouter = router({
         });
       }
 
-      const newOrgMetadata: OrgMetadata = orgDataQuery.metadata || {};
-      newOrgMetadata.bonuses = newOrgMetadata.bonuses || []; // Initialize bonuses as an empty array if it is undefined
+      const newOrgMetadata: OrgMetadata = orgDataQuery.metadata ?? {};
+      newOrgMetadata.bonuses = newOrgMetadata.bonuses ?? []; // Initialize bonuses as an empty array if it is undefined
       newOrgMetadata.bonuses.push({
         item: 'domain',
         awardedAt: new Date(),

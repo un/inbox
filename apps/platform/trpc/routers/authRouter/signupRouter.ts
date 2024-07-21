@@ -1,12 +1,12 @@
-import { z } from 'zod';
-import { router, publicProcedure } from '~platform/trpc/trpc';
-import type { DBType } from '@u22n/database';
-import { eq } from '@u22n/database/orm';
-import { ratelimiter } from '~platform/trpc/ratelimit';
-import { accounts } from '@u22n/database/schema';
 import { blockedUsernames, reservedUsernames } from '~platform/utils/signup';
 import { calculatePasswordStrength } from '@u22n/utils/password';
+import { router, publicProcedure } from '~platform/trpc/trpc';
+import { ratelimiter } from '~platform/trpc/ratelimit';
 import { zodSchemas } from '@u22n/utils/zodSchemas';
+import { accounts } from '@u22n/database/schema';
+import type { DBType } from '@u22n/database';
+import { eq } from '@u22n/database/orm';
+import { z } from 'zod';
 
 export async function validateUsername(
   db: DBType,

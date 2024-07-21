@@ -1,12 +1,3 @@
-import { z } from 'zod';
-import { router, orgProcedure, orgAdminProcedure } from '~platform/trpc/trpc';
-import {
-  and,
-  eq,
-  inArray,
-  or,
-  type InferInsertModel
-} from '@u22n/database/orm';
 import {
   orgMembers,
   domains,
@@ -18,14 +9,23 @@ import {
   emailIdentitiesAuthorizedOrgMembers
 } from '@u22n/database/schema';
 import {
+  and,
+  eq,
+  inArray,
+  or,
+  type InferInsertModel
+} from '@u22n/database/orm';
+import {
   typeIdGenerator,
   typeIdValidator,
   type TypeId
 } from '@u22n/utils/typeid';
+import { router, orgProcedure, orgAdminProcedure } from '~platform/trpc/trpc';
+import { emailIdentityExternalRouter } from './emailIdentityExternalRouter';
 import { nanoIdToken } from '@u22n/utils/zodSchemas';
 import { TRPCError } from '@trpc/server';
-import { emailIdentityExternalRouter } from './emailIdentityExternalRouter';
 import { env } from '~platform/env';
+import { z } from 'zod';
 
 export const emailIdentityRouter = router({
   external: emailIdentityExternalRouter,

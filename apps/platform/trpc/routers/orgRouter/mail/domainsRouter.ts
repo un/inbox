@@ -1,17 +1,17 @@
-import { z } from 'zod';
-import { router, orgProcedure, orgAdminProcedure } from '~platform/trpc/trpc';
-import { and, eq } from '@u22n/database/orm';
 import {
   domains,
   postalServers,
   orgPostalConfigs
 } from '@u22n/database/schema';
-import { typeIdGenerator, typeIdValidator } from '@u22n/utils/typeid';
-import { lookupNS } from '@u22n/utils/dns';
-import { TRPCError } from '@trpc/server';
+import { router, orgProcedure, orgAdminProcedure } from '~platform/trpc/trpc';
 import { mailBridgeTrpcClient } from '~platform/utils/tRPCServerClients';
+import { typeIdGenerator, typeIdValidator } from '@u22n/utils/typeid';
 import { updateDnsRecords } from '~platform/utils/updateDnsRecords';
 import { iCanHazCallerFactory } from '../iCanHaz/iCanHazRouter';
+import { and, eq } from '@u22n/database/orm';
+import { lookupNS } from '@u22n/utils/dns';
+import { TRPCError } from '@trpc/server';
+import { z } from 'zod';
 
 export const domainsRouter = router({
   createNewDomain: orgAdminProcedure
@@ -101,8 +101,7 @@ export const domainsRouter = router({
           });
 
         if (
-          !createMailBridgeOrgResponse ||
-          !createMailBridgeOrgResponse.postalServer ||
+          !createMailBridgeOrgResponse?.postalServer ||
           !createMailBridgeOrgResponse.config
         ) {
           throw new TRPCError({
@@ -150,7 +149,7 @@ export const domainsRouter = router({
         publicId: newPublicId,
         orgId: orgId,
         domain: domainName,
-        postalHost: mailBridgeResponse.postalServerUrl || '',
+        postalHost: mailBridgeResponse.postalServerUrl ?? '',
         dkimKey: mailBridgeResponse.dkimKey,
         dkimValue: mailBridgeResponse.dkimValue,
         verificationToken: mailBridgeResponse.verificationToken,

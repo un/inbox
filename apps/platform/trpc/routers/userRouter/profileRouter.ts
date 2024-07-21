@@ -1,9 +1,9 @@
-import { z } from 'zod';
-import { router, accountProcedure } from '~platform/trpc/trpc';
-import { and, eq } from '@u22n/database/orm';
 import { orgMemberProfiles, orgs, orgMembers } from '@u22n/database/schema';
+import { router, accountProcedure } from '~platform/trpc/trpc';
 import { typeIdValidator } from '@u22n/utils/typeid';
+import { and, eq } from '@u22n/database/orm';
 import { TRPCError } from '@trpc/server';
+import { z } from 'zod';
 
 export const profileRouter = router({
   // createProfile: accountProcedure
@@ -55,7 +55,7 @@ export const profileRouter = router({
       const accountId = account.id;
 
       let orgId: number | null = null;
-      if (input.orgPublicId || input.orgShortcode) {
+      if (Boolean(input.orgPublicId ?? input.orgShortcode)) {
         const orgQuery = await db.query.orgs.findFirst({
           where: input.orgPublicId
             ? eq(orgs.publicId, input.orgPublicId)
@@ -66,9 +66,9 @@ export const profileRouter = router({
             id: true
           }
         });
-        orgId = orgQuery?.id || null;
+        orgId = orgQuery?.id ?? null;
       }
-      if ((input.orgPublicId || input.orgShortcode) && !orgId) {
+      if (Boolean(input.orgPublicId ?? input.orgShortcode) && !orgId) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message:
@@ -101,7 +101,7 @@ export const profileRouter = router({
         }
       });
 
-      if (!userOrgMembershipQuery || !userOrgMembershipQuery.profile) {
+      if (!userOrgMembershipQuery?.profile) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: "We couldn't find your profile, please contact support."

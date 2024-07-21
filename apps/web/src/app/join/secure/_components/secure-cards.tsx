@@ -1,17 +1,17 @@
-import { Fingerprint, Lock, Password } from '@phosphor-icons/react';
-import { cn } from '@/src/lib/utils';
-import { type UseFormReturn } from 'react-hook-form';
 import {
   Form,
   FormControl,
   FormField,
   FormItem
 } from '@/src/components/shadcn-ui/form';
-import { PasswordInput } from '@/src/components/password-input';
-import { platform } from '@/src/lib/trpc';
-import { useDebounce } from '@uidotdev/usehooks';
-import { useEffect } from 'react';
 import { StrengthMeter } from '@/src/components/shared/strength-meter';
+import { Fingerprint, Lock, Password } from '@phosphor-icons/react';
+import { PasswordInput } from '@/src/components/password-input';
+import { type UseFormReturn } from 'react-hook-form';
+import { useDebounce } from '@uidotdev/usehooks';
+import { platform } from '@/src/lib/trpc';
+import { cn } from '@/src/lib/utils';
+import { useEffect } from 'react';
 
 type Selected = {
   selected: 'passkey' | 'password';

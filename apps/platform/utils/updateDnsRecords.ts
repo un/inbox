@@ -1,11 +1,11 @@
-import type { TypeId } from '@u22n/utils/typeid';
-import type { DBType } from '@u22n/database';
-import { and, eq } from '@u22n/database/orm';
 import { domains, orgMembers } from '@u22n/database/schema';
-import { TRPCError } from '@trpc/server';
-import { ms } from '@u22n/utils/ms';
 import { mailBridgeTrpcClient } from './tRPCServerClients';
+import type { TypeId } from '@u22n/utils/typeid';
+import { and, eq } from '@u22n/database/orm';
+import type { DBType } from '@u22n/database';
+import { TRPCError } from '@trpc/server';
 import { realtime } from './realtime';
+import { ms } from '@u22n/utils/ms';
 
 export async function updateDnsRecords(
   {

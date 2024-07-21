@@ -1,8 +1,8 @@
-import { z } from 'zod';
 import { router, orgProcedure } from '~platform/trpc/trpc';
-import { eq, and, or } from '@u22n/database/orm';
 import { orgs, orgMembers } from '@u22n/database/schema';
+import { eq, and, or } from '@u22n/database/orm';
 import { TRPCError } from '@trpc/server';
+import { z } from 'zod';
 
 export const orgMembersRouter = router({
   isOrgMemberAdmin: orgProcedure.input(z.object({})).query(async ({ ctx }) => {

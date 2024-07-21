@@ -1,18 +1,18 @@
-import * as webAuthn from '@simplewebauthn/server';
-import type {
-  RegistrationResponseJSON,
-  PublicKeyCredentialDescriptorFuture,
-  AuthenticationResponseJSON
-} from '@simplewebauthn/types';
 import {
   type Authenticator,
   getAuthenticator,
   listAuthenticatorsByAccountCredentialId,
   listAuthenticatorsByAccountId
 } from './passkeyUtils';
+import type {
+  RegistrationResponseJSON,
+  PublicKeyCredentialDescriptorFuture,
+  AuthenticationResponseJSON
+} from '@simplewebauthn/types';
+import * as webAuthn from '@simplewebauthn/server';
+import { storage } from '~platform/storage';
 import { TRPCError } from '@trpc/server';
 import { env } from '~platform/env';
-import { storage } from '~platform/storage';
 
 type RegistrationOptions = {
   accountId?: number;
@@ -55,7 +55,7 @@ export async function generateRegistrationOptions(
     }
   });
 
-  authStorage.setItem(
+  await authStorage.setItem(
     `passkeyChallenge: ${accountPublicId}`,
     registrationOptions.challenge
   );
@@ -70,7 +70,7 @@ export async function verifyRegistrationResponse({
   registrationResponse: RegistrationResponseJSON;
   publicId: string;
 }) {
-  const expectedChallenge = await authStorage.getItem(
+  const expectedChallenge = await authStorage.getItem<string>(
     `passkeyChallenge: ${publicId}`
   );
 

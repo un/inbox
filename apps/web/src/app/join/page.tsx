@@ -1,19 +1,19 @@
 'use client';
 
-import { Button } from '@/src/components/shadcn-ui/button';
-import { Checkbox } from '@/src/components/shadcn-ui/checkbox';
-import Stepper from './_components/stepper';
 import { At, Check, Plus, SpinnerGap } from '@phosphor-icons/react';
-import { useDebounce } from '@uidotdev/usehooks';
-import { platform } from '@/src/lib/trpc';
-import { useEffect, useMemo, useState } from 'react';
-import { zodSchemas } from '@u22n/utils/zodSchemas';
-import { useRouter } from 'next/navigation';
+import { Checkbox } from '@/src/components/shadcn-ui/checkbox';
+import { Button } from '@/src/components/shadcn-ui/button';
 import { Input } from '@/src/components/shadcn-ui/input';
 import { Label } from '@/src/components/shadcn-ui/label';
-import Image from 'next/image';
+import { useEffect, useMemo, useState } from 'react';
+import { zodSchemas } from '@u22n/utils/zodSchemas';
 import { useCookies } from 'next-client-cookies';
+import { useDebounce } from '@uidotdev/usehooks';
+import Stepper from './_components/stepper';
+import { useRouter } from 'next/navigation';
+import { platform } from '@/src/lib/trpc';
 import { datePlus } from '@u22n/utils/ms';
+import Image from 'next/image';
 
 export default function Page() {
   const [username, setUsername] = useState<string>('');

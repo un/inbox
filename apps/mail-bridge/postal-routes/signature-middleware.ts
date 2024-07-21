@@ -1,9 +1,9 @@
-import { env } from '../env';
 import { validatePostalWebhookSignature } from '../utils/validatePostalWebhookSignature';
-import type { Ctx } from '../ctx';
 import { createMiddleware } from '@u22n/hono/helpers';
 import { getTracer } from '@u22n/otel/helpers';
 import { flatten } from '@u22n/otel/exports';
+import type { Ctx } from '../ctx';
+import { env } from '../env';
 
 const middlewareTracer = getTracer('mail-bridge/hono/middleware');
 
@@ -15,7 +15,7 @@ export const signatureMiddleware = createMiddleware<Ctx>(async (c, next) =>
         span?.recordException(new Error(`Method not allowed, ${c.req.method}`));
         return c.json({ message: 'Method not allowed' }, 405);
       }
-      const body = await c.req.json().catch(() => ({}));
+      const body = (await c.req.json().catch(() => ({}))) as unknown;
       const signature = c.req.header('x-postal-signature');
       if (!signature) {
         span?.recordException(new Error('Missing signature'));

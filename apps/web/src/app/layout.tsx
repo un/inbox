@@ -1,13 +1,13 @@
-import type { Metadata } from 'next';
+import { TooltipProvider } from '@/src/components/shadcn-ui/tooltip';
+import { CookiesProvider } from 'next-client-cookies/server';
+import { Toaster } from '@/src/components/shadcn-ui/sonner';
+import { PublicEnvScript } from 'next-runtime-env';
+import { TRPCReactProvider } from '@/src/lib/trpc';
+import { ThemeProvider } from 'next-themes';
 import { Inter } from 'next/font/google';
 import localFont from 'next/font/local';
 import { cn } from '@/src/lib/utils';
-import { ThemeProvider } from 'next-themes';
-import { TRPCReactProvider } from '@/src/lib/trpc';
-import { Toaster } from '@/src/components/shadcn-ui/sonner';
-import { TooltipProvider } from '@/src/components/shadcn-ui/tooltip';
-import { CookiesProvider } from 'next-client-cookies/server';
-import { PublicEnvScript } from 'next-runtime-env';
+import type { Metadata } from 'next';
 import '@/src/styles/globals.css';
 
 const inter = Inter({

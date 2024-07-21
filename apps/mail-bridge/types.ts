@@ -1,5 +1,5 @@
 // exported types
-import { trpcMailBridgeRouter } from './trpc';
+import { type trpcMailBridgeRouter } from './trpc';
 export type TrpcMailBridgeRouter = typeof trpcMailBridgeRouter;
 
 export interface postalEmailPayload {

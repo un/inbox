@@ -1,7 +1,7 @@
-import { z } from 'zod';
 import { router, orgProcedure } from '~platform/trpc/trpc';
-import { eq } from '@u22n/database/orm';
 import { contacts } from '@u22n/database/schema';
+import { eq } from '@u22n/database/orm';
+import { z } from 'zod';
 
 export const contactsRouter = router({
   getOrgContacts: orgProcedure.input(z.object({})).query(async ({ ctx }) => {

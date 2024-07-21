@@ -1,13 +1,13 @@
 'use client';
 import { useMemo, useRef, forwardRef, useImperativeHandle } from 'react';
+import type { EditorProviderProps, JSONContent } from '@tiptap/react';
 import { EditorProvider, useCurrentEditor } from '@tiptap/react';
-import { Provider } from 'jotai';
-import tunnel from 'tunnel-rat';
+import { EditorCommandTunnelContext } from './editor-command';
 import { tipTapExtensions } from '../../extensions';
 import { editorStore } from '../utils/store';
-import { EditorCommandTunnelContext } from './editor-command';
 import type { FC, ReactNode } from 'react';
-import type { EditorProviderProps, JSONContent } from '@tiptap/react';
+import { Provider } from 'jotai';
+import tunnel from 'tunnel-rat';
 
 export interface EditorProps {
   readonly children: ReactNode;

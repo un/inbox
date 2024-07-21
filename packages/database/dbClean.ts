@@ -1,8 +1,12 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-floating-promises */
 /* eslint-disable no-console */
 
-import { db } from '.';
-import { sql } from './orm';
 import * as schema from './schema';
+import { sql } from './orm';
+import { db } from '.';
 
 (async () => {
   console.log('🔥 Cleaning the database of all entries');

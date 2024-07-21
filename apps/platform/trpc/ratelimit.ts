@@ -3,17 +3,17 @@ import {
   Ratelimit,
   type RatelimitConfig
 } from '@unkey/ratelimit';
-import { trpcContext } from './trpc';
-import { env } from '~platform/env';
-import { TRPCError } from '@trpc/server';
 import type { TrpcContext } from '~platform/ctx';
 import { getTracer } from '@u22n/otel/helpers';
+import { TRPCError } from '@trpc/server';
+import { trpcContext } from './trpc';
+import { env } from '~platform/env';
 
 export const ipIdentifier = (ctx: TrpcContext) =>
   `ip:${ctx.event.env.incoming.socket.remoteAddress ?? 'unknown'}`;
 export const accountIdentifier = (ctx: TrpcContext) =>
-  `account:${ctx.account?.id!}`;
-export const orgIdentifier = (ctx: TrpcContext) => `org:${ctx.org?.id!}`;
+  `account:${ctx.account?.id}`;
+export const orgIdentifier = (ctx: TrpcContext) => `org:${ctx.org?.id}`;
 
 const cachedLimiters = new Map<string, Ratelimit | NoopRatelimit>();
 

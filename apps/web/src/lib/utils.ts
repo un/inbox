@@ -1,6 +1,6 @@
-import { twMerge } from 'tailwind-merge';
-import clsx, { type ClassValue } from 'clsx';
 import { type TypeId } from '@u22n/utils/typeid';
+import clsx, { type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
 import { env } from '../env';
 
 export const cn = (...input: ClassValue[]) => twMerge(clsx(input));

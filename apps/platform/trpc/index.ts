@@ -1,26 +1,26 @@
 export * from '@trpc/server';
-import { router } from './trpc';
-import { passkeyRouter } from './routers/authRouter/passkeyRouter';
-import { passwordRouter } from './routers/authRouter/passwordRouter';
-import { signupRouter } from './routers/authRouter/signupRouter';
-import { recoveryRouter } from './routers/authRouter/recoveryRouter';
-import { profileRouter } from './routers/userRouter/profileRouter';
-import { crudRouter } from './routers/orgRouter/orgCrudRouter';
-import { invitesRouter } from './routers/orgRouter/users/invitesRouter';
-import { convoRouter } from './routers/convoRouter/convoRouter';
-import { contactsRouter } from './routers/contactRouter/contactRouter';
+import { emailIdentityRouter } from './routers/orgRouter/mail/emailIdentityRouter';
 import { orgProfileRouter } from './routers/orgRouter/setup/profileRouter';
 import { orgMembersRouter } from './routers/orgRouter/users/membersRouter';
-import { domainsRouter } from './routers/orgRouter/mail/domainsRouter';
-import { teamsRouter } from './routers/orgRouter/users/teamsRouter';
-import { emailIdentityRouter } from './routers/orgRouter/mail/emailIdentityRouter';
-import { billingRouter } from './routers/orgRouter/setup/billingRouter';
-import { addressRouter } from './routers/userRouter/addressRouter';
-import { defaultsRouter } from './routers/userRouter/defaultsRouter';
-import { twoFactorRouter } from './routers/authRouter/twoFactorRouter';
-import { securityRouter } from './routers/userRouter/securityRouter';
-import { storeRouter } from './routers/orgRouter/orgStoreRouter';
 import { iCanHazRouter } from './routers/orgRouter/iCanHaz/iCanHazRouter';
+import { invitesRouter } from './routers/orgRouter/users/invitesRouter';
+import { billingRouter } from './routers/orgRouter/setup/billingRouter';
+import { domainsRouter } from './routers/orgRouter/mail/domainsRouter';
+import { contactsRouter } from './routers/contactRouter/contactRouter';
+import { twoFactorRouter } from './routers/authRouter/twoFactorRouter';
+import { passwordRouter } from './routers/authRouter/passwordRouter';
+import { recoveryRouter } from './routers/authRouter/recoveryRouter';
+import { defaultsRouter } from './routers/userRouter/defaultsRouter';
+import { securityRouter } from './routers/userRouter/securityRouter';
+import { teamsRouter } from './routers/orgRouter/users/teamsRouter';
+import { passkeyRouter } from './routers/authRouter/passkeyRouter';
+import { profileRouter } from './routers/userRouter/profileRouter';
+import { addressRouter } from './routers/userRouter/addressRouter';
+import { storeRouter } from './routers/orgRouter/orgStoreRouter';
+import { signupRouter } from './routers/authRouter/signupRouter';
+import { convoRouter } from './routers/convoRouter/convoRouter';
+import { crudRouter } from './routers/orgRouter/orgCrudRouter';
+import { router } from './trpc';
 
 const trpcPlatformAuthRouter = router({
   signup: signupRouter,

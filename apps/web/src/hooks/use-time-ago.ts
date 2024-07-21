@@ -1,6 +1,6 @@
+import { useState, useEffect, useCallback } from 'react';
 import { intlFormatDistance } from 'date-fns';
 import { ms } from '@u22n/utils/ms';
-import { useState, useEffect, useCallback } from 'react';
 
 function format(time: Date) {
   return intlFormatDistance(time, new Date());

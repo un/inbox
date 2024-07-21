@@ -2,12 +2,12 @@
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { api } from '@/lib/trpc';
 import { Suspense, useState } from 'react';
-import { toast } from 'sonner';
 import { serialize } from 'superjson';
 import { toDataURL } from 'qrcode';
+import { api } from '@/lib/trpc';
 import Image from 'next/image';
+import { toast } from 'sonner';
 
 export default function Page() {
   const [username, setUsername] = useState<string>('');
@@ -21,7 +21,7 @@ export default function Page() {
   } = api.accounts.resetPassword.useMutation({
     onSuccess: () => {
       toast.success('Password reset successful');
-      refetch();
+      void refetch();
     },
     onError: (error) => {
       toast.error(error.message);
@@ -35,7 +35,7 @@ export default function Page() {
   } = api.accounts.reset2fa.useMutation({
     onSuccess: () => {
       toast.success('2FA reset successful');
-      refetch();
+      void refetch();
     },
     onError: (error) => {
       toast.error(error.message);

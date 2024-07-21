@@ -1,11 +1,3 @@
-import { env } from './env';
-import { db } from '@u22n/database';
-import { trpcMailBridgeRouter } from './trpc';
-import { eventApi } from './postal-routes/events';
-import { inboundApi } from './postal-routes/inbound';
-import { signatureMiddleware } from './postal-routes/signature-middleware';
-import { opentelemetry } from '@u22n/otel/hono';
-import type { Ctx, TRPCContext } from './ctx';
 import {
   createHonoApp,
   setupErrorHandlers,
@@ -15,6 +7,14 @@ import {
   setupRuntime,
   setupTrpcHandler
 } from '@u22n/hono';
+import { signatureMiddleware } from './postal-routes/signature-middleware';
+import { inboundApi } from './postal-routes/inbound';
+import { eventApi } from './postal-routes/events';
+import { opentelemetry } from '@u22n/otel/hono';
+import { trpcMailBridgeRouter } from './trpc';
+import type { Ctx, TRPCContext } from './ctx';
+import { db } from '@u22n/database';
+import { env } from './env';
 
 const processCleanup: Array<() => Promise<void>> = [];
 

@@ -1,4 +1,3 @@
-import { Button } from '@/src/components/shadcn-ui/button';
 import {
   Dialog,
   DialogTitle,
@@ -8,9 +7,10 @@ import {
   DialogFooter,
   DialogClose
 } from '@/src/components/shadcn-ui/dialog';
+import { Button } from '@/src/components/shadcn-ui/button';
 import { Input } from '@/src/components/shadcn-ui/input';
-import { platform } from '@/src/lib/trpc';
 import { Pencil } from '@phosphor-icons/react';
+import { platform } from '@/src/lib/trpc';
 import { useState } from 'react';
 import { toast } from 'sonner';
 

@@ -1,9 +1,9 @@
-import * as React from 'react';
-import { Slot } from '@radix-ui/react-slot';
 import { cva, type VariantProps } from 'class-variance-authority';
+import { Slot } from '@radix-ui/react-slot';
+import * as React from 'react';
 
-import { cn } from '@/src/lib/utils';
 import { SpinnerGap } from '@phosphor-icons/react';
+import { cn } from '@/src/lib/utils';
 
 //! This component has been modified from the original version in the shadcn-ui package
 

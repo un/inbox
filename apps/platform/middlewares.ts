@@ -1,10 +1,10 @@
 import { createMiddleware, getCookie } from '@u22n/hono/helpers';
+import { COOKIE_SESSION } from './utils/cookieNames';
+import { getTracer } from '@u22n/otel/helpers';
+import { flatten } from '@u22n/otel/exports';
 import { storage } from './storage';
 import type { Ctx } from './ctx';
 import { env } from './env';
-import { getTracer } from '@u22n/otel/helpers';
-import { flatten } from '@u22n/otel/exports';
-import { COOKIE_SESSION } from './utils/cookieNames';
 
 const middlewareTracer = getTracer('platform/hono/middleware');
 

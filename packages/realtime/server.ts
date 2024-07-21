@@ -1,7 +1,7 @@
-import Pusher from 'pusher';
 import { type EventDataMap, eventDataMaps } from './events';
 import type { TypeId } from '@u22n/utils/typeid';
 import type { z } from 'zod';
+import Pusher from 'pusher';
 
 export default class RealtimeServer {
   private pusher: Pusher;

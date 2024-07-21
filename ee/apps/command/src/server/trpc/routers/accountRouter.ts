@@ -1,12 +1,12 @@
-import { z } from 'zod';
+import { accounts, type AccountMetadata } from '@u22n/database/schema';
 import { router, accountProcedure } from '../trpc';
+import { createTOTPKeyURI } from 'oslo/otp';
+import { encodeHex } from 'oslo/encoding';
+import { Argon2id } from 'oslo/password';
+import { TRPCError } from '@trpc/server';
 import { eq } from '@u22n/database/orm';
 import { db } from '@u22n/database';
-import { accounts, type AccountMetadata } from '@u22n/database/schema';
-import { TRPCError } from '@trpc/server';
-import { Argon2id } from 'oslo/password';
-import { encodeHex } from 'oslo/encoding';
-import { createTOTPKeyURI } from 'oslo/otp';
+import { z } from 'zod';
 
 export const accountRouter = router({
   getAccountData: accountProcedure
@@ -75,8 +75,8 @@ export const accountRouter = router({
       }
 
       const newAccountMetadata: AccountMetadata =
-        accountDataQuery.metadata || {};
-      newAccountMetadata.bonuses = newAccountMetadata.bonuses || []; // Initialize bonuses as an empty array if it is undefined
+        accountDataQuery.metadata ?? {};
+      newAccountMetadata.bonuses = newAccountMetadata.bonuses ?? []; // Initialize bonuses as an empty array if it is undefined
       newAccountMetadata.bonuses.push({
         item: 'unin',
         awardedAt: new Date(),

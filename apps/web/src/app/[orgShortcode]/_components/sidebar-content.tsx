@@ -1,7 +1,5 @@
 'use client';
 
-import { cn } from '@/src/lib/utils';
-import { useGlobalStore } from '@/src/providers/global-store-provider';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,25 +31,26 @@ import {
   Question,
   User
 } from '@phosphor-icons/react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import React from 'react';
-import { useTheme } from 'next-themes';
-import { sidebarSubmenuOpenAtom } from './atoms';
-import {
-  ToggleGroup,
-  ToggleGroupItem
-} from '@/src/components/shadcn-ui/toggle-group';
-import { env } from '@/src/env';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger
 } from '@/src/components/shadcn-ui/tooltip';
-import { useSetAtom } from 'jotai';
+import {
+  ToggleGroup,
+  ToggleGroupItem
+} from '@/src/components/shadcn-ui/toggle-group';
+import { useGlobalStore } from '@/src/providers/global-store-provider';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Avatar } from '@/src/components/avatar';
+import { sidebarSubmenuOpenAtom } from './atoms';
+import { useRouter } from 'next/navigation';
+import { useTheme } from 'next-themes';
+import { cn } from '@/src/lib/utils';
+import { useSetAtom } from 'jotai';
+import { env } from '@/src/env';
+import { toast } from 'sonner';
+import Link from 'next/link';
 
 export default function SidebarContent() {
   const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);

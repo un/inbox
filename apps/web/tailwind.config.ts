@@ -1,8 +1,8 @@
-import type { Config } from 'tailwindcss';
+import typographyPlugin from '@tailwindcss/typography';
 import { fontFamily } from 'tailwindcss/defaultTheme';
 import { createPlugin } from 'windy-radix-palette';
-import typographyPlugin from '@tailwindcss/typography';
 import animatePlugin from 'tailwindcss-animate';
+import type { Config } from 'tailwindcss';
 
 const colors = createPlugin();
 

@@ -1,9 +1,9 @@
-import * as React from 'react';
 import * as SelectPrimitive from '@radix-ui/react-select';
+import * as React from 'react';
 
-import { cn } from '@/src/lib/utils';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { CaretDown, CaretUp, Check } from '@phosphor-icons/react';
+import { cn } from '@/src/lib/utils';
 
 //! This component has been modified from the original version in the shadcn-ui package
 
