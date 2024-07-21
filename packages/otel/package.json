@@ -14,13 +14,10 @@
     "@opentelemetry/resources": "^1.25.1",
     "@opentelemetry/sdk-trace-node": "^1.25.1",
     "@t3-oss/env-core": "^0.10.1",
+    "@u22n/hono": "workspace:^",
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@u22n/tsconfig": "^0.0.2",
-    "hono": "^4.4.13"
-  },
-  "peerDependencies": {
-    "hono": "^4.4.7"
+    "@u22n/tsconfig": "^0.0.2"
   }
 }

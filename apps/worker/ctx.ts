@@ -1,6 +1,3 @@
-import type { HttpBindings } from '@hono/node-server';
+import type { HonoContext } from '@u22n/hono';
 
-export type Ctx = {
-  Bindings: HttpBindings;
-  Variables: {};
-};
+export type Ctx = HonoContext;

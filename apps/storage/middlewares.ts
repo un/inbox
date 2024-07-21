@@ -1,8 +1,7 @@
 import { env } from './env';
 import { storage } from './storage';
-import { getCookie } from 'hono/cookie';
 import type { Ctx } from './ctx';
-import { createMiddleware } from 'hono/factory';
+import { createMiddleware, getCookie } from '@u22n/hono/helpers';
 
 export const authMiddleware = createMiddleware<Ctx>(async (c, next) =>
   c.get('otel').tracer.startActiveSpan('authMiddleware', async (span) => {

@@ -14,14 +14,12 @@
     }
   },
   "dependencies": {
-    "@hono/node-server": "^1.12.0",
-    "@hono/trpc-server": "^0.3.2",
-    "@hono/zod-validator": "^0.2.2",
     "@simplewebauthn/server": "^9.0.3",
     "@t3-oss/env-core": "^0.10.1",
     "@trpc/client": "11.0.0-rc.413",
     "@trpc/server": "11.0.0-rc.413",
     "@u22n/database": "workspace:^",
+    "@u22n/hono": "workspace:^",
     "@u22n/mail-bridge": "workspace:^",
     "@u22n/otel": "workspace:^",
     "@u22n/realtime": "workspace:^",
@@ -29,7 +27,6 @@
     "@u22n/tsconfig": "^0.0.2",
     "@u22n/utils": "workspace:^",
     "@unkey/ratelimit": "^0.3.1",
-    "hono": "^4.4.13",
     "lucia": "^3.2.0",
     "oslo": "^1.2.1",
     "superjson": "^2.2.1",

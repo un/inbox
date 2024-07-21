@@ -1,4 +1,4 @@
-import { createMiddleware } from 'hono/factory';
+import { createMiddleware } from '@u22n/hono/helpers';
 import type { Ctx } from './ctx';
 import { env } from './env';
 import { stripeSdk } from './stripe';
