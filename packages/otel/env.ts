@@ -12,5 +12,6 @@ export const env = createEnv({
     OTEL_EXPORTER_METRICS_ENDPOINT: z.string().url().optional(),
     NODE_ENV: z.enum(['development', 'production']).default('development')
   },
-  runtimeEnv: process.env
+  runtimeEnv: process.env,
+  emptyStringAsUndefined: true
 });
