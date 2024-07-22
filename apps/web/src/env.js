@@ -1,5 +1,5 @@
-import { z } from 'zod';
 import { createEnv } from '@t3-oss/env-core';
+import { z } from 'zod';
 
 const IS_BROWSER = typeof window !== 'undefined';
 const IS_DEV = process.env.NODE_ENV === 'development';
@@ -26,7 +26,9 @@ if (!IS_BROWSER) {
 
   PUBLIC_ENV_LIST.forEach((key) => {
     const prefixedKey = `NEXT_PUBLIC_${key}`;
-    process.env[prefixedKey] = process.env[key];
+    if (typeof process.env[key] !== 'undefined') {
+      process.env[prefixedKey] = process.env[key];
+    }
   });
 }
 
