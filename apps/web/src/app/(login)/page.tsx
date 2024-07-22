@@ -28,6 +28,8 @@ import {
 } from '@/src/components/turnstile';
 import { platform } from '@/src/lib/trpc';
 import error from 'next/error';
+import { useState } from 'react';
+import { TwoFactorDialog } from './_components/two-factor-dialog';
 
 const loginSchema = z.object({
   username: zodSchemas.username(2),
@@ -42,6 +44,7 @@ const loginSchema = z.object({
 
 export default function Page() {
   const router = useRouter();
+  const [twoFactorDialogOpen, setTwoFactorDialogOpen] = useState(false);
 
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -69,7 +72,7 @@ export default function Page() {
           );
         }
       } else {
-        // setTwoFactorDialogOpen(true);
+        setTwoFactorDialogOpen(true);
       }
     } catch {
       /* do nothing */
@@ -163,6 +166,7 @@ export default function Page() {
                 </Button>
               </form>
             </Form>
+            <TwoFactorDialog open={twoFactorDialogOpen} />
           </div>
         </div>
         <div className="text-base-10 flex flex-col gap-2 text-sm">
