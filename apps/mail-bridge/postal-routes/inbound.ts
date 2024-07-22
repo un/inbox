@@ -1,13 +1,13 @@
-import { zValidator } from '@hono/zod-validator';
 import {
   postalMessageSchema,
   mailParamsSchema
 } from '../queue/mail-processor/schemas';
 import type { Ctx } from '../ctx';
-import { Hono } from 'hono';
 import { mailProcessorQueue } from '../queue/mail-processor';
+import { createHonoApp } from '@u22n/hono';
+import { zValidator } from '@u22n/hono/helpers';
 
-export const inboundApi = new Hono<Ctx>();
+export const inboundApi = createHonoApp<Ctx>();
 
 inboundApi.post(
   '/mail/inbound/:orgId/:mailserverId',

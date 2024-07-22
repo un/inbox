@@ -1,11 +1,8 @@
-import type { Otel } from '@u22n/otel/hono';
+import type { HonoContext } from '@u22n/hono';
 
-export type Ctx = {
-  Variables: {
-    otel: Otel;
-    account: {
-      id: number;
-      session: any;
-    } | null;
-  };
-};
+export type Ctx = HonoContext<{
+  account: {
+    id: number;
+    session: any;
+  } | null;
+}>;

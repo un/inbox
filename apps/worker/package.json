@@ -2,10 +2,11 @@
   "name": "@u22n/worker",
   "private": true,
   "type": "module",
+  "version": "0.0.0-dev",
   "scripts": {
-    "dev": "tsx watch --clear-screen=false app.ts",
-    "start": "node --import=tsx app.ts",
-    "build": "echo 'No Build Step Needed'",
+    "dev": "tsx watch --clear-screen=false --import ./tracing.ts app.ts",
+    "start": "node --import ./.output/tracing.js .output/app.js",
+    "build": "tsup",
     "check": "tsc --noEmit"
   },
   "exports": {
@@ -14,23 +15,22 @@
     }
   },
   "dependencies": {
-    "@hono/node-server": "^1.12.0",
-    "@hono/trpc-server": "^0.3.2",
     "@t3-oss/env-core": "^0.10.1",
-    "@trpc/client": "11.0.0-rc.421",
-    "@trpc/server": "11.0.0-rc.421",
+    "@trpc/client": "11.0.0-rc.466",
+    "@trpc/server": "11.0.0-rc.466",
     "@u22n/database": "workspace:^",
+    "@u22n/hono": "workspace:^",
     "@u22n/otel": "workspace:^",
     "@u22n/utils": "workspace:^",
     "bullmq": "^5.8.7",
     "cron": "^3.1.7",
-    "hono": "^4.4.13",
     "superjson": "^2.2.1",
     "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/node": "^20.14.10",
     "@u22n/tsconfig": "^0.0.2",
+    "tsup": "^8.1.2",
     "tsx": "^4.16.2",
     "typescript": "^5.5.3"
   }

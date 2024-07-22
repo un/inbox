@@ -7,6 +7,7 @@ import { trpcContext } from './trpc';
 import { env } from '~platform/env';
 import { TRPCError } from '@trpc/server';
 import type { TrpcContext } from '~platform/ctx';
+import { getTracer } from '@u22n/otel/helpers';
 
 export const ipIdentifier = (ctx: TrpcContext) =>
   `ip:${ctx.event.env.incoming.socket.remoteAddress ?? 'unknown'}`;
@@ -15,6 +16,8 @@ export const accountIdentifier = (ctx: TrpcContext) =>
 export const orgIdentifier = (ctx: TrpcContext) => `org:${ctx.org?.id!}`;
 
 const cachedLimiters = new Map<string, Ratelimit | NoopRatelimit>();
+
+const ratelimitTracer = getTracer('platform/trpc/ratelimit');
 
 type RatelimiterConfig = {
   /**
@@ -43,30 +46,43 @@ export const ratelimiter = ({
   namespace = 'public-functions',
   createIdentifier = ipIdentifier
 }: RatelimiterConfig) =>
-  trpcContext.middleware(async ({ ctx, path, next }) => {
-    let limiter = cachedLimiters.get(path);
+  trpcContext.middleware(async ({ ctx, path, next }) =>
+    ratelimitTracer.startActiveSpan(`TRPC Ratelimit ${path}`, async (span) => {
+      let limiter = cachedLimiters.get(path);
 
-    if (!limiter) {
-      limiter = env.UNKEY_ROOT_KEY
-        ? new Ratelimit({
-            async: true,
-            namespace,
-            limit,
-            duration,
-            rootKey: env.UNKEY_ROOT_KEY
-          })
-        : new NoopRatelimit();
-      cachedLimiters.set(path, limiter);
-    }
+      if (!limiter) {
+        limiter = env.UNKEY_ROOT_KEY
+          ? new Ratelimit({
+              async: true,
+              namespace,
+              limit,
+              duration,
+              rootKey: env.UNKEY_ROOT_KEY
+            })
+          : new NoopRatelimit();
+        cachedLimiters.set(path, limiter);
+      }
 
-    const identifier = createIdentifier(ctx);
-    const result = await limiter.limit(identifier);
-    if (result.success) {
-      return next();
-    } else {
-      throw new TRPCError({
-        code: 'TOO_MANY_REQUESTS',
-        message: `Too many requests, try again in ${Math.floor((result.reset - Date.now()) / 1000)} seconds`
+      span?.addEvent('ratelimit.start');
+
+      const identifier = createIdentifier(ctx);
+      const result = await limiter.limit(identifier);
+
+      span?.setAttributes({
+        'ratelimit.identifier': identifier,
+        'ratelimit.success': result.success,
+        'ratelimit.remaining': result.remaining,
+        'ratelimit.reset': result.reset
       });
-    }
-  });
+
+      span?.addEvent('ratelimit.end');
+      if (result.success) {
+        return next();
+      } else {
+        throw new TRPCError({
+          code: 'TOO_MANY_REQUESTS',
+          message: `Too many requests, try again in ${Math.floor((result.reset - Date.now()) / 1000)} seconds`
+        });
+      }
+    })
+  );

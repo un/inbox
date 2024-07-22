@@ -2,10 +2,11 @@
   "name": "@u22n/mail-bridge",
   "private": true,
   "type": "module",
+  "version": "0.0.0-dev",
   "scripts": {
-    "dev": "tsx watch --clear-screen=false app.ts",
-    "start": "node --import=tsx app.ts",
-    "build": "echo 'No Build Step Needed'",
+    "dev": "tsx watch --clear-screen=false --import ./tracing.ts app.ts",
+    "start": "node --import ./.output/tracing.js .output/app.js",
+    "build": "tsup",
     "check": "tsc --noEmit"
   },
   "exports": {
@@ -14,14 +15,11 @@
     }
   },
   "dependencies": {
-    "@hono/node-server": "^1.12.0",
-    "@hono/trpc-server": "^0.3.2",
-    "@hono/zod-validator": "^0.2.2",
     "@t3-oss/env-core": "^0.10.1",
-    "@trpc/client": "11.0.0-rc.413",
-    "@trpc/server": "11.0.0-rc.413",
-    "@types/mailparser": "^3.4.4",
+    "@trpc/client": "11.0.0-rc.466",
+    "@trpc/server": "11.0.0-rc.466",
     "@u22n/database": "workspace:*",
+    "@u22n/hono": "workspace:^",
     "@u22n/mailtools": "^0.1.2",
     "@u22n/otel": "workspace:^",
     "@u22n/realtime": "workspace:^",
@@ -31,7 +29,6 @@
     "bullmq": "^5.8.7",
     "dompurify": "^3.1.6",
     "drizzle-orm": "^0.32.0",
-    "hono": "^4.4.13",
     "jsdom": "^24.1.0",
     "mailauth": "^4.6.8",
     "mailparser": "^3.7.1",
@@ -45,8 +42,10 @@
   "devDependencies": {
     "@types/dompurify": "^3.0.5",
     "@types/jsdom": "^21.1.7",
+    "@types/mailparser": "^3.4.4",
     "@types/node": "^20.14.10",
     "@types/nodemailer": "^6.4.15",
+    "tsup": "^8.1.2",
     "tsx": "^4.16.2"
   }
 }

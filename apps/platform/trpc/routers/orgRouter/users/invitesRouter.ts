@@ -21,7 +21,6 @@ import {
 import { typeIdGenerator, typeIdValidator } from '@u22n/utils/typeid';
 import { nanoIdToken, zodSchemas } from '@u22n/utils/zodSchemas';
 import { refreshOrgShortcodeCache } from '~platform/utils/orgShortcode';
-import { isAccountAdminOfOrg } from '~platform/utils/account';
 import { TRPCError } from '@trpc/server';
 import { billingTrpcClient } from '~platform/utils/tRPCServerClients';
 import { addOrgMemberToTeamHandler } from './teamsHandler';

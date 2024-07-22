@@ -24,7 +24,7 @@ import { createAuthenticator } from '~platform/utils/auth/passkeyUtils';
 import { validateUsername } from './signupRouter';
 import { createLuciaSessionCookie } from '~platform/utils/session';
 import { env } from '~platform/env';
-import { getCookie, setCookie } from 'hono/cookie';
+import { getCookie, setCookie } from '@u22n/hono/helpers';
 import { ratelimiter } from '~platform/trpc/ratelimit';
 
 export const passkeyRouter = router({
@@ -37,7 +37,7 @@ export const passkeyRouter = router({
         username: zodSchemas.username()
       })
     )
-    .query(async ({ input, ctx }) => {
+    .mutation(async ({ input, ctx }) => {
       const { db } = ctx;
       const { username } = input;
       const { available, error } = await validateUsername(db, input.username);

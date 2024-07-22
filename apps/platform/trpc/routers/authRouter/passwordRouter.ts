@@ -17,13 +17,57 @@ import { validateUsername } from './signupRouter';
 import { createLuciaSessionCookie } from '~platform/utils/session';
 import { decodeHex } from 'oslo/encoding';
 import { TOTPController } from 'oslo/otp';
-import { setCookie, getCookie, deleteCookie } from 'hono/cookie';
+import { setCookie, getCookie, deleteCookie } from '@u22n/hono/helpers';
 import { env } from '~platform/env';
 import { storage } from '~platform/storage';
 import { ms } from '@u22n/utils/ms';
 import { ratelimiter } from '~platform/trpc/ratelimit';
 
 export const passwordRouter = router({
+  signUpWithPassword: publicProcedure
+    .unstable_concat(turnstileProcedure)
+    .use(ratelimiter({ limit: 10, namespace: 'signUp.password' }))
+    .input(
+      z.object({
+        username: zodSchemas.username(),
+        password: strongPasswordSchema
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { password, username } = input;
+      const { db, event } = ctx;
+
+      const { accountId, publicId } = await db.transaction(async (tx) => {
+        const { available, error } = await validateUsername(tx, username);
+        if (!available) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: `Username Error : ${error}`
+          });
+        }
+        const passwordHash = await new Argon2id().hash(password);
+        const publicId = typeIdGenerator('account');
+
+        const newUser = await tx.insert(accounts).values({
+          username,
+          publicId,
+          passwordHash
+        });
+
+        return {
+          accountId: Number(newUser.insertId),
+          publicId
+        };
+      });
+
+      await createLuciaSessionCookie(event, {
+        accountId,
+        username,
+        publicId
+      });
+
+      return { success: true };
+    }),
   signUpWithPassword2FA: publicProcedure
     .unstable_concat(turnstileProcedure)
     .use(ratelimiter({ limit: 10, namespace: 'signUp.password' }))

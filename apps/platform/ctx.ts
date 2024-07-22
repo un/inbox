@@ -1,16 +1,11 @@
-import type { HttpBindings } from '@hono/node-server';
 import type { DBType } from '@u22n/database';
-import type { Otel } from '@u22n/otel/hono';
-import type { Context } from 'hono';
+import type { HonoContext } from '@u22n/hono';
+import type { Context } from '@u22n/hono/helpers';
 import type { DatabaseSession } from 'lucia';
 
-export type Ctx = {
-  Bindings: HttpBindings;
-  Variables: {
-    account: AccountContext;
-    otel: Otel;
-  };
-};
+export type Ctx = HonoContext<{
+  account: AccountContext;
+}>;
 
 export type OrgContext = {
   id: number;

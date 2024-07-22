@@ -1,6 +1,6 @@
-import { Hono } from 'hono';
+import { createHonoApp } from '@u22n/hono';
 import type { Ctx } from '~platform/ctx';
-import { zValidator } from '@hono/zod-validator';
+import { zValidator } from '@u22n/hono/helpers';
 import { z } from 'zod';
 import { validateOrgShortcode } from '~platform/utils/orgShortcode';
 import { db } from '@u22n/database';
@@ -8,7 +8,7 @@ import { and, eq } from '@u22n/database/orm';
 import { orgMembers } from '@u22n/database/schema';
 import { realtime } from '~platform/utils/realtime';
 
-export const realtimeApi = new Hono<Ctx>();
+export const realtimeApi = createHonoApp<Ctx>();
 
 realtimeApi.post(
   '/auth',

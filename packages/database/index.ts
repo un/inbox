@@ -1,7 +1,38 @@
 import { drizzle } from 'drizzle-orm/planetscale-serverless';
-import { Client } from '@planetscale/database';
+import { Client, Connection } from '@planetscale/database';
 import { env } from './env';
 import * as schema from './schema';
+import { getTracer } from '@u22n/otel/helpers';
+
+const databaseTracer = getTracer('database');
+
+const originalExecute = Connection.prototype.execute;
+Connection.prototype.execute = async function (
+  query: string,
+  args: any[] | null,
+  options: any
+) {
+  return databaseTracer.startActiveSpan(`Database Query`, async (span) => {
+    if (span) {
+      span.addEvent('database.query.start');
+      span.setAttribute('database.statement', query);
+      if (args) {
+        span.setAttribute(
+          'database.values',
+          args.map((v) => v.toString())
+        );
+      }
+    }
+    const result = await originalExecute
+      .call(this, query, args, options)
+      .catch((err) => {
+        span?.recordException(err);
+        throw err;
+      });
+    span?.addEvent('database.query.end');
+    return result;
+  });
+};
 
 const client = new Client({
   host: env.DB_PLANETSCALE_HOST,

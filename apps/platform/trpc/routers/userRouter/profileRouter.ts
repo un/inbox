@@ -116,23 +116,22 @@ export const profileRouter = router({
     .input(
       z.object({
         profilePublicId: typeIdValidator('orgMemberProfile'),
-        fName: z.string(),
-        lName: z.string(),
-        title: z.string(),
-        blurb: z.string(),
-        imageId: z.string().uuid().optional().nullable(),
-        handle: z.string().min(2).max(20)
+        name: z.string(),
+        title: z.string().optional(),
+        blurb: z.string().optional(),
+        handle: z.string().min(2).max(20).optional()
       })
     )
     .mutation(async ({ ctx, input }) => {
       const { db, account } = ctx;
       const accountId = account.id;
+      const [firstName, ...lastName] = input.name.split(' ');
 
       await db
         .update(orgMemberProfiles)
         .set({
-          firstName: input.fName,
-          lastName: input.lName,
+          firstName,
+          lastName: lastName.join(' '),
           title: input.title,
           blurb: input.blurb,
           handle: input.handle

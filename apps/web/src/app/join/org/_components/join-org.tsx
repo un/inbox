@@ -1,6 +1,5 @@
 'use client';
 
-import useLoading from '@/src/hooks/use-loading';
 import { platform } from '@/src/lib/trpc';
 import { generateAvatarUrl, getInitials } from '@/src/lib/utils';
 import { Button } from '@/src/components/shadcn-ui/button';
@@ -9,6 +8,7 @@ import {
   Dialog,
   DialogClose,
   DialogContent,
+  DialogHeader,
   DialogTitle,
   DialogTrigger
 } from '@/src/components/shadcn-ui/dialog';
@@ -17,12 +17,13 @@ import {
   AvatarFallback,
   AvatarImage
 } from '@/src/components/shadcn-ui/avatar';
-import { Users } from '@phosphor-icons/react';
+import { UsersThree } from '@phosphor-icons/react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import { DialogDescription } from '@radix-ui/react-dialog';
 
-export default function JoinOrgButton({
+export function JoinOrg({
   hasInviteCode,
   inviteCode: initialInviteCode
 }: {
@@ -30,50 +31,34 @@ export default function JoinOrgButton({
   inviteCode?: string;
 }) {
   const [inviteCode, setInviteCode] = useState(initialInviteCode ?? '');
-  const validateInviteCodeApi =
-    platform.useUtils().org.users.invites.validateInvite;
-  const joinOrgApi = platform.org.users.invites.redeemInvite.useMutation();
   const router = useRouter();
   const [modalOpen, setModalOpen] = useState(false);
 
   const {
     data: inviteData,
-    loading: inviteLoading,
-    error: inviteError,
-    run: validateInvite,
-    clearData: clearInviteData
-  } = useLoading(async (signal) => {
-    return await validateInviteCodeApi.fetch(
-      {
-        inviteToken: inviteCode
-      },
-      { signal }
-    );
-  });
-
-  const {
-    loading: joinLoading,
-    error: joinError,
-    run: joinOrg
-  } = useLoading(async () => {
-    const { success, orgShortcode } = await joinOrgApi.mutateAsync({
+    isLoading: inviteLoading,
+    error: inviteError
+  } = platform.org.users.invites.validateInvite.useQuery(
+    {
       inviteToken: inviteCode
-    });
-    if (success) {
-      toast.success(`You have joined ${inviteData?.orgName}!`);
-      router.push(`/join/profile?org=${orgShortcode}`);
-      setModalOpen(false);
-    } else {
-      throw new Error('Unknown Error Occurred');
+    },
+    {
+      enabled: inviteCode.length === 32
+    }
+  );
+  const {
+    mutateAsync: joinOrg,
+    error: joinError,
+    isPending: isJoining
+  } = platform.org.users.invites.redeemInvite.useMutation({
+    onSuccess: ({ success }) => {
+      if (success) {
+        toast.success(`You have joined ${inviteData?.orgName}!`);
+        router.push(`/join/profile?org=${inviteData?.orgShortcode}`);
+        setModalOpen(false);
+      }
     }
   });
-
-  useEffect(() => {
-    if (inviteCode && modalOpen) {
-      validateInvite();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [modalOpen]);
 
   useEffect(() => {
     if (hasInviteCode) {
@@ -99,24 +84,28 @@ export default function JoinOrgButton({
       open={modalOpen}>
       <DialogTrigger asChild>
         <Button
-          className="flex-1 gap-1"
-          variant={hasInviteCode ? 'default' : 'outline'}>
-          <Users size={20} />
-          <span className="whitespace-nowrap">Join an organization</span>
+          className="flex-1"
+          variant={hasInviteCode ? 'default' : 'ghost'}>
+          Join Existing organization
         </Button>
       </DialogTrigger>
 
       <DialogContent>
-        <DialogTitle>Join an Organization</DialogTitle>
+        <DialogHeader className="sr-only">
+          <DialogTitle>Join an Organization</DialogTitle>
+          <DialogDescription>
+            Enter the invite code you received to join an organization
+          </DialogDescription>
+        </DialogHeader>
         <div className="flex flex-col gap-4">
           <label className="flex flex-col gap-1">
             <div className="text-sm font-bold">Invite Code</div>
             <Input
+              inputSize="lg"
+              placeholder="Invite Code"
               value={inviteCode}
-              onChange={(e) => {
-                setInviteCode(e.target.value);
-                clearInviteData();
-              }}
+              onChange={(e) => setInviteCode(e.target.value)}
+              leadingSlot={UsersThree}
             />
           </label>
 
@@ -157,32 +146,31 @@ export default function JoinOrgButton({
             </div>
           )}
 
-          {joinError && !joinLoading && (
+          {joinError && !isJoining && (
             <div className="text-red-10 text-sm font-bold">
               {joinError.message}
             </div>
           )}
 
-          <Button
-            loading={inviteLoading || joinLoading}
-            disabled={inviteCode.length !== 32}
-            className="mt-4"
-            onClick={() => {
-              if (!inviteData) {
-                validateInvite({ clearData: true, clearError: true });
-              } else {
-                joinOrg({ clearData: true, clearError: true });
-              }
-            }}>
-            {inviteData ? 'Join Organization' : 'Validate Invite Code'}
-          </Button>
-          <DialogClose asChild>
+          <div className="flex gap-2">
+            <DialogClose asChild>
+              <Button
+                variant="outline"
+                className="flex-1">
+                Cancel
+              </Button>
+            </DialogClose>
             <Button
-              variant="outline"
-              className="w-full">
-              Cancel
+              loading={inviteLoading || isJoining}
+              disabled={inviteCode.length !== 32}
+              className="flex-1"
+              onClick={async () => {
+                if (!inviteData) return;
+                await joinOrg({ inviteToken: inviteCode });
+              }}>
+              Join Organization
             </Button>
-          </DialogClose>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

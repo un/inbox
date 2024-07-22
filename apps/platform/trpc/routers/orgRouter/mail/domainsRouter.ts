@@ -9,7 +9,6 @@ import {
 import { typeIdGenerator, typeIdValidator } from '@u22n/utils/typeid';
 import { lookupNS } from '@u22n/utils/dns';
 import { TRPCError } from '@trpc/server';
-import { isAccountAdminOfOrg } from '~platform/utils/account';
 import { mailBridgeTrpcClient } from '~platform/utils/tRPCServerClients';
 import { updateDnsRecords } from '~platform/utils/updateDnsRecords';
 import { iCanHazCallerFactory } from '../iCanHaz/iCanHazRouter';

@@ -1,6 +1,8 @@
 import { TRPCError, initTRPC } from '@trpc/server';
 import superjson from 'superjson';
 import type { TRPCContext } from '../ctx';
+import { getTracer } from '@u22n/otel/helpers';
+import { flatten } from '@u22n/otel/exports';
 
 export const trpcContext = initTRPC
   .context<TRPCContext>()
@@ -13,18 +15,24 @@ const isServiceAuthenticated = trpcContext.middleware(({ next, ctx }) => {
   return next({ ctx });
 });
 
+const trpcTracer = getTracer('mail-bridge/trpc');
 export const publicProcedure = trpcContext.procedure.use(
-  async ({ ctx, type, path, next }) =>
-    ctx.context
-      .get('otel')
-      .tracer.startActiveSpan(`TRPC ${type} ${path}`, async (span) => {
-        const result = await next();
-        span.setAttributes({
-          'trpc.ok': result.ok
-        });
-        span.end();
-        return result;
-      })
+  async ({ type, path, next }) =>
+    trpcTracer.startActiveSpan(`TRPC ${type} ${path}`, async (span) => {
+      const result = await next();
+      if (span) {
+        span.setAttributes(
+          flatten({
+            trpc: {
+              type: type,
+              path: path,
+              ok: result.ok
+            }
+          })
+        );
+      }
+      return result;
+    })
 );
 export const protectedProcedure = publicProcedure.use(isServiceAuthenticated);
 export const router = trpcContext.router;

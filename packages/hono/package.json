@@ -1,0 +1,23 @@
+{
+  "name": "@u22n/hono",
+  "type": "module",
+  "version": "0.0.0",
+  "exports": {
+    ".": "./src/index.ts",
+    "./helpers": "./src/helpers.ts"
+  },
+  "scripts": {
+    "check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.12.0",
+    "@hono/trpc-server": "^0.3.2",
+    "@hono/zod-validator": "^0.2.2",
+    "hono": "^4.5.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.11",
+    "@u22n/tsconfig": "^0.0.2",
+    "typescript": "^5.5.3"
+  }
+}

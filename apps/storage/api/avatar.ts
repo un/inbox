@@ -1,7 +1,5 @@
-import { Hono } from 'hono';
 import type { Ctx } from '../ctx';
 import { checkSignedIn } from '../middlewares';
-import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
 import { typeIdValidator, type TypeId } from '@u22n/utils/typeid';
 import {
@@ -16,8 +14,10 @@ import { db } from '@u22n/database';
 import { s3Client } from '../s3';
 import sharp from 'sharp';
 import { env } from '../env';
+import { createHonoApp } from '@u22n/hono';
+import { zValidator } from '@u22n/hono/helpers';
 
-export const avatarApi = new Hono<Ctx>().post(
+export const avatarApi = createHonoApp<Ctx>().post(
   '/avatar',
   checkSignedIn,
   zValidator(

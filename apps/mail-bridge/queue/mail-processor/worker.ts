@@ -29,16 +29,16 @@ import { tipTapExtensions } from '@u22n/tiptap/extensions';
 import { sendRealtimeNotification } from '../../utils/realtime';
 import { simpleParser, type EmailAddress } from 'mailparser';
 import { env } from '../../env';
-import { trace } from '@u22n/otel/exports';
-import { logger } from '@u22n/otel/logger';
 import { discord } from '@u22n/utils/discord';
 import mime from 'mime';
+import { getTracer } from '@u22n/otel/helpers';
+import { logger } from '@u22n/otel/logger';
 
 const { host, username, password, port } = new URL(
   env.DB_REDIS_CONNECTION_STRING
 );
 
-const tracer = trace.getTracer('mail-processor');
+const tracer = getTracer('mail-bridge/queue/mail-processor');
 
 export const worker = new Worker<
   {
@@ -49,9 +49,9 @@ export const worker = new Worker<
 >(
   'mail-processor',
   (job) =>
-    tracer.startActiveSpan('mail-processor', async (span) => {
+    tracer.startActiveSpan('Mail Processor', async (span) => {
       try {
-        span.setAttributes({
+        span?.setAttributes({
           'job.id': job.id,
           'job.data': JSON.stringify(job.data)
         });
@@ -65,7 +65,7 @@ export const worker = new Worker<
             ...params
           });
 
-        span.addEvent('Resolved org and mailserver', {
+        span?.addEvent('mail-processor.resolved_org_mailserver', {
           orgId,
           orgPublicId,
           forwardedEmailAddress: forwardedEmailAddress || '<null>'
@@ -89,7 +89,7 @@ export const worker = new Worker<
           throw new Error('No message ID found in the email');
 
         if (parsedEmail.from.value.length > 1) {
-          span.addEvent(
+          logger.warn(
             'Multiple from addresses detected in a message, only using first email address'
           );
         }
@@ -142,7 +142,7 @@ export const worker = new Worker<
           });
 
         if (alreadyProcessedMessageWithThisId) {
-          span.addEvent('Message already processed');
+          logger.warn('Message already processed');
           return;
         }
 
@@ -197,7 +197,7 @@ export const worker = new Worker<
           !messageFromPlatformObject ||
           !messageFromPlatformObject[0]
         ) {
-          span.setAttributes({
+          span?.setAttributes({
             'message.toObject': JSON.stringify(messageToPlatformObject),
             'message.fromObject': JSON.stringify(messageFromPlatformObject)
           });
@@ -261,7 +261,7 @@ export const worker = new Worker<
 
         // if theres no email identity ids, then we assume that this email has no destination, so we need to send the bounce message
         if (!emailIdentityIds.length) {
-          span.setAttributes({
+          span?.setAttributes({
             'message.addressIds': JSON.stringify(messageAddressIds)
           });
           throw new Error('No email identity ids found');
@@ -784,14 +784,11 @@ export const worker = new Worker<
           convoEntryId: +insertNewConvoEntry.insertId
         });
       } catch (e) {
-        span.recordException(e as Error);
-        span.setStatus({ code: 2 });
-        logger.error(e, 'Error processing email');
+        span?.recordException(e as Error);
+        console.error('Error processing email');
         await discord.info(`Mailbridge Queue Error\n${(e as Error).message}`);
         // Throw the error to be caught by the worker, and moving to failed jobs
         throw e;
-      } finally {
-        span.end();
       }
     }),
   {

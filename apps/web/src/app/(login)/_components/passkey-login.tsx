@@ -40,6 +40,7 @@ export function PasskeyLoginButton() {
           description: 'Redirecting you to create an organization'
         });
         router.push('/join/org');
+        return;
       }
 
       toast.success('Sign in successful!', {

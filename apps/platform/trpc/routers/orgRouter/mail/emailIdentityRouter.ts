@@ -23,7 +23,6 @@ import {
   type TypeId
 } from '@u22n/utils/typeid';
 import { nanoIdToken } from '@u22n/utils/zodSchemas';
-import { isAccountAdminOfOrg } from '~platform/utils/account';
 import { TRPCError } from '@trpc/server';
 import { emailIdentityExternalRouter } from './emailIdentityExternalRouter';
 import { env } from '~platform/env';
