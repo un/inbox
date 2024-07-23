@@ -91,9 +91,18 @@ export function PasswordCard({
         password: debouncedPassword
       },
       {
-        enabled: active && debouncedPassword.length > 8
+        enabled: active
       }
     );
+
+  // run validation on the debounced password
+  useEffect(() => {
+    const handleValidation = async () => {
+      if (debouncedPassword.length === 0) return;
+      await form.trigger('password');
+    };
+    void handleValidation();
+  }, [debouncedPassword, form]);
 
   useEffect(() => {
     if (!active) return;
@@ -107,6 +116,9 @@ export function PasswordCard({
     );
   }, [form, active, data?.allowed, password, confirmPassword]);
 
+  const hasPasswordValidationError = form.formState.errors.password;
+  const hasPasswordMatchError = passwordMatch === false;
+  const makeSpaceForError = hasPasswordValidationError ?? hasPasswordMatchError;
   return (
     <div
       role="button"
@@ -115,7 +127,11 @@ export function PasswordCard({
       <div
         className={cn(
           'border-base-5 flex w-full flex-col items-center rounded-xl border bg-white p-3 transition-all duration-300 ease-in-out',
-          active ? 'border-accent-10 h-[210px] gap-3' : 'h-[60px]'
+          !active
+            ? 'h-[60px]'
+            : makeSpaceForError
+              ? 'border-accent-10 h-[260px] gap-3'
+              : 'border-accent-10 h-[230px] gap-3'
         )}>
         <div className="w-full">
           <div className="flex items-center gap-1">
@@ -164,6 +180,18 @@ export function PasswordCard({
                   )}
                 />
               </form>
+              {/* display the error */}
+              {hasPasswordValidationError && (
+                <p className="text-red-9 w-full text-left text-xs">
+                  {form.formState.errors.password?.message}
+                </p>
+              )}
+              {/* display password mismatch */}
+              {passwordMatch === false && (
+                <p className="w-full text-left text-xs">
+                  Passwords don&apos;t match
+                </p>
+              )}
             </Form>
             <StrengthMeter
               strength={
@@ -174,22 +202,17 @@ export function PasswordCard({
               message={
                 isLoading ? (
                   'Calculating Strength...'
-                ) : data && passwordMatch !== false ? (
-                  <span
-                    className={data.allowed ? 'text-green-9' : 'text-red-9'}>
+                ) : data?.score ? (
+                  <span className="text-green-9">
                     {
                       ['Super Weak', 'Weak', 'Not Great', 'Great', 'Godlike'][
                         data?.score ?? 0
                       ]
                     }
                   </span>
-                ) : passwordMatch === false ? (
-                  "Passwords don't match"
-                ) : (
-                  ''
-                )
+                ) : null
               }
-              error={data?.allowed ? passwordMatch === false : false}
+              error={false}
             />
           </>
         )}
