@@ -28,6 +28,7 @@ import {
 } from '@/src/components/shadcn-ui/dialog';
 import { useState } from 'react';
 import { type UiColor, uiColors } from '@u22n/utils/colors';
+import { SpinnerGap } from '@phosphor-icons/react';
 
 export function NewTeamModal() {
   const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
@@ -132,7 +133,13 @@ export function NewTeamModal() {
           <DialogDescription>Create a new Team for your Org</DialogDescription>
         </DialogHeader>
         {isLoading ? (
-          <div>Loading...</div>
+          <div className="flex w-full justify-center gap-2 text-center font-bold">
+            <SpinnerGap
+              className="size-4 animate-spin"
+              size={16}
+            />
+            Loading...
+          </div>
         ) : !canAddTeam ? (
           <div>
             Your Current Billing Plan does not allow you to create Teams

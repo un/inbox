@@ -17,7 +17,7 @@ import { type JSONContent, generateHTML } from '@u22n/tiptap/react';
 import { tipTapExtensions } from '@u22n/tiptap/extensions';
 import { type formatParticipantData } from '../../utils';
 import { cn } from '@/src/lib/utils';
-import { DotsThree } from '@phosphor-icons/react';
+import { DotsThree, SpinnerGap } from '@phosphor-icons/react';
 import { useAtom } from 'jotai';
 import { useCopyToClipboard } from '@uidotdev/usehooks';
 import { toast } from 'sonner';
@@ -78,8 +78,12 @@ export function MessagesPanel({
     (index: number, message: (typeof allMessages)[number]) => (
       <div className="h-full w-full">
         {index === firstItemIndex && hasNextPage ? (
-          <div className="flex w-full items-center justify-center gap-2">
-            <span>Loading...</span>
+          <div className="flex w-full items-center justify-center gap-2 text-center font-bold">
+            <SpinnerGap
+              className="size-4 animate-spin"
+              size={16}
+            />
+            Loading...
           </div>
         ) : null}
         <MessageItem

@@ -5,7 +5,7 @@ import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { type TypeId } from '@u22n/utils/typeid';
 import { Button } from '@/src/components/shadcn-ui/button';
 import Link from 'next/link';
-import { ArrowLeft, Info } from '@phosphor-icons/react';
+import { ArrowLeft, Info, SpinnerGap } from '@phosphor-icons/react';
 import {
   Alert,
   AlertDescription,
@@ -54,7 +54,15 @@ export default function Page({
           need help.
         </AlertDescription>
       </Alert>
-      {isLoading && <div>Loading...</div>}
+      {isLoading && (
+        <div className="flex w-full justify-center gap-2 text-center font-bold">
+          <SpinnerGap
+            className="size-4 animate-spin"
+            size={16}
+          />
+          Loading...
+        </div>
+      )}
       {emailInfo ? (
         <>
           <div>

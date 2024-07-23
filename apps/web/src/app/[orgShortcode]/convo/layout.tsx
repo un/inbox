@@ -89,7 +89,7 @@ export default function Layout({
 
   return (
     <div className="flex h-full w-full flex-row gap-0 xl:grid xl:grid-cols-3">
-      <div className="flex h-full min-w-96 flex-col gap-2 p-4 pt-3 xl:col-span-1 xl:min-w-80">
+      <div className="flex h-full min-w-96 flex-col gap-2 p-2 pt-3 xl:col-span-1 xl:min-w-80">
         <div
           className={
             'flex w-full flex-row items-center justify-between gap-2 overflow-visible p-2.5 pt-0'
@@ -127,8 +127,10 @@ export default function Layout({
                       className="h-4 w-4"
                     />
                   </div>
-                  <BreadcrumbLink href={`/${orgShortcode}/convo`}>
-                    {showHidden ? 'Hidden Conversations' : 'Conversations'}
+                  <BreadcrumbLink asChild>
+                    <Link href={`/${orgShortcode}/convo`}>
+                      {showHidden ? 'Hidden Conversations' : 'Conversations'}
+                    </Link>
                   </BreadcrumbLink>
                 </BreadcrumbItem>
               </BreadcrumbList>
