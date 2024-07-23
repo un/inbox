@@ -16,7 +16,8 @@ import {
   orgInvitations,
   orgMembers,
   orgMemberProfiles,
-  accounts
+  accounts,
+  orgs
 } from '@u22n/database/schema';
 import { typeIdGenerator, typeIdValidator } from '@u22n/utils/typeid';
 import { nanoIdToken, zodSchemas } from '@u22n/utils/zodSchemas';
@@ -194,11 +195,11 @@ export const invitesRouter = router({
           const res = await sendInviteEmail({
             to: notification?.notificationEmailAddress || '',
             invitedName: `${newOrgMember.firstName} ${newOrgMember.lastName || ''}`,
-            invitingOrg: org.name,
+            invitingOrgName: org.name,
             expiryDate: new Date(
               Date.now() + 7 * 24 * 60 * 60 * 1000
             ).toDateString(),
-            inviteUrl: `https://app.uninbox.com/join/invite/${newInviteToken}`
+            inviteUrl: `https://${env.WEBAPP_URL}/join/invite/${newInviteToken}`
           });
 
           if (!res) {

@@ -4,6 +4,7 @@ import { eq } from '@u22n/database/orm';
 import { orgs } from '@u22n/database/schema';
 import { typeIdValidator } from '@u22n/utils/typeid';
 import { TRPCError } from '@trpc/server';
+import { refreshOrgShortcodeCache } from '~platform/utils/orgShortcode';
 
 export const orgProfileRouter = router({
   getOrgProfile: orgProcedure
@@ -67,6 +68,8 @@ export const orgProfileRouter = router({
           name: orgName
         })
         .where(eq(orgs.id, orgId));
+
+      await refreshOrgShortcodeCache(orgId);
 
       return {
         success: true
