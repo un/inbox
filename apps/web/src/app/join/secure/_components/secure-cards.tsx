@@ -80,22 +80,30 @@ export function PasswordCard({
   const password = form.watch('password');
   const confirmPassword = form.watch('confirmPassword');
   const debouncedPassword = useDebounce(password, 1000);
-  // only show message if both passwords are filled
-  const showPasswordMatchMessage =
-    password.length > 0 && confirmPassword.length > 0;
-
-  const passwordMatch = password === confirmPassword;
+  const passwordMatch =
+    password.length >= 8 && confirmPassword.length >= 8
+      ? password === confirmPassword
+      : null;
 
   const { data, isLoading } =
-    platform.auth.signup.checkPasswordStrength.useQuery({
-      password: debouncedPassword
-    });
+    platform.auth.signup.checkPasswordStrength.useQuery(
+      {
+        password: debouncedPassword
+      },
+      {
+        enabled: active && debouncedPassword.length > 8
+      }
+    );
 
   useEffect(() => {
     if (!active) return;
     form.setValue(
       'validated',
-      (data?.allowed && password === confirmPassword) ?? false
+      (password.length >= 8 &&
+        confirmPassword.length >= 8 &&
+        data?.allowed &&
+        password === confirmPassword) ??
+        false
     );
   }, [form, active, data?.allowed, password, confirmPassword]);
 
@@ -175,7 +183,7 @@ export function PasswordCard({
                       ]
                     }
                   </span>
-                ) : showPasswordMatchMessage && passwordMatch === false ? (
+                ) : passwordMatch === false ? (
                   "Passwords don't match"
                 ) : (
                   ''
