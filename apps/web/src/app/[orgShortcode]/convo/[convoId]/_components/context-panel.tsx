@@ -12,7 +12,7 @@ import {
   HoverCardContent,
   HoverCardPortal
 } from '@/src/components/shadcn-ui/hover-card';
-import { CaretUp, CaretDown } from '@phosphor-icons/react';
+import { CaretUp, CaretDown, SpinnerGap } from '@phosphor-icons/react';
 import { useState } from 'react';
 import { type formatParticipantData } from '../../utils';
 import { memo } from 'react';
@@ -43,7 +43,15 @@ export function ContextPanel({
             <span className="select-none p-2">Participants</span>
             {participantOpen ? <CaretUp size={14} /> : <CaretDown size={14} />}
           </div>
-          {participants.length === 0 && <span className="p-2">Loading...</span>}
+          {participants.length === 0 && (
+            <div className="flex w-full justify-center gap-2 text-center font-bold">
+              <SpinnerGap
+                className="size-4 animate-spin"
+                size={16}
+              />
+              Loading...
+            </div>
+          )}
           <div className="flex flex-col px-2">
             {participants.map((participant, i) => (
               <div

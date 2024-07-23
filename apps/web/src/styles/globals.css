@@ -83,3 +83,15 @@
   height: 0;
   pointer-events: none;
 }
+
+@media (orientation: landscape) {
+  ::-webkit-scrollbar {
+    @apply bg-slate-2 h-[6px] w-[6px];
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-slate-4 border-slate-2 rounded-xl border;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-slate-1 rounded-xl;
+  }
+}

@@ -56,7 +56,7 @@ export default function Page() {
             )}
             {data.currentPlan === 'pro' && (
               <div className="flex flex-col">
-                <div className="text-muted-foreground">Billing Period</div>
+                <div className="text-base-11">Billing Period</div>
                 <div className="font-display text-xl">
                   {data.currentPeriod === 'monthly' ? 'Monthly' : 'Yearly'}
                 </div>

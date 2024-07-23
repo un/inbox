@@ -30,7 +30,7 @@ type PostalResponse =
     };
 
 export async function sendInviteEmail({
-  invitingOrg,
+  invitingOrgName,
   to,
   invitedName,
   expiryDate,
@@ -50,19 +50,19 @@ export async function sendInviteEmail({
         cc: [],
         from: `${config.sendAsName} <${config.sendAsEmail}>`,
         sender: config.sendAsEmail,
-        subject: `You have been invited to join ${invitingOrg} on Uninbox`,
+        subject: `You have been invited to join ${invitingOrgName} on Uninbox`,
         plain_body: inviteTemplatePlainText({
           expiryDate,
           invitedName,
           inviteUrl,
-          invitingOrg,
+          invitingOrgName: invitingOrgName,
           to
         }),
         html_body: inviteTemplate({
           expiryDate,
           invitedName,
           inviteUrl,
-          invitingOrg,
+          invitingOrgName: invitingOrgName,
           to
         }),
         attachments: [],

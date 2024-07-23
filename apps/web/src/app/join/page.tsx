@@ -76,8 +76,8 @@ export default function Page() {
       <div className="flex flex-col gap-4 pt-3">
         <div className="flex-col items-start gap-1 text-start">
           <Input
+            label="Username"
             inputSize="lg"
-            placeholder="Username"
             autoComplete="new-username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}

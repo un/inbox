@@ -97,14 +97,14 @@ export function PasswordModal({
         <AlertDialogDescription>Choose a Password</AlertDialogDescription>
         <div className="flex w-full flex-col gap-4 p-2">
           <PasswordInput
+            label="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             autoComplete="new-password"
             id="password"
-            placeholder="Password"
           />
           {passwordCheckLoading && (
-            <div className="text-muted-foreground w-full font-bold">
+            <div className="text-base-11 w-full font-bold">
               Checking password strength...
             </div>
           )}
@@ -141,10 +141,10 @@ export function PasswordModal({
             </div>
           )}
           <PasswordInput
+            label="Confirm Password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             id="confirm-password"
-            placeholder="Confirm Password"
             autoComplete="new-password"
           />
 
@@ -226,7 +226,7 @@ export function TOTPModal({
 
           {qrCodeSecret && (
             <div className="border-muted/80 flex w-full rounded border">
-              <div className="bg-muted text-muted-foreground text-bold flex w-[32ch] flex-1 items-center overflow-hidden truncate text-clip rounded rounded-r-none p-1 font-mono">
+              <div className="bg-muted text-base-11 text-bold flex w-[32ch] flex-1 items-center overflow-hidden truncate text-clip rounded rounded-r-none p-1 font-mono">
                 {qrCodeSecret}
               </div>
               <CopyButton

@@ -25,6 +25,7 @@ export function PasskeyNameModal({
         </DialogDescription>
         <div className="my-6 flex flex-col gap-2">
           <Input
+            label="Passkey Name"
             defaultValue={'Passkey'}
             onChange={(e) => {
               setName(e.target.value);

@@ -75,9 +75,7 @@ export default function Page({
       {isLoading && <div>Loading...</div>}
       {domainInfo ? (
         <>
-          <div className="text-muted-foreground font-bold uppercase">
-            Status
-          </div>
+          <div className="text-base-11 font-bold uppercase">Status</div>
           <div className="flex flex-col gap-2 py-2">
             {domainInfo.domainData?.domainStatus !== 'active' ? (
               <>
@@ -119,7 +117,7 @@ export default function Page({
               </Alert>
             )}
           </div>
-          <div className="text-muted-foreground font-bold uppercase">Mail</div>
+          <div className="text-base-11 font-bold uppercase">Mail</div>
           <div>
             <Accordion
               type="multiple"
@@ -259,11 +257,11 @@ export default function Page({
           </div>
           <div className="flex justify-between">
             <div className="flex flex-col">
-              <div className="text-muted-foreground font-bold uppercase">
+              <div className="text-base-11 font-bold uppercase">
                 DNS Records
               </div>
               {!dnsLoading && (
-                <div className="text-muted-foreground text-sm">
+                <div className="text-base-11 text-sm">
                   Last Checked: {lastChecked}
                 </div>
               )}
@@ -315,18 +313,18 @@ export default function Page({
                       </div>
                       <div className="flex items-end gap-2">
                         <div className="flex flex-col">
-                          <span className="text-muted-foreground text-sm uppercase">
+                          <span className="text-base-11 text-sm uppercase">
                             Type
                           </span>
-                          <span className="bg-muted text-muted-foreground rounded p-3">
+                          <span className="bg-muted text-base-11 rounded p-3">
                             TXT
                           </span>
                         </div>
                         <div className="flex flex-col">
-                          <span className="text-muted-foreground text-sm uppercase">
+                          <span className="text-base-11 text-sm uppercase">
                             Name
                           </span>
-                          <span className="bg-muted text-muted-foreground rounded p-3">
+                          <span className="bg-muted text-base-11 rounded p-3">
                             {domainDNSRecord.dnsRecords.verification.name}
                           </span>
                         </div>
@@ -335,10 +333,10 @@ export default function Page({
                           text={domainDNSRecord.dnsRecords.verification.name}
                         />
                         <div className="flex flex-col">
-                          <span className="text-muted-foreground text-sm uppercase">
+                          <span className="text-base-11 text-sm uppercase">
                             Value
                           </span>
-                          <span className="bg-muted text-muted-foreground rounded p-3">
+                          <span className="bg-muted text-base-11 rounded p-3">
                             {domainDNSRecord.dnsRecords.verification.value}
                           </span>
                         </div>
@@ -372,35 +370,35 @@ export default function Page({
                       </div>
                       <div className="flex items-end gap-2">
                         <div className="flex flex-col">
-                          <span className="text-muted-foreground text-sm uppercase">
+                          <span className="text-base-11 text-sm uppercase">
                             Type
                           </span>
-                          <span className="bg-muted text-muted-foreground rounded p-3">
+                          <span className="bg-muted text-base-11 rounded p-3">
                             MX
                           </span>
                         </div>
                         <div className="flex flex-col">
-                          <span className="text-muted-foreground text-sm uppercase">
+                          <span className="text-base-11 text-sm uppercase">
                             Name
                           </span>
-                          <span className="bg-muted text-muted-foreground rounded p-3">
+                          <span className="bg-muted text-base-11 rounded p-3">
                             {domainDNSRecord.dnsRecords.mx.name}
                           </span>
                         </div>
 
                         <div className="flex flex-col">
-                          <span className="text-muted-foreground text-sm uppercase">
+                          <span className="text-base-11 text-sm uppercase">
                             Priority
                           </span>
-                          <span className="bg-muted text-muted-foreground rounded p-3 text-center">
+                          <span className="bg-muted text-base-11 rounded p-3 text-center">
                             {domainDNSRecord.dnsRecords.mx.priority}
                           </span>
                         </div>
                         <div className="flex flex-col">
-                          <span className="text-muted-foreground text-sm uppercase">
+                          <span className="text-base-11 text-sm uppercase">
                             Value
                           </span>
-                          <span className="bg-muted text-muted-foreground rounded p-3">
+                          <span className="bg-muted text-base-11 rounded p-3">
                             {domainDNSRecord.dnsRecords.mx.value}
                           </span>
                         </div>
@@ -433,18 +431,18 @@ export default function Page({
                       </div>
                       <div className="flex items-end gap-2">
                         <div className="flex flex-col">
-                          <span className="text-muted-foreground text-sm uppercase">
+                          <span className="text-base-11 text-sm uppercase">
                             Type
                           </span>
-                          <span className="bg-muted text-muted-foreground rounded p-3">
+                          <span className="bg-muted text-base-11 rounded p-3">
                             TXT
                           </span>
                         </div>
                         <div className="flex flex-col">
-                          <span className="text-muted-foreground text-sm uppercase">
+                          <span className="text-base-11 text-sm uppercase">
                             Name
                           </span>
-                          <span className="bg-muted text-muted-foreground rounded p-3">
+                          <span className="bg-muted text-base-11 rounded p-3">
                             {domainDNSRecord.dnsRecords.dkim.name}
                           </span>
                         </div>
@@ -455,10 +453,10 @@ export default function Page({
                       </div>
                       <div className="flex items-end gap-2">
                         <div className="flex flex-col">
-                          <span className="text-muted-foreground text-sm uppercase">
+                          <span className="text-base-11 text-sm uppercase">
                             Value
                           </span>
-                          <span className="bg-muted text-muted-foreground break-all rounded p-3">
+                          <span className="bg-muted text-base-11 break-all rounded p-3">
                             {domainDNSRecord.dnsRecords.dkim.value}
                           </span>
                         </div>
@@ -491,27 +489,27 @@ export default function Page({
                       </div>
                       <div className="flex items-end gap-2">
                         <div className="flex flex-col">
-                          <span className="text-muted-foreground text-sm uppercase">
+                          <span className="text-base-11 text-sm uppercase">
                             Type
                           </span>
-                          <span className="bg-muted text-muted-foreground rounded p-3">
+                          <span className="bg-muted text-base-11 rounded p-3">
                             TXT
                           </span>
                         </div>
                         <div className="flex flex-col">
-                          <span className="text-muted-foreground text-sm uppercase">
+                          <span className="text-base-11 text-sm uppercase">
                             Name
                           </span>
-                          <span className="bg-muted text-muted-foreground rounded p-3">
+                          <span className="bg-muted text-base-11 rounded p-3">
                             {domainDNSRecord.dnsRecords.spf.name}
                           </span>
                         </div>
 
                         <div className="flex flex-col">
-                          <span className="text-muted-foreground text-sm uppercase">
+                          <span className="text-base-11 text-sm uppercase">
                             Value
                           </span>
-                          <span className="bg-muted text-muted-foreground rounded p-3">
+                          <span className="bg-muted text-base-11 rounded p-3">
                             {domainDNSRecord.dnsRecords.spf.value}
                           </span>
                         </div>
@@ -545,18 +543,18 @@ export default function Page({
                       </div>
                       <div className="flex items-end gap-2">
                         <div className="flex flex-col">
-                          <span className="text-muted-foreground text-sm uppercase">
+                          <span className="text-base-11 text-sm uppercase">
                             Type
                           </span>
-                          <span className="bg-muted text-muted-foreground rounded p-3">
+                          <span className="bg-muted text-base-11 rounded p-3">
                             CNAME
                           </span>
                         </div>
                         <div className="flex flex-col">
-                          <span className="text-muted-foreground text-sm uppercase">
+                          <span className="text-base-11 text-sm uppercase">
                             Name
                           </span>
-                          <span className="bg-muted text-muted-foreground rounded p-3">
+                          <span className="bg-muted text-base-11 rounded p-3">
                             {domainDNSRecord.dnsRecords.returnPath.name}
                           </span>
                         </div>
@@ -565,10 +563,10 @@ export default function Page({
                           text={domainDNSRecord.dnsRecords.returnPath.name}
                         />
                         <div className="flex flex-col">
-                          <span className="text-muted-foreground text-sm uppercase">
+                          <span className="text-base-11 text-sm uppercase">
                             Value
                           </span>
-                          <span className="bg-muted text-muted-foreground rounded p-3">
+                          <span className="bg-muted text-base-11 rounded p-3">
                             {domainDNSRecord.dnsRecords.returnPath.value}
                           </span>
                         </div>
@@ -601,18 +599,18 @@ export default function Page({
                       </div>
                       <div className="flex items-end gap-2">
                         <div className="flex flex-col">
-                          <span className="text-muted-foreground text-sm uppercase">
+                          <span className="text-base-11 text-sm uppercase">
                             Type
                           </span>
-                          <span className="bg-muted text-muted-foreground rounded p-3">
+                          <span className="bg-muted text-base-11 rounded p-3">
                             TXT
                           </span>
                         </div>
                         <div className="flex flex-col">
-                          <span className="text-muted-foreground text-sm uppercase">
+                          <span className="text-base-11 text-sm uppercase">
                             Name
                           </span>
-                          <span className="bg-muted text-muted-foreground rounded p-3">
+                          <span className="bg-muted text-base-11 rounded p-3">
                             {domainDNSRecord.dnsRecords.dmarc.name}
                           </span>
                         </div>
@@ -621,10 +619,10 @@ export default function Page({
                           text={domainDNSRecord.dnsRecords.dmarc.name}
                         />
                         <div className="flex flex-col">
-                          <span className="text-muted-foreground text-sm uppercase">
+                          <span className="text-base-11 text-sm uppercase">
                             Value
                           </span>
-                          <span className="bg-muted text-muted-foreground rounded p-3">
+                          <span className="bg-muted text-base-11 rounded p-3">
                             {domainDNSRecord.dnsRecords.dmarc.optimal}
                           </span>
                         </div>
@@ -639,18 +637,18 @@ export default function Page({
                       </div>
                       <div className="flex items-end gap-2">
                         <div className="flex flex-col">
-                          <span className="text-muted-foreground text-sm uppercase">
+                          <span className="text-base-11 text-sm uppercase">
                             Type
                           </span>
-                          <span className="bg-muted text-muted-foreground rounded p-3">
+                          <span className="bg-muted text-base-11 rounded p-3">
                             TXT
                           </span>
                         </div>
                         <div className="flex flex-col">
-                          <span className="text-muted-foreground text-sm uppercase">
+                          <span className="text-base-11 text-sm uppercase">
                             Name
                           </span>
-                          <span className="bg-muted text-muted-foreground rounded p-3">
+                          <span className="bg-muted text-base-11 rounded p-3">
                             {domainDNSRecord.dnsRecords.dmarc.name}
                           </span>
                         </div>
@@ -659,10 +657,10 @@ export default function Page({
                           text={domainDNSRecord.dnsRecords.dmarc.name}
                         />
                         <div className="flex flex-col">
-                          <span className="text-muted-foreground text-sm uppercase">
+                          <span className="text-base-11 text-sm uppercase">
                             Value
                           </span>
-                          <span className="bg-muted text-muted-foreground rounded p-3">
+                          <span className="bg-muted text-base-11 rounded p-3">
                             {domainDNSRecord.dnsRecords.dmarc.acceptable}
                           </span>
                         </div>

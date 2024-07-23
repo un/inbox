@@ -125,60 +125,49 @@ export function InviteModal() {
             void form.handleSubmit();
           }}>
           <div className="flex w-full gap-2">
-            <div className="flex flex-col">
-              <label
-                htmlFor="firstName"
-                className="font-semibold">
-                First Name
-              </label>
-              <form.Field
-                name="firstName"
-                validators={{ onBlur: z.string().min(1).max(64) }}
-                children={(field) => (
-                  <>
-                    <Input
-                      id={field.name}
-                      name={field.name}
-                      value={field.state.value ?? ''}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      onBlur={field.handleBlur}
-                    />
-                    {field.state.meta.errorMap.onBlur && (
-                      <span className="text-red-10">
-                        {field.state.meta.errorMap.onBlur}
-                      </span>
-                    )}
-                  </>
-                )}
-              />
-            </div>
-            <div className="flex flex-col">
-              <label
-                htmlFor="lastName"
-                className="font-semibold">
-                Last Name (Optional)
-              </label>
-              <form.Field
-                name="lastName"
-                validators={{ onBlur: z.string().min(0).max(64) }}
-                children={(field) => (
-                  <>
-                    <Input
-                      id={field.name}
-                      name={field.name}
-                      value={field.state.value ?? ''}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      onBlur={field.handleBlur}
-                    />
-                    {field.state.meta.errorMap.onBlur && (
-                      <span className="text-red-10">
-                        {field.state.meta.errorMap.onBlur}
-                      </span>
-                    )}
-                  </>
-                )}
-              />
-            </div>
+            <form.Field
+              name="firstName"
+              validators={{ onBlur: z.string().min(1).max(64) }}
+              children={(field) => (
+                <>
+                  <Input
+                    label="First Name"
+                    id={field.name}
+                    name={field.name}
+                    value={field.state.value ?? ''}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    onBlur={field.handleBlur}
+                  />
+                  {field.state.meta.errorMap.onBlur && (
+                    <span className="text-red-10">
+                      {field.state.meta.errorMap.onBlur}
+                    </span>
+                  )}
+                </>
+              )}
+            />
+
+            <form.Field
+              name="lastName"
+              validators={{ onBlur: z.string().min(0).max(64) }}
+              children={(field) => (
+                <>
+                  <Input
+                    label="Last Name (Optional)"
+                    id={field.name}
+                    name={field.name}
+                    value={field.state.value ?? ''}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    onBlur={field.handleBlur}
+                  />
+                  {field.state.meta.errorMap.onBlur && (
+                    <span className="text-red-10">
+                      {field.state.meta.errorMap.onBlur}
+                    </span>
+                  )}
+                </>
+              )}
+            />
           </div>
           <div className="flex w-full gap-2">
             <div className="flex flex-1 flex-col">
@@ -207,33 +196,28 @@ export function InviteModal() {
                 )}
               />
             </div>
-            <div className="flex flex-1 flex-col">
-              <label
-                htmlFor="title"
-                className="font-semibold">
-                Title (Optional)
-              </label>
-              <form.Field
-                name="title"
-                validators={{ onBlur: z.string().min(0).max(64) }}
-                children={(field) => (
-                  <>
-                    <Input
-                      id={field.name}
-                      name={field.name}
-                      value={field.state.value ?? ''}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      onBlur={field.handleBlur}
-                    />
-                    {field.state.meta.errorMap.onBlur && (
-                      <span className="text-red-10">
-                        {field.state.meta.errorMap.onBlur}
-                      </span>
-                    )}
-                  </>
-                )}
-              />
-            </div>
+
+            <form.Field
+              name="title"
+              validators={{ onBlur: z.string().min(0).max(64) }}
+              children={(field) => (
+                <>
+                  <Input
+                    label="Title (Optional)"
+                    id={field.name}
+                    name={field.name}
+                    value={field.state.value ?? ''}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    onBlur={field.handleBlur}
+                  />
+                  {field.state.meta.errorMap.onBlur && (
+                    <span className="text-red-10">
+                      {field.state.meta.errorMap.onBlur}
+                    </span>
+                  )}
+                </>
+              )}
+            />
           </div>
           <div className="mt-4 flex w-full flex-col gap-2">
             <div className="flex items-center gap-2">
@@ -259,11 +243,11 @@ export function InviteModal() {
                     children={(field) => (
                       <>
                         <Input
+                          label="Invite Email Address"
                           name={field.name}
                           value={field.state.value ?? ''}
                           onChange={(e) => field.handleChange(e.target.value)}
                           onBlur={field.handleBlur}
-                          placeholder="somebody@email.com"
                         />
                         {field.state.meta.errorMap.onBlur && (
                           <span className="text-red-10">
@@ -315,6 +299,7 @@ export function InviteModal() {
                             }}
                             children={(field) => (
                               <Input
+                                label="Email Username"
                                 className="w-full flex-1"
                                 id={field.name}
                                 name={field.name}
@@ -323,7 +308,6 @@ export function InviteModal() {
                                   field.handleChange(e.target.value)
                                 }
                                 onBlur={field.handleBlur}
-                                placeholder="username"
                               />
                             )}
                           />
@@ -364,6 +348,7 @@ export function InviteModal() {
                           children={(field) => (
                             <>
                               <Input
+                                label="Send Name"
                                 id={field.name}
                                 className="w-full"
                                 name={field.name}
@@ -372,7 +357,6 @@ export function InviteModal() {
                                   field.handleChange(e.target.value)
                                 }
                                 onBlur={field.handleBlur}
-                                placeholder="Send Name"
                               />
                               {field.state.meta.errorMap.onBlur && (
                                 <span className="text-red-10">

@@ -70,9 +70,9 @@ export function CreateOrg() {
   return (
     <div className="flex w-full flex-col gap-1">
       <Input
+        label="Organization Name"
         fullWidth
         inputSize="lg"
-        placeholder="Org Name"
         value={orgName}
         onBlur={async () => {
           // If the org name is empty, clear the shortcode

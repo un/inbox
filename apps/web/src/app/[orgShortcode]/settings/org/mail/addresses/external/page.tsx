@@ -126,9 +126,6 @@ export default function Page() {
             void form.handleSubmit();
           }}>
           <div className="flex w-fit flex-col gap-2">
-            <div className="text-muted-foreground font-bold uppercase">
-              Email Address
-            </div>
             <div className="flex gap-1">
               <form.Field
                 name="fullEmail"
@@ -138,13 +135,13 @@ export default function Page() {
                 children={(field) => (
                   <div className="flex flex-col">
                     <Input
+                      label="Full Email Address"
                       className="w-fit"
                       id={field.name}
                       name={field.name}
                       value={field.state.value}
                       onChange={(e) => field.handleChange(e.target.value)}
                       onBlur={field.handleBlur}
-                      placeholder="hello@example.com"
                     />
                     {field.state.meta.errorMap.onBlur && (
                       <span className="text-red-10">
@@ -160,13 +157,13 @@ export default function Page() {
                 children={(field) => (
                   <div className="flex flex-col">
                     <Input
+                      label="Send Name"
                       id={field.name}
                       className="w-fit"
                       name={field.name}
                       value={field.state.value ?? ''}
                       onChange={(e) => field.handleChange(e.target.value)}
                       onBlur={field.handleBlur}
-                      placeholder="Send Name"
                     />
                     {field.state.meta.errorMap.onBlur && (
                       <span className="text-red-10">
@@ -180,7 +177,7 @@ export default function Page() {
           </div>
 
           <div className="flex w-fit flex-col gap-2">
-            <div className="text-muted-foreground font-bold uppercase">
+            <div className="text-base-11 font-bold uppercase">
               SMTP Settings
             </div>
             <div className="flex gap-1">
@@ -190,43 +187,31 @@ export default function Page() {
                   onBlur: z.string().min(3).includes('.')
                 }}
                 children={(field) => (
-                  <div className="flex flex-col">
-                    <span className="text-muted-foreground text-xs">
-                      SMTP Host
-                    </span>
-                    <Input
-                      className="w-fit"
-                      id={field.name}
-                      name={field.name}
-                      value={field.state.value}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      onBlur={field.handleBlur}
-                      placeholder="hostname"
-                    />
-                  </div>
+                  <Input
+                    label="SMTP Hostname"
+                    className="w-fit"
+                    id={field.name}
+                    name={field.name}
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    onBlur={field.handleBlur}
+                  />
                 )}
               />
               <form.Field
                 name="smtp.port"
                 validators={{ onBlur: z.number().min(1).max(65535) }}
                 children={(field) => (
-                  <div className="flex flex-col">
-                    <span className="text-muted-foreground text-xs">
-                      SMTP Port
-                    </span>
-                    <Input
-                      id={field.name}
-                      type="number"
-                      className="w-fit"
-                      name={field.name}
-                      value={field.state.value ?? ''}
-                      onChange={(e) =>
-                        field.handleChange(e.target.valueAsNumber)
-                      }
-                      onBlur={field.handleBlur}
-                      placeholder="port"
-                    />
-                  </div>
+                  <Input
+                    label="SMTP Port"
+                    id={field.name}
+                    type="number"
+                    className="w-fit"
+                    name={field.name}
+                    value={field.state.value ?? ''}
+                    onChange={(e) => field.handleChange(e.target.valueAsNumber)}
+                    onBlur={field.handleBlur}
+                  />
                 )}
               />
             </div>
@@ -237,40 +222,30 @@ export default function Page() {
                   onBlur: z.string().min(1)
                 }}
                 children={(field) => (
-                  <div className="flex flex-col">
-                    <span className="text-muted-foreground text-xs">
-                      Username
-                    </span>
-                    <Input
-                      className="w-fit"
-                      id={field.name}
-                      name={field.name}
-                      value={field.state.value}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      onBlur={field.handleBlur}
-                      placeholder="username"
-                    />
-                  </div>
+                  <Input
+                    label="SMTP Username"
+                    className="w-fit"
+                    id={field.name}
+                    name={field.name}
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    onBlur={field.handleBlur}
+                  />
                 )}
               />
               <form.Field
                 name="smtp.password"
                 validators={{ onBlur: z.string().min(1) }}
                 children={(field) => (
-                  <div className="flex flex-col">
-                    <span className="text-muted-foreground text-xs">
-                      Password
-                    </span>
-                    <Input
-                      id={field.name}
-                      className="w-fit"
-                      name={field.name}
-                      value={field.state.value ?? ''}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      onBlur={field.handleBlur}
-                      placeholder="password"
-                    />
-                  </div>
+                  <Input
+                    label="SMTP Password"
+                    id={field.name}
+                    className="w-fit"
+                    name={field.name}
+                    value={field.state.value ?? ''}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    onBlur={field.handleBlur}
+                  />
                 )}
               />
             </div>
@@ -279,9 +254,7 @@ export default function Page() {
                 name="smtp.encryption"
                 children={(field) => (
                   <div className="flex w-full flex-1 flex-col">
-                    <span className="text-muted-foreground text-xs">
-                      Encryption
-                    </span>
+                    <span className="text-base-11 text-xs">Encryption</span>
                     <Select
                       value={field.state.value}
                       onValueChange={(value) =>
@@ -310,9 +283,7 @@ export default function Page() {
                 name="smtp.authMethod"
                 children={(field) => (
                   <div className="flex w-full flex-1 flex-col">
-                    <span className="text-muted-foreground text-xs">
-                      Auth Method
-                    </span>
+                    <span className="text-base-11 text-xs">Auth Method</span>
                     <Select
                       value={field.state.value}
                       onValueChange={(value) =>
@@ -336,7 +307,7 @@ export default function Page() {
             </div>
           </div>
 
-          <div className="text-muted-foreground font-bold uppercase">
+          <div className="text-base-11 font-bold uppercase">
             Deliver Messages To
           </div>
           <div className="flex flex-col gap-2">

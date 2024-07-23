@@ -158,7 +158,7 @@ export function AvatarModal({
             <Button
               variant="secondary"
               onClick={() => onClose()}
-              className="mt-4 w-full">
+              className="w-full">
               Cancel
             </Button>
             {croppedUrl && (

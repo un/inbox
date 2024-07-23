@@ -135,7 +135,7 @@ export function ReplyBox({ convoId }: { convoId: TypeId<'convos'> }) {
                           <span className="flex items-center justify-between">
                             <span
                               className={cn(
-                                !email.sendingEnabled && 'text-muted-foreground'
+                                !email.sendingEnabled && 'text-base-11'
                               )}>
                               {`${email.sendName} (${email.username}@${email.domainName})`}
                             </span>

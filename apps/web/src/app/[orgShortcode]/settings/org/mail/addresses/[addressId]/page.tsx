@@ -5,7 +5,7 @@ import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { type TypeId } from '@u22n/utils/typeid';
 import { Button } from '@/src/components/shadcn-ui/button';
 import Link from 'next/link';
-import { ArrowLeft, Info } from '@phosphor-icons/react';
+import { ArrowLeft, Info, SpinnerGap } from '@phosphor-icons/react';
 import {
   Alert,
   AlertDescription,
@@ -54,11 +54,19 @@ export default function Page({
           need help.
         </AlertDescription>
       </Alert>
-      {isLoading && <div>Loading...</div>}
+      {isLoading && (
+        <div className="flex w-full justify-center gap-2 text-center font-bold">
+          <SpinnerGap
+            className="size-4 animate-spin"
+            size={16}
+          />
+          Loading...
+        </div>
+      )}
       {emailInfo ? (
         <>
           <div>
-            <div className="text-muted-foreground font-bold uppercase">
+            <div className="text-base-11 font-bold uppercase">
               Email Address
             </div>
             <div>
@@ -66,7 +74,7 @@ export default function Page({
             </div>
           </div>
           <div>
-            <div className="text-muted-foreground font-bold uppercase">
+            <div className="text-base-11 font-bold uppercase">
               Forwarding Address
             </div>
             <div>
@@ -74,15 +82,11 @@ export default function Page({
             </div>
           </div>
           <div>
-            <div className="text-muted-foreground font-bold uppercase">
-              Send Name
-            </div>
+            <div className="text-base-11 font-bold uppercase">Send Name</div>
             <div>{emailInfo.emailIdentityData?.sendName ?? 'None'}</div>
           </div>
           <div>
-            <div className="text-muted-foreground font-bold uppercase">
-              Catch All
-            </div>
+            <div className="text-base-11 font-bold uppercase">Catch All</div>
             <div>
               <Badge className="uppercase">
                 {emailInfo.emailIdentityData?.isCatchAll ? 'Yes' : 'No'}
@@ -90,9 +94,7 @@ export default function Page({
             </div>
           </div>
           <div>
-            <div className="text-muted-foreground font-bold uppercase">
-              Delivers To
-            </div>
+            <div className="text-base-11 font-bold uppercase">Delivers To</div>
             <div className="flex flex-wrap gap-2">
               {emailInfo.emailIdentityData?.authorizedOrgMembers.map(
                 (member) => {
@@ -110,7 +112,7 @@ export default function Page({
                       />
                       <div className="flex flex-col">
                         <div>{`${profile.firstName} ${profile.lastName}`}</div>
-                        <div className="text-muted-foreground text-xs">
+                        <div className="text-base-11 text-xs">
                           @{profile.handle}
                         </div>
                       </div>

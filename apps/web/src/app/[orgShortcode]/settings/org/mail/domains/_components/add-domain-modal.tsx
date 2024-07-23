@@ -69,18 +69,13 @@ export function AddDomainModal() {
           </div>
         ) : (
           <div className="my-2 flex w-fit flex-col gap-2">
-            <div className="flex flex-col">
-              <label
-                htmlFor="domain"
-                className="font-semibold">
-                Domain
-              </label>
-              <Input
-                name={'domain'}
-                value={domain}
-                onChange={(e) => setDomain(e.target.value)}
-              />
-            </div>
+            <Input
+              label="Domain"
+              name={'domain'}
+              value={domain}
+              onChange={(e) => setDomain(e.target.value)}
+            />
+
             {domainError && (
               <div className="text-red-500">{domainError.message}</div>
             )}

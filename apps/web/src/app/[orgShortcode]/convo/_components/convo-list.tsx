@@ -6,6 +6,7 @@ import { useCallback } from 'react';
 import { Virtuoso } from 'react-virtuoso';
 import { ms } from '@u22n/utils/ms';
 import { ConvoItem } from './convo-list-item';
+import { SpinnerGap } from '@phosphor-icons/react';
 
 type Props = {
   hidden: boolean;
@@ -41,7 +42,13 @@ export function ConvoList(props: Props) {
             <ConvoItem convo={convo} />
           </div>
           {index === allConvos.length - 1 && hasNextPage && (
-            <div className="w-full text-center font-bold">Loading...</div>
+            <div className="flex w-full justify-center gap-2 text-center font-bold">
+              <SpinnerGap
+                className="size-4 animate-spin"
+                size={16}
+              />
+              Loading...
+            </div>
           )}
         </div>
       );
@@ -52,12 +59,18 @@ export function ConvoList(props: Props) {
   return (
     <div className="flex h-full w-full flex-col">
       {isLoading ? (
-        <div className="w-full py-2 text-center font-bold">Loading...</div>
+        <div className="flex w-full justify-center gap-2 text-center font-bold">
+          <SpinnerGap
+            className="size-4 animate-spin"
+            size={16}
+          />
+          Loading...
+        </div>
       ) : (
         <Virtuoso
           data={allConvos}
           itemContent={itemRenderer}
-          style={{ overscrollBehavior: 'contain' }}
+          style={{ overscrollBehavior: 'contain', overflowX: 'clip' }}
           endReached={async () => {
             if (hasNextPage && !isFetchingNextPage) await fetchNextPage();
           }}
