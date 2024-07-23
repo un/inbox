@@ -5,6 +5,7 @@ import { platform } from '@/src/lib/trpc';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { columns } from './_components/columns';
 import { AddEmailModal } from './_components/add-address-modal';
+import { SpinnerGap } from '@phosphor-icons/react';
 
 export default function Page() {
   const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
@@ -22,7 +23,15 @@ export default function Page() {
         </div>
         <AddEmailModal />
       </div>
-      {isLoading && <div>Loading...</div>}
+      {isLoading && (
+        <div className="flex w-full justify-center gap-2 text-center font-bold">
+          <SpinnerGap
+            className="size-4 animate-spin"
+            size={16}
+          />
+          Loading...
+        </div>
+      )}
       {emailsList && (
         <DataTable
           columns={columns}
