@@ -73,8 +73,13 @@ export const emailIdentityExternalRouter = router({
       })
     )
     .mutation(async ({ input }) => {
+      // timeout after 30 seconds
+      const signal = AbortSignal.timeout(30_000);
+
       const result =
-        await mailBridgeTrpcClient.smtp.validateSmtpCredentials.mutate(input);
+        await mailBridgeTrpcClient.smtp.validateSmtpCredentials.query(input, {
+          signal
+        });
 
       if (result.result.error) {
         throw new TRPCError({
@@ -140,7 +145,7 @@ export const emailIdentityExternalRouter = router({
 
       // verify smtp again
       const smtpVerificationResult =
-        await mailBridgeTrpcClient.smtp.validateSmtpCredentials.mutate(
+        await mailBridgeTrpcClient.smtp.validateSmtpCredentials.query(
           input.smtp
         );
 

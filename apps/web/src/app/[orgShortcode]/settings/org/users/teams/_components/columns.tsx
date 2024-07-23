@@ -68,7 +68,7 @@ export const columns: ColumnDef<Team>[] = [
           <TooltipTrigger>
             <div
               className="size-6 rounded-full"
-              style={{ backgroundColor: `var(--${row.original.color}-10)` }}
+              style={{ backgroundColor: `var(--${row.original.color}10)` }}
             />
           </TooltipTrigger>
           <TooltipContent className="capitalize">

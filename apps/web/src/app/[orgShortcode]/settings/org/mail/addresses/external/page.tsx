@@ -1,7 +1,6 @@
 'use client';
 
 import { platform } from '@/src/lib/trpc';
-import { useForm } from '@tanstack/react-form';
 import { Input } from '@/src/components/shadcn-ui/input';
 import {
   Select,
@@ -14,13 +13,39 @@ import {
 import { MultiSelect } from '@/src/components/shared/multiselect';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { z } from 'zod';
-import { zodValidator } from '@tanstack/zod-form-adapter';
-import { type TypeId } from '@u22n/utils/typeid';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
-import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft } from '@phosphor-icons/react';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage
+} from '@/src/components/shadcn-ui/form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { PasswordInput } from '@/src/components/password-input';
+import { toast } from 'sonner';
+
+const externalEmailFormSchema = z.object({
+  fullEmail: z.string().email(),
+  sendName: z.string().min(1).max(64),
+  smtp: z.object({
+    host: z.string().min(3).includes('.'),
+    port: z.number().min(1).max(65535),
+    username: z.string().min(1),
+    password: z.string().min(1),
+    encryption: z.enum(['none', 'ssl', 'tls', 'starttls']),
+    authMethod: z.enum(['plain', 'login'])
+  }),
+  deliversTo: z.object({
+    users: z.string().array(),
+    teams: z.string().array()
+  })
+});
 
 export default function Page() {
   const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
@@ -29,24 +54,25 @@ export default function Page() {
   const { mutateAsync: checkSMTPConnection } =
     platform.org.mail.emailIdentities.external.validateExternalSmtpCredentials.useMutation();
 
-  const [error, setError] = useState<string | null>(null);
-
   const router = useRouter();
 
-  const {
-    mutateAsync: createExternalEmailIdentity,
-    error: emailIdentityError
-  } =
+  const { mutateAsync: createExternalEmailIdentity, isPending: isAdding } =
     platform.org.mail.emailIdentities.external.createNewExternalIdentity.useMutation(
       {
         onSuccess: () => {
           void invalidateEmails.invalidate();
           router.push('./');
+        },
+        onError: (e) => {
+          toast.error("Couldn't verify SMTP Credentials", {
+            description: e.message
+          });
         }
       }
     );
 
-  const form = useForm({
+  const form = useForm<z.infer<typeof externalEmailFormSchema>>({
+    resolver: zodResolver(externalEmailFormSchema),
     defaultValues: {
       fullEmail: '',
       sendName: '',
@@ -55,40 +81,13 @@ export default function Page() {
         port: 25,
         username: '',
         password: '',
-        encryption: 'none' as 'none' | 'ssl' | 'tls' | 'starttls',
-        authMethod: 'plain' as 'plain' | 'login'
+        encryption: 'none',
+        authMethod: 'plain'
       },
       deliversTo: {
-        users: [] as TypeId<'orgMembers'>[],
-        teams: [] as TypeId<'teams'>[]
+        users: [],
+        teams: []
       }
-    },
-    validatorAdapter: zodValidator,
-    onSubmit: async ({ value }) => {
-      const smtpValid = await checkSMTPConnection({
-        orgShortcode,
-        ...value.smtp
-      })
-        .then((e) => e.valid)
-        .catch(() => false);
-
-      if (!smtpValid) {
-        setError('SMTP Connection Failed, Please check your credentials');
-        return;
-      }
-
-      await createExternalEmailIdentity({
-        orgShortcode,
-        sendName: value.sendName,
-        emailAddress: value.fullEmail,
-        smtp: value.smtp,
-        routeToOrgMemberPublicIds:
-          value.deliversTo.users.length > 0
-            ? value.deliversTo.users
-            : undefined,
-        routeToTeamsPublicIds:
-          value.deliversTo.teams.length > 0 ? value.deliversTo.teams : undefined
-      }).catch(() => null);
     }
   });
 
@@ -99,6 +98,42 @@ export default function Page() {
 
   const { data: orgTeams, isLoading: orgTeamsLoading } =
     platform.org.users.teams.getOrgTeams.useQuery({ orgShortcode });
+
+  const handleSubmit = async (
+    value: z.infer<typeof externalEmailFormSchema>
+  ) => {
+    if (
+      value.deliversTo.users.length === 0 &&
+      value.deliversTo.teams.length === 0
+    ) {
+      toast.error('You need to add atleast 1 user or team');
+      return;
+    }
+    const smtpValid = await checkSMTPConnection({
+      orgShortcode,
+      ...value.smtp
+    })
+      .then((e) => e.valid)
+      .catch(() => false);
+
+    if (!smtpValid) {
+      toast.error('SMTP Connection Failed, Please check your credentials');
+      return;
+    }
+
+    await createExternalEmailIdentity({
+      orgShortcode,
+      sendName: value.sendName,
+      emailAddress: value.fullEmail,
+      smtp: value.smtp,
+      routeToOrgMemberPublicIds:
+        value.deliversTo.users.length > 0 ? value.deliversTo.users : undefined,
+      routeToTeamsPublicIds:
+        value.deliversTo.teams.length > 0 ? value.deliversTo.teams : undefined
+    }).catch(() => null);
+
+    form.reset();
+  };
 
   return (
     <div className="flex w-full flex-col gap-2 p-4">
@@ -118,328 +153,325 @@ export default function Page() {
         </div>
       </div>
       <div className="flex w-full flex-col justify-between">
-        <form
-          className="my-2 flex w-full flex-col gap-2"
-          onSubmit={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            void form.handleSubmit();
-          }}>
-          <div className="flex w-fit flex-col gap-2">
-            <div className="flex gap-1">
-              <form.Field
-                name="fullEmail"
-                validators={{
-                  onBlur: z.string().email()
-                }}
-                children={(field) => (
-                  <div className="flex flex-col">
-                    <Input
-                      label="Full Email Address"
-                      className="w-fit"
-                      id={field.name}
-                      name={field.name}
-                      value={field.state.value}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      onBlur={field.handleBlur}
-                    />
-                    {field.state.meta.errorMap.onBlur && (
-                      <span className="text-red-10">
-                        {field.state.meta.errorMap.onBlur}
-                      </span>
-                    )}
-                  </div>
-                )}
-              />
-              <form.Field
-                name="sendName"
-                validators={{ onBlur: z.string().min(1).max(64) }}
-                children={(field) => (
-                  <div className="flex flex-col">
-                    <Input
-                      label="Send Name"
-                      id={field.name}
-                      className="w-fit"
-                      name={field.name}
-                      value={field.state.value ?? ''}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      onBlur={field.handleBlur}
-                    />
-                    {field.state.meta.errorMap.onBlur && (
-                      <span className="text-red-10">
-                        {field.state.meta.errorMap.onBlur}
-                      </span>
-                    )}
-                  </div>
-                )}
-              />
+        <Form {...form}>
+          <div className="my-2 flex w-full flex-col gap-2">
+            <div className="flex w-fit flex-col gap-2">
+              <div className="text-muted-foreground font-bold uppercase">
+                Email Address
+              </div>
+              <div className="flex gap-1">
+                <FormField
+                  control={form.control}
+                  name="fullEmail"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Input
+                          fullWidth
+                          label="Full Email Address"
+                          value={field.value}
+                          onChange={field.onChange}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="sendName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Input
+                          fullWidth
+                          label="Send Name"
+                          value={field.value}
+                          onChange={field.onChange}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </div>
-          </div>
 
-          <div className="flex w-fit flex-col gap-2">
-            <div className="text-base-11 font-bold uppercase">
-              SMTP Settings
+            <div className="flex w-fit flex-col gap-2">
+              <div className="text-muted-foreground font-bold uppercase">
+                SMTP Settings
+              </div>
+              <div className="flex gap-1">
+                <FormField
+                  control={form.control}
+                  name="smtp.host"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Input
+                          fullWidth
+                          label="SMTP Hostname"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="smtp.port"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Input
+                          fullWidth
+                          label="SMTP Port"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="flex gap-1">
+                <FormField
+                  control={form.control}
+                  name="smtp.username"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Input
+                          fullWidth
+                          label="SMTP Username"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="smtp.password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <PasswordInput
+                          fullWidth
+                          label="SMTP Password"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="flex gap-2">
+                <FormField
+                  control={form.control}
+                  name="smtp.encryption"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Encryption</FormLabel>
+                      <Select
+                        value={field.value}
+                        onValueChange={(value) =>
+                          field.onChange(
+                            value as 'none' | 'ssl' | 'tls' | 'starttls'
+                          )
+                        }>
+                        <FormControl>
+                          <SelectTrigger className="w-full flex-1 uppercase">
+                            <SelectValue className="flex w-full px-2">
+                              {field.value ?? 'Select Encryption'}
+                            </SelectValue>
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectGroup>
+                            <SelectItem value="none">None</SelectItem>
+                            <SelectItem value="ssl">SSL</SelectItem>
+                            <SelectItem value="tls">TLS</SelectItem>
+                            <SelectItem value="starttls">STARTTLS</SelectItem>
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="smtp.authMethod"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Auth Method</FormLabel>
+                      <Select
+                        value={field.value}
+                        onValueChange={(value) =>
+                          field.onChange(value as 'plain' | 'login')
+                        }>
+                        <FormControl>
+                          <SelectTrigger className="w-full flex-1 capitalize">
+                            <SelectValue className="flex w-full px-2">
+                              {field.value ?? 'Select Login Method'}
+                            </SelectValue>
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectGroup>
+                            <SelectItem value="plain">Plain</SelectItem>
+                            <SelectItem value="login">Login</SelectItem>
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
+              </div>
             </div>
-            <div className="flex gap-1">
-              <form.Field
-                name="smtp.host"
-                validators={{
-                  onBlur: z.string().min(3).includes('.')
-                }}
-                children={(field) => (
-                  <Input
-                    label="SMTP Hostname"
-                    className="w-fit"
-                    id={field.name}
-                    name={field.name}
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    onBlur={field.handleBlur}
-                  />
-                )}
-              />
-              <form.Field
-                name="smtp.port"
-                validators={{ onBlur: z.number().min(1).max(65535) }}
-                children={(field) => (
-                  <Input
-                    label="SMTP Port"
-                    id={field.name}
-                    type="number"
-                    className="w-fit"
-                    name={field.name}
-                    value={field.state.value ?? ''}
-                    onChange={(e) => field.handleChange(e.target.valueAsNumber)}
-                    onBlur={field.handleBlur}
-                  />
-                )}
-              />
-            </div>
-            <div className="flex gap-1">
-              <form.Field
-                name="smtp.username"
-                validators={{
-                  onBlur: z.string().min(1)
-                }}
-                children={(field) => (
-                  <Input
-                    label="SMTP Username"
-                    className="w-fit"
-                    id={field.name}
-                    name={field.name}
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    onBlur={field.handleBlur}
-                  />
-                )}
-              />
-              <form.Field
-                name="smtp.password"
-                validators={{ onBlur: z.string().min(1) }}
-                children={(field) => (
-                  <Input
-                    label="SMTP Password"
-                    id={field.name}
-                    className="w-fit"
-                    name={field.name}
-                    value={field.state.value ?? ''}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    onBlur={field.handleBlur}
-                  />
-                )}
-              />
-            </div>
-            <div className="flex w-fit gap-1">
-              <form.Field
-                name="smtp.encryption"
-                children={(field) => (
-                  <div className="flex w-full flex-1 flex-col">
-                    <span className="text-base-11 text-xs">Encryption</span>
-                    <Select
-                      value={field.state.value}
-                      onValueChange={(value) =>
-                        field.handleChange(
-                          value as 'none' | 'ssl' | 'tls' | 'starttls'
-                        )
-                      }>
-                      <SelectTrigger className="w-full flex-1 uppercase">
-                        <SelectValue className="flex w-full px-2">
-                          {field.state.value ?? 'Select Encryption'}
-                        </SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectItem value="none">None</SelectItem>
-                          <SelectItem value="ssl">SSL</SelectItem>
-                          <SelectItem value="tls">TLS</SelectItem>
-                          <SelectItem value="starttls">STARTTLS</SelectItem>
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-              />
-              <form.Field
-                name="smtp.authMethod"
-                children={(field) => (
-                  <div className="flex w-full flex-1 flex-col">
-                    <span className="text-base-11 text-xs">Auth Method</span>
-                    <Select
-                      value={field.state.value}
-                      onValueChange={(value) =>
-                        field.handleChange(value as 'plain' | 'login')
-                      }>
-                      <SelectTrigger className="w-full flex-1 capitalize">
-                        <SelectValue className="flex w-full px-2">
-                          {field.state.value ?? 'Select Login Method'}
-                        </SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectItem value="plain">Plain</SelectItem>
-                          <SelectItem value="login">Login</SelectItem>
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-              />
-            </div>
-          </div>
 
-          <div className="text-base-11 font-bold uppercase">
-            Deliver Messages To
-          </div>
-          <div className="flex flex-col gap-2">
-            <div className="flex gap-2">
-              <div className="flex flex-col gap-1">
-                <div className="flex items-center gap-2">
-                  <label className="text-sm font-bold">Teams</label>
-                </div>
-                <form.Field
-                  name="deliversTo.teams"
-                  children={(field) => (
-                    <>
-                      {orgTeamsLoading && <div>Loading...</div>}
-                      <MultiSelect
-                        values={field.state.value ?? []}
-                        setValues={(values) =>
-                          field.handleChange(values as TypeId<'teams'>[])
-                        }
-                        items={
-                          orgTeams?.teams.map((item) => ({
-                            ...item,
-                            value: item.publicId,
-                            keywords: [
-                              item.name,
-                              item.description ?? '',
-                              item.color ?? ''
-                            ]
-                          })) ?? []
-                        }
-                        ItemRenderer={(item) => (
-                          <div className="flex gap-1">
-                            <div
-                              className="h-4 w-4 rounded-full border"
-                              style={{
-                                backgroundColor: `var(--${item.color}-10)`
-                              }}
-                            />
-                            {item.name}
-                          </div>
-                        )}
-                        TriggerRenderer={({ items }) => (
-                          <div className="flex flex-wrap gap-2">
-                            {items.map((item) => (
+            <div className="text-muted-foreground font-bold uppercase">
+              Deliver Messages To
+            </div>
+            <div className="flex flex-col gap-2">
+              <div className="flex gap-2">
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-bold">Teams</label>
+                  </div>
+                  <FormField
+                    control={form.control}
+                    name="deliversTo.teams"
+                    render={({ field }) => (
+                      <>
+                        {orgTeamsLoading && <div>Loading...</div>}
+                        <MultiSelect
+                          values={field.value}
+                          setValues={(actionOrValue) => {
+                            if (typeof actionOrValue === 'function') {
+                              form.setValue(
+                                'deliversTo.users',
+                                actionOrValue(field.value)
+                              );
+                            } else {
+                              form.setValue('deliversTo.users', actionOrValue);
+                            }
+                          }}
+                          items={
+                            orgTeams?.teams.map((item) => ({
+                              ...item,
+                              value: item.publicId,
+                              keywords: [
+                                item.name,
+                                item.description ?? '',
+                                item.color ?? ''
+                              ]
+                            })) ?? []
+                          }
+                          ItemRenderer={(item) => (
+                            <div className="flex gap-1">
                               <div
-                                key={item.value}
-                                className="flex items-center gap-1">
+                                className="h-4 w-4 rounded-full border"
+                                style={{
+                                  backgroundColor: `var(--${item.color}10)`
+                                }}
+                              />
+                              {item.name}
+                            </div>
+                          )}
+                          TriggerRenderer={({ items }) => (
+                            <div className="flex flex-1 flex-wrap gap-2">
+                              {items.map((item) => (
                                 <div
-                                  className="h-4 w-4 rounded-full border"
-                                  style={{
-                                    backgroundColor: `var(--${item.color}-10)`
-                                  }}
-                                />
-                                <div>{item.name}</div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                        emptyPlaceholder="Select teams"
-                      />
-                    </>
-                  )}
-                />
-              </div>
-              <div className="flex flex-1 flex-col gap-1">
-                <div className="flex items-center gap-2">
-                  <label className="text-sm font-bold">Users</label>
+                                  key={item.value}
+                                  className="flex w-full items-center gap-1">
+                                  <div
+                                    className="h-4 w-4 rounded-full border"
+                                    style={{
+                                      backgroundColor: `var(--${item.color}10)`
+                                    }}
+                                  />
+                                  <div>{item.name}</div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          emptyPlaceholder="Select teams"
+                        />
+                      </>
+                    )}
+                  />
                 </div>
-                <form.Field
-                  name="deliversTo.users"
-                  children={(field) => (
-                    <>
-                      {orgMembersLoading && <div>Loading...</div>}
-                      <MultiSelect
-                        values={field.state.value ?? []}
-                        setValues={(values) =>
-                          field.handleChange(values as TypeId<'orgMembers'>[])
-                        }
-                        items={
-                          orgMembers?.members?.map((item) => ({
-                            ...item,
-                            value: item.publicId,
-                            keywords: [
-                              item.profile.handle ?? '',
-                              item.profile.title ?? '',
-                              item.profile.blurb ?? ''
-                            ]
-                          })) ?? []
-                        }
-                        ItemRenderer={(item) => (
-                          <div className="flex">
-                            {item.profile.firstName} {item.profile.lastName}
-                          </div>
-                        )}
-                        TriggerRenderer={({ items }) => (
-                          <div className="flex flex-wrap gap-2">
-                            {items.map((item, i, users) => (
-                              <div key={item.publicId}>
-                                {item.profile.firstName} {item.profile.lastName}
-                                {i < users.length - 1 ? ', ' : ''}
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                        emptyPlaceholder="Select users"
-                      />
-                    </>
-                  )}
-                />
+                <div className="flex flex-1 flex-col gap-1">
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-bold">Users</label>
+                  </div>
+                  <FormField
+                    control={form.control}
+                    name="deliversTo.users"
+                    render={({ field }) => (
+                      <>
+                        {orgMembersLoading && <div>Loading...</div>}
+                        <MultiSelect
+                          values={field.value}
+                          setValues={(actionOrValue) => {
+                            if (typeof actionOrValue === 'function') {
+                              form.setValue(
+                                'deliversTo.users',
+                                actionOrValue(field.value)
+                              );
+                            } else {
+                              form.setValue('deliversTo.users', actionOrValue);
+                            }
+                          }}
+                          items={
+                            orgMembers?.members?.map((item) => ({
+                              ...item,
+                              value: item.publicId,
+                              keywords: [
+                                item.profile.handle ?? '',
+                                item.profile.title ?? '',
+                                item.profile.blurb ?? ''
+                              ]
+                            })) ?? []
+                          }
+                          ItemRenderer={(item) => (
+                            <div className="flex">
+                              {item.profile.firstName} {item.profile.lastName}
+                            </div>
+                          )}
+                          TriggerRenderer={({ items }) => (
+                            <div className="flex flex-wrap gap-2">
+                              {items.map((item, i, users) => (
+                                <div key={item.publicId}>
+                                  {item.profile.firstName}{' '}
+                                  {item.profile.lastName}
+                                  {i < users.length - 1 ? ', ' : ''}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          emptyPlaceholder="Select users"
+                        />
+                      </>
+                    )}
+                  />
+                </div>
               </div>
-            </div>
 
-            <div className="text-red-10">{emailIdentityError?.message}</div>
-            <div className="text-red-10">{error}</div>
-            <div className="mt-2 flex w-fit flex-wrap gap-2">
-              <form.Subscribe
-                selector={(form) => [
-                  form.isTouched,
-                  form.canSubmit,
-                  form.isSubmitting
-                ]}
-                children={([isTouched, canSubmit, isSubmitting]) => (
-                  <Button
-                    disabled={!isTouched || !canSubmit || isSubmitting}
-                    // loading={isSubmitting}
-                  >
-                    {isSubmitting ? 'Adding...' : 'Add External Email'}
-                  </Button>
-                )}
-              />
+              <div className="mt-2 flex w-fit flex-wrap gap-2">
+                <Button
+                  loading={isAdding || form.formState.isSubmitting}
+                  onClick={form.handleSubmit(handleSubmit)}>
+                  {isAdding ? 'Adding...' : 'Add External Email'}
+                </Button>
+              </div>
             </div>
           </div>
-        </form>
+        </Form>
       </div>
     </div>
   );

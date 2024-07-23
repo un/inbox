@@ -14,7 +14,7 @@ export const smtpRouter = router({
         authMethod: z.enum(['plain', 'login'])
       })
     )
-    .mutation(async ({ input }) => {
+    .query(async ({ input }) => {
       const result = await validateSmtpCredentials(input);
 
       return { result };
