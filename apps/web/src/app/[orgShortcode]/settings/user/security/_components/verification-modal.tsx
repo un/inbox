@@ -107,6 +107,7 @@ export function VerificationModal({
 
           {hasPassword && (
             <PasswordInput
+              label="CurrentPassword"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               disabled={passwordLoading}

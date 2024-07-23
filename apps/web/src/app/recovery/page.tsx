@@ -121,29 +121,25 @@ export default function Page() {
         <h1 className="text-center text-xl font-bold">
           Recover Your Credentials
         </h1>
-        <div className="flex flex-col gap-1">
-          <label
-            htmlFor="username"
-            className="text-xs font-bold">
-            Username
-          </label>
-          <form.Field
-            name="username"
-            validators={{ onBlur: zodSchemas.username(2) }}
-            children={(field) => (
-              <>
-                <Input
-                  id="username"
-                  name={field.name}
-                  value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  onBlur={field.handleBlur}
-                />
-                <FieldInfo field={field} />
-              </>
-            )}
-          />
-        </div>
+
+        <form.Field
+          name="username"
+          validators={{ onBlur: zodSchemas.username(2) }}
+          children={(field) => (
+            <>
+              <Input
+                label="Username"
+                id="username"
+                name={field.name}
+                value={field.state.value}
+                onChange={(e) => field.handleChange(e.target.value)}
+                onBlur={field.handleBlur}
+              />
+              <FieldInfo field={field} />
+            </>
+          )}
+        />
+
         <form.Field
           name="recoveryType"
           children={({ state, handleChange }) => (
@@ -222,63 +218,53 @@ export default function Page() {
               <TabsContent
                 value="two-fa"
                 className="py-4">
-                <div className="flex flex-col gap-1">
-                  <label
-                    htmlFor="known-password"
-                    className="text-xs font-bold">
-                    Password
-                  </label>
-                  <form.Field
-                    name="password"
-                    validators={{
-                      onBlur: z.string().min(8, {
-                        message: 'Password must be atleast 8 characters '
-                      })
-                    }}
-                    children={(field) => (
-                      <>
-                        <Input
-                          id="known-password"
-                          name={field.name}
-                          value={field.state.value}
-                          type="password"
-                          onChange={(e) =>
-                            field.handleChange(e.target.value ?? '')
-                          }
-                          onBlur={field.handleBlur}
-                        />
-                        <FieldInfo field={field} />
-                      </>
-                    )}
-                  />
-                </div>
+                <form.Field
+                  name="password"
+                  validators={{
+                    onBlur: z.string().min(8, {
+                      message: 'Password must be atleast 8 characters '
+                    })
+                  }}
+                  children={(field) => (
+                    <>
+                      <Input
+                        label="Password"
+                        id="known-password"
+                        name={field.name}
+                        value={field.state.value}
+                        type="password"
+                        onChange={(e) =>
+                          field.handleChange(e.target.value ?? '')
+                        }
+                        onBlur={field.handleBlur}
+                      />
+                      <FieldInfo field={field} />
+                    </>
+                  )}
+                />
               </TabsContent>
             </Tabs>
           )}
         />
-        <div className="flex flex-col gap-1">
-          <label
-            htmlFor="recovery-code"
-            className="text-xs font-bold">
-            Recovery Code
-          </label>
-          <form.Field
-            name="recoveryCode"
-            validators={{ onBlur: zodSchemas.nanoIdToken() }}
-            children={(field) => (
-              <>
-                <Input
-                  id="recovery-code"
-                  name={field.name}
-                  value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  onBlur={field.handleBlur}
-                />
-                <FieldInfo field={field} />
-              </>
-            )}
-          />
-        </div>
+
+        <form.Field
+          name="recoveryCode"
+          validators={{ onBlur: zodSchemas.nanoIdToken() }}
+          children={(field) => (
+            <>
+              <Input
+                label="Recovery Code"
+                id="recovery-code"
+                name={field.name}
+                value={field.state.value}
+                onChange={(e) => field.handleChange(e.target.value)}
+                onBlur={field.handleBlur}
+              />
+              <FieldInfo field={field} />
+            </>
+          )}
+        />
+
         <form.Field
           name="turnstileToken"
           validators={{

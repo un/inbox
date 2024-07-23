@@ -56,11 +56,11 @@ export function PasswordRecoveryModal({
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-1">
             <PasswordInput
+              label="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="new-password"
               id="password"
-              placeholder="Password"
               className={
                 passwordStrength
                   ? 'error' in passwordStrength || passwordStrength.score < 3
@@ -73,7 +73,7 @@ export function PasswordRecoveryModal({
               <div className="flex gap-1">
                 {strengthLoading ? (
                   <>
-                    <span className="text-muted-foreground text-xs font-bold">
+                    <span className="text-base-11 text-xs font-bold">
                       Checking...
                     </span>
                   </>
@@ -102,10 +102,10 @@ export function PasswordRecoveryModal({
 
           <div className="flex flex-col gap-2">
             <PasswordInput
+              label="Confirm Password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               id="confirm-password"
-              placeholder="Confirm Password"
               color={
                 confirmPassword && confirmPassword.length > 0
                   ? password === confirmPassword
@@ -116,7 +116,7 @@ export function PasswordRecoveryModal({
             />
 
             {confirmPassword && confirmPassword.length > 0 && (
-              <div className="text-muted-foreground text-xs font-bold">
+              <div className="text-base-11 text-xs font-bold">
                 {password !== confirmPassword && 'Passwords do not match'}
               </div>
             )}
@@ -176,7 +176,7 @@ export function TwoFactorModal({
               className="mx-auto rounded bg-white p-2"
             />
             <div className="border-muted/80 flex w-full rounded border">
-              <div className="bg-muted text-muted-foreground text-bold flex w-[32ch] flex-1 items-center overflow-hidden truncate text-clip rounded rounded-r-none p-1 font-mono">
+              <div className="bg-muted text-base-11 text-bold flex w-[32ch] flex-1 items-center overflow-hidden truncate text-clip rounded rounded-r-none p-1 font-mono">
                 {qrCodeSecret}
               </div>
               <CopyButton

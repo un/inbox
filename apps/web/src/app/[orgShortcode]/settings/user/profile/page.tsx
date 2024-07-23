@@ -116,42 +116,36 @@ export default function Page() {
         <div className="flex gap-2">
           {isInitDataLoading && <Skeleton />}
 
-          <label>
-            <span className="text-sm font-medium">First Name</span>
-            <Input
-              value={firstNameValue}
-              onChange={(e) => setFirstNameValue(e.target.value)}
-            />
-          </label>
+          <Input
+            label="First Name"
+            value={firstNameValue}
+            onChange={(e) => setFirstNameValue(e.target.value)}
+          />
 
           {isInitDataLoading && <Skeleton />}
 
-          <label>
-            <span className="text-sm font-medium">Last Name</span>
-            <Input
-              value={lastNameValue}
-              onChange={(e) => setLastNameValue(e.target.value)}
-            />
-          </label>
+          <Input
+            label="Last Name"
+            value={lastNameValue}
+            onChange={(e) => setLastNameValue(e.target.value)}
+          />
         </div>
         <div className="flex gap-2">
           {isInitDataLoading && <Skeleton />}
-          <label>
-            <span className="text-sm font-medium">Title</span>
-            <Input
-              value={titleValue}
-              onChange={(e) => setTitleValue(e.target.value)}
-            />
-          </label>
+
+          <Input
+            label="Title"
+            value={titleValue}
+            onChange={(e) => setTitleValue(e.target.value)}
+          />
 
           {isInitDataLoading && <Skeleton />}
-          <label>
-            <span className="text-sm font-medium">Bio</span>
-            <Input
-              value={bioValue}
-              onChange={(e) => setBioValue(e.target.value)}
-            />
-          </label>
+
+          <Input
+            label="Blurb"
+            value={bioValue}
+            onChange={(e) => setBioValue(e.target.value)}
+          />
         </div>
         <div className="flex w-full gap-2">
           {isInitDataLoading && <Skeleton />}

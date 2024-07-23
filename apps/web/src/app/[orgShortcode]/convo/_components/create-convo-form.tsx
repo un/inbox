@@ -437,9 +437,7 @@ export default function CreateConvoForm() {
                 className="[&>span:last-child]:w-full">
                 <span className="flex items-center justify-between">
                   <span
-                    className={cn(
-                      !identity.sendingEnabled && 'text-muted-foreground'
-                    )}>
+                    className={cn(!identity.sendingEnabled && 'text-base-11')}>
                     {`${identity.sendName} (${identity.username}@${identity.domainName})`}
                   </span>
                   {!identity.sendingEnabled && (
@@ -467,12 +465,11 @@ export default function CreateConvoForm() {
       </div>
 
       <div className="flex w-full flex-col gap-2 text-sm">
-        <h4 className="font-bold">Subject</h4>
         <Input
+          label="Subject"
           type="text"
           value={topic}
           onChange={(e) => setTopic(e.target.value)}
-          placeholder="Type a Subject"
           className="h-fit w-full"
         />
       </div>
@@ -592,7 +589,7 @@ function ParticipantsComboboxPopover({
                           size="sm"
                           hideTooltip
                         />
-                        <p className="text-muted-foreground text-sm">
+                        <p className="text-base-11 text-sm">
                           {participant.own && participant.own
                             ? 'You (already a participant)'
                             : `${participant.name} ${participant.title ? `(${participant.title})` : ''}`}
@@ -640,8 +637,8 @@ function ParticipantsComboboxPopover({
             }>
             <CommandInput asChild>
               <Input
+                label="Search or type an Email address"
                 className="h-8"
-                placeholder="Search or type an Email address"
                 onKeyDown={(e) => {
                   // Hack to prevent cmdk from preventing Home and End keys
                   if (e.key === 'Home' || e.key === 'End') {
@@ -678,7 +675,7 @@ function ParticipantsComboboxPopover({
                           (p) => p.publicId === participant.publicId
                         )
                           ? 'text-gray-10'
-                          : 'text-muted-foreground'
+                          : 'text-base-11'
                       )}
                       disabled={
                         participant.type === 'orgMember' && participant.disabled
@@ -701,7 +698,7 @@ function ParticipantsComboboxPopover({
                           size="sm"
                           hideTooltip
                         />
-                        <p className="text-muted-foreground text-sm">
+                        <p className="text-base-11 text-sm">
                           {participant.own && participant.own
                             ? 'You (already a participant)'
                             : `${participant.name} ${participant.title ? `(${participant.title})` : ''}`}
