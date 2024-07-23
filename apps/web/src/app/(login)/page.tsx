@@ -112,10 +112,10 @@ export default function Page() {
                     <FormItem>
                       <FormControl>
                         <Input
+                          label="Username"
                           {...field}
                           leadingSlot={At}
                           inputSize="lg"
-                          placeholder="Username"
                         />
                       </FormControl>
                       <FormMessage />
@@ -129,17 +129,19 @@ export default function Page() {
                     <FormItem>
                       <FormControl>
                         <PasswordInput
+                          label="Password"
                           {...field}
                           leadingSlot={Lock}
                           inputSize="lg"
-                          placeholder="Password"
                         />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                {error && <FormMessage>{error.message}</FormMessage>}
+                {error && (
+                  <div className="text-red-10 text-sm">{error.message}</div>
+                )}
 
                 <FormField
                   control={form.control}

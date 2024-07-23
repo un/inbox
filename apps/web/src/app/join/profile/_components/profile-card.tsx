@@ -131,11 +131,11 @@ export function ProfileCard({ orgData, wasInvited }: ProfileCardProps) {
 
       <div className="my-4 flex w-full flex-col items-center justify-center gap-4">
         <Input
+          label="Full Name"
           fullWidth
           inputSize="lg"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Full Name"
           leadingSlot={User}
         />
 

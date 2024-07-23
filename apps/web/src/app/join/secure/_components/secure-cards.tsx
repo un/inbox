@@ -42,7 +42,7 @@ export function PasskeyCard({ selected, setSelected }: Selected) {
               <span className="text-base font-semibold">Passkey</span>
             )}
           </div>
-          <div className="border-green-5 bg-green-9 flex items-center gap-[6px] rounded-full border px-[8px] py-[2px] text-white">
+          <div className="border-green-5 bg-green-9 text-base-1 flex items-center gap-[6px] rounded-full border px-[8px] py-[2px]">
             <Lock size={16} />
             <span className="text-xs font-medium">Most Secure</span>
           </div>
@@ -136,8 +136,8 @@ export function PasswordCard({
                     <FormItem>
                       <FormControl>
                         <PasswordInput
+                          label="Password"
                           inputSize="lg"
-                          placeholder="Password"
                           className="focus-visible:border-accent-9 focus-within:z-1 rounded-b-none shadow-none focus-visible:ring-0"
                           leadingSlot={Lock}
                           {...field}
@@ -153,8 +153,8 @@ export function PasswordCard({
                     <FormItem>
                       <FormControl>
                         <PasswordInput
+                          label="Confirm Password"
                           inputSize="lg"
-                          placeholder="Confirm Password"
                           className="focus-visible:border-accent-9 mt-[-1px] rounded-t-none border-t-transparent shadow-none focus-visible:ring-0"
                           leadingSlot={Lock}
                           {...field}

@@ -66,7 +66,7 @@ export default function Page({
       {emailInfo ? (
         <>
           <div>
-            <div className="text-muted-foreground font-bold uppercase">
+            <div className="text-base-11 font-bold uppercase">
               Email Address
             </div>
             <div>
@@ -74,7 +74,7 @@ export default function Page({
             </div>
           </div>
           <div>
-            <div className="text-muted-foreground font-bold uppercase">
+            <div className="text-base-11 font-bold uppercase">
               Forwarding Address
             </div>
             <div>
@@ -82,15 +82,11 @@ export default function Page({
             </div>
           </div>
           <div>
-            <div className="text-muted-foreground font-bold uppercase">
-              Send Name
-            </div>
+            <div className="text-base-11 font-bold uppercase">Send Name</div>
             <div>{emailInfo.emailIdentityData?.sendName ?? 'None'}</div>
           </div>
           <div>
-            <div className="text-muted-foreground font-bold uppercase">
-              Catch All
-            </div>
+            <div className="text-base-11 font-bold uppercase">Catch All</div>
             <div>
               <Badge className="uppercase">
                 {emailInfo.emailIdentityData?.isCatchAll ? 'Yes' : 'No'}
@@ -98,9 +94,7 @@ export default function Page({
             </div>
           </div>
           <div>
-            <div className="text-muted-foreground font-bold uppercase">
-              Delivers To
-            </div>
+            <div className="text-base-11 font-bold uppercase">Delivers To</div>
             <div className="flex flex-wrap gap-2">
               {emailInfo.emailIdentityData?.authorizedOrgMembers.map(
                 (member) => {
@@ -118,7 +112,7 @@ export default function Page({
                       />
                       <div className="flex flex-col">
                         <div>{`${profile.firstName} ${profile.lastName}`}</div>
-                        <div className="text-muted-foreground text-xs">
+                        <div className="text-base-11 text-xs">
                           @{profile.handle}
                         </div>
                       </div>

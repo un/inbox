@@ -101,8 +101,8 @@ export function JoinOrg({
           <label className="flex flex-col gap-1">
             <div className="text-sm font-bold">Invite Code</div>
             <Input
+              label="Invite Code"
               inputSize="lg"
-              placeholder="Invite Code"
               value={inviteCode}
               onChange={(e) => setInviteCode(e.target.value)}
               leadingSlot={UsersThree}
@@ -110,7 +110,7 @@ export function JoinOrg({
           </label>
 
           {!inviteData && inviteLoading && (
-            <div className="text-muted-foreground text-sm font-bold">
+            <div className="text-base-11 text-sm font-bold">
               Validating Invite Code...
             </div>
           )}

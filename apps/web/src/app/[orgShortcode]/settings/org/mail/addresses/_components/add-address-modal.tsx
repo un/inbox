@@ -113,7 +113,7 @@ export function AddEmailModal() {
             void form.handleSubmit();
           }}>
           <div className="flex w-full flex-col gap-2">
-            <div className="text-muted-foreground font-bold uppercase">
+            <div className="text-base-11 font-bold uppercase">
               Email Address
             </div>
             <div className="flex gap-1">
@@ -130,13 +130,13 @@ export function AddEmailModal() {
                 }}
                 children={(field) => (
                   <Input
+                    label="Email Username"
                     className="w-full flex-1"
                     id={field.name}
                     name={field.name}
                     value={field.state.value}
                     onChange={(e) => field.handleChange(e.target.value)}
                     onBlur={field.handleBlur}
-                    placeholder="Username"
                   />
                 )}
               />
@@ -178,13 +178,13 @@ export function AddEmailModal() {
               children={(field) => (
                 <>
                   <Input
+                    label="Send Name"
                     id={field.name}
                     className="w-full"
                     name={field.name}
                     value={field.state.value ?? ''}
                     onChange={(e) => field.handleChange(e.target.value)}
                     onBlur={field.handleBlur}
-                    placeholder="Send Name"
                   />
                   {field.state.meta.errorMap.onBlur && (
                     <span className="text-red-10">
@@ -196,7 +196,7 @@ export function AddEmailModal() {
             />
           </div>
           <Separator className="my-2" />
-          <div className="text-muted-foreground font-bold uppercase">
+          <div className="text-base-11 font-bold uppercase">
             Deliver Messages To
           </div>
           <div className="flex w-full flex-col gap-2">

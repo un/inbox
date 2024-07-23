@@ -50,7 +50,7 @@ export default function InviteCard({ code }: { code: string }) {
   if (inviteLoading || (!inviteData && !inviteError) || signedInLoading) {
     return (
       <div className="bg-card mx-auto my-4 max-w-[450px] rounded border p-4">
-        <div className="text-muted-foreground text-sm font-bold">
+        <div className="text-base-11 text-sm font-bold">
           Checking your Invite...
         </div>
       </div>

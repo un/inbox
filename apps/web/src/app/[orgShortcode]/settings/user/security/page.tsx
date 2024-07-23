@@ -268,7 +268,7 @@ export default function Page() {
                   className="bg-muted flex items-center justify-center gap-2 rounded border px-2 py-1">
                   <div className="flex flex-col">
                     <span>{passkey.nickname}</span>
-                    <span className="text-muted-foreground text-xs">
+                    <span className="text-base-11 text-xs">
                       {format(passkey.createdAt, ' HH:mm, do MMM yyyy')}
                     </span>
                   </div>
@@ -294,7 +294,7 @@ export default function Page() {
                 </div>
               ))}
               {initData?.passkeys.length === 0 && (
-                <div className="text-muted-foreground">No passkeys found</div>
+                <div className="text-base-11">No passkeys found</div>
               )}
             </div>
             <Button
@@ -316,7 +316,7 @@ export default function Page() {
                     <span>
                       {session.device} - {session.os}
                     </span>
-                    <span className="text-muted-foreground text-xs">
+                    <span className="text-base-11 text-xs">
                       {format(session.createdAt, ' HH:mm, do MMM yyyy')}
                     </span>
                   </div>

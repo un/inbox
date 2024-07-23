@@ -100,8 +100,8 @@ export default function ProfileComponent() {
 
         <div className="flex flex-row gap-2">
           <label>
-            <span>Organization Name</span>
             <Input
+              label="Organization Name"
               value={orgNameValue}
               onChange={(e) => setOrgNameValue(e.target.value)}
             />

@@ -153,61 +153,50 @@ export function NewTeamModal() {
               void form.handleSubmit();
             }}>
             <div className="flex w-full gap-2">
-              <div className="flex flex-col">
-                <label
-                  htmlFor="teamName"
-                  className="font-semibold">
-                  Team Name
-                </label>
-                <form.Field
-                  name="teamName"
-                  validators={{ onBlur: z.string().min(2).max(50) }}
-                  children={(field) => (
-                    <>
-                      <Input
-                        id={field.name}
-                        name={field.name}
-                        value={field.state.value ?? ''}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                        onBlur={field.handleBlur}
-                        className="w-72"
-                      />
-                      {field.state.meta.errorMap.onBlur && (
-                        <span className="text-red-10">
-                          {field.state.meta.errorMap.onBlur}
-                        </span>
-                      )}
-                    </>
-                  )}
-                />
-              </div>
-              <div className="flex flex-col">
-                <label
-                  htmlFor="description"
-                  className="font-semibold">
-                  Description
-                </label>
-                <form.Field
-                  name="description"
-                  validators={{ onBlur: z.string().min(0).max(500) }}
-                  children={(field) => (
-                    <>
-                      <Input
-                        id={field.name}
-                        name={field.name}
-                        value={field.state.value ?? ''}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                        onBlur={field.handleBlur}
-                      />
-                      {field.state.meta.errorMap.onBlur && (
-                        <span className="text-red-10">
-                          {field.state.meta.errorMap.onBlur}
-                        </span>
-                      )}
-                    </>
-                  )}
-                />
-              </div>
+              <form.Field
+                name="teamName"
+                validators={{ onBlur: z.string().min(2).max(50) }}
+                children={(field) => (
+                  <>
+                    <Input
+                      label="Team Name"
+                      id={field.name}
+                      name={field.name}
+                      value={field.state.value ?? ''}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      onBlur={field.handleBlur}
+                      className="w-72"
+                    />
+                    {field.state.meta.errorMap.onBlur && (
+                      <span className="text-red-10">
+                        {field.state.meta.errorMap.onBlur}
+                      </span>
+                    )}
+                  </>
+                )}
+              />
+
+              <form.Field
+                name="description"
+                validators={{ onBlur: z.string().min(0).max(500) }}
+                children={(field) => (
+                  <>
+                    <Input
+                      label="Description"
+                      id={field.name}
+                      name={field.name}
+                      value={field.state.value ?? ''}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      onBlur={field.handleBlur}
+                    />
+                    {field.state.meta.errorMap.onBlur && (
+                      <span className="text-red-10">
+                        {field.state.meta.errorMap.onBlur}
+                      </span>
+                    )}
+                  </>
+                )}
+              />
             </div>
             <div className="flex w-full gap-2">
               <div className="flex flex-1 flex-col">
@@ -287,6 +276,7 @@ export function NewTeamModal() {
                               children={(field) => (
                                 <div className="flex flex-col">
                                   <Input
+                                    label="Email Username"
                                     className="w-full flex-1"
                                     id={field.name}
                                     name={field.name}
@@ -295,7 +285,6 @@ export function NewTeamModal() {
                                       field.handleChange(e.target.value)
                                     }
                                     onBlur={field.handleBlur}
-                                    placeholder="username"
                                   />
                                   {field.state.meta.errorMap.onBlur && (
                                     <span className="text-red-10">
@@ -342,6 +331,7 @@ export function NewTeamModal() {
                             children={(field) => (
                               <>
                                 <Input
+                                  label="Send Name"
                                   id={field.name}
                                   className="w-full"
                                   name={field.name}
@@ -350,7 +340,6 @@ export function NewTeamModal() {
                                     field.handleChange(e.target.value)
                                   }
                                   onBlur={field.handleBlur}
-                                  placeholder="Send Name"
                                 />
                                 {field.state.meta.errorMap.onBlur && (
                                   <span className="text-red-10">

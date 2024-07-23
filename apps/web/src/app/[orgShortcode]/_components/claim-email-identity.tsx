@@ -27,7 +27,7 @@ export function ClaimEmailIdentity() {
             <br />
             Do you want to claim a free @uninbox.me email address?
           </p>
-          <p className="text-muted-foreground text-sm">
+          <p className="text-base-11 text-sm">
             You can also ask your Organization admin to assign a email to you
           </p>
         </div>
