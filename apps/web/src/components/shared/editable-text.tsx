@@ -33,7 +33,7 @@ export function EditableText({ value, setValue }: EditableTextProps) {
         setIsEditing(true);
         setTimeout(() => inputRef.current?.focus(), 10);
       }}
-      className={cn(value && 'decoration-blue-7/70 underline')}>
+      className={cn(value && 'decoration-blue-5 underline')}>
       {value || '...'}
     </span>
   );

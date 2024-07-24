@@ -92,7 +92,7 @@ const PricingCard = ({
     className={cn(
       `flex w-72 flex-col justify-between py-1 ${popular ? 'border-accent-9' : 'border-base-6'} mx-auto sm:mx-0`,
       {
-        'animate-background-shine bg-white bg-[length:200%_100%] transition-colors dark:bg-[linear-gradient(110deg,#000103,45%,#1e2631,55%,#000103)]':
+        'animate-background-shine bg-base-1 bg-[length:200%_100%] transition-colors dark:bg-[linear-gradient(110deg,#000103,45%,#1e2631,55%,#000103)]':
           exclusive
       }
     )}>

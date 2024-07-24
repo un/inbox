@@ -5,13 +5,13 @@ import { Button } from './button';
 import { X } from '@phosphor-icons/react';
 
 const alertVariants = cva(
-  'relative w-full rounded-lg border px-4 py-3 text-sm [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-foreground [&>svg~*]:pl-7',
+  'relative w-full rounded-lg border px-4 py-3 text-sm [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-base-12 [&>svg~*]:pl-7',
   {
     variants: {
       variant: {
-        default: 'bg-background text-foreground',
+        default: 'bg-base-2 text-base-12',
         destructive:
-          'border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive'
+          'border-red-6 text-red-9 dark:border-red-9 [&>svg]:text-red-9'
       }
     },
     defaultVariants: {

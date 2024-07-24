@@ -59,7 +59,7 @@ export default function SidebarContent() {
   return (
     <div
       className={cn(
-        'bg-slate-3 border-slate-5 z-[1] flex h-full w-full min-w-56 resize-x flex-col items-start gap-4 rounded-2xl border p-2'
+        'bg-base-3 border-base-5 z-[1] flex h-full w-full min-w-56 resize-x flex-col items-start gap-4 rounded-2xl border p-2'
       )}>
       <OrgMenu />
       <div
@@ -67,11 +67,11 @@ export default function SidebarContent() {
           'flex w-full grow flex-col items-start justify-start gap-4 p-0'
         )}>
         <div className="flex w-full flex-col gap-0 p-0">
-          <span className="text-slate-10 p-1 text-[10px] font-semibold uppercase">
+          <span className="text-base-10 p-1 text-[10px] font-semibold uppercase">
             Spaces
           </span>
           <Link
-            className="hover:bg-slate-1 flex w-full max-w-full flex-row items-center gap-2 truncate rounded-lg p-1.5"
+            className="hover:bg-base-1 flex w-full max-w-full flex-row items-center gap-2 truncate rounded-lg p-1.5"
             href={`/${orgShortcode}/convo`}>
             <div className="bg-blue-4 text-blue-9 flex h-6 w-6 items-center justify-center rounded-sm">
               <User
@@ -79,15 +79,13 @@ export default function SidebarContent() {
                 className={'h-4 w-4'}
               />
             </div>
-            <span className="text-slate-12 font-medium">My personal space</span>
+            <span className="text-base-12 font-medium">My personal space</span>
           </Link>
         </div>
       </div>
       <div className="flex w-full flex-row items-center justify-between p-1">
-        <span className={cn('font-display text-slate-11 text-sm')}>
-          UnInbox
-        </span>
-        <span className={cn('text-slate-11 text-xs')}>v0.1.0</span>
+        <span className={cn('font-display text-base-11 text-sm')}>UnInbox</span>
+        <span className={cn('text-base-11 text-xs')}>v0.1.0</span>
       </div>
     </div>
   );
@@ -151,7 +149,7 @@ function OrgMenu() {
       <DropdownMenu onOpenChange={(open) => setSidebarSubmenuOpen(open)}>
         <DropdownMenuTrigger
           className={
-            'bg-slate-1 border-slate-5 hover:bg-slate-2 flex w-full flex-row items-center justify-between gap-2 rounded-lg border p-3 shadow-sm'
+            'bg-base-1 border-base-5 hover:bg-base-2 flex w-full flex-row items-center justify-between gap-2 rounded-lg border p-3 shadow-sm'
           }>
           <div className={'flex flex-row items-center gap-2'}>
             <Avatar className="h-8 w-8">
@@ -165,9 +163,7 @@ function OrgMenu() {
                 {currentOrg.name}
               </span>
               <span
-                className={cn(
-                  'text-slate-11 text-xs font-medium leading-none'
-                )}>
+                className={cn('text-base-11 text-xs font-medium leading-none')}>
                 {displayName}
               </span>
             </div>
@@ -177,10 +173,10 @@ function OrgMenu() {
             <CaretUpDown className={'h-4 w-4'} />
           </div>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="bg-slate-1 border-slate-5 flex w-[214px] flex-col gap-0 p-0">
+        <DropdownMenuContent className="bg-base-1 border-base-5 flex w-[214px] flex-col gap-0 p-0">
           <DropdownMenuLabel className={'px-0 py-0'}>
             <div className="flex flex-col items-start justify-start gap-2 p-3">
-              <span className={'text-slate-11 text-xs font-medium uppercase'}>
+              <span className={'text-base-11 text-xs font-medium uppercase'}>
                 Signed in as
               </span>
               <div className={'flex flex-row gap-2'}>
@@ -190,15 +186,11 @@ function OrgMenu() {
                 </Avatar>
                 <div className="flex flex-col items-start justify-center">
                   <span
-                    className={
-                      'text-slate-12 text-sm font-medium leading-none'
-                    }>
+                    className={'text-base-12 text-sm font-medium leading-none'}>
                     {displayName}
                   </span>
                   <span
-                    className={
-                      'text-slate-11 text-xs font-normal leading-none'
-                    }>
+                    className={'text-base-11 text-xs font-normal leading-none'}>
                     @{username}
                   </span>
                 </div>
@@ -211,7 +203,7 @@ function OrgMenu() {
             <DropdownMenuLabel className={'px-0 py-0'}>
               <span
                 className={
-                  'text-slate-11 w-full text-left text-xs font-medium uppercase'
+                  'text-base-11 w-full text-left text-xs font-medium uppercase'
                 }>
                 Organizations
               </span>
@@ -219,7 +211,7 @@ function OrgMenu() {
             {orgs.map((org) => (
               <DropdownMenuItem
                 key={org.publicId}
-                className="focus:bg-slate-3 rounded-sm p-0"
+                className="focus:bg-base-3 rounded-sm p-0"
                 asChild>
                 <div
                   onClick={() => {
@@ -242,7 +234,7 @@ function OrgMenu() {
                       />
                       <AvatarFallback>{getInitials(org.name)}</AvatarFallback>
                     </Avatar>
-                    <span className={'text-slate-12 text-sm font-medium'}>
+                    <span className={'text-base-12 text-sm font-medium'}>
                       {org.name}
                     </span>
                   </div>
@@ -252,7 +244,7 @@ function OrgMenu() {
             ))}
             <DropdownMenuItem
               key={'addNewOrg'}
-              className="focus:bg-slate-3 rounded-sm p-0"
+              className="focus:bg-base-3 rounded-sm p-0"
               asChild>
               <div
                 onClick={() => {
@@ -264,14 +256,14 @@ function OrgMenu() {
                 <div className="flex flex-row items-center gap-2">
                   <div
                     className={
-                      'border-slate-5 flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-md border-2 border-dotted'
+                      'border-base-5 flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-md border-2 border-dotted'
                     }>
                     <Plus
                       weight="bold"
                       className={'absolute h-4 w-4'}
                     />
                   </div>
-                  <span className={'text-slate-11 text-sm font-medium'}>
+                  <span className={'text-base-11 text-sm font-medium'}>
                     Create Organization
                   </span>
                 </div>
@@ -283,7 +275,7 @@ function OrgMenu() {
             <DropdownMenuItem asChild>
               <Link
                 href={`/${currentOrg.shortcode}/settings`}
-                className="text-slate-11 flex w-full flex-row items-center gap-2 font-medium">
+                className="text-base-11 flex w-full flex-row items-center gap-2 font-medium">
                 <Gear className={'h-4 w-4'} />
                 <span>Settings</span>
               </Link>
@@ -294,11 +286,11 @@ function OrgMenu() {
               }}>
               <div
                 className={
-                  'text-slate-11 flex w-full flex-row items-center justify-between'
+                  'text-base-11 flex w-full flex-row items-center justify-between'
                 }>
                 <div
                   className={
-                    'text-slate-11 flex flex-row items-center gap-2 font-medium'
+                    'text-base-11 flex flex-row items-center gap-2 font-medium'
                   }>
                   <Palette className={'h-4 w-4'} />
                   <span>Theme</span>
@@ -316,9 +308,7 @@ function OrgMenu() {
                     value="light"
                     aria-label="Toggle light mode"
                     className={
-                      theme === 'light'
-                        ? 'border-slate-7 rounded-md border'
-                        : ''
+                      theme === 'light' ? 'border-base-7 rounded-md border' : ''
                     }>
                     <Sun className={'h-4 w-4'} />
                   </ToggleGroupItem>
@@ -326,7 +316,7 @@ function OrgMenu() {
                     value="dark"
                     aria-label="Toggle dark mode"
                     className={
-                      theme === 'dark' ? 'border-slate-7 rounded-md border' : ''
+                      theme === 'dark' ? 'border-base-7 rounded-md border' : ''
                     }>
                     <MoonStars className={'h-4 w-4'} />
                   </ToggleGroupItem>
@@ -335,7 +325,7 @@ function OrgMenu() {
                     aria-label="Toggle system default"
                     className={
                       theme === 'system'
-                        ? 'border-slate-7 rounded-md border'
+                        ? 'border-base-7 rounded-md border'
                         : ''
                     }>
                     <Monitor className={'h-4 w-4'} />
@@ -345,7 +335,7 @@ function OrgMenu() {
             </DropdownMenuItem>
             <DropdownMenuSub>
               <DropdownMenuSubTrigger>
-                <div className="text-slate-11 flex w-full flex-row items-center gap-2 font-medium">
+                <div className="text-base-11 flex w-full flex-row items-center gap-2 font-medium">
                   <Question className={'h-4 w-4'} />
                   <span>Help</span>
                 </div>
@@ -355,7 +345,7 @@ function OrgMenu() {
                   <DropdownMenuItem>
                     <div
                       className={
-                        'text-slate-11 flex w-full flex-row items-center gap-2 font-medium'
+                        'text-base-11 flex w-full flex-row items-center gap-2 font-medium'
                       }>
                       <Book className={'h-4 w-4'} />
                       <span>Documentation</span>
@@ -364,7 +354,7 @@ function OrgMenu() {
                   <DropdownMenuItem>
                     <div
                       className={
-                        'text-slate-11 flex w-full flex-row items-center gap-2 font-medium'
+                        'text-base-11 flex w-full flex-row items-center gap-2 font-medium'
                       }>
                       <QuestionMark />
                       <span>Support</span>
@@ -373,7 +363,7 @@ function OrgMenu() {
                   <DropdownMenuItem>
                     <div
                       className={
-                        'text-slate-11 flex w-full flex-row items-center gap-2 font-medium'
+                        'text-base-11 flex w-full flex-row items-center gap-2 font-medium'
                       }>
                       <MapPin className={'h-4 w-4'} />
                       <span>Roadmap</span>
@@ -382,7 +372,7 @@ function OrgMenu() {
                   <DropdownMenuItem>
                     <div
                       className={
-                        'text-slate-11 flex w-full flex-row items-center gap-2 font-medium'
+                        'text-base-11 flex w-full flex-row items-center gap-2 font-medium'
                       }>
                       <Activity className={'h-4 w-4'} />
                       <span>Status</span>
@@ -391,7 +381,7 @@ function OrgMenu() {
                   <DropdownMenuItem>
                     <div
                       className={
-                        'text-slate-11 flex w-full flex-row items-center gap-2 font-medium'
+                        'text-base-11 flex w-full flex-row items-center gap-2 font-medium'
                       }>
                       <Megaphone className={'h-4 w-4'} />
                       <span>Changelog</span>
@@ -408,7 +398,7 @@ function OrgMenu() {
               logOut();
             }}
             disabled={loggingOut}
-            className="focus:bg-red-9 focus:text-slate-1 text-slate-11">
+            className="focus:bg-red-9 focus:text-base-1 text-base-11">
             <div className={'flex flex-row items-center gap-2 p-2 font-medium'}>
               <SignOut className={'h-4 w-4'} />
               <span>Log out</span>

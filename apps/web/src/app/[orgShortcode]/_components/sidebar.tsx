@@ -59,13 +59,13 @@ export default function Sidebar() {
         {!isSidebarAutoCollapsed && (
           <div
             className={cn(
-              'bg-slate-3 focus-within:bg-slate-5 border-slate-5 absolute top-[34px] z-[1] flex h-6 w-4 max-w-4 cursor-pointer items-center justify-end overflow-visible rounded-br-[7px] rounded-tr-[7px] border border-l-0 transition-all duration-1000 ease-in-out',
+              'bg-base-3 focus-within:bg-base-5 border-base-5 absolute top-[34px] z-[1] flex h-6 w-4 max-w-4 cursor-pointer items-center justify-end overflow-visible rounded-br-[7px] rounded-tr-[7px] border border-l-0 transition-all duration-1000 ease-in-out',
               sidebarExpanded ? 'visible opacity-100' : 'invisible opacity-0',
               sidebarDocked ? '-right-[15px]' : '-right-[3px]'
             )}>
             <div
               className={cn(
-                'hover:bg-slate-5 flex h-[22px] w-[22px] min-w-[22px] cursor-pointer items-center justify-center rounded-md transition-all duration-1000 ease-in-out',
+                'hover:bg-base-5 flex h-[22px] w-[22px] min-w-[22px] cursor-pointer items-center justify-center rounded-md transition-all duration-1000 ease-in-out',
                 sidebarExpanded ? 'visible opacity-100' : 'invisible opacity-0'
               )}
               onClick={() => setSidebarDocking(!sidebarDocked)}>
@@ -82,12 +82,12 @@ export default function Sidebar() {
         {isSidebarAutoCollapsed && (
           <div
             className={cn(
-              'bg-slate-3 focus-within:bg-slate-5 border-slate-5 absolute -right-[19px] top-[26px] flex h-10 w-8 max-w-8 cursor-pointer items-center justify-end overflow-visible rounded-br-[7px] rounded-tr-[7px] border border-l-0 transition-all duration-1000 ease-in-out',
+              'bg-base-3 focus-within:bg-base-5 border-base-5 absolute -right-[19px] top-[26px] flex h-10 w-8 max-w-8 cursor-pointer items-center justify-end overflow-visible rounded-br-[7px] rounded-tr-[7px] border border-l-0 transition-all duration-1000 ease-in-out',
               sidebarExpanded ? 'visible opacity-100' : 'invisible opacity-0'
             )}>
             <div
               className={cn(
-                'hover:bg-slate-5 flex h-[38px] w-[38px] min-w-[38px] cursor-pointer items-center justify-center rounded-md transition-all duration-1000 ease-in-out',
+                'hover:bg-base-5 flex h-[38px] w-[38px] min-w-[38px] cursor-pointer items-center justify-center rounded-md transition-all duration-1000 ease-in-out',
                 sidebarExpanded ? 'visible opacity-100' : 'invisible opacity-0'
               )}
               onClick={() => setSidebarExpanded(false)}>

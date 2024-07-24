@@ -156,7 +156,7 @@ export default function Page() {
         <Form {...form}>
           <div className="my-2 flex w-full flex-col gap-2">
             <div className="flex w-fit flex-col gap-2">
-              <div className="text-muted-foreground font-bold uppercase">
+              <div className="text-base-11 font-bold uppercase">
                 Email Address
               </div>
               <div className="flex gap-1">
@@ -198,7 +198,7 @@ export default function Page() {
             </div>
 
             <div className="flex w-fit flex-col gap-2">
-              <div className="text-muted-foreground font-bold uppercase">
+              <div className="text-base-11 font-bold uppercase">
                 SMTP Settings
               </div>
               <div className="flex gap-1">
@@ -333,7 +333,7 @@ export default function Page() {
               </div>
             </div>
 
-            <div className="text-muted-foreground font-bold uppercase">
+            <div className="text-base-11 font-bold uppercase">
               Deliver Messages To
             </div>
             <div className="flex flex-col gap-2">

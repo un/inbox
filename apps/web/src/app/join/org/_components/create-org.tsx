@@ -106,7 +106,7 @@ export function CreateOrg() {
       />
       <Tooltip>
         <TooltipTrigger asChild>
-          <div className="text-slate-11 w-fit text-xs">
+          <div className="text-base-11 w-fit text-xs">
             {env.NEXT_PUBLIC_WEBAPP_URL}/
             <EditableText
               value={orgShortcode}

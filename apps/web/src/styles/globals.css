@@ -71,7 +71,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-base-2 text-foreground;
   }
 }
 
@@ -86,12 +86,12 @@
 
 @media (orientation: landscape) {
   ::-webkit-scrollbar {
-    @apply bg-slate-2 h-[6px] w-[6px];
+    @apply bg-base-2 h-[6px] w-[6px];
   }
   ::-webkit-scrollbar-thumb {
-    @apply bg-slate-4 border-slate-2 rounded-xl border;
+    @apply bg-base-4 border-base-2 rounded-xl border;
   }
   ::-webkit-scrollbar-track {
-    @apply bg-slate-1 rounded-xl;
+    @apply bg-base-1 rounded-xl;
   }
 }

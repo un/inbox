@@ -27,7 +27,7 @@ export function PasskeyCard({ selected, setSelected }: Selected) {
       className="h-fit w-full overflow-hidden">
       <div
         className={cn(
-          'border-base-5 flex w-full flex-col items-center rounded-xl border-2 bg-white p-3 transition-all duration-300 ease-in-out',
+          'border-base-5 bg-base-1 flex w-full flex-col items-center rounded-xl border-2 p-3 transition-all duration-300 ease-in-out',
           active
             ? 'border-accent-10 bg-accent-3 h-[152px] gap-3 border-2'
             : 'h-[60px]'
@@ -126,7 +126,7 @@ export function PasswordCard({
       className="h-fit w-full overflow-hidden">
       <div
         className={cn(
-          'border-base-5 flex w-full flex-col items-center rounded-xl border bg-white p-3 transition-all duration-300 ease-in-out',
+          'border-base-5 bg-base-1 flex w-full flex-col items-center rounded-xl border p-3 transition-all duration-300 ease-in-out',
           !active
             ? 'h-[60px]'
             : makeSpaceForError
@@ -188,7 +188,7 @@ export function PasswordCard({
               )}
               {/* display password mismatch */}
               {passwordMatch === false && (
-                <p className="w-full text-left text-xs">
+                <p className="text-red-9 w-full text-left text-xs">
                   Passwords don&apos;t match
                 </p>
               )}
