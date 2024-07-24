@@ -2,7 +2,6 @@
 
 import { platform } from '@/src/lib/trpc';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
-import { useForm } from '@tanstack/react-form';
 import { Input } from '@/src/components/shadcn-ui/input';
 import { Switch } from '@/src/components/shadcn-ui/switch';
 import {
@@ -15,7 +14,6 @@ import {
 } from '@/src/components/shadcn-ui/select';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { z } from 'zod';
-import { zodValidator } from '@tanstack/zod-form-adapter';
 import { type TypeId } from '@u22n/utils/typeid';
 import {
   Dialog,
@@ -28,9 +26,39 @@ import {
 } from '@/src/components/shadcn-ui/dialog';
 import { useState } from 'react';
 import { type UiColor, uiColors } from '@u22n/utils/colors';
-import { SpinnerGap } from '@phosphor-icons/react';
+import { At, SpinnerGap } from '@phosphor-icons/react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage
+} from '@/src/components/shadcn-ui/form';
+
+const teamFormSchema = z.object({
+  teamName: z.string().min(2, 'Team name must be at least 2 characters'),
+  description: z.string(),
+  color: z.enum(uiColors),
+  email: z.object({
+    create: z.boolean(),
+    address: z
+      .string()
+      .min(1)
+      .max(32)
+      .regex(/^[a-zA-Z0-9._-]*$/, {
+        message: 'Only letters and numbers'
+      })
+      .optional(),
+    domain: z.string().min(1, 'You must select a domain').optional(),
+    sendName: z.string().min(1, 'You must enter a send name').max(64).optional()
+  })
+});
 
 export function NewTeamModal() {
+  const [open, setOpen] = useState(false);
   const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
   const invalidateTeams = platform.useUtils().org.users.teams.getOrgTeams;
 
@@ -49,78 +77,82 @@ export function NewTeamModal() {
     }
   );
 
-  const { mutateAsync: createTeam, error: teamError } =
-    platform.org.users.teams.createTeam.useMutation({
-      onSuccess: () => {
-        void invalidateTeams.invalidate();
-      }
-    });
+  const {
+    mutateAsync: createTeam,
+    error: teamError,
+    isPending: isCreatingTeam
+  } = platform.org.users.teams.createTeam.useMutation({
+    onSuccess: () => {
+      void invalidateTeams.invalidate();
+    }
+  });
 
-  const { mutateAsync: createEmailIdentity, error: emailError } =
-    platform.org.mail.emailIdentities.createNewEmailIdentity.useMutation({
-      onSuccess: () => {
-        setOpen(false);
-      }
-    });
+  const {
+    mutateAsync: createEmailIdentity,
+    error: emailError,
+    isPending: isCreatingEmailIdentity
+  } = platform.org.mail.emailIdentities.createNewEmailIdentity.useMutation();
 
-  const form = useForm({
+  const form = useForm<z.infer<typeof teamFormSchema>>({
+    resolver: zodResolver(teamFormSchema),
     defaultValues: {
       teamName: '',
       description: '',
-      color: 'red' as UiColor,
+      color: 'red',
       email: {
         create: false,
         address: '',
-        domain: '' as TypeId<'domains'>,
+        domain: '',
         sendName: ''
-      }
-    },
-    validatorAdapter: zodValidator,
-    onSubmit: async ({ value }) => {
-      if (value.email.create) {
-        const emailAvailable = await checkEmailAvailability.fetch({
-          orgShortcode,
-          emailUsername: value.email.address,
-          domainPublicId: value.email.domain
-        });
-        if (!emailAvailable.available) {
-          setFormError('This is email is not available or is already in use');
-          return;
-        }
-      }
-
-      const team = await createTeam({
-        orgShortcode,
-        teamName: value.teamName,
-        teamColor: value.color,
-        teamDescription: value.description ?? undefined
-      });
-
-      if (value.email.create) {
-        await createEmailIdentity({
-          orgShortcode,
-          domainPublicId: value.email.domain,
-          emailUsername: value.email.address,
-          sendName: value.email.sendName,
-          catchAll: false,
-          routeToTeamsPublicIds: [team.newTeamPublicId]
-        });
       }
     }
   });
+
+  const handleSubmit = async (values: z.infer<typeof teamFormSchema>) => {
+    if (values.email.create) {
+      const emailAvailable = await checkEmailAvailability.fetch({
+        orgShortcode,
+        emailUsername: values.email.address!,
+        domainPublicId: values.email.domain!
+      });
+      if (!emailAvailable.available) {
+        setFormError('This is email is not available or is already in use');
+        return;
+      }
+    }
+
+    const team = await createTeam({
+      orgShortcode,
+      teamName: values.teamName,
+      teamColor: values.color,
+      teamDescription: values.description ?? undefined
+    });
+
+    if (values.email.create) {
+      await createEmailIdentity({
+        orgShortcode,
+        domainPublicId: values.email.domain!,
+        emailUsername: values.email.address!,
+        sendName: values.email.sendName!,
+        catchAll: false,
+        routeToTeamsPublicIds: [team.newTeamPublicId]
+      });
+    }
+
+    form.reset();
+    setOpen(false);
+  };
 
   const { data: orgDomains, isLoading: orgDomainsLoading } =
     platform.org.mail.domains.getOrgDomains.useQuery({
       orgShortcode
     });
 
-  const [open, setOpen] = useState(false);
-
   return (
     <Dialog
       open={open}
       onOpenChange={() => {
-        if (form.state.isSubmitting) return;
+        if (form.formState.isSubmitting) return;
         setOpen(!open);
       }}>
       <DialogTrigger asChild>
@@ -145,172 +177,150 @@ export function NewTeamModal() {
             Your Current Billing Plan does not allow you to create Teams
           </div>
         ) : (
-          <form
-            className="my-2 flex w-fit flex-col gap-2"
-            onSubmit={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              void form.handleSubmit();
-            }}>
-            <div className="flex w-full gap-2">
-              <form.Field
-                name="teamName"
-                validators={{ onBlur: z.string().min(2).max(50) }}
-                children={(field) => (
-                  <>
-                    <Input
-                      label="Team Name"
-                      id={field.name}
-                      name={field.name}
-                      value={field.state.value ?? ''}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      onBlur={field.handleBlur}
-                      className="w-72"
-                    />
-                    {field.state.meta.errorMap.onBlur && (
-                      <span className="text-red-10">
-                        {field.state.meta.errorMap.onBlur}
-                      </span>
-                    )}
-                  </>
-                )}
-              />
-
-              <form.Field
-                name="description"
-                validators={{ onBlur: z.string().min(0).max(500) }}
-                children={(field) => (
-                  <>
-                    <Input
-                      label="Description"
-                      id={field.name}
-                      name={field.name}
-                      value={field.state.value ?? ''}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      onBlur={field.handleBlur}
-                    />
-                    {field.state.meta.errorMap.onBlur && (
-                      <span className="text-red-10">
-                        {field.state.meta.errorMap.onBlur}
-                      </span>
-                    )}
-                  </>
-                )}
-              />
-            </div>
-            <div className="flex w-full gap-2">
-              <div className="flex flex-1 flex-col">
-                <label className="font-semibold">Color</label>
-                <form.Field
+          <div className="my-2 flex flex-col gap-2">
+            <Form {...form}>
+              <div className="flex w-full gap-2">
+                <FormField
+                  control={form.control}
+                  name="teamName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Input
+                          fullWidth
+                          label="Team Name"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Input
+                          fullWidth
+                          label="Description"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="flex w-full gap-2">
+                <FormField
+                  control={form.control}
                   name="color"
-                  children={(field) => (
-                    <Select
-                      name={field.name}
-                      value={field.state.value ?? ''}
-                      onValueChange={(e: UiColor) => field.handleChange(e)}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent
-                        id={field.name}
-                        onBlur={field.handleBlur}>
-                        <SelectGroup>
-                          {uiColors.map((color) => (
-                            <SelectItem
-                              value={color}
-                              key={color}>
-                              <div className="flex items-center gap-2">
-                                <div
-                                  className="h-4 w-4 rounded-full"
-                                  style={{
-                                    backgroundColor: `var(--${color}-10)`
-                                  }}
-                                />
-                                <div className="capitalize">{color}</div>
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Color</FormLabel>
+                      <FormControl>
+                        <Select
+                          name={field.name}
+                          value={field.value}
+                          onValueChange={(e: UiColor) => field.onChange(e)}>
+                          <SelectTrigger className="w-full">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent
+                            id={field.name}
+                            onBlur={field.onBlur}>
+                            <SelectGroup>
+                              {uiColors.map((color) => (
+                                <SelectItem
+                                  value={color}
+                                  key={color}>
+                                  <div className="flex items-center gap-2">
+                                    <div
+                                      className="h-4 w-4 rounded-full"
+                                      style={{
+                                        backgroundColor: `var(--${color}10)`
+                                      }}
+                                    />
+                                    <div className="capitalize">{color}</div>
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectGroup>
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )}
                 />
               </div>
-            </div>
-            <div className="mt-4 flex w-full flex-col gap-2">
-              <div className="flex items-center gap-2">
-                <label className="font-bold">
-                  Create an Address for the User
-                </label>
-                <form.Field
+              <div className="mt-4 flex w-full flex-col gap-2">
+                <FormField
+                  control={form.control}
                   name="email.create"
-                  children={(field) => (
-                    <Switch
-                      checked={field.state.value ?? false}
-                      onCheckedChange={field.handleChange}
-                      onBlur={field.handleBlur}
-                    />
+                  render={({ field }) => (
+                    <FormItem className="mb-2 flex items-center gap-4">
+                      <div className="mt-2 text-sm font-bold">
+                        Create an Address for the User
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )}
                 />
-              </div>
-              <form.Subscribe
-                selector={(form) => form.values.email.create}
-                children={(createEmail) =>
-                  createEmail && (
-                    <>
-                      {orgDomainsLoading && <div>Loading...</div>}
-                      {orgDomains && (
-                        <>
-                          <div className="flex gap-1">
-                            <form.Field
-                              name="email.address"
-                              validators={{
-                                onBlur: z
-                                  .string()
-                                  .min(2)
-                                  .max(32)
-                                  .regex(/^[a-zA-Z0-9._-]*$/, {
-                                    message: 'Only letters and numbers'
-                                  })
-                              }}
-                              children={(field) => (
-                                <div className="flex flex-col">
+
+                {form.watch('email.create') && (
+                  <>
+                    {orgDomainsLoading && <div>Loading...</div>}
+                    {orgDomains && (
+                      <>
+                        <div className="flex gap-1">
+                          <FormField
+                            control={form.control}
+                            name="email.address"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormControl>
                                   <Input
+                                    fullWidth
                                     label="Email Username"
-                                    className="w-full flex-1"
-                                    id={field.name}
-                                    name={field.name}
-                                    value={field.state.value ?? ''}
-                                    onChange={(e) =>
-                                      field.handleChange(e.target.value)
-                                    }
-                                    onBlur={field.handleBlur}
+                                    {...field}
                                   />
-                                  {field.state.meta.errorMap.onBlur && (
-                                    <span className="text-red-10">
-                                      {field.state.meta.errorMap.onBlur}
-                                    </span>
-                                  )}
-                                </div>
-                              )}
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <span className="my-[10px] flex items-start">
+                            <At
+                              className="size-4"
+                              weight="bold"
                             />
-                            <span className="flex items-center">@</span>
-                            <form.Field
-                              name="email.domain"
-                              validators={{ onChange: z.string().min(1) }}
-                              children={(field) => (
+                          </span>
+                          <FormField
+                            control={form.control}
+                            name="email.domain"
+                            render={({ field }) => (
+                              <FormItem>
                                 <Select
                                   name={field.name}
-                                  value={field.state.value}
+                                  value={field.value}
                                   onValueChange={(e: TypeId<'domains'>) =>
-                                    field.handleChange(e)
+                                    field.onChange(e)
                                   }>
-                                  <SelectTrigger className="w-full flex-1">
+                                  <SelectTrigger className="w-full">
                                     <SelectValue placeholder="Select domain" />
                                   </SelectTrigger>
                                   <SelectContent
                                     id={field.name}
-                                    onBlur={field.handleBlur}>
+                                    onBlur={field.onBlur}>
                                     <SelectGroup>
                                       {orgDomains.domainData.map((domain) => (
                                         <SelectItem
@@ -322,74 +332,75 @@ export function NewTeamModal() {
                                     </SelectGroup>
                                   </SelectContent>
                                 </Select>
-                              )}
-                            />
-                          </div>
-                          <form.Field
-                            name="email.sendName"
-                            validators={{ onBlur: z.string().min(1).max(64) }}
-                            children={(field) => (
-                              <>
-                                <Input
-                                  label="Send Name"
-                                  id={field.name}
-                                  className="w-full"
-                                  name={field.name}
-                                  value={field.state.value ?? ''}
-                                  onChange={(e) =>
-                                    field.handleChange(e.target.value)
-                                  }
-                                  onBlur={field.handleBlur}
-                                />
-                                {field.state.meta.errorMap.onBlur && (
-                                  <span className="text-red-10">
-                                    {field.state.meta.errorMap.onBlur}
-                                  </span>
-                                )}
-                              </>
+                                <FormMessage />
+                              </FormItem>
                             )}
                           />
-                        </>
-                      )}
-                    </>
-                  )
-                }
-              />
-            </div>
-            <div className="mt-4 flex w-full flex-col gap-2">
-              <div className="text-red-10">
-                {formError ?? teamError?.message ?? emailError?.message}
-              </div>
-              <form.Subscribe
-                selector={(form) => [
-                  form.isTouched,
-                  form.canSubmit,
-                  form.isSubmitting
-                ]}
-                children={([isTouched, canSubmit, isSubmitting]) => (
-                  <Button
-                    disabled={!isTouched || !canSubmit || isSubmitting}
-                    // loading={isSubmitting}
-                    className="my-1">
-                    {isSubmitting ? 'Creating...' : 'Create New Team'}
-                  </Button>
+                        </div>
+                        <FormField
+                          control={form.control}
+                          name="email.sendName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
+                                <Input
+                                  fullWidth
+                                  label="Send Name"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </>
+                    )}
+                  </>
                 )}
-              />
-              <DialogClose asChild>
-                <form.Subscribe
-                  selector={(form) => form.isSubmitting}
-                  children={(isSubmitting) => (
+              </div>
+
+              <div className="mt-1 flex w-full flex-col gap-2">
+                <div className="text-red-10">
+                  {formError ?? teamError?.message ?? emailError?.message}
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  <DialogClose asChild>
                     <Button
-                      className="w-full"
-                      disabled={isSubmitting}
-                      onMouseDown={() => setOpen(false)}>
+                      className="flex-1"
+                      disabled={isCreatingTeam || isCreatingEmailIdentity}>
                       Cancel
                     </Button>
-                  )}
-                />
-              </DialogClose>
-            </div>
-          </form>
+                  </DialogClose>
+                  <Button
+                    loading={
+                      isCreatingTeam ||
+                      isCreatingEmailIdentity ||
+                      form.formState.isSubmitting
+                    }
+                    className="flex-1"
+                    onClick={async (e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      const values = form.getValues();
+
+                      // We need to make the fields optional if they are not being used
+                      if (!values.email.create) {
+                        form.setValue('email.address', undefined);
+                        form.setValue('email.domain', undefined);
+                        form.setValue('email.sendName', undefined);
+                      }
+
+                      await form.handleSubmit(handleSubmit)(e);
+                    }}>
+                    {isCreatingTeam || isCreatingEmailIdentity
+                      ? 'Creating...'
+                      : 'Create New Team'}
+                  </Button>
+                </div>
+              </div>
+            </Form>
+          </div>
         )}
       </DialogContent>
     </Dialog>

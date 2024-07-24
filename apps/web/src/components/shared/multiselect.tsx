@@ -34,6 +34,7 @@ type MultiSelectProps<T extends Record<string, unknown>> = {
   TriggerRenderer: FC<{ items: Item<T>[] }>;
   values: string[];
   setValues: Dispatch<SetStateAction<string[]>>;
+  fullWidth?: boolean;
 };
 
 export function MultiSelect<T extends Record<string, unknown>>({
@@ -44,7 +45,8 @@ export function MultiSelect<T extends Record<string, unknown>>({
   ItemRenderer,
   TriggerRenderer,
   values,
-  setValues
+  setValues,
+  fullWidth
 }: MultiSelectProps<T>) {
   const [open, setOpen] = useState(false);
 
@@ -57,7 +59,10 @@ export function MultiSelect<T extends Record<string, unknown>>({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="h-full w-fit min-w-[200px] justify-between">
+          className={cn(
+            'h-full w-fit min-w-[200px] justify-between',
+            fullWidth && 'w-full'
+          )}>
           {values.length > 0 ? (
             <TriggerRenderer
               items={items.filter((item) => values.includes(item.value))}
