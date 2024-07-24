@@ -35,6 +35,11 @@ import {
   FormItem,
   FormMessage
 } from '@/src/components/shadcn-ui/form';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger
+} from '@/src/components/shadcn-ui/tooltip';
 
 const inviteFormSchema = z.object({
   firstName: z.string().min(1).max(64),
@@ -384,10 +389,25 @@ export function InviteModal() {
                       Add User to Teams
                     </div>
                     <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
+                      {orgTeams?.teams && orgTeams?.teams?.length > 0 ? (
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      ) : (
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <Switch
+                              disabled
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{`You don't have any teams`}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
                     </FormControl>
                     <FormMessage />
                   </FormItem>
