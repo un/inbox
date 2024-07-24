@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 import { Input } from '@/src/components/shadcn-ui/input';
 import Image from 'next/image';
 import { useAvatarUploader } from '@/src/hooks/use-avatar-uploader';
-import { generateAvatarUrl } from '@/src/lib/utils';
+import { generateAvatarUrl, openFilePicker } from '@/src/lib/utils';
 
 type ProfileCardProps = {
   orgData: RouterOutputs['account']['profile']['getOrgMemberProfile'];
@@ -107,23 +107,15 @@ export function ProfileCard({ orgData, wasInvited }: ProfileCardProps) {
             className="w-fit"
             variant="outline"
             loading={uploading}
-            onClick={() => {
-              const input = document.createElement('input');
-              input.type = 'file';
-              input.accept = 'image/png, image/jpeg';
-              input.multiple = false;
-              input.onchange = (e) => {
-                const file = (e.target as HTMLInputElement).files?.[0];
-                if (file) {
-                  upload({
-                    type: 'orgMember',
-                    publicId: orgData.profile.publicId,
-                    file
-                  });
-                }
-              };
-              input.click();
-            }}>
+            onClick={() =>
+              openFilePicker((files) => {
+                upload({
+                  type: 'orgMember',
+                  publicId: orgData.profile.publicId,
+                  file: files[0]!
+                });
+              })
+            }>
             {uploading ? `Uploading ${progress.toFixed(2)}%` : 'Upload'}
           </Button>
         </div>

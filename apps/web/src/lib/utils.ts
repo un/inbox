@@ -59,3 +59,18 @@ export const prettyBytes = (bytes: number) => {
   const i = Math.floor(Math.log(bytes) / Math.log(1024));
   return `${(bytes / Math.pow(1024, i)).toFixed(2)} ${units[i]}`;
 };
+
+export const openFilePicker = (
+  callback: (file: File[]) => void,
+  options?: { multiple?: boolean; accept?: string }
+) => {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = options?.accept ?? 'image/png, image/jpeg';
+  input.multiple = options?.multiple ?? false;
+  input.onchange = (e) => {
+    const files = (e.target as HTMLInputElement).files;
+    if (files?.length) callback(Array.from(files));
+  };
+  input.click();
+};

@@ -7,12 +7,20 @@ import { Camera, FloppyDisk } from '@phosphor-icons/react';
 import { platform } from '@/src/lib/trpc';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import useLoading from '@/src/hooks/use-loading';
-import { cn, generateAvatarUrl } from '@/src/lib/utils';
-import useAwaitableModal from '@/src/hooks/use-awaitable-modal';
-import { AvatarModal } from '@/src/components/shared/avatar-modal';
+import { cn, generateAvatarUrl, openFilePicker } from '@/src/lib/utils';
 import { PageTitle } from '../_components/page-title';
 import { Skeleton } from '@/src/components/shadcn-ui/skeleton';
 import { Input } from '@/src/components/shadcn-ui/input';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from '@/src/components/shadcn-ui/alert-dialog';
+import AvatarCrop from '@/src/components/avatar-crop';
+import { useAvatarUploader } from '@/src/hooks/use-avatar-uploader';
+import { toast } from 'sonner';
 
 export default function ProfileComponent() {
   const router = useRouter();
@@ -26,6 +34,7 @@ export default function ProfileComponent() {
     });
 
   const [orgNameValue, setOrgNameValue] = useState<string>(currentOrg.name);
+  const [file, setFile] = useState<File | null>(null);
 
   const avatarUrl = useMemo(() => {
     return generateAvatarUrl({
@@ -35,21 +44,17 @@ export default function ProfileComponent() {
     });
   }, [currentOrg.publicId, currentOrg.avatarTimestamp]);
 
-  const [AvatarModalRoot, avatarModalOpen] = useAwaitableModal(AvatarModal, {
-    publicId: currentOrg.publicId
-  });
-
-  const {
-    error: avatarError,
-    loading: avatarLoading,
-    run: openModal
-  } = useLoading(async () => {
-    const avatarTimestamp = new Date(
-      await avatarModalOpen({
-        publicId: currentOrg.publicId
-      })
-    );
-    updateOrg(orgShortcode, { avatarTimestamp });
+  const { uploading, progress, upload } = useAvatarUploader({
+    onError: (error) => {
+      toast.error("Couldn't upload avatar", {
+        description: error.message
+      });
+    },
+    onUploaded: (response) => {
+      updateOrg(orgShortcode, {
+        avatarTimestamp: response.avatarTimestamp
+      });
+    }
   });
 
   const updateOrgProfileApi =
@@ -75,28 +80,32 @@ export default function ProfileComponent() {
           <Skeleton className="h-20 w-56 items-center justify-center" />
         )}
         <Button
-          loading={avatarLoading}
-          className="mx-0 aspect-square h-full max-h-[100px] w-full max-w-[100px] cursor-pointer rounded-full p-0"
-          onClick={() => {
-            openModal({});
-          }}>
-          <div
-            className={cn(
-              avatarUrl ? 'bg-cover' : 'from-accent-9 to-base-9',
-              'flex h-full w-full flex-col rounded-full bg-gradient-to-r *:opacity-0 *:transition-opacity *:duration-300 *:ease-in-out *:hover:opacity-100'
-            )}
-            style={{
-              backgroundImage: avatarUrl ? `url(${avatarUrl})` : undefined
-            }}>
-            <div className="bg-gray-5 flex h-full w-full flex-col items-center justify-center rounded-full">
-              <Camera size={24} />
-              <span className="text-sm">Upload</span>
+          disabled={uploading}
+          variant="outline"
+          className="mx-0 flex aspect-square h-full max-h-[100px] w-full max-w-[100px] cursor-pointer items-center justify-center rounded-full p-0"
+          onClick={() => openFilePicker((files) => setFile(files[0] ?? null))}>
+          {uploading ? (
+            <span className="font-bold text-white">
+              {Math.round(progress)}%
+            </span>
+          ) : (
+            <div
+              className={cn(
+                avatarUrl
+                  ? 'bg-cover'
+                  : 'from-cyan-9 to-green-9 bg-gradient-to-bl',
+                'flex h-full w-full flex-col rounded-full bg-gradient-to-r *:opacity-0 *:transition-opacity *:duration-300 *:ease-in-out *:hover:opacity-80'
+              )}
+              style={{
+                backgroundImage: avatarUrl ? `url(${avatarUrl})` : undefined
+              }}>
+              <div className="bg-base-5 flex h-full w-full flex-col items-center justify-center rounded-full">
+                <Camera size={24} />
+                <span className="text-sm">Upload</span>
+              </div>
             </div>
-          </div>
+          )}
         </Button>
-        {avatarError && (
-          <span className="text-red-10 text-sm">{avatarError.message}</span>
-        )}
 
         <div className="flex flex-row gap-2">
           <label>
@@ -115,7 +124,36 @@ export default function ProfileComponent() {
           Save
         </Button>
       </div>
-      <AvatarModalRoot />
+      {file && (
+        <AlertDialog
+          open={file !== null}
+          onOpenChange={() => setFile(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Upload Avatar</AlertDialogTitle>
+              <AlertDialogDescription className="sr-only">
+                Upload new Avatar
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="flex flex-col items-center justify-center gap-2">
+              <AvatarCrop
+                input={file}
+                onCrop={(e) => {
+                  upload({
+                    file: new File([e], currentOrg.publicId, {
+                      type: 'image/png'
+                    }),
+                    publicId: currentOrg.publicId,
+                    type: 'org'
+                  });
+                  setFile(null);
+                }}
+                onCancel={() => setFile(null)}
+              />
+            </div>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </div>
   );
 }

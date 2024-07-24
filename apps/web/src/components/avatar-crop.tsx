@@ -25,6 +25,7 @@ export default function AvatarCrop({
   const imageSrc = useMemo(() => URL.createObjectURL(input), [input]);
   const [scale, setScale] = useState(1);
   const imageRef = useRef<HTMLImageElement | null>(null);
+  const [cropLoading, setCropLoading] = useState(false);
 
   const convertCropToBlob = async (crop: Crop) => {
     if (!imageRef.current) throw new Error('No image ref');
@@ -80,7 +81,7 @@ export default function AvatarCrop({
   };
 
   return (
-    <div className="flex w-full flex-col items-center justify-center gap-2">
+    <div className="flex w-full flex-col items-center justify-center gap-4">
       <ReactCrop
         className="select-none"
         crop={crop}
@@ -97,23 +98,26 @@ export default function AvatarCrop({
           alt="Your Avatar"
           ref={imageRef}
           onLoad={(e) => {
-            const { naturalWidth: width, naturalHeight: height } =
-              e.currentTarget;
-            setCrop(
-              centerCrop(
-                makeAspectCrop(
-                  {
-                    unit: '%',
-                    height: 100
-                  },
-                  1,
+            const target = e.currentTarget;
+
+            setTimeout(() => {
+              const { naturalWidth: width, naturalHeight: height } = target;
+              setCrop(
+                centerCrop(
+                  makeAspectCrop(
+                    {
+                      unit: '%',
+                      height: 90
+                    },
+                    1,
+                    width,
+                    height
+                  ),
                   width,
                   height
-                ),
-                width,
-                height
-              )
-            );
+                )
+              );
+            }, 100);
           }}
         />
       </ReactCrop>
@@ -124,22 +128,26 @@ export default function AvatarCrop({
         value={[scale]}
         onValueChange={(e) => setScale(e[0] ?? 0)}
       />
-      <div className="grid w-full grid-cols-2 items-center gap-2">
+      <div className="flex w-full items-center gap-2">
         <Button
           variant="secondary"
+          className="flex-1"
           onClick={onCancel}>
           Cancel
         </Button>
         <Button
+          loading={cropLoading}
           variant="default"
           className="flex-1"
           onClick={async () => {
-            if (!crop) return;
+            if (!crop || cropLoading) return;
+            setCropLoading(true);
             const blob = await convertCropToBlob(crop);
             URL.revokeObjectURL(imageSrc);
+            setCropLoading(false);
             onCrop(blob);
           }}>
-          Crop
+          Done
         </Button>
       </div>
     </div>
