@@ -471,7 +471,7 @@ export function InviteModal() {
                   <Button
                     className="flex-1"
                     disabled={isSubmitting}
-                    value="secondary">
+                    variant={'secondary'}>
                     Cancel
                   </Button>
                 </DialogClose>
