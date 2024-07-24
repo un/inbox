@@ -4,12 +4,7 @@ import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn, generateAvatarUrl, getInitials } from '@/src/lib/utils';
 import { type TypeId, inferTypeId } from '@u22n/utils/typeid';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger
-} from './shadcn-ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from './shadcn-ui/tooltip';
 import {
   Avatar as AvatarShad,
   AvatarFallback,
@@ -100,31 +95,29 @@ export function Avatar(props: AvatarProps) {
       </AvatarShad>
     </div>
   ) : (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger className="w-fit">
-          <AvatarShad
-            className={avatarVariants({
-              color: props.color,
-              size: props.size
-            })}>
-            <AvatarImage
-              src={avatarUrl}
-              alt={altText}
-            />
-            <AvatarFallback>{getInitials(altText)}</AvatarFallback>
-          </AvatarShad>
-        </TooltipTrigger>
-        <TooltipContent className="flex flex-col gap-1">
-          {altText}
-          <AvatarIcon
-            avatarProfilePublicId={props.avatarProfilePublicId}
-            size="xs"
-            withDot
+    <Tooltip>
+      <TooltipTrigger className="w-fit">
+        <AvatarShad
+          className={avatarVariants({
+            color: props.color,
+            size: props.size
+          })}>
+          <AvatarImage
+            src={avatarUrl}
+            alt={altText}
           />
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+          <AvatarFallback>{getInitials(altText)}</AvatarFallback>
+        </AvatarShad>
+      </TooltipTrigger>
+      <TooltipContent className="flex flex-col gap-1">
+        {altText}
+        <AvatarIcon
+          avatarProfilePublicId={props.avatarProfilePublicId}
+          size="xs"
+          withDot
+        />
+      </TooltipContent>
+    </Tooltip>
   );
 }
 
