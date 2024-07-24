@@ -10,7 +10,6 @@ import {
 } from '@/src/components/shadcn-ui/avatar';
 import { Badge } from '@/src/components/shadcn-ui/badge';
 import { format } from 'date-fns';
-import { ScrollArea } from '@/src/components/shadcn-ui/scroll-area';
 import {
   Tooltip,
   TooltipTrigger,
@@ -74,12 +73,8 @@ export const columns: ColumnDef<Member>[] = [
     cell: ({ row }) => {
       const inviteCode = row.original.inviteToken;
       return inviteCode ? (
-        <div className="flex w-fit items-center justify-between gap-2">
-          <ScrollArea
-            className="w-32"
-            type="hover">
-            <span>{inviteCode}</span>
-          </ScrollArea>
+        <div className="flex w-full max-w-36 items-center justify-between gap-2">
+          <span className="truncate">{inviteCode}</span>
           <CopyButton
             text={inviteCode}
             iconSize={12}
@@ -94,12 +89,9 @@ export const columns: ColumnDef<Member>[] = [
     cell: ({ row }) => {
       const inviteCode = row.original.inviteToken;
       return inviteCode ? (
-        <div className="flex w-fit items-center justify-between gap-2">
-          <ScrollArea
-            className="w-32"
-            type="hover">
-            <span>{`${env.NEXT_PUBLIC_WEBAPP_URL}/join/invite/${inviteCode}`}</span>
-          </ScrollArea>
+        <div className="flex w-full max-w-36 items-center justify-between gap-2">
+          <span className="truncate">{`${env.NEXT_PUBLIC_WEBAPP_URL}/join/invite/${inviteCode}`}</span>
+
           <CopyButton
             text={`${env.NEXT_PUBLIC_WEBAPP_URL}/join/invite/${inviteCode}`}
             iconSize={12}
@@ -113,7 +105,11 @@ export const columns: ColumnDef<Member>[] = [
     header: 'Email',
     cell: ({ row }) => {
       const email = row.original.email;
-      return <div className="flex h-full items-center">{email}</div>;
+      return (
+        <div className="flex h-full w-full max-w-36 items-center">
+          <span className="truncate">{email}</span>
+        </div>
+      );
     }
   }),
   columnHelper.display({
