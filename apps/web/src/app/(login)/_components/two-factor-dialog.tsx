@@ -18,14 +18,19 @@ export function TwoFactorDialog({ open }: { open: boolean }) {
   const [code, setCode] = useState('');
   const router = useRouter();
   const { isSuccess, error, mutateAsync, isPending } =
-    platform.auth.twoFactorAuthentication.verifyTwoFactorChallenge.useMutation();
+    platform.auth.twoFactorAuthentication.verifyTwoFactorChallenge.useMutation({
+      onError: () => setCode('')
+    });
 
   return (
-    <AlertDialog open={open}>
+    <AlertDialog
+      open={open}
+      // don't close on any interaction
+      onOpenChange={() => false}>
       <AlertDialogContent className="w-min p-8">
         <AlertDialogTitle>Two Factor Authentication</AlertDialogTitle>
         <AlertDialogDescription>
-          Please enter the 6-digit code from your authenticator app
+          Enter the 6-digit code from your authenticator app
         </AlertDialogDescription>
         <div className="mx-auto w-fit">
           <InputOTP
@@ -43,11 +48,10 @@ export function TwoFactorDialog({ open }: { open: boolean }) {
           </InputOTP>
         </div>
         {error && (
-          <div className="text-red-9 text-center text-sm">{error.message}</div>
+          <div className="text-red-9 text-center text-xs">{error.message}</div>
         )}
         <Button
           className="mx-auto w-full"
-          variant="secondary"
           disabled={code.length !== 6 || isPending || isSuccess}
           loading={isPending || isSuccess}
           onClick={async () => {
