@@ -27,7 +27,7 @@ export const recoveryRouter = router({
     .input(
       z
         .object({
-          username: zodSchemas.username(2),
+          username: zodSchemas.usernameLogin(2),
           recoveryCode: zodSchemas.nanoIdToken()
         })
         .and(

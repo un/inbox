@@ -168,7 +168,7 @@ export const passwordRouter = router({
     .use(ratelimiter({ limit: 20, namespace: 'signIn.password' }))
     .input(
       z.object({
-        username: zodSchemas.username(2),
+        username: zodSchemas.usernameLogin(2),
         password: z.string().min(8)
       })
     )
