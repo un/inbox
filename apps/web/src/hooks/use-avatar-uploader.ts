@@ -3,7 +3,15 @@ import { type TypeId } from '@u22n/utils/typeid';
 import { useCallback, useState } from 'react';
 import { env } from '../env';
 
-export function useAvatarUploader() {
+type AvatarUploaderOptions = {
+  onUploaded?: (response: { avatarTimestamp: Date }) => void;
+  onError?: (error: Error) => void;
+};
+
+export function useAvatarUploader({
+  onError,
+  onUploaded
+}: AvatarUploaderOptions = {}) {
   const [uploadResponse, setUploadResponse] = useState<{
     avatarTimestamp: Date;
   } | null>(null);
@@ -17,7 +25,7 @@ export function useAvatarUploader() {
       publicId,
       file
     }: {
-      type: 'orgMember' | 'org' | 'contact' | 'team';
+      type: 'orgMember' | 'org' | 'contacts' | 'teams';
       publicId: TypeId<'org' | 'orgMemberProfile' | 'contacts' | 'teams'>;
       file: File;
     }) => {
@@ -32,21 +40,26 @@ export function useAvatarUploader() {
         formData,
         method: 'POST',
         url: `${env.NEXT_PUBLIC_STORAGE_URL}/api/avatar`,
-        onProgress: (progress) => setProgress(progress)
+        onProgress: (progress) => {
+          setProgress(progress);
+        }
       })
         .then((data) => {
-          setUploadResponse(
-            JSON.parse(data as string) as { avatarTimestamp: Date }
-          );
+          const response = JSON.parse(data as string) as {
+            avatarTimestamp: Date;
+          };
+          setUploadResponse(response);
+          onUploaded?.(response);
           setUploading(false);
         })
         .catch((e) => {
           setUploadResponse(null);
           setError(e as Error);
+          onError?.(e as Error);
           setUploading(false);
         });
     },
-    []
+    [onError, onUploaded]
   );
 
   return {

@@ -1,17 +1,24 @@
 'use client';
 
-import { AvatarModal } from '@/src/components/shared/avatar-modal';
-import { Camera } from '@phosphor-icons/react';
+import { Camera, SpinnerGap } from '@phosphor-icons/react';
 import { useEffect, useState, useMemo } from 'react';
-import { cn, generateAvatarUrl } from '@/src/lib/utils';
+import { cn, generateAvatarUrl, openFilePicker } from '@/src/lib/utils';
 import useLoading from '@/src/hooks/use-loading';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { platform } from '@/src/lib/trpc';
-import useAwaitableModal from '@/src/hooks/use-awaitable-modal';
-import { Skeleton } from '@/src/components/shadcn-ui/skeleton';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { Input } from '@/src/components/shadcn-ui/input';
 import { PageTitle } from '../../_components/page-title';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription
+} from '@/src/components/shadcn-ui/alert-dialog';
+import AvatarCrop from '@/src/components/avatar-crop';
+import { useAvatarUploader } from '@/src/hooks/use-avatar-uploader';
+import { toast } from 'sonner';
 
 export default function Page() {
   const profile = useGlobalStore((state) => state.currentOrg.orgMemberProfile);
@@ -31,6 +38,17 @@ export default function Page() {
   const [lastNameValue, setLastNameValue] = useState('');
   const [titleValue, setTitleValue] = useState('');
   const [bioValue, setBioValue] = useState('');
+  const [file, setFile] = useState<File | null>(null);
+  const { uploading, progress, upload } = useAvatarUploader({
+    onError: (error) => {
+      toast.error("Couldn't upload avatar", {
+        description: error.message
+      });
+    },
+    onUploaded: (response) => {
+      setAvatarTimestamp(response.avatarTimestamp);
+    }
+  });
 
   const avatarUrl = useMemo(() => {
     if (!initData || !avatarTimestamp) return null;
@@ -40,10 +58,6 @@ export default function Page() {
       size: '5xl'
     });
   }, [avatarTimestamp, initData]);
-
-  const [AvatarModalRoot, avatarModalOpen] = useAwaitableModal(AvatarModal, {
-    publicId: profile.publicId
-  });
 
   useEffect(() => {
     if (initData) {
@@ -56,16 +70,6 @@ export default function Page() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initData]);
-
-  const {
-    error: avatarError,
-    loading: avatarLoading,
-    run: openModal
-  } = useLoading(async () => {
-    if (!initData) return;
-    const avatarTimestamp = new Date(await avatarModalOpen({}));
-    setAvatarTimestamp(avatarTimestamp);
-  });
 
   const updateProfileApi =
     platform.account.profile.updateOrgMemberProfile.useMutation();
@@ -81,48 +85,53 @@ export default function Page() {
     await revalidateProfile();
   });
 
+  if (isInitDataLoading)
+    return (
+      <div className="flex h-12 w-full items-center justify-center">
+        <SpinnerGap className="size-4 animate-ping" />
+        <span className="text-base-11 text-sm">Loading Profile...</span>
+      </div>
+    );
+
   return (
-    <div className="flex flex-col gap-3 p-4">
+    <div className="flex w-full flex-col gap-3 p-4">
       <PageTitle title="Your Profile" />
 
       <div className="flex flex-col gap-3">
-        {isInitDataLoading && <Skeleton />}
-
         <Button
-          loading={avatarLoading}
-          className="mx-0 aspect-square h-full max-h-[100px] w-full max-w-[100px] cursor-pointer rounded-full p-0"
-          onClick={() => {
-            openModal({});
-          }}>
-          <div
-            className={cn(
-              avatarUrl ? 'bg-cover' : 'from-accent-9 to-base-9',
-              'flex h-full w-full flex-col rounded-full bg-gradient-to-r *:opacity-0 *:transition-opacity *:duration-300 *:ease-in-out *:hover:opacity-100'
-            )}
-            style={{
-              backgroundImage: avatarUrl ? `url(${avatarUrl})` : undefined
-            }}>
-            <div className="bg-gray-5 flex h-full w-full flex-col items-center justify-center rounded-full">
-              <Camera size={24} />
-              <span className="text-sm">Upload</span>
+          disabled={uploading}
+          variant="outline"
+          className="mx-0 flex aspect-square h-full max-h-[100px] w-full max-w-[100px] cursor-pointer items-center justify-center rounded-full p-0"
+          onClick={() => openFilePicker((files) => setFile(files[0] ?? null))}>
+          {uploading ? (
+            <span className="font-bold text-white">
+              {Math.round(progress)}%
+            </span>
+          ) : (
+            <div
+              className={cn(
+                avatarUrl
+                  ? 'bg-cover'
+                  : 'from-cyan-9 to-green-9 bg-gradient-to-bl',
+                'flex h-full w-full flex-col rounded-full bg-gradient-to-r *:opacity-0 *:transition-opacity *:duration-300 *:ease-in-out *:hover:opacity-80'
+              )}
+              style={{
+                backgroundImage: avatarUrl ? `url(${avatarUrl})` : undefined
+              }}>
+              <div className="bg-base-5 flex h-full w-full flex-col items-center justify-center rounded-full">
+                <Camera size={24} />
+                <span className="text-sm">Upload</span>
+              </div>
             </div>
-          </div>
+          )}
         </Button>
 
-        {avatarError && (
-          <span className="text-red-10 text-sm">{avatarError.message}</span>
-        )}
-
         <div className="flex gap-2">
-          {isInitDataLoading && <Skeleton />}
-
           <Input
             label="First Name"
             value={firstNameValue}
             onChange={(e) => setFirstNameValue(e.target.value)}
           />
-
-          {isInitDataLoading && <Skeleton />}
 
           <Input
             label="Last Name"
@@ -131,15 +140,11 @@ export default function Page() {
           />
         </div>
         <div className="flex gap-2">
-          {isInitDataLoading && <Skeleton />}
-
           <Input
             label="Title"
             value={titleValue}
             onChange={(e) => setTitleValue(e.target.value)}
           />
-
-          {isInitDataLoading && <Skeleton />}
 
           <Input
             label="Blurb"
@@ -148,7 +153,6 @@ export default function Page() {
           />
         </div>
         <div className="flex w-full gap-2">
-          {isInitDataLoading && <Skeleton />}
           <Button
             loading={saveLoading}
             onClick={() => saveProfile({ clearData: true, clearError: true })}>
@@ -156,7 +160,36 @@ export default function Page() {
           </Button>
         </div>
       </div>
-      <AvatarModalRoot />
+      {file && (
+        <AlertDialog
+          open={file !== null}
+          onOpenChange={() => setFile(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Upload Avatar</AlertDialogTitle>
+              <AlertDialogDescription className="sr-only">
+                Upload new Avatar
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="flex flex-col items-center justify-center gap-2">
+              <AvatarCrop
+                input={file}
+                onCrop={(e) => {
+                  upload({
+                    file: new File([e], profile.publicId, {
+                      type: 'image/png'
+                    }),
+                    publicId: profile.publicId,
+                    type: 'orgMember'
+                  });
+                  setFile(null);
+                }}
+                onCancel={() => setFile(null)}
+              />
+            </div>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </div>
   );
 }
