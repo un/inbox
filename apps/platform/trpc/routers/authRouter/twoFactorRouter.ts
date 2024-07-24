@@ -55,7 +55,6 @@ export const twoFactorRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      await new Promise((resolve) => setTimeout(resolve, 4000));
       const challengeCookie = getCookie(
         ctx.event,
         'two-factor-login-challenge'
