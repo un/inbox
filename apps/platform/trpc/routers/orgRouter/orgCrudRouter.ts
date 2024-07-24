@@ -56,7 +56,7 @@ export const crudRouter = router({
           .string()
           .min(5)
           .max(64)
-          .regex(/^[a-z0-9\-]*$/, {
+          .regex(/^[a-z0-9]*$/, {
             message: 'Only lowercase letters and numbers'
           })
       })
@@ -74,7 +74,7 @@ export const crudRouter = router({
     .query(async ({ ctx, input }) => {
       const autoShortcode = input.orgName
         .toLowerCase()
-        .replace(/[^a-z0-9\-]/g, '');
+        .replace(/[^a-z0-9]/g, '');
       const existingOrgs = await ctx.db.query.orgs.findMany({
         where: like(orgs.shortcode, `${autoShortcode}%`),
         columns: {
@@ -82,17 +82,20 @@ export const crudRouter = router({
         }
       });
 
-      if (existingOrgs.length === 0) {
+      const existingShortcodeList = existingOrgs.map((org) => org.shortcode);
+      if (
+        existingShortcodeList.length === 0 ||
+        !existingShortcodeList.includes(autoShortcode)
+      ) {
         return { shortcode: autoShortcode.substring(0, 32) };
       }
-      const existingShortcodeList = existingOrgs.map((org) => org.shortcode);
       let currentSuffix = existingShortcodeList.length;
       let retries = 0;
-      let newShortcode = `${autoShortcode.substring(0, 28)}-${currentSuffix}`;
+      let newShortcode = `${autoShortcode.substring(0, 28)}${currentSuffix}`;
 
       while (existingShortcodeList.includes(newShortcode)) {
         currentSuffix++;
-        newShortcode = `${autoShortcode.substring(0, 28)}-${currentSuffix}`;
+        newShortcode = `${autoShortcode.substring(0, 28)}${currentSuffix}`;
         retries++;
         if (retries > 30) {
           throw new TRPCError({

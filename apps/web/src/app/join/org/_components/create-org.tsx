@@ -3,7 +3,7 @@
 import { platform } from '@/src/lib/trpc';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { IdentificationCard } from '@phosphor-icons/react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -16,19 +16,21 @@ import {
   TooltipContent,
   TooltipTrigger
 } from '@/src/components/shadcn-ui/tooltip';
+import { useDebounce } from '@uidotdev/usehooks';
 
 export function CreateOrg() {
   const [orgName, setOrgName] = useState('');
   const [orgShortcode, setOrgShortcode] = useState('');
   const [customShortcode, setCustomShortcode] = useState(false);
   const router = useRouter();
+  const debouncedOrgName = useDebounce(orgName, 750);
 
   const [shortcodeValid, shortcodeError] = useMemo(() => {
     const { success, error } = z
       .string()
       .min(5)
       .max(64)
-      .regex(/^[a-z0-9\-]*$/, {
+      .regex(/^[a-z0-9]*$/, {
         message: 'Only lowercase letters and numbers'
       })
       .safeParse(orgShortcode);
@@ -48,15 +50,47 @@ export function CreateOrg() {
       }
     );
 
-  const { refetch: generateShortcode } =
+  const { data: generateShortcodeData, error: generateShortcodeError } =
     platform.org.crud.generateOrgShortcode.useQuery(
       {
-        orgName
+        orgName: debouncedOrgName
       },
       {
-        enabled: false
+        enabled: !customShortcode && debouncedOrgName.trim().length >= 5
       }
     );
+
+  const generateOrgShortcodeUtils =
+    platform.useUtils().org.crud.generateOrgShortcode;
+
+  // Update the shortcode if the org name changes
+  useEffect(() => {
+    if (generateShortcodeData) setOrgShortcode(generateShortcodeData.shortcode);
+  }, [generateShortcodeData]);
+
+  // If org name is less than 5 characters, clear the shortcode as min length is 5
+  useEffect(() => {
+    if (debouncedOrgName.trim().length < 5 && !customShortcode) {
+      void generateOrgShortcodeUtils.invalidate();
+      setOrgShortcode('');
+    }
+  }, [
+    debouncedOrgName,
+    customShortcode,
+    orgShortcode,
+    generateOrgShortcodeUtils
+  ]);
+
+  // handle shortcode generation error
+  useEffect(() => {
+    if (generateShortcodeError) {
+      toast.error('An Error Occurred while generating the Org Shortcode', {
+        description: generateShortcodeError.message
+      });
+      setOrgShortcode(debouncedOrgName.toLowerCase().replace(/[^a-z0-9]/g, ''));
+      setCustomShortcode(true);
+    }
+  }, [debouncedOrgName, generateShortcodeError]);
 
   const { mutateAsync: createOrg, isPending } =
     platform.org.crud.createNewOrg.useMutation({
@@ -74,33 +108,6 @@ export function CreateOrg() {
         fullWidth
         inputSize="lg"
         value={orgName}
-        onBlur={async () => {
-          // If the org name is empty, clear the shortcode
-          if (orgName.trim().length === 0 && !customShortcode) {
-            if (orgShortcode) {
-              setOrgShortcode('');
-            }
-          }
-          // If the org name is less than 5 characters, do not generate a shortcode
-          if (customShortcode || orgName.trim().length < 5) return;
-          const { data, error } = await generateShortcode();
-
-          if (error) {
-            toast.error(
-              'An Error Occurred while generating the Org Shortcode',
-              {
-                description: error.message
-              }
-            );
-            setOrgShortcode(orgName.toLowerCase().replace(/[^a-z0-9]/g, ''));
-            setCustomShortcode(true);
-            return;
-          }
-
-          if (data) {
-            setOrgShortcode(data.shortcode);
-          }
-        }}
         onChange={(e) => setOrgName(e.target.value)}
         leadingSlot={IdentificationCard}
       />
