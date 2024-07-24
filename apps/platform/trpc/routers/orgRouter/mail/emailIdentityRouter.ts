@@ -32,7 +32,13 @@ export const emailIdentityRouter = router({
   checkEmailAvailability: orgProcedure
     .input(
       z.object({
-        emailUsername: z.string().min(1).max(255),
+        emailUsername: z
+          .string()
+          .min(1)
+          .max(255)
+          .regex(/^[a-zA-Z0-9._-]*$/, {
+            message: 'Only letters, numbers, dots, hyphens and underscores'
+          }),
         domainPublicId: typeIdValidator('domains')
       })
     )
@@ -89,7 +95,13 @@ export const emailIdentityRouter = router({
   createNewEmailIdentity: orgAdminProcedure
     .input(
       z.object({
-        emailUsername: z.string().min(1).max(255),
+        emailUsername: z
+          .string()
+          .min(1)
+          .max(255)
+          .regex(/^[a-zA-Z0-9._-]*$/, {
+            message: 'Only letters, numbers, dots, hyphens and underscores'
+          }),
         domainPublicId: typeIdValidator('domains'),
         sendName: z.string().min(2).max(255),
         catchAll: z.boolean().optional().default(false),

@@ -40,7 +40,19 @@ export const zodSchemas = {
         message: `Must be at least ${minLength} characters long`
       })
       .max(32, {
-        message: "Too Long, Ain't nobody typing that 😂"
+        message: 'Too Long'
+      })
+      .regex(/^[a-zA-Z0-9]*$/, {
+        message: 'Only letters and numbers'
+      }),
+  usernameLogin: (minLength: number = 5) =>
+    z
+      .string()
+      .min(minLength, {
+        message: `Must be at least ${minLength} characters long`
+      })
+      .max(32, {
+        message: 'Too Long'
       })
       .regex(/^[a-zA-Z0-9._-]*$/, {
         message: 'Only letters and numbers'
