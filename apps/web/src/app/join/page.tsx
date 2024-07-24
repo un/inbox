@@ -17,7 +17,7 @@ import { datePlus } from '@u22n/utils/ms';
 
 export default function Page() {
   const [username, setUsername] = useState<string>('');
-  const [agree, setAgree] = useState(true);
+  const [agree, setAgree] = useState(false);
   const router = useRouter();
   const debouncedUsername = useDebounce(username, 1000);
   const cookies = useCookies();
