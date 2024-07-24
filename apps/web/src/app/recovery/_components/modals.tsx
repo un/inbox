@@ -173,9 +173,9 @@ export function TwoFactorModal({
             <QRCodeSVG
               value={uri}
               size={200}
-              className="mx-auto rounded bg-white p-2"
+              className="bg-base-1 mx-auto rounded p-2"
             />
-            <div className="border-muted/80 flex w-full rounded border">
+            <div className="border-base-6 flex w-full rounded border">
               <div className="bg-muted text-base-11 text-bold flex w-[32ch] flex-1 items-center overflow-hidden truncate text-clip rounded rounded-r-none p-1 font-mono">
                 {qrCodeSecret}
               </div>

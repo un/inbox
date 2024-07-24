@@ -31,11 +31,11 @@ const config = {
       colors: {
         accent: colors.alias('cyan'),
         base: colors.alias('slate'),
-        border: 'hsl(var(--border))',
+        border: 'var(--slate6)',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
-        background: 'hsl(var(--background))',
-        foreground: 'hsl(var(--foreground))',
+        background: 'var(--slate1)',
+        foreground: 'var(--slate-12)',
         primary: {
           DEFAULT: 'hsl(var(--primary))',
           foreground: 'hsl(var(--primary-foreground))'

@@ -13,7 +13,7 @@ export function StrengthMeter({
   return (
     <div className="flex w-full flex-col gap-1 p-1">
       <div className="flex items-center justify-between text-xs">
-        <span className="text-slate-11">Strength:</span>
+        <span className="text-base-11">Strength:</span>
         {message}
       </div>
       <div className="flex h-1 items-center justify-center gap-1">

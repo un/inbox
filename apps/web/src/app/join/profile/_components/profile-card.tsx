@@ -99,9 +99,7 @@ export function ProfileCard({ orgData, wasInvited }: ProfileCardProps) {
         </div>
         <div className="flex flex-col gap-1">
           <div className="font-base font-semibold">Upload Image</div>
-          <div className="text-slate-11 text-sm">
-            Min 400x400px, PNG or JPEG
-          </div>
+          <div className="text-base-11 text-sm">Min 400x400px, PNG or JPEG</div>
           <Button
             size="sm"
             className="w-fit"
@@ -146,7 +144,7 @@ export function ProfileCard({ orgData, wasInvited }: ProfileCardProps) {
             Save Profile
           </Button>
           <Button
-            className="text-slate-11 w-full"
+            className="text-base-11 w-full"
             variant="ghost"
             onClick={() => router.push(`/${orgShortCode}`)}>
             Skip

@@ -43,9 +43,7 @@ export function TwoFactorDialog({ open }: { open: boolean }) {
           </InputOTP>
         </div>
         {error && (
-          <div className="text-destructive text-center text-sm">
-            {error.message}
-          </div>
+          <div className="text-red-9 text-center text-sm">{error.message}</div>
         )}
         <Button
           className="mx-auto w-full"

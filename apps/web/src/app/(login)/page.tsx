@@ -92,13 +92,13 @@ export default function Page() {
         <div className="py-6">
           <PasskeyLoginButton />
           <div className="flex items-center justify-center gap-2 py-4">
-            <Separator className="bg-slate-5 w-28" />
+            <Separator className="bg-base-5 w-28" />
             <Badge
               className="uppercase"
               variant="outline">
               or
             </Badge>
-            <Separator className="bg-slate-5 w-28" />
+            <Separator className="bg-base-5 w-28" />
           </div>
           <div className="flex flex-col items-center justify-center gap-4 py-2">
             <Form {...form}>
