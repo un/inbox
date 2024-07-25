@@ -31,12 +31,18 @@ export function ClaimEmailIdentity() {
             You can also ask your Organization admin to assign a email to you
           </p>
         </div>
-        <DialogFooter>
+        <DialogFooter className="flex gap-2">
           <DialogClose asChild>
-            <Button variant="secondary">Ignore for now</Button>
+            <Button
+              variant="secondary"
+              className="flex-1">
+              Ignore for now
+            </Button>
           </DialogClose>
           <DialogClose asChild>
-            <Button asChild>
+            <Button
+              asChild
+              className="flex-1">
               <Link href={`/${orgShortcode}/settings/user/addresses`}>
                 Claim Free @uninbox.me Address
               </Link>
