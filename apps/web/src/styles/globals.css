@@ -73,18 +73,7 @@
   body {
     @apply bg-base-2 text-foreground;
   }
-}
 
-.tiptap p.is-editor-empty:first-child::before {
-  color: #adb5bd;
-  font-size: 14px;
-  content: attr(data-placeholder);
-  float: left;
-  height: 0;
-  pointer-events: none;
-}
-
-@media (orientation: landscape) {
   ::-webkit-scrollbar {
     @apply bg-base-2 h-[6px] w-[6px];
   }
@@ -94,4 +83,13 @@
   ::-webkit-scrollbar-track {
     @apply bg-base-1 rounded-xl;
   }
+}
+
+.tiptap p.is-editor-empty:first-child::before {
+  color: #adb5bd;
+  font-size: 14px;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
 }
