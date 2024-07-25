@@ -424,7 +424,7 @@ export default function CreateConvoForm() {
             }
             setSelectedEmailIdentity(value);
           }}>
-          <SelectTrigger className="h-fit">
+          <SelectTrigger>
             <SelectValue>
               {selectedEmailIdentityString ?? 'Select an Email Identity to Use'}
             </SelectValue>
@@ -470,7 +470,7 @@ export default function CreateConvoForm() {
           type="text"
           value={topic}
           onChange={(e) => setTopic(e.target.value)}
-          className="h-fit w-full"
+          className="w-full"
         />
       </div>
 
@@ -531,6 +531,7 @@ function ParticipantsComboboxPopover({
   );
 
   const [currentSelectValue, setCurrentSelectValue] = useState('');
+  const [search, setSearch] = useState('');
   const hasExternalParticipants = useMemo(
     () =>
       selectedParticipants.some(
@@ -539,6 +540,30 @@ function ParticipantsComboboxPopover({
       ),
     [selectedParticipants]
   );
+
+  const setEmailParticipants = useSetAtom(newEmailParticipantsAtom);
+  const addSelectedParticipant = useSetAtom(selectedParticipantsAtom);
+
+  const addEmailParticipant = (email: string) => {
+    setEmailParticipants((prev) =>
+      prev.includes(email) ? prev : prev.concat(email)
+    );
+    addSelectedParticipant((prev) =>
+      prev.find((p) => p.publicId === email)
+        ? prev
+        : prev.concat({
+            type: 'email',
+            publicId: email,
+            address: email,
+            keywords: [email],
+            avatarPublicId: null,
+            avatarTimestamp: null,
+            color: null,
+            own: false,
+            name: email
+          })
+    );
+  };
 
   return (
     <div className="flex w-full items-center space-x-4">
@@ -638,11 +663,19 @@ function ParticipantsComboboxPopover({
             <CommandInput asChild>
               <Input
                 label="Search or type an Email address"
-                className="h-8"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={(e) => {
                   // Hack to prevent cmdk from preventing Home and End keys
                   if (e.key === 'Home' || e.key === 'End') {
                     e.stopPropagation();
+                  }
+                  if (e.key === 'Enter') {
+                    if (z.string().email().safeParse(search).success) {
+                      addEmailParticipant(search);
+                      setCurrentSelectValue('');
+                      setSearch('');
+                    }
                   }
                 }}
                 onFocus={() => {
@@ -651,7 +684,7 @@ function ParticipantsComboboxPopover({
                 }}
               />
             </CommandInput>
-            <CommandList className="max-h-[calc(var(--radix-popover-content-available-height)*0.9)] overflow-scroll">
+            <CommandList className="max-h-[calc(var(--radix-popover-content-available-height)*0.9)] overflow-x-clip overflow-y-scroll">
               {loading && <CommandLoading>Loading Participants</CommandLoading>}
               <CommandGroup className="flex flex-col gap-2 px-1">
                 {!loading && <EmptyStateHandler />}
