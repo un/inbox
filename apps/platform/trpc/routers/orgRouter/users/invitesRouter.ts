@@ -199,7 +199,7 @@ export const invitesRouter = router({
             expiryDate: new Date(
               Date.now() + 7 * 24 * 60 * 60 * 1000
             ).toDateString(),
-            inviteUrl: `https://${env.WEBAPP_URL}/join/invite/${newInviteToken}`
+            inviteUrl: `${env.WEBAPP_URL}/join/invite/${newInviteToken}`
           });
 
           if (!res) {
