@@ -1,378 +1,405 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { platform } from '@/src/lib/trpc';
-import { VerificationModal } from './_components/verification-modal';
-import { DeletePasskeyModal } from './_components/delete-modals';
-import {
-  PasswordModal,
-  TOTPModal,
-  RecoveryCodeModal
-} from './_components/reset-modals';
-import useAwaitableModal from '@/src/hooks/use-awaitable-modal';
 import { toast } from 'sonner';
-import { Trash, CheckCircle, Clock } from '@phosphor-icons/react';
+import {
+  Trash,
+  SpinnerGap,
+  SignOut,
+  CheckCircle,
+  Clock,
+  Pencil
+} from '@phosphor-icons/react';
 import { format } from 'date-fns';
-import useLoading from '@/src/hooks/use-loading';
 import { startRegistration } from '@simplewebauthn/browser';
-import { useRouter } from 'next/navigation';
-import { DeleteAllSessions } from './_components/session-modals';
-import { useQueryClient } from '@tanstack/react-query';
+import { RemoveAllSessionsModal } from './_components/session-modal';
 import { PageTitle } from '../../_components/page-title';
-import { Skeleton } from '@/src/components/shadcn-ui/skeleton';
-import { Switch } from '@/src/components/shadcn-ui/switch';
 import { Button } from '@/src/components/shadcn-ui/button';
-import { Input } from '@/src/components/shadcn-ui/input';
-// import { PasskeyNameModal } from './_components/passkey-modals';
-
-export function RecoveryEmailSection() {
-  const [recoveryEmail, setRecoveryEmail] = useState('');
-
-  const { data: recoveryEmailStatus } =
-    platform.account.security.getRecoveryEmailStatus.useQuery();
-  const { mutateAsync: setRecoveryEmailMutation } =
-    platform.account.security.setRecoveryEmail.useMutation();
-
-  const handleSetRecoveryEmail = async () => {
-    toast.promise(setRecoveryEmailMutation({ recoveryEmail }), {
-      loading: 'Sending you a verification code to your email',
-      success: 'Check your emails for a verification code',
-      error: 'Something went wrong while setting your recovery email'
-    });
-  };
-
-  return (
-    <div className="space-y-2">
-      <h3 className="text-lg font-medium">Recovery Email</h3>
-      {recoveryEmailStatus?.isSet ? (
-        recoveryEmailStatus.isVerified ? (
-          <div className="text-green-6 flex items-center space-x-1">
-            <CheckCircle
-              size={20}
-              weight="fill"
-            />
-            <p>Your recovery email is set and verified.</p>
-          </div>
-        ) : (
-          <div className="text-yellow-9 flex items-center space-x-1">
-            <Clock
-              size={20}
-              weight="fill"
-            />
-            <p>Your recovery email is set but not verified yet</p>
-          </div>
-        )
-      ) : (
-        <div>
-          <Input
-            label="Recovery Email"
-            type="email"
-            value={recoveryEmail}
-            onChange={(e) => setRecoveryEmail(e.target.value)}
-            placeholder="Enter recovery email"
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                void handleSetRecoveryEmail();
-              }
-            }}
-          />
-          <Button onClick={handleSetRecoveryEmail}>Set Recovery Email</Button>
-        </div>
-      )}
-    </div>
-  );
-}
+import { ElevatedModal } from './_components/elevated-modal';
+import { ms } from '@u22n/utils/ms';
+import {
+  EnableOrChangePasswordModal,
+  DisablePasswordModal
+} from './_components/password-modals';
+import {
+  PasskeyDeleteModal,
+  PasskeyRenameModal
+} from './_components/passkey-modals';
+import { useMutation } from '@tanstack/react-query';
+import {
+  DisableTwoFactorModal,
+  EnableOrResetTwoFactorModal
+} from './_components/two-factor-modals';
+import {
+  DisableRecoveryCodeModal,
+  EnableOrResetRecoveryCodeModal
+} from './_components/recovery-modals';
+import {
+  DisableRecoveryEmailModal,
+  RecoveryEmailModal
+} from './_components/recovery-email-modals';
 
 export default function Page() {
-  const queryClient = useQueryClient();
-  const router = useRouter();
+  const platformUtils = platform.useUtils();
 
   const {
-    data: initData,
-    isLoading: isInitDataLoading,
-    refetch: refreshSecurityData
-  } = platform.account.security.getSecurityOverview.useQuery({});
-
-  const [verificationToken, setVerificationToken] = useState<null | string>(
-    null
-  );
-
-  const [isPassword2FaEnabled, setIsPassword2FaEnabled] = useState(false);
-
-  useEffect(() => {
-    if (!isInitDataLoading && initData) {
-      setIsPassword2FaEnabled(
-        initData.passwordSet && initData.twoFactorEnabled
-      );
-    }
-  }, [initData, isInitDataLoading]);
-
-  const [VerificationModalRoot, openVerifyModal] = useAwaitableModal(
-    VerificationModal,
-    {
-      has2Fa: false,
-      hasPassword: false,
-      hasPasskey: false
-    }
-  );
-  const [PasswordModalRoot, openPasswordModal] = useAwaitableModal(
-    PasswordModal,
-    {
-      verificationToken: ''
-    }
-  );
-  const [TOTPModalRoot, openTOTPModal] = useAwaitableModal(TOTPModal, {
-    verificationToken: ''
+    data: overviewData,
+    isLoading: overviewDataLoading,
+    refetch: refetchOverviewData
+  } = platform.account.security.getOverview.useQuery(void 0, {
+    refetchOnWindowFocus: true
   });
 
-  const [RecoveryModalRoot, openRecoveryModal] = useAwaitableModal(
-    RecoveryCodeModal,
-    {
-      verificationToken: '',
-      mode: 'reset'
-    }
+  const { data: elevatedData, refetch: refreshElevatedData } =
+    platform.account.security.checkIfElevated.useQuery(void 0, {
+      gcTime: ms('5 minutes'),
+      staleTime: ms('5 minutes')
+    });
+
+  const elevatedActionRef = useRef<(() => Promise<void> | void) | null>(null);
+
+  const [elevatedModalOpen, setElevatedModalOpen] = useState(false);
+
+  const ensureElevated = useCallback(
+    (fn: () => Promise<void> | void) => {
+      if (elevatedData?.isElevated) {
+        void fn();
+      } else {
+        elevatedActionRef.current = fn;
+        setElevatedModalOpen(true);
+      }
+    },
+    [elevatedData?.isElevated]
   );
 
-  const [DeletePasskeyModalRoot, openDeletePasskeyModal] = useAwaitableModal(
-    DeletePasskeyModal,
-    {
-      publicId: 'ap_',
-      name: '',
-      verificationToken: ''
-    }
-  );
+  const [changePasswordModalOpen, setChangePasswordModalOpen] = useState<
+    'enable' | 'change' | null
+  >(null);
+  const [disablePasswordModalOpen, setDisablePasswordModalOpen] =
+    useState(false);
 
-  const [DeleteAllSessionsModalRoot, openDeleteAllSessionsModal] =
-    useAwaitableModal(DeleteAllSessions, { verificationToken: '' });
+  const [twoFactorModalOpen, setTwoFactorModalOpen] = useState<
+    'enable' | 'reset' | null
+  >(null);
+  const [disableTwoFactorModalOpen, setDisableTwoFactorModalOpen] =
+    useState(false);
 
-  // const [PasskeyNameModalRoot, openPasskeyNameModal] = useAwaitableModal(
-  //   PasskeyNameModal,
-  //   {}
-  // );
+  const [recoveryEmailModalOpen, setRecoveryEmailModalOpen] = useState<
+    'enable' | 'change' | null
+  >(null);
+  const [disableRecoveryEmailModalOpen, setDisableRecoveryEmailModalOpen] =
+    useState(false);
 
-  const fetchPasskeyChallengeApi =
-    platform.useUtils().account.security.generateNewPasskeyChallenge;
-  const { mutateAsync: addNewPasskey } =
-    platform.account.security.addNewPasskey.useMutation({
-      onSuccess: () => {
-        void refreshSecurityData();
-      },
+  const [recoveryCodeModalOpen, setRecoveryCodeModalOpen] = useState<
+    'enable' | 'reset' | null
+  >(null);
+  const [disableRecoveryCodeModalOpen, setDisableRecoveryCodeModalOpen] =
+    useState(false);
+
+  const [deletePasskey, setDeletePasskey] = useState<{
+    nickname: string;
+    publicId: string;
+  } | null>(null);
+  const [renamePasskey, setRenamePasskey] = useState<{
+    nickname: string;
+    publicId: string;
+  } | null>(null);
+
+  const [removeAllSessionsModalOpen, setRemoveAllSessionsModalOpen] =
+    useState(false);
+
+  const { mutateAsync: removeSession } =
+    platform.account.security.removeSession.useMutation({
       onError: (err) => {
-        toast.error('Something went wrong while adding new passkey', {
+        toast.error('Something went wrong while removing session', {
           description: err.message
         });
       }
     });
 
-  const { loading: passkeyAddLoading, run: addPasskey } = useLoading(
-    async () => {
-      const token = await waitForVerification();
-      if (!token) return;
-      const challenge = await fetchPasskeyChallengeApi.fetch({
-        verificationToken: token
-      });
-      const response = await startRegistration(challenge.options);
+  const { mutateAsync: generatePasskeyCreationChallenge } =
+    platform.account.security.generatePasskeyCreationChallenge.useMutation();
+  const { mutateAsync: createNewPasskey } =
+    platform.account.security.createNewPasskey.useMutation();
 
-      // Need to have a separate endpoint for rename
-      // const passkeyName = await openPasskeyNameModal().catch(() => null);
-      // if (!passkeyName) return;
+  const { mutateAsync: createPasskey, isPending: creatingPasskey } =
+    useMutation({
+      mutationFn: async () => {
+        const { options } = await generatePasskeyCreationChallenge();
+        const passkeyResponse = await startRegistration(options).catch(
+          (err: Error) => {
+            if (err.name === 'NotAllowedError') {
+              toast.info('Passkey creation was canceled');
+            } else {
+              toast.error('Something went wrong while creating passkey', {
+                description: err.message,
+                className: 'z-[1000]'
+              });
+            }
+          }
+        );
+        if (!passkeyResponse) return { success: false };
+        return await createNewPasskey({ passkeyResponse });
+      },
+      onError: (err) => {
+        toast.error('Could not create passkey', {
+          description: err.message,
+          className: 'z-[1000]'
+        });
+      },
+      onSuccess: ({ success }) => {
+        if (success) {
+          toast.success('Passkey created successfully');
+          // We don't have enough info to update cache, so we'll just refetch
+          void refetchOverviewData();
+          void refreshElevatedData();
+        }
+      }
+    });
 
-      await addNewPasskey({
-        verificationToken: token,
-        // nickname: passkeyName,
-        registrationResponseRaw: response
-      });
-    }
-  );
+  const canDeletePasskey = useMemo(() => {
+    if (!overviewData) return false;
+    return overviewData.passwordSet ? true : overviewData.passkeys.length > 1;
+  }, [overviewData]);
 
-  const { mutateAsync: logoutSingle } =
-    platform.account.security.deleteSession.useMutation();
-
-  async function waitForVerification() {
-    if (!initData) throw new Error('No init data');
-    if (verificationToken) return verificationToken;
-    const token = await openVerifyModal({
-      hasPasskey: initData.passkeys.length > 0,
-      hasPassword: initData.passwordSet,
-      has2Fa: initData.twoFactorEnabled
-    }).catch(() => null);
-    setVerificationToken(token);
-    return token;
-  }
-
-  const {
-    mutate: disableLegacySecurity,
-    isPending: isDisablingLegacySecurity
-  } = platform.account.security.disableLegacySecurity.useMutation({
-    onError: (err) => {
-      toast.error('Something went wrong while disabling Legacy Security', {
-        description: err.message
-      });
-    }
-  });
-
-  const canDisableLegacySecurity = (initData?.passkeys.length ?? 0) > 0;
-  const canDeletePasskey =
-    (initData?.passkeys.length ?? 0) > 1 || isPassword2FaEnabled;
+  const canDisablePassword = useMemo(() => {
+    if (!overviewData) return false;
+    return overviewData.passwordSet && overviewData.passkeys.length > 0;
+  }, [overviewData]);
 
   return (
-    <div className="flex flex-col gap-4 p-4">
+    <div className="flex w-full flex-col gap-4 p-4">
       <PageTitle
         title="Security"
         description="Manage your account security"
       />
 
-      {isInitDataLoading && (
-        <Skeleton className="flex h-20 w-56 items-center justify-center" />
+      {overviewDataLoading && (
+        <div className="flex h-20 w-full items-center justify-center">
+          <SpinnerGap className="size-4 animate-spin" />
+          <span className="text-base-10 text-sm">Loading...</span>
+        </div>
       )}
 
-      {!isInitDataLoading && initData && (
-        <div className="my-4 flex flex-col gap-5">
-          <div className="flex flex-col gap-3">
-            <span className="text-lg font-bold">Legacy Security</span>
-            <span className="text-sm">
-              <div className="flex flex-col gap-3">
-                <span>Enable Password and 2FA Login</span>
-                <Switch
-                  checked={isPassword2FaEnabled}
-                  disabled={
-                    isDisablingLegacySecurity ||
-                    (isPassword2FaEnabled && !canDisableLegacySecurity)
-                  }
-                  onCheckedChange={async () => {
-                    const token = await waitForVerification();
-                    if (!token) return;
-
-                    if (isPassword2FaEnabled) {
-                      disableLegacySecurity({
-                        verificationToken: verificationToken ?? token
-                      });
-                      await refreshSecurityData();
-                      setIsPassword2FaEnabled(false);
-                    } else {
-                      const passwordSet = await openPasswordModal({
-                        verificationToken: verificationToken ?? token
-                      }).catch(() => false);
-                      const otpSet = await openTOTPModal({
-                        verificationToken: verificationToken ?? token
-                      }).catch(() => false);
-                      if (!passwordSet || !otpSet) return;
-                      await refreshSecurityData();
-                      setIsPassword2FaEnabled(true);
-                    }
-                  }}
-                />
-                {isDisablingLegacySecurity && (
-                  <Skeleton className="h-20 w-40" />
+      {overviewData && (
+        <div className="flex flex-col gap-5">
+          <div className="flex flex-col gap-2">
+            <span className="text-lg font-bold">Password and 2FA</span>
+            <div className="flex flex-col gap-2">
+              <span className="text-sm font-semibold">Password</span>
+              <div className="flex gap-2">
+                {overviewData.passwordSet ? (
+                  <Button
+                    onClick={() =>
+                      ensureElevated(() => setChangePasswordModalOpen('change'))
+                    }>
+                    Change Password
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={() =>
+                      ensureElevated(() => setChangePasswordModalOpen('enable'))
+                    }>
+                    Enable Password
+                  </Button>
+                )}
+                {canDisablePassword && (
+                  <Button
+                    variant="destructive"
+                    onClick={() =>
+                      ensureElevated(() => setDisablePasswordModalOpen(true))
+                    }>
+                    Disable Password
+                  </Button>
                 )}
               </div>
-            </span>
+            </div>
+            <div className="flex flex-col gap-2">
+              <span className="text-sm font-semibold">
+                Two-Factor Authentication
+              </span>
+              <div className="flex gap-2">
+                {overviewData.twoFactorEnabled ? (
+                  <Button
+                    onClick={() =>
+                      ensureElevated(() => setTwoFactorModalOpen('reset'))
+                    }>
+                    Reset 2FA
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={() =>
+                      ensureElevated(() => setChangePasswordModalOpen('enable'))
+                    }>
+                    Enable 2FA
+                  </Button>
+                )}
+                {overviewData.twoFactorEnabled && (
+                  <Button
+                    variant="destructive"
+                    onClick={() =>
+                      ensureElevated(() => setDisableTwoFactorModalOpen(true))
+                    }>
+                    Disable 2FA
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
 
+          <div className="flex flex-col gap-2">
+            <span className="text-lg font-bold">Recovery Email</span>
+            {overviewData.recoveryEmailSet &&
+              (overviewData.recoveryEmailVerifiedAt ? (
+                <div className="text-green-9 flex items-center gap-1">
+                  <CheckCircle
+                    size={16}
+                    weight="fill"
+                  />
+                  <span className="text-sm">
+                    Your recovery email is set and verified at{' '}
+                    {format(
+                      overviewData.recoveryEmailVerifiedAt,
+                      'HH:mm, do MMM yyyy'
+                    )}
+                  </span>
+                </div>
+              ) : (
+                <>
+                  <div className="text-yellow-9 flex items-center gap-1">
+                    <Clock
+                      size={16}
+                      weight="fill"
+                    />
+                    <span className="text-sm">
+                      Your recovery email is set but not verified yet
+                    </span>
+                  </div>
+                  <span className="text-base-10 text-sm">
+                    If you think your recovery email is incorrect, you can
+                    change the recovery email by clicking the button below.
+                  </span>
+                </>
+              ))}
             <div className="flex gap-2">
-              {initData?.passwordSet && (
+              {overviewData.recoveryEmailSet ? (
+                <>
+                  <Button
+                    onClick={() =>
+                      ensureElevated(() => setRecoveryEmailModalOpen('change'))
+                    }>
+                    Change Recovery Email
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={() =>
+                      ensureElevated(() =>
+                        setDisableRecoveryEmailModalOpen(true)
+                      )
+                    }>
+                    Disable Recovery Email
+                  </Button>
+                </>
+              ) : (
                 <Button
-                  onClick={async () => {
-                    const token = await waitForVerification();
-                    if (!token) return;
-                    await openPasswordModal({
-                      verificationToken: verificationToken ?? token
-                    }).catch(() => null);
-                  }}>
-                  Reset Password
-                </Button>
-              )}
-
-              {initData?.twoFactorEnabled && (
-                <Button
-                  onClick={async () => {
-                    const token = await waitForVerification();
-                    if (!token) return;
-                    await openTOTPModal({
-                      verificationToken: verificationToken ?? token
-                    }).catch(() => null);
-                  }}>
-                  Reset 2FA
+                  onClick={() =>
+                    ensureElevated(() => setRecoveryEmailModalOpen('enable'))
+                  }>
+                  Setup Recovery Email
                 </Button>
               )}
             </div>
           </div>
-          {(initData.recoveryCodeSet || isPassword2FaEnabled) && (
-            <div className="flex flex-col gap-3">
-              <span className="text-lg font-bold">Account Recovery</span>
-              <Button
-                className="w-fit"
-                onClick={async () => {
-                  const token = await waitForVerification();
-                  if (!token) return;
-                  await openRecoveryModal({
-                    verificationToken: verificationToken ?? token,
-                    mode: isPassword2FaEnabled ? 'reset' : 'disable'
-                  }).catch(() => null);
-                  await refreshSecurityData();
-                }}>
-                {initData.recoveryCodeSet
-                  ? isPassword2FaEnabled
-                    ? 'Reset Recovery Code'
-                    : 'Disable Recovery Code'
-                  : 'Setup Recovery'}
-              </Button>
+
+          <div className="flex flex-col gap-2">
+            <span className="text-lg font-bold">Recovery Code</span>
+            <div className="flex gap-2">
+              {overviewData.recoveryCodeSet ? (
+                <>
+                  <Button
+                    onClick={() =>
+                      ensureElevated(() => setRecoveryCodeModalOpen('reset'))
+                    }>
+                    Reset Recovery Code
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={() =>
+                      ensureElevated(() =>
+                        setDisableRecoveryCodeModalOpen(true)
+                      )
+                    }>
+                    Disable Recovery Code
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  onClick={() =>
+                    ensureElevated(() => setRecoveryCodeModalOpen('enable'))
+                  }>
+                  Setup Recovery Code
+                </Button>
+              )}
             </div>
-          )}
-          <div className="flex flex-col gap-3">
+          </div>
+
+          <div className="flex flex-col gap-2">
             <span className="text-lg font-bold">Passkeys</span>
             <div className="flex flex-wrap gap-2">
-              {initData?.passkeys.map((passkey) => (
+              {overviewData.passkeys.map((passkey) => (
                 <div
                   key={passkey.publicId}
-                  className="bg-muted flex items-center justify-center gap-2 rounded border px-2 py-1">
+                  className="bg-base-3 flex items-center justify-center gap-3 rounded-xl border p-2">
                   <div className="flex flex-col">
-                    <span>{passkey.nickname}</span>
+                    <span className="text-sm font-semibold">
+                      {passkey.nickname}
+                    </span>
                     <span className="text-base-11 text-xs">
-                      {format(passkey.createdAt, ' HH:mm, do MMM yyyy')}
+                      {format(passkey.createdAt, 'HH:mm, do MMM yyyy')}
                     </span>
                   </div>
-                  <div>
+                  <div className="flex gap-1">
+                    <Button
+                      size="icon"
+                      onClick={() => setRenamePasskey(passkey)}>
+                      <Pencil size={16} />
+                    </Button>
                     <Button
                       size="icon"
                       variant="destructive"
                       disabled={!canDeletePasskey}
-                      onClick={async () => {
-                        const token = await waitForVerification();
-                        if (!token) return;
-                        await openDeletePasskeyModal({
-                          publicId: passkey.publicId,
-                          name: passkey.nickname,
-                          verificationToken: verificationToken ?? token
-                        })
-                          .then(() => refreshSecurityData())
-                          .catch(() => null);
-                      }}>
+                      onClick={() =>
+                        ensureElevated(() => setDeletePasskey(passkey))
+                      }>
                       <Trash size={16} />
                     </Button>
                   </div>
                 </div>
               ))}
-              {initData?.passkeys.length === 0 && (
-                <div className="text-base-11">No passkeys found</div>
+              {overviewData.passkeys.length === 0 && (
+                <div className="text-base-11">
+                  No passkeys have been added yet
+                </div>
               )}
             </div>
             <Button
               className="w-fit"
-              loading={passkeyAddLoading}
-              onClick={() => addPasskey({ clearError: true, clearData: true })}>
+              loading={creatingPasskey}
+              onClick={() => ensureElevated(() => void createPasskey())}>
               Add New Passkey
             </Button>
           </div>
 
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-2">
             <span className="text-lg font-bold">Sessions</span>
             <div className="flex flex-wrap gap-2">
-              {initData?.sessions.map((session) => (
+              {overviewData?.sessions.map((session) => (
                 <div
                   key={session.publicId}
-                  className="bg-muted flex items-center justify-center gap-2 rounded border px-2 py-1">
+                  className="bg-base-3 flex items-center justify-center gap-3 rounded-xl border p-2">
                   <div className="flex flex-col">
-                    <span>
+                    <span className="text-sm font-semibold">
                       {session.device} - {session.os}
                     </span>
                     <span className="text-base-11 text-xs">
@@ -383,15 +410,32 @@ export default function Page() {
                     <Button
                       size="icon"
                       variant="destructive"
-                      onClick={async () => {
-                        const token = await waitForVerification();
-                        if (!token) return;
-                        await logoutSingle({
-                          sessionPublicId: session.publicId,
-                          verificationToken: verificationToken ?? token
-                        })
-                          .then(() => refreshSecurityData())
-                          .catch(() => null);
+                      onClick={() => {
+                        if (session.publicId === overviewData.thisDevice) {
+                          toast.error(
+                            'You cannot remove your current session',
+                            {
+                              description:
+                                'If you want to remove this session, please log out normally'
+                            }
+                          );
+                          return;
+                        }
+                        ensureElevated(async () => {
+                          await removeSession({
+                            sessionPublicId: session.publicId
+                          });
+                          platformUtils.account.security.getOverview.setData(
+                            void 0,
+                            (up) => {
+                              if (!up) return;
+                              const sessions = up.sessions.filter(
+                                (s) => s.publicId !== session.publicId
+                              );
+                              return { ...up, sessions };
+                            }
+                          );
+                        });
                       }}>
                       <Trash size={16} />
                     </Button>
@@ -400,33 +444,260 @@ export default function Page() {
               ))}
             </div>
             <Button
-              className="w-fit"
-              onClick={async () => {
-                const token = await waitForVerification();
-                if (!token) return;
-                await openDeleteAllSessionsModal({
-                  verificationToken: verificationToken ?? token
-                })
-                  .then(() => {
-                    queryClient.removeQueries();
-                    router.replace('/');
-                  })
-                  .catch(() => null);
-              }}>
-              Logout of All Sessions
+              variant="destructive"
+              className="mt-3 w-fit gap-2"
+              onClick={() =>
+                ensureElevated(() => setRemoveAllSessionsModalOpen(true))
+              }>
+              <SignOut
+                size={16}
+                weight="bold"
+              />
+              <span>Logout of All Sessions</span>
             </Button>
           </div>
-          <RecoveryEmailSection />
+
+          {elevatedModalOpen && (
+            <ElevatedModal
+              open={elevatedModalOpen}
+              setOpen={setElevatedModalOpen}
+              overviewData={overviewData}
+              onSuccess={async () => {
+                const { data } = await refreshElevatedData();
+                if (!data?.isElevated) {
+                  toast.error('Something went wrong, please try again');
+                }
+                if (typeof elevatedActionRef.current === 'function') {
+                  void elevatedActionRef.current();
+                }
+                elevatedActionRef.current = null;
+              }}
+            />
+          )}
+
+          {changePasswordModalOpen && (
+            <EnableOrChangePasswordModal
+              open={changePasswordModalOpen}
+              setOpen={(open) =>
+                setChangePasswordModalOpen(open ? 'change' : null)
+              }
+              onSuccess={async () => {
+                platformUtils.account.security.getOverview.setData(
+                  void 0,
+                  (up) => {
+                    if (!up) return;
+                    return {
+                      ...up,
+                      passwordSet: true
+                    };
+                  }
+                );
+                await refreshElevatedData();
+              }}
+            />
+          )}
+
+          {disablePasswordModalOpen && (
+            <DisablePasswordModal
+              open={disablePasswordModalOpen}
+              setOpen={setDisablePasswordModalOpen}
+              onSuccess={async () => {
+                platformUtils.account.security.getOverview.setData(
+                  void 0,
+                  (up) => {
+                    if (!up) return;
+                    return {
+                      ...up,
+                      passwordSet: false,
+                      twoFactorEnabled: false
+                    };
+                  }
+                );
+                await refreshElevatedData();
+              }}
+            />
+          )}
+
+          {twoFactorModalOpen && (
+            <EnableOrResetTwoFactorModal
+              open={twoFactorModalOpen}
+              setOpen={(open) => setTwoFactorModalOpen(open ? 'reset' : null)}
+              onSuccess={async () => {
+                platformUtils.account.security.getOverview.setData(
+                  void 0,
+                  (up) => {
+                    if (!up) return;
+                    return {
+                      ...up,
+                      twoFactorEnabled: true
+                    };
+                  }
+                );
+                await refreshElevatedData();
+              }}
+            />
+          )}
+
+          {disableTwoFactorModalOpen && (
+            <DisableTwoFactorModal
+              open={disableTwoFactorModalOpen}
+              setOpen={setDisableTwoFactorModalOpen}
+              onSuccess={async () => {
+                platformUtils.account.security.getOverview.setData(
+                  void 0,
+                  (up) => {
+                    if (!up) return;
+                    return {
+                      ...up,
+                      twoFactorEnabled: false
+                    };
+                  }
+                );
+                await refreshElevatedData();
+              }}
+            />
+          )}
+
+          {recoveryEmailModalOpen && (
+            <RecoveryEmailModal
+              open={recoveryEmailModalOpen}
+              setOpen={(open) =>
+                setRecoveryEmailModalOpen(open ? 'change' : null)
+              }
+              onSuccess={async () => {
+                platformUtils.account.security.getOverview.setData(
+                  void 0,
+                  (up) => {
+                    if (!up) return;
+                    return {
+                      ...up,
+                      recoveryEmailSet: true,
+                      recoveryEmailVerifiedAt: null
+                    };
+                  }
+                );
+                await refreshElevatedData();
+              }}
+            />
+          )}
+
+          {disableRecoveryEmailModalOpen && (
+            <DisableRecoveryEmailModal
+              open={disableRecoveryEmailModalOpen}
+              setOpen={setDisableRecoveryEmailModalOpen}
+              onSuccess={async () => {
+                platformUtils.account.security.getOverview.setData(
+                  void 0,
+                  (up) => {
+                    if (!up) return;
+                    return {
+                      ...up,
+                      recoveryEmailSet: false,
+                      recoveryEmailVerifiedAt: null
+                    };
+                  }
+                );
+                await refreshElevatedData();
+              }}
+            />
+          )}
+
+          {recoveryCodeModalOpen && (
+            <EnableOrResetRecoveryCodeModal
+              open={recoveryCodeModalOpen}
+              setOpen={(open) =>
+                setRecoveryCodeModalOpen(open ? 'enable' : null)
+              }
+              onSuccess={async () => {
+                platformUtils.account.security.getOverview.setData(
+                  void 0,
+                  (up) => {
+                    if (!up) return;
+                    return {
+                      ...up,
+                      recoveryCodeSet: true
+                    };
+                  }
+                );
+                await refreshElevatedData();
+              }}
+            />
+          )}
+
+          {disableRecoveryCodeModalOpen && (
+            <DisableRecoveryCodeModal
+              open={disableRecoveryCodeModalOpen}
+              setOpen={setDisableRecoveryCodeModalOpen}
+              onSuccess={async () => {
+                platformUtils.account.security.getOverview.setData(
+                  void 0,
+                  (up) => {
+                    if (!up) return;
+                    return {
+                      ...up,
+                      recoveryCodeSet: false
+                    };
+                  }
+                );
+                await refreshElevatedData();
+              }}
+            />
+          )}
+
+          {deletePasskey && (
+            <PasskeyDeleteModal
+              setOpen={(open) => setDeletePasskey(open ? deletePasskey : null)}
+              onSuccess={async (publicId) => {
+                platformUtils.account.security.getOverview.setData(
+                  void 0,
+                  (up) => {
+                    if (!up) return;
+                    return {
+                      ...up,
+                      passkeys: up.passkeys.filter(
+                        (p) => p.publicId !== publicId
+                      )
+                    };
+                  }
+                );
+                await refreshElevatedData();
+              }}
+              passkey={deletePasskey}
+            />
+          )}
+
+          {renamePasskey && (
+            <PasskeyRenameModal
+              setOpen={(open) => setRenamePasskey(open ? renamePasskey : null)}
+              onSuccess={async ({ publicId, newNickname }) => {
+                platformUtils.account.security.getOverview.setData(
+                  void 0,
+                  (up) => {
+                    if (!up) return;
+                    return {
+                      ...up,
+                      passkeys: up.passkeys.map((p) =>
+                        p.publicId === publicId
+                          ? { ...p, nickname: newNickname }
+                          : p
+                      )
+                    };
+                  }
+                );
+                await refreshElevatedData();
+              }}
+              passkey={renamePasskey}
+            />
+          )}
+
+          {removeAllSessionsModalOpen && (
+            <RemoveAllSessionsModal
+              open={removeAllSessionsModalOpen}
+              setOpen={setRemoveAllSessionsModalOpen}
+            />
+          )}
         </div>
       )}
-
-      <VerificationModalRoot />
-      <PasswordModalRoot />
-      <TOTPModalRoot />
-      <RecoveryModalRoot />
-      <DeletePasskeyModalRoot />
-      {/* <PasskeyNameModalRoot /> */}
-      <DeleteAllSessionsModalRoot />
     </div>
   );
 }

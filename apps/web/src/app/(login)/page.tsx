@@ -13,7 +13,7 @@ import { Badge } from '@/src/components/shadcn-ui/badge';
 import { At, Lock } from '@phosphor-icons/react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodSchemas } from '@u22n/utils/zodSchemas';
@@ -45,6 +45,8 @@ export default function Page() {
   const { mutateAsync: loginPasskey } =
     platform.auth.passkey.verifyPasskey.useMutation();
   const [loadingPasskey, setLoadingPasskey] = useState(false);
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get('redirect_to');
 
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -77,18 +79,22 @@ export default function Page() {
         verificationResponseRaw: response
       });
 
+      if (redirectTo) {
+        router.replace(decodeURIComponent(redirectTo));
+      }
+
       if (!defaultOrg) {
         toast.error('You are not a member of any organization', {
           description: 'Redirecting you to create an organization'
         });
-        router.push('/join/org');
+        router.replace('/join/org');
         return;
       }
 
       toast.success('Sign in successful!', {
         description: 'Redirecting you to your conversations'
       });
-      router.push(`/${defaultOrg}/convo`);
+      router.replace(`/${defaultOrg}/convo`);
     } catch (error) {
       if (error instanceof Error) {
         if (error.name === 'NotAllowedError') {
@@ -99,12 +105,12 @@ export default function Page() {
           });
         }
       } else {
-        console.error(error);
+        toast.error(String(error));
       }
     } finally {
       setLoadingPasskey(false);
     }
-  }, [generatePasskey, router, turnstileToken, loginPasskey]);
+  }, [turnstileToken, generatePasskey, loginPasskey, redirectTo, router]);
 
   const loginWithPassword = useCallback(
     async ({ username, password }: z.infer<typeof loginSchema>) => {
@@ -121,12 +127,13 @@ export default function Page() {
           turnstileToken
         });
         if (status === 'NO_2FA_SETUP') {
+          if (redirectTo) {
+            router.replace(decodeURIComponent(redirectTo));
+          }
           if (!defaultOrgShortcode) {
-            router.push('/join/org');
+            router.replace('/join/org');
           } else {
-            router.push(
-              `/${defaultOrgShortcode}/settings/user/security?code=NO_2FA_SETUP`
-            );
+            router.replace(`/${defaultOrgShortcode}/convo`);
           }
         } else {
           setTwoFactorDialogOpen(true);
@@ -135,7 +142,7 @@ export default function Page() {
         /* do nothing */
       }
     },
-    [loginPassword, router, turnstileToken]
+    [loginPassword, redirectTo, router, turnstileToken]
   );
 
   return (

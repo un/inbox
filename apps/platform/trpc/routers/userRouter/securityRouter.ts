@@ -9,7 +9,7 @@ import { router, accountProcedure } from '~platform/trpc/trpc';
 import { and, eq } from '@u22n/database/orm';
 import { accounts, authenticators, sessions } from '@u22n/database/schema';
 import { typeIdValidator } from '@u22n/utils/typeid';
-import { nanoIdToken, zodSchemas } from '@u22n/utils/zodSchemas';
+import { nanoIdToken } from '@u22n/utils/zodSchemas';
 import {
   strongPasswordSchema,
   calculatePasswordStrength
@@ -28,71 +28,55 @@ import { TOTPController, createTOTPKeyURI } from 'oslo/otp';
 import { lucia } from '~platform/utils/auth';
 import { storage } from '~platform/storage';
 import { env } from '~platform/env';
-import crypto from 'crypto';
 import { sendRecoveryEmailConfirmation } from '~platform/utils/mail/transactional';
+import type { TrpcContext } from '~platform/ctx';
+import {
+  COOKIE_PASSKEY_CHALLENGE,
+  COOKIE_ELEVATED_TOKEN,
+  COOKIE_TWO_FACTOR_RESET_CHALLENGE
+} from '~platform/utils/cookieNames';
+import { accountIdentifier, ratelimiter } from '~platform/trpc/ratelimit';
 
-const authStorage = storage.auth;
+async function checkIfElevated(ctx: TrpcContext) {
+  const elevatedCookie = getCookie(ctx.event, COOKIE_ELEVATED_TOKEN);
+  if (!elevatedCookie) return false;
+  const elevatedToken = await storage.elevatedTokens.getItem(elevatedCookie);
+  if (!elevatedToken) return false;
+  if (
+    elevatedToken.issuer.accountId !== ctx.account?.id ||
+    elevatedToken.issuer.sessionId !== ctx.account?.session.id ||
+    elevatedToken.issuer.deviceIp !==
+      (ctx.event.env.incoming.socket.remoteAddress ?? '<unknown>')
+  )
+    return false;
+  return true;
+}
+
+async function revokeElevation(ctx: TrpcContext) {
+  const elevatedCookie = getCookie(ctx.event, COOKIE_ELEVATED_TOKEN);
+  if (!elevatedCookie) return;
+  await storage.elevatedTokens.removeItem(elevatedCookie);
+  deleteCookie(ctx.event, COOKIE_ELEVATED_TOKEN);
+}
+
+const elevatedProcedure = accountProcedure.use(async ({ ctx, next }) => {
+  if (!(await checkIfElevated(ctx)))
+    throw new TRPCError({
+      code: 'UNAUTHORIZED',
+      message:
+        'You are not allowed to perform elevated action at this moment. Please try again'
+    });
+  return next();
+});
 
 export const securityRouter = router({
-  getSecurityOverview: accountProcedure
-    .input(z.object({}))
-    .query(async ({ ctx }) => {
-      const { db, account } = ctx;
-      const accountId = account.id;
+  // Elevated Mode
+  checkIfElevated: accountProcedure.query(async ({ ctx }) => ({
+    isElevated: await checkIfElevated(ctx)
+  })),
 
-      const accountObjectQuery = await db.query.accounts.findFirst({
-        where: eq(accounts.id, accountId),
-        columns: {
-          publicId: true,
-          passwordHash: true,
-          recoveryCode: true,
-          twoFactorEnabled: true,
-          twoFactorSecret: true
-        },
-        with: {
-          authenticators: {
-            columns: {
-              publicId: true,
-              createdAt: true,
-              nickname: true
-            }
-          },
-          sessions: {
-            columns: {
-              publicId: true,
-              os: true,
-              device: true,
-              createdAt: true
-            }
-          }
-        }
-      });
-
-      if (!accountObjectQuery) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Account not found'
-        });
-      }
-
-      return {
-        passwordSet: !!accountObjectQuery.passwordHash,
-        recoveryCodeSet: !!accountObjectQuery.recoveryCode,
-        legacySecurityEnabled:
-          Boolean(accountObjectQuery.passwordHash) &&
-          accountObjectQuery.twoFactorEnabled &&
-          Boolean(accountObjectQuery.twoFactorSecret),
-        twoFactorEnabled:
-          accountObjectQuery.twoFactorEnabled &&
-          !!accountObjectQuery.twoFactorSecret,
-        passkeys: accountObjectQuery.authenticators || [],
-        sessions: accountObjectQuery.sessions || []
-      };
-    }),
-
-  generatePasskeyVerificationChallenge: accountProcedure
-    .input(z.object({}))
-    .query(async ({ ctx }) => {
+  generatePasskeyVerificationChallenge: accountProcedure.mutation(
+    async ({ ctx }) => {
       const { event, account } = ctx;
 
       const accountQuery = await ctx.db.query.accounts.findFirst({
@@ -109,67 +93,52 @@ export const securityRouter = router({
         });
       }
 
-      const authChallengeId = nanoIdToken();
+      const passkeyVerificationChallenge = nanoIdToken();
 
-      setCookie(event, 'unauth-challenge', authChallengeId, {
+      setCookie(event, COOKIE_PASSKEY_CHALLENGE, passkeyVerificationChallenge, {
         httpOnly: true,
         secure: env.NODE_ENV === 'production',
-        sameSite: 'Strict',
-        maxAge: 60 * 5,
+        expires: datePlus('5 minutes'),
         domain: env.PRIMARY_DOMAIN
       });
 
       const passkeyOptions = await generateAuthenticationOptions({
-        authChallengeId: authChallengeId,
+        authChallengeId: passkeyVerificationChallenge,
         accountId: accountQuery.id
       });
 
       return { options: passkeyOptions };
-    }),
+    }
+  ),
 
-  getVerificationToken: accountProcedure
+  grantElevation: accountProcedure
     .input(
       z.union([
+        z.object({ mode: z.literal('PASSKEY'), passkeyResponse: z.any() }),
         z.object({
+          mode: z.literal('PASSWORD'),
           password: z.string().min(8),
-          twoFactorCode: z.string()
-        }),
-        z.object({
-          verificationResponseRaw: z.any()
+          twoFactorCode: z.string().min(6).max(6).nullable()
         })
       ])
     )
-    .query(async ({ ctx, input }) => {
-      const { db, account } = ctx;
-      const accountId = account.id;
+    .mutation(async ({ ctx, input }) => {
+      const { account, db } = ctx;
 
-      const accountObjectQuery = await db.query.accounts.findFirst({
-        where: eq(accounts.id, accountId),
-        columns: {
-          publicId: true
-        }
-      });
+      if (input.mode === 'PASSKEY') {
+        const passkeyResponse =
+          input.passkeyResponse as AuthenticationResponseJSON;
+        const challengeCookie = getCookie(ctx.event, COOKIE_PASSKEY_CHALLENGE);
 
-      if (!accountObjectQuery) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Account not found'
-        });
-      }
-
-      if ('verificationResponseRaw' in input) {
-        const verificationResponse =
-          input.verificationResponseRaw as AuthenticationResponseJSON;
-
-        const challengeCookie = getCookie(ctx.event, 'unauth-challenge');
         if (!challengeCookie) {
           throw new TRPCError({
             code: 'BAD_REQUEST',
-            message: 'Challenge not found, try again'
+            message: 'Passkey challenge not found'
           });
         }
+
         const passkeyVerification = await verifyAuthenticationResponse({
-          authenticationResponse: verificationResponse,
+          authenticationResponse: passkeyResponse,
           authChallengeId: challengeCookie
         });
 
@@ -182,9 +151,9 @@ export const securityRouter = router({
             message: 'Passkey verification failed'
           });
         }
-      } else if ('password' in input) {
+      } else if (input.mode === 'PASSWORD') {
         const accountQuery = await db.query.accounts.findFirst({
-          where: eq(accounts.id, accountId),
+          where: eq(accounts.id, account.id),
           columns: {
             passwordHash: true,
             twoFactorSecret: true,
@@ -202,7 +171,7 @@ export const securityRouter = router({
         if (!accountQuery.passwordHash) {
           throw new TRPCError({
             code: 'METHOD_NOT_SUPPORTED',
-            message: 'Password verification is not enabled'
+            message: 'Password is not enabled'
           });
         }
 
@@ -214,13 +183,16 @@ export const securityRouter = router({
         if (!validPassword) {
           throw new TRPCError({
             code: 'UNAUTHORIZED',
-            message: 'Password verification failed'
+            message: 'Invalid password or 2FA code'
           });
         }
 
-        // We check if 2FA is enabled and if so, we verify the 2FA code
-        // this is for older accounts which were affected by the 2FA bug
         if (accountQuery.twoFactorEnabled && accountQuery.twoFactorSecret) {
+          if (!input.twoFactorCode)
+            throw new TRPCError({
+              code: 'BAD_REQUEST',
+              message: '2FA code is required'
+            });
           const secret = decodeHex(accountQuery.twoFactorSecret);
           const isValid = await new TOTPController().verify(
             input.twoFactorCode,
@@ -229,134 +201,118 @@ export const securityRouter = router({
           if (!isValid) {
             throw new TRPCError({
               code: 'UNAUTHORIZED',
-              message: 'Invalid 2FA code'
+              message: 'Invalid password or 2FA code'
             });
           }
         }
       } else {
+        // There is no way to get here, still throwing error to be safe
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message: 'Invalid input'
         });
       }
 
-      const token = nanoIdToken();
-      authStorage.setItem(
-        `authVerificationToken: ${accountObjectQuery.publicId}`,
-        token
-      );
+      // At this point we have verified the passkey or password and 2FA code
 
-      return {
-        token: token
-      };
-    }),
-
-  //* passwords
-  checkPasswordStrength: accountProcedure
-    .input(
-      z.object({
-        password: z.string()
-      })
-    )
-    .query(({ input }) => calculatePasswordStrength(input.password)),
-
-  disableLegacySecurity: accountProcedure
-    .input(
-      z.object({
-        verificationToken: zodSchemas.nanoIdToken()
-      })
-    )
-    .mutation(async ({ ctx, input }) => {
-      const { db, account } = ctx;
-      const accountId = account.id;
-
-      const accountData = await db.query.accounts.findFirst({
-        where: eq(accounts.id, accountId),
-        columns: {
-          publicId: true,
-          username: true,
-          passwordHash: true,
-          twoFactorSecret: true
+      const elevationToken = nanoIdToken();
+      await storage.elevatedTokens.setItem(elevationToken, {
+        issuer: {
+          accountId: account.id,
+          sessionId: account.session.id,
+          deviceIp: ctx.event.env.incoming.socket.remoteAddress ?? '<unknown>'
         }
       });
 
-      if (!accountData) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'User not found'
-        });
-      }
-
-      if (!input.verificationToken) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'VerificationToken is required'
-        });
-      }
-
-      const storedVerificationToken = await authStorage.getItem(
-        `authVerificationToken: ${accountData.publicId}`
-      );
-
-      if (input.verificationToken !== storedVerificationToken) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'VerificationToken is invalid'
-        });
-      }
-
-      await db
-        .update(accounts)
-        .set({
-          passwordHash: null,
-          twoFactorSecret: null,
-          twoFactorEnabled: false
-        })
-        .where(eq(accounts.id, accountId));
+      setCookie(ctx.event, COOKIE_ELEVATED_TOKEN, elevationToken, {
+        httpOnly: true,
+        secure: env.NODE_ENV === 'production',
+        expires: datePlus('5 minutes'),
+        domain: env.PRIMARY_DOMAIN
+      });
 
       return { success: true };
     }),
 
-  resetPassword: accountProcedure
-    .input(
-      z.object({
-        newPassword: strongPasswordSchema,
-        verificationToken: zodSchemas.nanoIdToken()
-      })
-    )
+  // Overview
+  getOverview: accountProcedure.query(async ({ ctx }) => {
+    const { db, account } = ctx;
+
+    const accountQuery = await db.query.accounts.findFirst({
+      where: eq(accounts.id, account.id),
+      columns: {
+        publicId: true,
+        passwordHash: true,
+        recoveryCode: true,
+        twoFactorEnabled: true,
+        twoFactorSecret: true,
+        recoveryEmailHash: true,
+        recoveryEmailVerifiedAt: true
+      },
+      with: {
+        authenticators: {
+          columns: {
+            publicId: true,
+            createdAt: true,
+            nickname: true
+          }
+        },
+        sessions: {
+          columns: {
+            sessionToken: true,
+            publicId: true,
+            os: true,
+            device: true,
+            createdAt: true
+          }
+        }
+      }
+    });
+
+    if (!accountQuery) {
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: 'Account not found'
+      });
+    }
+
+    return {
+      passwordSet: Boolean(accountQuery.passwordHash),
+      twoFactorEnabled:
+        accountQuery.twoFactorEnabled && Boolean(accountQuery.twoFactorSecret),
+      recoveryCodeSet: Boolean(accountQuery.recoveryCode),
+      recoveryEmailSet: Boolean(accountQuery.recoveryEmailHash),
+      recoveryEmailVerifiedAt: accountQuery.recoveryEmailVerifiedAt,
+      passkeys: accountQuery.authenticators || [],
+      sessions:
+        accountQuery.sessions.map(({ sessionToken, ...rest }) => rest) || [],
+      thisDevice: accountQuery.sessions.find(
+        (s) => s.sessionToken === account.session.id
+      )?.publicId
+    };
+  }),
+
+  // Password
+  checkPasswordStrength: accountProcedure
+    .input(z.object({ password: z.string() }))
+    .query(({ input }) => calculatePasswordStrength(input.password)),
+
+  changeOrEnablePassword: elevatedProcedure
+    .input(z.object({ newPassword: strongPasswordSchema }))
     .mutation(async ({ ctx, input }) => {
       const { db, account } = ctx;
-      const accountId = account.id;
 
-      const accountData = await db.query.accounts.findFirst({
-        where: eq(accounts.id, accountId),
+      const accountQuery = await db.query.accounts.findFirst({
+        where: eq(accounts.id, account.id),
         columns: {
-          publicId: true
+          id: true
         }
       });
 
-      if (!accountData) {
+      if (!accountQuery) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'User not found'
-        });
-      }
-
-      if (!input.verificationToken) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'VerificationToken is required'
-        });
-      }
-
-      const storedVerificationToken = await authStorage.getItem(
-        `authVerificationToken: ${accountData.publicId}`
-      );
-
-      if (input.verificationToken !== storedVerificationToken) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'VerificationToken is invalid'
         });
       }
 
@@ -364,150 +320,157 @@ export const securityRouter = router({
 
       await db
         .update(accounts)
-        .set({
-          passwordHash
-        })
-        .where(eq(accounts.id, accountId));
+        .set({ passwordHash })
+        .where(eq(accounts.id, accountQuery.id));
+
+      await revokeElevation(ctx);
 
       return { success: true };
     }),
-  generateTwoFactorResetChallenge: accountProcedure
-    .input(
-      z.object({
-        verificationToken: zodSchemas.nanoIdToken()
-      })
-    )
-    .query(async ({ ctx, input }) => {
-      const { verificationToken } = input;
-      const { db, account } = ctx;
 
-      const accountData = await db.query.accounts.findFirst({
-        where: eq(accounts.id, account.id),
-        columns: {
-          publicId: true,
-          username: true
+  // Disabling Password would also disable 2FA
+  // User can't disable password if they don't have atleast one passkey
+  disablePassword: elevatedProcedure.mutation(async ({ ctx }) => {
+    const { db, account } = ctx;
+    const accountQuery = await db.query.accounts.findFirst({
+      where: eq(accounts.id, account.id),
+      columns: {
+        id: true,
+        passwordHash: true,
+        twoFactorSecret: true
+      },
+      with: {
+        authenticators: {
+          columns: {
+            id: true
+          }
         }
+      }
+    });
+
+    if (!accountQuery) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'User not found'
       });
+    }
 
-      if (!accountData) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'User not found'
-        });
+    if (!accountQuery.passwordHash) {
+      throw new TRPCError({
+        code: 'METHOD_NOT_SUPPORTED',
+        message: 'Password is already disabled'
+      });
+    }
+
+    if (accountQuery.authenticators.length < 1) {
+      throw new TRPCError({
+        code: 'METHOD_NOT_SUPPORTED',
+        message: 'You must have at least one passkey to disable password'
+      });
+    }
+
+    await db
+      .update(accounts)
+      .set({
+        passwordHash: null,
+        twoFactorSecret: null,
+        twoFactorEnabled: false
+      })
+      .where(eq(accounts.id, accountQuery.id));
+
+    await revokeElevation(ctx);
+
+    return { success: true };
+  }),
+
+  // 2FA
+  generateTwoFactorResetChallenge: elevatedProcedure.query(async ({ ctx }) => {
+    const { db, account } = ctx;
+
+    const accountQuery = await db.query.accounts.findFirst({
+      where: eq(accounts.id, account.id),
+      columns: {
+        publicId: true,
+        username: true
       }
+    });
 
-      const storedVerificationToken = await authStorage.getItem(
-        `authVerificationToken: ${accountData.publicId}`
-      );
+    if (!accountQuery) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'User not found'
+      });
+    }
 
-      if (verificationToken !== storedVerificationToken) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'VerificationToken is invalid'
-        });
-      }
+    const existingChallenge = getCookie(
+      ctx.event,
+      COOKIE_TWO_FACTOR_RESET_CHALLENGE
+    );
 
-      const existingChallengeId = getCookie(
-        ctx.event,
-        'un-2fa-reset-challenge'
-      );
-      if (existingChallengeId) {
-        const encodedSecret = await authStorage.getItem<string>(
-          `un-2fa-reset-challenge:${existingChallengeId}`
-        );
-        if (encodedSecret) {
-          return {
-            uri: createTOTPKeyURI(
-              'UnInbox.com',
-              accountData.username,
-              decodeHex(encodedSecret)
-            )
-          };
-        }
-      }
+    if (existingChallenge)
+      await storage.twoFactorResetChallenges.removeItem(existingChallenge);
 
-      const newSecret = crypto.getRandomValues(new Uint8Array(20));
-      const uri = createTOTPKeyURI(
-        'UnInbox.com',
-        accountData.username,
-        newSecret
-      );
+    const newSecret = crypto.getRandomValues(new Uint8Array(20));
 
-      const un2faResetChallengeId = nanoIdToken();
-      authStorage.setItem(
-        `un-2fa-reset-challenge:${un2faResetChallengeId}`,
-        encodeHex(newSecret)
-      );
+    const uri = createTOTPKeyURI(
+      'UnInbox.com',
+      accountQuery.username,
+      newSecret
+    );
 
-      setCookie(ctx.event, 'un-2fa-reset-challenge', un2faResetChallengeId, {
+    const twoFactorResetChallenge = nanoIdToken();
+
+    await storage.twoFactorResetChallenges.setItem(twoFactorResetChallenge, {
+      account: {
+        username: accountQuery.username,
+        publicId: accountQuery.publicId
+      },
+      secret: encodeHex(newSecret)
+    });
+
+    setCookie(
+      ctx.event,
+      COOKIE_TWO_FACTOR_RESET_CHALLENGE,
+      twoFactorResetChallenge,
+      {
         httpOnly: true,
         secure: env.NODE_ENV === 'production',
-        sameSite: 'Strict',
         expires: datePlus('5 minutes'),
         domain: env.PRIMARY_DOMAIN
-      });
+      }
+    );
 
-      return { uri };
-    }),
+    return { uri };
+  }),
 
-  verifyTwoFactorResetChallenge: accountProcedure
-    .input(
-      z.object({
-        verificationToken: zodSchemas.nanoIdToken(),
-        code: z.string().min(6).max(6)
-      })
-    )
+  enableOrResetTwoFactor: elevatedProcedure
+    .input(z.object({ code: z.string().min(6).max(6) }))
     .mutation(async ({ ctx, input }) => {
-      const { verificationToken, code } = input;
       const { db, account } = ctx;
-
-      const accountData = await db.query.accounts.findFirst({
-        where: eq(accounts.id, account.id),
-        columns: {
-          publicId: true,
-          username: true
-        }
-      });
-
-      if (!accountData) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'User not found'
-        });
-      }
-
-      const storedVerificationToken = await authStorage.getItem(
-        `authVerificationToken: ${accountData.publicId}`
+      const twoFactorResetChallenge = getCookie(
+        ctx.event,
+        COOKIE_TWO_FACTOR_RESET_CHALLENGE
       );
 
-      if (verificationToken !== storedVerificationToken) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'VerificationToken is invalid'
-        });
-      }
-
-      const challengeId = getCookie(ctx.event, 'un-2fa-reset-challenge');
-      if (!challengeId) {
+      if (!twoFactorResetChallenge) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
-          message: '2FA Challenge cookie not found or expired, please try again'
+          message: '2FA Challenge not found or expired, please try again'
         });
       }
 
-      const encodedSecret = await authStorage.getItem<string>(
-        `un-2fa-reset-challenge:${challengeId}`
+      const storedChallenge = await storage.twoFactorResetChallenges.getItem(
+        twoFactorResetChallenge
       );
-
-      if (!encodedSecret) {
+      if (!storedChallenge) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
-          message: '2FA Challenge cookie not found or expired, please try again'
+          message: '2FA Challenge not found or expired, please try again'
         });
       }
 
-      const secret = decodeHex(encodedSecret);
-      const isValid = await new TOTPController().verify(code, secret);
+      const secret = decodeHex(storedChallenge.secret);
+      const isValid = await new TOTPController().verify(input.code, secret);
 
       if (!isValid) {
         throw new TRPCError({
@@ -518,225 +481,171 @@ export const securityRouter = router({
 
       await db
         .update(accounts)
-        .set({ twoFactorSecret: encodedSecret, twoFactorEnabled: true })
+        .set({
+          twoFactorSecret: storedChallenge.secret,
+          twoFactorEnabled: true
+        })
         .where(eq(accounts.id, account.id));
 
-      deleteCookie(ctx.event, 'un-2fa-reset-challenge');
-      authStorage.removeItem(`un-2fa-reset-challenge:${challengeId}`);
+      deleteCookie(ctx.event, COOKIE_TWO_FACTOR_RESET_CHALLENGE);
+      storage.twoFactorResetChallenges.removeItem(twoFactorResetChallenge);
 
       return { success: true };
     }),
 
-  disableRecoveryCode: accountProcedure
-    .input(
-      z.object({
-        verificationToken: zodSchemas.nanoIdToken()
-      })
-    )
-    .mutation(async ({ ctx, input }) => {
+  disableTwoFactor: elevatedProcedure.mutation(async ({ ctx }) => {
+    const { db, account } = ctx;
+    const accountQuery = await db.query.accounts.findFirst({
+      where: eq(accounts.id, account.id),
+      columns: {
+        id: true,
+        twoFactorSecret: true,
+        twoFactorEnabled: true
+      }
+    });
+
+    if (!accountQuery) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'User not found'
+      });
+    }
+
+    if (!accountQuery.twoFactorEnabled || !accountQuery.twoFactorSecret) {
+      throw new TRPCError({
+        code: 'METHOD_NOT_SUPPORTED',
+        message: '2FA is already disabled'
+      });
+    }
+
+    await db
+      .update(accounts)
+      .set({ twoFactorEnabled: false, twoFactorSecret: null })
+      .where(eq(accounts.id, accountQuery.id));
+
+    await revokeElevation(ctx);
+
+    return { success: true };
+  }),
+
+  // Recovery Code
+  enableOrResetRecoveryCode: elevatedProcedure.mutation(async ({ ctx }) => {
+    const { account, db } = ctx;
+
+    const accountQuery = await db.query.accounts.findFirst({
+      where: eq(accounts.id, account.id),
+      columns: {
+        publicId: true,
+        username: true
+      }
+    });
+
+    if (!accountQuery) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'User not found'
+      });
+    }
+
+    const newRecoveryCode = nanoIdToken();
+
+    await db
+      .update(accounts)
+      .set({ recoveryCode: await new Argon2id().hash(newRecoveryCode) })
+      .where(eq(accounts.id, account.id));
+
+    return { recoveryCode: newRecoveryCode, username: accountQuery.username };
+  }),
+
+  disableRecoveryCode: elevatedProcedure.mutation(async ({ ctx }) => {
+    const { account, db } = ctx;
+
+    const accountQuery = await db.query.accounts.findFirst({
+      where: eq(accounts.id, account.id),
+      columns: {
+        publicId: true,
+        username: true
+      }
+    });
+
+    if (!accountQuery) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'User not found'
+      });
+    }
+
+    await db
+      .update(accounts)
+      .set({ recoveryCode: null })
+      .where(eq(accounts.id, account.id));
+
+    return { success: true };
+  }),
+
+  // Passkeys
+  generatePasskeyCreationChallenge: elevatedProcedure.mutation(
+    async ({ ctx }) => {
       const { account, db } = ctx;
-      const accountId = account.id;
-
-      const accountData = await db.query.accounts.findFirst({
-        where: eq(accounts.id, accountId),
+      const accountQuery = await db.query.accounts.findFirst({
+        where: eq(accounts.id, account.id),
         columns: {
           publicId: true,
           username: true
         }
       });
 
-      if (!accountData) {
+      if (!accountQuery) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'User not found'
-        });
-      }
-
-      if (!input.verificationToken) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'VerificationToken is required'
-        });
-      }
-
-      const storedVerificationToken = await authStorage.getItem(
-        `authVerificationToken: ${accountData.publicId}`
-      );
-
-      if (input.verificationToken !== storedVerificationToken) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'VerificationToken is invalid'
-        });
-      }
-
-      await db
-        .update(accounts)
-        .set({ recoveryCode: null })
-        .where(eq(accounts.id, accountId));
-
-      return { success: true };
-    }),
-
-  resetRecoveryCode: accountProcedure
-    .input(
-      z.object({
-        verificationToken: zodSchemas.nanoIdToken()
-      })
-    )
-    .mutation(async ({ ctx, input }) => {
-      const { account, db } = ctx;
-      const accountId = account.id;
-
-      const accountData = await db.query.accounts.findFirst({
-        where: eq(accounts.id, accountId),
-        columns: {
-          publicId: true,
-          username: true
-        }
-      });
-
-      if (!accountData) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'User not found'
-        });
-      }
-
-      if (!input.verificationToken) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'VerificationToken is required'
-        });
-      }
-
-      const storedVerificationToken = await authStorage.getItem(
-        `authVerificationToken: ${accountData.publicId}`
-      );
-
-      if (input.verificationToken !== storedVerificationToken) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'VerificationToken is invalid'
-        });
-      }
-
-      const newRecoveryCode = nanoIdToken();
-      await db
-        .update(accounts)
-        .set({ recoveryCode: await new Argon2id().hash(newRecoveryCode) })
-        .where(eq(accounts.id, accountId));
-
-      return { recoveryCode: newRecoveryCode };
-    }),
-
-  //* passkeys
-  generateNewPasskeyChallenge: accountProcedure
-    .input(
-      z.object({
-        verificationToken: zodSchemas.nanoIdToken(),
-        /**
-         * @deprecated Let the browser decide
-         */
-        authenticatorType: z.enum(['platform', 'cross-platform']).optional()
-      })
-    )
-    .query(async ({ ctx, input }) => {
-      const { db, account } = ctx;
-      const accountId = account.id;
-
-      const accountData = await db.query.accounts.findFirst({
-        where: eq(accounts.id, accountId),
-        columns: {
-          publicId: true,
-          username: true
-        }
-      });
-
-      if (!accountData) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'User not found'
-        });
-      }
-
-      if (!input.verificationToken) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'VerificationToken is required'
-        });
-      }
-
-      const storedVerificationToken = await authStorage.getItem(
-        `authVerificationToken: ${accountData.publicId}`
-      );
-
-      if (input.verificationToken !== storedVerificationToken) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'VerificationToken is invalid'
         });
       }
 
       const passkeyOptions = await generateRegistrationOptions({
-        userDisplayName: accountData.username,
-        username: accountData.username,
-        accountPublicId: accountData.publicId
+        userDisplayName: accountQuery.username,
+        username: accountQuery.username,
+        accountPublicId: accountQuery.publicId
       });
-      return { options: passkeyOptions };
-    }),
 
-  addNewPasskey: accountProcedure
-    .input(
-      z.object({
-        registrationResponseRaw: z.any(),
-        nickname: z.string().min(3).max(32).default('Passkey'),
-        verificationToken: zodSchemas.nanoIdToken()
-      })
-    )
+      return { options: passkeyOptions };
+    }
+  ),
+
+  createNewPasskey: elevatedProcedure
+    .input(z.object({ passkeyResponse: z.any() }))
     .mutation(async ({ ctx, input }) => {
       const { db, account } = ctx;
-      const accountId = account.id;
 
-      const accountData = await db.query.accounts.findFirst({
-        where: eq(accounts.id, accountId),
+      const accountQuery = await db.query.accounts.findFirst({
+        where: eq(accounts.id, account.id),
         columns: {
+          id: true,
           publicId: true,
           username: true
+        },
+        with: {
+          authenticators: {
+            columns: {
+              id: true
+            }
+          }
         }
       });
 
-      if (!accountData) {
+      if (!accountQuery) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'User not found'
         });
       }
 
-      if (!input.verificationToken) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'VerificationToken is required'
-        });
-      }
-
-      const storedVerificationToken = await authStorage.getItem(
-        `authVerificationToken: ${accountData.publicId}`
-      );
-
-      if (input.verificationToken !== storedVerificationToken) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'VerificationToken is invalid'
-        });
-      }
-
       const registrationResponse =
-        input.registrationResponseRaw as RegistrationResponseJSON;
+        input.passkeyResponse as RegistrationResponseJSON;
 
       const passkeyVerification = await verifyRegistrationResponse({
         registrationResponse: registrationResponse,
-        publicId: accountData.publicId
+        publicId: accountQuery.publicId
       });
 
       if (
@@ -749,21 +658,18 @@ export const securityRouter = router({
         });
       }
 
-      const accountQuery = await db.query.accounts.findFirst({
-        where: eq(accounts.id, account.id),
-        columns: {
-          id: true
-        }
-      });
+      const passkeyType =
+        passkeyVerification.registrationInfo.credentialDeviceType ===
+        'multiDevice'
+          ? 'Synced'
+          : 'Native';
 
-      if (!accountQuery || !accountQuery.id) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'User account not found'
-        });
-      }
+      const passkeyNickname =
+        accountQuery.authenticators.length === 0
+          ? `Passkey (${passkeyType})`
+          : `Passkey ${accountQuery.authenticators.length + 1} (${passkeyType})`;
 
-      const insertPasskey = await createAuthenticator(
+      const createdPasskey = await createAuthenticator(
         {
           accountId: accountQuery.id,
           credentialID: passkeyVerification.registrationInfo.credentialID,
@@ -776,10 +682,10 @@ export const securityRouter = router({
           transports: registrationResponse.response.transports,
           counter: passkeyVerification.registrationInfo.counter
         },
-        input.nickname
+        passkeyNickname
       );
 
-      if (!insertPasskey.credentialID) {
+      if (!createdPasskey.credentialID) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Something went wrong adding your passkey, please try again'
@@ -788,90 +694,148 @@ export const securityRouter = router({
 
       return { success: true };
     }),
-
-  deletePasskey: accountProcedure
+  renamePasskey: accountProcedure
     .input(
       z.object({
         passkeyPublicId: typeIdValidator('accountPasskey'),
-        verificationToken: zodSchemas.nanoIdToken()
+        newNickname: z
+          .string()
+          .min(2, 'Nickname must be at least 2 characters')
+          .max(64, 'Nickname can be at most 64 characters')
       })
     )
     .mutation(async ({ ctx, input }) => {
       const { db, account } = ctx;
-      const accountId = account.id;
-
-      const accountData = await db.query.accounts.findFirst({
-        where: eq(accounts.id, accountId),
+      const accountQuery = await db.query.accounts.findFirst({
+        where: eq(accounts.id, account.id),
         columns: {
+          id: true,
           publicId: true,
-          username: true,
-          passwordHash: true,
-          twoFactorSecret: true
+          username: true
         },
         with: {
           authenticators: {
             columns: {
-              id: true
+              publicId: true,
+              createdAt: true,
+              nickname: true
             }
           }
         }
       });
 
-      if (!accountData) {
+      if (!accountQuery) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'User not found'
         });
       }
 
-      if (!input.verificationToken) {
+      const passkeyQuery = await db.query.authenticators.findFirst({
+        where: and(
+          eq(authenticators.publicId, input.passkeyPublicId),
+          eq(authenticators.accountId, accountQuery.id)
+        ),
+        columns: {
+          id: true,
+          publicId: true
+        }
+      });
+
+      if (!passkeyQuery) {
         throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'VerificationToken is required'
+          code: 'NOT_FOUND',
+          message: 'Passkey not found'
         });
       }
 
-      const storedVerificationToken = await authStorage.getItem(
-        `authVerificationToken: ${accountData.publicId}`
-      );
+      await db
+        .update(authenticators)
+        .set({ nickname: input.newNickname })
+        .where(
+          and(
+            eq(authenticators.accountId, accountQuery.id),
+            eq(authenticators.id, passkeyQuery.id)
+          )
+        );
 
-      if (input.verificationToken !== storedVerificationToken) {
+      return { success: true };
+    }),
+  // User can't delete passkeys if they don't have atleast one passkey or a password is set
+  deletePasskey: elevatedProcedure
+    .input(z.object({ passkeyPublicId: typeIdValidator('accountPasskey') }))
+    .mutation(async ({ ctx, input }) => {
+      const { db, account } = ctx;
+      const accountQuery = await db.query.accounts.findFirst({
+        where: eq(accounts.id, account.id),
+        columns: {
+          id: true,
+          passwordHash: true
+        },
+        with: {
+          authenticators: {
+            columns: {
+              publicId: true
+            }
+          }
+        }
+      });
+
+      if (!accountQuery) {
         throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'VerificationToken is invalid'
+          code: 'NOT_FOUND',
+          message: 'User not found'
         });
       }
 
-      const hasPassword = !!accountData.passwordHash;
-      const hasOtherPassKeys = accountData.authenticators.length > 1;
-
-      if (!hasPassword && !hasOtherPassKeys) {
+      if (
+        !accountQuery.passwordHash &&
+        accountQuery.authenticators.length <= 1
+      ) {
         throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'You must have at least one passkey, or a password set.'
+          code: 'METHOD_NOT_SUPPORTED',
+          message: 'You must have at least one passkey, or a password set'
+        });
+      }
+
+      if (
+        !accountQuery.authenticators.find(
+          (a) => a.publicId === input.passkeyPublicId
+        )
+      ) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Passkey not found'
         });
       }
 
       await db
         .delete(authenticators)
-        .where(eq(authenticators.publicId, input.passkeyPublicId));
+        .where(
+          and(
+            eq(authenticators.publicId, input.passkeyPublicId),
+            eq(authenticators.accountId, accountQuery.id)
+          )
+        );
+
+      // If it was the last passkey or only remaining passkey with password, we need to revoke the elevation token
+      if (
+        accountQuery.authenticators.length === 1 ||
+        (accountQuery.passwordHash && accountQuery.authenticators.length === 2)
+      )
+        await revokeElevation(ctx);
 
       return { success: true };
     }),
 
-  deleteSession: accountProcedure
-    .input(
-      z.object({
-        sessionPublicId: typeIdValidator('accountSession'),
-        verificationToken: zodSchemas.nanoIdToken()
-      })
-    )
+  // Sessions
+  removeSession: elevatedProcedure
+    .input(z.object({ sessionPublicId: typeIdValidator('accountSession') }))
     .mutation(async ({ ctx, input }) => {
       const { db, account } = ctx;
-      const accountId = account.id;
 
       const accountData = await db.query.accounts.findFirst({
-        where: eq(accounts.id, accountId),
+        where: eq(accounts.id, account.id),
         columns: {
           id: true,
           publicId: true
@@ -885,30 +849,14 @@ export const securityRouter = router({
         });
       }
 
-      if (!input.verificationToken) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'VerificationToken is required'
-        });
-      }
-
-      const storedVerificationToken = await authStorage.getItem(
-        `authVerificationToken: ${accountData.publicId}`
-      );
-
-      if (input.verificationToken !== storedVerificationToken) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'VerificationToken is invalid'
-        });
-      }
-
       const sessionQuery = await db.query.sessions.findFirst({
         where: and(
           eq(sessions.publicId, input.sessionPublicId),
           eq(sessions.accountId, accountData.id)
         ),
         columns: {
+          id: true,
+          publicId: true,
           sessionToken: true
         }
       });
@@ -920,101 +868,91 @@ export const securityRouter = router({
         });
       }
 
+      // If the session is the current session, we need to revoke the elevation token
+      if (sessionQuery.sessionToken === account.session.id)
+        await revokeElevation(ctx);
+
       await lucia.invalidateSession(sessionQuery.sessionToken);
 
       return { success: true };
     }),
-  deleteAllSessions: accountProcedure
-    .input(
-      z.object({
-        verificationToken: zodSchemas.nanoIdToken()
-      })
-    )
-    .mutation(async ({ ctx, input }) => {
-      const { db, account } = ctx;
-      const accountId = account.id;
 
-      const accountData = await db.query.accounts.findFirst({
-        where: eq(accounts.id, accountId),
-        columns: {
-          id: true,
-          publicId: true
-        }
+  removeAllSessions: elevatedProcedure.mutation(async ({ ctx, input }) => {
+    const { db, account } = ctx;
+    const accountId = account.id;
+
+    const accountData = await db.query.accounts.findFirst({
+      where: eq(accounts.id, accountId),
+      columns: {
+        id: true,
+        publicId: true
+      }
+    });
+
+    if (!accountData) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'User not found'
       });
+    }
 
-      if (!accountData) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'User not found'
-        });
-      }
+    await lucia.invalidateUserSessions(accountData.id);
+    await revokeElevation(ctx);
+    return { success: true };
+  }),
 
-      if (!input.verificationToken) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'VerificationToken is required'
-        });
-      }
-
-      const storedVerificationToken = await authStorage.getItem(
-        `authVerificationToken: ${accountData.publicId}`
-      );
-
-      if (input.verificationToken !== storedVerificationToken) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'VerificationToken is invalid'
-        });
-      }
-
-      await lucia.invalidateUserSessions(accountData.id);
-
-      return { success: true };
-    }),
-
-  setRecoveryEmail: accountProcedure
-    .input(
-      z.object({
-        recoveryEmail: z.string().email()
+  // Recovery Email
+  setupOrUpdateRecoveryEmail: elevatedProcedure
+    .use(
+      // Ratelimit upto 3 requests every 12 hours to prevent spamming emails
+      ratelimiter({
+        limit: 3,
+        namespace: 'account.security.setupOrUpdateRecoveryEmail',
+        duration: '12h',
+        createIdentifier: accountIdentifier
       })
     )
+    .input(z.object({ recoveryEmail: z.string().email() }))
     .mutation(async ({ ctx, input }) => {
       const { db, account } = ctx;
 
-      const hashedEmail = await new Argon2id().hash(input.recoveryEmail);
-      // add recovery code to cash
-      await db
-        .update(accounts)
-        .set({
-          recoveryEmailHash: hashedEmail
-        })
-        .where(eq(accounts.id, account.id));
-
-      const accountData = await db.query.accounts.findFirst({
+      const accountQuery = await db.query.accounts.findFirst({
         where: eq(accounts.id, account.id),
         columns: {
+          id: true,
+          publicId: true,
           username: true
         }
       });
-      if (!accountData) {
+
+      if (!accountQuery) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'Account data not found'
         });
       }
 
+      const recoveryEmailHash = await new Argon2id().hash(input.recoveryEmail);
+
+      await db
+        .update(accounts)
+        .set({ recoveryEmailHash, recoveryEmailVerifiedAt: null })
+        .where(eq(accounts.id, account.id));
+
       const verificationCode = nanoIdToken();
-      await authStorage.setItem(
-        `recoveryEmailVerificationCode:${account.id}`,
-        verificationCode
-      );
+      await storage.recoveryEmailVerificationCodes.setItem(verificationCode, {
+        account: {
+          id: accountQuery.id,
+          publicId: accountQuery.publicId
+        },
+        recoveryEmail: input.recoveryEmail
+      });
 
       const confirmationUrl = `${env.WEBAPP_URL}/recovery/verify-email/?code=${verificationCode}`;
 
-      // Send verification email
       await sendRecoveryEmailConfirmation({
         to: input.recoveryEmail,
-        username: accountData.username,
+        username: accountQuery.username,
         recoveryEmail: input.recoveryEmail,
         confirmationUrl: confirmationUrl,
         expiryDate: datePlus('15 minutes').toDateString(),
@@ -1025,51 +963,55 @@ export const securityRouter = router({
     }),
 
   verifyRecoveryEmail: accountProcedure
-    .input(
-      z.object({
-        verificationCode: z.string()
-      })
-    )
+    .input(z.object({ verificationCode: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const { db, account } = ctx;
-
-      const storedCode = await authStorage.getItem(
-        `recoveryEmailVerificationCode:${account.id}`
+      const storedCode = await storage.recoveryEmailVerificationCodes.getItem(
+        input.verificationCode
       );
-      if (storedCode !== input.verificationCode) {
+
+      if (!storedCode || storedCode.account.id !== account.id) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
-          message: 'Invalid verification code'
+          message: 'The verification code is invalid or has expired'
         });
       }
+
       await db
         .update(accounts)
         .set({ recoveryEmailVerifiedAt: new Date() })
         .where(eq(accounts.id, account.id));
 
-      authStorage.removeItem(`recoveryEmailVerificationCode:${account.id}`);
+      await storage.recoveryEmailVerificationCodes.removeItem(
+        input.verificationCode
+      );
 
       return { success: true };
     }),
 
-  getRecoveryEmailStatus: accountProcedure.query(async ({ ctx }) => {
+  disableRecoveryEmail: elevatedProcedure.mutation(async ({ ctx }) => {
     const { db, account } = ctx;
-    const result = await db.query.accounts.findFirst({
+    const accountQuery = await db.query.accounts.findFirst({
       where: eq(accounts.id, account.id),
       columns: {
-        recoveryEmailHash: true,
-        recoveryEmailVerifiedAt: true
+        id: true,
+        publicId: true,
+        username: true
       }
     });
-    if (!result) {
+
+    if (!accountQuery) {
       throw new TRPCError({
         code: 'NOT_FOUND',
         message: 'Account data not found'
       });
     }
-    return {
-      isSet: Boolean(result.recoveryEmailHash),
-      isVerified: Boolean(result.recoveryEmailVerifiedAt)
-    };
+
+    await db
+      .update(accounts)
+      .set({ recoveryEmailHash: null, recoveryEmailVerifiedAt: null })
+      .where(eq(accounts.id, accountQuery.id));
+
+    return { success: true };
   })
 });

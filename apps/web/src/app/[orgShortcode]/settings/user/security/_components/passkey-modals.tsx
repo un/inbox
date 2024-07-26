@@ -1,53 +1,183 @@
-import { type ModalComponent } from '@/src/hooks/use-awaitable-modal';
 import { Button } from '@/src/components/shadcn-ui/button';
-import { Input } from '@/src/components/shadcn-ui/input';
 import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogDescription
+  DialogDescription,
+  DialogHeader,
+  DialogFooter,
+  DialogClose
 } from '@/src/components/shadcn-ui/dialog';
+import { Input } from '@/src/components/shadcn-ui/input';
+import { platform } from '@/src/lib/trpc';
+import { Pencil } from '@phosphor-icons/react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
-export function PasskeyNameModal({
-  open,
-  onClose,
-  onResolve
-}: ModalComponent<NonNullable<unknown>, string>) {
-  const [name, setName] = useState('Passkey');
+type PasskeyDeleteModalProps = {
+  passkey: {
+    nickname: string;
+    publicId: string;
+  } | null;
+  setOpen: (open: boolean) => void;
+  onSuccess: (publicId: string) => void;
+};
+
+export function PasskeyDeleteModal({
+  setOpen,
+  onSuccess,
+  passkey
+}: PasskeyDeleteModalProps) {
+  const { mutateAsync: deletePasskey, isPending: deletingPasskey } =
+    platform.account.security.deletePasskey.useMutation({
+      onSuccess: ({ success }) => {
+        if (success) {
+          onSuccess(passkey?.publicId ?? '');
+          toast.success(`${passkey?.nickname} has been deleted`);
+          setOpen(false);
+        }
+      },
+      onError: (err) => {
+        toast.error('Something went wrong', {
+          description: err.message,
+          className: 'z-[1000]'
+        });
+      }
+    });
   return (
-    <Dialog open={open}>
+    <Dialog
+      open={Boolean(passkey)}
+      onOpenChange={() => {
+        if (deletingPasskey) return;
+        setOpen(!open);
+      }}>
       <DialogContent>
-        <DialogTitle>Name your new passkey</DialogTitle>
-        <DialogDescription>
-          This will help you identify your passkey in the future. Keep it simple
-          like Android Phone, Apple ID, Windows Hello, YubiKey etc.
-        </DialogDescription>
-        <div className="my-6 flex flex-col gap-2">
+        <DialogHeader>
+          <DialogTitle>
+            Delete <span className="font-semibold">{passkey?.nickname}</span>
+          </DialogTitle>
+          <DialogDescription>
+            This will delete this passkey from your account. You will not be
+            able to recover it.{' '}
+            <span className="font-semibold">
+              Note that you will need to delete the associated passkeys from
+              your authenticator yourself.
+            </span>
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="flex gap-2">
+          <DialogClose asChild>
+            <Button
+              variant="secondary"
+              className="flex-1">
+              Cancel
+            </Button>
+          </DialogClose>
+          <Button
+            variant="destructive"
+            className="flex-1"
+            loading={deletingPasskey}
+            onClick={async () => {
+              if (!passkey) return;
+              await deletePasskey({
+                passkeyPublicId: passkey.publicId
+              });
+            }}>
+            Delete Passkey
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+type PasskeyRenameModalProps = {
+  passkey: {
+    nickname: string;
+    publicId: string;
+  } | null;
+  setOpen: (open: boolean) => void;
+  onSuccess: (data: { publicId: string; newNickname: string }) => void;
+};
+
+export function PasskeyRenameModal({
+  setOpen,
+  onSuccess,
+  passkey
+}: PasskeyRenameModalProps) {
+  const [nickname, setNickname] = useState(passkey?.nickname ?? '');
+
+  const { mutateAsync: renamePasskey, isPending: renamingPasskey } =
+    platform.account.security.renamePasskey.useMutation({
+      onSuccess: ({ success }, { newNickname }) => {
+        if (success) {
+          onSuccess({ publicId: passkey?.publicId ?? '', newNickname });
+          toast.success(
+            `${passkey?.nickname} has been renamed to ${newNickname}`
+          );
+          setOpen(false);
+        }
+      },
+      onError: (err) => {
+        toast.error('Something went wrong while renaming passkey', {
+          description: err.message,
+          className: 'z-[1000]'
+        });
+      }
+    });
+  return (
+    <Dialog
+      open={Boolean(passkey)}
+      onOpenChange={() => {
+        if (renamingPasskey) return;
+        setOpen(!open);
+      }}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>
+            Rename <span className="font-semibold">{passkey?.nickname}</span>
+          </DialogTitle>
+          <DialogDescription>
+            Rename this passkey to something convenient for you. You might want
+            to call it something like Phone, Apple ID, YubiKey etc
+          </DialogDescription>
+        </DialogHeader>
+        <div className="p-4">
           <Input
-            label="Passkey Name"
-            defaultValue={'Passkey'}
-            onChange={(e) => {
-              setName(e.target.value);
-            }}
+            fullWidth
+            label="New Nickname"
+            inputSize="lg"
+            value={nickname}
+            onChange={(e) => setNickname(e.target.value)}
+            leadingSlot={Pencil}
           />
         </div>
-        <div className="flex flex-col gap-3">
+        <DialogFooter className="flex gap-2">
+          <DialogClose asChild>
+            <Button
+              variant="secondary"
+              className="flex-1">
+              Cancel
+            </Button>
+          </DialogClose>
           <Button
-            className="w-full"
+            className="flex-1"
+            disabled={
+              nickname === passkey?.nickname ||
+              nickname.length < 2 ||
+              nickname.length > 64
+            }
+            loading={renamingPasskey}
             onClick={async () => {
-              onResolve(name);
+              if (!passkey) return;
+              await renamePasskey({
+                passkeyPublicId: passkey.publicId,
+                newNickname: nickname
+              }).catch(() => null);
             }}>
-            Save
+            Rename Passkey
           </Button>
-          <Button
-            onClick={() => onClose()}
-            className="w-full"
-            variant="outline"
-            color="gray">
-            Cancel
-          </Button>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
