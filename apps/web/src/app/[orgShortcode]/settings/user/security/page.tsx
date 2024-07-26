@@ -22,7 +22,52 @@ import { PageTitle } from '../../_components/page-title';
 import { Skeleton } from '@/src/components/shadcn-ui/skeleton';
 import { Switch } from '@/src/components/shadcn-ui/switch';
 import { Button } from '@/src/components/shadcn-ui/button';
+import { Input } from '@/src/components/shadcn-ui/input';
 // import { PasskeyNameModal } from './_components/passkey-modals';
+
+export function RecoveryEmailSection() {
+  const [recoveryEmail, setRecoveryEmail] = useState('');
+
+  const { data: recoveryEmailStatus } =
+    platform.account.security.getRecoveryEmailStatus.useQuery();
+  const { mutateAsync: setRecoveryEmailMutation } =
+    platform.account.security.setRecoveryEmail.useMutation();
+
+  const handleSetRecoveryEmail = async () => {
+    toast.promise(setRecoveryEmailMutation({ recoveryEmail }), {
+      loading: 'Sending you a verification code to your email',
+      success: 'Check your emails for a verification code',
+      error: 'Something went wrong while setting your recovery email'
+    });
+  };
+
+  return (
+    <div className="mt-6">
+      <h3 className="text-lg font-medium">Recovery Email</h3>
+      {recoveryEmailStatus?.isSet ? (
+        recoveryEmailStatus.isVerified && (
+          <p>Your recovery email is set and verified.</p>
+        )
+      ) : (
+        <div>
+          <Input
+            label="Recovery Email"
+            type="email"
+            value={recoveryEmail}
+            onChange={(e) => setRecoveryEmail(e.target.value)}
+            placeholder="Enter recovery email"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                void handleSetRecoveryEmail();
+              }
+            }}
+          />
+          <Button onClick={handleSetRecoveryEmail}>Set Recovery Email</Button>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function Page() {
   const queryClient = useQueryClient();
@@ -359,6 +404,7 @@ export default function Page() {
           </div>
         </div>
       )}
+      <RecoveryEmailSection />
 
       <VerificationModalRoot />
       <PasswordModalRoot />

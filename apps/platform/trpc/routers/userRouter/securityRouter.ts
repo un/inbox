@@ -28,6 +28,8 @@ import { TOTPController, createTOTPKeyURI } from 'oslo/otp';
 import { lucia } from '~platform/utils/auth';
 import { storage } from '~platform/storage';
 import { env } from '~platform/env';
+import crypto from 'crypto';
+import { sendRecoveryEmailConfirmation } from '~platform/utils/mail/transactional';
 
 const authStorage = storage.auth;
 
@@ -968,5 +970,112 @@ export const securityRouter = router({
       await lucia.invalidateUserSessions(accountData.id);
 
       return { success: true };
-    })
+    }),
+
+  setRecoveryEmail: accountProcedure
+    .input(
+      z.object({
+        recoveryEmail: z.string().email()
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { db, account } = ctx;
+
+      const hashedEmail = await new Argon2id().hash(input.recoveryEmail);
+      console.log('hashedEmail', hashedEmail);
+      // add recovery code to cash
+      await db
+        .update(accounts)
+        .set({
+          recoveryEmailHash: hashedEmail
+        })
+        .where(eq(accounts.id, account.id));
+
+      const accountData = await db.query.accounts.findFirst({
+        where: eq(accounts.id, account.id),
+        columns: {
+          username: true
+        }
+      });
+      if (!accountData) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Account data not found'
+        });
+      }
+      // 15 minutes expiry
+      // Generate verification code
+
+      const verificationCode = nanoIdToken();
+      await authStorage.setItem(
+        `recoveryEmailVerifcationCode:${account.id}`,
+        verificationCode
+      ); // 15 minutes expiry
+      console.log('send email with info', {
+        to: input.recoveryEmail,
+        subject: 'Verify your recovery email. You have 5 min.',
+        text: `Your verification code is: ${verificationCode}`
+      });
+
+      const confirmationUrl = `https://${env.WEBAPP_URL}/recovery/verify-emai/?code=${verificationCode}`;
+
+      if (false) {
+        // Send verification email
+        await sendRecoveryEmailConfirmation({
+          to: input.recoveryEmail,
+          username: accountData.username,
+          recoveryEmail: input.recoveryEmail,
+          confirmationUrl: confirmationUrl,
+          expiryDate: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+          verificationCode
+        });
+      }
+
+      return { success: true };
+    }),
+
+  verifyRecoveryEmail: accountProcedure
+    .input(
+      z.object({
+        verificationCode: z.string()
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { db, account } = ctx;
+
+      const storedCode = await authStorage.getItem(
+        `recoveryEmailVerifcationCode:${account.id}`
+      );
+      console.log('storedCode', storedCode);
+      console.log('input.verificationCode', input.verificationCode);
+      if (storedCode !== input.verificationCode) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Invalid verification code'
+        });
+      }
+      await db
+        .update(accounts)
+        .set({ recoveryEmailRecoveredAt: new Date() })
+        .where(eq(accounts.id, account.id));
+
+      authStorage.removeItem(`recoveryEmailVerifcationCode:${account.id}`);
+
+      return { success: true };
+    }),
+
+  getRecoveryEmailStatus: accountProcedure.query(async ({ ctx }) => {
+    const { db, account } = ctx;
+    const result = await db.query.accounts.findFirst({
+      where: eq(accounts.id, account.id),
+      columns: {
+        recoveryEmailHash: true,
+        recoveryEmailRecoveredAt: true
+      }
+    });
+    return {
+      isSet: !!result?.recoveryEmailHash,
+      isVerified: result?.recoveryEmailRecoveredAt
+    };
+  })
 });

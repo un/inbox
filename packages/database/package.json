@@ -17,7 +17,7 @@
     "db:up": "drizzle-kit up --config=drizzle.config.ts",
     "db:drop": "drizzle-kit drop --config=drizzle.config.ts",
     "db:drop:r": "drizzle-kit drop --config=drizzle.config.ts",
-    "db:studio": "pnpm drizzle-kit studio --port 3333  --config=drizzle.config.ts",
+    "db:studio": "pnpm drizzle-kit studio --port 3334  --config=drizzle.config.ts --verbose",
     "db:studio:r": "drizzle-kit studio --port 3333  --config=drizzle.config.ts",
     "db:seed:r": "tsx dbSeed.ts",
     "db:migrate": "tsx migrate.ts",
