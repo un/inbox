@@ -25,6 +25,8 @@ import { Button } from '@/src/components/shadcn-ui/button';
 import { Input } from '@/src/components/shadcn-ui/input';
 // import { PasskeyNameModal } from './_components/passkey-modals';
 
+import { CheckCircle } from '@phosphor-icons/react';
+
 export function RecoveryEmailSection() {
   const [recoveryEmail, setRecoveryEmail] = useState('');
 
@@ -42,11 +44,17 @@ export function RecoveryEmailSection() {
   };
 
   return (
-    <div className="">
+    <div className="space-y-2">
       <h3 className="text-lg font-medium">Recovery Email</h3>
       {recoveryEmailStatus?.isSet ? (
         recoveryEmailStatus.isVerified && (
-          <p>Your recovery email is set and verified.</p>
+          <div className="flex items-center space-x-1 text-green-600">
+            <CheckCircle
+              size={20}
+              weight="fill"
+            />
+            <p>Your recovery email is set and verified.</p>
+          </div>
         )
       ) : (
         <div>

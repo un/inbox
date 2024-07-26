@@ -47,7 +47,7 @@ export default function VerifyEmailPage() {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    handleVerify();
+    void handleVerify();
   };
 
   return (
