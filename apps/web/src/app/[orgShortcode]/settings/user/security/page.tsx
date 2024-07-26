@@ -42,7 +42,7 @@ export function RecoveryEmailSection() {
   };
 
   return (
-    <div className="mt-6">
+    <div className="">
       <h3 className="text-lg font-medium">Recovery Email</h3>
       {recoveryEmailStatus?.isSet ? (
         recoveryEmailStatus.isVerified && (
@@ -402,9 +402,9 @@ export default function Page() {
               Logout of All Sessions
             </Button>
           </div>
+          <RecoveryEmailSection />
         </div>
       )}
-      <RecoveryEmailSection />
 
       <VerificationModalRoot />
       <PasswordModalRoot />

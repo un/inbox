@@ -45,6 +45,11 @@ export default function VerifyEmailPage() {
     }
   };
 
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    handleVerify();
+  };
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-4">
       <h1 className="mb-4 text-2xl font-bold">Verify Recovery Email</h1>
@@ -60,7 +65,9 @@ export default function VerifyEmailPage() {
           </Link>
         </>
       ) : (
-        <>
+        <form
+          onSubmit={handleSubmit}
+          className="w-full max-w-xs">
           <p className="mb-4 text-sm text-gray-600">
             Please enter the verification code sent to your recovery email.
           </p>
@@ -70,15 +77,15 @@ export default function VerifyEmailPage() {
             value={verificationCode}
             onChange={(e) => setVerificationCode(e.target.value)}
             placeholder="Enter verification code"
-            className="mb-4 w-full max-w-xs"
+            className="mb-4 w-full"
           />
           <Button
-            onClick={handleVerify}
+            type="submit"
             disabled={isVerifying}
-            className="w-full max-w-xs">
+            className="w-full">
             {isVerifying ? 'Verifying...' : 'Verify Email'}
           </Button>
-        </>
+        </form>
       )}
     </div>
   );

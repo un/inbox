@@ -1011,25 +1011,24 @@ export const securityRouter = router({
         `recoveryEmailVerifcationCode:${account.id}`,
         verificationCode
       ); // 15 minutes expiry
-      console.log('send email with info', {
-        to: input.recoveryEmail,
-        subject: 'Verify your recovery email. You have 5 min.',
-        text: `Your verification code is: ${verificationCode}`
-      });
+
+      // console.log('send email with info', {
+      //   to: input.recoveryEmail,
+      //   subject: 'Verify your recovery email. You have 5 min.',
+      //   text: `Your verification code is: ${verificationCode}`
+      // });
 
       const confirmationUrl = `https://${env.WEBAPP_URL}/recovery/verify-emai/?code=${verificationCode}`;
 
-      if (false) {
-        // Send verification email
-        await sendRecoveryEmailConfirmation({
-          to: input.recoveryEmail,
-          username: accountData.username,
-          recoveryEmail: input.recoveryEmail,
-          confirmationUrl: confirmationUrl,
-          expiryDate: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
-          verificationCode
-        });
-      }
+      // Send verification email
+      await sendRecoveryEmailConfirmation({
+        to: input.recoveryEmail,
+        username: accountData.username,
+        recoveryEmail: input.recoveryEmail,
+        confirmationUrl: confirmationUrl,
+        expiryDate: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+        verificationCode
+      });
 
       return { success: true };
     }),
@@ -1046,8 +1045,6 @@ export const securityRouter = router({
       const storedCode = await authStorage.getItem(
         `recoveryEmailVerifcationCode:${account.id}`
       );
-      console.log('storedCode', storedCode);
-      console.log('input.verificationCode', input.verificationCode);
       if (storedCode !== input.verificationCode) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
