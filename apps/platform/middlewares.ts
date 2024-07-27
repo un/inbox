@@ -4,12 +4,13 @@ import type { Ctx } from './ctx';
 import { env } from './env';
 import { getTracer } from '@u22n/otel/helpers';
 import { flatten } from '@u22n/otel/exports';
+import { COOKIE_SESSION } from './utils/cookieNames';
 
 const middlewareTracer = getTracer('platform/hono/middleware');
 
 export const authMiddleware = createMiddleware<Ctx>(async (c, next) =>
   middlewareTracer.startActiveSpan('Auth Middleware', async (span) => {
-    const sessionCookie = getCookie(c, 'unsession');
+    const sessionCookie = getCookie(c, COOKIE_SESSION);
     span?.setAttribute('req.auth.meta.has_cookie', !!sessionCookie);
     if (!sessionCookie) {
       c.set('account', null);

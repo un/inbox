@@ -20,8 +20,21 @@ const createCachedStorage = <T extends StorageValue = StorageValue>(
 
 export const storage = {
   auth: createCachedStorage('auth', ms('5 minutes')),
-  twoFactorLoginChallenges: createCachedStorage<twoFactorLoginChallenges>(
+  twoFactorLoginChallenges: createCachedStorage<TwoFactorLoginChallenges>(
     'two-factor-login-challenges',
+    ms('5 minutes')
+  ),
+  twoFactorResetChallenges: createCachedStorage<TwoFactorResetChallenges>(
+    'two-factor-reset-challenges',
+    ms('5 minutes')
+  ),
+  recoveryEmailVerificationCodes:
+    createCachedStorage<RecoveryEmailVerificationCodes>(
+      'recovery-email-verification-codes',
+      ms('15 minutes')
+    ),
+  elevatedTokens: createCachedStorage<ElevatedTokens>(
+    'elevated-tokens',
     ms('5 minutes')
   ),
   orgContext: createCachedStorage<OrgContext>('org-context', ms('12 hours')),
@@ -31,7 +44,7 @@ export const storage = {
   )
 };
 
-type twoFactorLoginChallenges = {
+type TwoFactorLoginChallenges = {
   account: {
     id: number;
     username: string;
@@ -39,4 +52,28 @@ type twoFactorLoginChallenges = {
   };
   defaultOrgSlug?: string;
   secret: string;
+};
+
+type TwoFactorResetChallenges = {
+  account: {
+    username: string;
+    publicId: TypeId<'account'>;
+  };
+  secret: string;
+};
+
+type RecoveryEmailVerificationCodes = {
+  account: {
+    id: number;
+    publicId: TypeId<'account'>;
+  };
+  recoveryEmail: string;
+};
+
+type ElevatedTokens = {
+  issuer: {
+    accountId: number;
+    sessionId: string;
+    deviceIp: string;
+  };
 };

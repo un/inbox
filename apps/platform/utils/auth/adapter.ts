@@ -9,10 +9,7 @@ const sessionStorage = storage.session;
 
 export class UnInboxDBAdapter implements Adapter {
   public async deleteSession(sessionId: string) {
-    await db
-      .delete(sessions)
-      .where(eq(sessions.sessionToken, sessionId))
-      .execute();
+    await db.delete(sessions).where(eq(sessions.sessionToken, sessionId));
     sessionStorage.removeItem(sessionId);
   }
 
