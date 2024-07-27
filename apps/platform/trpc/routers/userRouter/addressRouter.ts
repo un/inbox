@@ -16,94 +16,81 @@ import { env } from '~platform/env';
 import { z } from 'zod';
 
 export const addressRouter = router({
-  getPersonalAddresses: accountProcedure
-    .input(z.object({}))
-    .query(async ({ ctx }) => {
-      const { db, account } = ctx;
-      const accountId = account?.id;
-      if (!accountId) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'account not found'
-        });
-      }
+  getPersonalAddresses: accountProcedure.query(async ({ ctx }) => {
+    const { db, account } = ctx;
+    const accountId = account.id;
 
-      const accountsEmailIdentitiesPersonal =
-        await db.query.emailIdentitiesPersonal.findMany({
-          where: eq(emailIdentitiesPersonal.accountId, accountId),
-          columns: {
-            publicId: true
+    const accountsEmailIdentitiesPersonal =
+      await db.query.emailIdentitiesPersonal.findMany({
+        where: eq(emailIdentitiesPersonal.accountId, accountId),
+        columns: {
+          publicId: true
+        },
+        with: {
+          org: {
+            columns: {
+              publicId: true,
+              avatarTimestamp: true,
+              name: true,
+              shortcode: true
+            }
           },
-          with: {
-            org: {
-              columns: {
-                publicId: true,
-                avatarTimestamp: true,
-                name: true,
-                shortcode: true
-              }
-            },
-            emailIdentity: {
-              columns: {
-                publicId: true,
-                sendName: true,
-                username: true,
-                domainName: true,
-                forwardingAddress: true
-              }
+          emailIdentity: {
+            columns: {
+              publicId: true,
+              sendName: true,
+              username: true,
+              domainName: true,
+              forwardingAddress: true
             }
           }
-        });
-
-      const mailDomains = env.MAIL_DOMAINS;
-      const consumedDomains =
-        accountsEmailIdentitiesPersonal.map(
-          (identity) => identity.emailIdentity.domainName
-        ) || [];
-      const availableFreeDomains = mailDomains.free
-        .filter((domain) => !consumedDomains.includes(domain))
-        .map((domain) => domain);
-      const availablePremiumDomains = mailDomains.premium
-        .filter((domain) => !consumedDomains.includes(domain))
-        .map((domain) => domain);
-      const accountObject = await db.query.accounts.findFirst({
-        where: eq(accounts.id, accountId),
-        columns: {
-          username: true,
-          metadata: true
         }
       });
 
-      const hasUninBonus = accountObject?.metadata?.bonuses?.some(
-        (bonus) => bonus.item === 'unin'
-      );
+    const mailDomains = env.MAIL_DOMAINS;
+    const consumedDomains =
+      accountsEmailIdentitiesPersonal.map(
+        (identity) => identity.emailIdentity.domainName
+      ) || [];
+    const availableFreeDomains = mailDomains.free
+      .filter((domain) => !consumedDomains.includes(domain))
+      .map((domain) => domain);
+    const availablePremiumDomains = mailDomains.premium
+      .filter((domain) => !consumedDomains.includes(domain))
+      .map((domain) => domain);
+    const accountObject = await db.query.accounts.findFirst({
+      where: eq(accounts.id, accountId),
+      columns: {
+        username: true,
+        metadata: true
+      }
+    });
 
-      return {
-        identities: accountsEmailIdentitiesPersonal,
-        available: {
-          free: availableFreeDomains,
-          premium: availablePremiumDomains
-        },
-        hasUninBonus: hasUninBonus,
-        username: accountObject?.username
-      };
-    }),
+    const hasUninBonus = accountObject?.metadata?.bonuses?.some(
+      (bonus) => bonus.item === 'unin'
+    );
+
+    return {
+      identities: accountsEmailIdentitiesPersonal,
+      available: {
+        free: availableFreeDomains,
+        premium: availablePremiumDomains
+      },
+      hasUninBonus: hasUninBonus,
+      username: accountObject?.username
+    };
+  }),
   claimPersonalAddress: orgProcedure
     .input(z.object({ emailIdentity: z.string().min(3) }))
     .mutation(async ({ ctx, input }) => {
       const { db, account, org } = ctx;
-      if (!account || !org) {
-        throw new TRPCError({
-          code: 'UNPROCESSABLE_CONTENT',
-          message: 'Account or Organization is not defined'
-        });
-      }
-      const accountId = account?.id;
+      const accountId = account.id;
       const orgId = org.id;
 
       const accountOrgMembership = org.members.find(
         (member) => member.accountId === accountId
       );
+
       if (!accountOrgMembership) {
         throw new TRPCError({
           code: 'UNPROCESSABLE_CONTENT',
@@ -277,13 +264,7 @@ export const addressRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const { db, account, org } = ctx;
-      if (!account || !org) {
-        throw new TRPCError({
-          code: 'UNPROCESSABLE_CONTENT',
-          message: 'Account or Organization is not defined'
-        });
-      }
-      const accountId = account?.id;
+      const accountId = account.id;
 
       const accountOrgMembershipResponse = org.members.find(
         (member) => member.accountId === accountId

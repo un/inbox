@@ -23,7 +23,7 @@ export default function Page() {
     isLoading: personalAddressesLoading,
     error: personalAddressesError,
     refetch: refetchPersonalAddresses
-  } = platform.account.addresses.getPersonalAddresses.useQuery({});
+  } = platform.account.addresses.getPersonalAddresses.useQuery();
 
   const [ClaimAddressModalRoot, claimAddress] = useAwaitableModal(
     ClaimAddressModal,

@@ -1,12 +1,11 @@
 import { router, orgProcedure } from '~platform/trpc/trpc';
 import { contacts } from '@u22n/database/schema';
 import { eq } from '@u22n/database/orm';
-import { z } from 'zod';
 
 export const contactsRouter = router({
-  getOrgContacts: orgProcedure.input(z.object({})).query(async ({ ctx }) => {
+  getOrgContacts: orgProcedure.query(async ({ ctx }) => {
     const { db, org } = ctx;
-    const orgId = org?.id;
+    const orgId = org.id;
 
     const orgContactsResponse = await db.query.contacts.findMany({
       where: eq(contacts.orgId, orgId),

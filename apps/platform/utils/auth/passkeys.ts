@@ -6,7 +6,6 @@ import {
 } from './passkeyUtils';
 import type {
   RegistrationResponseJSON,
-  PublicKeyCredentialDescriptorFuture,
   AuthenticationResponseJSON
 } from '@simplewebauthn/types';
 import * as webAuthn from '@simplewebauthn/server';
@@ -21,8 +20,6 @@ type RegistrationOptions = {
   userDisplayName: string;
   authenticatorAttachment?: 'platform' | 'cross-platform';
 };
-
-const authStorage = storage.auth;
 
 export async function generateRegistrationOptions(
   options: RegistrationOptions
@@ -55,10 +52,10 @@ export async function generateRegistrationOptions(
     }
   });
 
-  await authStorage.setItem(
-    `passkeyChallenge: ${accountPublicId}`,
-    registrationOptions.challenge
-  );
+  await storage.passkeyChallenges.setItem(accountPublicId, {
+    type: 'registration',
+    challenge: registrationOptions.challenge
+  });
 
   return registrationOptions;
 }
@@ -70,11 +67,9 @@ export async function verifyRegistrationResponse({
   registrationResponse: RegistrationResponseJSON;
   publicId: string;
 }) {
-  const expectedChallenge = await authStorage.getItem<string>(
-    `passkeyChallenge: ${publicId}`
-  );
+  const expectedChallenge = await storage.passkeyChallenges.getItem(publicId);
 
-  if (!expectedChallenge) {
+  if (!expectedChallenge || expectedChallenge.type !== 'registration') {
     throw new TRPCError({
       code: 'BAD_REQUEST',
       message:
@@ -85,11 +80,12 @@ export async function verifyRegistrationResponse({
   const verifiedRegistrationResponse =
     await webAuthn.verifyRegistrationResponse({
       response: registrationResponse,
-      expectedChallenge: expectedChallenge.toString(),
+      expectedChallenge: expectedChallenge.challenge,
       expectedOrigin: env.WEBAPP_URL,
       expectedRPID: env.PRIMARY_DOMAIN
     });
-  await authStorage.removeItem(`passkeyChallenge: ${publicId}`);
+
+  await storage.passkeyChallenges.removeItem(publicId);
   if (!verifiedRegistrationResponse.verified) {
     throw new Error('Registration verification failed');
   }
@@ -103,20 +99,15 @@ export async function generateAuthenticationOptions({
   authChallengeId: string;
   accountId?: number;
 }) {
-  const credentials: PublicKeyCredentialDescriptorFuture[] = [];
-
-  if (accountId) {
-    const accountPasskeys =
-      await listAuthenticatorsByAccountCredentialId(accountId);
-
-    for (const passkey of accountPasskeys) {
-      credentials.push({
-        id: passkey.credentialID,
-        type: 'public-key',
-        transports: passkey.transports
-      });
-    }
-  }
+  const credentials = accountId
+    ? (await listAuthenticatorsByAccountCredentialId(accountId)).map(
+        (passkey) => ({
+          id: passkey.credentialID,
+          type: 'public-key' as const,
+          transports: passkey.transports
+        })
+      )
+    : [];
 
   const authenticationOptions = await webAuthn.generateAuthenticationOptions({
     rpID: env.PRIMARY_DOMAIN,
@@ -125,8 +116,10 @@ export async function generateAuthenticationOptions({
     allowCredentials: credentials
   });
 
-  const userChallenge = authenticationOptions.challenge;
-  await authStorage.setItem(`authChallenge: ${authChallengeId}`, userChallenge);
+  await storage.passkeyChallenges.setItem(authChallengeId, {
+    type: 'authentication',
+    challenge: authenticationOptions.challenge
+  });
 
   return authenticationOptions;
 }
@@ -147,13 +140,19 @@ export async function verifyAuthenticationResponse({
     });
   }
 
-  const expectedChallenge = await authStorage.getItem(
-    `authChallenge: ${authChallengeId}`
-  );
+  const expectedChallenge =
+    await storage.passkeyChallenges.getItem(authChallengeId);
+
+  if (!expectedChallenge || expectedChallenge.type !== 'authentication') {
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      message: 'Authentication challenge not found'
+    });
+  }
 
   const verificationResult = await webAuthn.verifyAuthenticationResponse({
     response: authenticationResponse,
-    expectedChallenge: expectedChallenge as string,
+    expectedChallenge: expectedChallenge.challenge,
     expectedOrigin: env.WEBAPP_URL,
     expectedRPID: env.PRIMARY_DOMAIN,
     requireUserVerification: true,

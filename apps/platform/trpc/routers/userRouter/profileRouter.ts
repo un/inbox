@@ -6,43 +6,6 @@ import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 
 export const profileRouter = router({
-  // createProfile: accountProcedure
-  //   .input(
-  //     z.object({
-  //       fName: z.string(),
-  //       lName: z.string(),
-  //       handle: z.string().min(2).max(20),
-  //       defaultProfile: z.boolean().optional().default(false)
-  //     })
-  //   )
-  //   .mutation(async ({ ctx, input }) => {
-  //     const { db, user } = ctx;
-  //     const userId = user.id;
-
-  //     const newPublicId = typeIdGenerator('orgMemberProfile');
-  //     const insertUserProfileResponse = await db.insert(orgMemberProfiles).values({
-  //       userId: userId,
-  //       publicId: newPublicId,
-  //       firstName: input.fName,
-  //       lastName: input.lName,
-  //       defaultProfile: input.defaultProfile,
-  //       handle: input.handle
-  //     });
-
-  //     if (!insertUserProfileResponse.insertId) {
-  //       return {
-  //         success: false,
-  //         profileId: null,
-  //         error:
-  //           'Something went wrong, please retry. Contact our team if it persists'
-  //       };
-  //     }
-  //     return {
-  //       success: true,
-  //       profileId: newPublicId,
-  //       error: null
-  //     };
-  //   }),
   getOrgMemberProfile: accountProcedure
     .input(
       z.object({

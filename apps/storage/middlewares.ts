@@ -9,7 +9,7 @@ const middlewareTracer = getTracer('storage/hono/middleware');
 
 export const authMiddleware = createMiddleware<Ctx>(async (c, next) =>
   middlewareTracer.startActiveSpan('Auth Middleware', async (span) => {
-    const sessionCookie = getCookie(c, 'unsession');
+    const sessionCookie = getCookie(c, 'un-session');
     span?.setAttribute('req.auth.meta.has_cookie', !!sessionCookie);
     if (!sessionCookie) {
       c.set('account', null);

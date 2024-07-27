@@ -10,7 +10,6 @@ import { contactsRouter } from './routers/contactRouter/contactRouter';
 import { twoFactorRouter } from './routers/authRouter/twoFactorRouter';
 import { passwordRouter } from './routers/authRouter/passwordRouter';
 import { recoveryRouter } from './routers/authRouter/recoveryRouter';
-import { defaultsRouter } from './routers/userRouter/defaultsRouter';
 import { securityRouter } from './routers/userRouter/securityRouter';
 import { teamsRouter } from './routers/orgRouter/users/teamsRouter';
 import { passkeyRouter } from './routers/authRouter/passkeyRouter';
@@ -31,7 +30,6 @@ const trpcPlatformAuthRouter = router({
 });
 
 const trpcPlatformAccountRouter = router({
-  defaults: defaultsRouter,
   profile: profileRouter,
   addresses: addressRouter,
   security: securityRouter

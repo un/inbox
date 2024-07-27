@@ -21,19 +21,6 @@ export const convoEntryRouter = router({
     .query(async ({ ctx, input }) => {
       const { db, org } = ctx;
 
-      if (!ctx.account || !ctx.org) {
-        throw new TRPCError({
-          code: 'UNPROCESSABLE_CONTENT',
-          message: 'Account or Organization is not defined'
-        });
-      }
-      if (!org?.memberId) {
-        throw new TRPCError({
-          code: 'UNPROCESSABLE_CONTENT',
-          message: 'Account is not a member of the organization'
-        });
-      }
-
       const orgId = org.id;
       const accountOrgMemberId = org.memberId;
 
@@ -218,20 +205,6 @@ export const convoEntryRouter = router({
     )
     .query(async ({ ctx, input }) => {
       const { db, org } = ctx;
-
-      if (!ctx.account || !ctx.org) {
-        throw new TRPCError({
-          code: 'UNPROCESSABLE_CONTENT',
-          message: 'Account or Organization is not defined'
-        });
-      }
-      if (!org?.memberId) {
-        throw new TRPCError({
-          code: 'UNPROCESSABLE_CONTENT',
-          message: 'Account is not a member of the organization'
-        });
-      }
-
       const orgId = org.id;
       const accountOrgMemberId = org.memberId;
 
@@ -389,20 +362,6 @@ export const convoEntryRouter = router({
     )
     .query(async ({ ctx, input }) => {
       const { db, org } = ctx;
-
-      if (!ctx.account || !ctx.org) {
-        throw new TRPCError({
-          code: 'UNPROCESSABLE_CONTENT',
-          message: 'Account or Organization is not defined'
-        });
-      }
-      if (!org?.memberId) {
-        throw new TRPCError({
-          code: 'UNPROCESSABLE_CONTENT',
-          message: 'Account is not a member of the organization'
-        });
-      }
-
       const orgId = org.id;
       const accountOrgMemberId = org.memberId;
 

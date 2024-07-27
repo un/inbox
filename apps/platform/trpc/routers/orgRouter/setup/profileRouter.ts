@@ -14,14 +14,8 @@ export const orgProfileRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      if (!ctx.account || !ctx.org) {
-        throw new TRPCError({
-          code: 'UNPROCESSABLE_CONTENT',
-          message: 'Account or Organization is not defined'
-        });
-      }
       const { db, org } = ctx;
-      const orgId = org?.id;
+      const orgId = org.id;
       const { orgPublicId } = input;
 
       const orgProfileQuery = await db.query.orgs.findFirst({
@@ -52,14 +46,8 @@ export const orgProfileRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.account || !ctx.org) {
-        throw new TRPCError({
-          code: 'UNPROCESSABLE_CONTENT',
-          message: 'Account or Organization is not defined'
-        });
-      }
       const { db, org } = ctx;
-      const orgId = org?.id;
+      const orgId = org.id;
       const { orgName } = input;
 
       await db

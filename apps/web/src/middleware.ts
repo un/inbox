@@ -37,7 +37,7 @@ export default async function middleware(req: NextRequest) {
       // remove invalid session cookie
       const res = NextResponse.next();
       // eslint-disable-next-line drizzle/enforce-delete-with-where
-      res.cookies.delete('unsession');
+      res.cookies.delete('un-session');
       return res;
     }
   }

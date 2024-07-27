@@ -4,7 +4,7 @@ import { eq } from '@u22n/database/orm';
 import { db } from '@u22n/database';
 
 export async function getAccount(req: NextRequest) {
-  const sessionCookie = req.cookies.get('unsession');
+  const sessionCookie = req.cookies.get('un-session');
 
   if (!sessionCookie) {
     // Redirect to the webapp if the user is not logged in

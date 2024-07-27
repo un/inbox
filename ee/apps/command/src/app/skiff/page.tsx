@@ -49,7 +49,7 @@ export default function Page() {
                 toast.error('Org not found');
                 return;
               }
-              await mutateAsync({ orgId: data.org?.id });
+              await mutateAsync({ orgId: data.org.id });
             }}
             disabled={isPending}
             className="w-fit">
