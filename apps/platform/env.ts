@@ -52,7 +52,8 @@ export const env = createEnv({
     BILLING_KEY: z.string().nullable().default(null),
     BILLING_URL: z.string().url().nullable().default(null),
     PORT: z.coerce.number().int().min(1).max(65535).default(3300),
-    NODE_ENV: z.enum(['development', 'production']).default('development')
+    NODE_ENV: z.enum(['development', 'production']).default('development'),
+    DANGEROUS_DISABLE_EMAIL_SENDING: z.string().optional().default('false')
   },
   runtimeEnv: process.env
 });

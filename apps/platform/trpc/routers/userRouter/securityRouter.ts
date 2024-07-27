@@ -1012,13 +1012,15 @@ export const securityRouter = router({
         verificationCode
       ); // 15 minutes expiry
 
+      // todo: implement a way to log the email sent when on dev
+
       // console.log('send email with info', {
       //   to: input.recoveryEmail,
       //   subject: 'Verify your recovery email. You have 5 min.',
       //   text: `Your verification code is: ${verificationCode}`
       // });
 
-      const confirmationUrl = `https://${env.WEBAPP_URL}/recovery/verify-emai/?code=${verificationCode}`;
+      const confirmationUrl = `${env.WEBAPP_URL}/recovery/verify-email/?code=${verificationCode}`;
 
       // Send verification email
       await sendRecoveryEmailConfirmation({
