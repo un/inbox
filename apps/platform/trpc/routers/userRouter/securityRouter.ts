@@ -982,7 +982,6 @@ export const securityRouter = router({
       const { db, account } = ctx;
 
       const hashedEmail = await new Argon2id().hash(input.recoveryEmail);
-      console.log('hashedEmail', hashedEmail);
       // add recovery code to cash
       await db
         .update(accounts)
