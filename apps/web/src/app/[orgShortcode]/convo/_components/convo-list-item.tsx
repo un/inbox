@@ -3,7 +3,7 @@
 import { type RouterOutputs } from '@/src/lib/trpc';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { useMemo } from 'react';
-import useTimeAgo from '@/src/hooks/use-time-ago';
+import { useTimeAgo } from '@/src/hooks/use-time-ago';
 import { formatParticipantData } from '../utils';
 import Link from 'next/link';
 import AvatarPlus from '@/src/components/avatar-plus';
@@ -63,15 +63,15 @@ export function ConvoItem({
     <Link
       href={link}
       className={cn(
-        'flex h-full w-full max-w-full flex-row gap-2 overflow-visible rounded-lg border-2 px-2 py-3',
+        'flex h-full flex-row gap-2 overflow-visible rounded-xl border-2 px-2 py-3',
         isActive ? 'border-accent-8' : 'hover:border-base-6 border-transparent'
       )}>
       <AvatarPlus
         size="md"
         users={participantData}
       />
-      <div className="flex w-full flex-1 flex-col">
-        <div className="flex w-full flex-row items-end justify-between gap-1">
+      <div className="flex w-[90%] flex-1 flex-col">
+        <div className="flex flex-row items-end justify-between gap-1">
           <span className="truncate text-sm font-medium">
             {participantNames.join(', ')}
           </span>
@@ -80,11 +80,11 @@ export function ConvoItem({
           </span>
         </div>
 
-        <span className="w-full truncate text-left text-xs font-medium">
+        <span className="truncate break-all text-left text-xs font-medium">
           {convo.subjects[0]?.subject}
         </span>
 
-        <div className="flex w-full flex-row items-start justify-start gap-1 text-left text-sm">
+        <div className="flex flex-row items-start justify-start gap-1 text-left text-sm">
           <div className="px-0.5">
             {authorAvatarData && (
               <Avatar
@@ -98,7 +98,7 @@ export function ConvoItem({
             )}
           </div>
 
-          <span className="line-clamp-2 w-full max-w-full overflow-ellipsis break-words">
+          <span className="line-clamp-2 overflow-ellipsis whitespace-break-spaces break-words">
             {convo.entries[0]?.bodyPlainText ?? ''}
           </span>
         </div>

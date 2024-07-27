@@ -1,13 +1,7 @@
 'use client';
 
-import useLoading from '@/src/hooks/use-loading';
-import { cn, generateAvatarUrl, getInitials } from '@/src/lib/utils';
+import { cn } from '@/src/lib/utils';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage
-} from '@/src/components/shadcn-ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,18 +35,23 @@ import {
 } from '@phosphor-icons/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useMemo } from 'react';
 import { toast } from 'sonner';
-import { useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import React from 'react';
 import { useTheme } from 'next-themes';
 import { sidebarSubmenuOpenAtom } from './atoms';
-import { useAtom } from 'jotai';
 import {
   ToggleGroup,
   ToggleGroupItem
 } from '@/src/components/shadcn-ui/toggle-group';
 import { env } from '@/src/env';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger
+} from '@/src/components/shadcn-ui/tooltip';
+import { useSetAtom } from 'jotai';
+import { Avatar } from '@/src/components/avatar';
 
 export default function SidebarContent() {
   const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
@@ -97,36 +96,12 @@ function OrgMenu() {
   const username = useGlobalStore((state) => state.user.username);
   const orgs = useGlobalStore((state) => state.orgs);
   const queryClient = useQueryClient();
-  const [, setSidebarSubmenuOpen] = useAtom(sidebarSubmenuOpenAtom);
-
+  const setSidebarSubmenuOpen = useSetAtom(sidebarSubmenuOpenAtom);
   const { theme, setTheme } = useTheme();
   const router = useRouter();
 
-  const orgAvatarUrl = useMemo(
-    () =>
-      generateAvatarUrl({
-        publicId: currentOrg.publicId,
-        avatarTimestamp: currentOrg.avatarTimestamp,
-        size: '5xl'
-      }),
-    [currentOrg.publicId, currentOrg.avatarTimestamp]
-  );
-
-  const userAvatarUrl = useMemo(
-    () =>
-      generateAvatarUrl({
-        publicId: currentOrg.orgMemberProfile.publicId,
-        avatarTimestamp: currentOrg.orgMemberProfile.avatarTimestamp,
-        size: '5xl'
-      }),
-    [
-      currentOrg.orgMemberProfile.publicId,
-      currentOrg.orgMemberProfile.avatarTimestamp
-    ]
-  );
-
-  const { run: logOut, loading: loggingOut } = useLoading(
-    async () => {
+  const { mutateAsync: logOut, isPending: loggingOut } = useMutation({
+    mutationFn: async () => {
       await fetch(`${env.NEXT_PUBLIC_PLATFORM_URL}/auth/logout`, {
         method: 'POST',
         credentials: 'include'
@@ -134,12 +109,12 @@ function OrgMenu() {
       queryClient.removeQueries();
       router.replace('/');
     },
-    {
-      onError: (error) => {
-        if (error) toast.error(error.message);
-      }
+    onError: (error) => {
+      toast.error('Something went wrong while logging out', {
+        description: error.message
+      });
     }
-  );
+  });
 
   const displayName =
     `${currentOrg.orgMemberProfile.firstName ?? username} ${currentOrg.orgMemberProfile.lastName}`.trim();
@@ -152,12 +127,13 @@ function OrgMenu() {
             'bg-base-1 border-base-5 hover:bg-base-2 flex w-full flex-row items-center justify-between gap-2 rounded-lg border p-3 shadow-sm'
           }>
           <div className={'flex flex-row items-center gap-2'}>
-            <Avatar className="h-8 w-8">
-              <AvatarImage src={orgAvatarUrl ?? undefined} />
-              <AvatarFallback className={'text-sm font-semibold'}>
-                {getInitials(currentOrg.name)}
-              </AvatarFallback>
-            </Avatar>
+            <Avatar
+              avatarProfilePublicId={currentOrg.publicId}
+              avatarTimestamp={currentOrg.avatarTimestamp}
+              name={currentOrg.name}
+              size="lg"
+              hideTooltip
+            />
             <div className={'flex flex-col items-start justify-start'}>
               <span className={cn('text-sm font-semibold leading-none')}>
                 {currentOrg.name}
@@ -180,10 +156,13 @@ function OrgMenu() {
                 Signed in as
               </span>
               <div className={'flex flex-row gap-2'}>
-                <Avatar>
-                  <AvatarImage src={userAvatarUrl ?? undefined} />
-                  <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
-                </Avatar>
+                <Avatar
+                  avatarProfilePublicId={currentOrg.orgMemberProfile.publicId}
+                  avatarTimestamp={currentOrg.orgMemberProfile.avatarTimestamp}
+                  name={currentOrg.orgMemberProfile.firstName ?? username}
+                  size="lg"
+                  hideTooltip
+                />
                 <div className="flex flex-col items-start justify-center">
                   <span
                     className={'text-base-12 text-sm font-medium leading-none'}>
@@ -222,18 +201,13 @@ function OrgMenu() {
                     'flex w-full cursor-pointer flex-row items-center justify-between gap-2'
                   }>
                   <div className="flex flex-row items-center gap-2">
-                    <Avatar>
-                      <AvatarImage
-                        src={
-                          generateAvatarUrl({
-                            publicId: org.publicId,
-                            avatarTimestamp: org.avatarTimestamp,
-                            size: '5xl'
-                          }) ?? undefined
-                        }
-                      />
-                      <AvatarFallback>{getInitials(org.name)}</AvatarFallback>
-                    </Avatar>
+                    <Avatar
+                      avatarProfilePublicId={org.publicId}
+                      avatarTimestamp={org.avatarTimestamp}
+                      name={org.name}
+                      size="lg"
+                      hideTooltip
+                    />
                     <span className={'text-base-12 text-sm font-medium'}>
                       {org.name}
                     </span>
@@ -256,10 +230,10 @@ function OrgMenu() {
                 <div className="flex flex-row items-center gap-2">
                   <div
                     className={
-                      'border-base-5 flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-md border-2 border-dotted'
+                      'border-base-5 flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-md border-2 border-dotted'
                     }>
                     <Plus
-                      weight="bold"
+                      weight="regular"
                       className={'absolute h-4 w-4'}
                     />
                   </div>
@@ -280,10 +254,7 @@ function OrgMenu() {
                 <span>Settings</span>
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem
-              onSelect={(event) => {
-                event.preventDefault();
-              }}>
+            <DropdownMenuItem onSelect={(event) => event.preventDefault()}>
               <div
                 className={
                   'text-base-11 flex w-full flex-row items-center justify-between'
@@ -301,34 +272,45 @@ function OrgMenu() {
                   size="xs"
                   className="gap-0"
                   value={theme}
-                  onValueChange={(value: string) => {
-                    setTheme(value);
-                  }}>
+                  onValueChange={(value) => setTheme(value)}>
                   <ToggleGroupItem
                     value="light"
                     aria-label="Toggle light mode"
-                    className={
-                      theme === 'light' ? 'border-base-7 rounded-md border' : ''
-                    }>
-                    <Sun className={'h-4 w-4'} />
+                    className={cn(
+                      theme === 'light' && 'border-base-7 rounded-md border'
+                    )}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Sun className={'h-4 w-4'} />
+                      </TooltipTrigger>
+                      <TooltipContent>Light mode</TooltipContent>
+                    </Tooltip>
                   </ToggleGroupItem>
                   <ToggleGroupItem
                     value="dark"
                     aria-label="Toggle dark mode"
-                    className={
-                      theme === 'dark' ? 'border-base-7 rounded-md border' : ''
-                    }>
-                    <MoonStars className={'h-4 w-4'} />
+                    className={cn(
+                      theme === 'dark' && 'border-base-7 rounded-md border'
+                    )}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <MoonStars className={'h-4 w-4'} />
+                      </TooltipTrigger>
+                      <TooltipContent>Dark mode</TooltipContent>
+                    </Tooltip>
                   </ToggleGroupItem>
                   <ToggleGroupItem
                     value="system"
-                    aria-label="Toggle system default"
-                    className={
-                      theme === 'system'
-                        ? 'border-base-7 rounded-md border'
-                        : ''
-                    }>
-                    <Monitor className={'h-4 w-4'} />
+                    aria-label="Follow system default"
+                    className={cn(
+                      theme === 'system' && 'border-base-7 rounded-md border'
+                    )}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Monitor className={'h-4 w-4'} />
+                      </TooltipTrigger>
+                      <TooltipContent>Follow System</TooltipContent>
+                    </Tooltip>
                   </ToggleGroupItem>
                 </ToggleGroup>
               </div>
@@ -393,9 +375,9 @@ function OrgMenu() {
           </DropdownMenuGroup>
           <DropdownMenuSeparator className="" />
           <DropdownMenuItem
-            onMouseDown={() => {
+            onMouseDown={async () => {
               setSidebarSubmenuOpen(false);
-              logOut();
+              await logOut();
             }}
             disabled={loggingOut}
             className="focus:bg-red-9 focus:text-base-1 text-base-11">

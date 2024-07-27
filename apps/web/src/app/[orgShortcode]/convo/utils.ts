@@ -271,6 +271,7 @@ export function useUpdateConvoMessageList$Cache() {
   const utils = platform.useUtils();
   const convoEntiresApi = utils.convos.entries.getConvoEntries;
   const singleConvoEntryApi = utils.convos.entries.getConvoSingleEntry;
+  const updateConvoData = useUpdateConvoData$Cache();
 
   // TODO: make the reply mutation return the new convo entry, to save one API call
   return useCallback(
@@ -284,6 +285,25 @@ export function useUpdateConvoMessageList$Cache() {
         convoEntryPublicId,
         orgShortcode
       });
+
+      await updateConvoData(convoId, (oldData) => {
+        const author = oldData.participants.find(
+          (participant) =>
+            participant.publicId === oldData.entries[0]?.author.publicId
+        );
+        if (!author) return oldData;
+
+        const newEntry: (typeof oldData.entries)[0] = {
+          author: structuredClone(author),
+          bodyPlainText: convo.entry.bodyPlainText,
+          type: convo.entry.type
+        };
+
+        oldData.lastUpdatedAt = new Date();
+        oldData.entries.unshift(newEntry);
+        return oldData;
+      });
+
       convoEntiresApi.setInfiniteData(
         { convoPublicId: convoId, orgShortcode },
         (updater) => {
@@ -304,6 +324,61 @@ export function useUpdateConvoMessageList$Cache() {
         }
       );
     },
-    [convoEntiresApi, orgShortcode, singleConvoEntryApi]
+    [convoEntiresApi, orgShortcode, singleConvoEntryApi, updateConvoData]
+  );
+}
+
+type ConvoUpdater =
+  RouterOutputs['convos']['getOrgMemberConvos']['data'][number];
+
+export function useUpdateConvoData$Cache() {
+  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const utils = platform.useUtils();
+  const convoApi = utils.convos.getConvo;
+  const orgMemberConvoApi = utils.convos.getOrgMemberConvos;
+
+  return useCallback(
+    async (
+      convoId: TypeId<'convos'>,
+      dataUpdater: (oldData: ConvoUpdater) => ConvoUpdater
+    ) => {
+      await orgMemberConvoApi.cancel({ orgShortcode });
+      orgMemberConvoApi.setInfiniteData({ orgShortcode }, (updater) => {
+        if (!updater) return;
+        const clonedUpdater = structuredClone(updater);
+
+        // find the page
+        const page = clonedUpdater.pages.find((page) =>
+          page.data.some((convo) => convo.publicId === convoId)
+        );
+        if (!page) return;
+
+        // find the target convo
+        const targetConvo = page.data.find(
+          (convo) => convo.publicId === convoId
+        )!;
+
+        // get the updated data
+        const updatedConvo = dataUpdater(targetConvo);
+
+        // refetch the updated convo (we don't have enough info to update the cache)
+        void convoApi.refetch({
+          orgShortcode,
+          convoPublicId: updatedConvo.publicId
+        });
+
+        // remove the target convo from the list
+        page.data.splice(
+          page.data.findIndex((convo) => convo.publicId === convoId),
+          1
+        );
+
+        // add the updated convo to the the 1st page 1st item
+        clonedUpdater.pages[0]?.data.unshift(updatedConvo);
+
+        return clonedUpdater;
+      });
+    },
+    [convoApi, orgMemberConvoApi, orgShortcode]
   );
 }

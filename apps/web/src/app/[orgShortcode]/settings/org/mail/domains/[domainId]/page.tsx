@@ -14,7 +14,7 @@ import {
   AccordionTrigger
 } from '@/src/components/shadcn-ui/accordion';
 import { CopyButton } from '@/src/components/copy-button';
-import useTimeAgo from '@/src/hooks/use-time-ago';
+import { useTimeAgo } from '@/src/hooks/use-time-ago';
 import {
   Alert,
   AlertDescription,

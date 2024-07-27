@@ -320,7 +320,8 @@ export const convoEntryRouter = router({
           createdAt: true,
           body: true,
           type: true,
-          metadata: true
+          metadata: true,
+          bodyPlainText: true
         },
         with: {
           subject: {

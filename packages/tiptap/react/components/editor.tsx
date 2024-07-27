@@ -1,6 +1,6 @@
 'use client';
-import { useMemo, useRef, forwardRef } from 'react';
-import { EditorProvider } from '@tiptap/react';
+import { useMemo, useRef, forwardRef, useImperativeHandle } from 'react';
+import { EditorProvider, useCurrentEditor } from '@tiptap/react';
 import { Provider } from 'jotai';
 import tunnel from 'tunnel-rat';
 import { tipTapExtensions } from '../../extensions';
@@ -36,20 +36,23 @@ export type EditorContentProps = Omit<EditorProviderProps, 'content'> & {
   readonly initialContent?: JSONContent;
 };
 
-export const EditorContent = forwardRef<HTMLDivElement, EditorContentProps>(
+export type EditorFunctions = {
+  clearContent: () => void;
+};
+
+export const EditorContent = forwardRef<EditorFunctions, EditorContentProps>(
   ({ className, children, initialContent, ...rest }, ref) => {
     const extensions = useMemo(() => {
       return [...tipTapExtensions, ...(rest.extensions ?? [])];
     }, [rest.extensions]);
 
     return (
-      <div
-        ref={ref}
-        className={className}>
+      <div className={className}>
         <EditorProvider
           {...rest}
           content={initialContent}
           extensions={extensions}>
+          <EditorForwarder ref={ref} />
           {children}
         </EditorProvider>
       </div>
@@ -58,3 +61,11 @@ export const EditorContent = forwardRef<HTMLDivElement, EditorContentProps>(
 );
 
 EditorContent.displayName = 'EditorContent';
+
+export const EditorForwarder = forwardRef<EditorFunctions>((_, ref) => {
+  const { editor } = useCurrentEditor();
+  useImperativeHandle(ref, () => ({
+    clearContent: () => editor?.commands.clearContent()
+  }));
+  return null;
+});

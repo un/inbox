@@ -3,7 +3,6 @@
 import { Camera, SpinnerGap } from '@phosphor-icons/react';
 import { useEffect, useState, useMemo } from 'react';
 import { cn, generateAvatarUrl, openFilePicker } from '@/src/lib/utils';
-import useLoading from '@/src/hooks/use-loading';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { platform } from '@/src/lib/trpc';
 import { Button } from '@/src/components/shadcn-ui/button';
@@ -19,6 +18,23 @@ import {
 import AvatarCrop from '@/src/components/avatar-crop';
 import { useAvatarUploader } from '@/src/hooks/use-avatar-uploader';
 import { toast } from 'sonner';
+import { z } from 'zod';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage
+} from '@/src/components/shadcn-ui/form';
+
+const profileFormSchema = z.object({
+  firstName: z.string().min(1, { message: 'First name is required' }),
+  lastName: z.string(),
+  title: z.string(),
+  blurb: z.string()
+});
 
 export default function Page() {
   const profile = useGlobalStore((state) => state.currentOrg.orgMemberProfile);
@@ -26,18 +42,24 @@ export default function Page() {
   const updateOrg = useGlobalStore((state) => state.updateOrg);
 
   const {
-    data: initData,
-    isLoading: isInitDataLoading,
+    data: profileData,
+    isLoading: profileLoading,
     refetch: revalidateProfile
   } = platform.account.profile.getOrgMemberProfile.useQuery({
     orgShortcode: currentOrg.shortcode
   });
 
+  const form = useForm<z.infer<typeof profileFormSchema>>({
+    resolver: zodResolver(profileFormSchema),
+    defaultValues: {
+      firstName: '',
+      lastName: '',
+      title: '',
+      blurb: ''
+    }
+  });
+
   const [avatarTimestamp, setAvatarTimestamp] = useState<Date | null>(null);
-  const [firstNameValue, setFirstNameValue] = useState('');
-  const [lastNameValue, setLastNameValue] = useState('');
-  const [titleValue, setTitleValue] = useState('');
-  const [bioValue, setBioValue] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const { uploading, progress, upload } = useAvatarUploader({
     onError: (error) => {
@@ -51,45 +73,46 @@ export default function Page() {
   });
 
   const avatarUrl = useMemo(() => {
-    if (!initData || !avatarTimestamp) return null;
+    if (!profileData || !avatarTimestamp) return null;
     return generateAvatarUrl({
-      publicId: initData.profile.publicId,
+      publicId: profileData.profile.publicId,
       avatarTimestamp,
       size: '5xl'
     });
-  }, [avatarTimestamp, initData]);
+  }, [avatarTimestamp, profileData]);
 
   useEffect(() => {
-    if (initData) {
-      updateOrg(currentOrg.shortcode, { orgMemberProfile: initData.profile });
-      setFirstNameValue(initData.profile.firstName ?? '');
-      setLastNameValue(initData.profile.lastName ?? '');
-      setTitleValue(initData.profile.title ?? '');
-      setBioValue(initData.profile.blurb ?? '');
-      setAvatarTimestamp(initData.profile.avatarTimestamp);
+    if (profileData) {
+      updateOrg(currentOrg.shortcode, {
+        orgMemberProfile: profileData.profile
+      });
+      form.setValue('firstName', profileData.profile.firstName ?? '');
+      form.setValue('lastName', profileData.profile.lastName ?? '');
+      form.setValue('title', profileData.profile.title ?? '');
+      form.setValue('blurb', profileData.profile.blurb ?? '');
+      setAvatarTimestamp(profileData.profile.avatarTimestamp);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initData]);
+  }, [currentOrg.shortcode, form, profileData, updateOrg]);
 
-  const updateProfileApi =
-    platform.account.profile.updateOrgMemberProfile.useMutation();
-  const { loading: saveLoading, run: saveProfile } = useLoading(async () => {
-    if (!initData) return;
-    await updateProfileApi.mutateAsync({
-      name: `${firstNameValue} ${lastNameValue}`,
-      blurb: bioValue,
-      title: titleValue,
-      handle: initData.profile.handle ?? '',
-      profilePublicId: initData.profile.publicId
+  const { mutateAsync: updateProfile, isPending: updatingProfile } =
+    platform.account.profile.updateOrgMemberProfile.useMutation({
+      onError: (error) => {
+        toast.error("Couldn't update profile", {
+          description: error.message
+        });
+      },
+      onSuccess: () => {
+        void revalidateProfile();
+      }
     });
-    await revalidateProfile();
-  });
 
-  if (isInitDataLoading)
+  if (profileLoading)
     return (
-      <div className="flex h-12 w-full items-center justify-center">
-        <SpinnerGap className="size-4 animate-ping" />
-        <span className="text-base-11 text-sm">Loading Profile...</span>
+      <div className="flex h-32 w-full items-center justify-center gap-2">
+        <SpinnerGap className="size-4 animate-spin" />
+        <span className="text-base-11 text-sm font-semibold">
+          Loading Profile...
+        </span>
       </div>
     );
 
@@ -125,39 +148,96 @@ export default function Page() {
             </div>
           )}
         </Button>
+        <div className="flex w-fit flex-col gap-2">
+          <Form {...form}>
+            <div className="flex gap-2">
+              <FormField
+                control={form.control}
+                name="firstName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Input
+                        inputSize="lg"
+                        label="First Name"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="lastName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Input
+                        inputSize="lg"
+                        label="Last Name"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <div className="flex gap-2">
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Input
+                        inputSize="lg"
+                        label="Title"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-        <div className="flex gap-2">
-          <Input
-            label="First Name"
-            value={firstNameValue}
-            onChange={(e) => setFirstNameValue(e.target.value)}
-          />
-
-          <Input
-            label="Last Name"
-            value={lastNameValue}
-            onChange={(e) => setLastNameValue(e.target.value)}
-          />
-        </div>
-        <div className="flex gap-2">
-          <Input
-            label="Title"
-            value={titleValue}
-            onChange={(e) => setTitleValue(e.target.value)}
-          />
-
-          <Input
-            label="Blurb"
-            value={bioValue}
-            onChange={(e) => setBioValue(e.target.value)}
-          />
-        </div>
-        <div className="flex w-full gap-2">
-          <Button
-            loading={saveLoading}
-            onClick={() => saveProfile({ clearData: true, clearError: true })}>
-            Save
-          </Button>
+              <FormField
+                control={form.control}
+                name="blurb"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Input
+                        inputSize="lg"
+                        label="Bio"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <div className="flex w-full gap-2">
+              <Button
+                loading={updatingProfile}
+                onClick={(e) => {
+                  if (!profileData) return;
+                  return form.handleSubmit((data) =>
+                    updateProfile({
+                      name: `${data.firstName} ${data.lastName}`,
+                      blurb: data.blurb,
+                      title: data.title,
+                      handle: profileData.profile.handle ?? '',
+                      profilePublicId: profileData.profile.publicId
+                    })
+                  )(e);
+                }}>
+                Save
+              </Button>
+            </div>
+          </Form>
         </div>
       </div>
       {file && (

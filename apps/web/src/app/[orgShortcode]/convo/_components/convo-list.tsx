@@ -38,11 +38,9 @@ export function ConvoList(props: Props) {
     (index: number, convo: (typeof allConvos)[number]) => {
       return (
         <div key={convo.publicId}>
-          <div className="h-full w-full">
-            <ConvoItem convo={convo} />
-          </div>
+          <ConvoItem convo={convo} />
           {index === allConvos.length - 1 && hasNextPage && (
-            <div className="flex w-full justify-center gap-2 text-center font-bold">
+            <div className="flex w-full items-center justify-center gap-1 text-center font-semibold">
               <SpinnerGap
                 className="size-4 animate-spin"
                 size={16}
@@ -57,9 +55,9 @@ export function ConvoList(props: Props) {
   );
 
   return (
-    <div className="flex h-full w-full flex-col">
+    <div className="flex h-full flex-col">
       {isLoading ? (
-        <div className="flex w-full justify-center gap-2 text-center font-bold">
+        <div className="flex w-full items-center justify-center gap-2 text-center font-bold">
           <SpinnerGap
             className="size-4 animate-spin"
             size={16}
@@ -74,6 +72,7 @@ export function ConvoList(props: Props) {
           endReached={async () => {
             if (hasNextPage && !isFetchingNextPage) await fetchNextPage();
           }}
+          increaseViewportBy={100}
         />
       )}
     </div>
