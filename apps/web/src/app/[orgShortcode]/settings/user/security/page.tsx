@@ -11,7 +11,7 @@ import {
 } from './_components/reset-modals';
 import useAwaitableModal from '@/src/hooks/use-awaitable-modal';
 import { toast } from 'sonner';
-import { Trash } from '@phosphor-icons/react';
+import { Trash, CheckCircle, Clock } from '@phosphor-icons/react';
 import { format } from 'date-fns';
 import useLoading from '@/src/hooks/use-loading';
 import { startRegistration } from '@simplewebauthn/browser';
@@ -22,7 +22,66 @@ import { PageTitle } from '../../_components/page-title';
 import { Skeleton } from '@/src/components/shadcn-ui/skeleton';
 import { Switch } from '@/src/components/shadcn-ui/switch';
 import { Button } from '@/src/components/shadcn-ui/button';
+import { Input } from '@/src/components/shadcn-ui/input';
 // import { PasskeyNameModal } from './_components/passkey-modals';
+
+export function RecoveryEmailSection() {
+  const [recoveryEmail, setRecoveryEmail] = useState('');
+
+  const { data: recoveryEmailStatus } =
+    platform.account.security.getRecoveryEmailStatus.useQuery();
+  const { mutateAsync: setRecoveryEmailMutation } =
+    platform.account.security.setRecoveryEmail.useMutation();
+
+  const handleSetRecoveryEmail = async () => {
+    toast.promise(setRecoveryEmailMutation({ recoveryEmail }), {
+      loading: 'Sending you a verification code to your email',
+      success: 'Check your emails for a verification code',
+      error: 'Something went wrong while setting your recovery email'
+    });
+  };
+
+  return (
+    <div className="space-y-2">
+      <h3 className="text-lg font-medium">Recovery Email</h3>
+      {recoveryEmailStatus?.isSet ? (
+        recoveryEmailStatus.isVerified ? (
+          <div className="text-green-6 flex items-center space-x-1">
+            <CheckCircle
+              size={20}
+              weight="fill"
+            />
+            <p>Your recovery email is set and verified.</p>
+          </div>
+        ) : (
+          <div className="text-yellow-9 flex items-center space-x-1">
+            <Clock
+              size={20}
+              weight="fill"
+            />
+            <p>Your recovery email is set but not verified yet</p>
+          </div>
+        )
+      ) : (
+        <div>
+          <Input
+            label="Recovery Email"
+            type="email"
+            value={recoveryEmail}
+            onChange={(e) => setRecoveryEmail(e.target.value)}
+            placeholder="Enter recovery email"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                void handleSetRecoveryEmail();
+              }
+            }}
+          />
+          <Button onClick={handleSetRecoveryEmail}>Set Recovery Email</Button>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function Page() {
   const queryClient = useQueryClient();
@@ -357,6 +416,7 @@ export default function Page() {
               Logout of All Sessions
             </Button>
           </div>
+          <RecoveryEmailSection />
         </div>
       )}
 

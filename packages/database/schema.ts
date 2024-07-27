@@ -67,6 +67,8 @@ export const accounts = mysqlTable(
     createdAt: timestamp('created_at').$defaultFn(() => new Date()),
     lastLoginAt: timestamp('last_login_at'),
     passwordHash: varchar('password_hash', { length: 255 }),
+    recoveryEmailHash: varchar('recovery_email_hash', { length: 255 }),
+    recoveryEmailVerifiedAt: timestamp('recovery_email_verified_at'),
     twoFactorSecret: varchar('two_factor_secret', { length: 255 }),
     twoFactorEnabled: boolean('two_factor_enabled').notNull().default(false),
     recoveryCode: varchar('recovery_code', { length: 256 }),
