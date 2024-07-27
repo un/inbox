@@ -1002,14 +1002,12 @@ export const securityRouter = router({
           message: 'Account data not found'
         });
       }
-      // 15 minutes expiry
-      // Generate verification code
 
       const verificationCode = nanoIdToken();
       await authStorage.setItem(
-        `recoveryEmailVerifcationCode:${account.id}`,
+        `recoveryEmailVerificationCode:${account.id}`,
         verificationCode
-      ); // 15 minutes expiry
+      );
 
       const confirmationUrl = `${env.WEBAPP_URL}/recovery/verify-email/?code=${verificationCode}`;
 
@@ -1019,7 +1017,7 @@ export const securityRouter = router({
         username: accountData.username,
         recoveryEmail: input.recoveryEmail,
         confirmationUrl: confirmationUrl,
-        expiryDate: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+        expiryDate: datePlus('15 minutes').toDateString(),
         verificationCode
       });
 
@@ -1036,7 +1034,7 @@ export const securityRouter = router({
       const { db, account } = ctx;
 
       const storedCode = await authStorage.getItem(
-        `recoveryEmailVerifcationCode:${account.id}`
+        `recoveryEmailVerificationCode:${account.id}`
       );
       if (storedCode !== input.verificationCode) {
         throw new TRPCError({
@@ -1046,10 +1044,10 @@ export const securityRouter = router({
       }
       await db
         .update(accounts)
-        .set({ recoveryEmailRecoveredAt: new Date() })
+        .set({ recoveryEmailVerifiedAt: new Date() })
         .where(eq(accounts.id, account.id));
 
-      authStorage.removeItem(`recoveryEmailVerifcationCode:${account.id}`);
+      authStorage.removeItem(`recoveryEmailVerificationCode:${account.id}`);
 
       return { success: true };
     }),
@@ -1060,12 +1058,18 @@ export const securityRouter = router({
       where: eq(accounts.id, account.id),
       columns: {
         recoveryEmailHash: true,
-        recoveryEmailRecoveredAt: true
+        recoveryEmailVerifiedAt: true
       }
     });
+    if (!result) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'Account data not found'
+      });
+    }
     return {
-      isSet: !!result?.recoveryEmailHash,
-      isVerified: result?.recoveryEmailRecoveredAt
+      isSet: Boolean(result.recoveryEmailHash),
+      isVerified: Boolean(result.recoveryEmailVerifiedAt)
     };
   })
 });

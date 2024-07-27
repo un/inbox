@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { platform } from '@/src/lib/trpc';
 import { Button } from '@/src/components/shadcn-ui/button';
@@ -10,45 +10,25 @@ import Link from 'next/link';
 
 export default function VerifyEmailPage() {
   const searchParams = useSearchParams();
-  const [verificationCode, setVerificationCode] = useState('');
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [isVerified, setIsVerified] = useState(false);
+  const [verificationCode, setVerificationCode] = useState(
+    searchParams.get('code') ?? ''
+  );
 
-  const { mutateAsync: verifyRecoveryEmail } =
-    platform.account.security.verifyRecoveryEmail.useMutation();
-
-  useEffect(() => {
-    const code = searchParams.get('code');
-    if (code) {
-      setVerificationCode(code);
-    }
-  }, [searchParams]);
-
-  const handleVerify = async () => {
-    if (!verificationCode) {
-      toast.error('Please enter the verification code');
-      return;
-    }
-
-    setIsVerifying(true);
-    try {
-      await verifyRecoveryEmail({ verificationCode });
+  const {
+    mutateAsync: verifyRecoveryEmail,
+    isPending: isVerifying,
+    data: isVerified
+  } = platform.account.security.verifyRecoveryEmail.useMutation({
+    onSuccess: () => {
       toast.success('Recovery email verified successfully');
-      setIsVerified(true);
-    } catch (error: unknown) {
+    },
+    onError: (error: unknown) => {
       toast.error('Failed to verify recovery email', {
         description:
           error instanceof Error ? error.message : 'Unknown error occurred'
       });
-    } finally {
-      setIsVerifying(false);
     }
-  };
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    void handleVerify();
-  };
+  });
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-4">
@@ -66,27 +46,25 @@ export default function VerifyEmailPage() {
         </>
       ) : (
         <form
-          onSubmit={handleSubmit}
+          onSubmit={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            void verifyRecoveryEmail({ verificationCode });
+          }}
           className="w-full max-w-xs">
           <p className="mb-4 text-sm text-gray-600">
             Please enter the verification code sent to your recovery email.
           </p>
           <Input
+            inputSize="lg"
             label="Verification Code"
-            type="text"
             value={verificationCode}
             onChange={(e) => setVerificationCode(e.target.value)}
-            placeholder="Enter verification code"
-            className="w-full"
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                void handleVerify();
-              }
-            }}
           />
           <Button
             type="submit"
-            disabled={isVerifying}
+            loading={isVerifying}
+            disabled={verificationCode.length !== 32}
             className="w-full">
             {isVerifying ? 'Verifying...' : 'Verify Email'}
           </Button>

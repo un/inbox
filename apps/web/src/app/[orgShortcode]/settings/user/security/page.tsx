@@ -11,7 +11,7 @@ import {
 } from './_components/reset-modals';
 import useAwaitableModal from '@/src/hooks/use-awaitable-modal';
 import { toast } from 'sonner';
-import { Trash } from '@phosphor-icons/react';
+import { Trash, CheckCircle, Clock } from '@phosphor-icons/react';
 import { format } from 'date-fns';
 import useLoading from '@/src/hooks/use-loading';
 import { startRegistration } from '@simplewebauthn/browser';
@@ -24,8 +24,6 @@ import { Switch } from '@/src/components/shadcn-ui/switch';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { Input } from '@/src/components/shadcn-ui/input';
 // import { PasskeyNameModal } from './_components/passkey-modals';
-
-import { CheckCircle } from '@phosphor-icons/react';
 
 export function RecoveryEmailSection() {
   const [recoveryEmail, setRecoveryEmail] = useState('');
@@ -47,13 +45,21 @@ export function RecoveryEmailSection() {
     <div className="space-y-2">
       <h3 className="text-lg font-medium">Recovery Email</h3>
       {recoveryEmailStatus?.isSet ? (
-        recoveryEmailStatus.isVerified && (
-          <div className="flex items-center space-x-1 text-green-600">
+        recoveryEmailStatus.isVerified ? (
+          <div className="text-green-6 flex items-center space-x-1">
             <CheckCircle
               size={20}
               weight="fill"
             />
             <p>Your recovery email is set and verified.</p>
+          </div>
+        ) : (
+          <div className="text-yellow-9 flex items-center space-x-1">
+            <Clock
+              size={20}
+              weight="fill"
+            />
+            <p>Your recovery email is set but not verified yet</p>
           </div>
         )
       ) : (

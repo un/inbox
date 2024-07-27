@@ -19,10 +19,10 @@ export const recoveryEmailTemplatePlainText = ({
   
   You have requested to link ${recoveryEmail} as your recovery email for your Uninbox account.
   
-  Confirm your recovery email at ${confirmationUrl}
+  Confirm your recovery email at ${confirmationUrl} 
   
   If the button is not working, copy paste this code in your browser:
-  ${verificationCode}
+  ${verificationCode} 
   
   This confirmation link will expire on ${expiryDate}. Make sure to confirm before the expiry date.
   

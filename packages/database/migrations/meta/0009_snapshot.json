@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "096913be-de15-428a-ae56-264e0195069d",
+  "id": "4310f04a-5c0f-4584-8618-53c2017d9bda",
   "prevId": "55dd5354-54d4-4f2a-9189-fd22c93bcca6",
   "tables": {
     "account_credentials": {
@@ -123,15 +123,15 @@
           "notNull": false,
           "autoincrement": false
         },
-        "hashed_recovery_email": {
-          "name": "hashed_recovery_email",
+        "recovery_email_hash": {
+          "name": "recovery_email_hash",
           "type": "varchar(255)",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
-        "recovery_email_recovered_at": {
-          "name": "recovery_email_recovered_at",
+        "recovery_email_verified_at": {
+          "name": "recovery_email_verified_at",
           "type": "timestamp",
           "primaryKey": false,
           "notNull": false,

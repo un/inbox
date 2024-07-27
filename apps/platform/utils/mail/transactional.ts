@@ -34,24 +34,58 @@ type PostalResponse =
       };
     };
 
-// Re-usable function to route email sending to console or mailbridge
-const createEmailSender = () => {
-  const useConsoleLogEmailSending =
-    env.DANGEROUS_DISABLE_EMAIL_SENDING === 'true';
-
-  return async function sendEmail(emailData: any, emailFunction: Function) {
-    if (useConsoleLogEmailSending) {
-      // eslint-disable-next-line no-console
-      console.log('Email data:', JSON.stringify(emailData, null, 2));
-      return { success: true, message: 'Email logged to console' };
-    } else {
-      return await emailFunction(emailData);
-    }
-  };
+type EmailData = {
+  to: string[];
+  cc: string[];
+  from: string;
+  sender: string;
+  subject: string;
+  plain_body: string;
+  html_body: string;
+  attachments: unknown[];
+  headers: Record<string, string>;
 };
 
-// Create an instance of the email sender
-const sendEmail = createEmailSender();
+async function sendEmail(emailData: EmailData): Promise<PostalResponse> {
+  if (env.MAILBRIDGE_LOCAL_MODE) {
+    console.info('Mailbridge local mode enabled, sending email to console');
+    console.info(JSON.stringify(emailData, null, 2));
+    return {
+      status: 'success',
+      time: Date.now(),
+      flags: {},
+      data: {
+        message_id: 'console',
+        messages: {}
+      }
+    };
+  }
+
+  const config = env.MAILBRIDGE_TRANSACTIONAL_CREDENTIALS;
+  const sendMailPostalResponse = await fetch(
+    `${config.apiUrl}/api/v1/send/message`,
+    {
+      method: 'POST',
+      headers: {
+        'X-Server-API-Key': `${config.apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(emailData)
+    }
+  )
+    .then((res) => res.json())
+    .catch((e) => {
+      console.error('🚨 error sending email', e);
+      return {
+        status: 'parameter-error',
+        time: Date.now(),
+        flags: {},
+        data: { message_id: 'console', messages: {} }
+      };
+    });
+
+  return sendMailPostalResponse;
+}
 
 export async function sendInviteEmail({
   invitingOrgName,
@@ -61,45 +95,29 @@ export async function sendInviteEmail({
   inviteUrl
 }: InviteEmailProps) {
   const config = env.MAILBRIDGE_TRANSACTIONAL_CREDENTIALS;
-  const sendMailPostalResponse = (await fetch(
-    `${config.apiUrl}/api/v1/send/message`,
-    {
-      method: 'POST',
-      headers: {
-        'X-Server-API-Key': `${config.apiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        to: [to],
-        cc: [],
-        from: `${config.sendAsName} <${config.sendAsEmail}>`,
-        sender: config.sendAsEmail,
-        subject: `You have been invited to join ${invitingOrgName} on Uninbox`,
-        plain_body: inviteTemplatePlainText({
-          expiryDate,
-          invitedName,
-          inviteUrl,
-          invitingOrgName: invitingOrgName,
-          to
-        }),
-        html_body: inviteTemplate({
-          expiryDate,
-          invitedName,
-          inviteUrl,
-          invitingOrgName: invitingOrgName,
-          to
-        }),
-        attachments: [],
-        headers: {}
-      })
-    }
-  )
-    .then((res) => res.json())
-    .catch((e) => {
-      console.error('🚨 error sending invite email', e);
-    })) as PostalResponse;
-
-  return sendMailPostalResponse;
+  return await sendEmail({
+    to: [to],
+    cc: [],
+    from: `${config.sendAsName} <${config.sendAsEmail}>`,
+    sender: config.sendAsEmail,
+    subject: `You have been invited to join ${invitingOrgName} on Uninbox`,
+    plain_body: inviteTemplatePlainText({
+      to,
+      expiryDate,
+      invitedName,
+      inviteUrl,
+      invitingOrgName
+    }),
+    html_body: inviteTemplate({
+      to,
+      expiryDate,
+      invitedName,
+      inviteUrl,
+      invitingOrgName
+    }),
+    attachments: [],
+    headers: {}
+  });
 }
 
 export async function sendRecoveryEmailConfirmation({
@@ -111,7 +129,7 @@ export async function sendRecoveryEmailConfirmation({
   verificationCode
 }: RecoveryEmailProps) {
   const config = env.MAILBRIDGE_TRANSACTIONAL_CREDENTIALS;
-  const emailData = {
+  return await sendEmail({
     to: [to],
     cc: [],
     from: `${config.sendAsName} <${config.sendAsEmail}>`,
@@ -119,7 +137,7 @@ export async function sendRecoveryEmailConfirmation({
     subject: `Confirm your recovery email for Uninbox`,
     plain_body: recoveryEmailTemplatePlainText({
       to,
-      username: username,
+      username,
       recoveryEmail,
       confirmationUrl,
       expiryDate,
@@ -127,7 +145,7 @@ export async function sendRecoveryEmailConfirmation({
     }),
     html_body: recoveryEmailTemplate({
       to,
-      username: username,
+      username,
       recoveryEmail,
       confirmationUrl,
       expiryDate,
@@ -135,27 +153,5 @@ export async function sendRecoveryEmailConfirmation({
     }),
     attachments: [],
     headers: {}
-  };
-
-  const sendMailFunction = async (data: any) => {
-    const sendMailPostalResponse = await fetch(
-      `${config.apiUrl}/api/v1/send/message`,
-      {
-        method: 'POST',
-        headers: {
-          'X-Server-API-Key': `${config.apiKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
-      }
-    )
-      .then((res) => res.json())
-      .catch((e) => {
-        console.error('🚨 error sending recovery email confirmation', e);
-      });
-
-    return sendMailPostalResponse;
-  };
-
-  return await sendEmail(emailData, sendMailFunction);
+  });
 }
