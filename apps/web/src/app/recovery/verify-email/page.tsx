@@ -77,7 +77,7 @@ export default function VerifyEmailPage() {
             value={verificationCode}
             onChange={(e) => setVerificationCode(e.target.value)}
             placeholder="Enter verification code"
-            className="mb-4 w-full"
+            className="w-full"
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 void handleVerify();
