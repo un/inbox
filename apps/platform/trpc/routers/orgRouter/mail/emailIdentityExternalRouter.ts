@@ -24,21 +24,12 @@ export const emailIdentityExternalRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      if (!ctx.account || !ctx.org) {
-        throw new TRPCError({
-          code: 'UNPROCESSABLE_CONTENT',
-          message: 'Account or Organization is not defined'
-        });
-      }
       const { db } = ctx;
 
-      const [emailUsername, emailDomain] = input.emailAddress.split('@');
-      if (!emailDomain || !emailUsername) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Invalid email address'
-        });
-      }
+      const [emailUsername, emailDomain] = input.emailAddress.split('@') as [
+        string,
+        string
+      ];
 
       const emailIdentityResponse = await db.query.emailIdentities.findFirst({
         where: and(
@@ -113,28 +104,20 @@ export const emailIdentityExternalRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.account || !ctx.org) {
-        throw new TRPCError({
-          code: 'UNPROCESSABLE_CONTENT',
-          message: 'Account or Organization is not defined'
-        });
-      }
       const { db, org } = ctx;
-      const orgId = org?.id;
+      const orgId = org.id;
       const {
         sendName,
         smtp,
         routeToOrgMemberPublicIds,
-        routeToTeamsPublicIds
+        routeToTeamsPublicIds,
+        emailAddress
       } = input;
 
-      const [emailUsername, emailDomain] = input.emailAddress.split('@');
-      if (!emailDomain || !emailUsername) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Invalid email address'
-        });
-      }
+      const [emailUsername, emailDomain] = emailAddress.split('@') as [
+        string,
+        string
+      ];
 
       if (!routeToOrgMemberPublicIds && !routeToTeamsPublicIds) {
         throw new TRPCError({
@@ -143,10 +126,13 @@ export const emailIdentityExternalRouter = router({
         });
       }
 
+      const signal = AbortSignal.timeout(30_000);
+
       // verify smtp again
       const smtpVerificationResult =
         await mailBridgeTrpcClient.smtp.validateSmtpCredentials.query(
-          input.smtp
+          input.smtp,
+          { signal }
         );
 
       if (smtpVerificationResult.result.error) {

@@ -1,52 +1,15 @@
-import { deleteCookie, getCookie, setCookie } from '@u22n/hono/helpers';
+import { COOKIE_TWO_FACTOR_LOGIN_CHALLENGE } from '~platform/utils/cookieNames';
 import { createLuciaSessionCookie } from '~platform/utils/session';
-import { nanoIdToken, zodSchemas } from '@u22n/utils/zodSchemas';
 import { router, publicProcedure } from '~platform/trpc/trpc';
-import { TOTPController, createTOTPKeyURI } from 'oslo/otp';
+import { deleteCookie, getCookie } from '@u22n/hono/helpers';
 import { ratelimiter } from '~platform/trpc/ratelimit';
-import { decodeHex, encodeHex } from 'oslo/encoding';
 import { storage } from '~platform/storage';
+import { decodeHex } from 'oslo/encoding';
+import { TOTPController } from 'oslo/otp';
 import { TRPCError } from '@trpc/server';
-import { env } from '~platform/env';
 import { z } from 'zod';
 
 export const twoFactorRouter = router({
-  createTwoFactorChallenge: publicProcedure
-    .use(ratelimiter({ limit: 10, namespace: 'signUp.twoFactor.generate' }))
-    .input(z.object({ username: zodSchemas.username() }))
-    .query(async ({ ctx, input }) => {
-      const authStorage = storage.auth;
-      const existingChallenge = getCookie(ctx.event, 'un-2fa-challenge');
-
-      if (existingChallenge) {
-        const existingSecret = await authStorage.getItem(
-          `un2faChallenge:${input.username}-${existingChallenge}`
-        );
-        if (typeof existingSecret === 'string') {
-          return {
-            uri: createTOTPKeyURI(
-              'UnInbox.com',
-              input.username,
-              decodeHex(existingSecret)
-            )
-          };
-        }
-      }
-
-      const newSecret = crypto.getRandomValues(new Uint8Array(20));
-      const uri = createTOTPKeyURI('UnInbox.com', input.username, newSecret);
-      const hexSecret = encodeHex(newSecret);
-      const challengeId = nanoIdToken();
-      await authStorage.setItem(
-        `un2faChallenge:${input.username}-${challengeId}`,
-        hexSecret
-      );
-      setCookie(ctx.event, 'un-2fa-challenge', challengeId, {
-        domain: env.PRIMARY_DOMAIN,
-        httpOnly: true
-      });
-      return { uri };
-    }),
   verifyTwoFactorChallenge: publicProcedure
     .use(ratelimiter({ limit: 20, namespace: 'signIn.twoFactor.verify' }))
     .input(
@@ -57,7 +20,7 @@ export const twoFactorRouter = router({
     .mutation(async ({ ctx, input }) => {
       const challengeCookie = getCookie(
         ctx.event,
-        'two-factor-login-challenge'
+        COOKIE_TWO_FACTOR_LOGIN_CHALLENGE
       );
 
       if (!challengeCookie) {
@@ -90,7 +53,7 @@ export const twoFactorRouter = router({
         });
       }
 
-      deleteCookie(ctx.event, 'two-factor-login-challenge');
+      deleteCookie(ctx.event, COOKIE_TWO_FACTOR_LOGIN_CHALLENGE);
       await storage.twoFactorLoginChallenges.removeItem(challengeCookie);
 
       await createLuciaSessionCookie(ctx.event, {

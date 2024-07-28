@@ -19,7 +19,7 @@ function clientHeaders() {
 }
 
 export async function getAuthRedirection() {
-  if (!cookies().has('unsession')) return { defaultOrgShortcode: null };
+  if (!cookies().has('un-session')) return { defaultOrgShortcode: null };
   return fetch(`${getPlatformUrl()}/auth/redirection`, {
     headers: clientHeaders()
   }).then((r) => (r.ok ? r.json() : { defaultOrgShortcode: null })) as Promise<{
@@ -30,7 +30,7 @@ export async function getAuthRedirection() {
 // Skip the cookie validation on client with shallow=true
 // it is checked on server anyways and may cause performance issues if checked on client on every request
 export async function isAuthenticated(shallow = false) {
-  if (!cookies().has('unsession')) return false;
+  if (!cookies().has('un-session')) return false;
   if (shallow) return true;
   try {
     const data = (await fetch(`${getPlatformUrl()}/auth/status`, {

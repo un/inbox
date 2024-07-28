@@ -40,8 +40,8 @@ export default function Page() {
   const router = useRouter();
   const [twoFactorDialogOpen, setTwoFactorDialogOpen] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | undefined>();
-  const generatePasskey =
-    platform.useUtils().auth.passkey.generatePasskeyChallenge;
+  const { mutateAsync: generatePasskeyChallenge } =
+    platform.auth.passkey.generatePasskeyChallenge.useMutation();
   const { mutateAsync: loginPasskey } =
     platform.auth.passkey.verifyPasskey.useMutation();
   const [loadingPasskey, setLoadingPasskey] = useState(false);
@@ -71,7 +71,7 @@ export default function Page() {
     }
     try {
       setLoadingPasskey(true);
-      const data = await generatePasskey.fetch({
+      const data = await generatePasskeyChallenge({
         turnstileToken
       });
       const response = await startAuthentication(data.options);
@@ -110,7 +110,13 @@ export default function Page() {
     } finally {
       setLoadingPasskey(false);
     }
-  }, [turnstileToken, generatePasskey, loginPasskey, redirectTo, router]);
+  }, [
+    turnstileToken,
+    generatePasskeyChallenge,
+    loginPasskey,
+    redirectTo,
+    router
+  ]);
 
   const loginWithPassword = useCallback(
     async ({ username, password }: z.infer<typeof loginSchema>) => {

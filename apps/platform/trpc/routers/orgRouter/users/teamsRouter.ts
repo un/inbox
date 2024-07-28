@@ -17,15 +17,9 @@ export const teamsRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.account || !ctx.org) {
-        throw new TRPCError({
-          code: 'UNPROCESSABLE_CONTENT',
-          message: 'Account or Organization is not defined'
-        });
-      }
       const { db, org } = ctx;
 
-      const orgId = org?.id;
+      const orgId = org.id;
       const { teamName, teamDescription, teamColor } = input;
       const newPublicId = typeIdGenerator('teams');
 
@@ -41,15 +35,9 @@ export const teamsRouter = router({
         newTeamPublicId: newPublicId
       };
     }),
-  getOrgTeams: orgProcedure.input(z.object({})).query(async ({ ctx }) => {
-    if (!ctx.account || !ctx.org) {
-      throw new TRPCError({
-        code: 'UNPROCESSABLE_CONTENT',
-        message: 'User or Organization is not defined'
-      });
-    }
+  getOrgTeams: orgProcedure.query(async ({ ctx }) => {
     const { db, org } = ctx;
-    const orgId = org?.id;
+    const orgId = org.id;
 
     const teamQuery = await db.query.teams.findMany({
       columns: {
@@ -99,14 +87,8 @@ export const teamsRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      if (!ctx.account || !ctx.org) {
-        throw new TRPCError({
-          code: 'UNPROCESSABLE_CONTENT',
-          message: 'User or Organization is not defined'
-        });
-      }
       const { db, org } = ctx;
-      const orgId = org?.id;
+      const orgId = org.id;
 
       // Handle when adding database replicas
       const dbReplica = db;
@@ -175,12 +157,6 @@ export const teamsRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.account || !ctx.org) {
-        throw new TRPCError({
-          code: 'UNPROCESSABLE_CONTENT',
-          message: 'Account or Organization is not defined'
-        });
-      }
       const { org, db } = ctx;
       const { teamPublicId, orgMemberPublicId } = input;
 
@@ -203,12 +179,6 @@ export const teamsRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.account || !ctx.org) {
-        throw new TRPCError({
-          code: 'UNPROCESSABLE_CONTENT',
-          message: 'Account or Organization is not defined'
-        });
-      }
       const { org, db } = ctx;
       const { teamPublicId } = input;
 

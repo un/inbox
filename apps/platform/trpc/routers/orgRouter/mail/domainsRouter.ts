@@ -172,15 +172,9 @@ export const domainsRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      if (!ctx.account || !ctx.org) {
-        throw new TRPCError({
-          code: 'UNPROCESSABLE_CONTENT',
-          message: 'Account or Organization is not defined'
-        });
-      }
       const { db, org } = ctx;
 
-      const orgId = org?.id;
+      const orgId = org.id;
       const { domainPublicId } = input;
 
       // Handle when adding database replicas
@@ -216,21 +210,15 @@ export const domainsRouter = router({
     )
     .query(async ({ ctx, input }) => {
       const { db, org } = ctx;
-      const orgId = org?.id;
+      const orgId = org.id;
       const { domainPublicId } = input;
 
       return updateDnsRecords({ domainPublicId, orgId }, db);
     }),
 
-  getOrgDomains: orgProcedure.input(z.object({})).query(async ({ ctx }) => {
-    if (!ctx.account || !ctx.org) {
-      throw new TRPCError({
-        code: 'UNPROCESSABLE_CONTENT',
-        message: 'Account or Organization is not defined'
-      });
-    }
+  getOrgDomains: orgProcedure.query(async ({ ctx }) => {
     const { db, org } = ctx;
-    const orgId = org?.id;
+    const orgId = org.id;
 
     const domainResponse = await db.query.domains.findMany({
       where: eq(domains.orgId, orgId),

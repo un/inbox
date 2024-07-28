@@ -83,22 +83,10 @@ export const convoRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.account || !ctx.org) {
-        throw new TRPCError({
-          code: 'UNPROCESSABLE_CONTENT',
-          message: 'account or Organization is not defined'
-        });
-      }
       const { db, org } = ctx;
-      if (!org?.memberId) {
-        throw new TRPCError({
-          code: 'UNPROCESSABLE_CONTENT',
-          message: 'account is not a member of the organization'
-        });
-      }
+      const accountOrgMemberId = org.memberId;
+      const orgId = org.id;
 
-      const accountOrgMemberId = org?.memberId;
-      const orgId = org?.id;
       const {
         sendAsEmailIdentityPublicId,
         participantsEmails,
@@ -779,22 +767,9 @@ export const convoRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.account || !ctx.org) {
-        throw new TRPCError({
-          code: 'UNPROCESSABLE_CONTENT',
-          message: 'account or Organization is not defined'
-        });
-      }
       const { db, org } = ctx;
-      if (!org?.memberId) {
-        throw new TRPCError({
-          code: 'UNPROCESSABLE_CONTENT',
-          message: 'account is not a member of the organization'
-        });
-      }
-
-      const accountOrgMemberId = org?.memberId;
-      const orgId = org?.id;
+      const accountOrgMemberId = org.memberId;
+      const orgId = org.id;
       const {
         sendAsEmailIdentityPublicId,
         message: messageString,
@@ -1160,20 +1135,6 @@ export const convoRouter = router({
     )
     .query(async ({ ctx, input }) => {
       const { db, account, org } = ctx;
-
-      if (!ctx.account || !ctx.org) {
-        throw new TRPCError({
-          code: 'UNPROCESSABLE_CONTENT',
-          message: 'account or Organization is not defined'
-        });
-      }
-      if (!org?.memberId) {
-        throw new TRPCError({
-          code: 'UNPROCESSABLE_CONTENT',
-          message: 'account is not a member of the organization'
-        });
-      }
-
       const accountId = account.id;
       const orgId = org.id;
       const accountOrgMemberId = org.memberId;
@@ -1376,19 +1337,6 @@ export const convoRouter = router({
         ownParticipantPublicId: participantPublicId
       };
     }),
-
-  //* get convo entries
-  // getConvoEntries: orgProcedure
-  //   .input(
-  //     z.object({
-  //       convoPublicId: typeIdValidator('convos'),
-  //       cursor: z.object({
-  //         lastUpdatedAt: z.date().optional(),
-  //         lastPublicId: typeIdValidator('convos').optional()
-  //       })
-  //     })
-  //   )
-  //   .query(async () => {}),
 
   getOrgMemberConvos: orgProcedure
     .input(
@@ -1813,22 +1761,9 @@ export const convoRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.account || !ctx.org) {
-        throw new TRPCError({
-          code: 'UNPROCESSABLE_CONTENT',
-          message: 'account or Organization is not defined'
-        });
-      }
       const { db, org } = ctx;
-      if (!org?.memberId) {
-        throw new TRPCError({
-          code: 'UNPROCESSABLE_CONTENT',
-          message: 'account is not a member of the organization'
-        });
-      }
-
-      const accountOrgMemberId = org?.memberId;
-      const orgId = org?.id;
+      const accountOrgMemberId = org.memberId;
+      const orgId = org.id;
       const orgPublicId = org.publicId;
       const { convoPublicId } = input;
 

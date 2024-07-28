@@ -58,15 +58,9 @@ export const invitesRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.account || !ctx.org) {
-        throw new TRPCError({
-          code: 'UNPROCESSABLE_CONTENT',
-          message: 'Account or Organization is not defined'
-        });
-      }
       const { db, org } = ctx;
 
-      const orgId = org?.id;
+      const orgId = org.id;
       const orgMemberId = org?.memberId || 0;
 
       const { newOrgMember, notification, email, teams: teamsInput } = input;
@@ -218,16 +212,10 @@ export const invitesRouter = router({
         };
       });
     }),
-  viewInvites: orgProcedure.input(z.object({})).query(async ({ ctx }) => {
-    if (!ctx.account || !ctx.org) {
-      throw new TRPCError({
-        code: 'UNPROCESSABLE_CONTENT',
-        message: 'Account or Organization is not defined'
-      });
-    }
+  viewInvites: orgProcedure.query(async ({ ctx }) => {
     const { db, org } = ctx;
 
-    const orgId = org?.id;
+    const orgId = org.id;
 
     const orgInvitesResponse = await db.query.orgInvitations.findMany({
       where: eq(orgInvitations.orgId, orgId),
@@ -354,9 +342,6 @@ export const invitesRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.account) {
-        throw new Error('Account is not defined');
-      }
       const { db, account } = ctx;
       const accountId = account?.id;
 
@@ -479,12 +464,6 @@ export const invitesRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.account || !ctx.org) {
-        throw new TRPCError({
-          code: 'UNPROCESSABLE_CONTENT',
-          message: 'Account or Organization is not defined'
-        });
-      }
       const { db } = ctx;
 
       await db
@@ -505,12 +484,6 @@ export const invitesRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.account || !ctx.org) {
-        throw new TRPCError({
-          code: 'UNPROCESSABLE_CONTENT',
-          message: 'User or Organization is not defined'
-        });
-      }
       const { db } = ctx;
 
       await db

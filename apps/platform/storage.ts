@@ -19,7 +19,10 @@ const createCachedStorage = <T extends StorageValue = StorageValue>(
   });
 
 export const storage = {
-  auth: createCachedStorage('auth', ms('5 minutes')),
+  passkeyChallenges: createCachedStorage<PasskeyChallenges>(
+    'passkey-challenges',
+    ms('5 minutes')
+  ),
   twoFactorLoginChallenges: createCachedStorage<TwoFactorLoginChallenges>(
     'two-factor-login-challenges',
     ms('5 minutes')
@@ -42,6 +45,11 @@ export const storage = {
     'sessions',
     env.NODE_ENV === 'development' ? ms('12 hours') : ms('30 days')
   )
+};
+
+type PasskeyChallenges = {
+  type: 'registration' | 'authentication';
+  challenge: string;
 };
 
 type TwoFactorLoginChallenges = {

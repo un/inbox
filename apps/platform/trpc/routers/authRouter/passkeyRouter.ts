@@ -14,16 +14,17 @@ import {
   publicProcedure
 } from '~platform/trpc/trpc';
 import { createAuthenticator } from '~platform/utils/auth/passkeyUtils';
+import { deleteCookie, getCookie, setCookie } from '@u22n/hono/helpers';
+import { COOKIE_PASSKEY_CHALLENGE } from '~platform/utils/cookieNames';
 import { typeIdGenerator, typeIdValidator } from '@u22n/utils/typeid';
 import { createLuciaSessionCookie } from '~platform/utils/session';
 import { nanoIdToken, zodSchemas } from '@u22n/utils/zodSchemas';
-import { getCookie, setCookie } from '@u22n/hono/helpers';
 import { ratelimiter } from '~platform/trpc/ratelimit';
 import { validateUsername } from './signupRouter';
 import { accounts } from '@u22n/database/schema';
+import { datePlus } from '@u22n/utils/ms';
 import { TRPCError } from '@trpc/server';
 import { eq } from '@u22n/database/orm';
-import { ms } from '@u22n/utils/ms';
 import { env } from '~platform/env';
 import { z } from 'zod';
 
@@ -160,17 +161,15 @@ export const passkeyRouter = router({
     .use(
       ratelimiter({ limit: 20, namespace: 'signIn.passkey.generateChallenge' })
     )
-    .input(z.object({}))
-    .query(async ({ ctx }) => {
+    .mutation(async ({ ctx }) => {
       const { event } = ctx;
 
       const authChallengeId = nanoIdToken();
 
-      setCookie(event, 'unauth-challenge', authChallengeId, {
+      setCookie(event, COOKIE_PASSKEY_CHALLENGE, authChallengeId, {
         httpOnly: true,
         secure: env.NODE_ENV === 'production',
-        sameSite: 'Strict',
-        maxAge: ms('5 minutes'),
+        expires: datePlus('5 minutes'),
         domain: env.PRIMARY_DOMAIN
       });
       const passkeyOptions = await generateAuthenticationOptions({
@@ -195,7 +194,7 @@ export const passkeyRouter = router({
       const verificationResponse =
         input.verificationResponseRaw as AuthenticationResponseJSON;
 
-      const challengeCookie = getCookie(event, 'unauth-challenge');
+      const challengeCookie = getCookie(event, COOKIE_PASSKEY_CHALLENGE);
       if (!challengeCookie) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
@@ -246,6 +245,7 @@ export const passkeyRouter = router({
         });
       }
 
+      deleteCookie(ctx.event, COOKIE_PASSKEY_CHALLENGE);
       await createLuciaSessionCookie(ctx.event, {
         accountId: account.id,
         username: account.username,

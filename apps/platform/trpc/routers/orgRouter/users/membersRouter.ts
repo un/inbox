@@ -1,41 +1,21 @@
 import { router, orgProcedure } from '~platform/trpc/trpc';
 import { orgs, orgMembers } from '@u22n/database/schema';
 import { eq, and, or } from '@u22n/database/orm';
-import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 
 export const orgMembersRouter = router({
-  isOrgMemberAdmin: orgProcedure.input(z.object({})).query(async ({ ctx }) => {
-    if (!ctx.account || !ctx.org) {
-      throw new TRPCError({
-        code: 'UNPROCESSABLE_CONTENT',
-        message: 'Account or Organization is not defined'
-      });
-    }
+  isOrgMemberAdmin: orgProcedure.query(async ({ ctx }) => {
     const { org } = ctx;
 
     const accountOrgMembership = org.members.find(
       (member) => member.accountId === ctx.account.id
     );
 
-    if (!accountOrgMembership) {
-      throw new TRPCError({
-        code: 'UNPROCESSABLE_CONTENT',
-        message: 'Account is not a member of this organization'
-      });
-    }
-
     return accountOrgMembership?.role === 'admin';
   }),
-  getOrgMembers: orgProcedure.input(z.object({})).query(async ({ ctx }) => {
-    if (!ctx.account || !ctx.org) {
-      throw new TRPCError({
-        code: 'UNPROCESSABLE_CONTENT',
-        message: 'Account or Organization is not defined'
-      });
-    }
+  getOrgMembers: orgProcedure.query(async ({ ctx }) => {
     const { db, org } = ctx;
-    const orgId = org?.id;
+    const orgId = org.id;
 
     const orgQuery = await db.query.orgs.findFirst({
       columns: {
@@ -80,15 +60,9 @@ export const orgMembersRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      if (!ctx.account || !ctx.org) {
-        throw new TRPCError({
-          code: 'UNPROCESSABLE_CONTENT',
-          message: 'Account or Organization is not defined'
-        });
-      }
       const { db, account, org } = ctx;
       const accountId = account?.id;
-      const orgId = org?.id;
+      const orgId = org.id;
 
       const { includeRemoved } = input;
 
