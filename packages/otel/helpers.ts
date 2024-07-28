@@ -1,9 +1,13 @@
 import type { Span } from '@opentelemetry/api';
-import { trace } from '@opentelemetry/api';
-import { env } from './env';
+import { opentelemetryEnabled } from '.';
+
+// Import OpenTelemetry API only if it's enabled
+const { trace } = opentelemetryEnabled
+  ? await import('@opentelemetry/api')
+  : { trace: undefined };
 
 export function getTracer(name: string) {
-  if (!env.OTEL_ENABLED)
+  if (!trace)
     return {
       startActiveSpan: <Fn>(name: string, fn: (span?: Span) => Fn) => fn()
     };
@@ -11,7 +15,6 @@ export function getTracer(name: string) {
   const tracer = trace.getTracer(name);
   return {
     startActiveSpan<Fn>(name: string, fn: (span?: Span) => Fn) {
-      if (!env.OTEL_ENABLED) return fn();
       return tracer.startActiveSpan(name, (span) => {
         const result = fn(span);
         if (result instanceof Promise) {
@@ -26,7 +29,7 @@ export function getTracer(name: string) {
 }
 
 export function inActiveSpan<Fn>(fn: (span?: Span) => Fn) {
-  if (!env.OTEL_ENABLED) return fn();
+  if (!trace) return fn();
   const span = trace.getActiveSpan();
   return fn(span);
 }
