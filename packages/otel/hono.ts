@@ -6,14 +6,13 @@ function formatHeaders(headers: Record<string, string> | Headers) {
 }
 
 export const opentelemetry = (name?: string) => {
-  // eslint-disable-next-line @typescript-eslint/unbound-method
-  const { startActiveSpan } = getTracer(name ?? 'hono');
+  const tracer = getTracer(name ?? 'hono');
   return createMiddleware<{ Variables: { requestId: string } }>((c, next) =>
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     inActiveSpan(async (parent) => {
       parent?.updateName(`HTTP ${c.req.method} ${c.req.path}`);
       if (c.req.method === 'OPTIONS') return next();
-      return startActiveSpan(`Hono Handler`, async (span) => {
+      return tracer.startActiveSpan(`Hono Handler`, async (span) => {
         span?.addEvent('hono.start');
         span?.setAttributes({
           'hono.req.headers': formatHeaders(c.req.header())

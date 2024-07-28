@@ -1,37 +1,40 @@
 import { drizzle } from 'drizzle-orm/planetscale-serverless';
 import { Client, Connection } from '@planetscale/database';
-import { getTracer } from '@u22n/otel/helpers';
+import { opentelemetryEnabled } from '@u22n/otel';
 import * as schema from './schema';
 import { env } from './env';
 
-const databaseTracer = getTracer('database');
+if (opentelemetryEnabled) {
+  const { getTracer } = await import('@u22n/otel/helpers');
+  const databaseTracer = getTracer('database');
 
-// eslint-disable-next-line @typescript-eslint/unbound-method
-const originalExecute = Connection.prototype.execute;
+  // eslint-disable-next-line @typescript-eslint/unbound-method
+  const originalExecute = Connection.prototype.execute;
 
-Connection.prototype.execute = async function (query, args, options) {
-  return databaseTracer.startActiveSpan(`Database Query`, async (span) => {
-    if (span) {
-      span.addEvent('database.query.start');
-      span.setAttribute('database.statement', query);
-      if (Array.isArray(args)) {
-        span.setAttribute(
-          'database.values',
-          args.map((v: string) => v.toString())
-        );
+  Connection.prototype.execute = async function (query, args, options) {
+    return databaseTracer.startActiveSpan(`Database Query`, async (span) => {
+      if (span) {
+        span.addEvent('database.query.start');
+        span.setAttribute('database.statement', query);
+        if (Array.isArray(args)) {
+          span.setAttribute(
+            'database.values',
+            args.map((v: string) => v.toString())
+          );
+        }
       }
-    }
-    const result = await originalExecute
-      // @ts-expect-error, don't care about types here
-      .call(this, query, args, options)
-      .catch((err: Error) => {
-        span?.recordException(err);
-        throw err;
-      });
-    span?.addEvent('database.query.end');
-    return result;
-  });
-};
+      const result = await originalExecute
+        // @ts-expect-error, don't care about types here
+        .call(this, query, args, options)
+        .catch((err: Error) => {
+          span?.recordException(err);
+          throw err;
+        });
+      span?.addEvent('database.query.end');
+      return result;
+    });
+  };
+}
 
 const client = new Client({
   host: env.DB_PLANETSCALE_HOST,

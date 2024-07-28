@@ -1,7 +1,7 @@
 import { defineConfig } from 'tsup';
 
 export default defineConfig({
-  entry: ['app.ts', './tracing.ts'],
+  entry: ['app.ts', 'tracing.ts'],
   outDir: '.output',
   format: 'esm',
   target: 'esnext',
