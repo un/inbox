@@ -33,7 +33,7 @@ export const zodSchemas = {
       .max(nanoIdTokenLength, {
         message: `Token must be ${nanoIdTokenLength} characters long`
       }),
-  username: (minLength: number = 5) =>
+  username: (minLength = 5) =>
     z
       .string()
       .min(minLength, {
@@ -45,7 +45,7 @@ export const zodSchemas = {
       .regex(/^[a-zA-Z0-9]*$/, {
         message: 'Only letters and numbers'
       }),
-  usernameLogin: (minLength: number = 5) =>
+  usernameLogin: (minLength = 5) =>
     z
       .string()
       .min(minLength, {

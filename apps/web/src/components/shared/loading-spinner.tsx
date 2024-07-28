@@ -1,6 +1,6 @@
-import { cn } from '@/src/lib/utils';
 import { SpinnerBall } from '@phosphor-icons/react/dist/ssr';
 import { type HTMLAttributes } from 'react';
+import { cn } from '@/src/lib/utils';
 
 export function LoadingSpinner({
   spinnerSize = 24,

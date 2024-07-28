@@ -1,5 +1,4 @@
 'use client';
-import { type TypeId } from '@u22n/utils/typeid';
 import {
   HoverCard,
   HoverCardContent,
@@ -7,6 +6,7 @@ import {
   HoverCardTrigger
 } from './shadcn-ui/hover-card';
 import { Avatar, type AvatarProps } from './avatar';
+import { type TypeId } from '@u22n/utils/typeid';
 
 type AvatarPlusProps = {
   size: AvatarProps['size'];

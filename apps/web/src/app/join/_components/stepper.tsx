@@ -1,5 +1,5 @@
-import { cn } from '@/src/lib/utils';
 import { Check } from '@phosphor-icons/react';
+import { cn } from '@/src/lib/utils';
 
 export default function Stepper({
   step,

@@ -1,16 +1,3 @@
-import { mailBridgeTrpcClient } from '~platform/utils/tRPCServerClients';
-import { z } from 'zod';
-import { parse } from 'superjson';
-import { router, orgProcedure } from '~platform/trpc/trpc';
-import {
-  type InferInsertModel,
-  and,
-  eq,
-  inArray,
-  desc,
-  or,
-  lt
-} from '@u22n/database/orm';
 import {
   convos,
   convoParticipants,
@@ -32,17 +19,30 @@ import {
   convoEntryRawHtmlEmails
 } from '@u22n/database/schema';
 import {
+  type InferInsertModel,
+  and,
+  eq,
+  inArray,
+  desc,
+  or,
+  lt
+} from '@u22n/database/orm';
+import {
   typeIdValidator,
   type TypeId,
   typeIdGenerator
 } from '@u22n/utils/typeid';
-import { TRPCError } from '@trpc/server';
+import { realtime, sendRealtimeNotification } from '~platform/utils/realtime';
+import { mailBridgeTrpcClient } from '~platform/utils/tRPCServerClients';
 import { tipTapExtensions } from '@u22n/tiptap/extensions';
-import { tiptapCore } from '@u22n/tiptap';
+import { router, orgProcedure } from '~platform/trpc/trpc';
 import { type JSONContent } from '@u22n/tiptap/react';
 import { convoEntryRouter } from './entryRouter';
-import { realtime, sendRealtimeNotification } from '~platform/utils/realtime';
+import { tiptapCore } from '@u22n/tiptap';
+import { TRPCError } from '@trpc/server';
 import { env } from '~platform/env';
+import { parse } from 'superjson';
+import { z } from 'zod';
 
 export const convoRouter = router({
   entries: convoEntryRouter,
@@ -186,10 +186,7 @@ export const convoRouter = router({
       orgMemberPublicIdsForNotifications.push(authorOrgMemberObject.publicId);
 
       // validate the publicIds of Users and get the IDs
-      if (
-        participantsOrgMembersPublicIds &&
-        participantsOrgMembersPublicIds.length
-      ) {
+      if (participantsOrgMembersPublicIds?.length) {
         const orgMemberResponses = await db.query.orgMembers.findMany({
           where: and(
             eq(orgMembers.orgId, orgId),
@@ -228,7 +225,7 @@ export const convoRouter = router({
           const orgMemberIdObject: IdPairOrgMembers = {
             id: orgMember.id,
             publicId: orgMember.publicId,
-            emailIdentityId: emailIdentityId || null
+            emailIdentityId: emailIdentityId ?? null
           };
           orgMemberIds.push(orgMemberIdObject);
         }
@@ -242,7 +239,7 @@ export const convoRouter = router({
       }
 
       // validate the publicIds of Teams and get the IDs
-      if (participantsTeamsPublicIds && participantsTeamsPublicIds.length) {
+      if (participantsTeamsPublicIds?.length) {
         const teamResponses = await db.query.teams.findMany({
           where: and(
             eq(teams.orgId, orgId),
@@ -281,7 +278,7 @@ export const convoRouter = router({
           const teamObject: IdPair = {
             id: team.id,
             publicId: team.publicId,
-            emailIdentityId: emailIdentityId || null
+            emailIdentityId: emailIdentityId ?? null
           };
           orgTeamIds.push(teamObject);
         }
@@ -327,7 +324,7 @@ export const convoRouter = router({
 
       // for each of participantsEmails check if a contact or contact reputation exists. if no reputation create one, if reputation but no org contact create one, if reputation and org contact get ID
 
-      if (participantsEmails && participantsEmails.length) {
+      if (participantsEmails?.length) {
         for (const email of participantsEmails) {
           const [emailUsername = '', emailDomain = ''] = email.split('@');
           const existingContact = await db.query.contacts.findFirst({
@@ -740,16 +737,16 @@ export const convoRouter = router({
       const convoHasEmailParticipants = orgContactIds.length > 0;
 
       if (convoHasEmailParticipants && firstMessageType === 'message') {
-        mailBridgeTrpcClient.mail.send.sendConvoEntryEmail.mutate({
+        await mailBridgeTrpcClient.mail.send.sendConvoEntryEmail.mutate({
           convoId: Number(insertConvoResponse.insertId),
           entryId: Number(insertConvoEntryResponse.insertId),
-          sendAsEmailIdentityPublicId: sendAsEmailIdentityPublicId || '',
+          sendAsEmailIdentityPublicId: sendAsEmailIdentityPublicId ?? '',
           newConvoToParticipantPublicId: convoParticipantToPublicId!,
           orgId: orgId
         });
       }
 
-      realtime.emit({
+      await realtime.emit({
         orgMemberPublicIds: orgMemberPublicIdsForNotifications,
         event: 'convo:new',
         data: { publicId: newConvoPublicId }
@@ -947,7 +944,7 @@ export const convoRouter = router({
             message: 'User is not authorized to send as this email identity'
           });
         }
-        emailIdentityId = sendAsEmailIdentityResponse?.id || null;
+        emailIdentityId = sendAsEmailIdentityResponse?.id ?? null;
       }
 
       let authorConvoParticipantId: number | undefined;
@@ -1086,16 +1083,18 @@ export const convoRouter = router({
         input.attachments.length > 0 &&
         pendingAttachmentsToRemoveFromPending.length > 0
       ) {
-        db.delete(pendingAttachments).where(
-          inArray(
-            pendingAttachments.publicId,
-            pendingAttachmentsToRemoveFromPending
-          )
-        );
+        await db
+          .delete(pendingAttachments)
+          .where(
+            inArray(
+              pendingAttachments.publicId,
+              pendingAttachmentsToRemoveFromPending
+            )
+          );
       }
 
       //* send notifications
-      sendRealtimeNotification({
+      await sendRealtimeNotification({
         newConvo: false,
         convoId: Number(convoEntryToReplyToQueryResponse.convoId),
         convoEntryId: Number(insertConvoEntryResponse.insertId)
@@ -1108,7 +1107,7 @@ export const convoRouter = router({
         sendAsEmailIdentityPublicId &&
         messageType === 'message'
       ) {
-        mailBridgeTrpcClient.mail.send.sendConvoEntryEmail.mutate({
+        await mailBridgeTrpcClient.mail.send.sendConvoEntryEmail.mutate({
           convoId: Number(convoEntryToReplyToQueryResponse.convoId),
           entryId: Number(insertConvoEntryResponse.insertId),
           sendAsEmailIdentityPublicId: sendAsEmailIdentityPublicId,
@@ -1415,7 +1414,7 @@ export const convoRouter = router({
         ? new Date(cursor.lastUpdatedAt)
         : new Date();
 
-      const inputLastPublicId = cursor.lastPublicId || 'c_';
+      const inputLastPublicId = cursor.lastPublicId ?? 'c_';
 
       const convoQuery = await db.query.convos.findMany({
         orderBy: [desc(convos.lastUpdatedAt), desc(convos.publicId)],
@@ -1715,7 +1714,7 @@ export const convoRouter = router({
         }
       });
 
-      if (!convoQuery || !convoQuery?.publicId) {
+      if (!convoQuery?.publicId) {
         return null;
       }
 
@@ -1737,9 +1736,7 @@ export const convoRouter = router({
         .set({
           lastReadAt: new Date()
         })
-        .where(
-          eq(convoParticipants.publicId, participant.publicId as `cp_${string}`)
-        );
+        .where(eq(convoParticipants.publicId, participant.publicId));
 
       return convoQuery;
     }),
@@ -1801,7 +1798,7 @@ export const convoRouter = router({
           hidden: !input.unhide
         })
         .where(eq(convoParticipants.id, orgMemberConvoParticipant.id));
-      realtime.emit({
+      await realtime.emit({
         orgMemberPublicIds: [orgMemberConvoParticipant.orgMember!.publicId],
         event: 'convo:hidden',
         data: { publicId: convoPublicId, hidden: !input.unhide }
@@ -1995,7 +1992,7 @@ export const convoRouter = router({
                 filename: attachment.fileName
               }));
 
-            const deleteStorageResponse = await fetch(
+            const deleteStorageResponse = (await fetch(
               `${env.STORAGE_URL}/api/attachments/deleteAttachments`,
               {
                 method: 'post',
@@ -2010,7 +2007,7 @@ export const convoRouter = router({
                   )
                 })
               }
-            ).then((res) => res.json());
+            ).then((res) => res.json())) as unknown;
 
             if (!deleteStorageResponse) {
               console.error('🔥 Failed to delete attachments from storage', {

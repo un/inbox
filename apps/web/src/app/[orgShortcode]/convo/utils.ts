@@ -1,7 +1,7 @@
-import { platform, type RouterOutputs } from '@/src/lib/trpc';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
-import { type TypeId } from '@u22n/utils/typeid';
+import { platform, type RouterOutputs } from '@/src/lib/trpc';
 import { type InfiniteData } from '@tanstack/react-query';
+import { type TypeId } from '@u22n/utils/typeid';
 import { useCallback } from 'react';
 
 export function formatParticipantData(

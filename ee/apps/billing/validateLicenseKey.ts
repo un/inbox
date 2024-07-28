@@ -1,16 +1,16 @@
 import { env } from './env';
 
 async function validateLicenseKey(key: string, appUrl: string) {
-  const response = await fetch('https://ee.u22n.com/api/license/', {
+  const response = (await fetch('https://ee.u22n.com/api/license/', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ key, appUrl })
-  }).then((response: any) => {
+  }).then((response) => {
     if (!response.ok) {
       throw new Error('Network response was not ok');
     }
     return response.json();
-  });
+  })) as { valid: boolean };
 
   if (!response.valid) {
     throw new Error(

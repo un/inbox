@@ -1,12 +1,3 @@
-import { z } from 'zod';
-import {
-  router,
-  orgProcedure,
-  accountProcedure,
-  publicProcedure,
-  orgAdminProcedure
-} from '~platform/trpc/trpc';
-import { eq } from '@u22n/database/orm';
 import {
   domains,
   emailIdentities,
@@ -16,18 +7,26 @@ import {
   orgInvitations,
   orgMembers,
   orgMemberProfiles,
-  accounts,
-  orgs
+  accounts
 } from '@u22n/database/schema';
-import { typeIdGenerator, typeIdValidator } from '@u22n/utils/typeid';
-import { nanoIdToken, zodSchemas } from '@u22n/utils/zodSchemas';
+import {
+  router,
+  orgProcedure,
+  accountProcedure,
+  publicProcedure,
+  orgAdminProcedure
+} from '~platform/trpc/trpc';
 import { refreshOrgShortcodeCache } from '~platform/utils/orgShortcode';
-import { TRPCError } from '@trpc/server';
 import { billingTrpcClient } from '~platform/utils/tRPCServerClients';
-import { addOrgMemberToTeamHandler } from './teamsHandler';
+import { typeIdGenerator, typeIdValidator } from '@u22n/utils/typeid';
 import { sendInviteEmail } from '~platform/utils/mail/transactional';
-import { env } from '~platform/env';
+import { nanoIdToken, zodSchemas } from '@u22n/utils/zodSchemas';
+import { addOrgMemberToTeamHandler } from './teamsHandler';
 import { ratelimiter } from '~platform/trpc/ratelimit';
+import { TRPCError } from '@trpc/server';
+import { eq } from '@u22n/database/orm';
+import { env } from '~platform/env';
+import { z } from 'zod';
 
 export const invitesRouter = router({
   createNewInvite: orgProcedure
@@ -81,8 +80,8 @@ export const invitesRouter = router({
             publicId: orgMemberProfilePublicId,
             orgId: orgId,
             firstName: newOrgMember.firstName,
-            lastName: newOrgMember.lastName || '',
-            title: newOrgMember.title || '',
+            lastName: newOrgMember.lastName ?? '',
+            title: newOrgMember.title ?? '',
             handle: ''
           });
         const orgMemberProfileId = +orgMemberProfileResponse.insertId;
@@ -185,7 +184,7 @@ export const invitesRouter = router({
           invitedByOrgMemberId: orgMemberId,
           orgMemberId: +orgMemberResponse.insertId,
           role: newOrgMember.role,
-          email: notification?.notificationEmailAddress || null,
+          email: notification?.notificationEmailAddress ?? null,
           inviteToken: newInviteToken,
           invitedOrgMemberProfileId: orgMemberProfileId,
           expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 Days from now
@@ -194,7 +193,7 @@ export const invitesRouter = router({
         if (notification?.notificationEmailAddress) {
           const res = await sendInviteEmail({
             to: notification?.notificationEmailAddress || '',
-            invitedName: `${newOrgMember.firstName} ${newOrgMember.lastName || ''}`,
+            invitedName: `${newOrgMember.firstName} ${newOrgMember.lastName ?? ''}`,
             invitingOrgName: org.name,
             expiryDate: new Date(
               Date.now() + 7 * 24 * 60 * 60 * 1000
@@ -435,7 +434,7 @@ export const invitesRouter = router({
         .update(orgMemberProfiles)
         .set({
           accountId: accountId,
-          handle: userHandleQuery?.username || ''
+          handle: userHandleQuery?.username ?? ''
         })
         .where(
           eq(
@@ -461,7 +460,7 @@ export const invitesRouter = router({
         .where(eq(orgInvitations.id, queryInvitesResponse.id));
 
       if (env.EE_LICENSE_KEY) {
-        billingTrpcClient.stripe.subscriptions.updateOrgUserCount.mutate({
+        await billingTrpcClient.stripe.subscriptions.updateOrgUserCount.mutate({
           orgId: +queryInvitesResponse.orgId
         });
       }
@@ -486,7 +485,7 @@ export const invitesRouter = router({
           message: 'Account or Organization is not defined'
         });
       }
-      const { db, org } = ctx;
+      const { db } = ctx;
 
       await db
         .update(orgInvitations)
@@ -512,7 +511,7 @@ export const invitesRouter = router({
           message: 'User or Organization is not defined'
         });
       }
-      const { db, org } = ctx;
+      const { db } = ctx;
 
       await db
         .update(orgInvitations)

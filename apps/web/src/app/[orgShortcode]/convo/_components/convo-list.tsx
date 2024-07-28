@@ -1,12 +1,12 @@
 'use client';
 
-import { platform } from '@/src/lib/trpc';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
-import { useCallback } from 'react';
+import { SpinnerGap } from '@phosphor-icons/react';
+import { ConvoItem } from './convo-list-item';
+import { platform } from '@/src/lib/trpc';
 import { Virtuoso } from 'react-virtuoso';
 import { ms } from '@u22n/utils/ms';
-import { ConvoItem } from './convo-list-item';
-import { SpinnerGap } from '@phosphor-icons/react';
+import { useCallback } from 'react';
 
 type Props = {
   hidden: boolean;

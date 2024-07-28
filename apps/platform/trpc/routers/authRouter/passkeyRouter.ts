@@ -1,31 +1,31 @@
-import { z } from 'zod';
-import {
-  router,
-  turnstileProcedure,
-  publicProcedure
-} from '~platform/trpc/trpc';
-import { eq } from '@u22n/database/orm';
-import { accounts } from '@u22n/database/schema';
-import { TRPCError } from '@trpc/server';
-import type {
-  RegistrationResponseJSON,
-  AuthenticationResponseJSON
-} from '@simplewebauthn/types';
-import { typeIdGenerator, typeIdValidator } from '@u22n/utils/typeid';
-import { nanoIdToken, zodSchemas } from '@u22n/utils/zodSchemas';
-import { ms } from '@u22n/utils/ms';
 import {
   verifyRegistrationResponse,
   generateRegistrationOptions,
   generateAuthenticationOptions,
   verifyAuthenticationResponse
 } from '~platform/utils/auth/passkeys';
+import type {
+  RegistrationResponseJSON,
+  AuthenticationResponseJSON
+} from '@simplewebauthn/types';
+import {
+  router,
+  turnstileProcedure,
+  publicProcedure
+} from '~platform/trpc/trpc';
 import { createAuthenticator } from '~platform/utils/auth/passkeyUtils';
-import { validateUsername } from './signupRouter';
+import { typeIdGenerator, typeIdValidator } from '@u22n/utils/typeid';
 import { createLuciaSessionCookie } from '~platform/utils/session';
-import { env } from '~platform/env';
+import { nanoIdToken, zodSchemas } from '@u22n/utils/zodSchemas';
 import { getCookie, setCookie } from '@u22n/hono/helpers';
 import { ratelimiter } from '~platform/trpc/ratelimit';
+import { validateUsername } from './signupRouter';
+import { accounts } from '@u22n/database/schema';
+import { TRPCError } from '@trpc/server';
+import { eq } from '@u22n/database/orm';
+import { ms } from '@u22n/utils/ms';
+import { env } from '~platform/env';
+import { z } from 'zod';
 
 export const passkeyRouter = router({
   // We use turnstile at start because there is no time to interact between starting and finishing the passkey registration
@@ -44,7 +44,7 @@ export const passkeyRouter = router({
       if (!available) {
         throw new TRPCError({
           code: 'FORBIDDEN',
-          message: error || "Username isn't available"
+          message: error ?? "Username isn't available"
         });
       }
 
@@ -96,7 +96,7 @@ export const passkeyRouter = router({
           if (!available) {
             throw new TRPCError({
               code: 'FORBIDDEN',
-              message: error || "Username isn't available"
+              message: error ?? "Username isn't available"
             });
           }
 

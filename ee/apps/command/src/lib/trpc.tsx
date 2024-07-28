@@ -1,15 +1,15 @@
 'use client';
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { loggerLink, httpBatchLink } from '@trpc/client';
 import {
   createTRPCReact,
   type inferReactQueryProcedureOptions
 } from '@trpc/react-query';
-import { type PropsWithChildren, useState } from 'react';
-import SuperJSON from 'superjson';
-import type { TrpcCommandRouter } from '../server/trpc';
 import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { loggerLink, httpBatchLink } from '@trpc/client';
+import { type PropsWithChildren, useState } from 'react';
+import type { TrpcCommandRouter } from '../server/trpc';
+import SuperJSON from 'superjson';
 
 const createQueryClient = () =>
   new QueryClient({

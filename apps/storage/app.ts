@@ -1,14 +1,3 @@
-import { env } from './env';
-import { avatarProxy } from './proxy/avatars';
-import { attachmentProxy } from './proxy/attachment';
-import { authMiddleware } from './middlewares';
-import { avatarApi } from './api/avatar';
-import { presignApi } from './api/presign';
-import { mailfetchApi } from './api/mailfetch';
-import { internalPresignApi } from './api/internalPresign';
-import { deleteAttachmentsApi } from './api/deleteAttachments';
-import { opentelemetry } from '@u22n/otel/hono';
-import type { Ctx } from './ctx';
 import {
   createHonoApp,
   setupCors,
@@ -18,6 +7,17 @@ import {
   setupRouteLogger,
   setupRuntime
 } from '@u22n/hono';
+import { deleteAttachmentsApi } from './api/deleteAttachments';
+import { internalPresignApi } from './api/internalPresign';
+import { attachmentProxy } from './proxy/attachment';
+import { opentelemetry } from '@u22n/otel/hono';
+import { mailfetchApi } from './api/mailfetch';
+import { authMiddleware } from './middlewares';
+import { avatarProxy } from './proxy/avatars';
+import { presignApi } from './api/presign';
+import { avatarApi } from './api/avatar';
+import type { Ctx } from './ctx';
+import { env } from './env';
 
 const app = createHonoApp<Ctx>();
 

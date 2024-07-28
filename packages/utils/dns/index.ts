@@ -46,8 +46,8 @@ export const lookupMX = async (domain: string) =>
       .map((entry) => {
         const [priority, exchange] = entry.data.split(/\s/);
         return {
-          priority: parseInt(priority || '0'),
-          exchange: exchange?.replace(/\.$/, '') || ''
+          priority: parseInt(priority ?? '0'),
+          exchange: exchange?.replace(/\.$/, '') ?? ''
         };
       })
       .sort((a, b) => a.priority - b.priority)

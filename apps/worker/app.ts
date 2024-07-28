@@ -1,10 +1,3 @@
-import type { Ctx } from './ctx';
-import { env } from './env';
-import { commandControlAuthMiddleware } from './middlewares';
-import { opentelemetry } from '@u22n/otel/hono';
-import { sessionCleanupCronJob } from './services/expired-session-cleanup';
-import { dnsCheckWorker, masterCronJob } from './services/dns-check-queue';
-import { jobsRouter } from './trpc/routers/jobs-router';
 import {
   createHonoApp,
   setupErrorHandlers,
@@ -14,6 +7,13 @@ import {
   setupRuntime,
   setupTrpcHandler
 } from '@u22n/hono';
+import { sessionCleanupCronJob } from './services/expired-session-cleanup';
+import { dnsCheckWorker, masterCronJob } from './services/dns-check-queue';
+import { commandControlAuthMiddleware } from './middlewares';
+import { jobsRouter } from './trpc/routers/jobs-router';
+import { opentelemetry } from '@u22n/otel/hono';
+import type { Ctx } from './ctx';
+import { env } from './env';
 
 const app = createHonoApp<Ctx>();
 app.use(opentelemetry('worker/hono'));

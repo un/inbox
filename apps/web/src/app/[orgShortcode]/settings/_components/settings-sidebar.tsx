@@ -1,11 +1,5 @@
 'use client';
 
-import { type ReactNode } from 'react';
-import { usePathname } from 'next/navigation';
-import Link from 'next/link';
-import { cn } from '@/src/lib/utils';
-import { platform } from '@/src/lib/trpc';
-import { useGlobalStore } from '@/src/providers/global-store-provider';
 import {
   User,
   Envelope,
@@ -18,6 +12,12 @@ import {
   UserPlus,
   HandHeart
 } from '@phosphor-icons/react';
+import { useGlobalStore } from '@/src/providers/global-store-provider';
+import { usePathname } from 'next/navigation';
+import { platform } from '@/src/lib/trpc';
+import { type ReactNode } from 'react';
+import { cn } from '@/src/lib/utils';
+import Link from 'next/link';
 
 type NavLinks = {
   label: string;

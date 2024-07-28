@@ -1,5 +1,5 @@
-import 'server-only';
 import { cookies, headers as nextHeaders } from 'next/headers';
+import 'server-only';
 
 function getPlatformUrl() {
   if (process.env.NEXT_PUBLIC_PLATFORM_URL)

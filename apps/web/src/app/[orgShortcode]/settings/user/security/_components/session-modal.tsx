@@ -1,5 +1,3 @@
-import { platform } from '@/src/lib/trpc';
-import { Button } from '@/src/components/shadcn-ui/button';
 import {
   Dialog,
   DialogClose,
@@ -9,9 +7,11 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/src/components/shadcn-ui/dialog';
-import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
+import { Button } from '@/src/components/shadcn-ui/button';
 import { useQueryClient } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
+import { platform } from '@/src/lib/trpc';
+import { toast } from 'sonner';
 
 type DeleteAllSessionsModalProps = {
   open: boolean;

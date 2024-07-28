@@ -1,9 +1,9 @@
-import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
-import { cn } from '@/lib/utils';
-import { TRPCReactProvider } from '@/lib/trpc';
-import '../styles/globals.css';
 import { Toaster } from '@/components/ui/sonner';
+import { TRPCReactProvider } from '@/lib/trpc';
+import { Inter } from 'next/font/google';
+import type { Metadata } from 'next';
+import { cn } from '@/lib/utils';
+import '../styles/globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
 

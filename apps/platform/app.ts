@@ -1,5 +1,3 @@
-import type { Ctx, TrpcContext } from './ctx';
-import { env } from './env';
 import {
   createHonoApp,
   setupCors,
@@ -10,13 +8,15 @@ import {
   setupRuntime,
   setupTrpcHandler
 } from '@u22n/hono';
-import { authApi } from './routes/auth';
-import { realtimeApi } from './routes/realtime';
-import { trpcPlatformRouter } from './trpc';
-import { db } from '@u22n/database';
 import { authMiddleware, serviceMiddleware } from './middlewares';
-import { opentelemetry } from '@u22n/otel/hono';
+import { realtimeApi } from './routes/realtime';
 import { servicesApi } from './routes/services';
+import { opentelemetry } from '@u22n/otel/hono';
+import type { Ctx, TrpcContext } from './ctx';
+import { trpcPlatformRouter } from './trpc';
+import { authApi } from './routes/auth';
+import { db } from '@u22n/database';
+import { env } from './env';
 
 const app = createHonoApp<Ctx>();
 

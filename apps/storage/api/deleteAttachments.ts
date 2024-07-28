@@ -1,11 +1,11 @@
-import { checkAuthorizedService } from '../middlewares';
-import { z } from 'zod';
 import { DeleteObjectsCommand } from '@aws-sdk/client-s3';
-import { env } from '../env';
-import { s3Client } from '../s3';
-import type { Ctx } from '../ctx';
-import { createHonoApp } from '@u22n/hono';
+import { checkAuthorizedService } from '../middlewares';
 import { zValidator } from '@u22n/hono/helpers';
+import { createHonoApp } from '@u22n/hono';
+import type { Ctx } from '../ctx';
+import { s3Client } from '../s3';
+import { env } from '../env';
+import { z } from 'zod';
 
 export const deleteAttachmentsApi = createHonoApp<Ctx>().post(
   '/attachments/deleteAttachments',
@@ -28,7 +28,7 @@ export const deleteAttachmentsApi = createHonoApp<Ctx>().post(
       }
     });
 
-    await s3Client.send(command).catch((err) => {
+    await s3Client.send(command).catch((err: Error) => {
       console.error('Error while deleting some attachments', {
         attachments,
         err

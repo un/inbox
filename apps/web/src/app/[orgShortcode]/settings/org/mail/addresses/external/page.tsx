@@ -1,7 +1,5 @@
 'use client';
 
-import { platform } from '@/src/lib/trpc';
-import { Input } from '@/src/components/shadcn-ui/input';
 import {
   Select,
   SelectContent,
@@ -10,13 +8,6 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/src/components/shadcn-ui/select';
-import { MultiSelect } from '@/src/components/shared/multiselect';
-import { Button } from '@/src/components/shadcn-ui/button';
-import { z } from 'zod';
-import { useGlobalStore } from '@/src/providers/global-store-provider';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { ArrowLeft } from '@phosphor-icons/react';
 import {
   Form,
   FormControl,
@@ -25,10 +16,19 @@ import {
   FormLabel,
   FormMessage
 } from '@/src/components/shadcn-ui/form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { useGlobalStore } from '@/src/providers/global-store-provider';
+import { MultiSelect } from '@/src/components/shared/multiselect';
 import { PasswordInput } from '@/src/components/password-input';
+import { Button } from '@/src/components/shadcn-ui/button';
+import { Input } from '@/src/components/shadcn-ui/input';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { ArrowLeft } from '@phosphor-icons/react';
+import { useRouter } from 'next/navigation';
+import { useForm } from 'react-hook-form';
+import { platform } from '@/src/lib/trpc';
 import { toast } from 'sonner';
+import Link from 'next/link';
+import { z } from 'zod';
 
 const externalEmailFormSchema = z.object({
   fullEmail: z.string().email(),

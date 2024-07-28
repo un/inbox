@@ -1,5 +1,5 @@
-import { db } from '.';
 import { sql } from './orm';
+import { db } from '.';
 
 console.info('🔥 Running post push script to fix drizzle issues');
 // eslint-disable-next-line no-console

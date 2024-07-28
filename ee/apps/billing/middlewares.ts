@@ -1,7 +1,7 @@
 import { createMiddleware } from '@u22n/hono/helpers';
+import { stripeSdk } from './stripe';
 import type { Ctx } from './ctx';
 import { env } from './env';
-import { stripeSdk } from './stripe';
 
 export const stripeWebhookMiddleware = createMiddleware<Ctx>(
   async (ctx, next) => {

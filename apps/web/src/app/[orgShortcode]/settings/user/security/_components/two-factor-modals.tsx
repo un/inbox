@@ -1,5 +1,3 @@
-import { CopyButton } from '@/src/components/copy-button';
-import { Button } from '@/src/components/shadcn-ui/button';
 import {
   Dialog,
   DialogClose,
@@ -14,9 +12,11 @@ import {
   InputOTPGroup,
   InputOTPSlot
 } from '@/src/components/shadcn-ui/input-otp';
-import { platform } from '@/src/lib/trpc';
-import { SpinnerGap } from '@phosphor-icons/react';
 import { Separator } from '@/src/components/shadcn-ui/separator';
+import { Button } from '@/src/components/shadcn-ui/button';
+import { CopyButton } from '@/src/components/copy-button';
+import { SpinnerGap } from '@phosphor-icons/react';
+import { platform } from '@/src/lib/trpc';
 import { QRCodeSVG } from 'qrcode.react';
 import { useState } from 'react';
 import { toast } from 'sonner';

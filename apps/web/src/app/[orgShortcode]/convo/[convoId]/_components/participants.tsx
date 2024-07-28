@@ -1,6 +1,3 @@
-import { type formatParticipantData } from '../../utils';
-import { Avatar, AvatarIcon } from '@/src/components/avatar';
-import { Button } from '@/src/components/shadcn-ui/button';
 import {
   Drawer,
   DrawerClose,
@@ -15,6 +12,9 @@ import {
   HoverCardTrigger
 } from '@/src/components/shadcn-ui/hover-card';
 import { Separator } from '@/src/components/shadcn-ui/separator';
+import { Avatar, AvatarIcon } from '@/src/components/avatar';
+import { Button } from '@/src/components/shadcn-ui/button';
+import { type formatParticipantData } from '../../utils';
 import { Dot, PenNib, X } from '@phosphor-icons/react';
 export function Participants({
   participants

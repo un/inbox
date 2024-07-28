@@ -3,10 +3,10 @@ import {
   createPublicKey
 } from 'node:crypto';
 import { customAlphabet } from 'nanoid';
+import { domains } from './schema';
+import { eq } from 'drizzle-orm';
 import { promisify } from 'util';
 import { postalDB } from '.';
-import { eq } from 'drizzle-orm';
-import { domains } from './schema';
 
 export const randomAlphaNumeric = customAlphabet(
   '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'

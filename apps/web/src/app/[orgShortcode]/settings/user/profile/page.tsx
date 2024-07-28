@@ -1,13 +1,5 @@
 'use client';
 
-import { Camera, SpinnerGap } from '@phosphor-icons/react';
-import { useEffect, useState, useMemo } from 'react';
-import { cn, generateAvatarUrl, openFilePicker } from '@/src/lib/utils';
-import { useGlobalStore } from '@/src/providers/global-store-provider';
-import { platform } from '@/src/lib/trpc';
-import { Button } from '@/src/components/shadcn-ui/button';
-import { Input } from '@/src/components/shadcn-ui/input';
-import { PageTitle } from '../../_components/page-title';
 import {
   AlertDialog,
   AlertDialogContent,
@@ -15,12 +7,6 @@ import {
   AlertDialogTitle,
   AlertDialogDescription
 } from '@/src/components/shadcn-ui/alert-dialog';
-import AvatarCrop from '@/src/components/avatar-crop';
-import { useAvatarUploader } from '@/src/hooks/use-avatar-uploader';
-import { toast } from 'sonner';
-import { z } from 'zod';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Form,
   FormControl,
@@ -28,6 +14,20 @@ import {
   FormItem,
   FormMessage
 } from '@/src/components/shadcn-ui/form';
+import { cn, generateAvatarUrl, openFilePicker } from '@/src/lib/utils';
+import { useGlobalStore } from '@/src/providers/global-store-provider';
+import { useAvatarUploader } from '@/src/hooks/use-avatar-uploader';
+import { Button } from '@/src/components/shadcn-ui/button';
+import { Camera, SpinnerGap } from '@phosphor-icons/react';
+import { Input } from '@/src/components/shadcn-ui/input';
+import { PageTitle } from '../../_components/page-title';
+import AvatarCrop from '@/src/components/avatar-crop';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useEffect, useState, useMemo } from 'react';
+import { useForm } from 'react-hook-form';
+import { platform } from '@/src/lib/trpc';
+import { toast } from 'sonner';
+import { z } from 'zod';
 
 const profileFormSchema = z.object({
   firstName: z.string().min(1, { message: 'First name is required' }),

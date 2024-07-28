@@ -1,9 +1,9 @@
-import { z } from 'zod';
+import { convos, convoEntries } from '@u22n/database/schema';
 import { router, orgProcedure } from '~platform/trpc/trpc';
 import { and, desc, eq, lt, or } from '@u22n/database/orm';
-import { convos, convoEntries } from '@u22n/database/schema';
 import { typeIdValidator } from '@u22n/utils/typeid';
 import { TRPCError } from '@trpc/server';
+import { z } from 'zod';
 
 export const convoEntryRouter = router({
   getConvoEntries: orgProcedure
@@ -45,7 +45,7 @@ export const convoEntryRouter = router({
         ? new Date(lastCreatedAt)
         : new Date();
 
-      const inputLastPublicId = lastPublicId || 'ce_';
+      const inputLastPublicId = lastPublicId ?? 'ce_';
 
       // check if the conversation belongs to the same org, early return if not before multiple db selects
       const convoResponse = await db.query.convos.findFirst({

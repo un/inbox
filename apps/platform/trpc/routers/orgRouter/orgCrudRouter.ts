@@ -1,16 +1,16 @@
-import { z } from 'zod';
-import { router, accountProcedure } from '~platform/trpc/trpc';
-import type { DBType } from '@u22n/database';
-import { eq, and, like } from '@u22n/database/orm';
 import {
   orgs,
   orgMembers,
   orgMemberProfiles,
   accounts
 } from '@u22n/database/schema';
-import { typeIdGenerator } from '@u22n/utils/typeid';
-import { TRPCError } from '@trpc/server';
 import { blockedUsernames, reservedUsernames } from '~platform/utils/signup';
+import { router, accountProcedure } from '~platform/trpc/trpc';
+import { typeIdGenerator } from '@u22n/utils/typeid';
+import { eq, and, like } from '@u22n/database/orm';
+import type { DBType } from '@u22n/database';
+import { TRPCError } from '@trpc/server';
+import { z } from 'zod';
 
 async function validateOrgShortcode(
   db: DBType,
@@ -133,7 +133,7 @@ export const crudRouter = router({
       if (!shortcodeAvailability.available) {
         throw new TRPCError({
           code: 'CONFLICT',
-          message: shortcodeAvailability.error || 'Org shortcode not available'
+          message: shortcodeAvailability.error ?? 'Org shortcode not available'
         });
       }
 
@@ -155,7 +155,7 @@ export const crudRouter = router({
           columns: {
             username: true
           }
-        })) || {};
+        })) ?? {};
 
       if (!username) {
         throw new TRPCError({
@@ -203,7 +203,7 @@ export const crudRouter = router({
       const { db, account } = ctx;
       const accountId = account.id;
 
-      const whereAccountIsAdmin = input.onlyAdmin || false;
+      const whereAccountIsAdmin = input.onlyAdmin ?? false;
 
       const orgMembersQuery = await db.query.orgMembers.findMany({
         columns: {

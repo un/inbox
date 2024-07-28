@@ -1,6 +1,6 @@
-import { Queue } from 'bullmq';
-import { env } from '../../env';
 import type { MailParamsSchema, PostalMessageSchema } from './schemas';
+import { env } from '../../env';
+import { Queue } from 'bullmq';
 
 const { host, username, password, port } = new URL(
   env.DB_REDIS_CONNECTION_STRING

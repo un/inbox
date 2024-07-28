@@ -1,13 +1,13 @@
 'use client';
 
-import { cn } from '@/src/lib/utils';
 import { usePreferencesState } from '@/src/stores/preferences-store';
 import { CaretDoubleLeft, PushPin, X } from '@phosphor-icons/react';
-import SidebarContent from './sidebar-content';
-import { sidebarSubmenuOpenAtom } from './atoms';
-import { useAtom } from 'jotai';
-import { useEffect } from 'react';
 import { useIsSidebarAutoCollapsed } from '@/src/hooks/is-mobile';
+import { sidebarSubmenuOpenAtom } from './atoms';
+import SidebarContent from './sidebar-content';
+import { cn } from '@/src/lib/utils';
+import { useEffect } from 'react';
+import { useAtom } from 'jotai';
 
 export default function Sidebar() {
   const {

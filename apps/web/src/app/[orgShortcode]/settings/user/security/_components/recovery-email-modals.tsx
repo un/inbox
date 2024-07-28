@@ -1,4 +1,3 @@
-import { Button } from '@/src/components/shadcn-ui/button';
 import {
   Dialog,
   DialogClose,
@@ -15,13 +14,14 @@ import {
   FormItem,
   FormMessage
 } from '@/src/components/shadcn-ui/form';
+import { Button } from '@/src/components/shadcn-ui/button';
 import { Input } from '@/src/components/shadcn-ui/input';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
 import { Envelope } from '@phosphor-icons/react';
+import { useForm } from 'react-hook-form';
 import { platform } from '@/src/lib/trpc';
 import { toast } from 'sonner';
+import { z } from 'zod';
 
 type RecoveryEmailModalProps = {
   open: 'enable' | 'change' | null;

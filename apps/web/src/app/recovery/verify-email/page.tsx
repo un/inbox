@@ -1,15 +1,15 @@
 'use client';
 
-import { useState } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { isAuthenticated, platform } from '@/src/lib/trpc';
 import { Button } from '@/src/components/shadcn-ui/button';
+import { isAuthenticated, platform } from '@/src/lib/trpc';
 import { Input } from '@/src/components/shadcn-ui/input';
+import { SpinnerGap } from '@phosphor-icons/react';
+import { useSearchParams } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
+import Image from 'next/image';
 import { toast } from 'sonner';
 import Link from 'next/link';
-import { useQuery } from '@tanstack/react-query';
-import Image from 'next/image';
-import { SpinnerGap } from '@phosphor-icons/react';
 
 export default function VerifyEmailPage() {
   const searchParams = useSearchParams();

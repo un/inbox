@@ -1,23 +1,22 @@
 'use client';
 
-import { cn, generateAvatarUrl, getInitials } from '@/src/lib/utils';
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage
-} from '@/src/components/shadcn-ui/avatar';
 import {
   HoverCard,
   HoverCardTrigger,
   HoverCardContent,
   HoverCardPortal
 } from '@/src/components/shadcn-ui/hover-card';
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage
+} from '@/src/components/shadcn-ui/avatar';
 import { CaretUp, CaretDown, SpinnerGap } from '@phosphor-icons/react';
-import { useState } from 'react';
-import { type formatParticipantData } from '../../utils';
-import { memo } from 'react';
-import { type TypeId } from '@u22n/utils/typeid';
+import { cn, generateAvatarUrl, getInitials } from '@/src/lib/utils';
 import { Badge } from '@/src/components/shadcn-ui/badge';
+import { type formatParticipantData } from '../../utils';
+import { type TypeId } from '@u22n/utils/typeid';
+import { useState, memo } from 'react';
 
 export function ContextPanel({
   participants,

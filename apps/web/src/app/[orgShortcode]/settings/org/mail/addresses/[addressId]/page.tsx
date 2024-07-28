@@ -1,18 +1,18 @@
 'use client';
 
-import { platform } from '@/src/lib/trpc';
-import { useGlobalStore } from '@/src/providers/global-store-provider';
-import { type TypeId } from '@u22n/utils/typeid';
-import { Button } from '@/src/components/shadcn-ui/button';
-import Link from 'next/link';
-import { ArrowLeft, Info, SpinnerGap } from '@phosphor-icons/react';
 import {
   Alert,
   AlertDescription,
   AlertTitle
 } from '@/src/components/shadcn-ui/alert';
+import { useGlobalStore } from '@/src/providers/global-store-provider';
+import { ArrowLeft, Info, SpinnerGap } from '@phosphor-icons/react';
+import { Button } from '@/src/components/shadcn-ui/button';
 import { Badge } from '@/src/components/shadcn-ui/badge';
 import { Avatar } from '@/src/components/avatar';
+import { type TypeId } from '@u22n/utils/typeid';
+import { platform } from '@/src/lib/trpc';
+import Link from 'next/link';
 
 export default function Page({
   params

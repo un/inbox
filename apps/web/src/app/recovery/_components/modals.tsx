@@ -1,24 +1,24 @@
-import { type ModalComponent } from '@/src/hooks/use-awaitable-modal';
-import { Button } from '@/src/components/shadcn-ui/button';
 import {
   AlertDialog,
   AlertDialogContent,
   AlertDialogTitle,
   AlertDialogDescription
 } from '@/src/components/shadcn-ui/alert-dialog';
-import { useState } from 'react';
 import {
   InputOTP,
   InputOTPGroup,
   InputOTPSlot
 } from '@/src/components/shadcn-ui/input-otp';
-import { CopyButton } from '@/src/components/copy-button';
+import { type ModalComponent } from '@/src/hooks/use-awaitable-modal';
 import { PasswordInput } from '@/src/components/password-input';
+import { Button } from '@/src/components/shadcn-ui/button';
+import { CopyButton } from '@/src/components/copy-button';
 import { useDebounce } from '@uidotdev/usehooks';
-import { platform } from '@/src/lib/trpc';
-import { cn } from '@/src/lib/utils';
 import { type TypeId } from '@u22n/utils/typeid';
+import { platform } from '@/src/lib/trpc';
 import { QRCodeSVG } from 'qrcode.react';
+import { cn } from '@/src/lib/utils';
+import { useState } from 'react';
 
 export function PasswordRecoveryModal({
   open,

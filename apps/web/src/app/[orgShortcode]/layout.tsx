@@ -1,14 +1,14 @@
 'use client';
 
-import Sidebar from './_components/sidebar';
 import { GlobalStoreProvider } from '@/src/providers/global-store-provider';
-import { Button } from '@/src/components/shadcn-ui/button';
-import { SpinnerGap } from '@phosphor-icons/react';
-import Link from 'next/link';
-import { platform } from '@/src/lib/trpc';
+import { ClaimEmailIdentity } from './_components/claim-email-identity';
 import { RealtimeProvider } from '@/src/providers/realtime-provider';
 import { NewConvoSheet } from './convo/_components/new-convo-sheet';
-import { ClaimEmailIdentity } from './_components/claim-email-identity';
+import { Button } from '@/src/components/shadcn-ui/button';
+import { SpinnerGap } from '@phosphor-icons/react';
+import Sidebar from './_components/sidebar';
+import { platform } from '@/src/lib/trpc';
+import Link from 'next/link';
 
 export default function Layout({
   children,

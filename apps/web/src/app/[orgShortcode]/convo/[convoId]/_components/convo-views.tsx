@@ -1,16 +1,16 @@
-import { platform } from '@/src/lib/trpc';
-import Link from 'next/link';
-import { type TypeId } from '@u22n/utils/typeid';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
-import { useMemo, useRef } from 'react';
-import { formatParticipantData } from '../../utils';
-import { MessagesPanel } from './messages-panel';
-import TopBar from './top-bar';
-import { ReplyBox } from './reply-box';
 import { Button } from '@/src/components/shadcn-ui/button';
-import { env } from '@/src/env';
 import { usePageTitle } from '@/src/hooks/use-page-title';
 import { type VirtuosoHandle } from 'react-virtuoso';
+import { formatParticipantData } from '../../utils';
+import { type TypeId } from '@u22n/utils/typeid';
+import { MessagesPanel } from './messages-panel';
+import { platform } from '@/src/lib/trpc';
+import { useMemo, useRef } from 'react';
+import { ReplyBox } from './reply-box';
+import { env } from '@/src/env';
+import TopBar from './top-bar';
+import Link from 'next/link';
 
 export function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
   const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);

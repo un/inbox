@@ -69,7 +69,7 @@ export async function dnsVerifier({ rootDomain, expected }: DnsVerifierInput) {
   const spfTxtRecords = await lookupTXT(rootDomain);
   if (spfTxtRecords.success) {
     const spfRecords = parseSpfIncludes(
-      spfTxtRecords.data.find((_) => _.startsWith('v=spf1')) || ''
+      spfTxtRecords.data.find((_) => _.startsWith('v=spf1')) ?? ''
     );
     results.spf.valid =
       !!spfRecords && spfRecords.includes.includes(expected.spf.includes);
@@ -82,12 +82,12 @@ export async function dnsVerifier({ rootDomain, expected }: DnsVerifierInput) {
     );
     if (dkimRecords.success) {
       const domainKey = parseDkim(
-        dkimRecords.data.find((_) => _.startsWith('v=DKIM1')) || ''
+        dkimRecords.data.find((_) => _.startsWith('v=DKIM1')) ?? ''
       );
       results.dkim.valid =
         !!domainKey &&
-        domainKey['h'] === 'sha256' &&
-        domainKey['p'] === expected.dkim.value;
+        domainKey.h === 'sha256' &&
+        domainKey.p === expected.dkim.value;
       results.dkim.current = domainKey;
     }
   }
@@ -113,9 +113,9 @@ export async function dnsVerifier({ rootDomain, expected }: DnsVerifierInput) {
   const dmarcRecords = await lookupTXT(`_dmarc.${rootDomain}`);
   if (dmarcRecords.success) {
     const dmarcValues = parseDmarc(
-      dmarcRecords.data.find((_) => _.startsWith('v=DMARC1')) || ''
+      dmarcRecords.data.find((_) => _.startsWith('v=DMARC1')) ?? ''
     );
-    results.dmarc.valid = !!dmarcValues && dmarcValues['p'] !== 'none';
+    results.dmarc.valid = !!dmarcValues && dmarcValues.p !== 'none';
     results.dmarc.current = dmarcValues;
   }
 

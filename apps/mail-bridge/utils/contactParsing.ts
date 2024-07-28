@@ -1,12 +1,12 @@
-import type { EmailAddress } from 'mailparser';
-import { db } from '@u22n/database';
-import { and, eq } from '@u22n/database/orm';
 import {
   contactGlobalReputations,
   contacts,
   emailIdentities
 } from '@u22n/database/schema';
 import { typeIdGenerator } from '@u22n/utils/typeid';
+import type { EmailAddress } from 'mailparser';
+import { and, eq } from '@u22n/database/orm';
+import { db } from '@u22n/database';
 
 type MessageParseAddressPlatformObject = {
   id: number;

@@ -1,17 +1,17 @@
-import { z } from 'zod';
-import { router, protectedProcedure } from '../trpc';
-import { and, eq } from '@u22n/database/orm';
-import { postalServers } from '@u22n/database/schema';
-import { typeIdValidator } from '@u22n/utils/typeid';
-import { postalDB } from '../../postal-db';
-import { httpEndpoints, organizations, servers } from '../../postal-db/schema';
 import {
   createDomain,
   setMailServerRouteForDomain,
   getDomainDNSRecords,
   type GetDomainDNSRecordsOutput
 } from '../../postal-db/functions';
+import { httpEndpoints, organizations, servers } from '../../postal-db/schema';
+import { postalServers } from '@u22n/database/schema';
+import { typeIdValidator } from '@u22n/utils/typeid';
+import { router, protectedProcedure } from '../trpc';
 import { activePostalServer } from '../../env';
+import { and, eq } from '@u22n/database/orm';
+import { postalDB } from '../../postal-db';
+import { z } from 'zod';
 
 export const domainRouter = router({
   createDomain: protectedProcedure
@@ -60,7 +60,7 @@ export const domainRouter = router({
         }
       });
 
-      if (!postalDbOrgQuery || !postalDbOrgQuery.id) {
+      if (!postalDbOrgQuery?.id) {
         return {
           error: 'Organization not found'
         };
@@ -86,7 +86,7 @@ export const domainRouter = router({
         }
       });
 
-      if (!postalServerQuery || !postalServerQuery.id) {
+      if (!postalServerQuery?.id) {
         return {
           error: 'Server not found'
         };
@@ -105,7 +105,7 @@ export const domainRouter = router({
           }
         });
 
-      if (!postalServerEndpointQuery || !postalServerEndpointQuery.id) {
+      if (!postalServerEndpointQuery?.id) {
         return {
           error: 'Endpoint not found'
         };

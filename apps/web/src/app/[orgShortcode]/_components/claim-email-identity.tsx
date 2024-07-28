@@ -1,4 +1,3 @@
-import { Button } from '@/src/components/shadcn-ui/button';
 import {
   Dialog,
   DialogClose,
@@ -8,8 +7,9 @@ import {
   DialogTitle
 } from '@/src/components/shadcn-ui/dialog';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
-import Link from 'next/link';
+import { Button } from '@/src/components/shadcn-ui/button';
 import { DialogDescription } from '@radix-ui/react-dialog';
+import Link from 'next/link';
 
 export function ClaimEmailIdentity() {
   const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);

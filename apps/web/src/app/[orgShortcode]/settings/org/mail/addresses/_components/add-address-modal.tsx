@@ -1,19 +1,5 @@
 'use client';
 
-import { platform } from '@/src/lib/trpc';
-import { useGlobalStore } from '@/src/providers/global-store-provider';
-import { Input } from '@/src/components/shadcn-ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/src/components/shadcn-ui/select';
-import { MultiSelect } from '@/src/components/shared/multiselect';
-import { Button } from '@/src/components/shadcn-ui/button';
-import { z } from 'zod';
 import {
   Dialog,
   DialogContent,
@@ -22,9 +8,14 @@ import {
   DialogTitle,
   DialogDescription
 } from '@/src/components/shadcn-ui/dialog';
-import { useState } from 'react';
-import { Separator } from '@/src/components/shadcn-ui/separator';
-import Link from 'next/link';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/src/components/shadcn-ui/select';
 import {
   Form,
   FormControl,
@@ -32,10 +23,19 @@ import {
   FormItem,
   FormMessage
 } from '@/src/components/shadcn-ui/form';
-import { useForm } from 'react-hook-form';
+import { useGlobalStore } from '@/src/providers/global-store-provider';
+import { MultiSelect } from '@/src/components/shared/multiselect';
+import { Separator } from '@/src/components/shadcn-ui/separator';
+import { Button } from '@/src/components/shadcn-ui/button';
+import { Switch } from '@/src/components/shadcn-ui/switch';
+import { Input } from '@/src/components/shadcn-ui/input';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { At } from '@phosphor-icons/react';
-import { Switch } from '@/src/components/shadcn-ui/switch';
+import { useForm } from 'react-hook-form';
+import { platform } from '@/src/lib/trpc';
+import { useState } from 'react';
+import Link from 'next/link';
+import { z } from 'zod';
 
 const addressFormSchema = z.object({
   address: z

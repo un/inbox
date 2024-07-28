@@ -1,15 +1,15 @@
 'use client';
 
-import { Button } from '@/src/components/shadcn-ui/button';
-import { platform } from '@/src/lib/trpc';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
-import { useState } from 'react';
+import { Skeleton } from '@/src/components/shadcn-ui/skeleton';
+import { PageTitle } from '../../../_components/page-title';
+import { Button } from '@/src/components/shadcn-ui/button';
 import { PricingTable } from './_components/plans-table';
 import CalEmbed from '@calcom/embed-react';
-import Link from 'next/link';
+import { platform } from '@/src/lib/trpc';
 import { cn } from '@/src/lib/utils';
-import { PageTitle } from '../../../_components/page-title';
-import { Skeleton } from '@/src/components/shadcn-ui/skeleton';
+import { useState } from 'react';
+import Link from 'next/link';
 
 export default function Page() {
   const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);

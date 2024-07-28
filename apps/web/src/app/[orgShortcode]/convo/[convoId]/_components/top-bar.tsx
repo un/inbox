@@ -29,12 +29,11 @@ import {
   TooltipContent,
   TooltipTrigger
 } from '@/src/components/shadcn-ui/tooltip';
+import { useDeleteConvo$Cache, type formatParticipantData } from '../../utils';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { type VariantProps, cva } from 'class-variance-authority';
 import { type RouterOutputs, platform } from '@/src/lib/trpc';
 import { Button } from '@/src/components/shadcn-ui/button';
-import { type formatParticipantData } from '../../utils';
-import { useDeleteConvo$Cache } from '../../utils';
 import { type TypeId } from '@u22n/utils/typeid';
 import { Participants } from './participants';
 import { useRouter } from 'next/navigation';

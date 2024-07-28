@@ -3,10 +3,10 @@ import {
   AlertTitle,
   AlertDescription
 } from '@/src/components/shadcn-ui/alert';
-import { Badge } from '@/src/components/shadcn-ui/badge';
-import { type RouterOutputs } from '@/src/lib/trpc';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { usePreferencesState } from '@/src/stores/preferences-store';
+import { Badge } from '@/src/components/shadcn-ui/badge';
+import { type RouterOutputs } from '@/src/lib/trpc';
 import Link from 'next/link';
 
 type Issues = RouterOutputs['org']['store']['getOrgIssues']['issues'];

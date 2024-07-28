@@ -4,38 +4,38 @@ import {
   verifyAuthenticationResponse,
   verifyRegistrationResponse
 } from '~platform/utils/auth/passkeys';
-import { z } from 'zod';
-import { router, accountProcedure } from '~platform/trpc/trpc';
-import { and, eq } from '@u22n/database/orm';
-import { accounts, authenticators, sessions } from '@u22n/database/schema';
-import { typeIdValidator } from '@u22n/utils/typeid';
-import { nanoIdToken } from '@u22n/utils/zodSchemas';
-import {
-  strongPasswordSchema,
-  calculatePasswordStrength
-} from '@u22n/utils/password';
-import { datePlus } from '@u22n/utils/ms';
-import { TRPCError } from '@trpc/server';
-import { deleteCookie, getCookie, setCookie } from '@u22n/hono/helpers';
-import type {
-  AuthenticationResponseJSON,
-  RegistrationResponseJSON
-} from '@simplewebauthn/types';
-import { Argon2id } from 'oslo/password';
-import { createAuthenticator } from '~platform/utils/auth/passkeyUtils';
-import { decodeHex, encodeHex } from 'oslo/encoding';
-import { TOTPController, createTOTPKeyURI } from 'oslo/otp';
-import { lucia } from '~platform/utils/auth';
-import { storage } from '~platform/storage';
-import { env } from '~platform/env';
-import { sendRecoveryEmailConfirmation } from '~platform/utils/mail/transactional';
-import type { TrpcContext } from '~platform/ctx';
 import {
   COOKIE_PASSKEY_CHALLENGE,
   COOKIE_ELEVATED_TOKEN,
   COOKIE_TWO_FACTOR_RESET_CHALLENGE
 } from '~platform/utils/cookieNames';
+import type {
+  AuthenticationResponseJSON,
+  RegistrationResponseJSON
+} from '@simplewebauthn/types';
+import {
+  strongPasswordSchema,
+  calculatePasswordStrength
+} from '@u22n/utils/password';
+import { sendRecoveryEmailConfirmation } from '~platform/utils/mail/transactional';
+import { accounts, authenticators, sessions } from '@u22n/database/schema';
 import { accountIdentifier, ratelimiter } from '~platform/trpc/ratelimit';
+import { createAuthenticator } from '~platform/utils/auth/passkeyUtils';
+import { deleteCookie, getCookie, setCookie } from '@u22n/hono/helpers';
+import { router, accountProcedure } from '~platform/trpc/trpc';
+import { TOTPController, createTOTPKeyURI } from 'oslo/otp';
+import { nanoIdToken } from '@u22n/utils/zodSchemas';
+import { typeIdValidator } from '@u22n/utils/typeid';
+import { decodeHex, encodeHex } from 'oslo/encoding';
+import type { TrpcContext } from '~platform/ctx';
+import { lucia } from '~platform/utils/auth';
+import { and, eq } from '@u22n/database/orm';
+import { storage } from '~platform/storage';
+import { datePlus } from '@u22n/utils/ms';
+import { Argon2id } from 'oslo/password';
+import { TRPCError } from '@trpc/server';
+import { env } from '~platform/env';
+import { z } from 'zod';
 
 async function checkIfElevated(ctx: TrpcContext) {
   const elevatedCookie = getCookie(ctx.event, COOKIE_ELEVATED_TOKEN);
@@ -285,7 +285,7 @@ export const securityRouter = router({
       recoveryEmailVerifiedAt: accountQuery.recoveryEmailVerifiedAt,
       passkeys: accountQuery.authenticators || [],
       sessions:
-        accountQuery.sessions.map(({ sessionToken, ...rest }) => rest) || [],
+        accountQuery.sessions.map(({ sessionToken: _, ...rest }) => rest) || [],
       thisDevice: accountQuery.sessions.find(
         (s) => s.sessionToken === account.session.id
       )?.publicId
@@ -488,7 +488,9 @@ export const securityRouter = router({
         .where(eq(accounts.id, account.id));
 
       deleteCookie(ctx.event, COOKIE_TWO_FACTOR_RESET_CHALLENGE);
-      storage.twoFactorResetChallenges.removeItem(twoFactorResetChallenge);
+      await storage.twoFactorResetChallenges.removeItem(
+        twoFactorResetChallenge
+      );
 
       return { success: true };
     }),
@@ -877,7 +879,7 @@ export const securityRouter = router({
       return { success: true };
     }),
 
-  removeAllSessions: elevatedProcedure.mutation(async ({ ctx, input }) => {
+  removeAllSessions: elevatedProcedure.mutation(async ({ ctx }) => {
     const { db, account } = ctx;
     const accountId = account.id;
 

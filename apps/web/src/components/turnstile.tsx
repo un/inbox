@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import {
   Turnstile,
   type TurnstileProps,
@@ -9,6 +8,7 @@ import {
 import { useTheme } from 'next-themes';
 import { forwardRef } from 'react';
 import { env } from '../env';
+import React from 'react';
 
 export const turnstileEnabled = Boolean(env.NEXT_PUBLIC_TURNSTILE_SITE_KEY);
 

@@ -1,34 +1,35 @@
 import {
-  inviteTemplate,
-  inviteTemplatePlainText,
-  type InviteEmailProps
-} from './inviteTemplate';
-import {
   recoveryEmailTemplate,
   recoveryEmailTemplatePlainText,
   type RecoveryEmailProps
 } from './setRecoveryEmailTemplate';
+import {
+  inviteTemplate,
+  inviteTemplatePlainText,
+  type InviteEmailProps
+} from './inviteTemplate';
 import { env } from '~platform/env';
 
 type PostalResponse =
   | {
       status: 'success';
       time: number;
-      flags: any;
+      flags: unknown;
       data: {
         message_id: string;
-        messages: {
-          [email: string]: {
+        messages: Record<
+          string,
+          {
             id: number;
             token: string;
-          };
-        };
+          }
+        >;
       };
     }
   | {
       status: 'parameter-error';
       time: number;
-      flags: any;
+      flags: unknown;
       data: {
         message: string;
       };
@@ -62,7 +63,7 @@ async function sendEmail(emailData: EmailData): Promise<PostalResponse> {
   }
 
   const config = env.MAILBRIDGE_TRANSACTIONAL_CREDENTIALS;
-  const sendMailPostalResponse = await fetch(
+  const sendMailPostalResponse = (await fetch(
     `${config.apiUrl}/api/v1/send/message`,
     {
       method: 'POST',
@@ -82,7 +83,7 @@ async function sendEmail(emailData: EmailData): Promise<PostalResponse> {
         flags: {},
         data: { message_id: 'console', messages: {} }
       };
-    });
+    })) as PostalResponse;
 
   return sendMailPostalResponse;
 }

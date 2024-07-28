@@ -1,8 +1,9 @@
 'use client';
 
-import { useCallback, useMemo, useRef, useState } from 'react';
-import { platform } from '@/src/lib/trpc';
-import { toast } from 'sonner';
+import {
+  DisableRecoveryCodeModal,
+  EnableOrResetRecoveryCodeModal
+} from './_components/recovery-modals';
 import {
   Trash,
   SpinnerGap,
@@ -11,13 +12,14 @@ import {
   Clock,
   Pencil
 } from '@phosphor-icons/react';
-import { format } from 'date-fns';
-import { startRegistration } from '@simplewebauthn/browser';
-import { RemoveAllSessionsModal } from './_components/session-modal';
-import { PageTitle } from '../../_components/page-title';
-import { Button } from '@/src/components/shadcn-ui/button';
-import { ElevatedModal } from './_components/elevated-modal';
-import { ms } from '@u22n/utils/ms';
+import {
+  DisableTwoFactorModal,
+  EnableOrResetTwoFactorModal
+} from './_components/two-factor-modals';
+import {
+  DisableRecoveryEmailModal,
+  RecoveryEmailModal
+} from './_components/recovery-email-modals';
 import {
   EnableOrChangePasswordModal,
   DisablePasswordModal
@@ -26,19 +28,17 @@ import {
   PasskeyDeleteModal,
   PasskeyRenameModal
 } from './_components/passkey-modals';
+import { RemoveAllSessionsModal } from './_components/session-modal';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { ElevatedModal } from './_components/elevated-modal';
+import { startRegistration } from '@simplewebauthn/browser';
+import { Button } from '@/src/components/shadcn-ui/button';
+import { PageTitle } from '../../_components/page-title';
 import { useMutation } from '@tanstack/react-query';
-import {
-  DisableTwoFactorModal,
-  EnableOrResetTwoFactorModal
-} from './_components/two-factor-modals';
-import {
-  DisableRecoveryCodeModal,
-  EnableOrResetRecoveryCodeModal
-} from './_components/recovery-modals';
-import {
-  DisableRecoveryEmailModal,
-  RecoveryEmailModal
-} from './_components/recovery-email-modals';
+import { platform } from '@/src/lib/trpc';
+import { ms } from '@u22n/utils/ms';
+import { format } from 'date-fns';
+import { toast } from 'sonner';
 
 export default function Page() {
   const platformUtils = platform.useUtils();

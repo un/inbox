@@ -1,13 +1,15 @@
-import { getTracer, inActiveSpan } from './helpers';
 import { createMiddleware } from '@u22n/hono/helpers';
+import { getTracer, inActiveSpan } from './helpers';
 
 function formatHeaders(headers: Record<string, string> | Headers) {
   return Object.entries(headers).map(([key, value]) => `${key}: ${value}`);
 }
 
-export function opentelemetry(name?: string) {
+export const opentelemetry = (name?: string) => {
+  // eslint-disable-next-line @typescript-eslint/unbound-method
   const { startActiveSpan } = getTracer(name ?? 'hono');
   return createMiddleware<{ Variables: { requestId: string } }>((c, next) =>
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     inActiveSpan(async (parent) => {
       parent?.updateName(`HTTP ${c.req.method} ${c.req.path}`);
       if (c.req.method === 'OPTIONS') return next();
@@ -28,4 +30,4 @@ export function opentelemetry(name?: string) {
       });
     })
   );
-}
+};

@@ -1,16 +1,16 @@
-import type { Adapter, DatabaseSession } from 'lucia';
-import { db } from '@u22n/database';
-import { eq, inArray, lte } from '@u22n/database/orm';
 import { sessions, accounts } from '@u22n/database/schema';
-import { storage } from '~platform/storage';
+import { eq, inArray, lte } from '@u22n/database/orm';
+import type { Adapter, DatabaseSession } from 'lucia';
 import { typeIdGenerator } from '@u22n/utils/typeid';
+import { storage } from '~platform/storage';
+import { db } from '@u22n/database';
 
 const sessionStorage = storage.session;
 
 export class UnInboxDBAdapter implements Adapter {
   public async deleteSession(sessionId: string) {
     await db.delete(sessions).where(eq(sessions.sessionToken, sessionId));
-    sessionStorage.removeItem(sessionId);
+    await sessionStorage.removeItem(sessionId);
   }
 
   public async deleteUserSessions(accountId: number) {
@@ -114,7 +114,7 @@ export class UnInboxDBAdapter implements Adapter {
 
     if (existingSession === null) return;
 
-    sessionStorage.setItem(sessionId, existingSession, {
+    await sessionStorage.setItem(sessionId, existingSession, {
       ttl: Math.ceil((expiresAt.getTime() - Date.now()) / 1000)
     });
   }
@@ -153,7 +153,7 @@ export class UnInboxDBAdapter implements Adapter {
       }
     });
 
-    if (!accountSessions || !accountSessions.account) return null;
+    if (!accountSessions?.account) return null;
 
     return {
       id: accountSessions.account.id,

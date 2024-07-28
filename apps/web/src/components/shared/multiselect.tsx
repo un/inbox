@@ -1,16 +1,6 @@
 'use client';
 
 import {
-  type FC,
-  useState,
-  type ReactNode,
-  type Dispatch,
-  type SetStateAction
-} from 'react';
-import { Check, CaretUpDown } from '@phosphor-icons/react';
-import { cn } from '@/src/lib/utils';
-import { Button } from '../shadcn-ui/button';
-import {
   Command,
   CommandEmpty,
   CommandGroup,
@@ -18,7 +8,17 @@ import {
   CommandItem,
   CommandList
 } from '../shadcn-ui/command';
+import {
+  type FC,
+  useState,
+  type ReactNode,
+  type Dispatch,
+  type SetStateAction
+} from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '../shadcn-ui/popover';
+import { Check, CaretUpDown } from '@phosphor-icons/react';
+import { Button } from '../shadcn-ui/button';
+import { cn } from '@/src/lib/utils';
 
 type Item<T extends Record<string, unknown>> = {
   value: string;

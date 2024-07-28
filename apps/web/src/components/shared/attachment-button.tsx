@@ -1,13 +1,13 @@
-import uploadTracker from '@/src/lib/upload';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
-import { type TypeId } from '@u22n/utils/typeid';
-import { type PrimitiveAtom, useAtom } from 'jotai';
-import { Plus } from '@phosphor-icons/react';
-import { useMemo, useRef, useState } from 'react';
-import { toast } from 'sonner';
-import { Badge } from '@/src/components/shadcn-ui/badge';
 import { Button } from '@/src/components/shadcn-ui/button';
+import { Badge } from '@/src/components/shadcn-ui/badge';
+import { type PrimitiveAtom, useAtom } from 'jotai';
+import { useMemo, useRef, useState } from 'react';
+import { type TypeId } from '@u22n/utils/typeid';
+import { Plus } from '@phosphor-icons/react';
+import uploadTracker from '@/src/lib/upload';
 import { env } from '@/src/env';
+import { toast } from 'sonner';
 
 export type ConvoAttachmentUpload = {
   fileName: string;

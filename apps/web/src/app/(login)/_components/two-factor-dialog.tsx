@@ -1,18 +1,18 @@
-import { Button } from '@/src/components/shadcn-ui/button';
-import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSlot
-} from '@/src/components/shadcn-ui/input-otp';
 import {
   AlertDialog,
   AlertDialogContent,
   AlertDialogTitle,
   AlertDialogDescription
 } from '@/src/components/shadcn-ui/alert-dialog';
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot
+} from '@/src/components/shadcn-ui/input-otp';
+import { Button } from '@/src/components/shadcn-ui/button';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
 import { platform } from '@/src/lib/trpc';
+import { useState } from 'react';
 
 export function TwoFactorDialog({ open }: { open: boolean }) {
   const [code, setCode] = useState('');

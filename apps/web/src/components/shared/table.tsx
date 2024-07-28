@@ -1,12 +1,6 @@
 'use client';
 
 import {
-  type ColumnDef,
-  flexRender,
-  getCoreRowModel,
-  useReactTable
-} from '@tanstack/react-table';
-import {
   Table,
   TableBody,
   TableCell,
@@ -14,6 +8,12 @@ import {
   TableHeader,
   TableRow
 } from '../shadcn-ui/table';
+import {
+  type ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  useReactTable
+} from '@tanstack/react-table';
 import { useRouter } from 'next/navigation';
 
 interface DataTableProps<TData, TValue> {

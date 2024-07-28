@@ -1,10 +1,10 @@
 'use client';
 
-import { At } from '@phosphor-icons/react';
-import Stepper from '../_components/stepper';
 import { CreateOrg } from './_components/create-org';
 import { JoinOrg } from './_components/join-org';
 import { useCookies } from 'next-client-cookies';
+import Stepper from '../_components/stepper';
+import { At } from '@phosphor-icons/react';
 import Image from 'next/image';
 
 export default function JoinOrgPage() {

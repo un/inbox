@@ -1,5 +1,3 @@
-import { z } from 'zod';
-import { router, protectedProcedure } from '../trpc';
 import {
   emailIdentities,
   postalServers,
@@ -15,12 +13,14 @@ import {
   orgs,
   convoParticipants
 } from '@u22n/database/schema';
-import { typeIdValidator } from '@u22n/utils/typeid';
-import { and, eq, inArray } from '@u22n/database/orm';
-import { tiptapHtml } from '@u22n/tiptap';
-import { type JSONContent } from '@u22n/tiptap/react';
 import { tipTapExtensions } from '@u22n/tiptap/extensions';
+import { and, eq, inArray } from '@u22n/database/orm';
+import { type JSONContent } from '@u22n/tiptap/react';
+import { typeIdValidator } from '@u22n/utils/typeid';
+import { router, protectedProcedure } from '../trpc';
 import { sendEmail } from '../../smtp/sendEmail';
+import { tiptapHtml } from '@u22n/tiptap';
+import { z } from 'zod';
 
 export const sendMailRouter = router({
   sendConvoEntryEmail: protectedProcedure
@@ -563,7 +563,7 @@ export const sendMailRouter = router({
             })
           }
         ).then((res) => res.json())) as GetUrlResponse;
-        if (!downloadUrl || !downloadUrl.url) {
+        if (!downloadUrl?.url) {
           throw new Error('something went wrong getting the attachment URL');
         }
 
@@ -581,7 +581,7 @@ export const sendMailRouter = router({
         for (const attachment of attachments) {
           try {
             const base64 = await getAttachment({
-              orgPublicId: orgQueryResponse.publicId!,
+              orgPublicId: orgQueryResponse.publicId,
               attachmentPublicId: attachment.publicId,
               fileName: attachment.fileName
             });
@@ -606,9 +606,9 @@ export const sendMailRouter = router({
       const emailBodyPlainText = convoEntryResponse.bodyPlainText;
 
       const replyToEmailId =
-        convoEntryResponse.replyTo?.convoMessageSource.emailMessageId || null;
+        convoEntryResponse.replyTo?.convoMessageSource.emailMessageId ?? null;
 
-      const emailHeaders: { [key: string]: string } = replyToEmailId
+      const emailHeaders: Record<string, string> = replyToEmailId
         ? {
             'In-Reply-To': `<${replyToEmailId}>`,
             References: `<${replyToEmailId}>`
@@ -636,7 +636,7 @@ export const sendMailRouter = router({
             cc: convoCcAddressesFiltered,
             from: convoFromStringObject,
             sender: convoSenderEmailAddress,
-            subject: convoEntryResponse.subject?.subject || 'No Subject',
+            subject: convoEntryResponse.subject?.subject ?? 'No Subject',
             plainBody: emailBodyPlainText,
             htmlBody: emailBodyHTML,
             attachments: postalAttachments,
@@ -660,7 +660,7 @@ export const sendMailRouter = router({
         } else if (!('success' in sentEmail) && sentEmail.messageId) {
           const entryMetadata: ConvoEntryMetadata = {
             email: {
-              to: [convoMetadataToAddress!],
+              to: [convoMetadataToAddress],
               from: [convoMetadataFromAddress],
               cc: convoMetadataCcAddressesFiltered,
               messageId: sentEmail.messageId,
@@ -677,7 +677,7 @@ export const sendMailRouter = router({
 
           return {
             success: true,
-            metadata: entryMetadata as ConvoEntryMetadata
+            metadata: entryMetadata
           };
         } else {
           console.error(
@@ -694,21 +694,22 @@ export const sendMailRouter = router({
         | {
             status: 'success';
             time: number;
-            flags: any;
+            flags: unknown;
             data: {
               message_id: string;
-              messages: {
-                [email: string]: {
+              messages: Record<
+                string,
+                {
                   id: number;
                   token: string;
-                };
-              };
+                }
+              >;
             };
           }
         | {
             status: 'parameter-error';
             time: number;
-            flags: any;
+            flags: unknown;
             data: {
               message: string;
             };
@@ -725,7 +726,7 @@ export const sendMailRouter = router({
           cc: convoCcAddressesFiltered,
           from: convoFromStringObject,
           sender: convoSenderEmailAddress,
-          subject: convoEntryResponse.subject?.subject || 'No Subject',
+          subject: convoEntryResponse.subject?.subject ?? 'No Subject',
           plain_body: emailBodyPlainText,
           html_body: emailBodyHTML,
           attachments: postalAttachments,
@@ -748,7 +749,7 @@ export const sendMailRouter = router({
 
         const entryMetadata: ConvoEntryMetadata = {
           email: {
-            to: [convoMetadataToAddress!],
+            to: [convoMetadataToAddress],
             from: [convoMetadataFromAddress],
             cc: convoMetadataCcAddressesFiltered,
             messageId: sendMailPostalResponse.data.message_id,
@@ -768,7 +769,7 @@ export const sendMailRouter = router({
 
         return {
           success: true,
-          metadata: entryMetadata as ConvoEntryMetadata
+          metadata: entryMetadata
         };
       } else {
         console.error(

@@ -1,11 +1,11 @@
 'use client';
 
-import { DataTable } from '@/src/components/shared/table';
-import { platform } from '@/src/lib/trpc';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
-import { columns } from './_components/columns';
+import { DataTable } from '@/src/components/shared/table';
 import { InviteModal } from './_components/invite-modal';
 import { SpinnerGap } from '@phosphor-icons/react';
+import { columns } from './_components/columns';
+import { platform } from '@/src/lib/trpc';
 
 export default function Page() {
   const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);

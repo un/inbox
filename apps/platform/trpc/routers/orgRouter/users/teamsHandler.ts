@@ -1,6 +1,3 @@
-import { TRPCError } from '@trpc/server';
-import type { DBType } from '@u22n/database';
-import { and, eq } from '@u22n/database/orm';
 import {
   convoParticipantTeamMembers,
   convoParticipants,
@@ -9,6 +6,9 @@ import {
   orgMembers
 } from '@u22n/database/schema';
 import { typeIdGenerator, type TypeId } from '@u22n/utils/typeid';
+import { and, eq } from '@u22n/database/orm';
+import type { DBType } from '@u22n/database';
+import { TRPCError } from '@trpc/server';
 
 export async function addOrgMemberToTeamHandler(
   db: DBType,

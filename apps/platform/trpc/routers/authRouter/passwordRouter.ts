@@ -1,27 +1,27 @@
-import { z } from 'zod';
-import { Argon2id } from 'oslo/password';
 import {
   router,
   accountProcedure,
   turnstileProcedure,
   publicProcedure
 } from '~platform/trpc/trpc';
-import { eq } from '@u22n/database/orm';
-import { accounts } from '@u22n/database/schema';
+import { setCookie, getCookie, deleteCookie } from '@u22n/hono/helpers';
+import { createLuciaSessionCookie } from '~platform/utils/session';
 import { nanoIdToken, zodSchemas } from '@u22n/utils/zodSchemas';
 import { strongPasswordSchema } from '@u22n/utils/password';
+import { ratelimiter } from '~platform/trpc/ratelimit';
 import { typeIdGenerator } from '@u22n/utils/typeid';
-import { TRPCError } from '@trpc/server';
-import { lucia } from '~platform/utils/auth';
 import { validateUsername } from './signupRouter';
-import { createLuciaSessionCookie } from '~platform/utils/session';
+import { accounts } from '@u22n/database/schema';
+import { lucia } from '~platform/utils/auth';
+import { storage } from '~platform/storage';
 import { decodeHex } from 'oslo/encoding';
 import { TOTPController } from 'oslo/otp';
-import { setCookie, getCookie, deleteCookie } from '@u22n/hono/helpers';
-import { env } from '~platform/env';
-import { storage } from '~platform/storage';
+import { Argon2id } from 'oslo/password';
+import { TRPCError } from '@trpc/server';
+import { eq } from '@u22n/database/orm';
 import { ms } from '@u22n/utils/ms';
-import { ratelimiter } from '~platform/trpc/ratelimit';
+import { env } from '~platform/env';
+import { z } from 'zod';
 
 export const passwordRouter = router({
   signUpWithPassword: publicProcedure
@@ -233,7 +233,7 @@ export const passwordRouter = router({
       if (userResponse.twoFactorEnabled && userResponse.twoFactorSecret) {
         const twoFactorChallengeId = nanoIdToken();
 
-        storage.twoFactorLoginChallenges.setItem(twoFactorChallengeId, {
+        await storage.twoFactorLoginChallenges.setItem(twoFactorChallengeId, {
           account: userResponse,
           defaultOrgSlug: userResponse.orgMemberships[0]?.org.shortcode,
           secret: userResponse.twoFactorSecret

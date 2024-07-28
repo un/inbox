@@ -1,6 +1,6 @@
-import { env } from '../env';
-import type { Ctx } from '../ctx';
 import { createHonoApp } from '@u22n/hono';
+import type { Ctx } from '../ctx';
+import { env } from '../env';
 
 // Proxy to `${process.env.STORAGE_S3_ENDPOINT}/${process.env.STORAGE_S3_BUCKET_AVATARS}/${proxy}`
 export const avatarProxy = createHonoApp<Ctx>().get(

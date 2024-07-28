@@ -1,7 +1,7 @@
 import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
 import { trpcCommandRouter } from '@/server/trpc';
-import { db } from '@u22n/database';
 import type { NextRequest } from 'next/server';
+import { db } from '@u22n/database';
 
 function handler(req: NextRequest) {
   return fetchRequestHandler({

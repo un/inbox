@@ -1,7 +1,7 @@
-import { db } from '@u22n/database';
-import { eq } from '@u22n/database/orm';
 import { sessions } from '@u22n/database/schema';
 import type { NextRequest } from 'next/server';
+import { eq } from '@u22n/database/orm';
+import { db } from '@u22n/database';
 
 export async function getAccount(req: NextRequest) {
   const sessionCookie = req.cookies.get('unsession');

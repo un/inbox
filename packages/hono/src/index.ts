@@ -1,17 +1,18 @@
-import { Hono, type Context } from 'hono';
-import { cors } from 'hono/cors';
-import { logger } from 'hono/logger';
-import { serve } from '@hono/node-server';
-import { trpcServer } from '@hono/trpc-server';
 import type { HttpBindings } from '@hono/node-server';
+import { trpcServer } from '@hono/trpc-server';
+import { serve } from '@hono/node-server';
+import { Hono, type Context } from 'hono';
+import { logger } from 'hono/logger';
+import { cors } from 'hono/cors';
 
-export type HonoContext<Variables = {}> = {
+export type HonoContext<Variables = NonNullable<unknown>> = {
   Variables: Variables;
   Bindings: HttpBindings;
 };
 
 export const createHonoApp = <T extends HonoContext>() => new Hono<T>();
 
+// eslint-disable-next-line @typescript-eslint/ban-types
 type CorsOptions = Parameters<typeof cors>[0] & {};
 
 export const setupRouteLogger = <T extends HonoContext>(
@@ -89,6 +90,7 @@ export const setupHonoListener = <T extends HonoContext>(
 
 type TrpcServerOptions = Parameters<typeof trpcServer>[0];
 type AnyRouter = TrpcServerOptions['router'];
+// eslint-disable-next-line @typescript-eslint/ban-types
 type FetchOptions = Parameters<TrpcServerOptions['createContext'] & {}>[0];
 
 export const setupTrpcHandler = <T extends HonoContext>(
@@ -120,6 +122,6 @@ export const setupRuntime = (
 
   process.on('unhandledRejection', (err) => console.error(err));
   process.on('uncaughtException', (err) => console.error(err));
-  process.on('SIGINT', handleExit);
-  process.on('SIGTERM', handleExit);
+  process.on('SIGINT', () => void handleExit());
+  process.on('SIGTERM', () => void handleExit());
 };

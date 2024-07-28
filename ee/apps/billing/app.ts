@@ -1,11 +1,3 @@
-import { type Ctx } from './ctx';
-import { env } from './env';
-import { stripeWebhookMiddleware } from './middlewares';
-import { stripeApi } from './routes/stripe';
-import { trpcBillingRouter } from './trpc';
-import { db } from '@u22n/database';
-import { stripeData } from './stripe';
-import { validateLicense } from './validateLicenseKey';
 import {
   createHonoApp,
   setupCors,
@@ -15,6 +7,14 @@ import {
   setupRuntime,
   setupTrpcHandler
 } from '@u22n/hono';
+import { stripeWebhookMiddleware } from './middlewares';
+import { validateLicense } from './validateLicenseKey';
+import { stripeApi } from './routes/stripe';
+import { trpcBillingRouter } from './trpc';
+import { stripeData } from './stripe';
+import { db } from '@u22n/database';
+import { type Ctx } from './ctx';
+import { env } from './env';
 
 await validateLicense();
 

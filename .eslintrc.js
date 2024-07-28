@@ -4,28 +4,40 @@
 module.exports = {
   root: true,
   parser: '@typescript-eslint/parser',
-  plugins: ['@typescript-eslint', 'prettier', 'drizzle', '@u22n/custom'],
-  extends: ['prettier', 'plugin:drizzle/all'],
+  plugins: ['@typescript-eslint', 'drizzle'],
+  parserOptions: {
+    project: true
+  },
+  extends: [
+    'plugin:drizzle/all',
+    'plugin:@typescript-eslint/recommended-type-checked',
+    'plugin:@typescript-eslint/stylistic-type-checked'
+  ],
   rules: {
-    semi: [2, 'always']
+    '@typescript-eslint/array-type': 'off',
+    '@typescript-eslint/consistent-type-definitions': 'off',
+    '@typescript-eslint/consistent-type-imports': [
+      'warn',
+      { prefer: 'type-imports', fixStyle: 'inline-type-imports' }
+    ],
+    '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+    '@typescript-eslint/require-await': 'off',
+    '@typescript-eslint/no-misused-promises': [
+      'error',
+      { checksVoidReturn: { attributes: false } }
+    ],
+    'no-console': ['error', { allow: ['info', 'warn', 'trace', 'error'] }]
   },
   overrides: [
     {
-      files: ['*'],
-      rules: {
-        'no-console': [
-          'error',
-          {
-            allow: ['info', 'warn', 'trace', 'error']
-          }
-        ]
-      }
+      files: ['./packages/database/**/*'],
+      plugins: ['@u22n/custom'],
+      rules: { '@u22n/custom/table-needs-org-id': 'error' }
     },
     {
-      files: ['./packages/database/**/*'],
-      rules: {
-        '@u22n/custom/table-needs-org-id': 'error'
-      }
+      files: ['./apps/web/**/*'],
+      extends: ['next/core-web-vitals'],
+      rules: { 'react/no-children-prop': ['warn', { allowFunctions: true }] }
     }
   ]
 };

@@ -1,7 +1,3 @@
-import { TRPCError } from '@trpc/server';
-import { z } from 'zod';
-import { orgProcedure, router, accountProcedure } from '~platform/trpc/trpc';
-import { eq } from '@u22n/database/orm';
 import {
   emailIdentities,
   emailIdentitiesPersonal,
@@ -10,10 +6,14 @@ import {
   emailIdentitiesAuthorizedOrgMembers,
   emailRoutingRulesDestinations
 } from '@u22n/database/schema';
-import { orgMembers } from '@u22n/database/schema';
+import { orgProcedure, router, accountProcedure } from '~platform/trpc/trpc';
 import { typeIdGenerator, typeIdValidator } from '@u22n/utils/typeid';
 import { nanoIdToken } from '@u22n/utils/zodSchemas';
+import { orgMembers } from '@u22n/database/schema';
+import { TRPCError } from '@trpc/server';
+import { eq } from '@u22n/database/orm';
 import { env } from '~platform/env';
+import { z } from 'zod';
 
 export const addressRouter = router({
   getPersonalAddresses: accountProcedure
@@ -157,7 +157,7 @@ export const addressRouter = router({
         ...availablePremiumDomains
       ];
 
-      const emailIdentityDomain = input.emailIdentity.split('@')[1] || '';
+      const emailIdentityDomain = input.emailIdentity.split('@')[1] ?? '';
 
       if (!availableDomains.includes(emailIdentityDomain)) {
         throw new TRPCError({
@@ -185,10 +185,7 @@ export const addressRouter = router({
           }
         }
       });
-      if (
-        !accountOrgMembershipResponse ||
-        !accountOrgMembershipResponse.account
-      ) {
+      if (!accountOrgMembershipResponse?.account) {
         throw new TRPCError({
           code: 'UNPROCESSABLE_CONTENT',
           message: 'Account not found'

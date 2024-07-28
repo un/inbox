@@ -1,16 +1,16 @@
 'use client';
 
-import { Button } from '@/src/components/shadcn-ui/button';
-import { type RouterOutputs, platform } from '@/src/lib/trpc';
-import Stepper from '../../_components/stepper';
-import { useEffect, useMemo, useState } from 'react';
-import { User } from '@phosphor-icons/react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { toast } from 'sonner';
-import { Input } from '@/src/components/shadcn-ui/input';
-import Image from 'next/image';
 import { useAvatarUploader } from '@/src/hooks/use-avatar-uploader';
 import { generateAvatarUrl, openFilePicker } from '@/src/lib/utils';
+import { type RouterOutputs, platform } from '@/src/lib/trpc';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Button } from '@/src/components/shadcn-ui/button';
+import { Input } from '@/src/components/shadcn-ui/input';
+import { useEffect, useMemo, useState } from 'react';
+import Stepper from '../../_components/stepper';
+import { User } from '@phosphor-icons/react';
+import Image from 'next/image';
+import { toast } from 'sonner';
 
 type ProfileCardProps = {
   orgData: RouterOutputs['account']['profile']['getOrgMemberProfile'];

@@ -1,21 +1,5 @@
 'use client';
 
-import { platform } from '@/src/lib/trpc';
-import { useGlobalStore } from '@/src/providers/global-store-provider';
-import { Input } from '@/src/components/shadcn-ui/input';
-import { Switch } from '@/src/components/shadcn-ui/switch';
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/src/components/shadcn-ui/select';
-import { MultiSelect } from '@/src/components/shared/multiselect';
-import { Button } from '@/src/components/shadcn-ui/button';
-import { z } from 'zod';
-import { type TypeId } from '@u22n/utils/typeid';
 import {
   Dialog,
   DialogContent,
@@ -25,9 +9,14 @@ import {
   DialogDescription,
   DialogClose
 } from '@/src/components/shadcn-ui/dialog';
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/src/components/shadcn-ui/select';
 import {
   Form,
   FormControl,
@@ -40,6 +29,17 @@ import {
   TooltipContent,
   TooltipTrigger
 } from '@/src/components/shadcn-ui/tooltip';
+import { useGlobalStore } from '@/src/providers/global-store-provider';
+import { MultiSelect } from '@/src/components/shared/multiselect';
+import { Switch } from '@/src/components/shadcn-ui/switch';
+import { Button } from '@/src/components/shadcn-ui/button';
+import { Input } from '@/src/components/shadcn-ui/input';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { type TypeId } from '@u22n/utils/typeid';
+import { useForm } from 'react-hook-form';
+import { platform } from '@/src/lib/trpc';
+import { useState } from 'react';
+import { z } from 'zod';
 
 const inviteFormSchema = z.object({
   firstName: z.string().min(1).max(64),

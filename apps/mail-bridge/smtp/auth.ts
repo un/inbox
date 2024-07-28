@@ -31,10 +31,10 @@ export async function validateSmtpCredentials({
     .verify()
     .then(() => ({ valid: true, error: null }) as const)
     .catch(
-      (e) =>
+      (e: Error) =>
         ({
           valid: false,
-          error: e.message as string
+          error: e.message
         }) as const
     );
   transport.close();

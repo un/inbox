@@ -1,6 +1,6 @@
-import { z } from 'zod';
 import { validateSmtpCredentials } from '../../smtp/auth';
 import { protectedProcedure, router } from '../trpc';
+import { z } from 'zod';
 
 export const smtpRouter = router({
   validateSmtpCredentials: protectedProcedure

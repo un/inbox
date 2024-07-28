@@ -1,6 +1,6 @@
 import type { Span } from '@opentelemetry/api';
-import { env } from './env';
 import { trace } from '@opentelemetry/api';
+import { env } from './env';
 
 export function getTracer(name: string) {
   if (!env.OTEL_ENABLED)

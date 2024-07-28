@@ -1,9 +1,5 @@
 'use client';
 
-import { platform } from '@/src/lib/trpc';
-import { generateAvatarUrl, getInitials } from '@/src/lib/utils';
-import { Button } from '@/src/components/shadcn-ui/button';
-import { Input } from '@/src/components/shadcn-ui/input';
 import {
   Dialog,
   DialogClose,
@@ -17,11 +13,15 @@ import {
   AvatarFallback,
   AvatarImage
 } from '@/src/components/shadcn-ui/avatar';
-import { UsersThree } from '@phosphor-icons/react';
-import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
-import { useRouter } from 'next/navigation';
+import { generateAvatarUrl, getInitials } from '@/src/lib/utils';
+import { Button } from '@/src/components/shadcn-ui/button';
 import { DialogDescription } from '@radix-ui/react-dialog';
+import { Input } from '@/src/components/shadcn-ui/input';
+import { UsersThree } from '@phosphor-icons/react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { platform } from '@/src/lib/trpc';
+import { toast } from 'sonner';
 
 export function JoinOrg({
   hasInviteCode,

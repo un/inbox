@@ -1,11 +1,11 @@
-import { useAtom, useSetAtom } from 'jotai';
 import { useEffect, forwardRef, createContext } from 'react';
-import { Command } from 'cmdk';
+import type { ComponentPropsWithoutRef, FC } from 'react';
 import { queryAtom, rangeAtom } from '../utils/atoms';
 import { editorStore } from '../utils/store';
-import type tunnel from 'tunnel-rat';
-import type { ComponentPropsWithoutRef, FC } from 'react';
+import { useAtom, useSetAtom } from 'jotai';
 import type { Range } from '@tiptap/core';
+import type tunnel from 'tunnel-rat';
+import { Command } from 'cmdk';
 
 export const EditorCommandTunnelContext = createContext(
   {} as ReturnType<typeof tunnel>

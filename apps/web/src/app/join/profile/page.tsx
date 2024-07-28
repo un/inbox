@@ -1,11 +1,11 @@
 'use client';
 
-import Link from 'next/link';
+import { LoadingSpinner } from '@/src/components/shared/loading-spinner';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { ProfileCard } from './_components/profile-card';
-import { platform } from '@/src/lib/trpc';
 import { useCookies } from 'next-client-cookies';
-import { LoadingSpinner } from '@/src/components/shared/loading-spinner';
+import { platform } from '@/src/lib/trpc';
+import Link from 'next/link';
 
 export default function Page({
   searchParams

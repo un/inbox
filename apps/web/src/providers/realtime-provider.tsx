@@ -5,8 +5,8 @@ import {
   useState,
   type PropsWithChildren
 } from 'react';
-import RealtimeClient from '@u22n/realtime/client';
 import { useGlobalStore } from './global-store-provider';
+import RealtimeClient from '@u22n/realtime/client';
 import { toast } from 'sonner';
 import { env } from '../env';
 

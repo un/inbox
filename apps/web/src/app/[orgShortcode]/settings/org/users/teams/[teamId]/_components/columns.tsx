@@ -1,13 +1,13 @@
 'use client';
 
-import { createColumnHelper, type ColumnDef } from '@tanstack/react-table';
-import type { RouterOutputs } from '@/src/lib/trpc';
-import { generateAvatarUrl, getInitials } from '@/src/lib/utils';
 import {
   Avatar,
   AvatarFallback,
   AvatarImage
 } from '@/src/components/shadcn-ui/avatar';
+import { createColumnHelper, type ColumnDef } from '@tanstack/react-table';
+import { generateAvatarUrl, getInitials } from '@/src/lib/utils';
+import type { RouterOutputs } from '@/src/lib/trpc';
 
 type Member =
   // eslint-disable-next-line @typescript-eslint/ban-types

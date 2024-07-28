@@ -1,17 +1,17 @@
 'use client';
 
-import { Button } from '@/src/components/shadcn-ui/button';
-import { DataTable } from '@/src/components/shared/table';
-import { platform } from '@/src/lib/trpc';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
-import { ArrowLeft } from '@phosphor-icons/react';
-import { columns } from './_components/columns';
-import Link from 'next/link';
 import { Separator } from '@/src/components/shadcn-ui/separator';
-import { useState } from 'react';
 // import { EditMemberList } from './_components/member-editor';
 import { AddNewMember } from './_components/add-new-member';
+import { Button } from '@/src/components/shadcn-ui/button';
+import { DataTable } from '@/src/components/shared/table';
+import { ArrowLeft } from '@phosphor-icons/react';
 import { type TypeId } from '@u22n/utils/typeid';
+import { columns } from './_components/columns';
+import { platform } from '@/src/lib/trpc';
+import { useState } from 'react';
+import Link from 'next/link';
 
 export default function Page({
   params

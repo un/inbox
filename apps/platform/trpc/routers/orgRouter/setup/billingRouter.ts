@@ -1,10 +1,10 @@
-import { z } from 'zod';
+import { domains, orgBilling, orgMembers, orgs } from '@u22n/database/schema';
+import { billingTrpcClient } from '~platform/utils/tRPCServerClients';
+import { isAccountAdminOfOrg } from '~platform/utils/account';
 import { router, eeProcedure } from '~platform/trpc/trpc';
 import { eq, and, sql } from '@u22n/database/orm';
-import { domains, orgBilling, orgMembers, orgs } from '@u22n/database/schema';
-import { isAccountAdminOfOrg } from '~platform/utils/account';
 import { TRPCError } from '@trpc/server';
-import { billingTrpcClient } from '~platform/utils/tRPCServerClients';
+import { z } from 'zod';
 
 export const billingRouter = router({
   getOrgBillingOverview: eeProcedure
@@ -35,8 +35,8 @@ export const billingRouter = router({
         }
       });
 
-      const orgPlan = orgBillingQuery?.plan || 'free';
-      const orgPeriod = orgBillingQuery?.period || 'monthly';
+      const orgPlan = orgBillingQuery?.plan ?? 'free';
+      const orgPeriod = orgBillingQuery?.period ?? 'monthly';
 
       const activeOrgMembersCount = await db
         .select({ count: sql<number>`count(*)` })
@@ -133,7 +133,7 @@ export const billingRouter = router({
         );
 
       const activeOrgMembersCount = Number(
-        activeOrgMembersCountResponse[0]?.count || '0'
+        activeOrgMembersCountResponse[0]?.count ?? '0'
       );
       const orgSubLink =
         await billingTrpcClient.stripe.links.createSubscriptionPaymentLink.mutate(
@@ -165,7 +165,7 @@ export const billingRouter = router({
         plan: true
       }
     });
-    const orgPlan = orgBillingResponse?.plan || 'free';
+    const orgPlan = orgBillingResponse?.plan ?? 'free';
     return {
       isPro: orgPlan === 'pro'
     };
@@ -215,7 +215,7 @@ export const billingRouter = router({
       };
     }
 
-    const allowedDomains: number = domainBonus.bonus.count as number;
+    const allowedDomains: number = domainBonus.bonus.count;
 
     const domainQuery = await db.query.domains.findMany({
       where: eq(domains.orgId, org.id),

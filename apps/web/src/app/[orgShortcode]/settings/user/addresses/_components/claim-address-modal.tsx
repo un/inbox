@@ -1,15 +1,15 @@
-import { type ModalComponent } from '@/src/hooks/use-awaitable-modal';
-import { platform } from '@/src/lib/trpc';
-import { useGlobalStore } from '@/src/providers/global-store-provider';
-import { Button } from '@/src/components/shadcn-ui/button';
 import {
   Dialog,
   DialogContent,
   DialogTitle
 } from '@/src/components/shadcn-ui/dialog';
-import Link from 'next/link';
+import { useGlobalStore } from '@/src/providers/global-store-provider';
+import { type ModalComponent } from '@/src/hooks/use-awaitable-modal';
+import { Button } from '@/src/components/shadcn-ui/button';
+import { platform } from '@/src/lib/trpc';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import Link from 'next/link';
 
 export function ClaimAddressModal({
   address,

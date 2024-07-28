@@ -1,9 +1,9 @@
-import { loggerLink } from '@trpc/client';
-import { createTRPCClient, httpBatchLink } from '@trpc/client';
-import SuperJSON from 'superjson';
 import type { TrpcMailBridgeRouter } from '@u22n/mail-bridge/trpc';
 import type { TrpcBillingRouter } from '@uninbox-ee/billing/trpc';
+import { createTRPCClient, httpBatchLink } from '@trpc/client';
+import { loggerLink } from '@trpc/client';
 import { env } from '~platform/env';
+import SuperJSON from 'superjson';
 
 export const mailBridgeTrpcClient = createTRPCClient<TrpcMailBridgeRouter>({
   links: [

@@ -1,6 +1,6 @@
-import * as React from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { X } from '@phosphor-icons/react';
+import * as React from 'react';
 
 import { cn } from '@/src/lib/utils';
 

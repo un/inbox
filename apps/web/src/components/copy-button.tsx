@@ -1,10 +1,10 @@
 'use client';
 
-import { useCopyToClipboard } from '@uidotdev/usehooks';
-import { cn } from '../lib/utils';
 import { Button, type ButtonProps } from '@/src/components/shadcn-ui/button';
-import { Check, Copy } from '@phosphor-icons/react';
 import { type ElementRef, forwardRef, useState } from 'react';
+import { useCopyToClipboard } from '@uidotdev/usehooks';
+import { Check, Copy } from '@phosphor-icons/react';
+import { cn } from '../lib/utils';
 
 export const CopyButton = forwardRef<
   ElementRef<'button'>,

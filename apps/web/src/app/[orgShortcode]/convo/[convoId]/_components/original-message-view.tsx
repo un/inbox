@@ -1,11 +1,11 @@
 import { Dialog, DialogContent } from '@/src/components/shadcn-ui/dialog';
+import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { ScrollArea } from '@/src/components/shadcn-ui/scroll-area';
 import { Separator } from '@/src/components/shadcn-ui/separator';
-import { platform } from '@/src/lib/trpc';
-import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { SpinnerGap } from '@phosphor-icons/react';
 import { type TypeId } from '@u22n/utils/typeid';
 import { memo, useRef, useState } from 'react';
+import { platform } from '@/src/lib/trpc';
 
 export function OriginalMessageView({
   setOpen,

@@ -1,18 +1,18 @@
-import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
-import { OTLPLogExporter } from '@opentelemetry/exporter-logs-otlp-http';
-import { WinstonInstrumentation } from '@opentelemetry/instrumentation-winston';
-import { HttpInstrumentation } from '@opentelemetry/instrumentation-http';
-import { registerInstrumentations } from '@opentelemetry/instrumentation';
-import { UndiciInstrumentation } from '@opentelemetry/instrumentation-undici';
 import {
   NodeTracerProvider,
   BatchSpanProcessor
 } from '@opentelemetry/sdk-trace-node';
-import { Resource } from '@opentelemetry/resources';
 import {
   BatchLogRecordProcessor,
   LoggerProvider
 } from '@opentelemetry/sdk-logs';
+import { WinstonInstrumentation } from '@opentelemetry/instrumentation-winston';
+import { UndiciInstrumentation } from '@opentelemetry/instrumentation-undici';
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
+import { HttpInstrumentation } from '@opentelemetry/instrumentation-http';
+import { registerInstrumentations } from '@opentelemetry/instrumentation';
+import { OTLPLogExporter } from '@opentelemetry/exporter-logs-otlp-http';
+import { Resource } from '@opentelemetry/resources';
 import { logs } from '@opentelemetry/api-logs';
 import { env } from './env';
 

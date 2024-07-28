@@ -1,8 +1,8 @@
-import { z } from 'zod';
-import humanFormat from 'human-format';
-import { zxcvbn, zxcvbnOptions } from '@zxcvbn-ts/core';
 import { dictionary, adjacencyGraphs } from '@zxcvbn-ts/language-common';
 import { haveIBeenPwned } from '@zxcvbn-ts/matcher-pwned';
+import { zxcvbn, zxcvbnOptions } from '@zxcvbn-ts/core';
+import humanFormat from 'human-format';
+import { z } from 'zod';
 
 zxcvbnOptions.setOptions({
   dictionary,

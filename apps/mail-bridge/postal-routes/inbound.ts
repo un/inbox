@@ -2,10 +2,10 @@ import {
   postalMessageSchema,
   mailParamsSchema
 } from '../queue/mail-processor/schemas';
-import type { Ctx } from '../ctx';
 import { mailProcessorQueue } from '../queue/mail-processor';
-import { createHonoApp } from '@u22n/hono';
 import { zValidator } from '@u22n/hono/helpers';
+import { createHonoApp } from '@u22n/hono';
+import type { Ctx } from '../ctx';
 
 export const inboundApi = createHonoApp<Ctx>();
 

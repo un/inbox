@@ -13,7 +13,7 @@ export default function Page() {
   const { isPending, mutateAsync } = api.accounts.addUninOffer.useMutation({
     onSuccess: () => {
       toast.success('Unin offer added');
-      refetch();
+      void refetch();
     },
     onError: (error) => {
       toast.error(error.message);

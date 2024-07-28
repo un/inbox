@@ -18,9 +18,9 @@ import {
   mediumtext,
   customType
 } from 'drizzle-orm/mysql-core';
-import { relations } from 'drizzle-orm';
 import { typeIdDataType as publicId } from '@u22n/utils/typeid';
 import { uiColors } from '@u22n/utils/colors';
+import { relations } from 'drizzle-orm';
 
 // import { stripeBillingPeriods, stripePlanNames } from '../../ee/apps/billing';
 const stripeBillingPeriods = ['monthly', 'yearly'] as const;
@@ -1255,8 +1255,8 @@ export type ConvoEntryMetadataEmailAddress = {
 
 export type ConvoEntryMetadataMissingParticipant = {
   type: 'user' | 'team';
-  publicId: String;
-  name: String;
+  publicId: string;
+  name: string;
 };
 
 export type ConvoEntryMetadataEmail = {

@@ -1,6 +1,6 @@
-import { db } from '@u22n/database';
-import { lte } from '@u22n/database/orm';
 import { sessions } from '@u22n/database/schema';
+import { lte } from '@u22n/database/orm';
+import { db } from '@u22n/database';
 
 export async function cleanupExpiredSessions() {
   const now = performance.now();

@@ -1,8 +1,8 @@
-import * as React from 'react';
 import { Slot } from '@radix-ui/react-slot';
+import * as React from 'react';
 
-import { cn } from '@/src/lib/utils';
 import { CaretRight, DotsThree } from '@phosphor-icons/react';
+import { cn } from '@/src/lib/utils';
 
 const Breadcrumb = React.forwardRef<
   HTMLElement,

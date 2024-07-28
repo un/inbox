@@ -1,22 +1,5 @@
 'use client';
 
-import { platform } from '@/src/lib/trpc';
-import { type TypeId } from '@u22n/utils/typeid';
-import { useGlobalStore } from '@/src/providers/global-store-provider';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { type JSONContent } from '@u22n/tiptap/react';
-import {
-  useUpdateConvoData$Cache,
-  useUpdateConvoMessageList$Cache
-} from '../../utils';
-import { atom, useAtom, useAtomValue } from 'jotai';
-import { toast } from 'sonner';
-import { Editor } from '@/src/components/shared/editor';
-import { emptyTiptapEditorContent } from '@u22n/tiptap';
-import { useAttachmentUploader } from '@/src/components/shared/attachments';
-import { stringify } from 'superjson';
-import { replyToMessageAtom } from '../atoms';
-import { Button } from '@/src/components/shadcn-ui/button';
 import {
   Select,
   SelectContent,
@@ -24,14 +7,31 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/src/components/shadcn-ui/select';
-import { Paperclip, Question } from '@phosphor-icons/react';
-import { cn } from '@/src/lib/utils';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger
 } from '@/src/components/shadcn-ui/tooltip';
+import {
+  useUpdateConvoData$Cache,
+  useUpdateConvoMessageList$Cache
+} from '../../utils';
+import { useAttachmentUploader } from '@/src/components/shared/attachments';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { type EditorFunctions } from '@u22n/tiptap/react/components';
+import { Paperclip, Question } from '@phosphor-icons/react';
+import { Button } from '@/src/components/shadcn-ui/button';
+import { Editor } from '@/src/components/shared/editor';
+import { emptyTiptapEditorContent } from '@u22n/tiptap';
+import { type JSONContent } from '@u22n/tiptap/react';
+import { atom, useAtom, useAtomValue } from 'jotai';
+import { type TypeId } from '@u22n/utils/typeid';
+import { replyToMessageAtom } from '../atoms';
+import { platform } from '@/src/lib/trpc';
+import { stringify } from 'superjson';
+import { cn } from '@/src/lib/utils';
+import { toast } from 'sonner';
 
 const selectedEmailIdentityAtom = atom<null | TypeId<'emailIdentities'>>(null);
 

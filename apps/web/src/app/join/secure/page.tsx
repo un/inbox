@@ -1,25 +1,25 @@
 'use client';
 
-import { Button } from '@/src/components/shadcn-ui/button';
-import { useRouter } from 'next/navigation';
-import Stepper from '../_components/stepper';
-import { PasskeyCard, PasswordCard } from './_components/secure-cards';
-import { toast } from 'sonner';
 import {
   TurnstileComponent,
   turnstileEnabled
 } from '@/src/components/turnstile';
-import { useCallback, useEffect, useState } from 'react';
-import Image from 'next/image';
-import { useCookies } from 'next-client-cookies';
-import { At } from '@phosphor-icons/react';
+import { PasskeyCard, PasswordCard } from './_components/secure-cards';
 import { Separator } from '@/src/components/shadcn-ui/separator';
-import { z } from 'zod';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { platform } from '@/src/lib/trpc';
 import { startRegistration } from '@simplewebauthn/browser';
+import { Button } from '@/src/components/shadcn-ui/button';
+import { useCallback, useEffect, useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
+import { useCookies } from 'next-client-cookies';
+import Stepper from '../_components/stepper';
+import { useRouter } from 'next/navigation';
+import { At } from '@phosphor-icons/react';
+import { useForm } from 'react-hook-form';
+import { platform } from '@/src/lib/trpc';
+import Image from 'next/image';
+import { toast } from 'sonner';
+import { z } from 'zod';
 
 type PasskeyCreationOptions = Parameters<typeof startRegistration>[0];
 

@@ -1,8 +1,8 @@
-import { db } from '@u22n/database';
-import { eq } from '@u22n/database/orm';
-import { orgs } from '@u22n/database/schema';
 import type { OrgContext } from '~platform/ctx';
+import { orgs } from '@u22n/database/schema';
 import { storage } from '~platform/storage';
+import { eq } from '@u22n/database/orm';
+import { db } from '@u22n/database';
 
 export async function validateOrgShortcode(orgShortcode: string) {
   if (!orgShortcode) return null;

@@ -1,8 +1,8 @@
-import { z } from 'zod';
-import { router, protectedProcedure } from '../trpc';
-import { eq } from '@u22n/database/orm';
-import { TRPCError } from '@trpc/server';
 import { domains, orgBilling, orgs } from '@u22n/database/schema';
+import { router, protectedProcedure } from '../trpc';
+import { TRPCError } from '@trpc/server';
+import { eq } from '@u22n/database/orm';
+import { z } from 'zod';
 
 export const iCanHazRouter = router({
   domain: protectedProcedure
@@ -48,7 +48,7 @@ export const iCanHazRouter = router({
         return false;
       }
 
-      const allowedDomains: number = domainBonus.bonus.count as number;
+      const allowedDomains: number = domainBonus.bonus.count;
 
       const domainQuery = await db.query.domains.findMany({
         where: eq(domains.orgId, orgId),
