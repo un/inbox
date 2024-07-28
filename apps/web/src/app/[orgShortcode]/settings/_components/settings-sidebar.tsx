@@ -27,6 +27,9 @@ type NavLinks = {
 
 export default function SettingsSidebar() {
   const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const { data: hazBilling } = platform.org.iCanHaz.billing.useQuery({
+    orgShortcode
+  });
 
   const { data: isAdmin } =
     platform.org.users.members.isOrgMemberAdmin.useQuery({
@@ -56,11 +59,15 @@ export default function SettingsSidebar() {
       to: `/${orgShortcode}/settings/org`,
       icon: <Buildings />
     },
-    {
-      label: 'Billing',
-      to: `/${orgShortcode}/settings/org/setup/billing`,
-      icon: <CreditCard />
-    }
+    ...(hazBilling
+      ? [
+          {
+            label: 'Billing',
+            to: `/${orgShortcode}/settings/org/setup/billing`,
+            icon: <CreditCard />
+          }
+        ]
+      : [])
   ];
 
   const orgUserLinks: NavLinks[] = [

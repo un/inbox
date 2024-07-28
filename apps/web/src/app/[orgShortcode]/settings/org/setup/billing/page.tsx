@@ -5,6 +5,7 @@ import { Skeleton } from '@/src/components/shadcn-ui/skeleton';
 import { PageTitle } from '../../../_components/page-title';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { PricingTable } from './_components/plans-table';
+import { useRouter } from 'next/navigation';
 import CalEmbed from '@calcom/embed-react';
 import { platform } from '@/src/lib/trpc';
 import { cn } from '@/src/lib/utils';
@@ -13,6 +14,16 @@ import Link from 'next/link';
 
 export default function Page() {
   const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+
+  const { data: hazBilling } = platform.org.iCanHaz.billing.useQuery({
+    orgShortcode
+  });
+
+  const router = useRouter();
+  if (!hazBilling) {
+    router.push(`/${orgShortcode}/settings/`);
+  }
+
   const { data, isLoading } =
     platform.org.setup.billing.getOrgBillingOverview.useQuery({
       orgShortcode

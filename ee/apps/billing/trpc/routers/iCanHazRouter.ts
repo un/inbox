@@ -6,6 +6,9 @@ import { eq } from '@u22n/database/orm';
 import { z } from 'zod';
 
 export const iCanHazRouter = router({
+  billing: protectedProcedure.query(async ({ ctx, input }) => {
+    return true;
+  }),
   domain: protectedProcedure
     .input(z.object({ orgId: z.number() }))
     .query(async ({ ctx, input }) => {
