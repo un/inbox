@@ -1,27 +1,33 @@
 import { intlFormatDistance } from 'date-fns';
 import { ms } from '@u22n/utils/ms';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
-export default function useTimeAgo(
-  time: Date,
-  {
-    updateInterval = ms('1 minute'),
-    liveUpdate = true
-  }: {
-    updateInterval?: number;
-    liveUpdate?: boolean;
-  } = {}
-) {
-  const [timeAgo, setTimeAgo] = useState(() =>
-    intlFormatDistance(time, Date.now())
+function format(time: Date) {
+  return intlFormatDistance(time, new Date());
+}
+
+function calculateOptimalInterval(time: Date) {
+  const diff = new Date().getTime() - time.getTime();
+  if (diff < ms('1 minute')) return ms('1 second');
+  if (diff < ms('1 hour')) return ms('1 minutes');
+  return ms('1 hour');
+}
+
+export function useTimeAgo(time: Date) {
+  const [timeAgo, setTimeAgo] = useState(() => format(time));
+  const [updateInterval, setUpdateInterval] = useState(() =>
+    calculateOptimalInterval(time)
   );
+  const updateInfo = useCallback(() => {
+    setTimeAgo(format(time));
+    setUpdateInterval(calculateOptimalInterval(time));
+  }, [time]);
+
   useEffect(() => {
-    if (!liveUpdate) return;
-    const interval = setInterval(
-      () => setTimeAgo(intlFormatDistance(time, Date.now())),
-      updateInterval
-    );
+    updateInfo();
+    const interval = setInterval(() => updateInfo(), updateInterval);
     return () => clearInterval(interval);
-  }, [time, updateInterval, liveUpdate]);
+  }, [time, updateInfo, updateInterval]);
+
   return timeAgo;
 }

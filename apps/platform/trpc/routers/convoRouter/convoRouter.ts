@@ -1147,7 +1147,8 @@ export const convoRouter = router({
       }
       return {
         status: 'success',
-        publicId: newConvoEntryPublicId
+        publicId: newConvoEntryPublicId,
+        bodyPlainText: newConvoEntryBodyPlainText
       };
     }),
 

@@ -3,16 +3,18 @@
 import { platform } from '@/src/lib/trpc';
 import { type TypeId } from '@u22n/utils/typeid';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { type JSONContent } from '@u22n/tiptap/react';
-import { useUpdateConvoMessageList$Cache } from '../../utils';
+import {
+  useUpdateConvoData$Cache,
+  useUpdateConvoMessageList$Cache
+} from '../../utils';
 import { atom, useAtom, useAtomValue } from 'jotai';
 import { toast } from 'sonner';
 import { Editor } from '@/src/components/shared/editor';
 import { emptyTiptapEditorContent } from '@u22n/tiptap';
 import { useAttachmentUploader } from '@/src/components/shared/attachments';
 import { stringify } from 'superjson';
-import { type Editor as EditorType } from '@u22n/tiptap/react';
 import { replyToMessageAtom } from '../atoms';
 import { Button } from '@/src/components/shadcn-ui/button';
 import {
@@ -29,30 +31,40 @@ import {
   TooltipContent,
   TooltipTrigger
 } from '@/src/components/shadcn-ui/tooltip';
+import { type EditorFunctions } from '@u22n/tiptap/react/components';
 
 const selectedEmailIdentityAtom = atom<null | TypeId<'emailIdentities'>>(null);
 
-export function ReplyBox({ convoId }: { convoId: TypeId<'convos'> }) {
+type ReplyBoxProps = {
+  convoId: TypeId<'convos'>;
+  onReply: () => void;
+};
+
+export function ReplyBox({ convoId, onReply }: ReplyBoxProps) {
   const [editorText, setEditorText] = useState<JSONContent>(
     emptyTiptapEditorContent
   );
   const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
   const replyTo = useAtomValue(replyToMessageAtom);
   const addConvoToCache = useUpdateConvoMessageList$Cache();
-  const editorRef = useRef<EditorType | null>(null);
+  const updateConvoData = useUpdateConvoData$Cache();
+  const editorRef = useRef<EditorFunctions>(null);
 
-  // TODO: Find a better way to handle this
-  const [, setLoadingType] = useState<'comment' | 'message'>('message');
+  const [loadingType, setLoadingType] = useState<'comment' | 'message'>(
+    'message'
+  );
 
-  const replyToConvoMutation = platform.convos.replyToConvo.useMutation({
-    onSuccess: () => {
-      editorRef.current?.commands.clearContent();
-      setEditorText(emptyTiptapEditorContent);
-    },
-    onError: (err) => {
-      toast.error(err.message);
-    }
-  });
+  const { mutateAsync: replyToConvo, isPending: replyToConvoLoading } =
+    platform.convos.replyToConvo.useMutation({
+      onSuccess: () => {
+        editorRef.current?.clearContent();
+        setEditorText(emptyTiptapEditorContent);
+        removeAllAttachments();
+      },
+      onError: (err) => {
+        toast.error(err.message);
+      }
+    });
 
   const isEditorEmpty = useMemo(() => {
     const contentArray = editorText?.content;
@@ -88,8 +100,56 @@ export function ReplyBox({ convoId }: { convoId: TypeId<'convos'> }) {
     });
   }, [emailIdentities, setEmailIdentity]);
 
-  const { attachments, openFilePicker, getTrpcUploadFormat, AttachmentArray } =
-    useAttachmentUploader();
+  const {
+    attachments,
+    openFilePicker,
+    getTrpcUploadFormat,
+    AttachmentArray,
+    removeAllAttachments
+  } = useAttachmentUploader();
+
+  const handleReply = useCallback(
+    async (type: 'comment' | 'message') => {
+      if (!replyTo || !emailIdentity) return;
+      setLoadingType(type);
+      const { publicId, bodyPlainText } = await replyToConvo({
+        attachments: getTrpcUploadFormat(),
+        orgShortcode,
+        message: stringify(editorText),
+        replyToMessagePublicId: replyTo,
+        messageType: type
+      });
+      await addConvoToCache(convoId, publicId);
+      await updateConvoData(convoId, (oldData) => {
+        const author = oldData.participants.find(
+          (participant) =>
+            participant.publicId === oldData.entries[0]?.author.publicId
+        );
+        if (!author) return oldData;
+        const newEntry: (typeof oldData.entries)[0] = {
+          author: structuredClone(author),
+          bodyPlainText,
+          type
+        };
+        oldData.lastUpdatedAt = new Date();
+        oldData.entries.unshift(newEntry);
+        return oldData;
+      });
+      onReply();
+    },
+    [
+      addConvoToCache,
+      convoId,
+      editorText,
+      emailIdentity,
+      getTrpcUploadFormat,
+      onReply,
+      orgShortcode,
+      replyTo,
+      replyToConvo,
+      updateConvoData
+    ]
+  );
 
   return (
     <div className="flex min-h-32 flex-col justify-end p-4">
@@ -97,9 +157,7 @@ export function ReplyBox({ convoId }: { convoId: TypeId<'convos'> }) {
         <Editor
           initialValue={editorText}
           onChange={setEditorText}
-          setEditor={(editor) => {
-            editorRef.current = editor;
-          }}
+          ref={editorRef}
         />
         <AttachmentArray attachments={attachments} />
         <div className="flex flex-row items-center justify-between gap-2">
@@ -123,7 +181,7 @@ export function ReplyBox({ convoId }: { convoId: TypeId<'convos'> }) {
                     <SelectTrigger
                       size={'sm'}
                       width={'fit'}
-                      className="text-xs">
+                      className="whitespace-nowrap text-xs">
                       <SelectValue placeholder="Select an email address" />
                     </SelectTrigger>
                     <SelectContent>
@@ -178,48 +236,26 @@ export function ReplyBox({ convoId }: { convoId: TypeId<'convos'> }) {
             <Button
               variant="secondary"
               size={'sm'}
+              loading={replyToConvoLoading && loadingType === 'comment'}
               disabled={
                 !replyTo ||
                 isEditorEmpty ||
                 !emailIdentity ||
-                replyToConvoMutation.isPending
+                replyToConvoLoading
               }
-              onClick={async () => {
-                if (!replyTo || !emailIdentity) return;
-                setLoadingType('comment');
-                const { publicId } = await replyToConvoMutation.mutateAsync({
-                  attachments: getTrpcUploadFormat(),
-                  orgShortcode,
-                  message: stringify(editorText),
-                  replyToMessagePublicId: replyTo,
-                  messageType: 'comment'
-                });
-                await addConvoToCache(convoId, publicId);
-              }}>
+              onClick={() => handleReply('comment')}>
               Comment
             </Button>
             <Button
-              // loading={replyToConvoMutation.isLoading && loadingType === 'message'}
+              loading={replyToConvoLoading && loadingType === 'message'}
               disabled={
                 !replyTo ||
                 isEditorEmpty ||
                 !emailIdentity ||
-                replyToConvoMutation.isPending
+                replyToConvoLoading
               }
               size={'sm'}
-              onClick={async () => {
-                if (!replyTo || !emailIdentity) return;
-                setLoadingType('message');
-                const { publicId } = await replyToConvoMutation.mutateAsync({
-                  attachments: getTrpcUploadFormat(),
-                  orgShortcode,
-                  message: stringify(editorText),
-                  replyToMessagePublicId: replyTo,
-                  messageType: 'message',
-                  sendAsEmailIdentityPublicId: emailIdentity
-                });
-                await addConvoToCache(convoId, publicId);
-              }}>
+              onClick={() => handleReply('message')}>
               Send
             </Button>
           </div>

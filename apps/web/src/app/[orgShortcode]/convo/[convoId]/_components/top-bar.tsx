@@ -1,11 +1,6 @@
 'use client';
 
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger
-} from '@/src/components/shadcn-ui/tooltip';
-import {
   EyeSlash,
   Eye,
   Trash,
@@ -20,34 +15,35 @@ import {
   FileTxt,
   File
 } from '@phosphor-icons/react';
-import Link from 'next/link';
-import { useDeleteConvo$Cache } from '../../utils';
-import useAwaitableModal, {
-  type ModalComponent
-} from '@/src/hooks/use-awaitable-modal';
-import { type RouterOutputs, platform } from '@/src/lib/trpc';
-import { type TypeId } from '@u22n/utils/typeid';
-import { useGlobalStore } from '@/src/providers/global-store-provider';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/src/components/shadcn-ui/button';
-import { cn } from '@/src/lib/utils';
-import { type formatParticipantData } from '../../utils';
 import {
   Dialog,
+  DialogClose,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
   DialogTitle
 } from '@/src/components/shadcn-ui/dialog';
-import { Participants } from './participants';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger
+} from '@/src/components/shadcn-ui/tooltip';
+import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { type VariantProps, cva } from 'class-variance-authority';
+import { type RouterOutputs, platform } from '@/src/lib/trpc';
+import { Button } from '@/src/components/shadcn-ui/button';
+import { type formatParticipantData } from '../../utils';
+import { useDeleteConvo$Cache } from '../../utils';
+import { type TypeId } from '@u22n/utils/typeid';
+import { Participants } from './participants';
+import { useRouter } from 'next/navigation';
+import { cn } from '@/src/lib/utils';
+import { useState } from 'react';
+import { toast } from 'sonner';
+import Link from 'next/link';
 
-export default function TopBar({
-  isConvoLoading,
-  convoId,
-  convoHidden,
-  subjects,
-  participants,
-  attachments
-}: {
+type TopBarProps = {
   participants: NonNullable<ReturnType<typeof formatParticipantData>>[];
   attachments: {
     name: string;
@@ -58,20 +54,41 @@ export default function TopBar({
   isConvoLoading: boolean;
   convoId: TypeId<'convos'>;
   convoHidden: boolean | null;
-  subjects: RouterOutputs['convos']['getConvo']['data']['subjects'] | undefined;
-}) {
+  subjects?: RouterOutputs['convos']['getConvo']['data']['subjects'];
+};
+
+export default function TopBar({
+  isConvoLoading,
+  convoId,
+  convoHidden,
+  subjects,
+  participants,
+  attachments
+}: TopBarProps) {
   const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
-  const [ModalRoot, openDeleteModal] = useAwaitableModal(DeleteModal, {
-    convoId,
-    convoHidden
-  });
-  const hideConvo = platform.convos.hideConvo.useMutation();
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const router = useRouter();
+  const removeConvoFromList = useDeleteConvo$Cache();
+
+  const { mutateAsync: hideConvo, isPending: hidingConvo } =
+    platform.convos.hideConvo.useMutation();
+  const { mutateAsync: deleteConvo, isPending: deletingConvo } =
+    platform.convos.deleteConvo.useMutation({
+      onSuccess: () => {
+        void removeConvoFromList(convoId);
+        router.push(`/${orgShortcode}/convo`);
+      },
+      onError: (error) => {
+        toast.error('Something went wrong while deleting the convo', {
+          description: error.message
+        });
+      }
+    });
 
   return (
     <div className="border-base-5 bg-base-1 flex w-full flex-col items-center justify-between border-b p-0">
       <div className="border-base-5 flex h-14 w-full flex-row items-center justify-between border-b p-4">
-        <div className="flex w-full max-w-full flex-row items-center gap-4 overflow-hidden">
+        <div className="flex flex-1 flex-row items-center gap-4 overflow-hidden">
           <Button
             variant={'outline'}
             size={'icon-sm'}
@@ -83,7 +100,7 @@ export default function TopBar({
           {subjects?.map((subject) => (
             <span
               key={subject.subject}
-              className="truncate text-lg font-medium leading-tight">
+              className="min-w-fit max-w-0 truncate text-lg font-medium leading-tight">
               {subject.subject}
             </span>
           ))}
@@ -98,12 +115,17 @@ export default function TopBar({
                 className={
                   'hover:bg-red-5 hover:text-red-11 hover:border-red-8'
                 }
-                onClick={() => {
-                  openDeleteModal({ convoHidden })
-                    // Navigate to empty page on delete
-                    .then(() => router.push(`/${orgShortcode}/convo`))
-                    // Do nothing if Hide is chosen or Modal is Closed
-                    .catch(() => null);
+                loading={deletingConvo}
+                onClick={async (e) => {
+                  e.preventDefault();
+                  if (e.shiftKey) {
+                    return deleteConvo({
+                      convoPublicId: convoId,
+                      orgShortcode
+                    }).catch(() => null);
+                  } else {
+                    setDeleteModalOpen(true);
+                  }
                 }}>
                 <Trash size={16} />
               </Button>
@@ -115,13 +137,14 @@ export default function TopBar({
               <Button
                 variant={'outline'}
                 size={'icon-sm'}
-                onClick={async () => {
-                  await hideConvo.mutateAsync({
+                loading={hidingConvo}
+                onClick={() =>
+                  hideConvo({
                     convoPublicId: convoId,
                     orgShortcode,
                     unhide: convoHidden ? true : undefined
-                  });
-                }}>
+                  })
+                }>
                 {convoHidden ? <Eye size={16} /> : <EyeSlash size={16} />}
               </Button>
             </TooltipTrigger>
@@ -145,7 +168,7 @@ export default function TopBar({
             attachments.map((attachment) => (
               <AttachmentBlock
                 key={attachment.publicId}
-                attachment={attachment}
+                {...attachment}
               />
             ))
           ) : (
@@ -153,81 +176,128 @@ export default function TopBar({
           )}
         </div>
       </div>
-      <ModalRoot />
+      {deleteModalOpen && (
+        <DeleteModal
+          open={deleteModalOpen}
+          setOpen={setDeleteModalOpen}
+          convoId={convoId}
+          convoHidden={convoHidden}
+          onSuccess={() => router.push(`/${orgShortcode}/convo`)}
+        />
+      )}
     </div>
   );
 }
 
+type DeleteModalProps = {
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  onSuccess: () => void;
+  convoId: TypeId<'convos'>;
+  convoHidden: boolean | null;
+};
+
 function DeleteModal({
-  onClose,
-  onResolve,
   open,
   convoId,
-  convoHidden
-}: ModalComponent<{ convoId: TypeId<'convos'>; convoHidden: boolean | null }>) {
+  convoHidden,
+  setOpen
+}: DeleteModalProps) {
   const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
-  const hideConvo = platform.convos.hideConvo.useMutation();
-  const deleteConvo = platform.convos.deleteConvo.useMutation();
   const removeConvoFromList = useDeleteConvo$Cache();
+
+  const { mutateAsync: hideConvo, isPending: hidingConvo } =
+    platform.convos.hideConvo.useMutation({
+      onSuccess: () => {
+        void removeConvoFromList(convoId);
+        setOpen(false);
+      },
+      onError: (error) => {
+        toast.error('Something went wrong while hiding the convo', {
+          description: error.message
+        });
+        setOpen(false);
+      }
+    });
+
+  const { mutateAsync: deleteConvo, isPending: deletingConvo } =
+    platform.convos.deleteConvo.useMutation({
+      onSuccess: () => {
+        void removeConvoFromList(convoId);
+        setOpen(false);
+      },
+      onError: (error) => {
+        toast.error('Something went wrong while deleting the convo', {
+          description: error.message
+        });
+        setOpen(false);
+      }
+    });
 
   return (
     <Dialog
       open={open}
-      onOpenChange={(open) => {
-        if (!open && !deleteConvo.isPending && !hideConvo.isPending) {
-          onClose();
-        }
+      onOpenChange={() => {
+        if (deletingConvo || hidingConvo) return;
+        setOpen(false);
       }}>
-      <DialogContent className="w-full max-w-96 p-4">
-        <DialogTitle>Delete Convo?</DialogTitle>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Delete Convo?</DialogTitle>
+          <DialogDescription>
+            <div>
+              This will permanently and immediately delete this conversation for
+              all the participants.
+            </div>
+            <div>Are you sure you want to delete this conversation?</div>
+            {!convoHidden && (
+              <div className="py-2">You can also choose to hide this Convo</div>
+            )}
+            <div className="py-3 text-xs font-semibold">
+              ProTip: Hold{' '}
+              <kbd className="bg-base-2 rounded-md border p-1">Shift</kbd> next
+              time to skip this confirmation prompt
+            </div>
+          </DialogDescription>
+        </DialogHeader>
 
-        <div className="flex flex-col gap-1">
-          <span>
-            This will permanently and immediately delete this conversation for
-            all the participants.
-          </span>
-          <span>Are you sure you want to delete this conversation?</span>
-          {convoHidden ? null : (
-            <span>Tip: You can also choose to hide this Convo</span>
-          )}
-        </div>
-
-        <div className="flex flex-row gap-2">
-          <Button
-            variant="outline"
-            disabled={deleteConvo.isPending || hideConvo.isPending}
-            onClick={() => onClose()}>
-            Cancel
-          </Button>
+        <DialogFooter className="flex gap-2">
+          <DialogClose asChild>
+            <Button
+              variant="secondary"
+              className="flex-1"
+              disabled={hidingConvo || deletingConvo}>
+              Cancel
+            </Button>
+          </DialogClose>
           {convoHidden ? null : (
             <Button
               variant="secondary"
-              disabled={deleteConvo.isPending || hideConvo.isPending}
-              onClick={async () => {
-                await hideConvo.mutateAsync({
+              className="flex-1"
+              loading={hidingConvo}
+              disabled={deletingConvo}
+              onClick={() =>
+                hideConvo({
                   convoPublicId: convoId,
                   orgShortcode
-                });
-                onClose();
-              }}>
+                })
+              }>
               Hide Instead
             </Button>
           )}
           <Button
             variant="destructive"
-            color="red"
-            disabled={hideConvo.isPending || deleteConvo.isPending}
-            onClick={async () => {
-              await deleteConvo.mutateAsync({
+            className="flex-1"
+            disabled={hidingConvo}
+            onClick={() =>
+              deleteConvo({
                 convoPublicId: convoId,
                 orgShortcode
-              });
-              await removeConvoFromList(convoId);
-              onResolve(null);
-            }}>
+              })
+            }>
             Delete
           </Button>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
@@ -240,8 +310,8 @@ type AttachmentBlockProps = {
   publicId: TypeId<'convoAttachments'>;
 };
 
-function AttachmentBlock({ attachment }: { attachment: AttachmentBlockProps }) {
-  const fileType = attachment.type.split('/')[1] ?? attachment.type;
+function AttachmentBlock({ name, url, type, publicId }: AttachmentBlockProps) {
+  const fileType = type.split('/')[1] ?? type;
 
   const iconClasses = cva(
     'bg-accent-9 text-accent-1 flex h-5 w-5 items-center justify-center rounded-sm',
@@ -290,28 +360,36 @@ function AttachmentBlock({ attachment }: { attachment: AttachmentBlockProps }) {
     }
   };
 
+  let shownName = name;
   // Limit the length of the attachment name to just 12 characters and replace the rest with ... and include the extension at the end
-  if (attachment.name.length > 12) {
-    const extension = attachment.name.split('.').pop();
-    attachment.name = `${attachment.name.slice(0, 12)}...` + `.${extension}`;
+  const [fileName = '', extension] = name.split('.');
+  if (fileName.length > 15) {
+    shownName = `${fileName?.slice(0, 12)}...` + `.${extension}`;
   }
 
   return (
-    <a
-      target="_blank"
-      key={attachment.publicId}
-      href={attachment.url}>
-      <div className="border-base-6 flex flex-row items-center gap-2 rounded-md border px-2 py-1.5">
-        <div
-          className={cn(
-            iconClasses({ color: fileType as IconClassProps['color'] })
-          )}>
-          <FileTypeIcon />
-        </div>
-        <div className="flex flex-col gap-0">
-          <span className="text-xs font-medium">{attachment.name}</span>
-        </div>
-      </div>
-    </a>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <a
+          target="_blank"
+          key={publicId}
+          href={url}>
+          <div className="border-base-6 flex flex-row items-center gap-2 rounded-md border px-2 py-1.5">
+            <div
+              className={cn(
+                iconClasses({ color: fileType as IconClassProps['color'] })
+              )}>
+              <FileTypeIcon />
+            </div>
+            <div className="flex flex-col gap-0">
+              <span className="text-xs font-medium">{shownName}</span>
+            </div>
+          </div>
+        </a>
+      </TooltipTrigger>
+      <TooltipContent>
+        <span className="text-xs font-medium">{name}</span>
+      </TooltipContent>
+    </Tooltip>
   );
 }

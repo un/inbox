@@ -9,32 +9,28 @@ import {
 } from '@/src/components/shadcn-ui/avatar';
 import Link from 'next/link';
 import { platform, isAuthenticated } from '@/src/lib/trpc';
-import useLoading from '@/src/hooks/use-loading';
 import { useCookies } from 'next-client-cookies';
-import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { generateAvatarUrl, getInitials } from '@/src/lib/utils';
 import { useQuery } from '@tanstack/react-query';
+import { SpinnerGap } from '@phosphor-icons/react';
 
 export default function InviteCard({ code }: { code: string }) {
-  const inviteDataApi = platform.useUtils().org.users.invites.validateInvite;
   const router = useRouter();
   const cookies = useCookies();
 
   const {
     data: inviteData,
     error: inviteError,
-    loading: inviteLoading,
-    run: checkInvite
-  } = useLoading(async (signal) => {
-    if (code.length !== 32) throw new Error('Invalid Invite code');
-    return await inviteDataApi.fetch(
-      {
-        inviteToken: code
-      },
-      { signal }
-    );
-  });
+    isLoading: inviteLoading
+  } = platform.org.users.invites.validateInvite.useQuery(
+    {
+      inviteToken: code
+    },
+    {
+      enabled: code.length === 32
+    }
+  );
 
   const { isLoading: signedInLoading, data: signedIn } = useQuery({
     enabled: true,
@@ -42,53 +38,49 @@ export default function InviteCard({ code }: { code: string }) {
     queryFn: isAuthenticated
   });
 
-  useEffect(() => {
-    checkInvite();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  if (inviteLoading || (!inviteData && !inviteError) || signedInLoading) {
+  if (inviteLoading || signedInLoading) {
     return (
-      <div className="bg-card mx-auto my-4 max-w-[450px] rounded border p-4">
-        <div className="text-base-11 text-sm font-bold">
-          Checking your Invite...
+      <div className="flex h-full w-full flex-col items-center justify-center">
+        <div className="text-base-11 flex items-center justify-center gap-2 text-sm font-bold">
+          <SpinnerGap className="size-4 animate-spin" />
+          <span>Checking your Invite...</span>
         </div>
       </div>
     );
   }
 
-  if (inviteError) {
+  if (inviteError ?? code.length !== 32) {
     return (
-      <>
-        <div className="bg-card mx-auto my-4 max-w-[450px] rounded border p-4">
+      <div className="flex h-full w-full flex-col items-center justify-center gap-2">
+        <div className="mx-auto rounded p-4">
           <div className="flex flex-col items-center gap-2">
             <div className="text-red-11 text-pretty font-bold">
               You received an Invite for UnInbox, but an error occurred
             </div>
             <div className="text-red-11 text-pretty text-sm">
-              {inviteError.message}
+              {inviteError?.message ?? 'Invalid Invite code'}
             </div>
           </div>
         </div>
         {signedIn ? (
           <Button
-            className="mx-auto my-4 max-w-[450px]"
+            className="w-fit"
             asChild>
             <Link href="/">Go Back Home</Link>
           </Button>
         ) : (
-          <div className="my-4 flex flex-col gap-2">
+          <div className="flex flex-col items-center gap-2">
             <div className="text-sm font-bold">
               You can still create a new UnInbox account
             </div>
             <Button
-              className="mx-auto max-w-[450px]"
+              className="w-fit"
               asChild>
               <Link href="/join">Create an UnInbox Account</Link>
             </Button>
           </div>
         )}
-      </>
+      </div>
     );
   }
 

@@ -39,7 +39,6 @@ import {
 } from '@u22n/tiptap/react/components';
 import { Editor } from '@/src/components/shared/editor';
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
-import useLoading from '@/src/hooks/use-loading';
 import { stringify } from 'superjson';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
@@ -57,6 +56,7 @@ import {
   TooltipContent,
   TooltipTrigger
 } from '@/src/components/shadcn-ui/tooltip';
+import { useMutation } from '@tanstack/react-query';
 
 export interface ConvoParticipantShared {
   avatarTimestamp: Date | null;
@@ -360,36 +360,20 @@ export default function CreateConvoForm() {
   const addConvo = useAddSingleConvo$Cache();
   const [, setNewPanelOpen] = useAtom(showNewConvoPanel);
 
-  const { loading: isMessageLoading, run: createConvo } = useLoading(
-    async () => await startConvoCreation('message'),
-    {
-      onError: (err) => {
-        toast.error(err.message);
-      },
-      onSuccess: (data) => {
-        toast.success('Convo created, redirecting you to your conversion');
-        void addConvo(data.publicId).then(() => {
-          setNewPanelOpen(false);
-          router.push(`/${orgShortcode}/convo/${data.publicId}`);
-        });
-      }
+  const {
+    mutateAsync: createConvo,
+    isPending: isCreating,
+    variables: messageType
+  } = useMutation({
+    mutationFn: async (type: 'comment' | 'message') => startConvoCreation(type),
+    onSuccess: (data) => {
+      toast.success('Convo created, redirecting you to your conversion');
+      void addConvo(data.publicId).then(() => {
+        setNewPanelOpen(false);
+        router.push(`/${orgShortcode}/convo/${data.publicId}`);
+      });
     }
-  );
-
-  const { loading: isCommentLoading, run: createComment } = useLoading(
-    async () => await startConvoCreation('comment'),
-    {
-      onError: (err) => {
-        toast.error(err.message);
-      },
-      onSuccess: (data) => {
-        toast.success('Convo created, redirecting you to your conversion');
-        void addConvo(data.publicId).then(() => {
-          router.push(`/${orgShortcode}/convo/${data.publicId}`);
-        });
-      }
-    }
-  );
+  });
 
   const selectedEmailIdentityString = useMemo(() => {
     if (!selectedEmailIdentity) return null;
@@ -478,8 +462,6 @@ export default function CreateConvoForm() {
         <Editor
           initialValue={editorText}
           onChange={setEditorText}
-          // eslint-disable-next-line @typescript-eslint/no-empty-function
-          setEditor={() => {}}
         />
 
         <AttachmentArray attachments={attachments} />
@@ -498,15 +480,16 @@ export default function CreateConvoForm() {
             <Button
               variant="secondary"
               size={'sm'}
-              disabled={!isFormValid || isMessageLoading}
-              onClick={() => createComment()}>
+              loading={isCreating && messageType === 'comment'}
+              disabled={!isFormValid || isCreating}
+              onClick={() => createConvo('comment')}>
               Comment
             </Button>
             <Button
               size={'sm'}
-              loading={isMessageLoading}
-              disabled={!isFormValid || isCommentLoading}
-              onClick={() => createConvo()}>
+              loading={isCreating && messageType === 'message'}
+              disabled={!isFormValid || isCreating}
+              onClick={() => createConvo('message')}>
               Send
             </Button>
           </div>

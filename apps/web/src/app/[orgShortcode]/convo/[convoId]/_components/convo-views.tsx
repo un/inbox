@@ -2,7 +2,7 @@ import { platform } from '@/src/lib/trpc';
 import Link from 'next/link';
 import { type TypeId } from '@u22n/utils/typeid';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import { formatParticipantData } from '../../utils';
 import { MessagesPanel } from './messages-panel';
 import TopBar from './top-bar';
@@ -10,6 +10,7 @@ import { ReplyBox } from './reply-box';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { env } from '@/src/env';
 import { usePageTitle } from '@/src/hooks/use-page-title';
+import { type VirtuosoHandle } from 'react-virtuoso';
 
 export function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
   const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
@@ -23,6 +24,8 @@ export function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
   });
 
   usePageTitle(convoData?.data.subjects[0]?.subject ?? 'UnInbox');
+
+  const virtuosoRef = useRef<VirtuosoHandle>(null);
 
   const attachments = useMemo(() => {
     if (!convoData) return [];
@@ -66,7 +69,7 @@ export function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
   }
 
   return (
-    <div className="flex h-full max-h-full w-full max-w-full flex-col overflow-hidden rounded-2xl">
+    <div className="flex h-full w-full flex-col overflow-hidden rounded-2xl">
       <TopBar
         isConvoLoading={convoDataLoading}
         convoId={convoId}
@@ -75,7 +78,7 @@ export function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
         participants={formattedParticipants}
         attachments={attachments}
       />
-      <div className="flex h-full w-full min-w-96 flex-col">
+      <div className="flex w-full min-w-96 flex-1 flex-col">
         {convoDataLoading || !participantOwnPublicId ? (
           <span>Loading</span>
         ) : (
@@ -85,10 +88,14 @@ export function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
             participantOwnPublicId={
               participantOwnPublicId as TypeId<'convoParticipants'>
             }
+            ref={virtuosoRef}
           />
         )}
       </div>
-      <ReplyBox convoId={convoId} />
+      <ReplyBox
+        convoId={convoId}
+        onReply={() => virtuosoRef.current?.scrollToIndex({ index: 'LAST' })}
+      />
     </div>
   );
 }
@@ -98,17 +105,14 @@ export function ConvoNotFound() {
   usePageTitle('Convo Not Found');
 
   return (
-    <div className="flex h-full w-full flex-col items-center justify-center">
-      <div>
-        <span>Convo Not Found</span>
-        <span>
-          The convo you are looking for does not exist. Please check the URL and
-          try again.
-        </span>
-        <Link href={`/${orgShortcode}/convo`}>
-          <Button>Go back to Convos</Button>
-        </Link>
+    <div className="mx-auto flex h-full w-full flex-col items-center justify-center gap-3">
+      <div className="text-xl font-bold">Convo Not Found</div>
+      <div className="text-base-11 text-balance text-sm font-medium">
+        The convo you are looking for does not exist or has been deleted.
       </div>
+      <Button asChild>
+        <Link href={`/${orgShortcode}/convo`}>Go back</Link>
+      </Button>
     </div>
   );
 }
