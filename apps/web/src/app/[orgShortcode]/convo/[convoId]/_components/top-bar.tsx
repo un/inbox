@@ -36,8 +36,10 @@ import { type RouterOutputs, platform } from '@/src/lib/trpc';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { type TypeId } from '@u22n/utils/typeid';
 import { Participants } from './participants';
+import { shiftKeyPressed } from '../../atoms';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/src/lib/utils';
+import { useAtomValue } from 'jotai';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import Link from 'next/link';
@@ -68,6 +70,7 @@ export default function TopBar({
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const router = useRouter();
   const removeConvoFromList = useDeleteConvo$Cache();
+  const shiftKey = useAtomValue(shiftKeyPressed);
 
   const { mutateAsync: hideConvo, isPending: hidingConvo } =
     platform.convos.hideConvo.useMutation();
@@ -109,11 +112,12 @@ export default function TopBar({
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                variant={'outline'}
+                variant={shiftKey ? 'destructive' : 'outline'}
                 size={'icon-sm'}
-                className={
-                  'hover:bg-red-5 hover:text-red-11 hover:border-red-8'
-                }
+                className={cn(
+                  !shiftKey &&
+                    'hover:bg-red-5 hover:text-red-11 hover:border-red-8'
+                )}
                 loading={deletingConvo}
                 onClick={async (e) => {
                   e.preventDefault();
@@ -129,7 +133,9 @@ export default function TopBar({
                 <Trash size={16} />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Delete Convo</TooltipContent>
+            <TooltipContent>
+              {shiftKey ? 'Delete Convo without confirmation' : 'Delete Convo'}
+            </TooltipContent>
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -243,20 +249,22 @@ function DeleteModal({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Delete Convo?</DialogTitle>
-          <DialogDescription>
-            <div>
+          <DialogDescription className="flex flex-col">
+            <span>
               This will permanently and immediately delete this conversation for
               all the participants.
-            </div>
-            <div>Are you sure you want to delete this conversation?</div>
+            </span>
+            <span>Are you sure you want to delete this conversation?</span>
             {!convoHidden && (
-              <div className="py-2">You can also choose to hide this Convo</div>
+              <span className="py-2">
+                You can also choose to hide this Convo
+              </span>
             )}
-            <div className="py-3 text-xs font-semibold">
+            <span className="py-3 text-xs font-semibold">
               ProTip: Hold{' '}
               <kbd className="bg-base-2 rounded-md border p-1">Shift</kbd> next
               time to skip this confirmation prompt
-            </div>
+            </span>
           </DialogDescription>
         </DialogHeader>
 
