@@ -37,7 +37,7 @@ export default function Page() {
       {personalAddressesLoading && <Skeleton className="h-10 w-full" />}
 
       {personalAddressesError && (
-        <div className="flex flex-col gap-2 p-2">
+        <div className="flex flex-col gap-2 px-2">
           <span className="text-red-10 text-sm">
             An error occurred while fetching addresses.
           </span>
@@ -46,7 +46,7 @@ export default function Page() {
       )}
 
       {personalAddresses && personalAddresses.available.free.length > 0 && (
-        <div className="flex flex-col gap-2 p-2">
+        <div className="flex flex-col gap-2 px-2">
           <span>Available Free Addresses</span>
           {personalAddresses.available.free.map((domain) => (
             <div
@@ -72,7 +72,7 @@ export default function Page() {
       )}
 
       {personalAddresses && personalAddresses.available.premium.length > 0 && (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 px-2">
           <span>
             Available Premium Addresses{' '}
             <span className="text-base-11 text-sm">

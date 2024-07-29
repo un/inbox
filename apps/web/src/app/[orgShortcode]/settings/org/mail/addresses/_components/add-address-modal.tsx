@@ -30,11 +30,11 @@ import { Button } from '@/src/components/shadcn-ui/button';
 import { Switch } from '@/src/components/shadcn-ui/switch';
 import { Input } from '@/src/components/shadcn-ui/input';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { DialogClose } from '@radix-ui/react-dialog';
 import { At } from '@phosphor-icons/react';
 import { useForm } from 'react-hook-form';
 import { platform } from '@/src/lib/trpc';
 import { useState } from 'react';
-import Link from 'next/link';
 import { z } from 'zod';
 
 const addressFormSchema = z.object({
@@ -54,7 +54,11 @@ const addressFormSchema = z.object({
   })
 });
 
-export function AddEmailModal() {
+export function AddEmailModal({
+  addExternalModalOpen
+}: {
+  addExternalModalOpen: (value: boolean) => void;
+}) {
   const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
   const invalidateEmails =
     platform.useUtils().org.mail.emailIdentities.getOrgEmailIdentities;
@@ -238,8 +242,8 @@ export function AddEmailModal() {
 
             <div className="text-sm font-bold">Deliver Messages To</div>
             <div className="flex w-full flex-col gap-2">
-              <div className="flex gap-2">
-                <div className="flex flex-1 flex-col gap-1">
+              <div className="grid grid-cols-2 gap-2">
+                <div className="flex flex-1 flex-col gap-1 w-full">
                   <div className="flex items-center gap-2">
                     <label className="text-sm">Teams</label>
                   </div>
@@ -369,16 +373,17 @@ export function AddEmailModal() {
                   form.getFieldState('deliversTo').error?.message}
               </div>
 
-              <div className="mt-2 flex flex-wrap gap-2">
-                <Button
-                  variant="secondary"
-                  className="flex-1"
-                  asChild>
-                  <Link
-                    href={`/${orgShortcode}/settings/org/mail/addresses/external`}>
-                    Add External Email Instead
-                  </Link>
-                </Button>
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                <DialogClose asChild>
+                  <Button
+                    variant="secondary"
+                    className="flex-1"
+                    onClick={() => addExternalModalOpen(true)}>
+                    {' '}
+                    Add External Email Instead{' '}
+                  </Button>
+                </DialogClose>
+
                 <Button
                   loading={isCreatingIdentity}
                   className="flex-1"
