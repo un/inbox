@@ -14,28 +14,26 @@ import { toast } from 'sonner';
 
 export default function VerifyResetPage() {
   const [verificationCode, setVerificationCode] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  const { mutateAsync: verifyRecoveryCode } =
-    platform.auth.recovery.verifyRecoveryCode.useMutation();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    try {
-      const result = await verifyRecoveryCode({ code: verificationCode });
-      if (result.success) {
-        toast.success('Verification successful.');
-        router.push(`/recovery/reset-password/reset?token=${result.token}`);
-      } else {
-        toast.error('Invalid verification code. Please try again.');
+  const { mutate: verifyRecoveryCode, isPending } =
+    platform.auth.recovery.verifyRecoveryCode.useMutation({
+      onSuccess: (result) => {
+        if (result.success) {
+          toast.success('Verification successful.');
+          router.push(`/recovery/reset-password/reset?token=${result.token}`);
+        } else {
+          toast.error('Invalid verification code. Please try again.');
+        }
+      },
+      onError: () => {
+        toast.error('An error occurred. Please try again.');
       }
-    } catch (error) {
-      toast.error('An error occurred. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
+    });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    verifyRecoveryCode({ code: verificationCode });
   };
 
   return (
@@ -68,8 +66,8 @@ export default function VerifyResetPage() {
         </div>
         <Button
           type="submit"
-          disabled={isLoading}>
-          {isLoading ? 'Verifying...' : 'Verify Code'}
+          disabled={isPending}>
+          {isPending ? 'Verifying...' : 'Verify Code'}
         </Button>
       </form>
     </div>

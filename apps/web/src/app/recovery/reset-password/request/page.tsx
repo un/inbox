@@ -10,26 +10,24 @@ import { toast } from 'sonner';
 export default function RequestResetPage() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  const { mutateAsync: sendRecoveryEmail } =
-    platform.account.security.sendRecoveryEmail.useMutation();
+  const { mutate: sendRecoveryEmail, isPending } =
+    platform.account.security.sendRecoveryEmail.useMutation({
+      onSuccess: () => {
+        toast.success(
+          'Recovery email sent. Please check your inbox for the verification code.'
+        );
+        router.push('/recovery/reset-password/verify');
+      },
+      onError: () => {
+        toast.error('An error occurred. Please try again.');
+      }
+    });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    try {
-      await sendRecoveryEmail({ username, email });
-      toast.success(
-        'Recovery email sent. Please check your inbox for the verification code.'
-      );
-      router.push('/recovery/reset-password/verify');
-    } catch (error) {
-      toast.error('An error occurred. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
+    sendRecoveryEmail({ username, email });
   };
 
   return (
@@ -43,8 +41,8 @@ export default function RequestResetPage() {
             label="Username"
             id="username"
             type="text"
-            placeholder="Enter your username"
             value={username}
+            inputSize="lg"
             onChange={(e) => setUsername(e.target.value)}
             className="mt-1"
             required
@@ -55,7 +53,7 @@ export default function RequestResetPage() {
             label="Recovery Email"
             id="email"
             type="email"
-            placeholder="Enter your recovery email"
+            inputSize="lg"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="mt-1"
@@ -65,8 +63,8 @@ export default function RequestResetPage() {
         <Button
           type="submit"
           className="w-full"
-          disabled={isLoading}>
-          {isLoading ? 'Sending...' : 'Send Recovery Email'}
+          disabled={isPending}>
+          {isPending ? 'Sending...' : 'Send Recovery Email'}
         </Button>
       </form>
     </div>
