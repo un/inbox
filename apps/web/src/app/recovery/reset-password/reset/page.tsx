@@ -12,6 +12,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useDebounce } from '@uidotdev/usehooks';
+import { TRPCClientError } from '@trpc/client';
 import { Lock } from '@phosphor-icons/react';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -41,7 +42,7 @@ export default function ResetPasswordPage() {
   });
 
   const { mutateAsync: resetPassword } =
-    platform.auth.security.resetPassword.useMutation();
+    platform.auth.recovery.resetPassword.useMutation();
 
   const password = form.watch('password');
   const confirmPassword = form.watch('confirmPassword');
@@ -88,8 +89,18 @@ export default function ResetPasswordPage() {
         'Password reset successfully. You can now log in with your new password.'
       );
       router.push('/login');
-    } catch (error) {
-      toast.error('An error occurred. Please try again.');
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        if (error.name === 'NOT_FOUND') {
+          toast.error('Invalid or expired reset token');
+        } else if (error.name === 'BAD_REQUEST') {
+          toast.error('Invalid or expired reset token');
+        } else {
+          toast.error(error.message);
+        }
+      } else {
+        toast.error('An error occurred. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }

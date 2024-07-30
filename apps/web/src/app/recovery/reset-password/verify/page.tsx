@@ -18,7 +18,7 @@ export default function VerifyResetPage() {
   const router = useRouter();
 
   const { mutateAsync: verifyRecoveryCode } =
-    platform.auth.security.verifyRecoveryCode.useMutation();
+    platform.auth.recovery.verifyRecoveryCode.useMutation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

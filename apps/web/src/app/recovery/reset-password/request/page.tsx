@@ -45,6 +45,7 @@ export default function RequestResetPage() {
             Username
           </label>
           <Input
+            label="Username"
             id="username"
             type="text"
             placeholder="Enter your username"
@@ -61,6 +62,7 @@ export default function RequestResetPage() {
             Recovery Email
           </label>
           <Input
+            label="Recovery Email"
             id="email"
             type="email"
             placeholder="Enter your recovery email"
