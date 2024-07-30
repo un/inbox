@@ -259,6 +259,7 @@ export const recoveryRouter = router({
   //     return { success: true };
   //   }),
   verifyRecoveryCode: publicProcedure
+    .use(ratelimiter({ limit: 10, namespace: 'recovery.verify' }))
     .input(z.object({ code: z.string().length(6) }))
     .mutation(async ({ input }) => {
       const storedData = await storage.accountRecoveryVerificationCodes.getItem(
