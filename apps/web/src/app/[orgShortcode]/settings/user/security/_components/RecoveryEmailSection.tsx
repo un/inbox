@@ -49,7 +49,7 @@ function UnverifiedEmailStatus() {
         </span>
       </div>
       <span className="text-base-10 text-sm">
-        Please verify your recovery email or change it if it's incorrect.
+        Please verify your recovery email or change it if it&apos;s incorrect.
       </span>
     </>
   );
@@ -139,7 +139,7 @@ export default function RecoveryEmailSection({
     platform.account.security.verifyRecoveryEmail.useMutation({
       onSuccess: () => {
         toast.success('Recovery email verified successfully');
-        refetchOverviewData();
+        void refetchOverviewData();
       },
       onError: (error: unknown) => {
         toast.error('Failed to verify recovery email', {

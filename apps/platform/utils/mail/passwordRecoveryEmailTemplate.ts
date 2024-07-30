@@ -1,4 +1,5 @@
 export type PasswordRecoveryEmailProps = {
+  to: string;
   username: string;
   recoveryCode: string;
   expiryDate: string;
