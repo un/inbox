@@ -10,7 +10,6 @@ const publicRoutes = [
   '/join',
   '/join/secure',
   '/recovery',
-  '/recovery/verify-email',
   '/recovery',
   '/recovery/reset-password/request',
   '/recovery/reset-password/reset',
