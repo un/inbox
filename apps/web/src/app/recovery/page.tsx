@@ -321,10 +321,16 @@
 //   );
 // }
 
-export default function Page() {
+'use client';
+
+import React from 'react';
+
+const WorkInProgressComponent: React.FC = () => {
   return (
-    <div className="flex h-full w-full items-center justify-center font-bold">
-      Recovery Page [WIP]
+    <div className="flex min-h-screen items-center justify-center">
+      <p className="text-lg font-semibold">This page is a work in progress.</p>
     </div>
   );
-}
+};
+
+export default WorkInProgressComponent;

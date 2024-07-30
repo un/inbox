@@ -1,4 +1,9 @@
 import {
+  passwordRecoveryEmailTemplate,
+  passwordRecoveryEmailTemplatePlainText,
+  type PasswordRecoveryEmailProps
+} from './passwordRecoveryEmailTemplate';
+import {
   recoveryEmailTemplate,
   recoveryEmailTemplatePlainText,
   type RecoveryEmailProps
@@ -50,7 +55,7 @@ type EmailData = {
 async function sendEmail(emailData: EmailData): Promise<PostalResponse> {
   if (env.MAILBRIDGE_LOCAL_MODE) {
     console.info('Mailbridge local mode enabled, sending email to console');
-    console.info(JSON.stringify(emailData, null, 2));
+    console.info(JSON.stringify(emailData.plain_body, null, 2));
     return {
       status: 'success',
       time: Date.now(),
@@ -125,7 +130,6 @@ export async function sendRecoveryEmailConfirmation({
   to,
   username,
   recoveryEmail,
-  confirmationUrl,
   expiryDate,
   verificationCode
 }: RecoveryEmailProps) {
@@ -140,7 +144,6 @@ export async function sendRecoveryEmailConfirmation({
       to,
       username,
       recoveryEmail,
-      confirmationUrl,
       expiryDate,
       verificationCode
     }),
@@ -148,9 +151,38 @@ export async function sendRecoveryEmailConfirmation({
       to,
       username,
       recoveryEmail,
-      confirmationUrl,
       expiryDate,
       verificationCode
+    }),
+    attachments: [],
+    headers: {}
+  });
+}
+
+export async function sendPasswordRecoveryEmail({
+  to,
+  username,
+  recoveryCode,
+  expiryDate
+}: PasswordRecoveryEmailProps) {
+  const config = env.MAILBRIDGE_TRANSACTIONAL_CREDENTIALS;
+  return await sendEmail({
+    to: [to],
+    cc: [],
+    from: `${config.sendAsName} <${config.sendAsEmail}>`,
+    sender: config.sendAsEmail,
+    subject: `Password Recovery for Your Uninbox Account`,
+    plain_body: passwordRecoveryEmailTemplatePlainText({
+      to,
+      username,
+      recoveryCode,
+      expiryDate
+    }),
+    html_body: passwordRecoveryEmailTemplate({
+      to,
+      username,
+      recoveryCode,
+      expiryDate
     }),
     attachments: [],
     headers: {}
