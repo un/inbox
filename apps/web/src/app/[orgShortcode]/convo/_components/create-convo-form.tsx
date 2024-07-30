@@ -34,6 +34,11 @@ import {
 } from '@u22n/tiptap/react/components';
 
 import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger
+} from '@/src/components/shadcn-ui/hover-card';
+import {
   At,
   CaretDown,
   Check,
@@ -560,7 +565,7 @@ function ParticipantsComboboxPopover({
             variant={'outline'}
             className="h-fit w-full justify-between">
             {selectedParticipants.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 overflow-hidden">
                 {selectedParticipants.map((participant, i) => {
                   let info = '';
                   switch (participant.type) {
@@ -685,58 +690,85 @@ function ParticipantsComboboxPopover({
                           : prev.concat(participant)
                       );
                     }}>
-                    <Button
-                      variant={'ghost'}
-                      className={cn(
-                        'my-1 w-full justify-start px-1',
-                        selectedParticipants.find(
-                          (p) => p.publicId === participant.publicId
-                        )
-                          ? 'text-gray-10'
-                          : 'text-base-11'
-                      )}
-                      disabled={
-                        participant.type === 'orgMember' && participant.disabled
-                      }
-                      onFocus={() =>
-                        setCurrentSelectValue(participant.publicId)
-                      }>
-                      <div className="flex items-center justify-center gap-2">
-                        <Avatar
-                          avatarProfilePublicId={
-                            participant.avatarPublicId ?? 'no_avatar'
-                          }
-                          avatarTimestamp={participant.avatarTimestamp}
-                          name={participant.name ?? ''}
-                          color={
-                            participant.color
-                              ? (participant.color as 'base')
-                              : 'base'
-                          }
-                          size="sm"
-                          hideTooltip
-                        />
-                        <p className="text-base-11 text-sm">
-                          {participant.own && participant.own
-                            ? 'You (already a participant)'
-                            : `${participant.name} ${participant.title ? `(${participant.title})` : ''}`}
-                        </p>
-                        <AvatarIcon
-                          avatarProfilePublicId={
-                            participant.avatarPublicId ?? 'no_avatar'
-                          }
-                          size="sm"
-                          address={participant.address ?? undefined}
-                          withDot={!!participant.address}
-                        />
-                      </div>
+                    <HoverCard>
+                      <Button
+                        variant={'ghost'}
+                        className={cn(
+                          'my-1 w-full justify-start px-1',
+                          selectedParticipants.find(
+                            (p) => p.publicId === participant.publicId
+                          )
+                            ? 'text-gray-10'
+                            : 'text-base-11'
+                        )}
+                        disabled={
+                          participant.type === 'orgMember' &&
+                          participant.disabled
+                        }
+                        onFocus={() =>
+                          setCurrentSelectValue(participant.publicId)
+                        }>
+                        <div className="flex items-center justify-center gap-2">
+                          <HoverCardTrigger className="flex flex-row items-center gap-1">
+                            <Avatar
+                              avatarProfilePublicId={
+                                participant.avatarPublicId ?? 'no_avatar'
+                              }
+                              avatarTimestamp={participant.avatarTimestamp}
+                              name={participant.name ?? ''}
+                              color={
+                                participant.color
+                                  ? (participant.color as 'base')
+                                  : 'base'
+                              }
+                              size="sm"
+                              hideTooltip
+                            />
+                            <p className="text-base-11 text-sm">
+                              {participant.own && participant.own
+                                ? 'You (already a participant)'
+                                : `${participant.name} ${participant.title ? `(${participant.title})` : ''}`}
+                            </p>
+                          </HoverCardTrigger>
+                          <AvatarIcon
+                            avatarProfilePublicId={
+                              participant.avatarPublicId ?? 'no_avatar'
+                            }
+                            size="sm"
+                            address={participant.address ?? undefined}
+                            withDot={!!participant.address}
+                          />
+                        </div>
 
-                      {selectedParticipants.find(
-                        (p) => p.publicId === participant.publicId
-                      ) ? (
-                        <Check size={16} />
-                      ) : null}
-                    </Button>
+                        {selectedParticipants.find(
+                          (p) => p.publicId === participant.publicId
+                        ) ? (
+                          <Check size={16} />
+                        ) : null}
+                      </Button>
+                      {participant.address && participant.name && (
+                        <HoverCardContent className="bg-slate-6 min-w-[280px] flex flex-col gap-1">
+                          <span className="font-100 text-xs">
+                            <span className="font-medium">Name :</span>{' '}
+                            {participant.name}
+                          </span>
+                          {!participant.handle ||
+                            (participant.handle !== '' && (
+                              <span className="font-100 text-xs">
+                                <span className="font-medium">Handle :</span>{' '}
+                                {participant.handle}
+                              </span>
+                            ))}
+                          {!participant.address ||
+                            (participant.address !== '' && (
+                              <span className="font-100 text-xs">
+                                <span className="font-medium">Address :</span>{' '}
+                                {participant.address}
+                              </span>
+                            ))}
+                        </HoverCardContent>
+                      )}
+                    </HoverCard>
                   </CommandItem>
                 ))}
               </CommandGroup>
