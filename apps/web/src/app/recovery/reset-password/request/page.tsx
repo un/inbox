@@ -39,11 +39,6 @@ export default function RequestResetPage() {
         onSubmit={handleSubmit}
         className="w-full max-w-md space-y-4">
         <div>
-          <label
-            htmlFor="username"
-            className="block text-sm font-medium text-gray-700">
-            Username
-          </label>
           <Input
             label="Username"
             id="username"
@@ -56,11 +51,6 @@ export default function RequestResetPage() {
           />
         </div>
         <div>
-          <label
-            htmlFor="email"
-            className="block text-sm font-medium text-gray-700">
-            Recovery Email
-          </label>
           <Input
             label="Recovery Email"
             id="email"
