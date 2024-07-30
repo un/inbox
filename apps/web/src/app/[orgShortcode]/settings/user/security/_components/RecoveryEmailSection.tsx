@@ -11,7 +11,6 @@ import {
 } from './recovery-email-modals';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { CheckCircle, Clock } from '@phosphor-icons/react';
-import { Input } from '@/src/components/shadcn-ui/input';
 import { REGEXP_ONLY_DIGITS_AND_CHARS } from 'input-otp';
 import { platform } from '@/src/lib/trpc';
 import { format } from 'date-fns';

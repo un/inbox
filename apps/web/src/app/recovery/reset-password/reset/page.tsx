@@ -12,7 +12,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useDebounce } from '@uidotdev/usehooks';
-import { TRPCClientError } from '@trpc/client';
 import { Lock } from '@phosphor-icons/react';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';

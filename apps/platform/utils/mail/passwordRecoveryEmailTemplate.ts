@@ -1,14 +1,10 @@
-import { nanoIdToken } from '@u22n/utils/zodSchemas';
-
 export type PasswordRecoveryEmailProps = {
-  to: string;
   username: string;
   recoveryCode: string;
   expiryDate: string;
 };
 
 export function passwordRecoveryEmailTemplate({
-  to,
   username,
   recoveryCode,
   expiryDate
@@ -38,7 +34,6 @@ export function passwordRecoveryEmailTemplate({
 }
 
 export function passwordRecoveryEmailTemplatePlainText({
-  to,
   username,
   recoveryCode,
   expiryDate
