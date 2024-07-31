@@ -177,7 +177,8 @@ export default function ResetPasswordPage() {
           <Button
             type="submit"
             className="w-full"
-            disabled={isLoading || !form.watch('validated')}>
+            disabled={isLoading || !form.watch('validated')}
+            loading={isLoading}>
             {isLoading ? 'Resetting...' : 'Reset Password'}
           </Button>
         </form>

@@ -66,7 +66,8 @@ export default function VerifyResetPage() {
         </div>
         <Button
           type="submit"
-          disabled={isPending}>
+          disabled={verificationCode.length !== 6}
+          loading={isPending}>
           {isPending ? 'Verifying...' : 'Verify Code'}
         </Button>
       </form>

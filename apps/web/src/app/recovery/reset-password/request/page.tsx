@@ -63,7 +63,7 @@ export default function RequestResetPage() {
         <Button
           type="submit"
           className="w-full"
-          disabled={isPending}>
+          loading={isPending}>
           {isPending ? 'Sending...' : 'Send Recovery Email'}
         </Button>
       </form>
