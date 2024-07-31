@@ -59,7 +59,6 @@ export function ExternalEmailModal({
   addExternalModalOpen: (value: boolean) => void;
   open: boolean;
 }) {
-  // const [open, setOpen] = useState(false);
   const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
   const invalidateEmails =
     platform.useUtils().org.mail.emailIdentities.getOrgEmailIdentities;

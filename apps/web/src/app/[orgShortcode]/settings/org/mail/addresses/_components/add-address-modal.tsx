@@ -6,7 +6,8 @@ import {
   DialogHeader,
   DialogTrigger,
   DialogTitle,
-  DialogDescription
+  DialogDescription,
+  DialogClose
 } from '@/src/components/shadcn-ui/dialog';
 import {
   Select,
@@ -30,7 +31,6 @@ import { Button } from '@/src/components/shadcn-ui/button';
 import { Switch } from '@/src/components/shadcn-ui/switch';
 import { Input } from '@/src/components/shadcn-ui/input';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { DialogClose } from '@radix-ui/react-dialog';
 import { At } from '@phosphor-icons/react';
 import { useForm } from 'react-hook-form';
 import { platform } from '@/src/lib/trpc';

@@ -1,7 +1,7 @@
 'use client';
 
+import { ExternalEmailModal } from './_components/add-external-email-modal';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
-import ExternalEmailModal from './_components/external-email-modal';
 import { AddEmailModal } from './_components/add-address-modal';
 import { DataTable } from '@/src/components/shared/table';
 import { SpinnerGap } from '@phosphor-icons/react';
