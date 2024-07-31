@@ -89,9 +89,9 @@ export function ProfileCard({ orgData, wasInvited }: ProfileCardProps) {
             <img
               src={avatarUrl}
               alt={`${name}'s Profile`}
-              width={64}
-              height={64}
-              className="size-16 rounded-xl"
+              width={90}
+              height={90}
+              className="rounded-xl"
             />
           ) : (
             <DefaultAvatar />
@@ -158,8 +158,8 @@ export function ProfileCard({ orgData, wasInvited }: ProfileCardProps) {
 const DefaultAvatar = () => {
   return (
     <svg
-      width="64"
-      height="65"
+      width="90"
+      height="90"
       viewBox="0 0 64 65"
       fill="none"
       xmlns="http://www.w3.org/2000/svg">
