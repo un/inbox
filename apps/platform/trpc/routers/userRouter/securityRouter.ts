@@ -1021,6 +1021,12 @@ export const securityRouter = router({
   }),
 
   sendRecoveryEmail: publicProcedure
+    .use(
+      ratelimiter({
+        limit: 10,
+        namespace: 'account.security.sendRecoveryEmail'
+      })
+    )
     .input(
       z.object({
         username: zodSchemas.usernameLogin().trim(),
@@ -1070,7 +1076,7 @@ export const securityRouter = router({
         to: input.email,
         username: accountQuery.username,
         recoveryCode: recoveryToken,
-        expiryDate: datePlus('15 min').toLocaleString()
+        expiryDate: datePlus('15 minutes').toLocaleString()
       });
 
       return { success: true };
