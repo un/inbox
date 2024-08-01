@@ -83,7 +83,9 @@ export default function SidebarContent() {
       </div>
       <div className="flex w-full flex-row items-center justify-between p-1">
         <span className={cn('font-display text-base-11 text-sm')}>UnInbox</span>
-        <span className={cn('text-base-11 text-xs')}>v0.1.0</span>
+        <span className={cn('text-base-11 text-xs')}>
+          v{env.NEXT_PUBLIC_APP_VERSION}
+        </span>
       </div>
     </div>
   );

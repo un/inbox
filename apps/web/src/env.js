@@ -11,6 +11,8 @@ if (!IS_BROWSER) {
     ? 'true'
     : 'false';
 
+  process.env.APP_VERSION = process.env.npm_package_version;
+
   // DON'T ADD ANY SENSITIVE ENVIRONMENT VARIABLES HERE
   // All variables defined here will be exposed to the client
   const PUBLIC_ENV_LIST = [
@@ -21,7 +23,8 @@ if (!IS_BROWSER) {
     'REALTIME_HOST',
     'REALTIME_PORT',
     'TURNSTILE_SITE_KEY',
-    'EE_ENABLED'
+    'EE_ENABLED',
+    'APP_VERSION'
   ];
 
   PUBLIC_ENV_LIST.forEach((key) => {
@@ -41,7 +44,8 @@ export const env = createEnv({
     NEXT_PUBLIC_REALTIME_HOST: z.string(),
     NEXT_PUBLIC_REALTIME_PORT: z.coerce.number(),
     NEXT_PUBLIC_TURNSTILE_SITE_KEY: z.string().optional(),
-    NEXT_PUBLIC_EE_ENABLED: z.enum(['true', 'false'])
+    NEXT_PUBLIC_EE_ENABLED: z.enum(['true', 'false']),
+    NEXT_PUBLIC_APP_VERSION: z.string().default('development')
   },
   // process.env is added here to allow access while on server, it is tree-shaken out in the browser
   // if you check in the browser, you will see runtimeEnv is set to window.__ENV only
