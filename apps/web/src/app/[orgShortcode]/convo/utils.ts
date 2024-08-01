@@ -119,17 +119,22 @@ export function useDeleteConvo$Cache() {
   );
 
   return useCallback(
-    async (convoId: TypeId<'convos'>) => {
-      await convoListApi.cancel({ orgShortcode });
-      await convoListApi.cancel({ orgShortcode, includeHidden: true });
+    async (convoId: TypeId<'convos'> | TypeId<'convos'>[]) => {
+      const convos = Array.isArray(convoId) ? convoId : [convoId];
+      await Promise.allSettled(
+        convos.map(async (convoId) => {
+          await convoListApi.cancel({ orgShortcode });
+          await convoListApi.cancel({ orgShortcode, includeHidden: true });
 
-      convoListApi.setInfiniteData({ orgShortcode }, (updater) =>
-        deleteFn(convoId, updater)
-      );
-      // deleteFn(convoId, updater)
-      convoListApi.setInfiniteData(
-        { orgShortcode, includeHidden: true },
-        (updater) => deleteFn(convoId, updater)
+          convoListApi.setInfiniteData({ orgShortcode }, (updater) =>
+            deleteFn(convoId, updater)
+          );
+          // deleteFn(convoId, updater)
+          convoListApi.setInfiniteData(
+            { orgShortcode, includeHidden: true },
+            (updater) => deleteFn(convoId, updater)
+          );
+        })
       );
     },
     [convoListApi, deleteFn, orgShortcode]
@@ -197,70 +202,79 @@ export function useToggleConvoHidden$Cache() {
   );
 
   return useCallback(
-    async (convoId: TypeId<'convos'>, hide = false) => {
-      await convoApi.cancel({ convoPublicId: convoId, orgShortcode });
-      convoApi.setData({ convoPublicId: convoId, orgShortcode }, (updater) => {
-        if (!updater) return;
-        const clonedUpdater = structuredClone(updater);
-        const participantIndex = clonedUpdater.data.participants.findIndex(
-          (participant) =>
-            participant.publicId === updater.ownParticipantPublicId
-        );
-        if (participantIndex === -1) return;
-        clonedUpdater.data.participants[participantIndex]!.hidden = hide;
-        return clonedUpdater;
-      });
+    async (convoId: TypeId<'convos'> | TypeId<'convos'>[], hide = false) => {
+      const convos = Array.isArray(convoId) ? convoId : [convoId];
+      await Promise.allSettled(
+        convos.map(async (convoId) => {
+          await convoApi.cancel({ convoPublicId: convoId, orgShortcode });
+          convoApi.setData(
+            { convoPublicId: convoId, orgShortcode },
+            (updater) => {
+              if (!updater) return;
+              const clonedUpdater = structuredClone(updater);
+              const participantIndex =
+                clonedUpdater.data.participants.findIndex(
+                  (participant) =>
+                    participant.publicId === updater.ownParticipantPublicId
+                );
+              if (participantIndex === -1) return;
+              clonedUpdater.data.participants[participantIndex]!.hidden = hide;
+              return clonedUpdater;
+            }
+          );
 
-      const convoToAdd = await specificConvoApi.fetch({
-        convoPublicId: convoId,
-        orgShortcode
-      });
+          const convoToAdd = await specificConvoApi.fetch({
+            convoPublicId: convoId,
+            orgShortcode
+          });
 
-      // Update both hidden and non-hidden convo lists
-      await convoListApi.cancel({ orgShortcode, includeHidden: true });
-      await convoListApi.cancel({ orgShortcode });
+          // Update both hidden and non-hidden convo lists
+          await convoListApi.cancel({ orgShortcode, includeHidden: true });
+          await convoListApi.cancel({ orgShortcode });
 
-      // if we are hiding a convo, we need to remove it from the non-hidden list and add to hidden list
-      if (hide) {
-        convoListApi.setInfiniteData({ orgShortcode }, (updater) =>
-          convoListUpdaterFn(
-            /* hide from non-hidden */ true,
-            null,
-            convoId,
-            updater
-          )
-        );
-        convoListApi.setInfiniteData(
-          { orgShortcode, includeHidden: true },
-          (updater) =>
-            convoListUpdaterFn(
-              /* add from hidden */ false,
-              convoToAdd,
-              null,
-              updater
-            )
-        );
-      } else {
-        // if we are un-hiding a convo, we need to remove it from the hidden list and add to non-hidden list
-        convoListApi.setInfiniteData({ orgShortcode }, (updater) =>
-          convoListUpdaterFn(
-            /* add to non-hidden */ false,
-            convoToAdd,
-            null,
-            updater
-          )
-        );
-        convoListApi.setInfiniteData(
-          { orgShortcode, includeHidden: true },
-          (updater) =>
-            convoListUpdaterFn(
-              /* hide from hidden */ true,
-              null,
-              convoId,
-              updater
-            )
-        );
-      }
+          // if we are hiding a convo, we need to remove it from the non-hidden list and add to hidden list
+          if (hide) {
+            convoListApi.setInfiniteData({ orgShortcode }, (updater) =>
+              convoListUpdaterFn(
+                /* hide from non-hidden */ true,
+                null,
+                convoId,
+                updater
+              )
+            );
+            convoListApi.setInfiniteData(
+              { orgShortcode, includeHidden: true },
+              (updater) =>
+                convoListUpdaterFn(
+                  /* add from hidden */ false,
+                  convoToAdd,
+                  null,
+                  updater
+                )
+            );
+          } else {
+            // if we are un-hiding a convo, we need to remove it from the hidden list and add to non-hidden list
+            convoListApi.setInfiniteData({ orgShortcode }, (updater) =>
+              convoListUpdaterFn(
+                /* add to non-hidden */ false,
+                convoToAdd,
+                null,
+                updater
+              )
+            );
+            convoListApi.setInfiniteData(
+              { orgShortcode, includeHidden: true },
+              (updater) =>
+                convoListUpdaterFn(
+                  /* hide from hidden */ true,
+                  null,
+                  convoId,
+                  updater
+                )
+            );
+          }
+        })
+      );
     },
     [convoApi, convoListApi, convoListUpdaterFn, orgShortcode, specificConvoApi]
   );
