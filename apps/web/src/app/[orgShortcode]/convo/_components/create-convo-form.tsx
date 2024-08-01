@@ -758,7 +758,7 @@ function ParticipantsComboboxPopover({
                         ) : null}
                       </Button>
                       {participant.address && participant.name && (
-                        <HoverCardContent className="bg-slate-6 min-w-[280px] flex flex-col gap-1">
+                        <HoverCardContent className="bg-slate-6 flex min-w-[280px] flex-col gap-1">
                           <span className="font-100 text-xs">
                             <span className="font-medium">Name :</span>{' '}
                             {participant.name}

@@ -68,12 +68,16 @@ export const MessagesPanel = forwardRef<VirtuosoHandle, MessagesPanelProps>(
         }
       );
 
-    const allMessages = useMemo(() => {
+    const [allMessages, setAllMessages] = useState<
+      RouterOutputs['convos']['entries']['getConvoEntries']['entries']
+    >([]);
+
+    useEffect(() => {
       const messages = data
         ? data.pages.flatMap(({ entries }) => entries).reverse()
         : [];
       setFirstItemIndex(() => INVERSE_LIST_START_INDEX - messages.length);
-      return messages;
+      setAllMessages(messages);
     }, [data]);
 
     useEffect(() => {
@@ -83,7 +87,9 @@ export const MessagesPanel = forwardRef<VirtuosoHandle, MessagesPanelProps>(
 
     const itemRenderer = useCallback(
       (index: number, message: (typeof allMessages)[number]) => (
-        <div key={message.publicId}>
+        <div
+          key={message.publicId}
+          className="py-4">
           {index === firstItemIndex && hasNextPage ? (
             <div className="flex w-full items-center justify-center gap-2 text-center font-bold">
               <SpinnerGap
@@ -124,12 +130,15 @@ export const MessagesPanel = forwardRef<VirtuosoHandle, MessagesPanelProps>(
             void fetchNextPage();
           }}
           data={allMessages}
-          initialTopMostItemIndex={Math.max(0, allMessages.length - 1)}
+          initialTopMostItemIndex={{
+            align: 'start',
+            index: Math.max(0, allMessages.length - 1)
+          }}
+          computeItemKey={(_, message) => message.publicId}
           firstItemIndex={firstItemIndex}
           itemContent={itemRenderer}
           style={{ overscrollBehavior: 'none', overflowX: 'clip' }}
           className="w-full"
-          increaseViewportBy={100}
           ref={ref}
         />
       </div>
@@ -139,201 +148,205 @@ export const MessagesPanel = forwardRef<VirtuosoHandle, MessagesPanelProps>(
 
 MessagesPanel.displayName = 'MessagesPanel';
 
-function MessageItem({
-  message,
-  participantOwnPublicId,
-  formattedParticipants
-}: {
-  message: RouterOutputs['convos']['entries']['getConvoEntries']['entries'][number];
-  participantOwnPublicId: string;
-  formattedParticipants: NonNullable<
-    ReturnType<typeof formatParticipantData>
-  >[];
-}) {
-  const messageHtml = useMemo(
-    () => generateHTML(message.body as JSONContent, tipTapExtensions),
-    [message.body]
-  );
-  const isUserAuthor = message.author.publicId === participantOwnPublicId;
-  const messageAuthor = useMemo(
-    () =>
-      formattedParticipants.find(
-        (p) => p.participantPublicId === message.author.publicId
-      )!,
-    [formattedParticipants, message.author.publicId]
-  );
-  const [replyTo, setReplyTo] = useAtom(replyToMessageAtom);
-  const [, copyToClipboard] = useCopyToClipboard();
-  const [viewingOriginalMessage, setViewingOriginalMessage] = useState(false);
+const MessageItem = memo(
+  function MessageItem({
+    message,
+    participantOwnPublicId,
+    formattedParticipants
+  }: {
+    message: RouterOutputs['convos']['entries']['getConvoEntries']['entries'][number];
+    participantOwnPublicId: string;
+    formattedParticipants: NonNullable<
+      ReturnType<typeof formatParticipantData>
+    >[];
+  }) {
+    const messageHtml = useMemo(
+      () => generateHTML(message.body as JSONContent, tipTapExtensions),
+      [message.body]
+    );
+    const isUserAuthor = message.author.publicId === participantOwnPublicId;
+    const messageAuthor = useMemo(
+      () =>
+        formattedParticipants.find(
+          (p) => p.participantPublicId === message.author.publicId
+        )!,
+      [formattedParticipants, message.author.publicId]
+    );
+    const [replyTo, setReplyTo] = useAtom(replyToMessageAtom);
+    const [, copyToClipboard] = useCopyToClipboard();
+    const [viewingOriginalMessage, setViewingOriginalMessage] = useState(false);
 
-  // if the message timestamp is less than a day ago, show the date instead of the time
-  const isRecent =
-    new Date().getTime() - message.createdAt.getTime() < ms('1 day');
-  const timeAgo = useTimeAgo(message.createdAt);
+    // if the message timestamp is less than a day ago, show the date instead of the time
+    const isRecent =
+      new Date().getTime() - message.createdAt.getTime() < ms('1 day');
+    const timeAgo = useTimeAgo(message.createdAt);
 
-  const viaAddress = message.metadata?.email?.from?.[0]?.email;
+    const viaAddress = message.metadata?.email?.from?.[0]?.email;
 
-  // styling
-  const messageStyling = cva('…', {
-    variants: {
-      type: {
-        message: 'rounded-2xl',
-        comment: '',
-        draft: 'rounded-none'
+    // styling
+    const messageStyling = cva('…', {
+      variants: {
+        type: {
+          message: 'rounded-2xl',
+          comment: '',
+          draft: 'rounded-none'
+        },
+        author: { true: '', false: '' }
       },
-      author: { true: '', false: '' }
-    },
-    compoundVariants: [
-      {
-        type: 'message',
-        author: true,
-        class: 'bg-accent-3 rounded-tr-sm'
-      },
-      {
-        type: 'message',
-        author: false,
-        class: 'bg-base-3 rounded-tl-sm'
-      },
-      {
-        type: 'comment',
-        author: true,
-        class: 'bg-amber-3 border-amber-5 border-r-2 rounded-l-md'
-      },
-      {
-        type: 'comment',
-        author: false,
-        class: 'bg-amber-2 border-amber-5 border-l-2 rounded-r-md'
-      }
-    ]
-  });
+      compoundVariants: [
+        {
+          type: 'message',
+          author: true,
+          class: 'bg-accent-3 rounded-tr-sm'
+        },
+        {
+          type: 'message',
+          author: false,
+          class: 'bg-base-3 rounded-tl-sm'
+        },
+        {
+          type: 'comment',
+          author: true,
+          class: 'bg-amber-3 border-amber-5 border-r-2 rounded-l-md'
+        },
+        {
+          type: 'comment',
+          author: false,
+          class: 'bg-amber-2 border-amber-5 border-l-2 rounded-r-md'
+        }
+      ]
+    });
 
-  return (
-    <div
-      className={cn(
-        'group my-6 flex w-full gap-2',
-        isUserAuthor ? 'flex-row-reverse' : 'flex-row'
-      )}>
+    return (
       <div
         className={cn(
-          isUserAuthor ? 'items-end' : 'items-start',
-          'flex w-fit max-w-prose flex-col gap-2 overflow-x-hidden'
+          'group flex w-full gap-2',
+          isUserAuthor ? 'flex-row-reverse' : 'flex-row'
         )}>
         <div
           className={cn(
-            'flex w-full items-center gap-2',
-            isUserAuthor ? 'flex-row-reverse' : 'flex-row'
+            isUserAuthor ? 'items-end' : 'items-start',
+            'flex w-fit max-w-prose flex-col gap-2 overflow-x-hidden'
           )}>
-          <Avatar
-            avatarProfilePublicId={messageAuthor.avatarProfilePublicId}
-            avatarTimestamp={messageAuthor.avatarTimestamp}
-            name={messageAuthor.name}
-            color={messageAuthor.color}
-            hideTooltip
-            size="xl"
-          />
           <div
             className={cn(
-              isUserAuthor ? 'flex-row-reverse' : 'flex-row',
-              viaAddress ? 'items-end' : 'items-center',
-              'flex gap-2'
+              'flex w-full items-center gap-2',
+              isUserAuthor ? 'flex-row-reverse' : 'flex-row'
             )}>
+            <Avatar
+              avatarProfilePublicId={messageAuthor.avatarProfilePublicId}
+              avatarTimestamp={messageAuthor.avatarTimestamp}
+              name={messageAuthor.name}
+              color={messageAuthor.color}
+              hideTooltip
+              size="xl"
+            />
             <div
               className={cn(
-                'flex flex-col gap-1',
-                isUserAuthor ? 'items-end' : 'items-start'
+                isUserAuthor ? 'flex-row-reverse' : 'flex-row',
+                viaAddress ? 'items-end' : 'items-center',
+                'flex gap-2'
               )}>
-              <span className="text-base font-medium leading-none">
-                {messageAuthor.name}
-              </span>
-              {viaAddress ? (
-                <span className="text-base-11 text-xs leading-none">
-                  via {viaAddress}
-                </span>
-              ) : null}
-            </div>
-          </div>
-          <div className={cn(isUserAuthor ? 'mr-4' : 'ml-4')}>
-            {isRecent ? (
-              <span className="text-base-11 text-xs leading-none">
-                {timeAgo}
-              </span>
-            ) : (
               <div
                 className={cn(
                   'flex flex-col gap-1',
-                  isUserAuthor ? 'items-start' : 'items-end'
+                  isUserAuthor ? 'items-end' : 'items-start'
                 )}>
-                <span className="text-base-11 text-xs leading-none">
-                  {message.createdAt.toLocaleDateString()}
+                <span className="text-base font-medium leading-none">
+                  {messageAuthor.name}
                 </span>
-                <span className="text-base-11 text-xs leading-none">
-                  {message.createdAt.toLocaleTimeString([], {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
-                </span>
+                {viaAddress ? (
+                  <span className="text-base-11 text-xs leading-none">
+                    via {viaAddress}
+                  </span>
+                ) : null}
               </div>
-            )}
+            </div>
+            <div className={cn(isUserAuthor ? 'mr-4' : 'ml-4')}>
+              {isRecent ? (
+                <span className="text-base-11 text-xs leading-none">
+                  {timeAgo}
+                </span>
+              ) : (
+                <div
+                  className={cn(
+                    'flex flex-col gap-1',
+                    isUserAuthor ? 'items-start' : 'items-end'
+                  )}>
+                  <span className="text-base-11 text-xs leading-none">
+                    {message.createdAt.toLocaleDateString()}
+                  </span>
+                  <span className="text-base-11 text-xs leading-none">
+                    {message.createdAt.toLocaleTimeString([], {
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+          <div
+            className={cn(
+              'flex w-fit max-w-full flex-row overflow-hidden px-3 py-2',
+              messageStyling({ type: message.type, author: isUserAuthor })
+            )}>
+            <HTMLMessage html={messageHtml} />
           </div>
         </div>
-        <div
-          className={cn(
-            'flex w-fit max-w-full flex-row overflow-hidden px-3 py-2',
-            messageStyling({ type: message.type, author: isUserAuthor })
-          )}>
-          <HTMLMessage html={messageHtml} />
-        </div>
-      </div>
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          className="opacity-0 group-hover:opacity-100"
-          asChild>
-          <Button
-            variant="secondary"
-            size="icon-sm"
-            className="mx-1 self-center">
-            <DotsThree size={12} />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuPortal>
-          <DropdownMenuContent sideOffset={5}>
-            <DropdownMenuItem
-              className="flex justify-between"
-              onClick={() => {
-                setReplyTo(
-                  replyTo === message.publicId ? null : message.publicId
-                );
-              }}>
-              Reply{' '}
-              {replyTo === message.publicId ? (
-                <Badge variant="outline">Replying</Badge>
-              ) : null}
-            </DropdownMenuItem>
-            {message.rawHtml?.wipeDate && (
-              <DropdownMenuItem onClick={() => setViewingOriginalMessage(true)}>
-                View Original Message
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            className="opacity-0 group-hover:opacity-100"
+            asChild>
+            <Button
+              variant="secondary"
+              size="icon-sm"
+              className="mx-1 self-center">
+              <DotsThree size={12} />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuPortal>
+            <DropdownMenuContent sideOffset={5}>
+              <DropdownMenuItem
+                className="flex justify-between"
+                onClick={() => {
+                  setReplyTo(
+                    replyTo === message.publicId ? null : message.publicId
+                  );
+                }}>
+                Reply{' '}
+                {replyTo === message.publicId ? (
+                  <Badge variant="outline">Replying</Badge>
+                ) : null}
               </DropdownMenuItem>
-            )}
-            <DropdownMenuItem
-              onClick={async () => {
-                await copyToClipboard(message.publicId);
-                toast.success('Message ID copied to clipboard');
-              }}>
-              Copy Message ID
-            </DropdownMenuItem>
-            <DropdownMenuItem>Report Bug</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenuPortal>
-      </DropdownMenu>
-      {viewingOriginalMessage && message.rawHtml?.wipeDate ? (
-        <OriginalMessageView
-          setOpen={setViewingOriginalMessage}
-          messagePublicId={message.publicId}
-        />
-      ) : null}
-    </div>
-  );
-}
+              {message.rawHtml?.wipeDate && (
+                <DropdownMenuItem
+                  onClick={() => setViewingOriginalMessage(true)}>
+                  View Original Message
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem
+                onClick={async () => {
+                  await copyToClipboard(message.publicId);
+                  toast.success('Message ID copied to clipboard');
+                }}>
+                Copy Message ID
+              </DropdownMenuItem>
+              <DropdownMenuItem>Report Bug</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenuPortal>
+        </DropdownMenu>
+        {viewingOriginalMessage && message.rawHtml?.wipeDate ? (
+          <OriginalMessageView
+            setOpen={setViewingOriginalMessage}
+            messagePublicId={message.publicId}
+          />
+        ) : null}
+      </div>
+    );
+  },
+  (prev, curr) => prev.message.publicId === curr.message.publicId
+);
 
 // It is important to memoize the HTMLMessage component to prevent unnecessary re-renders which can cause infinite fetch loops for images
 const HTMLMessage = memo(

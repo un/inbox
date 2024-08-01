@@ -164,7 +164,7 @@ export function ExternalEmailModal({
             <div className="my-2 flex w-full flex-col gap-2">
               <div className="flex w-full flex-col gap-2">
                 <div className="text-sm font-bold">Email Address</div>
-                <div className="grid grid-cols-2 gap-2 w-full">
+                <div className="grid w-full grid-cols-2 gap-2">
                   <FormField
                     control={form.control}
                     name="fullEmail"
@@ -204,7 +204,7 @@ export function ExternalEmailModal({
 
               <div className="flex w-full flex-col gap-2">
                 <div className="text-sm font-bold">SMTP Settings</div>
-                <div className="grid grid-cols-2 gap-2 w-full">
+                <div className="grid w-full grid-cols-2 gap-2">
                   <FormField
                     control={form.control}
                     name="smtp.host"
@@ -238,7 +238,7 @@ export function ExternalEmailModal({
                     )}
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-2 w-full">
+                <div className="grid w-full grid-cols-2 gap-2">
                   <FormField
                     control={form.control}
                     name="smtp.username"
@@ -340,8 +340,8 @@ export function ExternalEmailModal({
                 Deliver Messages To
               </div>
               <div className="flex flex-col gap-2">
-                <div className="grid grid-cols-2 gap-2 w-full">
-                  <div className="flex flex-col gap-1 w-full">
+                <div className="grid w-full grid-cols-2 gap-2">
+                  <div className="flex w-full flex-col gap-1">
                     <div className="flex items-center gap-2">
                       <label className="text-sm font-bold">Teams</label>
                     </div>
@@ -412,7 +412,7 @@ export function ExternalEmailModal({
                       )}
                     />
                   </div>
-                  <div className="flex flex-1 flex-col gap-1 w-full">
+                  <div className="flex w-full flex-1 flex-col gap-1">
                     <div className="flex items-center gap-2">
                       <label className="text-sm font-bold">Users</label>
                     </div>
@@ -473,7 +473,7 @@ export function ExternalEmailModal({
                   </div>
                 </div>
 
-                <div className="mt-2 grid grid-cols-2 w-full gap-2">
+                <div className="mt-2 grid w-full grid-cols-2 gap-2">
                   <DialogClose asChild>
                     <Button
                       variant="secondary"

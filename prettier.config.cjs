@@ -9,6 +9,6 @@ module.exports = {
   printWidth: 80,
   tabWidth: 2,
   arrowParens: 'always',
-  plugins: ['prettier-plugin-tailwindcss', 'prettier-plugin-sort-imports'],
+  plugins: ['prettier-plugin-sort-imports', 'prettier-plugin-tailwindcss'],
   singleAttributePerLine: true
 };

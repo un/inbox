@@ -130,14 +130,14 @@ export default function Layout({
     <div className="flex h-full w-full flex-row gap-0 xl:grid xl:grid-cols-3">
       <div className="flex h-full min-w-96 flex-col gap-2 p-2 pt-3 xl:col-span-1 xl:min-w-80">
         {selectingMode ? (
-          <div className="h-[47px] p-2.5 flex items-center justify-between">
-            <div className="flex items-center gap-2 justify-center">
+          <div className="flex h-[47px] items-center justify-between p-2.5">
+            <div className="flex items-center justify-center gap-2">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
                     variant="outline"
                     size="icon-sm"
-                    className="rounded-lg bg-accent-1"
+                    className="bg-accent-1 rounded-lg"
                     onClick={() => setSelection([])}>
                     <Minus
                       size={12}
@@ -147,7 +147,7 @@ export default function Layout({
                 </TooltipTrigger>
                 <TooltipContent>Unselect all</TooltipContent>
               </Tooltip>
-              <span className="text-base-11 font-semibold text-sm">
+              <span className="text-base-11 text-sm font-semibold">
                 {`${selection.length} convo${selection.length > 1 ? 's' : ''} selected`}
               </span>
             </div>

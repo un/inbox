@@ -132,7 +132,7 @@ export function ConvoItem({
                 e.stopPropagation();
                 onSelect(false);
               }}>
-              <div className="group-hover:block hidden size-6 rounded-lg border bg-accent-2" />
+              <div className="bg-accent-2 hidden size-6 rounded-lg border group-hover:block" />
               <div className="group-hover:hidden">
                 <AvatarPlus
                   size="md"
