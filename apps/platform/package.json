@@ -16,9 +16,9 @@
   },
   "dependencies": {
     "@simplewebauthn/server": "^9.0.3",
-    "@t3-oss/env-core": "^0.10.1",
-    "@trpc/client": "11.0.0-rc.466",
-    "@trpc/server": "11.0.0-rc.466",
+    "@t3-oss/env-core": "^0.11.0",
+    "@trpc/client": "11.0.0-rc.467",
+    "@trpc/server": "11.0.0-rc.467",
     "@u22n/database": "workspace:^",
     "@u22n/hono": "workspace:^",
     "@u22n/mail-bridge": "workspace:^",

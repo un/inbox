@@ -1691,7 +1691,9 @@ export const convoRouter = router({
   hideConvo: orgProcedure
     .input(
       z.object({
-        convoPublicId: typeIdValidator('convos'),
+        convoPublicId: z
+          .array(typeIdValidator('convos'))
+          .or(typeIdValidator('convos')),
         unhide: z.boolean().default(false)
       })
     )
@@ -1699,13 +1701,16 @@ export const convoRouter = router({
       const { db, org } = ctx;
       const { convoPublicId } = input;
       const orgMemberId = org.memberId;
+      const convoPublicIds = Array.isArray(convoPublicId)
+        ? convoPublicId
+        : [convoPublicId];
 
-      const convoQuery = await db.query.convos.findFirst({
+      const convosQuery = await db.query.convos.findMany({
         columns: {
           id: true
         },
         where: and(
-          eq(convos.publicId, convoPublicId),
+          inArray(convos.publicId, convoPublicIds),
           eq(convos.orgId, org.id)
         ),
         with: {
@@ -1725,18 +1730,21 @@ export const convoRouter = router({
         }
       });
 
-      if (!convoQuery) {
+      if (convosQuery.length !== convoPublicIds.length) {
         throw new TRPCError({
           code: 'NOT_FOUND',
-          message: 'Conversation not found'
+          message: 'One or more conversations not found'
         });
       }
 
-      const orgMemberConvoParticipant = convoQuery.participants[0];
-      if (!orgMemberConvoParticipant) {
+      const orgMemberConvoParticipants = convosQuery
+        .map((convo) => convo.participants[0])
+        .filter((participant) => typeof participant !== 'undefined');
+
+      if (orgMemberConvoParticipants.length !== convoPublicIds.length) {
         throw new TRPCError({
           code: 'NOT_FOUND',
-          message: 'Conversation not found'
+          message: 'One or more conversations not found'
         });
       }
 
@@ -1745,11 +1753,21 @@ export const convoRouter = router({
         .set({
           hidden: !input.unhide
         })
-        .where(eq(convoParticipants.id, orgMemberConvoParticipant.id));
+        .where(
+          inArray(
+            convoParticipants.id,
+            orgMemberConvoParticipants.map((p) => p.id)
+          )
+        );
+
+      const orgMemberPublicIdsForNotifications = Array.from(
+        new Set(orgMemberConvoParticipants.map((p) => p.orgMember!.publicId))
+      );
+
       await realtime.emit({
-        orgMemberPublicIds: [orgMemberConvoParticipant.orgMember!.publicId],
+        orgMemberPublicIds: orgMemberPublicIdsForNotifications,
         event: 'convo:hidden',
-        data: { publicId: convoPublicId, hidden: !input.unhide }
+        data: { publicId: convoPublicIds, hidden: !input.unhide }
       });
 
       return { success: true };
@@ -1757,7 +1775,9 @@ export const convoRouter = router({
   deleteConvo: orgProcedure
     .input(
       z.object({
-        convoPublicId: typeIdValidator('convos')
+        convoPublicId: z
+          .array(typeIdValidator('convos'))
+          .or(typeIdValidator('convos'))
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -1766,9 +1786,15 @@ export const convoRouter = router({
       const orgId = org.id;
       const orgPublicId = org.publicId;
       const { convoPublicId } = input;
+      const convoPublicIds = Array.isArray(convoPublicId)
+        ? convoPublicId
+        : [convoPublicId];
 
-      const convoQueryResponse = await db.query.convos.findFirst({
-        where: and(eq(convos.publicId, convoPublicId), eq(convos.orgId, orgId)),
+      const convoQueryResponses = await db.query.convos.findMany({
+        where: and(
+          inArray(convos.publicId, convoPublicIds),
+          eq(convos.orgId, orgId)
+        ),
         columns: {
           id: true,
           orgId: true
@@ -1785,6 +1811,16 @@ export const convoRouter = router({
                 columns: {
                   publicId: true
                 }
+              },
+              team: {
+                columns: {},
+                with: {
+                  members: {
+                    columns: {
+                      orgMemberId: true
+                    }
+                  }
+                }
               }
             }
           },
@@ -1796,136 +1832,138 @@ export const convoRouter = router({
         }
       });
 
-      if (!convoQueryResponse) {
+      // If the user is not a participant of any convo, throw an error
+      // it is not possible for this to happen from the UI, so no need to handle other convos gracefully
+      if (convoQueryResponses.length !== convoPublicIds.length) {
         throw new TRPCError({
           code: 'NOT_FOUND',
-          message: 'Conversation not found'
+          message: 'One or more conversations not found'
         });
       }
 
-      const userInConvo = convoQueryResponse.participants.find(
-        (participant) => participant.orgMemberId === accountOrgMemberId
+      // Check if the user is a direct participant or a team member of the convo and create a boolean array
+      const userInConvos = convoQueryResponses.map((convo) =>
+        convo.participants.some(
+          (participant) =>
+            participant.orgMemberId === accountOrgMemberId ||
+            participant.team?.members.some(
+              (teamMember) => teamMember.orgMemberId === accountOrgMemberId
+            )
+        )
       );
 
-      let userInTeam: boolean | null = null;
-      const teamIdsArray: number[] = [];
-      for (const participant of convoQueryResponse.participants) {
-        if (participant.teamId) {
-          teamIdsArray.push(participant.teamId);
-        }
-      }
-      if (teamIdsArray.length > 0) {
-        // get all org members for a team
-
-        const teamMembersQuery = await db.query.teamMembers.findMany({
-          where: inArray(teamMembers.teamId, teamIdsArray),
-          columns: {
-            orgMemberId: true
-          }
-        });
-
-        const userInTeamMember = teamMembersQuery.find(
-          (teamMember) => teamMember.orgMemberId === accountOrgMemberId
-        );
-
-        userInTeam = userInTeamMember ? true : false;
-      }
-
-      if (!userInConvo && !userInTeam) {
+      // If not all convos are owned by the user, throw an error
+      // again this is not possible from the UI
+      if (!userInConvos.every((userInConvo) => userInConvo)) {
         throw new TRPCError({
           code: 'UNAUTHORIZED',
           message:
-            'You are not a participant in this conversation and can not delete it'
+            'You are not a participant one or more selected conversation and can not delete it'
         });
       }
 
+      const convoIds = convoQueryResponses.map((convo) => convo.id);
+      const convoParticipantIds = Array.from(
+        new Set(
+          convoQueryResponses.flatMap((convo) =>
+            convo.participants.map((participant) => participant.id)
+          )
+        )
+      );
+      const convoEntriesIds = Array.from(
+        new Set(
+          convoQueryResponses.flatMap((convo) =>
+            convo.entries.map((entry) => entry.id)
+          )
+        )
+      );
+
+      // return;
       await db.transaction(async (db) => {
         try {
-          //? convoSubjects
-          await db
-            .delete(convoSubjects)
-            .where(eq(convoSubjects.convoId, convoQueryResponse.id));
-          //? convoParticipants
-          await db
-            .delete(convoParticipants)
-            .where(eq(convoParticipants.convoId, convoQueryResponse.id));
-          //? convoParticipantTeamMembers
-          const convoParticipantIds = convoQueryResponse.participants.map(
-            (participant) => participant.id
-          );
+          // Use the length checks to avoid throwing errors
+          if (convoIds.length > 0) {
+            //? convoSubjects
+            await db
+              .delete(convoSubjects)
+              .where(inArray(convoSubjects.convoId, convoIds));
 
-          await db
-            .delete(convoParticipantTeamMembers)
-            .where(
-              inArray(
-                convoParticipantTeamMembers.convoParticipantId,
-                convoParticipantIds
-              )
-            );
+            //? convoParticipants
+            await db
+              .delete(convoParticipants)
+              .where(inArray(convoParticipants.convoId, convoIds));
 
-          //? convoEntries
-          const convoEntriesIds = convoQueryResponse.entries.map(
-            (entry) => entry.id
-          );
+            //? convoSeenTimestamps
+            await db
+              .delete(convoSeenTimestamps)
+              .where(inArray(convoSeenTimestamps.convoId, convoIds));
+          }
 
-          await db
-            .delete(convoEntries)
-            .where(inArray(convoEntries.id, convoEntriesIds));
-          //? convoEntryReplies
-          await db
-            .delete(convoEntryReplies)
-            .where(
-              or(
-                inArray(convoEntryReplies.entryReplyId, convoEntriesIds),
-                inArray(convoEntryReplies.entrySourceId, convoEntriesIds)
-              )
-            );
-          //? convoEntryPrivateVisibilityParticipants
-          await db
-            .delete(convoEntryPrivateVisibilityParticipants)
-            .where(
-              inArray(
-                convoEntryPrivateVisibilityParticipants.entryId,
-                convoEntriesIds
-              )
-            );
-          //? convoEntryRawHtmlEmails
-          await db
-            .delete(convoEntryRawHtmlEmails)
-            .where(inArray(convoEntryRawHtmlEmails.entryId, convoEntriesIds));
-          //? convoSeenTimestamps
-          await db
-            .delete(convoSeenTimestamps)
-            .where(eq(convoSeenTimestamps.convoId, convoQueryResponse.id));
-          //? convoEntrySeenTimestamps
-          await db
-            .delete(convoEntrySeenTimestamps)
-            .where(
-              inArray(convoEntrySeenTimestamps.convoEntryId, convoEntriesIds)
-            );
+          if (convoEntriesIds.length > 0) {
+            //? convoEntries
+            await db
+              .delete(convoEntries)
+              .where(inArray(convoEntries.id, convoEntriesIds));
 
-          type AttachmentsToDelete = {
-            orgPublicId: TypeId<'org'>;
-            attachmentPublicId: TypeId<'convoAttachments'>;
-            filename: string;
-          }[];
+            //? convoEntryReplies
+            await db
+              .delete(convoEntryReplies)
+              .where(
+                or(
+                  inArray(convoEntryReplies.entryReplyId, convoEntriesIds),
+                  inArray(convoEntryReplies.entrySourceId, convoEntriesIds)
+                )
+              );
+
+            //? convoEntryPrivateVisibilityParticipants
+            await db
+              .delete(convoEntryPrivateVisibilityParticipants)
+              .where(
+                inArray(
+                  convoEntryPrivateVisibilityParticipants.entryId,
+                  convoEntriesIds
+                )
+              );
+            //? convoEntryRawHtmlEmails
+            await db
+              .delete(convoEntryRawHtmlEmails)
+              .where(inArray(convoEntryRawHtmlEmails.entryId, convoEntriesIds));
+
+            //? convoEntrySeenTimestamps
+            await db
+              .delete(convoEntrySeenTimestamps)
+              .where(
+                inArray(convoEntrySeenTimestamps.convoEntryId, convoEntriesIds)
+              );
+          }
+
+          if (convoParticipantIds.length > 0) {
+            //? convoParticipantTeamMembers
+            await db
+              .delete(convoParticipantTeamMembers)
+              .where(
+                inArray(
+                  convoParticipantTeamMembers.convoParticipantId,
+                  convoParticipantIds
+                )
+              );
+          }
 
           // convoAttachments - also delete from s3
           const attachmentsQuery = await db.query.convoAttachments.findMany({
-            where: eq(convoAttachments.convoId, convoQueryResponse.id),
+            where: inArray(convoAttachments.convoId, convoIds),
             columns: {
               publicId: true,
               fileName: true
             }
           });
 
-          if (attachmentsQuery.length !== 0) {
-            const attachmentsToDelete: AttachmentsToDelete =
-              attachmentsQuery.map((attachment) => ({
-                orgPublicId: typeIdValidator('org').parse(orgPublicId),
-                attachmentPublicId: attachment.publicId,
-                filename: attachment.fileName
-              }));
+          if (attachmentsQuery.length > 0) {
+            const attachmentsToDelete = attachmentsQuery.map((attachment) => ({
+              orgPublicId: typeIdValidator('org').parse(orgPublicId),
+              attachmentPublicId: attachment.publicId,
+              filename: attachment.fileName
+            }));
 
             const deleteStorageResponse = (await fetch(
               `${env.STORAGE_URL}/api/attachments/deleteAttachments`,
@@ -1953,11 +1991,17 @@ export const convoRouter = router({
 
           await db
             .delete(convoAttachments)
-            .where(eq(convoAttachments.convoId, convoQueryResponse.id));
-          await db.delete(convos).where(eq(convos.id, convoQueryResponse.id));
+            .where(inArray(convoAttachments.convoId, convoIds));
+
+          await db.delete(convos).where(inArray(convos.id, convoIds));
         } catch (error) {
           console.error('🔥 Failed to delete convo', error);
-          db.rollback();
+          // Rollback throws error for some reason, we need to return the trpc error not the rollback error
+
+          try {
+            db.rollback();
+          } catch {}
+
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
             message: 'Failed to delete conversation'
@@ -1965,15 +2009,18 @@ export const convoRouter = router({
         }
       });
 
-      const orgMemberPublicIdsForNotifications: TypeId<'orgMembers'>[] = [];
+      const orgMemberPublicIdsForNotifications = Array.from(
+        new Set(
+          convoQueryResponses
+            .flatMap((convo) =>
+              convo.participants.map(
+                (participant) => participant.orgMember?.publicId
+              )
+            )
+            .filter(Boolean) as TypeId<'orgMembers'>[]
+        )
+      );
 
-      for (const participant of convoQueryResponse.participants) {
-        if (participant.orgMember?.publicId) {
-          orgMemberPublicIdsForNotifications.push(
-            participant.orgMember.publicId
-          );
-        }
-      }
       if (orgMemberPublicIdsForNotifications.length > 0) {
         await realtime.emit({
           orgMemberPublicIds: orgMemberPublicIdsForNotifications,

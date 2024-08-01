@@ -75,11 +75,11 @@ export function Avatar(props: AvatarProps) {
   const avatarUrl =
     props.avatarProfilePublicId === 'no_avatar'
       ? undefined
-      : generateAvatarUrl({
+      : (generateAvatarUrl({
           publicId: props.avatarProfilePublicId,
           avatarTimestamp: props.avatarTimestamp,
           size: props.size ?? 'lg'
-        }) ?? '';
+        }) ?? '');
   const altText = props.name;
   const withoutTooltip = props.hideTooltip ?? false;
 

@@ -2,9 +2,8 @@ import { cookies, headers as nextHeaders } from 'next/headers';
 import 'server-only';
 
 function getPlatformUrl() {
-  if (process.env.NEXT_PUBLIC_PLATFORM_URL)
-    return process.env.NEXT_PUBLIC_PLATFORM_URL;
-  throw new Error('NEXT_PUBLIC_PLATFORM_URL is not set');
+  if (process.env.PLATFORM_URL) return process.env.PLATFORM_URL;
+  throw new Error('PLATFORM_URL is not set');
 }
 
 function clientHeaders() {

@@ -58,7 +58,7 @@ export function EnableOrResetTwoFactorModal({
   });
 
   const totpSecret = twoFactorResetChallenge?.uri
-    ? twoFactorResetChallenge.uri.match(/secret=([^&]+)/)?.[1] ?? null
+    ? (twoFactorResetChallenge.uri.match(/secret=([^&]+)/)?.[1] ?? null)
     : null;
 
   return (
