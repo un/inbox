@@ -94,16 +94,9 @@ export default function Page() {
     }
   }, [currentOrg.shortcode, form, profileData, updateOrg]);
 
-  const { mutateAsync: updateProfile, isPending: updatingProfile } =
+  const { mutate: updateProfile, isPending: updatingProfile } =
     platform.account.profile.updateOrgMemberProfile.useMutation({
-      onError: (error) => {
-        toast.error("Couldn't update profile", {
-          description: error.message
-        });
-      },
-      onSuccess: () => {
-        void revalidateProfile();
-      }
+      onSuccess: () => revalidateProfile()
     });
 
   if (profileLoading)

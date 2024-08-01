@@ -47,7 +47,7 @@ export function JoinOrg({
     }
   );
   const {
-    mutateAsync: joinOrg,
+    mutate: joinOrg,
     error: joinError,
     isPending: isJoining
   } = platform.org.users.invites.redeemInvite.useMutation({
@@ -164,9 +164,9 @@ export function JoinOrg({
               loading={inviteLoading || isJoining}
               disabled={inviteCode.length !== 32}
               className="flex-1"
-              onClick={async () => {
+              onClick={() => {
                 if (!inviteData) return;
-                await joinOrg({ inviteToken: inviteCode });
+                joinOrg({ inviteToken: inviteCode });
               }}>
               Join Organization
             </Button>

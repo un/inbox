@@ -22,10 +22,11 @@ import { Input } from '@/src/components/shadcn-ui/input';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { zodSchemas } from '@u22n/utils/zodSchemas';
 import { Fingerprint } from '@phosphor-icons/react';
+import { useMutation } from '@tanstack/react-query';
 import { At, Lock } from '@phosphor-icons/react';
-import { useCallback, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { platform } from '@/src/lib/trpc';
+import { useState } from 'react';
 import Image from 'next/image';
 import { toast } from 'sonner';
 import Link from 'next/link';
@@ -40,13 +41,17 @@ export default function Page() {
   const router = useRouter();
   const [twoFactorDialogOpen, setTwoFactorDialogOpen] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | undefined>();
-  const { mutateAsync: generatePasskeyChallenge } =
-    platform.auth.passkey.generatePasskeyChallenge.useMutation();
-  const { mutateAsync: loginPasskey } =
-    platform.auth.passkey.verifyPasskey.useMutation();
-  const [loadingPasskey, setLoadingPasskey] = useState(false);
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get('redirect_to');
+
+  const { mutateAsync: generatePasskeyChallenge } =
+    platform.auth.passkey.generatePasskeyChallenge.useMutation({
+      onError: () => void 0
+    });
+  const { mutateAsync: loginPasskey } =
+    platform.auth.passkey.verifyPasskey.useMutation({ onError: () => void 0 });
+  const { mutateAsync: loginPassword, error: passwordError } =
+    platform.auth.password.signIn.useMutation({ onError: () => void 0 });
 
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -56,27 +61,37 @@ export default function Page() {
     }
   });
 
-  const {
-    mutateAsync: loginPassword,
-    error,
-    isPending
-  } = platform.auth.password.signIn.useMutation();
+  const { mutate: loginWithPasskey, isPending: loadingPasskey } = useMutation({
+    mutationFn: async () => {
+      if (turnstileEnabled && !turnstileToken) {
+        toast.error(
+          'Captcha has not been completed yet, if you can see the Captcha, complete it manually'
+        );
+        return;
+      }
 
-  const loginWithPasskey = useCallback(async () => {
-    if (turnstileEnabled && !turnstileToken) {
-      toast.error(
-        'Captcha has not been completed yet, if you can see the Captcha, complete it manually'
-      );
-      return;
-    }
-    try {
-      setLoadingPasskey(true);
-      const data = await generatePasskeyChallenge({
+      const { options } = await generatePasskeyChallenge({
         turnstileToken
       });
-      const response = await startAuthentication(data.options);
+
+      const passkeyResponse = await startAuthentication(options).catch(
+        (error) => {
+          if (error instanceof Error) {
+            if (error.name === 'NotAllowedError') {
+              toast.warning('Passkey login either timed out or was cancelled');
+            } else {
+              toast.error(
+                'Something went wrong while trying to get passkey response'
+              );
+            }
+          }
+        }
+      );
+
+      if (!passkeyResponse) return;
+
       const { defaultOrg } = await loginPasskey({
-        verificationResponseRaw: response
+        verificationResponseRaw: passkeyResponse
       });
 
       if (redirectTo) {
@@ -88,50 +103,34 @@ export default function Page() {
           description: 'Redirecting you to create an organization'
         });
         router.replace('/join/org');
-        return;
-      }
-
-      toast.success('Sign in successful!', {
-        description: 'Redirecting you to your conversations'
-      });
-      router.replace(`/${defaultOrg}/convo`);
-    } catch (error) {
-      if (error instanceof Error) {
-        if (error.name === 'NotAllowedError') {
-          toast.warning('Passkey login either timed out or was cancelled');
-        } else {
-          toast.error(error.name, {
-            description: error.message
-          });
-        }
       } else {
-        toast.error(String(error));
+        toast.success('Sign in successful!', {
+          description: 'Redirecting you to your conversations'
+        });
+        router.replace(`/${defaultOrg}/convo`);
       }
-    } finally {
-      setLoadingPasskey(false);
     }
-  }, [
-    turnstileToken,
-    generatePasskeyChallenge,
-    loginPasskey,
-    redirectTo,
-    router
-  ]);
+  });
 
-  const loginWithPassword = useCallback(
-    async ({ username, password }: z.infer<typeof loginSchema>) => {
-      if (turnstileEnabled && !turnstileToken) {
-        toast.error(
-          'Captcha has not been completed yet, if you can see the Captcha, complete it manually'
-        );
-        return;
-      }
-      try {
+  const { mutate: loginWithPassword, isPending: loadingPassword } = useMutation(
+    {
+      mutationFn: async ({
+        username,
+        password
+      }: z.infer<typeof loginSchema>) => {
+        if (turnstileEnabled && !turnstileToken) {
+          toast.error(
+            'Captcha has not been completed yet, if you can see the Captcha, complete it manually'
+          );
+          return;
+        }
+
         const { status, defaultOrgShortcode } = await loginPassword({
           username,
           password,
           turnstileToken
         });
+
         if (status === 'NO_2FA_SETUP') {
           if (redirectTo) {
             router.replace(decodeURIComponent(redirectTo));
@@ -144,11 +143,8 @@ export default function Page() {
         } else {
           setTwoFactorDialogOpen(true);
         }
-      } catch {
-        /* do nothing */
       }
-    },
-    [loginPassword, redirectTo, router, turnstileToken]
+    }
   );
 
   return (
@@ -186,7 +182,9 @@ export default function Page() {
           <div className="flex flex-col items-center justify-center gap-4 py-2">
             <Form {...form}>
               <form
-                onSubmit={form.handleSubmit(loginWithPassword)}
+                onSubmit={form.handleSubmit((values) =>
+                  loginWithPassword(values)
+                )}
                 className="flex w-full flex-col items-center justify-center gap-3">
                 <FormField
                   control={form.control}
@@ -222,13 +220,16 @@ export default function Page() {
                     </FormItem>
                   )}
                 />
-                {error && (
-                  <div className="text-red-10 text-sm">{error.message}</div>
+
+                {passwordError && (
+                  <div className="text-red-10 text-sm">
+                    {passwordError.message}
+                  </div>
                 )}
 
                 <Button
                   className="w-full"
-                  loading={isPending}
+                  loading={loadingPassword}
                   type="submit">
                   Login
                 </Button>

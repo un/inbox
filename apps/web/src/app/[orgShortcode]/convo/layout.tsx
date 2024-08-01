@@ -62,7 +62,10 @@ export default function Layout({
       orgShortcode
     });
 
-  const { mutateAsync: hideConvo } = platform.convos.hideConvo.useMutation({
+  const { mutate: hideConvo } = platform.convos.hideConvo.useMutation({
+    onSettled: () => {
+      setSelection([]);
+    },
     onError: (error) => {
       toast.error(error.message);
     }
@@ -164,14 +167,13 @@ export default function Layout({
               <Button
                 variant="outline"
                 size="icon-sm"
-                onClick={async () => {
-                  await hideConvo({
+                onClick={() =>
+                  hideConvo({
                     orgShortcode,
                     convoPublicId: selection,
                     unhide: showHidden
-                  });
-                  setSelection([]);
-                }}>
+                  })
+                }>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     {!showHidden ? <EyeSlash /> : <Eye />}

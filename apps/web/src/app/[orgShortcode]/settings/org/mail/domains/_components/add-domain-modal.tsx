@@ -21,7 +21,7 @@ export function AddDomainModal() {
   const invalidateDomains = platform.useUtils().org.mail.domains.getOrgDomains;
 
   const {
-    mutateAsync: createNewDomain,
+    mutate: createNewDomain,
     error: domainError,
     isPending: isAddingDomain
   } = platform.org.mail.domains.createNewDomain.useMutation({
@@ -85,7 +85,7 @@ export function AddDomainModal() {
                 <Button>Cancel</Button>
               </DialogClose>
               <Button
-                onClick={async () => {
+                onClick={() => {
                   if (
                     !z.string().min(3).includes('.').safeParse(domain).success
                   ) {
@@ -93,7 +93,7 @@ export function AddDomainModal() {
                     return;
                   }
                   setInputError(null);
-                  await createNewDomain({
+                  createNewDomain({
                     orgShortcode,
                     domainName: domain
                   });

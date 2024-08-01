@@ -21,8 +21,10 @@ export function EditMemberList({ teamId, existingMembers, complete }: Props) {
     platform.org.users.members.getOrgMembers.useQuery({
       orgShortcode
     });
-  const { mutateAsync: saveList } =
-    platform.org.users.teams.updateTeamMembers.useMutation();
+  const { mutate: saveList } =
+    platform.org.users.teams.updateTeamMembers.useMutation({
+      onSuccess: () => complete()
+    });
 
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
 
@@ -68,14 +70,13 @@ export function EditMemberList({ teamId, existingMembers, complete }: Props) {
       />
       <Button
         className="w-fit"
-        onClick={async () => {
-          await saveList({
+        onClick={async () =>
+          saveList({
             orgShortcode,
             teamPublicId: teamId,
             orgMemberPublicIds: selectedMembers
-          });
-          complete();
-        }}>
+          })
+        }>
         Save
       </Button>
     </div>

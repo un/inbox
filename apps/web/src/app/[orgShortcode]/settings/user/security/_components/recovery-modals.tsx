@@ -29,7 +29,7 @@ export function EnableOrResetRecoveryCodeModal({
   const [downloaded, setDownloaded] = useState(false);
   const [newRecoveryCode, setNewRecoveryCode] = useState<string | null>(null);
 
-  const { mutateAsync: enableRecoveryCode, isPending: enablingRecoveryCode } =
+  const { mutate: enableRecoveryCode, isPending: enablingRecoveryCode } =
     platform.account.security.enableOrResetRecoveryCode.useMutation({
       onError: (err) => {
         toast.error(
@@ -103,7 +103,7 @@ export function EnableOrResetRecoveryCodeModal({
               if (newRecoveryCode) {
                 setOpen(false);
               } else {
-                await enableRecoveryCode();
+                enableRecoveryCode();
               }
             }}>
             {newRecoveryCode
@@ -127,7 +127,7 @@ export function DisableRecoveryCodeModal({
   setOpen,
   onSuccess
 }: DisableRecoveryCodeModalProps) {
-  const { mutateAsync: disableRecoveryCode, isPending: disablingRecoveryCode } =
+  const { mutate: disableRecoveryCode, isPending: disablingRecoveryCode } =
     platform.account.security.disableRecoveryCode.useMutation({
       onError: (err) => {
         toast.error('Something went wrong while disabling recovery code', {

@@ -360,7 +360,7 @@ export default function CreateConvoForm() {
             publicId: firstParticipant.publicId
           };
 
-    return await createConvoFn({
+    return createConvoFn({
       firstMessageType: type,
       topic,
       to: toParticipant,
@@ -376,10 +376,10 @@ export default function CreateConvoForm() {
   }
 
   const addConvo = useAddSingleConvo$Cache();
-  const [, setNewPanelOpen] = useAtom(showNewConvoPanel);
+  const setNewPanelOpen = useSetAtom(showNewConvoPanel);
 
   const {
-    mutateAsync: createConvo,
+    mutate: createConvo,
     isPending: isCreating,
     variables: messageType
   } = useMutation({

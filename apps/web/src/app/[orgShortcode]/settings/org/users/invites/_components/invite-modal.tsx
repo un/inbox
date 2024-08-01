@@ -75,11 +75,12 @@ export function InviteModal() {
   const invalidateInvites = platform.useUtils().org.users.invites.viewInvites;
 
   const {
-    mutateAsync: createInvite,
+    mutate: createInvite,
     error: inviteError,
     isPending: isSubmitting
   } = platform.org.users.invites.createNewInvite.useMutation({
     onSuccess: () => {
+      form.reset();
       void invalidateInvites.invalidate();
       setOpen(false);
     }
@@ -110,7 +111,7 @@ export function InviteModal() {
   });
 
   const handleSubmit = async (values: z.infer<typeof inviteFormSchema>) => {
-    await createInvite({
+    createInvite({
       orgShortcode,
       newOrgMember: {
         firstName: values.firstName,
@@ -132,7 +133,6 @@ export function InviteModal() {
         ? { teamsPublicIds: values.team.teams }
         : undefined
     });
-    form.reset();
   };
 
   const { data: orgDomains, isLoading: orgDomainsLoading } =

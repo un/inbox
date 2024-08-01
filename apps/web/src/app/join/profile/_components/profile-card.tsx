@@ -27,11 +27,9 @@ export function ProfileCard({ orgData, wasInvited }: ProfileCardProps) {
   const { upload, uploadResponse, uploading, error, progress } =
     useAvatarUploader();
 
-  const { mutateAsync: updateProfile, isPending } =
+  const { mutate: updateProfile, isPending } =
     platform.account.profile.updateOrgMemberProfile.useMutation({
-      onError: (error) => {
-        toast.error("Couldn't update profile", { description: error.message });
-      }
+      onSuccess: () => router.push(`/${orgShortCode}`)
     });
 
   const avatarUrl = useMemo(() => {
@@ -134,13 +132,12 @@ export function ProfileCard({ orgData, wasInvited }: ProfileCardProps) {
             className="w-full"
             disabled={!name}
             loading={isPending}
-            onClick={async () => {
-              await updateProfile({
+            onClick={() =>
+              updateProfile({
                 name,
                 profilePublicId: orgData.profile.publicId
-              });
-              router.push(`/${orgShortCode}`);
-            }}>
+              })
+            }>
             Save Profile
           </Button>
           <Button

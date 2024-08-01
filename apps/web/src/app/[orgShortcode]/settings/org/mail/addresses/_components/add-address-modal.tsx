@@ -64,11 +64,12 @@ export function AddEmailModal({
     platform.useUtils().org.mail.emailIdentities.getOrgEmailIdentities;
 
   const {
-    mutateAsync: createEmailIdentity,
+    mutate: createEmailIdentity,
     isPending: isCreatingIdentity,
     error: emailIdentityError
   } = platform.org.mail.emailIdentities.createNewEmailIdentity.useMutation({
     onSuccess: () => {
+      form.reset();
       void invalidateEmails.invalidate();
       setOpen(false);
     }
@@ -113,7 +114,7 @@ export function AddEmailModal({
       });
       return;
     }
-    await createEmailIdentity({
+    createEmailIdentity({
       orgShortcode,
       domainPublicId: values.domain,
       emailUsername: values.address,
@@ -125,8 +126,7 @@ export function AddEmailModal({
           : undefined,
       routeToTeamsPublicIds:
         values.deliversTo.teams.length > 0 ? values.deliversTo.teams : undefined
-    }).catch(() => null);
-    form.reset();
+    });
   };
   return (
     <Dialog

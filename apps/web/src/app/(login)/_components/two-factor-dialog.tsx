@@ -17,17 +17,30 @@ import { useState } from 'react';
 export function TwoFactorDialog({ open }: { open: boolean }) {
   const [code, setCode] = useState('');
   const router = useRouter();
-  const { isSuccess, error, mutateAsync, isPending } =
-    platform.auth.twoFactorAuthentication.verifyTwoFactorChallenge.useMutation({
+  const {
+    mutate: verifyTwoFactor,
+    isSuccess,
+    error,
+    isPending
+  } = platform.auth.twoFactorAuthentication.verifyTwoFactorChallenge.useMutation(
+    {
+      onSuccess: ({ defaultOrgSlug }) => {
+        if (!defaultOrgSlug) {
+          router.push('/join/org');
+        } else {
+          router.push(`/${defaultOrgSlug}`);
+        }
+      },
       onError: () => setCode('')
-    });
+    }
+  );
 
   return (
     <AlertDialog
       open={open}
       // don't close on any interaction
       onOpenChange={() => false}>
-      <AlertDialogContent className="w-min p-8">
+      <AlertDialogContent className="w-fit p-8">
         <AlertDialogTitle>Two Factor Authentication</AlertDialogTitle>
         <AlertDialogDescription>
           Enter the 6-digit code from your authenticator app
@@ -54,20 +67,7 @@ export function TwoFactorDialog({ open }: { open: boolean }) {
           className="mx-auto w-full"
           disabled={code.length !== 6 || isPending || isSuccess}
           loading={isPending || isSuccess}
-          onClick={async () => {
-            try {
-              const { defaultOrgSlug } = await mutateAsync({
-                twoFactorCode: code
-              });
-              if (!defaultOrgSlug) {
-                router.push('/join/org');
-              } else {
-                router.push(`/${defaultOrgSlug}`);
-              }
-            } catch {
-              /* do nothing */
-            }
-          }}>
+          onClick={() => verifyTwoFactor({ twoFactorCode: code })}>
           {isSuccess ? 'Redirecting...' : isPending ? 'Verifying...' : 'Verify'}
         </Button>
       </AlertDialogContent>

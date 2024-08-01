@@ -44,7 +44,7 @@ export function EnableOrResetTwoFactorModal({
     }
   );
   const {
-    mutateAsync: resetOrEnableTwoFactor,
+    mutate: resetOrEnableTwoFactor,
     isPending: enablingTwoFactor,
     error: twoFactorResetError
   } = platform.account.security.enableOrResetTwoFactor.useMutation({
@@ -172,7 +172,7 @@ export function DisableTwoFactorModal({
   setOpen,
   onSuccess
 }: DisableTwoFactorModalProps) {
-  const { mutateAsync: disableTwoFactor, isPending: disablingTwoFactor } =
+  const { mutate: disableTwoFactor, isPending: disablingTwoFactor } =
     platform.account.security.disableTwoFactor.useMutation({
       onError: (error) => {
         toast.error('Something went wrong while disabling 2FA', {

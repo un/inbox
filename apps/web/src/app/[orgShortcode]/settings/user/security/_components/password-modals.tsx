@@ -35,7 +35,7 @@ export function DisablePasswordModal({
   setOpen,
   onSuccess
 }: DisablePasswordModalProps) {
-  const { mutateAsync: disablePassword, isPending: disablingPassword } =
+  const { mutate: disablePassword, isPending: disablingPassword } =
     platform.account.security.disablePassword.useMutation({
       onSuccess: ({ success }) => {
         if (success) {
@@ -107,7 +107,7 @@ export function EnableOrChangePasswordModal({
   setOpen,
   onSuccess
 }: ChangeOrEnablePasswordModalProps) {
-  const { mutateAsync: changeOrEnablePassword, isPending: changingPassword } =
+  const { mutate: changeOrEnablePassword, isPending: changingPassword } =
     platform.account.security.changeOrEnablePassword.useMutation({
       onSuccess: ({ success }) => {
         if (success) {

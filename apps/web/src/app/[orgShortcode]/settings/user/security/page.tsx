@@ -95,19 +95,27 @@ export default function Page() {
   const [removeAllSessionsModalOpen, setRemoveAllSessionsModalOpen] =
     useState(false);
 
-  const { mutateAsync: removeSession } =
+  const { mutate: removeSession } =
     platform.account.security.removeSession.useMutation({
-      onError: (err) => {
-        toast.error('Something went wrong while removing session', {
-          description: err.message
+      onSuccess: (_, { sessionPublicId }) => {
+        platformUtils.account.security.getOverview.setData(void 0, (up) => {
+          if (!up) return;
+          const sessions = up.sessions.filter(
+            (s) => s.publicId !== sessionPublicId
+          );
+          return { ...up, sessions };
         });
       }
     });
 
   const { mutateAsync: generatePasskeyCreationChallenge } =
-    platform.account.security.generatePasskeyCreationChallenge.useMutation();
+    platform.account.security.generatePasskeyCreationChallenge.useMutation({
+      onError: () => void 0
+    });
   const { mutateAsync: createNewPasskey } =
-    platform.account.security.createNewPasskey.useMutation();
+    platform.account.security.createNewPasskey.useMutation({
+      onError: () => void 0
+    });
 
   const { mutateAsync: createPasskey, isPending: creatingPasskey } =
     useMutation({
@@ -347,21 +355,11 @@ export default function Page() {
                           );
                           return;
                         }
-                        ensureElevated(async () => {
-                          await removeSession({
+                        ensureElevated(async () =>
+                          removeSession({
                             sessionPublicId: session.publicId
-                          });
-                          platformUtils.account.security.getOverview.setData(
-                            void 0,
-                            (up) => {
-                              if (!up) return;
-                              const sessions = up.sessions.filter(
-                                (s) => s.publicId !== session.publicId
-                              );
-                              return { ...up, sessions };
-                            }
-                          );
-                        });
+                          })
+                        );
                       }}>
                       <Trash size={16} />
                     </Button>

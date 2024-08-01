@@ -8,8 +8,6 @@ import {
   DialogTitle
 } from '@/src/components/shadcn-ui/dialog';
 import { Button } from '@/src/components/shadcn-ui/button';
-import { useQueryClient } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
 import { platform } from '@/src/lib/trpc';
 import { toast } from 'sonner';
 
@@ -22,8 +20,11 @@ export function RemoveAllSessionsModal({
   open,
   setOpen
 }: DeleteAllSessionsModalProps) {
-  const { mutateAsync: logoutAll, isPending: isLoggingOut } =
+  const { mutate: logoutAll, isPending: isLoggingOut } =
     platform.account.security.removeAllSessions.useMutation({
+      onSuccess: () => {
+        window.location.replace('/');
+      },
       onError: (err) => {
         toast.error('Something went wrong', {
           description: err.message,
@@ -31,9 +32,6 @@ export function RemoveAllSessionsModal({
         });
       }
     });
-
-  const router = useRouter();
-  const queryClient = useQueryClient();
 
   return (
     <Dialog
@@ -62,11 +60,7 @@ export function RemoveAllSessionsModal({
           <Button
             className="flex-1"
             variant="destructive"
-            onClick={async () => {
-              await logoutAll();
-              router.push('/');
-              queryClient.removeQueries();
-            }}
+            onClick={() => logoutAll()}
             loading={isLoggingOut}>
             Logout of all sessions
           </Button>

@@ -72,18 +72,13 @@ export default function TopBar({
   const removeConvoFromList = useDeleteConvo$Cache();
   const shiftKey = useAtomValue(shiftKeyPressed);
 
-  const { mutateAsync: hideConvo, isPending: hidingConvo } =
+  const { mutate: hideConvo, isPending: hidingConvo } =
     platform.convos.hideConvo.useMutation();
-  const { mutateAsync: deleteConvo, isPending: deletingConvo } =
+  const { mutate: deleteConvo, isPending: deletingConvo } =
     platform.convos.deleteConvo.useMutation({
       onSuccess: () => {
         void removeConvoFromList(convoId);
         router.push(`/${orgShortcode}/convo`);
-      },
-      onError: (error) => {
-        toast.error('Something went wrong while deleting the convo', {
-          description: error.message
-        });
       }
     });
 
@@ -125,7 +120,7 @@ export default function TopBar({
                     return deleteConvo({
                       convoPublicId: convoId,
                       orgShortcode
-                    }).catch(() => null);
+                    });
                   } else {
                     setDeleteModalOpen(true);
                   }
@@ -211,7 +206,7 @@ function DeleteModal({
   const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
   const removeConvoFromList = useDeleteConvo$Cache();
 
-  const { mutateAsync: hideConvo, isPending: hidingConvo } =
+  const { mutate: hideConvo, isPending: hidingConvo } =
     platform.convos.hideConvo.useMutation({
       onSuccess: () => {
         void removeConvoFromList(convoId);
@@ -225,7 +220,7 @@ function DeleteModal({
       }
     });
 
-  const { mutateAsync: deleteConvo, isPending: deletingConvo } =
+  const { mutate: deleteConvo, isPending: deletingConvo } =
     platform.convos.deleteConvo.useMutation({
       onSuccess: () => {
         void removeConvoFromList(convoId);

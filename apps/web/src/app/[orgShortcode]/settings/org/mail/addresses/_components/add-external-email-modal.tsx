@@ -63,14 +63,17 @@ export function ExternalEmailModal({
   const invalidateEmails =
     platform.useUtils().org.mail.emailIdentities.getOrgEmailIdentities;
   const { mutateAsync: checkSMTPConnection } =
-    platform.org.mail.emailIdentities.external.validateExternalSmtpCredentials.useMutation();
+    platform.org.mail.emailIdentities.external.validateExternalSmtpCredentials.useMutation(
+      { onError: () => void 0 }
+    );
 
   const router = useRouter();
 
-  const { mutateAsync: createExternalEmailIdentity, isPending: isAdding } =
+  const { mutate: createExternalEmailIdentity, isPending: isAdding } =
     platform.org.mail.emailIdentities.external.createNewExternalIdentity.useMutation(
       {
         onSuccess: () => {
+          form.reset();
           void invalidateEmails.invalidate();
           router.push('./');
         },
@@ -132,7 +135,7 @@ export function ExternalEmailModal({
       return;
     }
 
-    await createExternalEmailIdentity({
+    createExternalEmailIdentity({
       orgShortcode,
       sendName: value.sendName,
       emailAddress: value.fullEmail,
@@ -141,9 +144,7 @@ export function ExternalEmailModal({
         value.deliversTo.users.length > 0 ? value.deliversTo.users : undefined,
       routeToTeamsPublicIds:
         value.deliversTo.teams.length > 0 ? value.deliversTo.teams : undefined
-    }).catch(() => null);
-
-    form.reset();
+    });
   };
 
   return (
