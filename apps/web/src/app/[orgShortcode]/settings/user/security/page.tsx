@@ -5,21 +5,11 @@ import {
   EnableOrResetRecoveryCodeModal
 } from './_components/recovery-modals';
 import {
-  Trash,
-  SpinnerGap,
-  SignOut,
-  CheckCircle,
-  Clock,
-  Pencil
-} from '@phosphor-icons/react';
-import {
   DisableTwoFactorModal,
   EnableOrResetTwoFactorModal
 } from './_components/two-factor-modals';
-import {
-  DisableRecoveryEmailModal,
-  RecoveryEmailModal
-} from './_components/recovery-email-modals';
+import { Trash, SpinnerGap, SignOut, Pencil } from '@phosphor-icons/react';
+
 import {
   EnableOrChangePasswordModal,
   DisablePasswordModal
@@ -39,6 +29,8 @@ import { platform } from '@/src/lib/trpc';
 import { ms } from '@u22n/utils/ms';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+
+import RecoveryEmailSection from './_components/RecoveryEmailSection';
 
 export default function Page() {
   const platformUtils = platform.useUtils();
@@ -83,12 +75,6 @@ export default function Page() {
     'enable' | 'reset' | null
   >(null);
   const [disableTwoFactorModalOpen, setDisableTwoFactorModalOpen] =
-    useState(false);
-
-  const [recoveryEmailModalOpen, setRecoveryEmailModalOpen] = useState<
-    'enable' | 'change' | null
-  >(null);
-  const [disableRecoveryEmailModalOpen, setDisableRecoveryEmailModalOpen] =
     useState(false);
 
   const [recoveryCodeModalOpen, setRecoveryCodeModalOpen] = useState<
@@ -247,69 +233,9 @@ export default function Page() {
               </div>
             </div>
           </div>
-
           <div className="flex flex-col gap-2">
             <span className="text-lg font-bold">Recovery Email</span>
-            {overviewData.recoveryEmailSet &&
-              (overviewData.recoveryEmailVerifiedAt ? (
-                <div className="text-green-9 flex items-center gap-1">
-                  <CheckCircle
-                    size={16}
-                    weight="fill"
-                  />
-                  <span className="text-sm">
-                    Your recovery email is set and verified at{' '}
-                    {format(
-                      overviewData.recoveryEmailVerifiedAt,
-                      'HH:mm, do MMM yyyy'
-                    )}
-                  </span>
-                </div>
-              ) : (
-                <>
-                  <div className="text-yellow-9 flex items-center gap-1">
-                    <Clock
-                      size={16}
-                      weight="fill"
-                    />
-                    <span className="text-sm">
-                      Your recovery email is set but not verified yet
-                    </span>
-                  </div>
-                  <span className="text-base-10 text-sm">
-                    If you think your recovery email is incorrect, you can
-                    change the recovery email by clicking the button below.
-                  </span>
-                </>
-              ))}
-            <div className="flex gap-2">
-              {overviewData.recoveryEmailSet ? (
-                <>
-                  <Button
-                    onClick={() =>
-                      ensureElevated(() => setRecoveryEmailModalOpen('change'))
-                    }>
-                    Change Recovery Email
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    onClick={() =>
-                      ensureElevated(() =>
-                        setDisableRecoveryEmailModalOpen(true)
-                      )
-                    }>
-                    Disable Recovery Email
-                  </Button>
-                </>
-              ) : (
-                <Button
-                  onClick={() =>
-                    ensureElevated(() => setRecoveryEmailModalOpen('enable'))
-                  }>
-                  Setup Recovery Email
-                </Button>
-              )}
-            </div>
+            <RecoveryEmailSection ensureElevated={ensureElevated} />
           </div>
 
           <div className="flex flex-col gap-2">
@@ -550,50 +476,6 @@ export default function Page() {
                     return {
                       ...up,
                       twoFactorEnabled: false
-                    };
-                  }
-                );
-                await refreshElevatedData();
-              }}
-            />
-          )}
-
-          {recoveryEmailModalOpen && (
-            <RecoveryEmailModal
-              open={recoveryEmailModalOpen}
-              setOpen={(open) =>
-                setRecoveryEmailModalOpen(open ? 'change' : null)
-              }
-              onSuccess={async () => {
-                platformUtils.account.security.getOverview.setData(
-                  void 0,
-                  (up) => {
-                    if (!up) return;
-                    return {
-                      ...up,
-                      recoveryEmailSet: true,
-                      recoveryEmailVerifiedAt: null
-                    };
-                  }
-                );
-                await refreshElevatedData();
-              }}
-            />
-          )}
-
-          {disableRecoveryEmailModalOpen && (
-            <DisableRecoveryEmailModal
-              open={disableRecoveryEmailModalOpen}
-              setOpen={setDisableRecoveryEmailModalOpen}
-              onSuccess={async () => {
-                platformUtils.account.security.getOverview.setData(
-                  void 0,
-                  (up) => {
-                    if (!up) return;
-                    return {
-                      ...up,
-                      recoveryEmailSet: false,
-                      recoveryEmailVerifiedAt: null
                     };
                   }
                 );

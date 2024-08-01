@@ -239,7 +239,7 @@ export default function Page() {
         </div>
         <div className="text-base-10 flex flex-col gap-2 text-sm">
           <Link
-            href="/recovery"
+            href="/recovery/reset-password/request"
             className="font-semibold underline underline-offset-4">
             Recover my Account
           </Link>

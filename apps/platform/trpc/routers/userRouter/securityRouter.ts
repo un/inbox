@@ -9,6 +9,10 @@ import {
   COOKIE_ELEVATED_TOKEN,
   COOKIE_TWO_FACTOR_RESET_CHALLENGE
 } from '~platform/utils/cookieNames';
+import {
+  sendPasswordRecoveryEmail,
+  sendRecoveryEmailConfirmation
+} from '~platform/utils/mail/transactional';
 import type {
   AuthenticationResponseJSON,
   RegistrationResponseJSON
@@ -17,17 +21,19 @@ import {
   strongPasswordSchema,
   calculatePasswordStrength
 } from '@u22n/utils/password';
-import { sendRecoveryEmailConfirmation } from '~platform/utils/mail/transactional';
 import { accounts, authenticators, sessions } from '@u22n/database/schema';
 import { accountIdentifier, ratelimiter } from '~platform/trpc/ratelimit';
 import { createAuthenticator } from '~platform/utils/auth/passkeyUtils';
 import { deleteCookie, getCookie, setCookie } from '@u22n/hono/helpers';
 import { router, accountProcedure } from '~platform/trpc/trpc';
 import { TOTPController, createTOTPKeyURI } from 'oslo/otp';
+import { publicProcedure } from '~platform/trpc/trpc';
 import { nanoIdToken } from '@u22n/utils/zodSchemas';
 import { typeIdValidator } from '@u22n/utils/typeid';
 import { decodeHex, encodeHex } from 'oslo/encoding';
+import { zodSchemas } from '@u22n/utils/zodSchemas';
 import type { TrpcContext } from '~platform/ctx';
+import { isNotNull } from '@u22n/database/orm';
 import { lucia } from '~platform/utils/auth';
 import { and, eq } from '@u22n/database/orm';
 import { storage } from '~platform/storage';
@@ -914,7 +920,7 @@ export const securityRouter = router({
         createIdentifier: accountIdentifier
       })
     )
-    .input(z.object({ recoveryEmail: z.string().email() }))
+    .input(z.object({ recoveryEmail: z.string().email().trim() }))
     .mutation(async ({ ctx, input }) => {
       const { db, account } = ctx;
 
@@ -941,7 +947,7 @@ export const securityRouter = router({
         .set({ recoveryEmailHash, recoveryEmailVerifiedAt: null })
         .where(eq(accounts.id, account.id));
 
-      const verificationCode = nanoIdToken();
+      const verificationCode = nanoIdToken(6);
       await storage.recoveryEmailVerificationCodes.setItem(verificationCode, {
         account: {
           id: accountQuery.id,
@@ -950,15 +956,12 @@ export const securityRouter = router({
         recoveryEmail: input.recoveryEmail
       });
 
-      const confirmationUrl = `${env.WEBAPP_URL}/recovery/verify-email/?code=${verificationCode}`;
-
       await sendRecoveryEmailConfirmation({
         to: input.recoveryEmail,
         username: accountQuery.username,
         recoveryEmail: input.recoveryEmail,
-        confirmationUrl: confirmationUrl,
-        expiryDate: datePlus('15 minutes').toDateString(),
-        verificationCode
+        verificationCode: verificationCode,
+        expiryDate: datePlus('15 minutes').toDateString()
       });
 
       return { success: true };
@@ -1015,5 +1018,67 @@ export const securityRouter = router({
       .where(eq(accounts.id, accountQuery.id));
 
     return { success: true };
-  })
+  }),
+
+  sendRecoveryEmail: publicProcedure
+    .use(
+      ratelimiter({
+        limit: 10,
+        namespace: 'account.security.sendRecoveryEmail'
+      })
+    )
+    .input(
+      z.object({
+        username: zodSchemas.usernameLogin().trim(),
+        email: z.string().email().trim()
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { db } = ctx;
+
+      const accountQuery = await db.query.accounts.findFirst({
+        where: and(
+          eq(accounts.username, input.username),
+          isNotNull(accounts.recoveryEmailHash)
+        ),
+        columns: {
+          id: true,
+          publicId: true,
+          username: true,
+          recoveryEmailHash: true
+        }
+      });
+
+      if (!accountQuery?.recoveryEmailHash) {
+        // To prevent username/email enumeration, we'll return success even if the account doesn't exist
+        return { success: true };
+      }
+
+      const isValidEmail = await new Argon2id().verify(
+        accountQuery.recoveryEmailHash,
+        input.email
+      );
+
+      if (!isValidEmail) {
+        // To prevent username/email enumeration, we'll return success even if the email doesn't match
+        return { success: true };
+      }
+
+      const recoveryToken = nanoIdToken(6);
+      await storage.accountRecoveryVerificationCodes.setItem(recoveryToken, {
+        account: {
+          id: accountQuery.id,
+          publicId: accountQuery.publicId
+        }
+      });
+
+      await sendPasswordRecoveryEmail({
+        to: input.email,
+        username: accountQuery.username,
+        recoveryCode: recoveryToken,
+        expiryDate: datePlus('15 minutes').toLocaleString()
+      });
+
+      return { success: true };
+    })
 });

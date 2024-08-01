@@ -2,7 +2,6 @@ export interface RecoveryEmailProps {
   to: string;
   username: string;
   recoveryEmail: string;
-  confirmationUrl: string;
   expiryDate: string;
   verificationCode: string;
 }
@@ -11,7 +10,6 @@ export const recoveryEmailTemplatePlainText = ({
   to,
   username,
   recoveryEmail,
-  confirmationUrl,
   expiryDate,
   verificationCode
 }: RecoveryEmailProps) =>
@@ -19,10 +17,9 @@ export const recoveryEmailTemplatePlainText = ({
   
   You have requested to link ${recoveryEmail} as your recovery email for your Uninbox account.
   
-  Confirm your recovery email at ${confirmationUrl} 
   
   If the button is not working, copy paste this code in your browser:
-  ${verificationCode} 
+ \`${verificationCode}\`
   
   This confirmation link will expire on ${expiryDate}. Make sure to confirm before the expiry date.
   
@@ -36,7 +33,6 @@ export const recoveryEmailTemplate = ({
   to,
   username,
   recoveryEmail,
-  confirmationUrl,
   expiryDate,
   verificationCode
 }: RecoveryEmailProps) =>
@@ -61,22 +57,15 @@ export const recoveryEmailTemplate = ({
               </table>
               <p style="font-size:14px;line-height:12px;margin:16px 0;margin-top:2.5rem;color:rgb(0,0,0)">Hello <strong>${username}</strong>,</p>
               <p style="font-size:14px;line-height:12px;margin:16px 0;color:rgb(0,0,0)">You have requested to link <strong>${recoveryEmail}</strong> as your recovery email for your Uninbox account.</p>
-              <table align="center" width="100%" border="0" cellPadding="0" cellSpacing="0" role="presentation" style="margin-bottom:32px;margin-top:32px;text-align:center">
-                <tbody>
-                  <tr>
-                    <td><a href="${confirmationUrl}" style="line-height:100%;text-decoration:none;display:inline-block;max-width:100%;border-radius:0.25rem;background-color:rgb(0,0,0);padding-left:1.25rem;padding-right:1.25rem;padding-top:0.75rem;padding-bottom:0.75rem;text-align:center;font-size:12px;font-weight:600;color:rgb(255,255,255);text-decoration-line:none;padding:12px 20px 12px 20px" target="_blank"><span><!--[if mso]><i style="letter-spacing: 20px;mso-font-width:-100%;mso-text-raise:18" hidden>&nbsp;</i><![endif]--></span><span style="max-width:100%;display:inline-block;line-height:120%;mso-padding-alt:0px;mso-text-raise:9px">Confirm Recovery Email</span><span><!--[if mso]><i style="letter-spacing: 20px;mso-font-width:-100%" hidden>&nbsp;</i><![endif]--></span></a></td>
-                  </tr>
-                </tbody>
-              </table>
-              <p style="font-size:14px;line-height:24px;margin:16px 0;color:rgb(0,0,0)">If the button is not working, copy paste this code in your browser:</p>
+              <p style="font-size:14px;line-height:24px;margin:16px 0;color:rgb(0,0,0)">Your verification code is:</p>
               <div style="background-color:#f0f0f0;border-radius:4px;padding:10px;margin-bottom:20px;">
-                <code style="word-break:break-all;display:block;font-family:monospace;font-size:12px;color:#333;">${verificationCode}</code>
+                <code style="word-break:break-all;display:block;font-family:monospace;font-size:24px;color:#333;text-align:center;">${verificationCode}</code>
               </div>
               <table align="center" width="100%" border="0" cellPadding="0" cellSpacing="0" role="presentation">
                 <tbody>
                   <tr>
                     <td>
-                      <p style="font-size:14px;line-height:20px;margin:16px 0;color:rgb(0,0,0)">This confirmation link will expire on <strong>${expiryDate}</strong>. Make sure to confirm before the expiry date.</p>
+                      <p style="font-size:14px;line-height:20px;margin:16px 0;color:rgb(0,0,0)">This verification code will expire on <strong>${expiryDate}</strong>. Make sure to confirm before the expiry date.</p>
                     </td>
                   </tr>
                 </tbody>

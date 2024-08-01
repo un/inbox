@@ -9,8 +9,9 @@ const publicRoutes = [
   '/',
   '/join',
   '/join/secure',
-  '/recovery',
-  '/recovery/verify-email'
+  '/recovery/reset-password/request',
+  '/recovery/reset-password/reset',
+  '/recovery/reset-password/verify'
 ];
 const publicDynamicRoutes = ['/join/invite'];
 

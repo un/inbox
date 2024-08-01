@@ -31,6 +31,13 @@ export const storage = {
     'two-factor-reset-challenges',
     ms('5 minutes')
   ),
+  // used when a user wants to recover a password
+  accountRecoveryVerificationCodes:
+    createCachedStorage<AccountRecoveryVerificationCodes>(
+      'account-recovery-verification-codes',
+      ms('15 minutes')
+    ),
+  // used when user adds a recovery email
   recoveryEmailVerificationCodes:
     createCachedStorage<RecoveryEmailVerificationCodes>(
       'recovery-email-verification-codes',
@@ -44,7 +51,18 @@ export const storage = {
   session: createCachedStorage<DatabaseSession>(
     'sessions',
     env.NODE_ENV === 'development' ? ms('12 hours') : ms('30 days')
+  ),
+  resetTokens: createCachedStorage<ResetTokens>(
+    'reset-tokens',
+    ms('15 minutes')
   )
+};
+
+type AccountRecoveryVerificationCodes = {
+  account: {
+    id: number;
+    publicId: TypeId<'account'>;
+  };
 };
 
 type PasskeyChallenges = {
@@ -83,5 +101,12 @@ type ElevatedTokens = {
     accountId: number;
     sessionId: string;
     deviceIp: string;
+  };
+};
+
+type ResetTokens = {
+  account: {
+    id: number;
+    publicId: TypeId<'account'>;
   };
 };
