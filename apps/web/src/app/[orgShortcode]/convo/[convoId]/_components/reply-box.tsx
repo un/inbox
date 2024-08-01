@@ -31,6 +31,7 @@ import { replyToMessageAtom } from '../atoms';
 import { platform } from '@/src/lib/trpc';
 import { stringify } from 'superjson';
 import { cn } from '@/src/lib/utils';
+import { ms } from '@u22n/utils/ms';
 import { toast } from 'sonner';
 
 const selectedEmailIdentityAtom = atom<null | TypeId<'emailIdentities'>>(null);
@@ -81,13 +82,23 @@ export function ReplyBox({ convoId, onReply }: ReplyBoxProps) {
   const [emailIdentity, setEmailIdentity] = useAtom(selectedEmailIdentityAtom);
 
   const { data: emailIdentities, isLoading: emailIdentitiesLoading } =
-    platform.org.mail.emailIdentities.getUserEmailIdentities.useQuery({
-      orgShortcode
-    });
+    platform.org.mail.emailIdentities.getUserEmailIdentities.useQuery(
+      {
+        orgShortcode
+      },
+      {
+        staleTime: ms('1 hour')
+      }
+    );
   const { data: isAdmin } =
-    platform.org.users.members.isOrgMemberAdmin.useQuery({
-      orgShortcode
-    });
+    platform.org.users.members.isOrgMemberAdmin.useQuery(
+      {
+        orgShortcode
+      },
+      {
+        staleTime: ms('1 hour')
+      }
+    );
 
   useEffect(() => {
     setEmailIdentity((prev) => {
@@ -135,6 +146,7 @@ export function ReplyBox({ convoId, onReply }: ReplyBoxProps) {
         oldData.entries.unshift(newEntry);
         return oldData;
       });
+
       onReply();
     },
     [

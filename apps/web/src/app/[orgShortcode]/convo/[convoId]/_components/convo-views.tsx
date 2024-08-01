@@ -8,6 +8,7 @@ import { MessagesPanel } from './messages-panel';
 import { platform } from '@/src/lib/trpc';
 import { useMemo, useRef } from 'react';
 import { ReplyBox } from './reply-box';
+import { ms } from '@u22n/utils/ms';
 import { env } from '@/src/env';
 import TopBar from './top-bar';
 import Link from 'next/link';
@@ -18,10 +19,15 @@ export function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
     data: convoData,
     isLoading: convoDataLoading,
     error: convoError
-  } = platform.convos.getConvo.useQuery({
-    orgShortcode,
-    convoPublicId: convoId
-  });
+  } = platform.convos.getConvo.useQuery(
+    {
+      orgShortcode,
+      convoPublicId: convoId
+    },
+    {
+      staleTime: ms('1 minute')
+    }
+  );
 
   usePageTitle(convoData?.data.subjects[0]?.subject ?? 'UnInbox');
 

@@ -62,6 +62,7 @@ import { useRouter } from 'next/navigation';
 import { platform } from '@/src/lib/trpc';
 import { stringify } from 'superjson';
 import { cn } from '@/src/lib/utils';
+import { ms } from '@u22n/utils/ms';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
@@ -113,9 +114,14 @@ export default function CreateConvoForm() {
   const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
 
   const { data: userEmailIdentities, isLoading: emailIdentitiesLoading } =
-    platform.org.mail.emailIdentities.getUserEmailIdentities.useQuery({
-      orgShortcode
-    });
+    platform.org.mail.emailIdentities.getUserEmailIdentities.useQuery(
+      {
+        orgShortcode
+      },
+      {
+        staleTime: ms('1 hour')
+      }
+    );
   const { data: orgMemberList, isLoading: orgMemberListLoading } =
     platform.org.users.members.getOrgMembersList.useQuery({ orgShortcode });
   const { data: orgTeamsData, isLoading: orgTeamsLoading } =
@@ -123,9 +129,14 @@ export default function CreateConvoForm() {
   const { data: orgContacts, isLoading: orgContactsLoading } =
     platform.org.contacts.getOrgContacts.useQuery({ orgShortcode });
   const { data: isAdmin } =
-    platform.org.users.members.isOrgMemberAdmin.useQuery({
-      orgShortcode
-    });
+    platform.org.users.members.isOrgMemberAdmin.useQuery(
+      {
+        orgShortcode
+      },
+      {
+        staleTime: ms('1 hour')
+      }
+    );
 
   const { mutateAsync: createConvoFn } =
     platform.convos.createNewConvo.useMutation();
