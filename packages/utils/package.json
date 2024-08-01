@@ -27,7 +27,7 @@
     "@zxcvbn-ts/core": "^3.0.4",
     "@zxcvbn-ts/language-common": "^3.0.4",
     "@zxcvbn-ts/matcher-pwned": "^3.0.4",
-    "drizzle-orm": "^0.32.0",
+    "drizzle-orm": "^0.32.1",
     "human-format": "^1.2.0",
     "itty-time": "^1.0.6",
     "nanoid": "^5.0.7",

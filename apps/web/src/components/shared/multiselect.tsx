@@ -68,7 +68,7 @@ export function MultiSelect<T extends Record<string, unknown>>({
               items={items.filter((item) => values.includes(item.value))}
             />
           ) : (
-            emptyPlaceholder ?? 'Select an Item'
+            (emptyPlaceholder ?? 'Select an Item')
           )}
           <CaretUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>

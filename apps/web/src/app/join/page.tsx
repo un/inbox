@@ -89,7 +89,7 @@ export default function Page() {
                   className="h-4 w-4 animate-spin"
                   size={12}
                 />
-              ) : usernameError ?? error ? (
+              ) : (usernameError ?? error) ? (
                 <Plus
                   size={16}
                   className="text-red-10 rotate-45"
@@ -125,7 +125,7 @@ export default function Page() {
                           type: data.available ? 'success' : 'error',
                           message: data.available
                             ? 'Looks good!'
-                            : data.error ?? 'Username is not available'
+                            : (data.error ?? 'Username is not available')
                         }
                       : error
                         ? {

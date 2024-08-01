@@ -3,10 +3,9 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Suspense, useState } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
 import { serialize } from 'superjson';
-import { toDataURL } from 'qrcode';
 import { api } from '@/lib/trpc';
-import Image from 'next/image';
 import { toast } from 'sonner';
 
 export default function Page() {
@@ -110,23 +109,10 @@ export default function Page() {
             {twoFaData.uri}
           </span>
           <Suspense fallback={<div>Loading QR code...</div>}>
-            <QRCode text={twoFaData.uri} />
+            <QRCodeSVG value={twoFaData.uri} />
           </Suspense>
         </div>
       )}
     </div>
-  );
-}
-
-async function QRCode({ text }: { text: string }) {
-  const src = await toDataURL(text);
-  return (
-    <Image
-      src={src}
-      className="rounded py-4"
-      alt="URI QR Code"
-      width={200}
-      height={200}
-    />
   );
 }

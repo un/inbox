@@ -49,9 +49,9 @@ export function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
   const convoHidden = useMemo(
     () =>
       convoData
-        ? convoData?.data.participants.find(
+        ? (convoData?.data.participants.find(
             (p) => p.publicId === participantOwnPublicId
-          )?.hidden ?? false
+          )?.hidden ?? false)
         : null,
     [convoData, participantOwnPublicId]
   );

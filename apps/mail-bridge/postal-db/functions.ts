@@ -218,7 +218,7 @@ export async function getDomainDNSRecords(
   const allSenders = Array.from(
     new Set([
       `_spf.${dnsRootUrl}`,
-      ...(records.spf.extraSenders ? spfDomains?.includes ?? [] : [])
+      ...(records.spf.extraSenders ? (spfDomains?.includes ?? []) : [])
     ]).values()
   );
 

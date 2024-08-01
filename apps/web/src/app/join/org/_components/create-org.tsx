@@ -141,7 +141,7 @@ export function CreateOrg() {
               : data
                 ? data.available
                   ? 'Looks good!'
-                  : data?.error ?? 'Shortcode is not available'
+                  : (data?.error ?? 'Shortcode is not available')
                 : ''}
       </div>
       <Button

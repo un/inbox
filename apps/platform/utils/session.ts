@@ -23,7 +23,7 @@ export async function createLuciaSessionCookie(
   const userDevice =
     device.type === 'mobile'
       ? device.toString()
-      : device.vendor ?? device.model ?? device.type ?? 'Unknown';
+      : (device.vendor ?? device.model ?? device.type ?? 'Unknown');
   const { accountId, username, publicId } = info;
   const accountSession = await lucia.createSession(accountId, {
     account: {

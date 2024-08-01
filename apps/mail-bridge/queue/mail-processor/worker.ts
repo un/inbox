@@ -105,10 +105,10 @@ export const worker = new Worker<
           : [];
 
         const inReplyToEmailId = parsedEmail.inReplyTo
-          ? parsedEmail.inReplyTo
+          ? (parsedEmail.inReplyTo
               .split(/\s+/g) // split by whitespace
               .map((part) => part.replace(/^<|>$/g, '')) // remove < and > from the start and end of the string
-              .filter((part) => !!part)[0] ?? null // remove empty strings and get the first element or null
+              .filter((part) => !!part)[0] ?? null) // remove empty strings and get the first element or null
           : null;
 
         const subject =
