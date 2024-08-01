@@ -4,40 +4,39 @@ import {
   createTRPCReact,
   type inferReactQueryProcedureOptions
 } from '@trpc/react-query';
+import {
+  QueryCache,
+  QueryClient,
+  QueryClientProvider
+} from '@tanstack/react-query';
 import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { TrpcPlatformRouter } from '@u22n/platform/trpc';
 import { loggerLink, httpBatchLink } from '@trpc/client';
 import { type PropsWithChildren, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import SuperJSON from 'superjson';
+import { toast } from 'sonner';
 import { env } from '../env';
 
-const createQueryClient = () =>
-  new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-        refetchOnWindowFocus: false
-      }
+const queryClient = new QueryClient({
+  queryCache: new QueryCache({
+    onError: (err) => toast.error(err.message)
+  }),
+  defaultOptions: {
+    queries: {
+      retry: false,
+      refetchOnWindowFocus: false
+    },
+    mutations: {
+      onError: (err) => toast.error(err.message)
     }
-  });
-
-let clientQueryClientSingleton: QueryClient | undefined = undefined;
-const getQueryClient = () => {
-  if (typeof window === 'undefined') {
-    // Server: always make a new query client
-    return createQueryClient();
   }
-  // Browser: use singleton pattern to keep the same query client
-  return (clientQueryClientSingleton ??= createQueryClient());
-};
+});
 
 export const platform = createTRPCReact<TrpcPlatformRouter>();
 
 export function TRPCReactProvider({ children }: PropsWithChildren) {
   const router = useRouter();
-  const queryClient = getQueryClient();
 
   const [trpcClient] = useState(() =>
     platform.createClient({

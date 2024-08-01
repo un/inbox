@@ -28,7 +28,7 @@ export function PasskeyDeleteModal({
   onSuccess,
   passkey
 }: PasskeyDeleteModalProps) {
-  const { mutateAsync: deletePasskey, isPending: deletingPasskey } =
+  const { mutate: deletePasskey, isPending: deletingPasskey } =
     platform.account.security.deletePasskey.useMutation({
       onSuccess: ({ success }) => {
         if (success) {
@@ -77,9 +77,9 @@ export function PasskeyDeleteModal({
             variant="destructive"
             className="flex-1"
             loading={deletingPasskey}
-            onClick={async () => {
+            onClick={() => {
               if (!passkey) return;
-              await deletePasskey({
+              deletePasskey({
                 passkeyPublicId: passkey.publicId
               });
             }}>
@@ -107,7 +107,7 @@ export function PasskeyRenameModal({
 }: PasskeyRenameModalProps) {
   const [nickname, setNickname] = useState(passkey?.nickname ?? '');
 
-  const { mutateAsync: renamePasskey, isPending: renamingPasskey } =
+  const { mutate: renamePasskey, isPending: renamingPasskey } =
     platform.account.security.renamePasskey.useMutation({
       onSuccess: ({ success }, { newNickname }) => {
         if (success) {
@@ -168,12 +168,12 @@ export function PasskeyRenameModal({
               nickname.length > 64
             }
             loading={renamingPasskey}
-            onClick={async () => {
+            onClick={() => {
               if (!passkey) return;
-              await renamePasskey({
+              renamePasskey({
                 passkeyPublicId: passkey.publicId,
                 newNickname: nickname
-              }).catch(() => null);
+              });
             }}>
             Rename Passkey
           </Button>

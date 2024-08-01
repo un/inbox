@@ -27,7 +27,7 @@ export function DeleteMultipleConvosModal({
   const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
   const [selections, setSelections] = useAtom(convoListSelection);
 
-  const { mutateAsync: deleteConvo, isPending: deletingConvos } =
+  const { mutate: deleteConvo, isPending: deletingConvos } =
     platform.convos.deleteConvo.useMutation({
       onSuccess: async () => {
         setOpen(false);
@@ -76,7 +76,7 @@ export function DeleteMultipleConvosModal({
               deleteConvo({
                 orgShortcode,
                 convoPublicId: selections
-              }).catch(() => null)
+              })
             }>
             Delete
           </Button>

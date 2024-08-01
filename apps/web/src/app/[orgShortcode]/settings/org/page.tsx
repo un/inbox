@@ -56,13 +56,8 @@ export default function ProfileComponent() {
     }
   });
 
-  const { mutateAsync: updateOrgProfile, isPending: updatingOrgProfile } =
+  const { mutate: updateOrgProfile, isPending: updatingOrgProfile } =
     platform.org.setup.profile.setOrgProfile.useMutation({
-      onError: (error) => {
-        toast.error("Couldn't update org profile", {
-          description: error.message
-        });
-      },
       onSuccess: () => {
         updateOrg(orgShortcode, { name: orgNameValue });
       }

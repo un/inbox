@@ -52,9 +52,13 @@ export function ElevatedModal({
   onSuccess
 }: ElevatedModalProps) {
   const { mutateAsync: generatePasskeyChallenge } =
-    platform.account.security.generatePasskeyVerificationChallenge.useMutation();
+    platform.account.security.generatePasskeyVerificationChallenge.useMutation({
+      onError: () => void 0
+    });
   const { mutateAsync: grantElevation, isPending: grantElevationPending } =
-    platform.account.security.grantElevation.useMutation();
+    platform.account.security.grantElevation.useMutation({
+      onError: () => void 0
+    });
 
   const {
     mutateAsync: passkeyVerification,

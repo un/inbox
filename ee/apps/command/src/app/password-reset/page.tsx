@@ -15,7 +15,7 @@ export default function Page() {
 
   const {
     data: passwordData,
-    mutateAsync: resetPassword,
+    mutate: resetPassword,
     isPending: isPendingPassword
   } = api.accounts.resetPassword.useMutation({
     onSuccess: () => {
@@ -30,7 +30,7 @@ export default function Page() {
   const {
     data: twoFaData,
     isPending: isPending2Fa,
-    mutateAsync: reset2Fa
+    mutate: reset2Fa
   } = api.accounts.reset2fa.useMutation({
     onSuccess: () => {
       toast.success('2FA reset successful');
@@ -64,7 +64,7 @@ export default function Page() {
           </div>
           <div className="flex gap-2">
             <Button
-              onClick={async () => {
+              onClick={() => {
                 if (!data.account) {
                   toast.error('Account not found');
                   return;
@@ -73,19 +73,19 @@ export default function Page() {
                   `You are about to reset the password for ${username}. Are you sure?`
                 );
                 if (!sure) return;
-                await resetPassword({ username });
+                resetPassword({ username });
               }}
               disabled={isPendingPassword}
               className="w-fit">
               {isPendingPassword ? 'Resetting Password...' : 'Reset Password'}
             </Button>
             <Button
-              onClick={async () => {
+              onClick={() => {
                 const sure = confirm(
                   `You are about to reset the 2FA for ${username}. Are you sure?`
                 );
                 if (!sure) return;
-                await reset2Fa({ username });
+                reset2Fa({ username });
               }}
               disabled={isPending2Fa}
               className="w-fit">

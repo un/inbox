@@ -17,11 +17,11 @@ import AvatarPlus from '@/src/components/avatar-plus';
 import { useTimeAgo } from '@/src/hooks/use-time-ago';
 import { useLongPress } from '@uidotdev/usehooks';
 import { Avatar } from '@/src/components/avatar';
+import { type TypeId } from '@u22n/utils/typeid';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/src/lib/utils';
 import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
-import { toast } from 'sonner';
 import Link from 'next/link';
 
 export function ConvoItem({
@@ -39,22 +39,12 @@ export function ConvoItem({
   const selecting = useAtomValue(convoListSelecting);
   const shiftKey = useAtomValue(shiftKeyPressed);
 
-  const deleteConvo$ = useDeleteConvo$Cache();
-  const { mutateAsync: deleteConvo } = platform.convos.deleteConvo.useMutation({
-    onError: (error) => {
-      toast.error('Failed to delete convo', {
-        description: error.message
-      });
-    }
+  const deleteConvoFromCache = useDeleteConvo$Cache();
+  const { mutate: deleteConvo } = platform.convos.deleteConvo.useMutation({
+    onSuccess: (_, { convoPublicId }) =>
+      deleteConvoFromCache(convoPublicId as TypeId<'convos'>)
   });
-
-  const { mutateAsync: hideConvo } = platform.convos.hideConvo.useMutation({
-    onError: (error) => {
-      toast.error('Failed to hide convo', {
-        description: error.message
-      });
-    }
-  });
+  const { mutate: hideConvo } = platform.convos.hideConvo.useMutation();
 
   const timeAgo = useTimeAgo(convo.lastUpdatedAt);
 
@@ -192,8 +182,8 @@ export function ConvoItem({
         <ContextMenuGroup>
           <ContextMenuItem
             className="gap-2"
-            onClick={async () =>
-              await hideConvo({
+            onClick={() =>
+              hideConvo({
                 orgShortcode,
                 convoPublicId: convo.publicId,
                 unhide: hidden
@@ -211,13 +201,12 @@ export function ConvoItem({
           </ContextMenuItem>
           <ContextMenuItem
             className="gap-2"
-            onClick={async () => {
-              await deleteConvo({
+            onClick={async () =>
+              deleteConvo({
                 orgShortcode,
                 convoPublicId: convo.publicId
-              });
-              await deleteConvo$(convo.publicId);
-            }}>
+              })
+            }>
             <Trash /> Delete
           </ContextMenuItem>
         </ContextMenuGroup>

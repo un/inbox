@@ -10,7 +10,6 @@ import { Button } from '@/src/components/shadcn-ui/button';
 import { type TypeId } from '@u22n/utils/typeid';
 import { platform } from '@/src/lib/trpc';
 import { useState } from 'react';
-import { toast } from 'sonner';
 
 type Props = {
   teamId: TypeId<'teams'>;
@@ -24,11 +23,9 @@ export function AddNewMember({ teamId, existingMembers, complete }: Props) {
     platform.org.users.members.getOrgMembers.useQuery({
       orgShortcode
     });
-  const { mutateAsync: addNewMember, isPending: isAdding } =
+  const { mutate: addNewMember, isPending: isAdding } =
     platform.org.users.teams.addOrgMemberToTeam.useMutation({
-      onError: (error) => {
-        toast.error(error.message);
-      }
+      onSuccess: () => complete()
     });
   const [selectedMember, setSelectedMember] = useState('');
 
@@ -58,15 +55,14 @@ export function AddNewMember({ teamId, existingMembers, complete }: Props) {
       <Button
         className="w-fit"
         disabled={!selectedMember || isAdding}
-        // loading={isAdding}
-        onClick={async () => {
-          await addNewMember({
+        loading={isAdding}
+        onClick={() =>
+          addNewMember({
             orgShortcode,
             teamPublicId: teamId,
             orgMemberPublicId: selectedMember
-          });
-          await complete();
-        }}>
+          })
+        }>
         {isAdding ? 'Adding...' : 'Add Member'}
       </Button>
     </div>

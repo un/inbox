@@ -92,13 +92,9 @@ export function CreateOrg() {
     }
   }, [debouncedOrgName, generateShortcodeError]);
 
-  const { mutateAsync: createOrg, isPending } =
+  const { mutate: createOrg, isPending } =
     platform.org.crud.createNewOrg.useMutation({
-      onError: (e) => {
-        toast.error('An Error Occurred while creating the Org', {
-          description: e.message
-        });
-      }
+      onSuccess: () => router.push(`/join/profile?org=${orgShortcode}`)
     });
 
   return (
@@ -152,7 +148,7 @@ export function CreateOrg() {
           isLoading
         }
         loading={isPending}
-        onClick={async () => {
+        onClick={() => {
           if (
             !orgName ||
             !shortcodeValid ||
@@ -160,8 +156,7 @@ export function CreateOrg() {
             isLoading
           )
             return;
-          await createOrg({ orgName, orgShortcode });
-          router.push(`/join/profile?org=${orgShortcode}`);
+          createOrg({ orgName, orgShortcode });
         }}>
         Create Organization
       </Button>

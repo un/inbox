@@ -41,7 +41,7 @@ import {
   ToggleGroupItem
 } from '@/src/components/shadcn-ui/toggle-group';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { Avatar } from '@/src/components/avatar';
 import { sidebarSubmenuOpenAtom } from './atoms';
 import { useRouter } from 'next/navigation';
@@ -49,7 +49,6 @@ import { useTheme } from 'next-themes';
 import { cn } from '@/src/lib/utils';
 import { useSetAtom } from 'jotai';
 import { env } from '@/src/env';
-import { toast } from 'sonner';
 import Link from 'next/link';
 
 export default function SidebarContent() {
@@ -96,24 +95,17 @@ function OrgMenu() {
   const currentOrg = useGlobalStore((state) => state.currentOrg);
   const username = useGlobalStore((state) => state.user.username);
   const orgs = useGlobalStore((state) => state.orgs);
-  const queryClient = useQueryClient();
   const setSidebarSubmenuOpen = useSetAtom(sidebarSubmenuOpenAtom);
   const { theme, setTheme } = useTheme();
   const router = useRouter();
 
-  const { mutateAsync: logOut, isPending: loggingOut } = useMutation({
+  const { mutate: logOut, isPending: loggingOut } = useMutation({
     mutationFn: async () => {
       await fetch(`${env.NEXT_PUBLIC_PLATFORM_URL}/auth/logout`, {
         method: 'POST',
         credentials: 'include'
       });
-      queryClient.removeQueries();
-      router.replace('/');
-    },
-    onError: (error) => {
-      toast.error('Something went wrong while logging out', {
-        description: error.message
-      });
+      window.location.replace('/');
     }
   });
 
@@ -376,9 +368,9 @@ function OrgMenu() {
           </DropdownMenuGroup>
           <DropdownMenuSeparator className="" />
           <DropdownMenuItem
-            onMouseDown={async () => {
+            onMouseDown={() => {
               setSidebarSubmenuOpen(false);
-              await logOut();
+              logOut();
             }}
             disabled={loggingOut}
             className="focus:bg-red-9 focus:text-base-1 text-base-11">

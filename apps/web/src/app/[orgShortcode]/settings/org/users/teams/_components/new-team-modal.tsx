@@ -91,7 +91,9 @@ export function NewTeamModal() {
     mutateAsync: createEmailIdentity,
     error: emailError,
     isPending: isCreatingEmailIdentity
-  } = platform.org.mail.emailIdentities.createNewEmailIdentity.useMutation();
+  } = platform.org.mail.emailIdentities.createNewEmailIdentity.useMutation({
+    onError: () => void 0
+  });
 
   const form = useForm<z.infer<typeof teamFormSchema>>({
     resolver: zodResolver(teamFormSchema),

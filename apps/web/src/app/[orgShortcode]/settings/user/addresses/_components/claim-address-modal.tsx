@@ -7,8 +7,6 @@ import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { type ModalComponent } from '@/src/hooks/use-awaitable-modal';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { platform } from '@/src/lib/trpc';
-import { useState } from 'react';
-import { toast } from 'sonner';
 import Link from 'next/link';
 
 export function ClaimAddressModal({
@@ -17,15 +15,13 @@ export function ClaimAddressModal({
   onClose,
   onResolve
 }: ModalComponent<{ address: string }>) {
-  const [isClaiming, setIsClaiming] = useState(false);
   const currentOrgName = useGlobalStore((state) => state.currentOrg.name);
   const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
 
-  const { mutateAsync: claimAddressConfirm } =
+  const { mutate: claimAddressConfirm, isPending: isClaiming } =
     platform.account.addresses.claimPersonalAddress.useMutation({
-      onSuccess: async () => {
-        setIsClaiming(false);
-      }
+      onError: () => onClose(),
+      onSuccess: () => onResolve(null)
     });
 
   return (
@@ -79,18 +75,10 @@ export function ClaimAddressModal({
             variant="default"
             onClick={() => {
               if (address === '') return;
-              setIsClaiming(true);
               claimAddressConfirm({
                 emailIdentity: address,
                 orgShortcode
-              })
-                .then(() => {
-                  onResolve(null);
-                })
-                .catch((e: Error) => {
-                  toast.error(e.message);
-                  onClose();
-                });
+              });
             }}
             loading={isClaiming}>
             I Understand, Claim Address

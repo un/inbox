@@ -46,7 +46,7 @@ export function RecoveryEmailModal({
   });
 
   const {
-    mutateAsync: setupOrUpdateRecoveryEmail,
+    mutate: setupOrUpdateRecoveryEmail,
     isPending: recoveryEmailPending
   } = platform.account.security.setupOrUpdateRecoveryEmail.useMutation({
     onError: (err) => {
@@ -142,7 +142,7 @@ export function DisableRecoveryEmailModal({
   onSuccess
 }: DisableRecoveryEmailModalProps) {
   const {
-    mutateAsync: disableRecoveryEmail,
+    mutate: disableRecoveryEmail,
     isPending: disableRecoveryEmailPending
   } = platform.account.security.disableRecoveryEmail.useMutation({
     onError: (err) => {
