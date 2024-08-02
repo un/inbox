@@ -125,7 +125,7 @@ export function ConvoList(props: Props) {
           />
           Loading...
         </div>
-      ) : (
+      ) : allConvos.length > 0 ? (
         <Virtuoso
           data={allConvos}
           itemContent={itemRenderer}
@@ -135,6 +135,23 @@ export function ConvoList(props: Props) {
           }}
           increaseViewportBy={100}
         />
+      ) : (
+        <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-center">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/inbox-zero.svg"
+            alt="You have no convos"
+            className="aspect-square w-full"
+          />
+          {props.hidden ? (
+            <span className="font-semibold">There are no hidden convos</span>
+          ) : (
+            <>
+              <span className="font-semibold">There are no convos</span>
+              <span>Enjoy your day!</span>
+            </>
+          )}
+        </div>
       )}
     </div>
   );
