@@ -24,6 +24,8 @@ if (!IS_BROWSER) {
     'REALTIME_PORT',
     'TURNSTILE_SITE_KEY',
     'EE_ENABLED',
+    'POSTHOG_KEY',
+    'POSTHOG_ENABLED',
     'APP_VERSION'
   ];
 
@@ -45,7 +47,9 @@ export const env = createEnv({
     NEXT_PUBLIC_REALTIME_PORT: z.coerce.number(),
     NEXT_PUBLIC_TURNSTILE_SITE_KEY: z.string().optional(),
     NEXT_PUBLIC_EE_ENABLED: z.enum(['true', 'false']),
-    NEXT_PUBLIC_APP_VERSION: z.string().default('development')
+    NEXT_PUBLIC_APP_VERSION: z.string().default('development'),
+    NEXT_PUBLIC_POSTHOG_ENABLED: z.enum(['true', 'false']).default('false'),
+    NEXT_PUBLIC_POSTHOG_KEY: z.string().optional()
   },
   // process.env is added here to allow access while on server, it is tree-shaken out in the browser
   // if you check in the browser, you will see runtimeEnv is set to window.__ENV only
