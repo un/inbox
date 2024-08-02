@@ -243,7 +243,7 @@ export function AddEmailModal({
             <div className="text-sm font-bold">Deliver Messages To</div>
             <div className="flex w-full flex-col gap-2">
               <div className="grid grid-cols-2 gap-2">
-                <div className="flex flex-1 flex-col gap-1 w-full">
+                <div className="flex w-full flex-1 flex-col gap-1">
                   <div className="flex items-center gap-2">
                     <label className="text-sm">Teams</label>
                   </div>

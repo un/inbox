@@ -50,6 +50,7 @@ export const EditorContent = forwardRef<EditorFunctions, EditorContentProps>(
       <div className={className}>
         <EditorProvider
           {...rest}
+          immediatelyRender={false}
           content={initialContent}
           extensions={extensions}>
           <EditorForwarder ref={ref} />
