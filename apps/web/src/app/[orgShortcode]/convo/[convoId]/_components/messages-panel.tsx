@@ -1,12 +1,16 @@
 'use client';
 
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuPortal
-} from '@/src/components/shadcn-ui/dropdown-menu';
+  ArrowBendDoubleUpLeft,
+  FileDashed,
+  Hash,
+  SpinnerGap
+} from '@phosphor-icons/react';
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent
+} from '@/src/components/shadcn-ui/tooltip';
 import {
   forwardRef,
   memo,
@@ -19,11 +23,8 @@ import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { type JSONContent, generateHTML } from '@u22n/tiptap/react';
 import { Virtuoso, type VirtuosoHandle } from 'react-virtuoso';
 import { OriginalMessageView } from './original-message-view';
-import { DotsThree, SpinnerGap } from '@phosphor-icons/react';
 import { type RouterOutputs, platform } from '@/src/lib/trpc';
-import { Button } from '@/src/components/shadcn-ui/button';
 import { tipTapExtensions } from '@u22n/tiptap/extensions';
-import { Badge } from '@/src/components/shadcn-ui/badge';
 import { type formatParticipantData } from '../../utils';
 import { useCopyToClipboard } from '@uidotdev/usehooks';
 import { useTimeAgo } from '@/src/hooks/use-time-ago';
@@ -220,8 +221,8 @@ const MessageItem = memo(
     return (
       <div
         className={cn(
-          'group flex w-full gap-2',
-          isUserAuthor ? 'flex-row-reverse' : 'flex-row'
+          'group relative flex w-fit gap-2',
+          isUserAuthor ? 'ml-auto' : 'mr-auto'
         )}>
         <div
           className={cn(
@@ -293,49 +294,68 @@ const MessageItem = memo(
             )}>
             <HTMLMessage html={messageHtml} />
           </div>
+          <div className="absolute -bottom-4 right-4 hidden w-40 grid-cols-4 gap-3 rounded-xl transition delay-150 ease-in-out group-hover:grid">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  className={cn(
+                    'bg-base-3 border-base-1 hover:bg-accent-4 hover:text-accent-11 group relative flex h-8 w-10 items-center justify-center rounded-full border-4',
+                    replyTo === message.publicId && 'bg-accent-4 text-accent-11'
+                  )}
+                  onClick={() => {
+                    setReplyTo(
+                      replyTo === message.publicId ? null : message.publicId
+                    );
+                  }}>
+                  <ArrowBendDoubleUpLeft />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {replyTo === message.publicId
+                  ? 'Replying to this message'
+                  : 'Reply'}
+              </TooltipContent>
+            </Tooltip>
+            {message.rawHtml?.wipeDate && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    className="bg-base-3 border-base-1 hover:bg-accent-4 hover:text-accent-11 group relative flex h-8 w-10 items-center justify-center rounded-full border-4"
+                    onClick={() => setViewingOriginalMessage(true)}>
+                    <FileDashed />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>View Original message</TooltipContent>
+              </Tooltip>
+            )}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  className="bg-base-3 border-base-1 hover:bg-accent-4 hover:text-accent-11 group relative flex h-8 w-10 items-center justify-center rounded-full border-4"
+                  onClick={async () => {
+                    await copyToClipboard(message.publicId);
+                    toast.success('Message ID copied to clipboard');
+                  }}>
+                  <Hash />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>Copy message ID</TooltipContent>
+            </Tooltip>
+
+            {/* Commented out until we have a way to report bugs */}
+            {/* <Tooltip>
+          <TooltipTrigger asChild>
+            <button className=" group/button relative bg-base-3 h-8 w-10 rounded-full border-4 border-base-1 flex justify-center items-center hover:bg-accent-4 hover:text-accent-11">
+              <Bug />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent className="bg-base-12 text-base-1 px-2 rounded-md">
+            Report a bug
+          </TooltipContent>
+        </Tooltip> */}
+          </div>
         </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            className="opacity-0 group-hover:opacity-100"
-            asChild>
-            <Button
-              variant="secondary"
-              size="icon-sm"
-              className="mx-1 self-center">
-              <DotsThree size={12} />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuPortal>
-            <DropdownMenuContent sideOffset={5}>
-              <DropdownMenuItem
-                className="flex justify-between"
-                onClick={() => {
-                  setReplyTo(
-                    replyTo === message.publicId ? null : message.publicId
-                  );
-                }}>
-                Reply{' '}
-                {replyTo === message.publicId ? (
-                  <Badge variant="outline">Replying</Badge>
-                ) : null}
-              </DropdownMenuItem>
-              {message.rawHtml?.wipeDate && (
-                <DropdownMenuItem
-                  onClick={() => setViewingOriginalMessage(true)}>
-                  View Original Message
-                </DropdownMenuItem>
-              )}
-              <DropdownMenuItem
-                onClick={async () => {
-                  await copyToClipboard(message.publicId);
-                  toast.success('Message ID copied to clipboard');
-                }}>
-                Copy Message ID
-              </DropdownMenuItem>
-              <DropdownMenuItem>Report Bug</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenuPortal>
-        </DropdownMenu>
+
         {viewingOriginalMessage && message.rawHtml?.wipeDate ? (
           <OriginalMessageView
             setOpen={setViewingOriginalMessage}
