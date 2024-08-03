@@ -23,7 +23,10 @@ export const EditorBubbleItem = forwardRef<
     <Comp
       ref={ref}
       {...rest}
-      onClick={() => onSelect?.(editor)}>
+      onPointerDown={(e) => {
+        e.preventDefault();
+        onSelect?.(editor);
+      }}>
       {children}
     </Comp>
   );

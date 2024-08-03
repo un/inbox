@@ -85,11 +85,7 @@
   }
 }
 
-.tiptap p.is-editor-empty:first-child::before {
-  color: #adb5bd;
-  font-size: 14px;
+.tiptap .is-editor-empty:first-child::before {
+  @apply text-base-9 pointer-events-none float-left h-0 text-sm font-medium;
   content: attr(data-placeholder);
-  float: left;
-  height: 0;
-  pointer-events: none;
 }

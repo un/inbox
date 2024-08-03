@@ -19,13 +19,13 @@ import {
 import { useAttachmentUploader } from '@/src/components/shared/attachments';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
-import { type EditorFunctions } from '@u22n/tiptap/react/components';
+import { type EditorFunctions } from '@u22n/tiptap/components';
 import { Paperclip, Question } from '@phosphor-icons/react';
 import { Button } from '@/src/components/shadcn-ui/button';
-import { Editor } from '@/src/components/shared/editor';
 import { emptyTiptapEditorContent } from '@u22n/tiptap';
 import { type JSONContent } from '@u22n/tiptap/react';
 import { atom, useAtom, useAtomValue } from 'jotai';
+import { Editor } from '@/src/components/editor';
 import { type TypeId } from '@u22n/utils/typeid';
 import { replyToMessageAtom } from '../atoms';
 import { platform } from '@/src/lib/trpc';

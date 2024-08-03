@@ -165,7 +165,7 @@ export default function Page() {
               onClick={() => loginWithPasskey()}
               loading={loadingPasskey}
               disabled={loadingPasskey || (turnstileEnabled && !turnstileToken)}
-              className="mb-2 w-72 cursor-pointer gap-2 font-semibold">
+              className="mb-2 w-full cursor-pointer gap-2 font-semibold">
               <Fingerprint size={20} />
               <span>Login with my passkey</span>
             </Button>
