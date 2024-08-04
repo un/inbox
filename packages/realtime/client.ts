@@ -121,7 +121,7 @@ export default class RealtimeClient {
   }
 
   public get isConnected() {
-    return !!this.client;
+    return !!this.client && this.client.connection.state === 'connected';
   }
 
   private bindEvents() {

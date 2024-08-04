@@ -32,7 +32,7 @@ export function RealtimeProvider({ children }: PropsWithChildren) {
       );
     });
     return () => {
-      client.disconnect();
+      if (client.isConnected) client.disconnect();
     };
   }, [client, orgShortcode]);
 
