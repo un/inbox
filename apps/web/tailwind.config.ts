@@ -29,6 +29,14 @@ const config = {
       }
     },
     extend: {
+      typography: {
+        DEFAULT: {
+          css: {
+            'blockquote p:first-of-type::before': false,
+            'blockquote p:first-of-type::after': false
+          }
+        }
+      },
       colors: {
         accent: colors.alias('cyan'),
         base: colors.alias('slate'),
@@ -36,7 +44,7 @@ const config = {
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
         background: 'var(--slate1)',
-        foreground: 'var(--slate-12)',
+        foreground: 'var(--slate12)',
         primary: {
           DEFAULT: 'hsl(var(--primary))',
           foreground: 'hsl(var(--primary-foreground))'

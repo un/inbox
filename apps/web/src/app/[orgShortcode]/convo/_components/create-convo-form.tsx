@@ -18,6 +18,11 @@ import {
   SelectValue
 } from '@/src/components/shadcn-ui/select';
 import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger
+} from '@/src/components/shadcn-ui/hover-card';
+import {
   Popover,
   PopoverTrigger,
   PopoverContent
@@ -27,17 +32,6 @@ import {
   TooltipContent,
   TooltipTrigger
 } from '@/src/components/shadcn-ui/tooltip';
-
-import {
-  type JSONContent,
-  emptyTiptapEditorContent
-} from '@u22n/tiptap/react/components';
-
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger
-} from '@/src/components/shadcn-ui/hover-card';
 import {
   At,
   CaretDown,
@@ -50,12 +44,14 @@ import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { Avatar, AvatarIcon } from '@/src/components/avatar';
 import { Button } from '@/src/components/shadcn-ui/button';
+import { type JSONContent } from '@u22n/tiptap/components';
 import { Input } from '@/src/components/shadcn-ui/input';
 import { Badge } from '@/src/components/shadcn-ui/badge';
-import { Editor } from '@/src/components/shared/editor';
+import { emptyTiptapEditorContent } from '@u22n/tiptap';
 import { useState, useMemo, useEffect } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useAddSingleConvo$Cache } from '../utils';
+import { Editor } from '@/src/components/editor';
 import { type TypeId } from '@u22n/utils/typeid';
 import { showNewConvoPanel } from '../atoms';
 import { useRouter } from 'next/navigation';
@@ -476,9 +472,9 @@ export default function CreateConvoForm() {
         />
       </div>
 
-      <div className="border-base-5 flex max-h-[250px] w-full flex-col gap-1 rounded-md border p-1">
+      <div className="border-base-5 flex max-h-[250px] w-full flex-col gap-1 rounded-md border px-2 py-1">
         <Editor
-          initialValue={editorText}
+          initialValue={emptyTiptapEditorContent}
           onChange={setEditorText}
         />
 

@@ -28,8 +28,10 @@ export const EditorCommandItem = forwardRef<
   return (
     <CommandItem
       ref={ref}
-      {...rest}
-      onSelect={() => onCommand({ editor, range })}>
+      onSelect={() => {
+        onCommand({ editor, range });
+      }}
+      {...rest}>
       {children}
     </CommandItem>
   );

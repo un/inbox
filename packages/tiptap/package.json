@@ -4,9 +4,10 @@
   "type": "module",
   "exports": {
     ".": "./index.ts",
-    "./extensions": "./extensions.ts",
-    "./react": "./react/index.ts",
-    "./react/components": "./react/components/index.ts"
+    "./react": "./react.ts",
+    "./extensions": "./extensions/index.ts",
+    "./extensions/slash-command": "./extensions/slash-command.ts",
+    "./components": "./components/index.ts"
   },
   "scripts": {
     "check": "tsc --noEmit"
@@ -28,6 +29,7 @@
     "@tiptap/html": "^2.5.8",
     "@tiptap/react": "^2.5.8",
     "@tiptap/starter-kit": "^2.5.8",
+    "@tiptap/suggestion": "^2.5.8",
     "@u22n/tsconfig": "^0.0.2",
     "cmdk": "^1.0.0",
     "jotai": "^2.9.1",

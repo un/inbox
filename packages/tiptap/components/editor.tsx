@@ -1,9 +1,8 @@
 'use client';
-import { useMemo, useRef, forwardRef, useImperativeHandle } from 'react';
 import type { EditorProviderProps, JSONContent } from '@tiptap/react';
 import { EditorProvider, useCurrentEditor } from '@tiptap/react';
+import { useRef, forwardRef, useImperativeHandle } from 'react';
 import { EditorCommandTunnelContext } from './editor-command';
-import { tipTapExtensions } from '../../extensions';
 import { editorStore } from '../utils/store';
 import type { FC, ReactNode } from 'react';
 import { Provider } from 'jotai';
@@ -42,17 +41,12 @@ export type EditorFunctions = {
 
 export const EditorContent = forwardRef<EditorFunctions, EditorContentProps>(
   ({ className, children, initialContent, ...rest }, ref) => {
-    const extensions = useMemo(() => {
-      return [...tipTapExtensions, ...(rest.extensions ?? [])];
-    }, [rest.extensions]);
-
     return (
       <div className={className}>
         <EditorProvider
-          {...rest}
           immediatelyRender={false}
           content={initialContent}
-          extensions={extensions}>
+          {...rest}>
           <EditorForwarder ref={ref} />
           {children}
         </EditorProvider>

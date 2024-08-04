@@ -111,15 +111,23 @@ export default function Layout({
   ]);
 
   useEffect(() => {
-    const globalModifierListener = (e: KeyboardEvent) => {
-      if (e.key !== 'Shift') return;
-      setShiftKeyPressed(e.shiftKey);
+    const globalModifierListener = (e: Event) => {
+      if (e instanceof KeyboardEvent) {
+        if (e.key !== 'Shift') return;
+        setShiftKeyPressed(e.shiftKey);
+      } else {
+        setShiftKeyPressed(false);
+      }
     };
     window.addEventListener('keydown', globalModifierListener);
     window.addEventListener('keyup', globalModifierListener);
+    window.addEventListener('focus', globalModifierListener);
+    window.addEventListener('blur', globalModifierListener);
     return () => {
       window.removeEventListener('keydown', globalModifierListener);
       window.removeEventListener('keyup', globalModifierListener);
+      window.removeEventListener('focus', globalModifierListener);
+      window.removeEventListener('blur', globalModifierListener);
     };
   }, [setShiftKeyPressed]);
 
