@@ -8,6 +8,12 @@ import {
   SelectValue
 } from '@/src/components/shadcn-ui/select';
 import {
+  Paperclip,
+  Question,
+  PaperPlaneTilt,
+  ChatTeardropText
+} from '@phosphor-icons/react';
+import {
   Tooltip,
   TooltipContent,
   TooltipTrigger
@@ -20,8 +26,8 @@ import { useAttachmentUploader } from '@/src/components/shared/attachments';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { type EditorFunctions } from '@u22n/tiptap/components';
-import { Paperclip, Question } from '@phosphor-icons/react';
 import { Button } from '@/src/components/shadcn-ui/button';
+import { useIsMobile } from '@/src/hooks/use-is-mobile';
 import { emptyTiptapEditorContent } from '@u22n/tiptap';
 import { type JSONContent } from '@u22n/tiptap/react';
 import { atom, useAtom, useAtomValue } from 'jotai';
@@ -50,6 +56,7 @@ export function ReplyBox({ convoId, onReply }: ReplyBoxProps) {
   const addConvoToCache = useUpdateConvoMessageList$Cache();
   const updateConvoData = useUpdateConvoData$Cache();
   const editorRef = useRef<EditorFunctions>(null);
+  const isMobile = useIsMobile();
 
   const [loadingType, setLoadingType] = useState<'comment' | 'message'>(
     'message'
@@ -164,7 +171,7 @@ export function ReplyBox({ convoId, onReply }: ReplyBoxProps) {
   );
 
   return (
-    <div className="flex min-h-32 flex-col justify-end p-4">
+    <div className="flex min-h-32 flex-col p-4">
       <div className="border-base-5 flex max-h-[250px] w-full flex-col gap-1 rounded-md border p-1">
         <Editor
           initialValue={editorText}
@@ -172,67 +179,64 @@ export function ReplyBox({ convoId, onReply }: ReplyBoxProps) {
           ref={editorRef}
         />
         <AttachmentArray attachments={attachments} />
-        <div className="flex flex-row items-center justify-between gap-2">
-          <div className="flex flex-row items-center gap-2">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-2">
             {!emailIdentitiesLoading ? (
-              <div className="flex flex-row items-center justify-start gap-1">
+              <div className="flex min-w-5 items-center justify-start gap-1">
                 <span className="text-gray-9 px-2 text-sm">From:</span>
-                <div className="max-w-80">
-                  <Select
-                    value={emailIdentity ?? undefined}
-                    onValueChange={(email) => {
-                      if (
-                        emailIdentities?.emailIdentities.find(
-                          (e) => e.publicId === email
-                        )?.sendingEnabled === false
-                      ) {
-                        return;
-                      }
-                      setEmailIdentity(email as TypeId<'emailIdentities'>);
-                    }}>
-                    <SelectTrigger
-                      size={'sm'}
-                      width={'fit'}
-                      className="whitespace-nowrap text-xs">
-                      <SelectValue placeholder="Select an email address" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {emailIdentities?.emailIdentities.map((email) => (
-                        <SelectItem
-                          key={email.publicId}
-                          value={email.publicId}
-                          className="[&>span:last-child]:w-full">
-                          <span className="flex items-center justify-between">
-                            <span
-                              className={cn(
-                                !email.sendingEnabled && 'text-base-11'
-                              )}>
-                              {`${email.sendName} (${email.username}@${email.domainName})`}
-                            </span>
-                            {!email.sendingEnabled && (
-                              <Tooltip>
-                                <TooltipTrigger>
-                                  <Question size={14} />
-                                </TooltipTrigger>
-                                <TooltipContent className="flex flex-col">
-                                  <span>
-                                    Sending from this email identity is
-                                    disabled.
-                                  </span>
-                                  <span>
-                                    {isAdmin
-                                      ? 'Please check that the DNS records are correctly set up.'
-                                      : 'Please contact your admin for assistance.'}
-                                  </span>
-                                </TooltipContent>
-                              </Tooltip>
-                            )}
+                <Select
+                  value={emailIdentity ?? undefined}
+                  onValueChange={(email) => {
+                    if (
+                      emailIdentities?.emailIdentities.find(
+                        (e) => e.publicId === email
+                      )?.sendingEnabled === false
+                    ) {
+                      return;
+                    }
+                    setEmailIdentity(email as TypeId<'emailIdentities'>);
+                  }}>
+                  <SelectTrigger
+                    size="sm"
+                    className="min-w-5">
+                    <SelectValue placeholder="Select an email address" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {emailIdentities?.emailIdentities.map((email) => (
+                      <SelectItem
+                        key={email.publicId}
+                        value={email.publicId}
+                        className="[&>span:last-child]:w-full">
+                        <span
+                          className={cn(
+                            'flex !min-w-0 items-center justify-between',
+                            !email.sendingEnabled && 'text-base-11'
+                          )}>
+                          <span className="truncate">
+                            {`${email.sendName} (${email.username}@${email.domainName})`}
                           </span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                          {!email.sendingEnabled && (
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <Question size={14} />
+                              </TooltipTrigger>
+                              <TooltipContent className="flex flex-col">
+                                <span>
+                                  Sending from this email identity is disabled.
+                                </span>
+                                <span>
+                                  {isAdmin
+                                    ? 'Please check that the DNS records are correctly set up.'
+                                    : 'Please contact your admin for assistance.'}
+                                </span>
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             ) : null}
             <Button
@@ -244,10 +248,10 @@ export function ReplyBox({ convoId, onReply }: ReplyBoxProps) {
               <Paperclip size={16} />
             </Button>
           </div>
-          <div className="align-center flex justify-end gap-2">
+          <div className="flex items-center gap-2">
             <Button
               variant="secondary"
-              size={'sm'}
+              size={isMobile ? 'icon' : 'sm'}
               loading={replyToConvoLoading && loadingType === 'comment'}
               disabled={
                 !replyTo ||
@@ -255,8 +259,11 @@ export function ReplyBox({ convoId, onReply }: ReplyBoxProps) {
                 !emailIdentity ||
                 replyToConvoLoading
               }
-              onClick={() => handleReply('comment')}>
-              Comment
+              onPointerDown={(e) => {
+                e.preventDefault();
+                return handleReply('comment');
+              }}>
+              {isMobile ? <ChatTeardropText size={16} /> : <span>Comment</span>}
             </Button>
             <Button
               loading={replyToConvoLoading && loadingType === 'message'}
@@ -266,9 +273,12 @@ export function ReplyBox({ convoId, onReply }: ReplyBoxProps) {
                 !emailIdentity ||
                 replyToConvoLoading
               }
-              size={'sm'}
-              onClick={() => handleReply('message')}>
-              Send
+              size={isMobile ? 'icon' : 'sm'}
+              onPointerDown={(e) => {
+                e.preventDefault();
+                return handleReply('message');
+              }}>
+              {isMobile ? <PaperPlaneTilt size={16} /> : <span>Send</span>}
             </Button>
           </div>
         </div>

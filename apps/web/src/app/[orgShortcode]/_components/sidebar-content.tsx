@@ -41,9 +41,11 @@ import {
   ToggleGroupItem
 } from '@/src/components/shadcn-ui/toggle-group';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
+import { useIsMobile } from '@/src/hooks/use-is-mobile';
 import { useMutation } from '@tanstack/react-query';
 import { Avatar } from '@/src/components/avatar';
 import { sidebarSubmenuOpenAtom } from './atoms';
+import { useMeasure } from '@uidotdev/usehooks';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { cn } from '@/src/lib/utils';
@@ -53,10 +55,13 @@ import Link from 'next/link';
 
 export default function SidebarContent() {
   const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const isMobile = useIsMobile();
+
   return (
     <div
       className={cn(
-        'bg-base-3 border-base-5 z-[1] flex h-full w-full min-w-56 resize-x flex-col items-start gap-4 rounded-2xl border p-2'
+        'bg-base-3 border-base-5 z-[1] flex h-full w-full min-w-56 resize-x flex-col items-start gap-4 rounded-2xl border p-2',
+        isMobile && 'rounded-r-none'
       )}>
       <OrgMenu />
       <div
@@ -97,6 +102,7 @@ function OrgMenu() {
   const orgs = useGlobalStore((state) => state.orgs);
   const setSidebarSubmenuOpen = useSetAtom(sidebarSubmenuOpenAtom);
   const { theme, setTheme } = useTheme();
+  const [measure, { width }] = useMeasure();
   const router = useRouter();
 
   const { mutate: logOut, isPending: loggingOut } = useMutation({
@@ -118,7 +124,8 @@ function OrgMenu() {
         <DropdownMenuTrigger
           className={
             'bg-base-1 border-base-5 hover:bg-base-2 flex w-full flex-row items-center justify-between gap-2 rounded-lg border p-3 shadow-sm'
-          }>
+          }
+          ref={measure}>
           <div className={'flex flex-row items-center gap-2'}>
             <Avatar
               avatarProfilePublicId={currentOrg.publicId}
@@ -142,7 +149,9 @@ function OrgMenu() {
             <CaretUpDown className={'h-4 w-4'} />
           </div>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="bg-base-1 border-base-5 flex w-[214px] flex-col gap-0 p-0">
+        <DropdownMenuContent
+          className="bg-base-1 border-base-5 flex flex-col gap-0 p-0"
+          style={{ width: `${width}px` }}>
           <DropdownMenuLabel className={'px-0 py-0'}>
             <div className="flex flex-col items-start justify-start gap-2 p-3">
               <span className={'text-base-11 text-xs font-medium uppercase'}>

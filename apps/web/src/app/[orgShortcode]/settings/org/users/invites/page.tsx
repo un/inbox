@@ -15,8 +15,8 @@ export default function Page() {
     });
 
   return (
-    <div className="flex w-full flex-col gap-2 p-4">
-      <div className="flex w-full justify-between">
+    <div className="flex flex-col gap-2 p-4">
+      <div className="flex justify-between">
         <div className="flex flex-col gap-2">
           <h1 className="font-display text-3xl leading-5">Invites</h1>
           <div>Manage Your Org Invitation</div>
@@ -33,10 +33,12 @@ export default function Page() {
         </div>
       )}
       {inviteList && (
-        <DataTable
-          columns={columns}
-          data={inviteList.invites ?? []}
-        />
+        <div className="flex flex-1 flex-col gap-2 overflow-auto">
+          <DataTable
+            columns={columns}
+            data={inviteList.invites ?? []}
+          />
+        </div>
       )}
     </div>
   );

@@ -4,7 +4,6 @@ import {
   EyeSlash,
   Eye,
   Trash,
-  CaretLeft,
   FilePdf,
   FileDoc,
   FileXls,
@@ -38,11 +37,10 @@ import { type TypeId } from '@u22n/utils/typeid';
 import { Participants } from './participants';
 import { shiftKeyPressed } from '../../atoms';
 import { useRouter } from 'next/navigation';
+import { type FC, useState } from 'react';
 import { cn } from '@/src/lib/utils';
 import { useAtomValue } from 'jotai';
-import { useState } from 'react';
 import { toast } from 'sonner';
-import Link from 'next/link';
 
 type TopBarProps = {
   participants: NonNullable<ReturnType<typeof formatParticipantData>>[];
@@ -56,6 +54,7 @@ type TopBarProps = {
   convoId: TypeId<'convos'>;
   convoHidden: boolean | null;
   subjects?: RouterOutputs['convos']['getConvo']['data']['subjects'];
+  DismissButton: FC;
 };
 
 export default function TopBar({
@@ -64,7 +63,8 @@ export default function TopBar({
   convoHidden,
   subjects,
   participants,
-  attachments
+  attachments,
+  DismissButton
 }: TopBarProps) {
   const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -86,18 +86,11 @@ export default function TopBar({
     <div className="border-base-5 bg-base-1 flex w-full flex-col items-center justify-between border-b p-0">
       <div className="border-base-5 flex h-14 w-full flex-row items-center justify-between border-b p-4">
         <div className="flex flex-1 flex-row items-center gap-4 overflow-hidden">
-          <Button
-            variant={'outline'}
-            size={'icon-sm'}
-            asChild>
-            <Link href={`/${orgShortcode}/convo`}>
-              <CaretLeft size={16} />
-            </Link>
-          </Button>
+          <DismissButton />
           {subjects?.map((subject) => (
             <span
               key={subject.subject}
-              className="min-w-fit max-w-0 truncate text-lg font-medium leading-tight">
+              className="min-w-0 truncate text-lg font-medium leading-tight">
               {subject.subject}
             </span>
           ))}

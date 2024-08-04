@@ -13,6 +13,7 @@ import { Eye, EyeSlash, Trash } from '@phosphor-icons/react/dist/ssr';
 import { Checkbox } from '@/src/components/shadcn-ui/checkbox';
 import { convoListSelecting, shiftKeyPressed } from '../atoms';
 import { platform, type RouterOutputs } from '@/src/lib/trpc';
+import { useIsMobile } from '@/src/hooks/use-is-mobile';
 import AvatarPlus from '@/src/components/avatar-plus';
 import { useTimeAgo } from '@/src/hooks/use-time-ago';
 import { useLongPress } from '@uidotdev/usehooks';
@@ -38,6 +39,7 @@ export function ConvoItem({
   const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
   const selecting = useAtomValue(convoListSelecting);
   const shiftKey = useAtomValue(shiftKeyPressed);
+  const isMobile = useIsMobile();
 
   const deleteConvoFromCache = useDeleteConvo$Cache();
   const { mutate: deleteConvo } = platform.convos.deleteConvo.useMutation({
@@ -95,13 +97,21 @@ export function ConvoItem({
       onSelect(false);
     },
     {
-      threshold: 450
+      threshold: 750
     }
   );
 
   return (
     <ContextMenu>
-      <ContextMenuTrigger>
+      <ContextMenuTrigger
+        onContextMenu={
+          isMobile
+            ? (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }
+            : undefined
+        }>
         <Link
           href={link}
           className={cn(
@@ -112,7 +122,7 @@ export function ConvoItem({
             selected && 'bg-accent-3',
             shiftKey && !selecting && 'group'
           )}
-          {...longPressHandlers}>
+          {...(isMobile ? longPressHandlers : {})}>
           {selecting ? (
             <Checkbox
               className="size-6 rounded-lg"

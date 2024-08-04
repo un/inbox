@@ -141,6 +141,7 @@ export const MessagesPanel = forwardRef<VirtuosoHandle, MessagesPanelProps>(
           style={{ overscrollBehavior: 'none', overflowX: 'clip' }}
           className="w-full"
           ref={ref}
+          increaseViewportBy={500}
         />
       </div>
     );
@@ -185,7 +186,7 @@ const MessageItem = memo(
     const viaAddress = message.metadata?.email?.from?.[0]?.email;
 
     // styling
-    const messageStyling = cva('…', {
+    const messageStyling = cva('', {
       variants: {
         type: {
           message: 'rounded-2xl',
@@ -377,7 +378,7 @@ const HTMLMessage = memo(
     return (
       <div
         dangerouslySetInnerHTML={{ __html }}
-        className="prose dark:prose-invert prose-a:decoration-blue-9 text-base-12 w-fit overflow-clip break-words"
+        className="prose dark:prose-invert prose-a:decoration-blue-9 text-base-12 w-fit min-w-min overflow-ellipsis text-pretty [overflow-wrap:anywhere]"
       />
     );
   },
