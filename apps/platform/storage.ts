@@ -61,6 +61,7 @@ export const storage = {
 type AccountRecoveryVerificationCodes = {
   account: {
     id: number;
+    username: string;
     publicId: TypeId<'account'>;
   };
 };
@@ -106,6 +107,7 @@ type ElevatedTokens = {
 
 type ResetTokens = {
   account: {
+    username: string;
     id: number;
     publicId: TypeId<'account'>;
   };

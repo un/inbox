@@ -16,12 +16,9 @@ export default function RequestResetPage() {
     platform.account.security.sendRecoveryEmail.useMutation({
       onSuccess: () => {
         toast.success(
-          'Recovery email sent. Please check your inbox for the verification code.'
+          'If the email address is registered and matches with the username, we will send a recovery code to it.'
         );
-        router.push('/recovery/reset-password/verify');
-      },
-      onError: () => {
-        toast.error('An error occurred. Please try again.');
+        router.push(`/recovery/reset-password/verify?for=${username}`);
       }
     });
 

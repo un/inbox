@@ -1067,6 +1067,7 @@ export const securityRouter = router({
       const recoveryToken = nanoIdToken(6);
       await storage.accountRecoveryVerificationCodes.setItem(recoveryToken, {
         account: {
+          username: accountQuery.username,
           id: accountQuery.id,
           publicId: accountQuery.publicId
         }

@@ -5,9 +5,9 @@ import {
   InputOTPGroup,
   InputOTPSlot
 } from '@/src/components/shadcn-ui/input-otp';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { REGEXP_ONLY_DIGITS_AND_CHARS } from 'input-otp';
-import { useRouter } from 'next/navigation';
 import { platform } from '@/src/lib/trpc';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 export default function VerifyResetPage() {
   const [verificationCode, setVerificationCode] = useState('');
   const router = useRouter();
+  const forUsername = useSearchParams().get('for');
 
   const { mutate: verifyRecoveryCode, isPending } =
     platform.auth.recovery.verifyRecoveryCode.useMutation({
@@ -25,15 +26,16 @@ export default function VerifyResetPage() {
         } else {
           toast.error('Invalid verification code. Please try again.');
         }
-      },
-      onError: () => {
-        toast.error('An error occurred. Please try again.');
       }
     });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    verifyRecoveryCode({ code: verificationCode });
+    if (!forUsername) {
+      toast.error('Username not defined');
+      return;
+    }
+    verifyRecoveryCode({ code: verificationCode, username: forUsername });
   };
 
   return (
