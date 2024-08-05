@@ -14,7 +14,7 @@ export default class RealtimeClient {
     private config: {
       appKey: string;
       host: string;
-      port: number;
+      port?: number;
       authEndpoint: string;
     }
   ) {}
@@ -23,7 +23,7 @@ export default class RealtimeClient {
     if (this.client) return;
     const client = new Pusher(this.config.appKey, {
       wsHost: this.config.host,
-      wsPort: Number(this.config.port),
+      wsPort: this.config.port ? Number(this.config.port) : undefined,
       cluster: 'default',
       forceTLS: false,
       enabledTransports: ['ws', 'wss'],
