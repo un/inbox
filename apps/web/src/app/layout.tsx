@@ -1,4 +1,5 @@
 import { TooltipProvider } from '@/src/components/shadcn-ui/tooltip';
+import { PHProvider } from '@/src/providers/posthog-provider';
 import { CookiesProvider } from 'next-client-cookies/server';
 import { Toaster } from '@/src/components/shadcn-ui/sonner';
 import { PublicEnvScript } from 'next-runtime-env';
@@ -8,7 +9,12 @@ import { Inter } from 'next/font/google';
 import localFont from 'next/font/local';
 import { cn } from '@/src/lib/utils';
 import type { Metadata } from 'next';
+import dynamic from 'next/dynamic';
 import '@/src/styles/globals.css';
+
+const PostHogPageView = dynamic(() => import('./posthog'), {
+  ssr: false
+});
 
 const inter = Inter({
   subsets: ['latin'],
@@ -41,30 +47,33 @@ export default function RootLayout({
       <head>
         <PublicEnvScript />
       </head>
-      <body
-        className={cn(
-          inter.variable,
-          calSans.variable,
-          'h-full max-h-svh overflow-hidden font-sans'
-        )}>
-        <CookiesProvider>
-          <ThemeProvider
-            attribute="class"
-            enableSystem
-            enableColorScheme
-            defaultTheme="system"
-            disableTransitionOnChange>
-            <div className="flex h-svh w-full flex-col">
-              <TooltipProvider>
-                <TRPCReactProvider>
-                  {children}
-                  <Toaster />
-                </TRPCReactProvider>
-              </TooltipProvider>
-            </div>
-          </ThemeProvider>
-        </CookiesProvider>
-      </body>
+      <PHProvider>
+        <body
+          className={cn(
+            inter.variable,
+            calSans.variable,
+            'h-full max-h-svh overflow-hidden font-sans'
+          )}>
+          <PostHogPageView />
+          <CookiesProvider>
+            <ThemeProvider
+              attribute="class"
+              enableSystem
+              enableColorScheme
+              defaultTheme="system"
+              disableTransitionOnChange>
+              <div className="flex h-svh w-full flex-col">
+                <TooltipProvider>
+                  <TRPCReactProvider>
+                    {children}
+                    <Toaster />
+                  </TRPCReactProvider>
+                </TooltipProvider>
+              </div>
+            </ThemeProvider>
+          </CookiesProvider>
+        </body>
+      </PHProvider>
     </html>
   );
 }

@@ -21,6 +21,7 @@
     "otel",
     "partialize",
     "planetscale",
+    "posthog",
     "presign",
     "presigner",
     "ratelimit",
