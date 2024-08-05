@@ -1,4 +1,10 @@
-import { Dialog, DialogContent } from '@/src/components/shadcn-ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle
+} from '@/src/components/shadcn-ui/dialog';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { ScrollArea } from '@/src/components/shadcn-ui/scroll-area';
 import { Separator } from '@/src/components/shadcn-ui/separator';
@@ -28,6 +34,12 @@ export function OriginalMessageView({
       open
       onOpenChange={setOpen}>
       <DialogContent className="h-[95svh] max-w-[95vw]">
+        <DialogHeader className="sr-only">
+          <DialogTitle>Original Message View</DialogTitle>
+          <DialogDescription>
+            This is the original message that was sent to us
+          </DialogDescription>
+        </DialogHeader>
         <div className="flex h-full w-full flex-col">
           {isLoading && (
             <div className="flex h-full w-full flex-col items-center justify-center gap-2">
