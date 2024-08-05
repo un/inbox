@@ -7,7 +7,7 @@ export default class RealtimeServer {
   private pusher: Pusher;
   constructor(config: {
     host: string;
-    port: string;
+    port?: string;
     appId: string;
     appKey: string;
     appSecret: string;
