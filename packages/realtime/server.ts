@@ -28,11 +28,12 @@ export default class RealtimeServer {
     data: z.infer<EventDataMap[T]>
   ) {
     // Parse the data before sending it to the client, ensuring it matches the schema
-    await this.pusher.trigger(
-      'broadcasts',
-      event,
-      eventDataMaps[event].parse(data)
-    );
+    await this.pusher
+      .trigger('broadcasts', event, eventDataMaps[event].parse(data))
+      .catch((e) => {
+        console.error(e);
+        throw e;
+      });
   }
 
   public async emit<const T extends keyof EventDataMap>({
@@ -48,7 +49,12 @@ export default class RealtimeServer {
       orgMemberPublicIds = [orgMemberPublicIds];
     // Parse the data before sending it to the client, ensuring it matches the schema
     for (const id of orgMemberPublicIds) {
-      await this.pusher.sendToUser(id, event, eventDataMaps[event].parse(data));
+      await this.pusher
+        .sendToUser(id, event, eventDataMaps[event].parse(data))
+        .catch((e) => {
+          console.error(e);
+          throw e;
+        });
     }
   }
 
