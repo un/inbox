@@ -22,12 +22,14 @@ export function NewConvoSheet() {
       dismissible={false}
       open={open}
       direction="bottom"
-      modal={false}>
-      <DrawerTrigger
-        asChild
-        onClick={() => setOpen(true)}>
+      modal={false}
+      shouldScaleBackground={false}
+      noBodyStyles>
+      <DrawerTrigger asChild>
         <div className="group fixed -bottom-5 -right-6 h-10 w-10 cursor-pointer transition-all hover:bottom-0 hover:right-0">
-          <Button size={'icon'}>
+          <Button
+            size={'icon'}
+            onClick={() => setOpen(true)}>
             <Plus className="-ml-3 -mt-3 h-3 w-3 group-hover:ml-0 group-hover:mt-0 group-hover:h-4 group-hover:w-4" />
           </Button>
         </div>

@@ -86,6 +86,5 @@
 }
 
 .tiptap .is-editor-empty:first-child::before {
-  @apply text-base-9 pointer-events-none float-left h-0 text-sm font-medium;
-  content: attr(data-placeholder);
+  @apply text-base-9 pointer-events-none float-left h-0 text-sm font-medium leading-7 content-['Type_something...'] md:content-[attr(data-placeholder)];
 }

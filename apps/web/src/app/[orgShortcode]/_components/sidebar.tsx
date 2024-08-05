@@ -1,13 +1,12 @@
 'use client';
 
+import { useIsSidebarAutoCollapsed } from '@/src/hooks/use-is-mobile';
 import { usePreferencesState } from '@/src/stores/preferences-store';
 import { CaretDoubleLeft, PushPin, X } from '@phosphor-icons/react';
-import { useIsSidebarAutoCollapsed } from '@/src/hooks/is-mobile';
 import { sidebarSubmenuOpenAtom } from './atoms';
-import SidebarContent from './sidebar-content';
+import { convoSidebarTunnel } from '../tunnels';
 import { cn } from '@/src/lib/utils';
-import { useEffect } from 'react';
-import { useAtom } from 'jotai';
+import { useAtomValue } from 'jotai';
 
 export default function Sidebar() {
   const {
@@ -17,19 +16,13 @@ export default function Sidebar() {
     setSidebarDocking
   } = usePreferencesState();
 
-  const [sidebarSubmenuOpen] = useAtom(sidebarSubmenuOpenAtom);
+  const sidebarSubmenuOpen = useAtomValue(sidebarSubmenuOpenAtom);
   const isSidebarAutoCollapsed = useIsSidebarAutoCollapsed();
-  useEffect(() => {
-    setSidebarExpanded(true);
 
-    setTimeout(() => {
-      setSidebarExpanded(false);
-    }, 1000);
-  }, [setSidebarExpanded]);
   return (
     <div
       className={cn(
-        'flex h-full max-h-svh resize-x flex-row items-start gap-4 overflow-visible p-0 transition-all duration-500 ease-in-out',
+        'flex h-full max-h-svh w-fit resize-x flex-row items-start gap-4 overflow-visible p-0 transition-all duration-500 ease-in-out',
         !isSidebarAutoCollapsed ? (sidebarDocked ? 'w-60' : 'w-0') : 'w-0'
       )}>
       <div
@@ -55,7 +48,7 @@ export default function Sidebar() {
         onFocus={() => {
           setSidebarExpanded(true);
         }}>
-        <SidebarContent />
+        <convoSidebarTunnel.Out />
         {!isSidebarAutoCollapsed && (
           <div
             className={cn(
@@ -71,9 +64,9 @@ export default function Sidebar() {
               onClick={() => setSidebarDocking(!sidebarDocked)}>
               <div>
                 {sidebarDocked ? (
-                  <CaretDoubleLeft className="h-4 w-4" />
+                  <CaretDoubleLeft className="size-4" />
                 ) : (
-                  <PushPin className="h-4 w-4" />
+                  <PushPin className="size-4" />
                 )}
               </div>
             </div>
@@ -85,16 +78,14 @@ export default function Sidebar() {
               'bg-base-3 focus-within:bg-base-5 border-base-5 absolute -right-[19px] top-[26px] flex h-10 w-8 max-w-8 cursor-pointer items-center justify-end overflow-visible rounded-br-[7px] rounded-tr-[7px] border border-l-0 transition-all duration-1000 ease-in-out',
               sidebarExpanded ? 'visible opacity-100' : 'invisible opacity-0'
             )}>
-            <div
+            <button
               className={cn(
                 'hover:bg-base-5 flex h-[38px] w-[38px] min-w-[38px] cursor-pointer items-center justify-center rounded-md transition-all duration-1000 ease-in-out',
                 sidebarExpanded ? 'visible opacity-100' : 'invisible opacity-0'
               )}
               onClick={() => setSidebarExpanded(false)}>
-              <div>
-                <X className="h-6 w-6" />
-              </div>
-            </div>
+              <X className="size-6" />
+            </button>
           </div>
         )}
       </div>

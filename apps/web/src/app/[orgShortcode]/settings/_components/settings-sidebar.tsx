@@ -25,7 +25,7 @@ type NavLinks = {
   icon: ReactNode;
 };
 
-export default function SettingsSidebar() {
+export default function SettingsSidebarContent() {
   const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
 
   const { data: isAdmin } =
@@ -94,7 +94,7 @@ export default function SettingsSidebar() {
   ];
 
   return (
-    <div className="bg-base-2 flex h-full w-[400px] flex-col gap-4 p-2 px-4">
+    <div className="bg-base-2 flex h-full w-full flex-col gap-4 p-2 px-4 md:max-w-[400px]">
       <NavBlock
         title="Personal"
         items={personalLinks}

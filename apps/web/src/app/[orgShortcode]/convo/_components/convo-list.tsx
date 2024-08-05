@@ -2,10 +2,10 @@
 
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { convoListSelection, lastSelectedConvo } from '../atoms';
-import { useCallback, useEffect, useMemo } from 'react';
 import { SpinnerGap } from '@phosphor-icons/react';
 import { type TypeId } from '@u22n/utils/typeid';
 import { ConvoItem } from './convo-list-item';
+import { useCallback, useMemo } from 'react';
 import { platform } from '@/src/lib/trpc';
 import { Virtuoso } from 'react-virtuoso';
 import { ms } from '@u22n/utils/ms';
@@ -19,7 +19,6 @@ export function ConvoList(props: Props) {
   const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
   const [selections, setSelections] = useAtom(convoListSelection);
   const [lastSelected, setLastSelected] = useAtom(lastSelectedConvo);
-  const utils = platform.useUtils();
 
   const {
     data: convos,
@@ -66,7 +65,9 @@ export function ConvoList(props: Props) {
     (index: number, convo: (typeof allConvos)[number]) => {
       const selected = selections.includes(convo.publicId);
       return (
-        <div key={convo.publicId}>
+        <div
+          key={convo.publicId}
+          className="py-0.5">
           <ConvoItem
             convo={convo}
             selected={selected}
@@ -107,14 +108,6 @@ export function ConvoList(props: Props) {
     ]
   );
 
-  useEffect(() => {
-    // Fetch the opposite list for data consistency
-    void utils.convos.getOrgMemberConvos.prefetchInfinite({
-      orgShortcode,
-      includeHidden: !props.hidden ? true : undefined
-    });
-  }, [orgShortcode, props.hidden, utils.convos.getOrgMemberConvos]);
-
   return (
     <div className="flex h-full flex-col">
       {isLoading ? (
@@ -133,7 +126,7 @@ export function ConvoList(props: Props) {
           endReached={async () => {
             if (hasNextPage && !isFetchingNextPage) await fetchNextPage();
           }}
-          increaseViewportBy={100}
+          increaseViewportBy={500}
         />
       ) : (
         <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-center">

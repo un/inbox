@@ -20,6 +20,7 @@ import {
 import { handleCommandNavigation } from '@u22n/tiptap/extensions/slash-command';
 import { slashCommand, suggestionItems } from './slash-commands';
 import { tipTapExtensions } from '@u22n/tiptap/extensions';
+import { useIsMobile } from '@/src/hooks/use-is-mobile';
 import { forwardRef, memo, useState } from 'react';
 
 interface EditorProp {
@@ -37,6 +38,7 @@ export const Editor = memo(
     const [openNode, setOpenNode] = useState(false);
     const [openColor, setOpenColor] = useState(false);
     const [openLink, setOpenLink] = useState(false);
+    const isMobile = useIsMobile();
 
     return (
       <div className="overflow-y-auto">
@@ -66,30 +68,35 @@ export const Editor = memo(
             extensions={extensions}
             onUpdate={({ editor }) => onChange(editor.getJSON())}
             ref={ref}>
-            <EditorCommand
-              className="border-base-5 bg-base-1 z-50 h-auto max-h-[330px] overflow-y-auto rounded-md border px-1 py-2 shadow-md transition-all"
-              loop>
-              <EditorCommandEmpty className="px-2">
-                No results
-              </EditorCommandEmpty>
-              <EditorCommandList>
-                {suggestionItems.map((item) => (
-                  <EditorCommandItem
-                    value={item.title}
-                    onCommand={(val) => item.command?.(val)}
-                    className="aria-selected:bg-accent-2 flex w-full items-center space-x-2 rounded-md px-2 py-1 text-left text-sm"
-                    key={item.title}>
-                    <div className="border-base-7 bg-base-3 flex size-8 items-center justify-center rounded-md border">
-                      {item.icon}
-                    </div>
-                    <div>
-                      <p className="font-semibold">{item.title}</p>
-                      <p className="text-base-8 text-xs">{item.description}</p>
-                    </div>
-                  </EditorCommandItem>
-                ))}
-              </EditorCommandList>
-            </EditorCommand>
+            {/* EditorCommand doesn't work on mobile */}
+            {!isMobile && (
+              <EditorCommand
+                className="border-base-5 bg-base-1 z-50 h-auto max-h-[330px] overflow-y-auto rounded-md border px-1 py-2 shadow-md transition-all"
+                loop>
+                <EditorCommandEmpty className="px-2">
+                  No results
+                </EditorCommandEmpty>
+                <EditorCommandList>
+                  {suggestionItems.map((item) => (
+                    <EditorCommandItem
+                      value={item.title}
+                      onCommand={(val) => item.command?.(val)}
+                      className="aria-selected:bg-accent-2 flex w-full items-center space-x-2 rounded-md px-2 py-1 text-left text-sm"
+                      key={item.title}>
+                      <div className="border-base-7 bg-base-3 flex size-8 items-center justify-center rounded-md border">
+                        {item.icon}
+                      </div>
+                      <div>
+                        <p className="font-semibold">{item.title}</p>
+                        <p className="text-base-8 text-xs">
+                          {item.description}
+                        </p>
+                      </div>
+                    </EditorCommandItem>
+                  ))}
+                </EditorCommandList>
+              </EditorCommand>
+            )}
 
             <EditorBubble
               tippyOptions={{

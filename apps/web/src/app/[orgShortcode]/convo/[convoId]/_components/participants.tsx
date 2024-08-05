@@ -2,6 +2,7 @@ import {
   Drawer,
   DrawerClose,
   DrawerContent,
+  DrawerDescription,
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger
@@ -16,6 +17,7 @@ import { Avatar, AvatarIcon } from '@/src/components/avatar';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { type formatParticipantData } from '../../utils';
 import { Dot, PenNib, X } from '@phosphor-icons/react';
+
 export function Participants({
   participants
 }: {
@@ -41,7 +43,10 @@ export function Participants({
     .map((p) => p.participantPublicId);
 
   return (
-    <Drawer direction="right">
+    <Drawer
+      direction="right"
+      noBodyStyles
+      shouldScaleBackground={false}>
       <DrawerTrigger asChild>
         <div
           className={
@@ -72,9 +77,9 @@ export function Participants({
           ))}
         </div>
       </DrawerTrigger>
-      {/* <DrawerContent className="fixed bottom-0 right-0 mt-24 flex h-full w-[400px] flex-col rounded-t-[10px] bg-base-1"> */}
-      <DrawerContent>
-        <div className="h-full max-w-sm">
+
+      <DrawerContent className="max-w-[80%] focus-within:outline-none">
+        <div className="h-full w-full max-w-sm">
           <DrawerHeader>
             <DrawerTitle>
               <span>Participants</span>
@@ -86,6 +91,9 @@ export function Participants({
                 </Button>
               </DrawerClose>
             </DrawerTitle>
+            <DrawerDescription className="sr-only">
+              Participants are the people who are part of this conversation
+            </DrawerDescription>
           </DrawerHeader>
           <div className="flex flex-col gap-4 pt-4">
             {orderedParticipants.map((participant) => (

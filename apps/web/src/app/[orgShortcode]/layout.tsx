@@ -5,7 +5,10 @@ import { ClaimEmailIdentity } from './_components/claim-email-identity';
 import { RealtimeProvider } from '@/src/providers/realtime-provider';
 import { NewConvoSheet } from './convo/_components/new-convo-sheet';
 import { Button } from '@/src/components/shadcn-ui/button';
+import SidebarContent from './_components/sidebar-content';
+import { useIsMobile } from '@/src/hooks/use-is-mobile';
 import { SpinnerGap } from '@phosphor-icons/react';
+import { convoSidebarTunnel } from './tunnels';
 import Sidebar from './_components/sidebar';
 import { platform } from '@/src/lib/trpc';
 import Link from 'next/link';
@@ -22,6 +25,8 @@ export default function Layout({
     { orgShortcode },
     { retry: 3, retryDelay: (attemptIndex) => attemptIndex * 5000 }
   );
+
+  const isMobile = useIsMobile();
 
   const { data: hasEmailIdentity } =
     platform.org.mail.emailIdentities.userHasEmailIdentities.useQuery({
@@ -87,18 +92,23 @@ export default function Layout({
 
   return (
     <GlobalStoreProvider initialState={storeData}>
-      <div className="bg-base-1 max-w-svh flex h-full max-h-svh w-full flex-row gap-0 overflow-hidden p-0">
-        <div className="h-full max-h-full w-fit">
-          <Sidebar />
+      <RealtimeProvider>
+        <convoSidebarTunnel.In>
+          <SidebarContent />
+        </convoSidebarTunnel.In>
+        <div className="bg-base-1 flex h-full">
+          {!isMobile && (
+            <div className="w-fit">
+              <Sidebar />
+            </div>
+          )}
+          <div className="min-w-0 flex-1">{children}</div>
+          {!isMobile && <NewConvoSheet />}
+          {hasEmailIdentity && !hasEmailIdentity.hasIdentity && (
+            <ClaimEmailIdentity />
+          )}
         </div>
-        <div className="flex h-full w-full flex-row p-0">
-          <RealtimeProvider>{children}</RealtimeProvider>
-        </div>
-        <NewConvoSheet />
-        {hasEmailIdentity && !hasEmailIdentity.hasIdentity && (
-          <ClaimEmailIdentity />
-        )}
-      </div>
+      </RealtimeProvider>
     </GlobalStoreProvider>
   );
 }

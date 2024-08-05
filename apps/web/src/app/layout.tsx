@@ -42,18 +42,14 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className="h-full w-full font-sans antialiased"
+      className="h-full max-h-svh overflow-hidden antialiased"
       suppressHydrationWarning>
       <head>
         <PublicEnvScript />
       </head>
       <PHProvider>
         <body
-          className={cn(
-            inter.variable,
-            calSans.variable,
-            'h-full max-h-svh overflow-hidden font-sans'
-          )}>
+          className={cn(inter.variable, calSans.variable, 'h-full font-sans')}>
           <PostHogPageView />
           <CookiesProvider>
             <ThemeProvider
@@ -62,14 +58,12 @@ export default function RootLayout({
               enableColorScheme
               defaultTheme="system"
               disableTransitionOnChange>
-              <div className="flex h-svh w-full flex-col">
-                <TooltipProvider>
-                  <TRPCReactProvider>
-                    {children}
-                    <Toaster />
-                  </TRPCReactProvider>
-                </TooltipProvider>
-              </div>
+              <TooltipProvider>
+                <TRPCReactProvider>
+                  {children}
+                  <Toaster />
+                </TRPCReactProvider>
+              </TooltipProvider>
             </ThemeProvider>
           </CookiesProvider>
         </body>

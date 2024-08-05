@@ -19,7 +19,7 @@ export type PreferencesStoreActions = {
 
 const initialState: PreferencesStoreState = {
   sidebarDocked: true,
-  sidebarExpanded: true,
+  sidebarExpanded: false,
   ignoredIssues: []
 };
 
