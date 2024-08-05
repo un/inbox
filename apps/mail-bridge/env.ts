@@ -74,7 +74,7 @@ export const env = createEnv({
       .optional()
       .transform((val) => val === 'true'),
     REALTIME_HOST: z.string().min(1),
-    REALTIME_PORT: z.string(),
+    REALTIME_PORT: z.string().optional(),
     REALTIME_APP_ID: z.string().min(1),
     REALTIME_APP_KEY: z.string().min(1),
     REALTIME_APP_SECRET: z.string().min(1),
@@ -83,7 +83,8 @@ export const env = createEnv({
     PORT: z.coerce.number().int().min(1).max(65535).default(3100),
     NODE_ENV: z.enum(['development', 'production']).default('development')
   },
-  runtimeEnv: process.env
+  runtimeEnv: process.env,
+  emptyStringAsUndefined: true
 });
 
 export const activePostalServer = env.MAILBRIDGE_POSTAL_SERVERS.find(
