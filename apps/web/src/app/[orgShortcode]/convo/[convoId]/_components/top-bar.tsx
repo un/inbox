@@ -284,6 +284,7 @@ function DeleteModal({
             variant="destructive"
             className="flex-1"
             disabled={hidingConvo}
+            loading={deletingConvo}
             onClick={() =>
               deleteConvo({
                 convoPublicId: convoId,
