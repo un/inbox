@@ -10,6 +10,7 @@ export default defineConfig({
   treeshake: true,
   noExternal: [/^@u22n\/.*/],
   minify: false,
+  keepNames: true,
   banner: {
     js: [
       `import { createRequire } from 'module';`,
