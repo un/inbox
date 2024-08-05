@@ -224,7 +224,7 @@ export default function Page() {
                 ) : (
                   <Button
                     onClick={() =>
-                      ensureElevated(() => setChangePasswordModalOpen('enable'))
+                      ensureElevated(() => setTwoFactorModalOpen('enable'))
                     }>
                     Enable 2FA
                   </Button>
