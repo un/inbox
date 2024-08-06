@@ -12,6 +12,8 @@ import { ChatCircle, ChatsCircle, GearSix, Plus } from '@phosphor-icons/react';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { convoSidebarTunnel, settingsSidebarTunnel } from '../tunnels';
 import { Button } from '@/src/components/shadcn-ui/button';
+import { usePathname } from 'next/navigation';
+
 import Link from 'next/link';
 
 type BottomNavProps = {
@@ -24,16 +26,19 @@ export function BottomNav({
   type = 'convos'
 }: BottomNavProps) {
   const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const isMessage = usePathname() === `/${orgShortcode}/convo`;
+  const isNewMessage = usePathname() === `/${orgShortcode}/convo/new`;
 
   return (
     <>
       {/* Spacer  */}
       <div className="h-20 w-full" />
       {/* Bottom Nav */}
-      <div className="bg-base-1 absolute bottom-0 z-[1] flex h-20 w-full items-center justify-around rounded-t-xl border border-b-0 px-4">
+      <div className="bg-slate-1 absolute bottom-0 z-[1] flex h-20 w-full items-center justify-around rounded-t-xl border border-b-0 px-4">
         <Button
           variant="ghost"
-          className="hover:bg-accent-2 hover:text-base-11 text-base-11 flex h-20 w-24 flex-col items-center justify-center gap-2 px-1 py-1"
+          aria-current={isMessage ? 'page' : undefined}
+          className="hover:bg-accent-2 hover:text-slate-11 text-slate-11 [&[aria-current='page']]:text-slate-12 flex h-20 w-24 flex-col items-center justify-center gap-2 px-1 py-1"
           asChild>
           <Link href={`/${orgShortcode}/convo`}>
             <ChatCircle
@@ -41,22 +46,23 @@ export function BottomNav({
               className="size-6"
             />
             <span className="text-sm">
-              {convoHidden ? 'Hidden Convos' : 'Convos'}
+              {convoHidden ? 'Hidden Messages' : 'Messages'}
             </span>
           </Link>
         </Button>
         <Button
+          aria-current={isNewMessage ? 'page' : undefined}
           variant="ghost"
-          className="hover:bg-accent-2 hover:text-base-11 text-base-11 flex h-20 w-24 flex-col items-center justify-center gap-1"
+          className="hover:bg-accent-2 hover:text-slate-11 text-slate-11 [&[aria-current='page']]:text-slate-12 flex h-20 w-24 flex-col items-center justify-center gap-1"
           asChild>
           <Link href={`/${orgShortcode}/convo/new`}>
-            <div className="bg-accent-11 text-base-1 rounded-xl p-2">
+            <div className="bg-accent-11 text-slate-1 rounded-xl p-2">
               <Plus
                 size={16}
                 className="size-4"
               />
             </div>
-            <span className="text-sm">New Convo</span>
+            <span className="text-sm">New Message</span>
           </Link>
         </Button>
         {type === 'convos' ? <SpacesSidebar /> : <SettingsSidebar />}
