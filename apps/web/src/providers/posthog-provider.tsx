@@ -6,14 +6,10 @@ import posthog from 'posthog-js';
 import { env } from '../env';
 
 const initPostHog = () => {
-  if (!env.NEXT_PUBLIC_POSTHOG_KEY) {
-    throw new Error('NEXT_PUBLIC_POSTHOG_KEY is not set');
-  }
-
   const persistence =
     cookieConsentGiven() === 'yes' ? 'localStorage+cookie' : 'memory';
 
-  posthog.init(env.NEXT_PUBLIC_POSTHOG_KEY, {
+  posthog.init(env.NEXT_PUBLIC_POSTHOG_KEY!, {
     api_host: '/ingest',
     person_profiles: 'identified_only',
     capture_pageview: false, // Disable automatic pageview capture, as we capture manually
