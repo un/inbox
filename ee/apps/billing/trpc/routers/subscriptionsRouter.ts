@@ -26,18 +26,19 @@ export const subscriptionsRouter = router({
           period: true
         }
       });
+
       if (!orgSubscriptionQuery?.id) {
         return { error: 'Org is not subscribed to a plan' };
       }
 
       const activeOrgMembersCount = await db
-        .select({ count: sql<number>`count(*)` })
+        .select({ count: sql<string>`count(*)` })
         .from(orgMembers)
         .where(
           and(eq(orgMembers.orgId, orgId), eq(orgMembers.status, 'active'))
         );
 
-      const totalOrgUsers = activeOrgMembersCount[0]?.count ?? 1;
+      const totalOrgUsers = Number(activeOrgMembersCount[0]?.count ?? '1');
 
       if (orgSubscriptionQuery.stripeSubscriptionId) {
         const stripeGetSubscriptionResult =

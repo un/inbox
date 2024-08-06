@@ -371,8 +371,15 @@ export const invitesRouter = router({
         }
       });
 
+      if (!queryInvitesResponse) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Invalid invite token'
+        });
+      }
+
       const invitedOrgMemberProfilePublicId =
-        queryInvitesResponse?.invitedProfile?.publicId;
+        queryInvitesResponse.invitedProfile?.publicId;
       if (
         !invitedOrgMemberProfilePublicId ||
         !queryInvitesResponse.invitedOrgMemberProfileId ||
@@ -381,13 +388,6 @@ export const invitesRouter = router({
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'Invalid invite token, please contact support'
-        });
-      }
-
-      if (!queryInvitesResponse) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Invalid invite token'
         });
       }
 
@@ -408,18 +408,36 @@ export const invitesRouter = router({
         });
       }
 
-      const userHandleQuery = await db.query.accounts.findFirst({
+      const userQuery = await db.query.accounts.findFirst({
         where: eq(accounts.id, accountId),
         columns: {
           username: true
+        },
+        with: {
+          orgMemberships: {
+            columns: {
+              orgId: true
+            }
+          }
         }
       });
+
+      if (
+        userQuery?.orgMemberships.find(
+          (org) => org.orgId === queryInvitesResponse.orgId
+        )
+      ) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'You are already a member of this org'
+        });
+      }
 
       await db
         .update(orgMemberProfiles)
         .set({
           accountId: accountId,
-          handle: userHandleQuery?.username ?? ''
+          handle: userQuery?.username ?? ''
         })
         .where(
           eq(
@@ -444,13 +462,13 @@ export const invitesRouter = router({
         })
         .where(eq(orgInvitations.id, queryInvitesResponse.id));
 
+      await refreshOrgShortcodeCache(+queryInvitesResponse.orgId);
+
       if (env.EE_LICENSE_KEY) {
         await billingTrpcClient.stripe.subscriptions.updateOrgUserCount.mutate({
           orgId: +queryInvitesResponse.orgId
         });
       }
-
-      await refreshOrgShortcodeCache(+queryInvitesResponse.orgId);
 
       return {
         success: true,
