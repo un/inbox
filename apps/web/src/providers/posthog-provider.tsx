@@ -1,5 +1,6 @@
 // app/providers.tsx
 'use client';
+import { cookieConsentGiven } from '../components/cookie-banner';
 import { PostHogProvider } from 'posthog-js/react';
 import posthog from 'posthog-js';
 import { env } from '../env';
@@ -14,7 +15,9 @@ if (
   posthog.init(env.NEXT_PUBLIC_POSTHOG_KEY, {
     api_host: '/ingest',
     person_profiles: 'identified_only',
-    capture_pageview: false // Disable automatic pageview capture, as we capture manually
+    capture_pageview: false, // Disable automatic pageview capture, as we capture manually
+    persistence:
+      cookieConsentGiven() === 'yes' ? 'localStorage+cookie' : 'memory'
   });
 }
 

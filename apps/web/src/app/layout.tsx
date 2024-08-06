@@ -1,4 +1,5 @@
 import { TooltipProvider } from '@/src/components/shadcn-ui/tooltip';
+import { CookieConsentBanner } from '@/src/components/cookie-banner';
 import { PHProvider } from '@/src/providers/posthog-provider';
 import { CookiesProvider } from 'next-client-cookies/server';
 import { Toaster } from '@/src/components/shadcn-ui/sonner';
@@ -62,6 +63,7 @@ export default function RootLayout({
                 <TRPCReactProvider>
                   {children}
                   <Toaster />
+                  <CookieConsentBanner />
                 </TRPCReactProvider>
               </TooltipProvider>
             </ThemeProvider>
