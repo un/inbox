@@ -30,7 +30,20 @@ import { ms } from '@u22n/utils/ms';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage
+} from '@/src/components/shadcn-ui/form';
 import RecoveryEmailSection from './_components/RecoveryEmailSection';
+import { Input } from '@/src/components/shadcn-ui/input';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Avatar } from '@/src/components/avatar';
+import { type TypeId } from '@u22n/utils/typeid';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
 
 export default function Page() {
   const platformUtils = platform.useUtils();
@@ -93,6 +106,9 @@ export default function Page() {
   } | null>(null);
 
   const [removeAllSessionsModalOpen, setRemoveAllSessionsModalOpen] =
+    useState(false);
+
+  const [showDeleteAccountSection, setShowDeleteAccountSection] =
     useState(false);
 
   const { mutate: removeSession } =
@@ -177,11 +193,12 @@ export default function Page() {
       )}
 
       {overviewData && (
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-8">
           <div className="flex flex-col gap-2">
-            <span className="text-lg font-bold">Password and 2FA</span>
-            <div className="flex flex-col gap-2">
-              <span className="text-sm font-semibold">Password</span>
+            <span className="text-base-11 text-sm font-semibold">
+              Password and 2FA
+            </span>
+            <div className="flex flex-row gap-2">
               <div className="flex gap-2">
                 {overviewData.passwordSet ? (
                   <Button
@@ -208,11 +225,6 @@ export default function Page() {
                   </Button>
                 )}
               </div>
-            </div>
-            <div className="flex flex-col gap-2">
-              <span className="text-sm font-semibold">
-                Two-Factor Authentication
-              </span>
               <div className="flex gap-2">
                 {overviewData.twoFactorEnabled ? (
                   <Button
@@ -242,12 +254,16 @@ export default function Page() {
             </div>
           </div>
           <div className="flex flex-col gap-2">
-            <span className="text-lg font-bold">Recovery Email</span>
+            <span className="text-base-11 text-sm font-semibold">
+              Recovery Email
+            </span>
             <RecoveryEmailSection ensureElevated={ensureElevated} />
           </div>
 
           <div className="flex flex-col gap-2">
-            <span className="text-lg font-bold">Recovery Code</span>
+            <span className="text-base-11 text-sm font-semibold">
+              Recovery Code
+            </span>
             <div className="flex gap-2">
               {overviewData.recoveryCodeSet ? (
                 <>
@@ -279,7 +295,7 @@ export default function Page() {
           </div>
 
           <div className="flex flex-col gap-2">
-            <span className="text-lg font-bold">Passkeys</span>
+            <span className="text-base-11 text-sm font-semibold">Passkeys</span>
             <div className="flex flex-wrap gap-2">
               {overviewData.passkeys.map((passkey) => (
                 <div
@@ -326,7 +342,7 @@ export default function Page() {
           </div>
 
           <div className="flex flex-col gap-2">
-            <span className="text-lg font-bold">Sessions</span>
+            <span className="text-base-11 text-sm font-semibold">Sessions</span>
             <div className="flex flex-wrap gap-2">
               {overviewData?.sessions.map((session) => (
                 <div
@@ -379,6 +395,28 @@ export default function Page() {
               />
               <span>Logout of All Sessions</span>
             </Button>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <span className="text-base-11 text-sm font-semibold">
+              Delete Account
+            </span>
+            {!showDeleteAccountSection ? (
+              <Button
+                variant="destructive"
+                className="mt-3 w-fit gap-2"
+                onClick={() =>
+                  ensureElevated(() => setShowDeleteAccountSection(true))
+                }>
+                <Trash
+                  size={16}
+                  weight="bold"
+                />
+                <span>Delete My Account</span>
+              </Button>
+            ) : (
+              <DeleteAccount />
+            )}
           </div>
 
           {elevatedModalOpen && (
@@ -578,6 +616,178 @@ export default function Page() {
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+function DeleteAccount() {
+  const { data: accountData, isLoading: accountDataLoading } =
+    platform.account.security.deleteAccountPre.useQuery();
+
+  const confirmationFormSchema = z.object({
+    username: z.literal(accountData?.username, {
+      errorMap: () => ({ message: 'Must match your username exactly' })
+    })
+  });
+
+  const form = useForm<z.infer<typeof confirmationFormSchema>>({
+    resolver: zodResolver(confirmationFormSchema),
+    defaultValues: {
+      username: ''
+    }
+  });
+
+  const validated = form.formState.isValid;
+
+  const { mutate: deleteAccountConfirm, isPending: deletingAccount } =
+    platform.account.security.deleteAccountConfirm.useMutation({
+      onSuccess: () => {
+        window.location.replace('/');
+      }
+    });
+
+  return (
+    <>
+      <div className="flex flex-col gap-2">
+        {accountDataLoading ? (
+          <div className="flex h-20 w-full items-center justify-center gap-2 text-center font-bold">
+            <SpinnerGap className="size-4 animate-spin" />
+            <span className="text-sm">Checking your account...</span>
+          </div>
+        ) : (
+          <div className="flex w-full flex-col gap-4">
+            <div className="flex w-full flex-col gap-2">
+              <span className="">
+                You are about to permanently and irreversibly delete your
+                account.
+              </span>
+              <span className="">
+                Your username will be disabled from being registered again.
+              </span>
+              <span className="text-red-9 font-semibold">
+                This can not be undone.
+              </span>
+            </div>
+
+            <div className="flex w-96 flex-col gap-4">
+              {accountData?.ownedOrgs && accountData?.ownedOrgs.length > 0 && (
+                <>
+                  <span className="text-base-11 text-xs">
+                    {(accountData?.ownedOrgs?.length ?? 0) > 1
+                      ? 'Delete these organizations with all their data and members:'
+                      : 'Delete this organization with all its data and members:'}
+                  </span>
+                  {accountData?.ownedOrgs.map((org) => (
+                    <OrgObject
+                      key={org.publicId}
+                      publicId={org.publicId}
+                      avatarTimestamp={org.avatarTimestamp}
+                      name={org.name}
+                      shortcode={org.shortcode}
+                    />
+                  ))}
+                </>
+              )}
+              {accountData?.memberOrgs &&
+                accountData?.memberOrgs.length > 0 && (
+                  <>
+                    <span className="text-base-11 text-xs">
+                      {(accountData?.memberOrgs?.length ?? 0) > 1
+                        ? 'Leave these organizations:'
+                        : 'Leave this organization:'}
+                    </span>
+                    {accountData?.memberOrgs.map((org) => (
+                      <OrgObject
+                        key={org.publicId}
+                        publicId={org.publicId}
+                        avatarTimestamp={org.avatarTimestamp}
+                        name={org.name}
+                        shortcode={org.shortcode}
+                      />
+                    ))}
+                  </>
+                )}
+            </div>
+
+            <div className="flex w-96 flex-col gap-4">
+              <span>
+                Please enter your username{' '}
+                <span className="bg-base-11 text-base-1 rounded-md px-1 py-0.5 font-mono text-sm">
+                  {accountData?.username}
+                </span>{' '}
+                to confirm your account deletion.
+              </span>
+              <Form {...form}>
+                <FormField
+                  control={form.control}
+                  name="username"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Input
+                          label="Username"
+                          inputSize="lg"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </Form>
+            </div>
+
+            <Button
+              variant="destructive"
+              className="mt-3 w-fit gap-2"
+              disabled={!validated}
+              loading={deletingAccount}
+              onClick={async (e) => {
+                e.preventDefault();
+                if (!validated)
+                  return form.setError('username', {
+                    message: 'Must match your username exactly'
+                  });
+                await form.handleSubmit(async () => deleteAccountConfirm())(e);
+              }}>
+              <Trash
+                size={16}
+                weight="bold"
+              />
+              <span>Yes I want to delete my whole account</span>
+            </Button>
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
+function OrgObject({
+  publicId,
+  avatarTimestamp,
+  name,
+  shortcode
+}: {
+  publicId: TypeId<'org'>;
+  avatarTimestamp: Date | null;
+  name: string;
+  shortcode: string;
+}) {
+  return (
+    <div className="flex w-full flex-row items-center justify-between gap-4">
+      <div className="flex w-full flex-row items-center gap-4">
+        <Avatar
+          avatarProfilePublicId={publicId}
+          avatarTimestamp={avatarTimestamp}
+          name={name}
+          size="xl"
+        />
+        <div className="flex flex-col gap-0">
+          <span className="font-semibold">{name}</span>
+          <span className="text-base-11 leading-0 text-xs">{shortcode}</span>
+        </div>
+      </div>
     </div>
   );
 }

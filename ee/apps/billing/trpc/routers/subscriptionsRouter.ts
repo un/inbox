@@ -79,5 +79,52 @@ export const subscriptionsRouter = router({
       return {
         updated: true
       };
+    }),
+  cancelOrgSubscription: protectedProcedure
+    .input(
+      z.object({
+        orgId: z.number().min(1)
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { db } = ctx;
+      const { orgId } = input;
+
+      const orgSubscriptionQuery = await db.query.orgBilling.findFirst({
+        where: eq(orgBilling.orgId, orgId),
+        columns: {
+          id: true,
+          orgId: true,
+          stripeSubscriptionId: true,
+          stripeCustomerId: true,
+          plan: true,
+          period: true
+        }
+      });
+      if (!orgSubscriptionQuery?.id) {
+        return { error: 'Org is not subscribed to a plan' };
+      }
+
+      if (orgSubscriptionQuery.stripeSubscriptionId) {
+        const stripeGetSubscriptionResult =
+          await stripeSdk.subscriptions.retrieve(
+            orgSubscriptionQuery.stripeSubscriptionId
+          );
+
+        if (stripeGetSubscriptionResult) {
+          await stripeSdk.subscriptions.update(
+            orgSubscriptionQuery.stripeSubscriptionId,
+            {
+              cancel_at: Math.floor(new Date().getTime() / 1000)
+            }
+          );
+        }
+      }
+
+      console.info('🫡 Cancelled billing for deleted org 💩', { orgId });
+
+      return {
+        updated: true
+      };
     })
 });
