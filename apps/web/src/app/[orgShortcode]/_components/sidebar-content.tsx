@@ -336,13 +336,18 @@ function OrgMenu() {
                     </div>
                   </DropdownMenuItem>
                   <DropdownMenuItem>
-                    <div
-                      className={
-                        'text-base-11 flex w-full flex-row items-center gap-2 font-medium'
-                      }>
-                      <QuestionMark />
-                      <span>Support</span>
-                    </div>
+                    <Link
+                      href={`${env.NEXT_PUBLIC_WEBAPP_URL}/${currentOrg.shortcode}/convo/new?emails=support@uninbox.com`}
+                      target="_blank">
+                      <div
+                        className={
+                          'text-base-11 flex w-full flex-row items-center gap-2 font-medium'
+                        }>
+                        <QuestionMark />
+
+                        <span>Support</span>
+                      </div>
+                    </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem>
                     <div
