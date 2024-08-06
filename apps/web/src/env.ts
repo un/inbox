@@ -44,7 +44,7 @@ export const env = createEnv({
     NEXT_PUBLIC_PLATFORM_URL: z.string().url(),
     NEXT_PUBLIC_REALTIME_APP_KEY: z.string(),
     NEXT_PUBLIC_REALTIME_HOST: z.string(),
-    NEXT_PUBLIC_REALTIME_PORT: z.coerce.number(),
+    NEXT_PUBLIC_REALTIME_PORT: z.coerce.number().optional(),
     NEXT_PUBLIC_TURNSTILE_SITE_KEY: z.string().optional(),
     NEXT_PUBLIC_EE_ENABLED: z.enum(['true', 'false']),
     NEXT_PUBLIC_APP_VERSION: z.string().default('development'),
