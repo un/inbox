@@ -135,7 +135,8 @@ export function ReplyBox({ convoId, onReply }: ReplyBoxProps) {
         orgShortcode,
         message: stringify(editorText),
         replyToMessagePublicId: replyTo,
-        messageType: type
+        messageType: type,
+        sendAsEmailIdentityPublicId: emailIdentity
       });
       await addConvoToCache(convoId, publicId);
       await updateConvoData(convoId, (oldData) => {
