@@ -18,8 +18,8 @@ stripeApi.post('/webhooks', async (c) => {
     console.info('Unhandled stripe event', {
       event: stripeEvent.type
     });
-    return c.json(null, 200);
   }
+  return c.json(null, 200);
 });
 
 const handleCustomerSubscriptionUpdated = async (stripeEvent: Stripe.Event) => {
