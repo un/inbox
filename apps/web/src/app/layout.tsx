@@ -1,5 +1,5 @@
+import { CookieConsentBanner } from '../components/posthog-cookie-banner';
 import { TooltipProvider } from '@/src/components/shadcn-ui/tooltip';
-import { CookieConsentBanner } from '@/src/components/cookie-banner';
 import { PHProvider } from '@/src/providers/posthog-provider';
 import { CookiesProvider } from 'next-client-cookies/server';
 import { Toaster } from '@/src/components/shadcn-ui/sonner';
@@ -13,9 +13,12 @@ import type { Metadata } from 'next';
 import dynamic from 'next/dynamic';
 import '@/src/styles/globals.css';
 
-const PostHogPageView = dynamic(() => import('./posthog'), {
-  ssr: false
-});
+const PostHogPageView = dynamic(
+  () => import('../components/posthog-page-view'),
+  {
+    ssr: false
+  }
+);
 
 const inter = Inter({
   subsets: ['latin'],

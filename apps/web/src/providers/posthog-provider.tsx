@@ -1,6 +1,6 @@
 // app/providers.tsx
 'use client';
-import { cookieConsentGiven } from '../components/cookie-banner';
+import { cookieConsentGiven } from '../components/posthog-cookie-banner';
 import { PostHogProvider } from 'posthog-js/react';
 import posthog from 'posthog-js';
 import { env } from '../env';
