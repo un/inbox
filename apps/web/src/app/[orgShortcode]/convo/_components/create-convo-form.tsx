@@ -107,11 +107,9 @@ const selectedParticipantsAtom = atom<NewConvoParticipant[]>([]);
 const newEmailParticipantsAtom = atom<string[]>([]);
 
 export default function CreateConvoForm({
-  initialEmails = [],
-  initialSubject = ''
+  initialEmails = []
 }: {
   initialEmails?: string[];
-  initialSubject?: string;
 }) {
   const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
 
@@ -151,7 +149,7 @@ export default function CreateConvoForm({
   const [selectedEmailIdentity, setSelectedEmailIdentity] = useState<
     string | null
   >(null);
-  const [topic, setTopic] = useState(initialSubject);
+  const [topic, setTopic] = useState('');
   const { attachments, openFilePicker, getTrpcUploadFormat, AttachmentArray } =
     useAttachmentUploader();
 
@@ -408,43 +406,35 @@ export default function CreateConvoForm({
   const setNewEmailParticipants = useSetAtom(newEmailParticipantsAtom);
   const setSelectedParticipants = useSetAtom(selectedParticipantsAtom);
 
+  const initializeEmailParticipants = (emails: string[]) => {
+    const uniqueEmails = [...new Set(emails)];
+    setNewEmailParticipants(uniqueEmails);
+    setSelectedParticipants((prev) => {
+      const newParticipants = uniqueEmails.map((email) => ({
+        type: 'email' as const,
+        publicId: email,
+        address: email,
+        keywords: [email],
+        avatarPublicId: null,
+        avatarTimestamp: null,
+        color: null,
+        own: false,
+        name: email
+      }));
+      return [
+        ...prev,
+        ...newParticipants.filter(
+          (p) => !prev.some((existing) => existing.publicId === p.publicId)
+        )
+      ];
+    });
+  };
+
   useEffect(() => {
-    const initializeEmailParticipants = (emails: string[]) => {
-      const uniqueEmails = [...new Set(emails)];
-      setNewEmailParticipants(uniqueEmails);
-      setSelectedParticipants((prev) => {
-        const newParticipants = uniqueEmails.map((email) => ({
-          type: 'email' as const,
-          publicId: email,
-          address: email,
-          keywords: [email],
-          avatarPublicId: null,
-          avatarTimestamp: null,
-          color: null,
-          own: false,
-          name: email
-        }));
-        return [
-          ...prev,
-          ...newParticipants.filter(
-            (p) => !prev.some((existing) => existing.publicId === p.publicId)
-          )
-        ];
-      });
-    };
     if (initialEmails.length > 0) {
       initializeEmailParticipants(initialEmails);
     }
-    if (initialSubject) {
-      setTopic(initialSubject);
-    }
-  }, [
-    initialEmails,
-    initialSubject,
-    setTopic,
-    setNewEmailParticipants,
-    setSelectedParticipants
-  ]);
+  }, [initialEmails]);
 
   return (
     <div className="flex w-full flex-col gap-3 p-3">

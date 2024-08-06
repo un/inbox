@@ -337,7 +337,7 @@ function OrgMenu() {
                   </DropdownMenuItem>
                   <DropdownMenuItem>
                     <Link
-                      href={`${env.NEXT_PUBLIC_WEBAPP_URL}/${currentOrg.shortcode}/convo/new?emails=support@uninbox.com&subject=Need%20help%20getting%20unblocked`}
+                      href={`${env.NEXT_PUBLIC_WEBAPP_URL}/${currentOrg.shortcode}/convo/new?emails=support@uninbox.com`}
                       target="_blank">
                       <div
                         className={
