@@ -10,6 +10,7 @@ import {
 import { deleteAttachmentsApi } from './api/deleteAttachments';
 import { internalPresignApi } from './api/internalPresign';
 import { attachmentProxy } from './proxy/attachment';
+import { deleteOrgsApi } from './api/deleteOrg';
 import { opentelemetry } from '@u22n/otel/hono';
 import { mailfetchApi } from './api/mailfetch';
 import { authMiddleware } from './middlewares';
@@ -40,6 +41,7 @@ app.route('/api', presignApi);
 app.route('/api', internalPresignApi);
 app.route('/api', mailfetchApi);
 app.route('/api', deleteAttachmentsApi);
+app.route('/api', deleteOrgsApi);
 
 const cleanup = setupHonoListener(app, { port: env.PORT });
 setupRuntime([cleanup]);

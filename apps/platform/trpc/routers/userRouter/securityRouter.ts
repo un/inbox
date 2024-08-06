@@ -1,4 +1,38 @@
 import {
+  accounts,
+  authenticators,
+  contacts,
+  convoAttachments,
+  convoEntries,
+  convoEntryPrivateVisibilityParticipants,
+  convoEntryRawHtmlEmails,
+  convoEntryReplies,
+  convoEntrySeenTimestamps,
+  convoParticipants,
+  convoParticipantTeamMembers,
+  convos,
+  convoSeenTimestamps,
+  convoSubjects,
+  domains,
+  emailIdentities,
+  emailIdentitiesAuthorizedOrgMembers,
+  emailIdentitiesPersonal,
+  emailIdentityExternal,
+  emailRoutingRules,
+  emailRoutingRulesDestinations,
+  orgInvitations,
+  orgMemberProfiles,
+  orgModules,
+  orgMembers,
+  orgPostalConfigs,
+  orgs,
+  pendingAttachments,
+  postalServers,
+  sessions,
+  teamMembers,
+  teams
+} from '@u22n/database/schema';
+import {
   generateAuthenticationOptions,
   generateRegistrationOptions,
   verifyAuthenticationResponse,
@@ -21,19 +55,20 @@ import {
   strongPasswordSchema,
   calculatePasswordStrength
 } from '@u22n/utils/password';
-import { accounts, authenticators, sessions } from '@u22n/database/schema';
 import { accountIdentifier, ratelimiter } from '~platform/trpc/ratelimit';
 import { createAuthenticator } from '~platform/utils/auth/passkeyUtils';
+import { refreshOrgShortcodeCache } from '~platform/utils/orgShortcode';
 import { deleteCookie, getCookie, setCookie } from '@u22n/hono/helpers';
+import { billingTrpcClient } from '~platform/utils/tRPCServerClients';
 import { router, accountProcedure } from '~platform/trpc/trpc';
 import { TOTPController, createTOTPKeyURI } from 'oslo/otp';
+import { inArray, isNotNull } from '@u22n/database/orm';
 import { publicProcedure } from '~platform/trpc/trpc';
 import { nanoIdToken } from '@u22n/utils/zodSchemas';
 import { typeIdValidator } from '@u22n/utils/typeid';
 import { decodeHex, encodeHex } from 'oslo/encoding';
 import { zodSchemas } from '@u22n/utils/zodSchemas';
 import type { TrpcContext } from '~platform/ctx';
-import { isNotNull } from '@u22n/database/orm';
 import { lucia } from '~platform/utils/auth';
 import { and, eq } from '@u22n/database/orm';
 import { storage } from '~platform/storage';
@@ -1081,5 +1116,272 @@ export const securityRouter = router({
       });
 
       return { success: true };
-    })
+    }),
+  deleteAccountPre: elevatedProcedure.query(async ({ ctx }) => {
+    const { db, account } = ctx;
+    const accountOrgsQuery = await db.query.accounts.findFirst({
+      where: eq(accounts.id, account.id),
+      columns: {
+        username: true
+      },
+      with: {
+        orgMemberships: {
+          columns: {
+            id: true,
+            role: true
+          },
+          with: {
+            org: {
+              columns: {
+                publicId: true,
+                name: true,
+                avatarTimestamp: true,
+                ownerId: true,
+                shortcode: true
+              }
+            }
+          }
+        }
+      }
+    });
+
+    if (!accountOrgsQuery) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'Account not in any orgs'
+      });
+    }
+
+    const ownedOrgs = accountOrgsQuery.orgMemberships.filter(
+      (orgMembership) => orgMembership.org.ownerId === account.id
+    );
+    const memberOrgs = accountOrgsQuery.orgMemberships.filter(
+      (orgMembership) => orgMembership.org.ownerId !== account.id
+    );
+
+    return {
+      username: accountOrgsQuery.username,
+      ownedOrgs: ownedOrgs.map((orgMembership) => {
+        return {
+          publicId: orgMembership.org.publicId,
+          name: orgMembership.org.name,
+          avatarTimestamp: orgMembership.org.avatarTimestamp,
+          shortcode: orgMembership.org.shortcode
+        };
+      }),
+      memberOrgs: memberOrgs.map((orgMembership) => {
+        return {
+          publicId: orgMembership.org.publicId,
+          name: orgMembership.org.name,
+          avatarTimestamp: orgMembership.org.avatarTimestamp,
+          shortcode: orgMembership.org.shortcode
+        };
+      })
+    };
+  }),
+  deleteAccountConfirm: elevatedProcedure.mutation(async ({ ctx }) => {
+    const { db, account } = ctx;
+
+    // delete user objects
+    await db
+      .update(accounts)
+      .set({
+        passwordHash: null,
+        recoveryCode: null,
+        recoveryEmailHash: null,
+        recoveryEmailVerifiedAt: null,
+        twoFactorEnabled: false,
+        twoFactorSecret: null,
+        metadata: { deleted: new Date() }
+      })
+      .where(eq(accounts.id, account.id));
+    await db
+      .delete(authenticators)
+      .where(eq(authenticators.accountId, account.id));
+
+    // delete user sessions
+    await lucia.invalidateUserSessions(account.id);
+
+    // delete org memberships
+
+    const orgMembersQuery = await db.query.orgMembers.findMany({
+      where: eq(orgMembers.accountId, account.id),
+      columns: {
+        id: true,
+        publicId: true
+      },
+      with: {
+        org: {
+          columns: {
+            id: true
+          }
+        }
+      }
+    });
+
+    if (orgMembersQuery.length > 0) {
+      const orgMemberIdsArray = orgMembersQuery.map(
+        (orgMember) => orgMember.id
+      );
+      const orgIdsArray = orgMembersQuery.map((orgMember) => orgMember.org.id);
+
+      await Promise.allSettled(
+        orgIdsArray.map(async (orgId) => {
+          await refreshOrgShortcodeCache(orgId);
+        })
+      );
+
+      await db
+        .update(orgMembers)
+        .set({
+          removedAt: new Date(),
+          accountId: null,
+          status: 'removed'
+        })
+        .where(inArray(orgMembers.id, orgMemberIdsArray));
+    }
+
+    // delete orgs
+
+    const orgsQuery = await db.query.orgs.findMany({
+      where: eq(orgs.ownerId, account.id),
+      columns: {
+        id: true,
+        publicId: true,
+        shortcode: true
+      }
+    });
+
+    if (orgsQuery.length > 0) {
+      const orgIdsArray = orgsQuery.map((org) => org.id);
+
+      await Promise.all([
+        db.delete(orgs).where(inArray(orgs.id, orgIdsArray)),
+        db
+          .delete(orgInvitations)
+          .where(inArray(orgInvitations.orgId, orgIdsArray)),
+        db.delete(orgModules).where(inArray(orgModules.orgId, orgIdsArray)),
+        db
+          .delete(orgPostalConfigs)
+          .where(inArray(orgPostalConfigs.orgId, orgIdsArray)),
+        db
+          .delete(orgPostalConfigs)
+          .where(inArray(orgPostalConfigs.orgId, orgIdsArray)),
+        db.delete(orgMembers).where(inArray(orgMembers.orgId, orgIdsArray)),
+        db
+          .delete(orgMemberProfiles)
+          .where(inArray(orgMemberProfiles.orgId, orgIdsArray)),
+        db.delete(teams).where(inArray(teams.orgId, orgIdsArray)),
+        db.delete(teamMembers).where(inArray(teamMembers.orgId, orgIdsArray)),
+        db.delete(domains).where(inArray(domains.orgId, orgIdsArray)),
+        db
+          .delete(postalServers)
+          .where(inArray(postalServers.orgId, orgIdsArray)),
+        db.delete(contacts).where(inArray(contacts.orgId, orgIdsArray)),
+        db
+          .delete(emailRoutingRules)
+          .where(inArray(emailRoutingRules.orgId, orgIdsArray)),
+        db
+          .delete(emailRoutingRulesDestinations)
+          .where(inArray(emailRoutingRulesDestinations.orgId, orgIdsArray)),
+        db
+          .delete(emailIdentities)
+          .where(inArray(emailIdentities.orgId, orgIdsArray)),
+        db
+          .delete(emailIdentitiesAuthorizedOrgMembers)
+          .where(
+            inArray(emailIdentitiesAuthorizedOrgMembers.orgId, orgIdsArray)
+          ),
+        db
+          .delete(emailIdentitiesPersonal)
+          .where(inArray(emailIdentitiesPersonal.orgId, orgIdsArray)),
+        db
+          .delete(emailIdentityExternal)
+          .where(inArray(emailIdentityExternal.orgId, orgIdsArray)),
+        db.delete(convos).where(inArray(convos.orgId, orgIdsArray)),
+        db
+          .delete(convoSubjects)
+          .where(inArray(convoSubjects.orgId, orgIdsArray)),
+        db
+          .delete(convoParticipants)
+          .where(inArray(convoParticipants.orgId, orgIdsArray)),
+        db
+          .delete(convoParticipantTeamMembers)
+          .where(inArray(convoParticipantTeamMembers.orgId, orgIdsArray)),
+        db
+          .delete(convoAttachments)
+          .where(inArray(convoAttachments.orgId, orgIdsArray)),
+        db
+          .delete(pendingAttachments)
+          .where(inArray(pendingAttachments.orgId, orgIdsArray)),
+        db.delete(convoEntries).where(inArray(convoEntries.orgId, orgIdsArray)),
+        db
+          .delete(convoEntryReplies)
+          .where(inArray(convoEntryReplies.orgId, orgIdsArray)),
+        db
+          .delete(convoEntryPrivateVisibilityParticipants)
+          .where(
+            inArray(convoEntryPrivateVisibilityParticipants.orgId, orgIdsArray)
+          ),
+        db
+          .delete(convoEntryRawHtmlEmails)
+          .where(inArray(convoEntryRawHtmlEmails.orgId, orgIdsArray)),
+        db
+          .delete(convoSeenTimestamps)
+          .where(inArray(convoSeenTimestamps.orgId, orgIdsArray)),
+        db
+          .delete(convoEntrySeenTimestamps)
+          .where(inArray(convoEntrySeenTimestamps.orgId, orgIdsArray))
+      ]);
+
+      // Delete orgShortcode Cache
+
+      const orgShortcodesArray = orgsQuery.map((org) => org.shortcode);
+      await Promise.allSettled(
+        orgShortcodesArray.map(async (orgShortcode) => {
+          await storage.orgContext.removeItem(orgShortcode);
+        })
+      );
+
+      // Delete attachments
+
+      const orgPublicIdsArray = orgsQuery.map((org) => org.publicId);
+
+      const deleteStorageResponse = (await fetch(
+        `${env.STORAGE_URL}/api/orgs/delete`,
+        {
+          method: 'post',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: env.STORAGE_KEY
+          },
+          body: JSON.stringify({
+            orgPublicIds: orgPublicIdsArray
+          })
+        }
+      ).then((res) => res.json())) as unknown;
+
+      if (!deleteStorageResponse) {
+        console.error('🔥 Failed to delete attachments from storage', {
+          orgPublicIdsArray
+        });
+      }
+
+      // Delete Billing
+
+      if (env.EE_LICENSE_KEY) {
+        await Promise.all(
+          orgIdsArray.map(async (orgId) => {
+            await billingTrpcClient.stripe.subscriptions.cancelOrgSubscription.mutate(
+              {
+                orgId: orgId
+              }
+            );
+          })
+        );
+      }
+    }
+
+    return true;
+  })
 });
