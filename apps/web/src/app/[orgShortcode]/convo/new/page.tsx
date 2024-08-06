@@ -4,6 +4,12 @@ import { useQueryState } from 'nuqs';
 
 export default function Page() {
   const [emails] = useQueryState('emails', { parse: (v) => v?.split(',') });
+  const [subject] = useQueryState('subject');
 
-  return <CreateConvoForm initialEmails={emails ?? []} />;
+  return (
+    <CreateConvoForm
+      initialEmails={emails ?? []}
+      initialSubject={subject ?? ''}
+    />
+  );
 }
