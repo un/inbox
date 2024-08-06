@@ -50,9 +50,12 @@ const ConsentBannerUI: React.FC<ConsentBannerUIProps> = ({
 );
 
 export function cookieConsentGiven(): ConsentStatus {
-  return (
-    (localStorage.getItem('cookie_consent') as ConsentStatus) ?? 'undecided'
-  );
+  if (typeof window !== 'undefined') {
+    return (
+      (localStorage.getItem('cookie_consent') as ConsentStatus) ?? 'undecided'
+    );
+  }
+  return 'undecided';
 }
 
 export function CookieConsentBanner() {
