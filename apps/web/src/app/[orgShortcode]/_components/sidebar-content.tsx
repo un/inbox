@@ -316,7 +316,7 @@ export function OrgMenuContent() {
           <DropdownMenuPortal>
             <DropdownMenuSubContent
               className={cn(isMobile && 'mb-[200px]')}
-              sideOffset={isMobile ? -100 : 0}>
+              sideOffset={isMobile ? -150 : 0}>
               <DropdownMenuItem>
                 <div
                   className={
