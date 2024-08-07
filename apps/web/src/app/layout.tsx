@@ -1,4 +1,3 @@
-import { CookieConsentBanner } from '../components/posthog-cookie-banner';
 import { TooltipProvider } from '@/src/components/shadcn-ui/tooltip';
 import { PHProvider } from '@/src/providers/posthog-provider';
 import { CookiesProvider } from 'next-client-cookies/server';
