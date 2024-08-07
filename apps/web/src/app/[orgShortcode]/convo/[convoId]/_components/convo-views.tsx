@@ -74,6 +74,19 @@ export function ConvoView({
     return formattedParticipantsData;
   }, [convoData?.data.participants]);
 
+  const hasExternalParticipants = useMemo(
+    () => formattedParticipants.some((p) => p.type === 'contact'),
+    [formattedParticipants]
+  );
+
+  const defaultEmailIdentity = useMemo(
+    () =>
+      convoData?.data.participants.find(
+        (p) => p.publicId === participantOwnPublicId
+      )?.emailIdentity?.publicId,
+    [convoData?.data.participants, participantOwnPublicId]
+  );
+
   if (convoError && convoError.data?.code === 'NOT_FOUND') {
     return <ConvoNotFound DismissButton={DismissButton} />;
   }
@@ -106,6 +119,8 @@ export function ConvoView({
       <ReplyBox
         convoId={convoId}
         onReply={() => virtuosoRef.current?.scrollToIndex({ index: 'LAST' })}
+        hasExternalParticipants={hasExternalParticipants}
+        defaultEmailIdentity={defaultEmailIdentity}
       />
     </div>
   );

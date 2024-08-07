@@ -11,6 +11,15 @@ import {
   useCommandState
 } from 'cmdk';
 import {
+  At,
+  CaretDown,
+  ChatTeardropText,
+  Check,
+  Paperclip,
+  PaperPlaneTilt,
+  Question
+} from '@phosphor-icons/react';
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -39,13 +48,6 @@ import {
   type Dispatch,
   type SetStateAction
 } from 'react';
-import {
-  At,
-  CaretDown,
-  Check,
-  Paperclip,
-  Question
-} from '@phosphor-icons/react';
 import { useAttachmentUploader } from '@/src/components/shared/attachments';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { useComposingDraft } from '@/src/stores/draft-store';
@@ -53,6 +55,7 @@ import { Avatar, AvatarIcon } from '@/src/components/avatar';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { Input } from '@/src/components/shadcn-ui/input';
 import { Badge } from '@/src/components/shadcn-ui/badge';
+import { useIsMobile } from '@/src/hooks/use-is-mobile';
 import { useMutation } from '@tanstack/react-query';
 import { useAddSingleConvo$Cache } from '../utils';
 import { Editor } from '@/src/components/editor';
@@ -120,6 +123,7 @@ export default function CreateConvoForm({
   const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
   const lastOrg = usePrevious(orgShortcode);
   const { draft, setDraft, resetDraft } = useComposingDraft();
+  const isMobile = useIsMobile();
 
   const { data: userEmailIdentities, isLoading: emailIdentitiesLoading } =
     platform.org.mail.emailIdentities.getUserEmailIdentities.useQuery(
@@ -175,6 +179,15 @@ export default function CreateConvoForm({
       )
     );
   });
+
+  const hasExternalParticipants = useMemo(
+    () =>
+      selectedParticipants.some(
+        (participant) =>
+          participant.type === 'email' || participant.type === 'contact'
+      ),
+    [selectedParticipants]
+  );
 
   const { mutateAsync: createConvoFn } =
     platform.convos.createNewConvo.useMutation({
@@ -382,14 +395,20 @@ export default function CreateConvoForm({
 
   const isFormValid = useMemo(() => {
     if (
+      (hasExternalParticipants ? selectedEmailIdentity !== null : true) &&
       isTextPresent &&
       topic.length > 0 &&
-      selectedParticipants.length > 0 &&
-      selectedEmailIdentity
+      selectedParticipants.length > 0
     )
       return true;
     return false;
-  }, [isTextPresent, topic, selectedParticipants, selectedEmailIdentity]);
+  }, [
+    hasExternalParticipants,
+    selectedEmailIdentity,
+    isTextPresent,
+    topic.length,
+    selectedParticipants.length
+  ]);
 
   async function startConvoCreation(type: 'message' | 'comment') {
     const getPublicIdsByType = (
@@ -424,7 +443,7 @@ export default function CreateConvoForm({
       firstMessageType: type,
       topic,
       to: toParticipant,
-      sendAsEmailIdentityPublicId: selectedEmailIdentity!,
+      sendAsEmailIdentityPublicId: selectedEmailIdentity ?? undefined,
       participantsOrgMembersPublicIds,
       participantsTeamsPublicIds,
       participantsContactsPublicIds,
@@ -443,7 +462,14 @@ export default function CreateConvoForm({
     isPending: isCreating,
     variables: messageType
   } = useMutation({
-    mutationFn: (type: 'comment' | 'message') => startConvoCreation(type),
+    mutationFn: (type: 'comment' | 'message') => {
+      if (hasExternalParticipants && selectedEmailIdentity === null) {
+        throw new Error(
+          'Please select an email identity to send the message as.'
+        );
+      }
+      return startConvoCreation(type);
+    },
     onSuccess: (data) => {
       toast.success('Convo created, redirecting you to your conversion');
 
@@ -455,18 +481,8 @@ export default function CreateConvoForm({
     }
   });
 
-  const selectedEmailIdentityString = useMemo(() => {
-    if (!selectedEmailIdentity) return null;
-    const identity = userEmailIdentities?.emailIdentities.find(
-      (e) => e.publicId === selectedEmailIdentity
-    );
-    return identity
-      ? `${identity.sendName} (${identity.username}@${identity.domainName})`
-      : null;
-  }, [selectedEmailIdentity, userEmailIdentities]);
-
   return (
-    <div className="flex w-full flex-col gap-3 p-3">
+    <div className="flex h-full w-full min-w-0 flex-col gap-3 p-3">
       <div className="flex w-full flex-col gap-2 text-sm">
         <h4 className="font-bold">Participants</h4>
         <ParticipantsComboboxPopover
@@ -476,59 +492,6 @@ export default function CreateConvoForm({
           setSelectedParticipants={setSelectedParticipants}
           setNewEmailParticipants={setNewEmailParticipants}
         />
-      </div>
-      <div className="flex w-full flex-col gap-2 text-sm">
-        <h4 className="font-bold">Email Identity</h4>
-        <Select
-          value={selectedEmailIdentity ?? undefined}
-          onValueChange={(value) => {
-            if (
-              userEmailIdentities?.emailIdentities.find(
-                (e) => e.publicId === value
-              )?.sendingEnabled === false
-            ) {
-              return;
-            }
-            setSelectedEmailIdentity(value);
-          }}>
-          <SelectTrigger>
-            <SelectValue>
-              {selectedEmailIdentityString ?? 'Select an Email Identity to Use'}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent side="bottom">
-            {userEmailIdentities?.emailIdentities.map((identity) => (
-              <SelectItem
-                key={identity.publicId}
-                value={identity.publicId}
-                className="[&>span:last-child]:w-full">
-                <span className="flex items-center justify-between">
-                  <span
-                    className={cn(!identity.sendingEnabled && 'text-base-11')}>
-                    {`${identity.sendName} (${identity.username}@${identity.domainName})`}
-                  </span>
-                  {!identity.sendingEnabled && (
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <Question size={14} />
-                      </TooltipTrigger>
-                      <TooltipContent className="flex flex-col">
-                        <span>
-                          Sending from this email identity is disabled.
-                        </span>
-                        <span>
-                          {isAdmin
-                            ? 'Please check that the DNS records are correctly set up.'
-                            : 'Please contact your admin for assistance.'}
-                        </span>
-                      </TooltipContent>
-                    </Tooltip>
-                  )}
-                </span>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
       </div>
 
       <div className="flex w-full flex-col gap-2 text-sm">
@@ -549,7 +512,67 @@ export default function CreateConvoForm({
 
         <AttachmentArray attachments={attachments} />
         <div className="flex flex-row items-center justify-between gap-2">
-          <div className="flex flex-row items-center gap-2">
+          <div className="flex min-w-0 flex-row items-center gap-2">
+            {!emailIdentitiesLoading && hasExternalParticipants ? (
+              <div className="flex min-w-0 items-center justify-start gap-1">
+                <span className="text-gray-9 px-2 text-sm">From:</span>
+                <Select
+                  value={selectedEmailIdentity ?? undefined}
+                  onValueChange={(email) => {
+                    if (
+                      userEmailIdentities?.emailIdentities.find(
+                        (e) => e.publicId === email
+                      )?.sendingEnabled === false
+                    ) {
+                      return;
+                    }
+                    setSelectedEmailIdentity(
+                      email as TypeId<'emailIdentities'>
+                    );
+                  }}>
+                  <SelectTrigger
+                    size="sm"
+                    className="min-w-5">
+                    <SelectValue placeholder="Select an email address" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {userEmailIdentities?.emailIdentities.map((email) => (
+                      <SelectItem
+                        key={email.publicId}
+                        value={email.publicId}
+                        className="[&>span:last-child]:w-full">
+                        <span
+                          className={cn(
+                            'flex !min-w-0 items-center justify-between',
+                            !email.sendingEnabled && 'text-base-11'
+                          )}>
+                          <span className="truncate">
+                            {`${email.sendName} (${email.username}@${email.domainName})`}
+                          </span>
+                          {!email.sendingEnabled && (
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <Question size={14} />
+                              </TooltipTrigger>
+                              <TooltipContent className="flex flex-col">
+                                <span>
+                                  Sending from this email identity is disabled.
+                                </span>
+                                <span>
+                                  {isAdmin
+                                    ? 'Please check that the DNS records are correctly set up.'
+                                    : 'Please contact your admin for assistance.'}
+                                </span>
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : null}
             <Button
               variant={'outline'}
               size={'icon-sm'}
@@ -566,14 +589,14 @@ export default function CreateConvoForm({
               loading={isCreating && messageType === 'comment'}
               disabled={!isFormValid || isCreating}
               onClick={() => createConvo('comment')}>
-              Comment
+              {isMobile ? <ChatTeardropText size={16} /> : <span>Comment</span>}
             </Button>
             <Button
               size={'sm'}
               loading={isCreating && messageType === 'message'}
               disabled={!isFormValid || isCreating}
               onClick={() => createConvo('message')}>
-              Send
+              {isMobile ? <PaperPlaneTilt size={16} /> : <span>Send</span>}
             </Button>
           </div>
         </div>

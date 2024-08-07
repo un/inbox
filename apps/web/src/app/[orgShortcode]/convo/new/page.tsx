@@ -7,9 +7,11 @@ export default function Page() {
   const [subject] = useQueryState('subject');
 
   return (
-    <CreateConvoForm
-      initialEmails={emails ?? []}
-      initialSubject={subject ?? ''}
-    />
+    <div className="flex w-full min-w-0 flex-1 flex-col">
+      <CreateConvoForm
+        initialEmails={emails ?? []}
+        initialSubject={subject ?? ''}
+      />
+    </div>
   );
 }

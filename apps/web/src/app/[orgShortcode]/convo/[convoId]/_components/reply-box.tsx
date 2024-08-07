@@ -42,15 +42,23 @@ import { platform } from '@/src/lib/trpc';
 import { stringify } from 'superjson';
 import { cn } from '@/src/lib/utils';
 import { ms } from '@u22n/utils/ms';
+import { toast } from 'sonner';
 
 const selectedEmailIdentityAtom = atom<null | TypeId<'emailIdentities'>>(null);
 
 type ReplyBoxProps = {
   convoId: TypeId<'convos'>;
   onReply: () => void;
+  hasExternalParticipants: boolean;
+  defaultEmailIdentity?: TypeId<'emailIdentities'>;
 };
 
-export function ReplyBox({ convoId, onReply }: ReplyBoxProps) {
+export function ReplyBox({
+  convoId,
+  onReply,
+  hasExternalParticipants,
+  defaultEmailIdentity
+}: ReplyBoxProps) {
   const { draft, setDraft, resetDraft } = useDraft(convoId);
   const [editorText, setEditorText] = useState(draft.content);
   const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
@@ -116,12 +124,13 @@ export function ReplyBox({ convoId, onReply }: ReplyBoxProps) {
     setEmailIdentity((prev) => {
       if (prev) return prev;
       return (
+        defaultEmailIdentity ??
         emailIdentities?.defaultEmailIdentity ??
         emailIdentities?.emailIdentities[0]?.publicId ??
         null
       );
     });
-  }, [emailIdentities, setEmailIdentity]);
+  }, [defaultEmailIdentity, emailIdentities, setEmailIdentity]);
 
   const {
     attachments,
@@ -152,7 +161,11 @@ export function ReplyBox({ convoId, onReply }: ReplyBoxProps) {
 
   const handleReply = useCallback(
     async (type: 'comment' | 'message') => {
-      if (!replyTo || !emailIdentity) return;
+      if (!replyTo) return;
+      if (hasExternalParticipants && emailIdentity === null) {
+        toast.error('Please select an email identity to send the message as.');
+        return;
+      }
       setLoadingType(type);
       const { publicId, bodyPlainText } = await replyToConvo({
         attachments: getTrpcUploadFormat(),
@@ -160,7 +173,7 @@ export function ReplyBox({ convoId, onReply }: ReplyBoxProps) {
         message: stringify(editorText),
         replyToMessagePublicId: replyTo,
         messageType: type,
-        sendAsEmailIdentityPublicId: emailIdentity
+        sendAsEmailIdentityPublicId: emailIdentity ?? undefined
       });
       await addConvoToCache(convoId, publicId);
       await updateConvoData(convoId, (oldData) => {
@@ -187,6 +200,7 @@ export function ReplyBox({ convoId, onReply }: ReplyBoxProps) {
       editorText,
       emailIdentity,
       getTrpcUploadFormat,
+      hasExternalParticipants,
       onReply,
       orgShortcode,
       replyTo,
@@ -206,7 +220,7 @@ export function ReplyBox({ convoId, onReply }: ReplyBoxProps) {
         <AttachmentArray attachments={attachments} />
         <div className="flex items-center justify-between gap-2">
           <div className="flex min-w-0 items-center gap-2">
-            {!emailIdentitiesLoading ? (
+            {!emailIdentitiesLoading && hasExternalParticipants ? (
               <div className="flex min-w-5 items-center justify-start gap-1">
                 <span className="text-gray-9 px-2 text-sm">From:</span>
                 <Select
@@ -295,7 +309,7 @@ export function ReplyBox({ convoId, onReply }: ReplyBoxProps) {
               disabled={
                 !replyTo ||
                 isEditorEmpty ||
-                !emailIdentity ||
+                (hasExternalParticipants && !emailIdentity) ||
                 replyToConvoLoading
               }
               size={isMobile ? 'icon' : 'sm'}
