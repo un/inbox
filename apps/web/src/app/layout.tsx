@@ -12,9 +12,12 @@ import type { Metadata } from 'next';
 import dynamic from 'next/dynamic';
 import '@/src/styles/globals.css';
 
-const PostHogPageView = dynamic(() => import('./posthog'), {
-  ssr: false
-});
+const PostHogPageView = dynamic(
+  () => import('../components/posthog-page-view'),
+  {
+    ssr: false
+  }
+);
 
 const inter = Inter({
   subsets: ['latin'],
