@@ -198,7 +198,7 @@ export default function Page() {
             <span className="text-base-11 text-sm font-semibold">
               Password and 2FA
             </span>
-            <div className="flex flex-row gap-2">
+            <div className="flex flex-row flex-wrap gap-2">
               <div className="flex gap-2">
                 {overviewData.passwordSet ? (
                   <Button

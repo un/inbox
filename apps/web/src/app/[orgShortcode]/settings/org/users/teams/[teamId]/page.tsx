@@ -2,11 +2,11 @@
 
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { Separator } from '@/src/components/shadcn-ui/separator';
+import { PageTitle } from '../../../../_components/page-title';
 // import { EditMemberList } from './_components/member-editor';
 import { AddNewMember } from './_components/add-new-member';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { DataTable } from '@/src/components/shared/table';
-import { ArrowLeft } from '@phosphor-icons/react';
 import { type TypeId } from '@u22n/utils/typeid';
 import { columns } from './_components/columns';
 import { platform } from '@/src/lib/trpc';
@@ -32,20 +32,13 @@ export default function Page({
 
   return (
     <div className="flex h-full w-full flex-col gap-2 p-4">
-      <div className="flex w-full gap-4">
-        <Button
-          asChild
-          size="icon"
-          variant="outline">
-          <Link href="./">
-            <ArrowLeft className="size-6" />
+      <PageTitle title="Team Info">
+        <Button asChild>
+          <Link href={`/${orgShortcode}/settings/org/users/invites`}>
+            Invite a Member
           </Link>
         </Button>
-        <div className="flex flex-col gap-2">
-          <h1 className="font-display text-3xl leading-5">Team Info</h1>
-          <div>Information about your Team</div>
-        </div>
-      </div>
+      </PageTitle>
       {isLoading && <div>Loading...</div>}
       {teamInfo ? (
         <>

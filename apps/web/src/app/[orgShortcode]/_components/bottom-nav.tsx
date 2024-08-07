@@ -1,132 +1,191 @@
 'use client';
 
 import {
-  Drawer,
-  DrawerContent,
-  DrawerDescription,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger
-} from '@/src/components/shadcn-ui/drawer';
-import { ChatCircle, ChatsCircle, GearSix, Plus } from '@phosphor-icons/react';
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger
+} from '@/src/components/shadcn-ui/dropdown-menu';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
-import { convoSidebarTunnel, settingsSidebarTunnel } from '../tunnels';
 import { Button } from '@/src/components/shadcn-ui/button';
+import { ChatCircle, Plus } from '@phosphor-icons/react';
+import { OrgMenuContent } from './sidebar-content';
+import { Avatar } from '@/src/components/avatar';
 import { usePathname } from 'next/navigation';
-
 import Link from 'next/link';
 
-type BottomNavProps = {
-  convoHidden?: boolean;
-  type?: 'convos' | 'settings';
-};
-
-export function BottomNav({
-  convoHidden = false,
-  type = 'convos'
-}: BottomNavProps) {
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
-  const isMessage = usePathname() === `/${orgShortcode}/convo`;
-  const isNewMessage = usePathname() === `/${orgShortcode}/convo/new`;
+export function BottomNav() {
+  // const [showSpacesDrawer, setShowSpacesDrawer] = useState(false);
 
   return (
     <>
-      {/* Spacer  */}
-      <div className="h-20 w-full" />
       {/* Bottom Nav */}
-      <div className="bg-slate-1 absolute bottom-0 z-[1] flex h-20 w-full items-center justify-around rounded-t-xl border border-b-0 px-4">
-        <Button
-          variant="ghost"
-          aria-current={isMessage ? 'page' : undefined}
-          className="hover:bg-accent-2 hover:text-slate-11 text-slate-11 [&[aria-current='page']]:text-slate-12 flex h-20 w-24 flex-col items-center justify-center gap-2 px-1 py-1"
-          asChild>
-          <Link href={`/${orgShortcode}/convo`}>
-            <ChatCircle
-              size={24}
-              className="size-6"
-            />
-            <span className="text-sm">
-              {convoHidden ? 'Hidden Messages' : 'Messages'}
-            </span>
-          </Link>
-        </Button>
-        <Button
-          aria-current={isNewMessage ? 'page' : undefined}
-          variant="ghost"
-          className="hover:bg-accent-2 hover:text-slate-11 text-slate-11 [&[aria-current='page']]:text-slate-12 flex h-20 w-24 flex-col items-center justify-center gap-1"
-          asChild>
-          <Link href={`/${orgShortcode}/convo/new`}>
-            <div className="bg-accent-11 text-slate-1 rounded-xl p-2">
-              <Plus
-                size={16}
-                className="size-4"
-              />
-            </div>
-            <span className="text-sm">New Message</span>
-          </Link>
-        </Button>
-        {type === 'convos' ? <SpacesSidebar /> : <SettingsSidebar />}
+      <div className="flex flex-col gap-0">
+        {/* <SpacesDrawer
+          drawerOpen={showSpacesDrawer}
+          setDrawerOpen={setShowSpacesDrawer}
+        /> */}
+        <div className="bg-base-1 z-[1000] grid h-fit w-full grid-cols-3 content-end justify-items-center rounded-t-xl border border-b-0 px-4 pb-2 pt-3">
+          <ConvoSpacesButton />
+          <NewConvoButton />
+          <UserContextMenu />
+        </div>
       </div>
     </>
   );
 }
 
-export function SpacesSidebar() {
+function NewConvoButton() {
+  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const pathname = usePathname();
+  const isActive = pathname.endsWith('/convo/new');
+
   return (
-    <Drawer
-      shouldScaleBackground={false}
-      noBodyStyles
-      direction="right">
-      <DrawerTrigger asChild>
-        <Button
-          variant="ghost"
-          className="hover:bg-accent-2 hover:text-base-11 text-base-11 flex h-20 w-24 flex-col items-center justify-center gap-2 px-1 py-1">
-          <ChatsCircle
-            size={24}
-            className="size-6"
-          />
-          <span className="text-sm">Spaces</span>
-        </Button>
-      </DrawerTrigger>
-      <DrawerContent className="w-[80%] p-0">
-        <DrawerHeader className="sr-only">
-          <DrawerTitle>Spaces Sidebar</DrawerTitle>
-          <DrawerDescription>
-            Sidebar shows all your spaces you have access to
-          </DrawerDescription>
-        </DrawerHeader>
-        <convoSidebarTunnel.Out />
-      </DrawerContent>
-    </Drawer>
+    <>
+      <Button
+        variant="ghost"
+        aria-current={isActive}
+        className="hover:bg-accent-2 hover:text-base-9 text-base-9 [&[aria-current=true]]:text-base-12 group flex h-20 w-24 flex-col items-center justify-center gap-2 px-1 py-1"
+        asChild>
+        <Link href={`/${orgShortcode}/convo/new`}>
+          <div className="bg-accent-9 text-base-1 group-[&[aria-current=true]]:bg-accent-10 rounded-lg p-2">
+            <Plus
+              size={16}
+              className="size-4"
+            />
+          </div>
+          <span className="text-sm">New Convo</span>
+        </Link>
+      </Button>
+    </>
+  );
+}
+function ConvoSpacesButton() {
+  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const pathname = usePathname();
+  const isActive = pathname.endsWith('/convo');
+
+  return (
+    <>
+      <Button
+        variant={'ghost'}
+        aria-current={isActive}
+        className="hover:bg-accent-2 hover:text-base-9 text-base-9 [&[aria-current=true]]:text-base-12 flex h-20 w-24 flex-col items-center justify-center gap-2 px-1 py-1"
+        asChild>
+        <Link href={`/${orgShortcode}/convo`}>
+          <div className="p-1">
+            <ChatCircle
+              size={24}
+              className="size-6"
+            />
+          </div>
+          <span className="text-sm">Convos</span>
+        </Link>
+      </Button>
+    </>
   );
 }
 
-export function SettingsSidebar() {
+//! Add back in when spaces are implemented
+// function ConvoSpacesButton(
+//   {
+//     showSpacesDrawer,
+//     setShowSpacesDrawer
+//   }: {
+//     showSpacesDrawer: boolean;
+//     setShowSpacesDrawer: (value: boolean) => void;
+//   }
+// ) {
+//   const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+//   const params = useParams();
+//   const isInConvo = !!params.convoId;
+
+//   return (
+//     <>
+//       Add back in when spaces are implemented
+//       {!isInConvo ? (
+//         <Button
+//           variant="ghost"
+//           className="hover:bg-accent-2 hover:text-base-9 text-base-9 flex h-20 w-24 flex-col items-center justify-center gap-2 px-1 py-1"
+//           onClick={() => setShowSpacesDrawer(!showSpacesDrawer)}>
+//           <ChatsCircle
+//             size={24}
+//             className="size-6"
+//           />
+//           <span className="text-sm">Spaces</span>
+//         </Button>
+//       ) : (
+//         <Button asChild>
+//           <Link href={`/${orgShortcode}/convo`}>
+//             <div className="hover:bg-accent-2 hover:text-base-9 text-base-9 flex w-24 flex-col items-center justify-center gap-2 px-1 py-1">
+//               <div className="p-2">
+//                 <ChatCircle
+//                   size={24}
+//                   className="size-6"
+//                 />
+//               </div>
+//               <span className="text-base-9 text-sm">
+//                 {isInConvo ? 'In Convo' : 'Not In Convo'}
+//               </span>
+//             </div>
+//           </Link>
+//         </Button>
+//       )}
+//     </>
+//   );
+// }
+
+//! Add back in when spaces are implemented
+// export function SpacesDrawer({
+//   drawerOpen,
+//   setDrawerOpen
+// }: {
+//   drawerOpen: boolean;
+//   setDrawerOpen: (value: boolean) => void;
+// }) {
+//   return (
+//     <Drawer
+//       open={drawerOpen}
+//       modal={false}
+//       direction={'bottom'}
+//       onClose={() => setDrawerOpen(false)}>
+//       <DrawerContent className="-bottom-4 p-0">
+//         <DrawerHeader className="sr-only">
+//           <DrawerTitle>Spaces Sidebar</DrawerTitle>
+//           <DrawerDescription>
+//             Sidebar shows all your spaces you have access to
+//           </DrawerDescription>
+//         </DrawerHeader>
+//         <div className="mb-24">
+//           <SidebarContent />
+//         </div>
+//       </DrawerContent>
+//     </Drawer>
+//   );
+// }
+
+function UserContextMenu() {
+  const currentOrg = useGlobalStore((state) => state.currentOrg);
+
   return (
-    <Drawer
-      shouldScaleBackground={false}
-      noBodyStyles
-      direction="right">
-      <DrawerTrigger asChild>
-        <Button
-          variant="ghost"
-          className="hover:bg-accent-2 hover:text-base-11 text-base-11 flex h-20 w-24 flex-col items-center justify-center gap-2 px-1 py-1">
-          <GearSix
-            size={24}
-            className="size-6"
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        className={
+          'data-[state=open]:text-base-12 text-base-9 group flex h-20 w-24 flex-row items-center justify-between opacity-90 data-[state=open]:opacity-100'
+        }>
+        <div className={'flex w-full flex-col items-center gap-2'}>
+          <Avatar
+            avatarProfilePublicId={currentOrg.publicId}
+            avatarTimestamp={currentOrg.avatarTimestamp}
+            name={currentOrg.name}
+            size="lg"
+            hideTooltip
           />
-          <span className="text-sm">Settings</span>
-        </Button>
-      </DrawerTrigger>
-      <DrawerContent className="w-[80%] p-0">
-        <DrawerHeader className="sr-only">
-          <DrawerTitle>Settings Sidebar</DrawerTitle>
-          <DrawerDescription>
-            All settings for your organization and account
-          </DrawerDescription>
-        </DrawerHeader>
-        <settingsSidebarTunnel.Out />
-      </DrawerContent>
-    </Drawer>
+          <span className="text-sm font-medium">Menu</span>
+        </div>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="bg-base-1 border-base-5 mb-4 flex min-w-96 flex-col gap-0 p-0">
+        <OrgMenuContent />
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

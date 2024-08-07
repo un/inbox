@@ -1,6 +1,7 @@
 'use client';
 
 import { useGlobalStore } from '@/src/providers/global-store-provider';
+import { PageTitle } from '../../../_components/page-title';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { DataTable } from '@/src/components/shared/table';
 import { columns } from './_components/columns';
@@ -16,17 +17,16 @@ export default function Page() {
 
   return (
     <div className="flex w-full flex-col gap-2 p-4">
-      <div className="flex w-full justify-between">
-        <div className="flex flex-col gap-2">
-          <h1 className="font-display text-3xl leading-5">Members</h1>
-          <div>Manage Your Org Members</div>
-        </div>
+      <PageTitle
+        title="Members"
+        description="Manage Your Org Members">
         <Button asChild>
           <Link href={`/${orgShortcode}/settings/org/users/invites`}>
             Invite a Member
           </Link>
         </Button>
-      </div>
+      </PageTitle>
+
       {isLoading && <div>Loading...</div>}
       {memberList && (
         <DataTable

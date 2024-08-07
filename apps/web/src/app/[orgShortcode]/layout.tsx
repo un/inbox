@@ -5,12 +5,12 @@ import { ClaimEmailIdentity } from './_components/claim-email-identity';
 import { RealtimeProvider } from '@/src/providers/realtime-provider';
 import { NewConvoSheet } from './convo/_components/new-convo-sheet';
 import { Button } from '@/src/components/shadcn-ui/button';
-import SidebarContent from './_components/sidebar-content';
 import { useIsMobile } from '@/src/hooks/use-is-mobile';
+import { BottomNav } from './_components/bottom-nav';
 import { SpinnerGap } from '@phosphor-icons/react';
-import { convoSidebarTunnel } from './tunnels';
 import Sidebar from './_components/sidebar';
 import { platform } from '@/src/lib/trpc';
+import { cn } from '@/src/lib/utils';
 import Link from 'next/link';
 
 export default function Layout({
@@ -93,16 +93,12 @@ export default function Layout({
   return (
     <GlobalStoreProvider initialState={storeData}>
       <RealtimeProvider>
-        <convoSidebarTunnel.In>
-          <SidebarContent />
-        </convoSidebarTunnel.In>
-        <div className="bg-base-1 flex h-full">
-          {!isMobile && (
-            <div className="w-fit">
-              <Sidebar />
-            </div>
-          )}
-          <div className="min-w-0 flex-1">{children}</div>
+        <div
+          className={cn('bg-base-1 flex h-full gap-0', isMobile && 'flex-col')}>
+          {!isMobile && <Sidebar />}
+          <div className="min-w-0 flex-1 grow overflow-x-auto">{children}</div>
+
+          {isMobile && <BottomNav />}
           {!isMobile && <NewConvoSheet />}
           {hasEmailIdentity && !hasEmailIdentity.hasIdentity && (
             <ClaimEmailIdentity />

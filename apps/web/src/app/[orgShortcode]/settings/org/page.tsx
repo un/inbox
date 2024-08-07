@@ -69,7 +69,7 @@ export default function ProfileComponent() {
 
   return (
     <div className="flex h-full w-full flex-col items-start gap-4 overflow-y-auto p-4">
-      <PageTitle title="Your Profile" />
+      <PageTitle title="Organization Profile" />
 
       <div className="flex flex-col gap-3">
         {adminLoading && (
