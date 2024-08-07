@@ -140,7 +140,7 @@ export function ConvoList(props: Props) {
             <span className="font-semibold">There are no hidden convos</span>
           ) : (
             <>
-              <span className="font-semibold">There are no convos</span>
+              <span className="font-semibold">There are no messages</span>
               <span>Enjoy your day!</span>
             </>
           )}
