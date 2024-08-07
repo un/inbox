@@ -3,6 +3,8 @@ import {
   AlertDialog,
   AlertDialogContent,
   AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
   AlertDialogTitle
 } from '@/src/components/shadcn-ui/alert-dialog';
 import {
@@ -13,16 +15,14 @@ import {
   CardHeader,
   CardTitle
 } from '@/src/components/shadcn-ui/card';
-import useAwaitableModal, {
-  type ModalComponent
-} from '@/src/hooks/use-awaitable-modal';
 import { Tabs, TabsList, TabsTrigger } from '@/src/components/shadcn-ui/tabs';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
-import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from '@/src/components/shadcn-ui/button';
-import { Check } from '@phosphor-icons/react';
+import { Check, SpinnerGap } from '@phosphor-icons/react';
+import { useEffect, useState } from 'react';
 import { platform } from '@/src/lib/trpc';
 import { cn } from '@/src/lib/utils';
+import { ms } from '@u22n/utils/ms';
 
 type PricingSwitchProps = {
   onSwitch: (value: string) => void;
@@ -164,14 +164,7 @@ export function PricingTable() {
   const [isYearly, setIsYearly] = useState(false);
   const togglePricingPeriod = (value: string) =>
     setIsYearly(parseInt(value) === 1);
-
-  const [StripeWatcherRoot, openPaymentModal] = useAwaitableModal(
-    StripeWatcher,
-    {
-      isYearly,
-      plan: 'pro'
-    }
-  );
+  const [stripeModalOpen, setStripeModalOpen] = useState(false);
 
   const plans = [
     {
@@ -187,24 +180,25 @@ export function PricingTable() {
         '7 day raw email retention',
         'Community/email support'
       ],
-      actionLabel: 'Go Free'
+      actionLabel: 'Go Free',
+      handler: () => void 0
     },
-    {
-      title: 'basic',
-      monthlyPrice: 3,
-      yearlyPrice: 30,
-      description: 'For the growing',
-      features: [
-        'Everything in Free',
-        '1 Custom Domains',
-        'Tags',
-        '1 Shared Space',
-        '5 Statuses per Space',
-        '3 Day activity history',
-        '14 Day raw email retention'
-      ],
-      actionLabel: 'Go Plus'
-    },
+    // {
+    //   title: 'basic',
+    //   monthlyPrice: 3,
+    //   yearlyPrice: 30,
+    //   description: 'For the growing',
+    //   features: [
+    //     'Everything in Free',
+    //     '1 Custom Domains',
+    //     'Tags',
+    //     '1 Shared Space',
+    //     '5 Statuses per Space',
+    //     '3 Day activity history',
+    //     '14 Day raw email retention'
+    //   ],
+    //   actionLabel: 'Go Plus'
+    // },
     {
       title: 'Pro',
       monthlyPrice: 12,
@@ -224,12 +218,12 @@ export function PricingTable() {
         'Video Call Support'
       ],
       actionLabel: 'Go Pro',
-      popular: true
+      popular: true,
+      handler: () => setStripeModalOpen(true)
     },
     {
       title: 'Enterprise',
-      monthlyPrice: 33,
-      yearlyPrice: 330,
+      price: 'Contact',
       description: 'For the leaders',
       features: [
         '30 Users Minimum',
@@ -240,24 +234,25 @@ export function PricingTable() {
         '10 year convo activity history',
         '10 year raw email retention',
         'Dedicated Onboarding',
-        'Org Wide - Video Call Support'
+        'Org Wide Video Call Support'
       ],
-      actionLabel: 'Go Pro',
-      popular: true
-    },
-    {
-      title: 'Self Host',
-      price: 'Time and Sanity',
-      description: 'For the crazy and the bold',
-      features: [
-        'All features from the app',
-        'Install on your own servers',
-        'The ultimate privacy',
-        'Free lifetime updates',
-        'Sleepless night'
-      ],
-      actionLabel: 'Go Brave'
+      actionLabel: 'Contact Sales',
+      popular: true,
+      handler: () => window.open('https://cal.com/mc/un', '_blank')
     }
+    // {
+    //   title: 'Self Host',
+    //   price: 'Time and Sanity',
+    //   description: 'For the crazy and the bold',
+    //   features: [
+    //     'All features from the app',
+    //     'Install on your own servers',
+    //     'The ultimate privacy',
+    //     'Free lifetime updates',
+    //     'Sleepless night'
+    //   ],
+    //   actionLabel: 'Go Brave'
+    // }
   ];
   return (
     <div className="flex flex-col items-center gap-4">
@@ -273,124 +268,129 @@ export function PricingTable() {
               key={plan.title}
               {...plan}
               isYearly={isYearly}
-              handler={() => openPaymentModal().catch(() => null)}
+              handler={plan.handler}
             />
           );
         })}
       </section>
-      <StripeWatcherRoot />
+
+      {stripeModalOpen && (
+        <StripeModal
+          open={stripeModalOpen}
+          setOpen={setStripeModalOpen}
+          isYearly={isYearly}
+          plan="pro"
+        />
+      )}
     </div>
   );
 }
 
-// export function PlansTable() {
-//   const [period /*setPeriod*/] = useState<'monthly' | 'yearly'>('monthly');
+type StripeModalProps = {
+  open: boolean;
+  setOpen: (value: boolean) => void;
+  isYearly: boolean;
+  plan: 'pro';
+};
 
-//   const [StripeWatcherRoot, openPaymentModal] = useAwaitableModal(
-//     StripeWatcher,
-//     {
-//       period
-//     }
-//   );
-
-//   return (
-//     <div className="flex w-full max-w-2xl gap-4">
-//       <div className="flex flex-1 flex-col gap-2 rounded border p-2">
-//         <div className="font-display text-2xl">Free</div>
-//         <div className="h-[200px]">Free Plan Perks Here</div>
-//         <Button disabled>Your Current Plan</Button>
-//       </div>
-//       <div className="flex flex-1 flex-col gap-2 rounded border p-2">
-//         <div className="font-display text-2xl">Pro</div>
-//         <div className="h-[200px]">Pro Plan Perks Here</div>
-//         {/* Monthly only for now, setup the period selector */}
-//         <Button onClick={() => openPaymentModal().catch(() => null)}>
-//           Upgrade
-//         </Button>
-//       </div>
-//       <StripeWatcherRoot />
-//     </div>
-//   );
-// }
-
-function StripeWatcher({
-  open,
-  isYearly,
-  plan,
-  onClose,
-  onResolve
-}: ModalComponent<{ isYearly: boolean; plan: 'pro' }>) {
+function StripeModal({ open, isYearly, plan, setOpen }: StripeModalProps) {
   const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const utils = platform.useUtils();
+
   const {
-    data: paymentLinkInfo,
-    error: linkError,
-    isLoading: paymentLinkLoading
+    data: paymentLink,
+    isLoading: paymentLinkLoading,
+    error: paymentLinkError
   } = platform.org.setup.billing.getOrgSubscriptionPaymentLink.useQuery(
     {
       orgShortcode,
-      period: isYearly ? 'yearly' : 'monthly',
-      plan: plan
+      plan,
+      period: isYearly ? 'yearly' : 'monthly'
     },
-    { enabled: open }
-  );
-  const paymentLinkCache =
-    platform.useUtils().org.setup.billing.getOrgSubscriptionPaymentLink;
-
-  const overviewApi =
-    platform.useUtils().org.setup.billing.getOrgBillingOverview;
-  const timeout = useRef<NodeJS.Timeout | null>(null);
-  const checkPayment = useCallback(async () => {
-    const overview = await overviewApi.fetch({ orgShortcode });
-    if (overview.currentPlan === 'pro') {
-      await overviewApi.invalidate({ orgShortcode });
-      if (timeout.current) {
-        clearTimeout(timeout.current);
-      }
-      onResolve(null);
-      return;
-    } else {
-      timeout.current = setTimeout(() => {
-        void checkPayment();
-      }, 7500);
+    {
+      enabled: open
     }
-  }, [onResolve, orgShortcode, overviewApi]);
+  );
 
-  useEffect(() => {
-    if (!open || !paymentLinkInfo) return;
-    window.open(paymentLinkInfo.subLink, '_blank');
-    timeout.current = setTimeout(() => {
-      void checkPayment();
-    }, 10000);
-    return () => {
-      if (timeout.current) {
-        clearTimeout(timeout.current);
+  const { data: overview } =
+    platform.org.setup.billing.getOrgBillingOverview.useQuery(
+      { orgShortcode },
+      {
+        enabled: open && paymentLink && !paymentLinkLoading,
+        refetchOnWindowFocus: true,
+        refetchInterval: ms('15 seconds')
       }
-      void paymentLinkCache.reset();
-    };
-  }, [open, paymentLinkInfo, paymentLinkCache, checkPayment]);
+    );
+
+  // Open payment link once payment link is generated
+  useEffect(() => {
+    if (!open || paymentLinkLoading || !paymentLink) return;
+    window.open(paymentLink.subLink, '_blank');
+  }, [open, paymentLink, paymentLinkLoading]);
+
+  // handle payment info update
+  useEffect(() => {
+    if (overview?.currentPlan === 'pro') {
+      void utils.org.setup.billing.getOrgBillingOverview.invalidate({
+        orgShortcode
+      });
+      setOpen(false);
+    }
+  }, [
+    orgShortcode,
+    overview,
+    setOpen,
+    utils.org.setup.billing.getOrgBillingOverview
+  ]);
 
   return (
     <AlertDialog open={open}>
       <AlertDialogContent>
-        <AlertDialogTitle>Upgrade to Pro</AlertDialogTitle>
-        <AlertDialogDescription className="space-y-2 p-2">
-          {paymentLinkLoading
-            ? 'Generating Payment Link'
-            : 'Waiting For you to complete your Payment (This may take a few seconds)'}
-        </AlertDialogDescription>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Upgrade to Pro</AlertDialogTitle>
+          <AlertDialogDescription className="space-y-2 p-2">
+            {paymentLinkLoading ? (
+              <span className="flex items-center gap-2">
+                <SpinnerGap className="size-4 animate-spin" />
+                Generating Payment Link
+              </span>
+            ) : paymentLink ? (
+              'Waiting for Payment (This may take a few seconds)'
+            ) : (
+              <span className="text-red-9">{paymentLinkError?.message}</span>
+            )}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
         <div className="flex flex-col gap-2 p-2">
-          We are waiting for you to complete your payment, If you have already
-          done the payment, please wait for a few seconds for the payment to
-          reflect. If this modal is not detecting your payment, please close
-          this modal and try refreshing. If the issue persists, please contact
-          support.
+          <span>
+            We are waiting for your payment to be processed. It may take a few
+            seconds for the payment to reflect in app.
+          </span>
+          {paymentLink && (
+            <span>
+              If a new tab was not opened,{' '}
+              <a
+                target="_blank"
+                href={paymentLink.subLink}
+                className="underline">
+                open it manually.
+              </a>
+            </span>
+          )}
+          <span>
+            {`If your payment hasn't been detected correctly, please try refreshing
+            the page.`}
+          </span>
+          <span>If the issue persists, please contact support.</span>
         </div>
-        <div className="text-red-10 space-y-2 font-medium">
-          {linkError?.message}
-        </div>
-        <div className="flex flex-col gap-2 py-2">
-          <Button onClick={() => onClose()}>Close</Button>
-        </div>
+
+        <AlertDialogFooter>
+          <Button
+            onClick={() => setOpen(false)}
+            className="w-full">
+            Close
+          </Button>
+        </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
   );
