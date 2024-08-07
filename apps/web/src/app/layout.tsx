@@ -66,7 +66,6 @@ export default function RootLayout({
                 <TRPCReactProvider>
                   {children}
                   <Toaster />
-                  <CookieConsentBanner />
                 </TRPCReactProvider>
               </TooltipProvider>
             </ThemeProvider>
