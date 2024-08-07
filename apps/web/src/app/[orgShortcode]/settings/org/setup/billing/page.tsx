@@ -5,10 +5,10 @@ import { Skeleton } from '@/src/components/shadcn-ui/skeleton';
 import { PageTitle } from '../../../_components/page-title';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { PricingTable } from './_components/plans-table';
+import { useEffect, useState } from 'react';
 import CalEmbed from '@calcom/embed-react';
 import { platform } from '@/src/lib/trpc';
 import { cn } from '@/src/lib/utils';
-import { useState } from 'react';
 import Link from 'next/link';
 
 export default function Page() {
@@ -27,6 +27,12 @@ export default function Page() {
     );
 
   const [showPlan, setShowPlans] = useState(false);
+
+  useEffect(() => {
+    if (data?.currentPlan === 'pro') {
+      setShowPlans(false);
+    }
+  }, [data?.currentPlan]);
 
   return (
     <div className="flex w-full flex-col gap-2 p-4">
