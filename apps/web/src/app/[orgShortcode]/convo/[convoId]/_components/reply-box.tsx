@@ -22,23 +22,26 @@ import {
   useUpdateConvoData$Cache,
   useUpdateConvoMessageList$Cache
 } from '../../utils';
+import {
+  type JSONContent,
+  type EditorFunctions
+} from '@u22n/tiptap/components';
 import { useAttachmentUploader } from '@/src/components/shared/attachments';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
-import { type EditorFunctions } from '@u22n/tiptap/components';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { useIsMobile } from '@/src/hooks/use-is-mobile';
 import { emptyTiptapEditorContent } from '@u22n/tiptap';
-import { type JSONContent } from '@u22n/tiptap/react';
+import { useDraft } from '@/src/stores/draft-store';
 import { atom, useAtom, useAtomValue } from 'jotai';
 import { Editor } from '@/src/components/editor';
 import { type TypeId } from '@u22n/utils/typeid';
+import { useDebounce } from '@uidotdev/usehooks';
 import { replyToMessageAtom } from '../atoms';
 import { platform } from '@/src/lib/trpc';
 import { stringify } from 'superjson';
 import { cn } from '@/src/lib/utils';
 import { ms } from '@u22n/utils/ms';
-import { toast } from 'sonner';
 
 const selectedEmailIdentityAtom = atom<null | TypeId<'emailIdentities'>>(null);
 
@@ -48,9 +51,8 @@ type ReplyBoxProps = {
 };
 
 export function ReplyBox({ convoId, onReply }: ReplyBoxProps) {
-  const [editorText, setEditorText] = useState<JSONContent>(
-    emptyTiptapEditorContent
-  );
+  const { draft, setDraft, resetDraft } = useDraft(convoId);
+  const [editorText, setEditorText] = useState(draft.content);
   const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
   const replyTo = useAtomValue(replyToMessageAtom);
   const addConvoToCache = useUpdateConvoMessageList$Cache();
@@ -68,13 +70,11 @@ export function ReplyBox({ convoId, onReply }: ReplyBoxProps) {
         editorRef.current?.clearContent();
         setEditorText(emptyTiptapEditorContent);
         removeAllAttachments();
-      },
-      onError: (err) => {
-        toast.error(err.message);
+        resetDraft();
       }
     });
 
-  const isEditorEmpty = useMemo(() => {
+  const emptyEditorChecker = useCallback((editorText: JSONContent) => {
     const contentArray = editorText?.content;
     if (!contentArray) return true;
     if (contentArray.length === 0) return true;
@@ -84,7 +84,12 @@ export function ReplyBox({ convoId, onReply }: ReplyBoxProps) {
     )
       return true;
     return false;
-  }, [editorText]);
+  }, []);
+
+  const isEditorEmpty = useMemo(
+    () => emptyEditorChecker(editorText),
+    [emptyEditorChecker, editorText]
+  );
 
   const [emailIdentity, setEmailIdentity] = useAtom(selectedEmailIdentityAtom);
 
@@ -124,7 +129,26 @@ export function ReplyBox({ convoId, onReply }: ReplyBoxProps) {
     getTrpcUploadFormat,
     AttachmentArray,
     removeAllAttachments
-  } = useAttachmentUploader();
+  } = useAttachmentUploader(draft.attachments);
+
+  // Autosave draft
+  const debouncedEditorText = useDebounce(editorText, 500);
+  useEffect(() => {
+    if (emptyEditorChecker(debouncedEditorText) && attachments.length === 0) {
+      resetDraft();
+    } else {
+      setDraft({
+        content: debouncedEditorText,
+        attachments
+      });
+    }
+  }, [
+    debouncedEditorText,
+    setDraft,
+    attachments,
+    emptyEditorChecker,
+    resetDraft
+  ]);
 
   const handleReply = useCallback(
     async (type: 'comment' | 'message') => {

@@ -33,6 +33,13 @@ import {
   TooltipTrigger
 } from '@/src/components/shadcn-ui/tooltip';
 import {
+  useState,
+  useMemo,
+  useEffect,
+  type Dispatch,
+  type SetStateAction
+} from 'react';
+import {
   At,
   CaretDown,
   Check,
@@ -41,24 +48,24 @@ import {
 } from '@phosphor-icons/react';
 import { useAttachmentUploader } from '@/src/components/shared/attachments';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
-import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { useComposingDraft } from '@/src/stores/draft-store';
 import { Avatar, AvatarIcon } from '@/src/components/avatar';
 import { Button } from '@/src/components/shadcn-ui/button';
-import { type JSONContent } from '@u22n/tiptap/components';
 import { Input } from '@/src/components/shadcn-ui/input';
 import { Badge } from '@/src/components/shadcn-ui/badge';
-import { emptyTiptapEditorContent } from '@u22n/tiptap';
-import { useState, useMemo, useEffect } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useAddSingleConvo$Cache } from '../utils';
 import { Editor } from '@/src/components/editor';
 import { type TypeId } from '@u22n/utils/typeid';
+import { useDebounce } from '@uidotdev/usehooks';
+import { usePrevious } from '@uidotdev/usehooks';
 import { showNewConvoPanel } from '../atoms';
 import { useRouter } from 'next/navigation';
 import { platform } from '@/src/lib/trpc';
 import { stringify } from 'superjson';
 import { cn } from '@/src/lib/utils';
 import { ms } from '@u22n/utils/ms';
+import { useSetAtom } from 'jotai';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
@@ -103,9 +110,6 @@ export type NewConvoParticipant =
   | ConvoParticipantOrgContacts
   | NewConvoParticipantEmailAddresses;
 
-const selectedParticipantsAtom = atom<NewConvoParticipant[]>([]);
-const newEmailParticipantsAtom = atom<string[]>([]);
-
 export default function CreateConvoForm({
   initialEmails = [],
   initialSubject = ''
@@ -114,6 +118,8 @@ export default function CreateConvoForm({
   initialSubject?: string;
 }) {
   const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const lastOrg = usePrevious(orgShortcode);
+  const { draft, setDraft, resetDraft } = useComposingDraft();
 
   const { data: userEmailIdentities, isLoading: emailIdentitiesLoading } =
     platform.org.mail.emailIdentities.getUserEmailIdentities.useQuery(
@@ -140,20 +146,52 @@ export default function CreateConvoForm({
       }
     );
 
-  const { mutateAsync: createConvoFn } =
-    platform.convos.createNewConvo.useMutation();
+  const [newEmailParticipants, setNewEmailParticipants] = useState<string[]>(
+    initialEmails ?? []
+  );
+  const [selectedParticipants, setSelectedParticipants] = useState<
+    NewConvoParticipant[]
+  >(() => {
+    const uniqueEmails = Array.from(new Set(initialEmails));
 
-  const newEmailParticipants = useAtomValue(newEmailParticipantsAtom);
-  const selectedParticipants = useAtomValue(selectedParticipantsAtom);
+    const newParticipants = uniqueEmails.map((email) => ({
+      type: 'email' as const,
+      publicId: email,
+      address: email,
+      keywords: [email],
+      avatarPublicId: null,
+      avatarTimestamp: null,
+      color: null,
+      own: false,
+      name: email
+    }));
+
+    return draft.participants.concat(
+      newParticipants.filter(
+        (p) =>
+          !draft.participants.some(
+            (existing) => existing.publicId === p.publicId
+          )
+      )
+    );
+  });
+
+  const { mutateAsync: createConvoFn } =
+    platform.convos.createNewConvo.useMutation({
+      onSuccess: () => {
+        setSelectedParticipants([]);
+        resetDraft();
+      }
+    });
 
   const router = useRouter();
 
   const [selectedEmailIdentity, setSelectedEmailIdentity] = useState<
     string | null
-  >(null);
-  const [topic, setTopic] = useState(initialSubject);
+  >(draft.from ?? null);
+  const [topic, setTopic] = useState(initialSubject || draft.topic);
   const { attachments, openFilePicker, getTrpcUploadFormat, AttachmentArray } =
-    useAttachmentUploader();
+    useAttachmentUploader(draft.attachments);
 
   // Set default email identity on load
   useEffect(() => {
@@ -306,9 +344,29 @@ export default function CreateConvoForm({
     newEmailParticipants
   ]);
 
-  const [editorText, setEditorText] = useState<JSONContent>(
-    emptyTiptapEditorContent
-  );
+  const [editorText, setEditorText] = useState(draft.content);
+
+  // Autosave draft
+  const debouncedEditorText = useDebounce(editorText, 500);
+  useEffect(() => {
+    if (lastOrg && lastOrg !== orgShortcode) return; // Don't autosave if org changes
+    setDraft({
+      content: debouncedEditorText,
+      attachments,
+      participants: selectedParticipants,
+      topic: topic,
+      from: selectedEmailIdentity ?? null
+    });
+  }, [
+    debouncedEditorText,
+    setDraft,
+    attachments,
+    selectedParticipants,
+    topic,
+    selectedEmailIdentity,
+    lastOrg,
+    orgShortcode
+  ]);
 
   const isTextPresent = useMemo(() => {
     const contentArray = editorText?.content;
@@ -385,10 +443,12 @@ export default function CreateConvoForm({
     isPending: isCreating,
     variables: messageType
   } = useMutation({
-    mutationFn: async (type: 'comment' | 'message') => startConvoCreation(type),
+    mutationFn: (type: 'comment' | 'message') => startConvoCreation(type),
     onSuccess: (data) => {
       toast.success('Convo created, redirecting you to your conversion');
+
       void addConvo(data.publicId).then(() => {
+        resetDraft();
         setNewPanelOpen(false);
         router.push(`/${orgShortcode}/convo/${data.publicId}`);
       });
@@ -405,47 +465,6 @@ export default function CreateConvoForm({
       : null;
   }, [selectedEmailIdentity, userEmailIdentities]);
 
-  const setNewEmailParticipants = useSetAtom(newEmailParticipantsAtom);
-  const setSelectedParticipants = useSetAtom(selectedParticipantsAtom);
-
-  useEffect(() => {
-    const initializeEmailParticipants = (emails: string[]) => {
-      const uniqueEmails = [...new Set(emails)];
-      setNewEmailParticipants(uniqueEmails);
-      setSelectedParticipants((prev) => {
-        const newParticipants = uniqueEmails.map((email) => ({
-          type: 'email' as const,
-          publicId: email,
-          address: email,
-          keywords: [email],
-          avatarPublicId: null,
-          avatarTimestamp: null,
-          color: null,
-          own: false,
-          name: email
-        }));
-        return [
-          ...prev,
-          ...newParticipants.filter(
-            (p) => !prev.some((existing) => existing.publicId === p.publicId)
-          )
-        ];
-      });
-    };
-    if (initialEmails.length > 0) {
-      initializeEmailParticipants(initialEmails);
-    }
-    if (initialSubject) {
-      setTopic(initialSubject);
-    }
-  }, [
-    initialEmails,
-    initialSubject,
-    setTopic,
-    setNewEmailParticipants,
-    setSelectedParticipants
-  ]);
-
   return (
     <div className="flex w-full flex-col gap-3 p-3">
       <div className="flex w-full flex-col gap-2 text-sm">
@@ -453,6 +472,9 @@ export default function CreateConvoForm({
         <ParticipantsComboboxPopover
           participants={allParticipants}
           loading={allParticipantsLoaded}
+          selectedParticipants={selectedParticipants}
+          setSelectedParticipants={setSelectedParticipants}
+          setNewEmailParticipants={setNewEmailParticipants}
         />
       </div>
       <div className="flex w-full flex-col gap-2 text-sm">
@@ -521,7 +543,7 @@ export default function CreateConvoForm({
 
       <div className="border-base-5 flex max-h-[250px] w-full flex-col gap-1 rounded-md border px-2 py-1">
         <Editor
-          initialValue={emptyTiptapEditorContent}
+          initialValue={editorText}
           onChange={setEditorText}
         />
 
@@ -563,17 +585,19 @@ export default function CreateConvoForm({
 type ParticipantsComboboxPopoverProps = {
   participants: NewConvoParticipant[];
   loading: boolean;
+  selectedParticipants: NewConvoParticipant[];
+  setSelectedParticipants: Dispatch<SetStateAction<NewConvoParticipant[]>>;
+  setNewEmailParticipants: Dispatch<SetStateAction<string[]>>;
 };
 
 function ParticipantsComboboxPopover({
   participants,
-  loading
+  loading,
+  selectedParticipants,
+  setSelectedParticipants,
+  setNewEmailParticipants
 }: ParticipantsComboboxPopoverProps) {
   const [open, setOpen] = useState(false);
-  const [selectedParticipants, setSelectedParticipants] = useAtom(
-    selectedParticipantsAtom
-  );
-
   const [currentSelectValue, setCurrentSelectValue] = useState('');
   const [search, setSearch] = useState('');
   const hasExternalParticipants = useMemo(
@@ -585,14 +609,11 @@ function ParticipantsComboboxPopover({
     [selectedParticipants]
   );
 
-  const setEmailParticipants = useSetAtom(newEmailParticipantsAtom);
-  const addSelectedParticipant = useSetAtom(selectedParticipantsAtom);
-
   const addEmailParticipant = (email: string) => {
-    setEmailParticipants((prev) =>
+    setNewEmailParticipants((prev) =>
       prev.includes(email) ? prev : prev.concat(email)
     );
-    addSelectedParticipant((prev) =>
+    setSelectedParticipants((prev) =>
       prev.find((p) => p.publicId === email)
         ? prev
         : prev.concat({
@@ -731,7 +752,12 @@ function ParticipantsComboboxPopover({
             <CommandList className="max-h-[calc(var(--radix-popover-content-available-height)*0.9)] overflow-x-clip overflow-y-scroll">
               {loading && <CommandLoading>Loading Participants</CommandLoading>}
               <CommandGroup className="flex flex-col gap-2 px-1">
-                {!loading && <EmptyStateHandler />}
+                {!loading && (
+                  <EmptyStateHandler
+                    addSelectedParticipant={setSelectedParticipants}
+                    setEmailParticipants={setNewEmailParticipants}
+                  />
+                )}
                 {participants.map((participant) => (
                   <CommandItem
                     key={participant.publicId}
@@ -834,16 +860,21 @@ function ParticipantsComboboxPopover({
   );
 }
 
-function EmptyStateHandler() {
+type EmptyStateHandlerProps = {
+  setEmailParticipants: Dispatch<SetStateAction<string[]>>;
+  addSelectedParticipant: Dispatch<SetStateAction<NewConvoParticipant[]>>;
+};
+
+function EmptyStateHandler({
+  setEmailParticipants,
+  addSelectedParticipant
+}: EmptyStateHandlerProps) {
   const isEmpty = useCommandState((state) => state.filtered.count === 0);
   const email = useCommandState((state) => state.search);
   const isValidEmail = useMemo(
     () => z.string().email().safeParse(email).success,
     [email]
   );
-
-  const setEmailParticipants = useSetAtom(newEmailParticipantsAtom);
-  const addSelectedParticipant = useSetAtom(selectedParticipantsAtom);
 
   const addEmailParticipant = (email: string) => {
     setEmailParticipants((prev) =>
