@@ -1,23 +1,19 @@
+'use client';
+
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { usePageTitle } from '@/src/hooks/use-page-title';
 import { type VirtuosoHandle } from 'react-virtuoso';
 import { formatParticipantData } from '../../utils';
 import { type TypeId } from '@u22n/utils/typeid';
 import { MessagesPanel } from './messages-panel';
-import { type FC, useMemo, useRef } from 'react';
 import { platform } from '@/src/lib/trpc';
+import { useMemo, useRef } from 'react';
 import { ReplyBox } from './reply-box';
 import { ms } from '@u22n/utils/ms';
 import { env } from '@/src/env';
 import TopBar from './top-bar';
 
-export function ConvoView({
-  convoId,
-  DismissButton
-}: {
-  convoId: TypeId<'convos'>;
-  DismissButton: FC;
-}) {
+export function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
   const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
   const {
     data: convoData,
@@ -88,7 +84,7 @@ export function ConvoView({
   );
 
   if (convoError && convoError.data?.code === 'NOT_FOUND') {
-    return <ConvoNotFound DismissButton={DismissButton} />;
+    return <ConvoNotFound />;
   }
 
   return (
@@ -100,7 +96,6 @@ export function ConvoView({
         subjects={convoData?.data.subjects}
         participants={formattedParticipants}
         attachments={attachments}
-        DismissButton={DismissButton}
       />
       <div className="flex w-full flex-1 flex-col">
         {convoDataLoading || !participantOwnPublicId ? (
@@ -126,7 +121,7 @@ export function ConvoView({
   );
 }
 
-export function ConvoNotFound({ DismissButton }: { DismissButton: FC }) {
+export function ConvoNotFound() {
   usePageTitle('Convo Not Found');
 
   return (
@@ -135,7 +130,6 @@ export function ConvoNotFound({ DismissButton }: { DismissButton: FC }) {
       <div className="text-base-11 text-balance text-center text-sm font-medium">
         The convo you are looking for does not exist or has been deleted.
       </div>
-      <DismissButton />
     </div>
   );
 }

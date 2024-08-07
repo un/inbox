@@ -12,7 +12,8 @@ import {
   FilePpt,
   FileZip,
   FileTxt,
-  File
+  File,
+  ArrowLeft
 } from '@phosphor-icons/react';
 import {
   Dialog,
@@ -33,14 +34,16 @@ import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { type VariantProps, cva } from 'class-variance-authority';
 import { type RouterOutputs, platform } from '@/src/lib/trpc';
 import { Button } from '@/src/components/shadcn-ui/button';
+import { useIsMobile } from '@/src/hooks/use-is-mobile';
 import { type TypeId } from '@u22n/utils/typeid';
 import { Participants } from './participants';
 import { shiftKeyPressed } from '../../atoms';
 import { useRouter } from 'next/navigation';
-import { type FC, useState } from 'react';
 import { cn } from '@/src/lib/utils';
 import { useAtomValue } from 'jotai';
+import { useState } from 'react';
 import { toast } from 'sonner';
+import Link from 'next/link';
 
 type TopBarProps = {
   participants: NonNullable<ReturnType<typeof formatParticipantData>>[];
@@ -54,7 +57,6 @@ type TopBarProps = {
   convoId: TypeId<'convos'>;
   convoHidden: boolean | null;
   subjects?: RouterOutputs['convos']['getConvo']['data']['subjects'];
-  DismissButton: FC;
 };
 
 export default function TopBar({
@@ -63,10 +65,10 @@ export default function TopBar({
   convoHidden,
   subjects,
   participants,
-  attachments,
-  DismissButton
+  attachments
 }: TopBarProps) {
   const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const isMobile = useIsMobile();
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const router = useRouter();
   const removeConvoFromList = useDeleteConvo$Cache();
@@ -86,7 +88,16 @@ export default function TopBar({
     <div className="border-base-5 bg-base-1 flex w-full flex-col items-center justify-between border-b p-0">
       <div className="border-base-5 flex h-14 w-full flex-row items-center justify-between border-b p-4">
         <div className="flex flex-1 flex-row items-center gap-4 overflow-hidden">
-          <DismissButton />
+          {isMobile && (
+            <Button
+              variant="outline"
+              size="icon-sm"
+              asChild>
+              <Link href={`./`}>
+                <ArrowLeft className="size-4" />
+              </Link>
+            </Button>
+          )}
           {subjects?.map((subject) => (
             <span
               key={subject.subject}

@@ -1,6 +1,7 @@
 'use client';
 
 import { useGlobalStore } from '@/src/providers/global-store-provider';
+import { PageTitle } from '../../../_components/page-title';
 import { NewTeamModal } from './_components/new-team-modal';
 import { DataTable } from '@/src/components/shared/table';
 import { columns } from './_components/columns';
@@ -15,13 +16,9 @@ export default function Page() {
 
   return (
     <div className="flex w-full flex-col gap-2 p-4">
-      <div className="flex w-full justify-between">
-        <div className="flex flex-col gap-2">
-          <h1 className="font-display text-3xl leading-5">Teams</h1>
-          <div>Manage Your Org Teams</div>
-        </div>
+      <PageTitle title="Teams">
         <NewTeamModal />
-      </div>
+      </PageTitle>
       {isLoading && <div>Loading...</div>}
       {teamList && (
         <DataTable

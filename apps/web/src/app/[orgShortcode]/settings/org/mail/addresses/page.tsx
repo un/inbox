@@ -3,6 +3,7 @@
 import { ExternalEmailModal } from './_components/add-external-email-modal';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { AddEmailModal } from './_components/add-address-modal';
+import { PageTitle } from '../../../_components/page-title';
 import { DataTable } from '@/src/components/shared/table';
 import { SpinnerGap } from '@phosphor-icons/react';
 import { columns } from './_components/columns';
@@ -21,17 +22,15 @@ export default function Page() {
 
   return (
     <div className="flex w-full flex-col gap-2 p-4">
-      <div className="flex w-full justify-between">
-        <div className="flex flex-col gap-2">
-          <h1 className="font-display text-3xl leading-5">Addresses</h1>
-          <div>Manage Your Org Email Addresses</div>
-        </div>
+      <PageTitle
+        title="Addresses"
+        description="Manage Your Org Members">
         <AddEmailModal addExternalModalOpen={setAddExternalModalOpen} />
         <ExternalEmailModal
           open={addExternalModalOpen}
           addExternalModalOpen={setAddExternalModalOpen}
         />
-      </div>
+      </PageTitle>
       {isLoading && (
         <div className="flex w-full justify-center gap-2 text-center font-bold">
           <SpinnerGap

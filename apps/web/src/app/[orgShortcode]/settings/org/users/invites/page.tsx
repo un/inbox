@@ -1,6 +1,7 @@
 'use client';
 
 import { useGlobalStore } from '@/src/providers/global-store-provider';
+import { PageTitle } from '../../../_components/page-title';
 import { DataTable } from '@/src/components/shared/table';
 import { InviteModal } from './_components/invite-modal';
 import { SpinnerGap } from '@phosphor-icons/react';
@@ -16,13 +17,12 @@ export default function Page() {
 
   return (
     <div className="flex flex-col gap-2 p-4">
-      <div className="flex justify-between">
-        <div className="flex flex-col gap-2">
-          <h1 className="font-display text-3xl leading-5">Invites</h1>
-          <div>Manage Your Org Invitation</div>
-        </div>
+      <PageTitle
+        title="Invites"
+        description="Grow your Org with Invitations">
         <InviteModal />
-      </div>
+      </PageTitle>
+
       {isLoading && (
         <div className="flex w-full justify-center gap-2 text-center font-bold">
           <SpinnerGap

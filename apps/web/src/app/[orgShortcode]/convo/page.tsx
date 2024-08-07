@@ -9,7 +9,7 @@ export default function Page() {
   const isMobile = useIsMobile();
 
   return isMobile ? null : (
-    <div className="flex h-full flex-col items-center justify-center gap-2 p-4 text-center">
+    <div className="flex flex-1 flex-col items-center justify-center gap-2 p-4 text-center">
       <span className="text-pretty font-medium">
         Select a Convo from Sidebar or Create a New One
       </span>
