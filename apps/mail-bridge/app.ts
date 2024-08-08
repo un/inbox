@@ -51,15 +51,17 @@ if (env.MAILBRIDGE_MODE === 'dual' || env.MAILBRIDGE_MODE === 'handler') {
 }
 
 if (env.MAILBRIDGE_MODE === 'dual' || env.MAILBRIDGE_MODE === 'worker') {
-  const { worker } = await import('./queue/mail-processor/worker');
+  const { worker: mailProcessorWorker } = await import(
+    './queue/mail-processor'
+  );
+
+  void mailProcessorWorker.run();
 
   console.info('Starting mail-bridge worker');
 
-  worker.on('error', (err) => console.error('[Worker] Error: ', err));
-
   processCleanup.push(async () => {
     console.info('Shutting down mail-bridge worker');
-    await worker.close();
+    await mailProcessorWorker.close();
   });
 }
 
