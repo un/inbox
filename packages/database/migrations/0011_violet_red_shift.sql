@@ -1,0 +1,1 @@
+ALTER TABLE `convo_entries` MODIFY COLUMN `body_plain_text` longtext NOT NULL;
