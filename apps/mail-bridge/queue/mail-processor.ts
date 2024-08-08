@@ -17,37 +17,271 @@ import {
   validateTypeId,
   type TypeId
 } from '@u22n/utils/typeid';
-import type { MailParamsSchema, PostalMessageSchema } from './schemas';
-import { sendRealtimeNotification } from '../../utils/realtime';
-import { parseAddressIds } from '../../utils/contactParsing';
+import { createQueue, createWorker } from '../utils/queue-helpers';
+import { sendRealtimeNotification } from '../utils/realtime';
 import { simpleParser, type EmailAddress } from 'mailparser';
 import { tipTapExtensions } from '@u22n/tiptap/extensions';
+import { parseAddressIds } from '../utils/contactParsing';
 import { eq, and, inArray } from '@u22n/database/orm';
 import { tiptapCore, tiptapHtml } from '@u22n/tiptap';
+import { typeIdValidator } from '@u22n/utils/typeid';
 import { getTracer } from '@u22n/otel/helpers';
 import { parseMessage } from '@u22n/mailtools';
 import { discord } from '@u22n/utils/discord';
-import { sanitize } from '../../utils/purify';
 import { logger } from '@u22n/otel/logger';
+import { sanitize } from '../utils/purify';
 import { db } from '@u22n/database';
-import { env } from '../../env';
-import { Worker } from 'bullmq';
+import { env } from '../env';
 import mime from 'mime';
+import { z } from 'zod';
 
-const { host, username, password, port } = new URL(
-  env.DB_REDIS_CONNECTION_STRING
+async function resolveOrgAndMailserver({
+  mailserverId,
+  orgId,
+  rcpt_to
+}: MailParamsSchema & {
+  rcpt_to: string;
+}): Promise<{
+  orgId: number;
+  orgPublicId: `o_${string}`;
+  forwardedEmailAddress: string | null;
+}> {
+  if (orgId === 0 && mailserverId === 'root') {
+    const [username, domain] = rcpt_to.split('@') as [string, string]; // we have verified that rcpt_to is an email address
+    const rootEmailIdentity = await db.query.emailIdentities.findFirst({
+      where: and(
+        eq(emailIdentities.username, username),
+        eq(emailIdentities.domainName, domain)
+      ),
+      columns: {
+        id: true,
+        orgId: true
+      },
+      with: {
+        org: {
+          columns: {
+            publicId: true
+          }
+        }
+      }
+    });
+    if (!rootEmailIdentity)
+      throw new Error(`No email identity found for root email`);
+    return {
+      orgId: rootEmailIdentity.orgId,
+      orgPublicId: rootEmailIdentity.org.publicId,
+      forwardedEmailAddress: null
+    };
+  } else if (orgId === 0 && mailserverId === 'fwd') {
+    const fwdEmailIdentity = await db.query.emailIdentities.findFirst({
+      where: eq(emailIdentities.forwardingAddress, rcpt_to),
+      columns: {
+        id: true,
+        username: true,
+        domainName: true,
+        orgId: true
+      },
+      with: {
+        org: {
+          columns: {
+            publicId: true
+          }
+        }
+      }
+    });
+    if (!fwdEmailIdentity)
+      throw new Error(`No email identity found for forward email: ${rcpt_to}`);
+
+    return {
+      orgId: fwdEmailIdentity.orgId,
+      orgPublicId: fwdEmailIdentity.org.publicId,
+      forwardedEmailAddress: `${fwdEmailIdentity.username}@${fwdEmailIdentity.domainName}`
+    };
+  } else if (
+    // Checks to narrow down the mailserverId
+    orgId !== 0 &&
+    mailserverId !== 'root' &&
+    mailserverId !== 'fwd'
+  ) {
+    //verify the mailserver actually exists
+    const mailServer = await db.query.postalServers.findFirst({
+      where: eq(postalServers.publicId, mailserverId),
+      columns: {
+        id: true,
+        orgId: true
+      },
+      with: {
+        org: {
+          columns: {
+            publicId: true
+          }
+        }
+      }
+    });
+    if (!mailServer || mailServer.orgId !== orgId)
+      throw new Error(`Mailserver not found or does not belong to the org`);
+
+    return {
+      orgId: mailServer.orgId,
+      orgPublicId: mailServer.org.publicId,
+      forwardedEmailAddress: null
+    };
+  } else
+    throw new Error(
+      `Invalid orgId and mailserverId: ${JSON.stringify({ orgId, mailserverId })}`
+    );
+}
+
+type UploadAndAttachAttachmentInput = {
+  orgId: number;
+  fileName: string;
+  fileType: string;
+  fileContent: Buffer;
+  fileSize: number;
+  convoId: number;
+  convoEntryId: number;
+  convoParticipantId: number;
+  inline: boolean;
+  cid: string | null;
+};
+
+type PreSignedData = {
+  publicId: string;
+  signedUrl: string;
+};
+
+async function uploadAndAttachAttachment(
+  input: UploadAndAttachAttachmentInput,
+  orgPublicId: TypeId<'org'>,
+  orgShortcode: string
+) {
+  const preUpload = (await fetch(
+    `${env.STORAGE_URL}/api/attachments/internalPresign`,
+    {
+      method: 'post',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: env.STORAGE_KEY
+      },
+      body: JSON.stringify({
+        orgPublicId,
+        filename: input.fileName
+      })
+    }
+  ).then((r) => r.json())) as PreSignedData;
+
+  if (!preUpload?.publicId || !preUpload.signedUrl) {
+    throw new Error('Missing attachmentPublicId or presignedUrl');
+  }
+
+  const attachmentPublicId = preUpload.publicId;
+  const presignedUrl = preUpload.signedUrl;
+
+  if (!validateTypeId('convoAttachments', attachmentPublicId)) {
+    throw new Error('Invalid attachmentPublicId');
+  }
+
+  try {
+    await fetch(presignedUrl, {
+      method: 'put',
+      body: input.fileContent,
+      headers: {
+        'Content-Type': input.fileType
+      }
+    });
+  } catch (error) {
+    console.error('Error uploading file to presigned URL:', error);
+    throw error; // Rethrow to handle it in the outer catch block
+  }
+
+  await db.insert(convoAttachments).values({
+    convoId: input.convoId,
+    convoEntryId: input.convoEntryId,
+    convoParticipantId: input.convoParticipantId,
+    orgId: input.orgId,
+    publicId: attachmentPublicId,
+    fileName: input.fileName,
+    type: input.fileType,
+    size: input.fileSize,
+    inline: input.inline
+  });
+
+  return {
+    attachmentUrl: `${env.STORAGE_URL}/attachment/${orgShortcode}/${attachmentPublicId}/${input.fileName}`,
+    cid: input.cid,
+    inline: input.inline
+  };
+}
+
+function replaceCidWithUrl(
+  html: string,
+  attachments: { cid: string | null; attachmentUrl: string; inline: boolean }[]
+) {
+  return attachments
+    .filter((_) => _.inline)
+    .reduce(
+      (acc, attachment) =>
+        acc.replaceAll(`cid:${attachment.cid}`, attachment.attachmentUrl),
+      html
+    );
+}
+
+// Expand this function to handle more automatic filename generation
+type GenerationContext = {
+  fileType: string;
+  identifier: string;
+};
+
+function generateFileName({ identifier, fileType }: GenerationContext) {
+  switch (fileType) {
+    case 'text/calendar':
+      return `${identifier} Calender Invite.ics`;
+    default:
+      return `Attachment (${identifier}) ${new Date().toDateString()}.${mime.getExtension(fileType) ?? 'bin'}`;
+  }
+}
+
+const QUEUE_NAME = 'mail-processor';
+
+export const postalMessageSchema = z.object({
+  id: z.number(),
+  // We can't use z.string().email() here because the email address can be something like `*@domain.com` which is not a valid email
+  rcpt_to: z.string().includes('@'),
+  mail_from: z.string(),
+  message: z.string(),
+  base64: z.boolean(),
+  size: z.number()
+});
+
+type PostalMessageSchema = z.infer<typeof postalMessageSchema>;
+
+export const mailParamsSchema = z.object({
+  orgId: z.coerce.number(),
+  mailserverId: z.enum(['root', 'fwd']).or(typeIdValidator('postalServers'))
+});
+
+type MailParamsSchema = z.infer<typeof mailParamsSchema>;
+
+type MailProcessorJobData = {
+  rawMessage: PostalMessageSchema;
+  params: MailParamsSchema;
+};
+
+export const mailProcessorQueue = createQueue<MailProcessorJobData>(
+  QUEUE_NAME,
+  {
+    defaultJobOptions: {
+      removeOnComplete: {
+        age: env.MAILBRIDGE_QUEUE_COMPLETED_MAX_AGE_SECONDS
+      }
+    }
+  }
 );
 
 const tracer = getTracer('mail-bridge/queue/mail-processor');
 
-export const worker = new Worker<
-  {
-    rawMessage: PostalMessageSchema;
-    params: MailParamsSchema;
-  },
-  void
->(
-  'mail-processor',
+export const worker = createWorker<MailProcessorJobData>(
+  QUEUE_NAME,
   (job) =>
     tracer.startActiveSpan('Mail Processor', async (span) => {
       try {
@@ -787,217 +1021,6 @@ export const worker = new Worker<
       }
     }),
   {
-    connection: {
-      host: host.split(':')[0],
-      port: Number(port),
-      username,
-      password
-    }
+    autorun: false
   }
 );
-
-async function resolveOrgAndMailserver({
-  mailserverId,
-  orgId,
-  rcpt_to
-}: MailParamsSchema & {
-  rcpt_to: string;
-}): Promise<{
-  orgId: number;
-  orgPublicId: `o_${string}`;
-  forwardedEmailAddress: string | null;
-}> {
-  if (orgId === 0 && mailserverId === 'root') {
-    const [username, domain] = rcpt_to.split('@') as [string, string]; // we have verified that rcpt_to is an email address
-    const rootEmailIdentity = await db.query.emailIdentities.findFirst({
-      where: and(
-        eq(emailIdentities.username, username),
-        eq(emailIdentities.domainName, domain)
-      ),
-      columns: {
-        id: true,
-        orgId: true
-      },
-      with: {
-        org: {
-          columns: {
-            publicId: true
-          }
-        }
-      }
-    });
-    if (!rootEmailIdentity)
-      throw new Error(`No email identity found for root email`);
-    return {
-      orgId: rootEmailIdentity.orgId,
-      orgPublicId: rootEmailIdentity.org.publicId,
-      forwardedEmailAddress: null
-    };
-  } else if (orgId === 0 && mailserverId === 'fwd') {
-    const fwdEmailIdentity = await db.query.emailIdentities.findFirst({
-      where: eq(emailIdentities.forwardingAddress, rcpt_to),
-      columns: {
-        id: true,
-        username: true,
-        domainName: true,
-        orgId: true
-      },
-      with: {
-        org: {
-          columns: {
-            publicId: true
-          }
-        }
-      }
-    });
-    if (!fwdEmailIdentity)
-      throw new Error(`No email identity found for forward email: ${rcpt_to}`);
-
-    return {
-      orgId: fwdEmailIdentity.orgId,
-      orgPublicId: fwdEmailIdentity.org.publicId,
-      forwardedEmailAddress: `${fwdEmailIdentity.username}@${fwdEmailIdentity.domainName}`
-    };
-  } else if (
-    // Checks to narrow down the mailserverId
-    orgId !== 0 &&
-    mailserverId !== 'root' &&
-    mailserverId !== 'fwd'
-  ) {
-    //verify the mailserver actually exists
-    const mailServer = await db.query.postalServers.findFirst({
-      where: eq(postalServers.publicId, mailserverId),
-      columns: {
-        id: true,
-        orgId: true
-      },
-      with: {
-        org: {
-          columns: {
-            publicId: true
-          }
-        }
-      }
-    });
-    if (!mailServer || mailServer.orgId !== orgId)
-      throw new Error(`Mailserver not found or does not belong to the org`);
-
-    return {
-      orgId: mailServer.orgId,
-      orgPublicId: mailServer.org.publicId,
-      forwardedEmailAddress: null
-    };
-  } else
-    throw new Error(
-      `Invalid orgId and mailserverId: ${JSON.stringify({ orgId, mailserverId })}`
-    );
-}
-
-interface UploadAndAttachAttachmentInput {
-  orgId: number;
-  fileName: string;
-  fileType: string;
-  fileContent: Buffer;
-  fileSize: number;
-  convoId: number;
-  convoEntryId: number;
-  convoParticipantId: number;
-  inline: boolean;
-  cid: string | null;
-}
-
-type PreSignedData = {
-  publicId: string;
-  signedUrl: string;
-};
-
-async function uploadAndAttachAttachment(
-  input: UploadAndAttachAttachmentInput,
-  orgPublicId: TypeId<'org'>,
-  orgShortcode: string
-) {
-  const preUpload = (await fetch(
-    `${env.STORAGE_URL}/api/attachments/internalPresign`,
-    {
-      method: 'post',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: env.STORAGE_KEY
-      },
-      body: JSON.stringify({
-        orgPublicId,
-        filename: input.fileName
-      })
-    }
-  ).then((r) => r.json())) as PreSignedData;
-
-  if (!preUpload?.publicId || !preUpload.signedUrl) {
-    throw new Error('Missing attachmentPublicId or presignedUrl');
-  }
-
-  const attachmentPublicId = preUpload.publicId;
-  const presignedUrl = preUpload.signedUrl;
-
-  if (!validateTypeId('convoAttachments', attachmentPublicId)) {
-    throw new Error('Invalid attachmentPublicId');
-  }
-
-  try {
-    await fetch(presignedUrl, {
-      method: 'put',
-      body: input.fileContent,
-      headers: {
-        'Content-Type': input.fileType
-      }
-    });
-  } catch (error) {
-    console.error('Error uploading file to presigned URL:', error);
-    throw error; // Rethrow to handle it in the outer catch block
-  }
-
-  await db.insert(convoAttachments).values({
-    convoId: input.convoId,
-    convoEntryId: input.convoEntryId,
-    convoParticipantId: input.convoParticipantId,
-    orgId: input.orgId,
-    publicId: attachmentPublicId,
-    fileName: input.fileName,
-    type: input.fileType,
-    size: input.fileSize,
-    inline: input.inline
-  });
-
-  return {
-    attachmentUrl: `${env.STORAGE_URL}/attachment/${orgShortcode}/${attachmentPublicId}/${input.fileName}`,
-    cid: input.cid,
-    inline: input.inline
-  };
-}
-
-function replaceCidWithUrl(
-  html: string,
-  attachments: { cid: string | null; attachmentUrl: string; inline: boolean }[]
-) {
-  return attachments
-    .filter((_) => _.inline)
-    .reduce(
-      (acc, attachment) =>
-        acc.replaceAll(`cid:${attachment.cid}`, attachment.attachmentUrl),
-      html
-    );
-}
-
-// Expand this function to handle more automatic filename generation
-type GenerationContext = {
-  fileType: string;
-  identifier: string;
-};
-
-function generateFileName({ identifier, fileType }: GenerationContext) {
-  switch (fileType) {
-    case 'text/calendar':
-      return `${identifier} Calender Invite.ics`;
-    default:
-      return `Attachment (${identifier}) ${new Date().toDateString()}.${mime.getExtension(fileType) ?? 'bin'}`;
-  }
-}

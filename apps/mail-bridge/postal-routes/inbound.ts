@@ -1,7 +1,4 @@
-import {
-  postalMessageSchema,
-  mailParamsSchema
-} from '../queue/mail-processor/schemas';
+import { postalMessageSchema, mailParamsSchema } from '../queue/mail-processor';
 import { mailProcessorQueue } from '../queue/mail-processor';
 import { zValidator } from '@u22n/hono/helpers';
 import { createHonoApp } from '@u22n/hono';
