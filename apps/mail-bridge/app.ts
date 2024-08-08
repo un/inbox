@@ -8,6 +8,7 @@ import {
   setupTrpcHandler
 } from '@u22n/hono';
 import { signatureMiddleware } from './postal-routes/signature-middleware';
+import { connection as postalDbConnection } from './postal-db/index';
 import { inboundApi } from './postal-routes/inbound';
 import { eventApi } from './postal-routes/events';
 import { opentelemetry } from '@u22n/otel/hono';
@@ -65,4 +66,5 @@ if (env.MAILBRIDGE_MODE === 'dual' || env.MAILBRIDGE_MODE === 'worker') {
   });
 }
 
+processCleanup.push(() => postalDbConnection.end());
 setupRuntime(processCleanup);
