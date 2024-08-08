@@ -53,7 +53,7 @@ export type AccountMetaBonus = {
   note: string;
 };
 export type AccountMetadata = {
-  deleted: Date;
+  deleted?: Date;
   bonuses?: AccountMetaBonus[];
 };
 
