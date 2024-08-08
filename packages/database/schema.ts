@@ -19,6 +19,11 @@ import {
   customType,
   longtext
 } from 'drizzle-orm/mysql-core';
+import {
+  spaceMemberNotificationArray,
+  spaceMemberRoleArray,
+  spaceStatusArray
+} from '@u22n/utils/spaces';
 import { typeIdDataType as publicId } from '@u22n/utils/typeid';
 import { uiColors } from '@u22n/utils/colors';
 import { relations } from 'drizzle-orm';
@@ -374,12 +379,13 @@ export const orgMembers = mysqlTable(
   'org_members',
   {
     id: serial('id').primaryKey(),
+    orgId: foreignKey('org_id').notNull(),
     publicId: publicId('orgMembers', 'public_id').notNull(),
     accountId: foreignKey('account_id'),
-    orgId: foreignKey('org_id').notNull(),
     invitedByOrgMemberId: foreignKey('invited_by_org_member_id'),
     status: mysqlEnum('status', ['invited', 'active', 'removed']).notNull(),
     role: mysqlEnum('role', ['member', 'admin']).notNull(),
+    personalSpaceId: foreignKey('personal_space_id'),
     orgMemberProfileId: foreignKey('org_member_profile_id').notNull(),
     addedAt: timestamp('added_at')
       .notNull()
@@ -410,15 +416,20 @@ export const orgMembersRelations = relations(orgMembers, ({ one, many }) => ({
     references: [orgMemberProfiles.id]
   }),
   routingRuleDestinations: many(emailRoutingRulesDestinations),
-  authorizedEmailIdentities: many(emailIdentitiesAuthorizedOrgMembers)
+  authorizedEmailIdentities: many(emailIdentitiesAuthorizedOrgMembers),
+  personalSpace: one(spaces, {
+    fields: [orgMembers.personalSpaceId],
+    references: [spaces.id]
+  }),
+  spaceMemberships: many(spaceMembers, { relationName: 'member' })
 }));
 
 export const orgMemberProfiles = mysqlTable(
   'org_member_profiles',
   {
     id: serial('id').primaryKey(),
-    publicId: publicId('orgMemberProfile', 'public_id').notNull(),
     orgId: foreignKey('org_id').notNull(),
+    publicId: publicId('orgMemberProfile', 'public_id').notNull(),
     avatarTimestamp: timestamp('avatar_timestamp'),
     accountId: foreignKey('account_id'),
     firstName: varchar('first_name', { length: 64 }),
@@ -446,6 +457,10 @@ export const orgMemberProfileRelations = relations(
     org: one(orgs, {
       fields: [orgMemberProfiles.orgId],
       references: [orgs.id]
+    }),
+    orgMember: one(orgMembers, {
+      fields: [orgMemberProfiles.id],
+      references: [orgMembers.orgMemberProfileId]
     })
   })
 );
@@ -454,9 +469,9 @@ export const teams = mysqlTable(
   'teams',
   {
     id: serial('id'), // -> removed pk from here
+    orgId: foreignKey('org_id').notNull(),
     publicId: publicId('teams', 'public_id').notNull(),
     avatarTimestamp: timestamp('avatar_timestamp'),
-    orgId: foreignKey('org_id').notNull(),
     name: varchar('name', { length: 128 }).notNull(),
     color: mysqlEnum('color', [...uiColors]),
     description: text('description'),
@@ -479,7 +494,8 @@ export const teamsRelations = relations(teams, ({ one, many }) => ({
   }),
   members: many(teamMembers),
   routingRuleDestinations: many(emailRoutingRulesDestinations),
-  authorizedEmailIdentities: many(emailIdentitiesAuthorizedOrgMembers)
+  authorizedEmailIdentities: many(emailIdentitiesAuthorizedOrgMembers),
+  spaceMemberships: many(spaceMembers)
 }));
 
 export const teamMembers = mysqlTable(
@@ -528,14 +544,229 @@ export const teamMembersRelations = relations(teamMembers, ({ one }) => ({
 }));
 
 //******************* */
+//* Spaces tables
+
+export const spaces = mysqlTable(
+  'spaces',
+  {
+    id: serial('id').primaryKey(),
+    orgId: foreignKey('org_id').notNull(),
+    parentSpaceId: foreignKey('parent_space_id'),
+    publicId: publicId('spaces', 'public_id').notNull(),
+    shortcode: varchar('shortcode', { length: 64 }).notNull(),
+    type: mysqlEnum('type', ['open', 'private']).notNull(),
+    personalSpace: boolean('personal_space').notNull().default(false),
+    convoPrefix: varchar('convo_prefix', { length: 8 }),
+    inheritParentPermissions: boolean('inherit_parent_permissions')
+      .notNull()
+      .default(false),
+    name: varchar('name', { length: 128 }).notNull(),
+    icon: varchar('icon', { length: 32 }).notNull().default('squares-four'),
+    color: mysqlEnum('color', [...uiColors]).notNull(),
+    description: text('description'),
+    avatarTimestamp: timestamp('avatar_timestamp'),
+    createdByOrgMemberId: foreignKey('created_by_org_member_id').notNull(),
+    createdAt: timestamp('created_at')
+      .notNull()
+      .$defaultFn(() => new Date())
+  },
+  (table) => ({
+    publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
+    shortcodeIndex: uniqueIndex('shortcode_idx').on(table.shortcode),
+    orgIdIndex: index('org_id_idx').on(table.orgId)
+  })
+);
+
+export const spaceRelations = relations(spaces, ({ one, many }) => ({
+  parentSpace: one(spaces, {
+    fields: [spaces.parentSpaceId],
+    references: [spaces.id],
+    relationName: 'parent'
+  }),
+  org: one(orgs, {
+    fields: [spaces.orgId],
+    references: [orgs.id]
+  }),
+  createdByOrgMember: one(orgMembers, {
+    fields: [spaces.createdByOrgMemberId],
+    references: [orgMembers.id]
+  }),
+  subSpaces: many(spaces, { relationName: 'parent' }),
+  members: many(spaceMembers),
+  statuses: many(spaceStatuses),
+  tags: many(spaceTags)
+}));
+
+//* Space Members
+
+export const spaceMembers = mysqlTable(
+  'space_members',
+  {
+    id: serial('id').primaryKey(),
+    orgId: foreignKey('org_id').notNull(),
+    publicId: publicId('spaceMembers', 'public_id').notNull(),
+    spaceId: foreignKey('space_id').notNull(),
+    orgMemberId: foreignKey('org_member_id'),
+    teamId: foreignKey('team_id'),
+    role: mysqlEnum('role', [...spaceMemberRoleArray])
+      .notNull()
+      .default('member'),
+    notifications: mysqlEnum('notifications', [...spaceMemberNotificationArray])
+      .notNull()
+      .default('active'),
+    addedByOrgMemberId: foreignKey('added_by_org_member_id').notNull(),
+    addedAt: timestamp('added_at')
+      .notNull()
+      .$defaultFn(() => new Date()),
+    removedAt: timestamp('removed_at'),
+    canCreate: boolean('can_create').notNull().default(true),
+    canRead: boolean('can_read').notNull().default(true),
+    canComment: boolean('can_comment').notNull().default(true),
+    canReply: boolean('can_reply').notNull().default(true),
+    canDelete: boolean('can_delete').notNull().default(true),
+    canChangeStatus: boolean('can_change_status').notNull().default(true),
+    canSetStatusToClosed: boolean('can_set_status_to_closed')
+      .notNull()
+      .default(true),
+    canAddTags: boolean('can_add_tags').notNull().default(true),
+    canMoveToAnotherSpace: boolean('can_move_to_another_space')
+      .notNull()
+      .default(true),
+    canAddToAnotherSpace: boolean('can_add_to_another_space')
+      .notNull()
+      .default(true),
+    canMergeConvos: boolean('can_merge').notNull().default(true),
+    canAddParticipants: boolean('can_add_participants').notNull().default(true)
+  },
+  (table) => ({
+    orgIdIndex: index('org_id_idx').on(table.orgId),
+    spaceIdIndex: index('space_id_idx').on(table.spaceId),
+    orgMemberIdIndex: index('org_member_id_idx').on(table.orgMemberId)
+  })
+);
+
+export const spaceMemberRelations = relations(spaceMembers, ({ one }) => ({
+  org: one(orgs, {
+    fields: [spaceMembers.orgId],
+    references: [orgs.id]
+  }),
+  space: one(spaces, {
+    fields: [spaceMembers.spaceId],
+    references: [spaces.id]
+  }),
+  team: one(teams, {
+    fields: [spaceMembers.teamId],
+    references: [teams.id]
+  }),
+  orgMember: one(orgMembers, {
+    fields: [spaceMembers.orgMemberId],
+    references: [orgMembers.id],
+    relationName: 'member'
+  }),
+  addedByOrgMember: one(orgMembers, {
+    fields: [spaceMembers.addedByOrgMemberId],
+    references: [orgMembers.id],
+    relationName: 'addedBy'
+  })
+}));
+
+export const spaceStatuses = mysqlTable(
+  'space_statuses',
+  {
+    id: serial('id').primaryKey(),
+    orgId: foreignKey('org_id').notNull(),
+    publicId: publicId('spaceStatuses', 'public_id').notNull(),
+    spaceId: foreignKey('space_id').notNull(),
+    type: mysqlEnum('type', [...spaceStatusArray]).notNull(),
+    order: tinyint('order', { unsigned: true }).notNull(),
+    name: varchar('name', { length: 32 }).notNull(),
+    color: mysqlEnum('color', [...uiColors]).notNull(),
+    icon: varchar('icon', { length: 32 }).notNull().default('check'),
+    description: text('description'),
+    disabled: boolean('disabled').notNull().default(false),
+    createdByOrgMemberId: foreignKey('created_by_org_member_id').notNull(),
+    createdAt: timestamp('created_at')
+      .notNull()
+      .$defaultFn(() => new Date())
+  },
+  (table) => ({
+    publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
+    orgIdIndex: index('org_id_idx').on(table.orgId),
+    spaceIdIndex: index('space_id_idx').on(table.spaceId)
+  })
+);
+
+export const spaceStatusesRelations = relations(
+  spaceStatuses,
+  ({ one, many }) => ({
+    org: one(orgs, {
+      fields: [spaceStatuses.orgId],
+      references: [orgs.id]
+    }),
+    space: one(spaces, {
+      fields: [spaceStatuses.spaceId],
+      references: [spaces.id]
+    }),
+    createdByOrgMember: one(orgMembers, {
+      fields: [spaceStatuses.createdByOrgMemberId],
+      references: [orgMembers.id]
+    }),
+    convoStatuses: many(convoStatuses)
+  })
+);
+
+export const spaceTags = mysqlTable(
+  'space_tags',
+  {
+    id: serial('id').primaryKey(),
+    orgId: foreignKey('org_id').notNull(),
+    publicId: publicId('spaceTags', 'public_id').notNull(),
+    spaceId: foreignKey('space_id').notNull(),
+    label: varchar('label', { length: 32 }).notNull(),
+    description: text('description'),
+    color: mysqlEnum('color', [...uiColors]).notNull(),
+    icon: varchar('icon', { length: 32 }).notNull().default('tag-simple'),
+    createdByOrgMemberId: foreignKey('created_by_org_member_id').notNull(),
+    disabled: boolean('disabled').notNull().default(false),
+    createdAt: timestamp('created_at')
+      .notNull()
+      .$defaultFn(() => new Date())
+  },
+  (table) => ({
+    publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
+    orgIdIndex: index('org_id_idx').on(table.orgId),
+    spaceIdIndex: index('space_id_idx').on(table.spaceId),
+    createdByOrgMemberIdIndex: index('created_by_org_member_id_idx').on(
+      table.createdByOrgMemberId
+    )
+  })
+);
+
+export const spaceTagsRelations = relations(spaceTags, ({ one, many }) => ({
+  org: one(orgs, {
+    fields: [spaceTags.orgId],
+    references: [orgs.id]
+  }),
+  space: one(spaces, {
+    fields: [spaceTags.spaceId],
+    references: [spaces.id]
+  }),
+  createdByOrgMember: one(orgMembers, {
+    fields: [spaceTags.createdByOrgMemberId],
+    references: [orgMembers.id]
+  }),
+  convoTags: many(convoTags)
+}));
+
+//******************* */
 //* Domains table
 export const domains = mysqlTable(
   'domains',
   {
     id: serial('id').primaryKey(),
-    publicId: publicId('domains', 'public_id').notNull(),
     orgId: foreignKey('org_id').notNull(),
     disabled: boolean('disabled').notNull().default(false),
+    publicId: publicId('domains', 'public_id').notNull(),
     catchAllAddress: foreignKey('catch_all_address'),
     postalHost: varchar('postal_host', { length: 32 }).notNull(),
     domain: varchar('domain', { length: 256 }).notNull(),
@@ -605,8 +836,8 @@ export const postalServers = mysqlTable(
   'postal_servers',
   {
     id: serial('id').primaryKey(),
-    publicId: publicId('postalServers', 'public_id').notNull(),
     orgId: foreignKey('org_id').notNull(),
+    publicId: publicId('postalServers', 'public_id').notNull(),
     type: mysqlEnum('type', ['email', 'transactional', 'marketing']).notNull(),
     apiKey: varchar('api_key', { length: 64 }).notNull(),
     smtpKey: varchar('smtp_key', { length: 64 }),
@@ -640,9 +871,9 @@ export const contacts = mysqlTable(
   'contacts',
   {
     id: serial('id').primaryKey(),
+    orgId: foreignKey('org_id').notNull(),
     publicId: publicId('contacts', 'public_id').notNull(),
     avatarTimestamp: timestamp('avatar_timestamp'),
-    orgId: foreignKey('org_id').notNull(),
     reputationId: foreignKey('reputation_id').notNull(),
     name: varchar('name', { length: 128 }),
     setName: varchar('set_name', { length: 128 }),
@@ -725,8 +956,8 @@ export const emailRoutingRules = mysqlTable(
   'email_routing_rules',
   {
     id: serial('id').primaryKey(),
-    publicId: publicId('emailRoutingRules', 'public_id').notNull(),
     orgId: foreignKey('org_id').notNull(),
+    publicId: publicId('emailRoutingRules', 'public_id').notNull(),
     name: varchar('name', { length: 128 }).notNull(),
     description: text('description'),
     createdBy: foreignKey('created_by').notNull(),
@@ -760,11 +991,13 @@ export const emailRoutingRulesDestinations = mysqlTable(
   'email_routing_rules_destinations',
   {
     id: serial('id').primaryKey(),
-    publicId: publicId('emailRoutingRuleDestinations', 'public_id').notNull(),
     orgId: foreignKey('org_id').notNull(),
+    publicId: publicId('emailRoutingRuleDestinations', 'public_id').notNull(),
     ruleId: foreignKey('rule_id').notNull(),
     teamId: foreignKey('team_id'),
     orgMemberId: foreignKey('org_member_id'),
+    spaceId: foreignKey('space_id'),
+    assignToSpaceMemberId: foreignKey('assign_to_space_member_id'),
     createdAt: timestamp('created_at')
       .notNull()
       .$defaultFn(() => new Date())
@@ -775,7 +1008,7 @@ export const emailRoutingRulesDestinations = mysqlTable(
     ruleIdIndex: index('rule_id_idx').on(table.ruleId),
     teamIdIndex: index('team_id_idx').on(table.teamId),
     orgMemberIdIndex: index('org_member_id_idx').on(table.orgMemberId)
-    //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit : orgMemberId//teamId
+    //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit : orgMemberId//teamId//spaceId
   })
 );
 export const emailRoutingRulesDestinationsRelations = relations(
@@ -796,6 +1029,14 @@ export const emailRoutingRulesDestinationsRelations = relations(
     orgMember: one(orgMembers, {
       fields: [emailRoutingRulesDestinations.orgMemberId],
       references: [orgMembers.id]
+    }),
+    space: one(spaces, {
+      fields: [emailRoutingRulesDestinations.spaceId],
+      references: [spaces.id]
+    }),
+    assignToSpaceMember: one(spaceMembers, {
+      fields: [emailRoutingRulesDestinations.assignToSpaceMemberId],
+      references: [spaceMembers.id]
     })
   })
 );
@@ -804,8 +1045,8 @@ export const emailIdentities = mysqlTable(
   'email_identities',
   {
     id: serial('id').primaryKey(),
-    publicId: publicId('emailIdentities', 'public_id').notNull(),
     orgId: foreignKey('org_id').notNull(),
+    publicId: publicId('emailIdentities', 'public_id').notNull(),
     username: varchar('username', { length: 32 }).notNull(),
     domainName: varchar('domain_name', { length: 128 }).notNull(),
     domainId: foreignKey('domain_id'),
@@ -865,6 +1106,7 @@ export const emailIdentitiesAuthorizedOrgMembers = mysqlTable(
     identityId: foreignKey('identity_id').notNull(),
     orgMemberId: foreignKey('org_member_id'),
     teamId: foreignKey('team_id'),
+    spaceId: foreignKey('space_id'),
     default: boolean('default').notNull().default(false),
     addedBy: foreignKey('added_by').notNull(),
     createdAt: timestamp('created_at')
@@ -904,6 +1146,10 @@ export const emailIdentitiesAuthorizedOrgMemberRelations = relations(
     team: one(teams, {
       fields: [emailIdentitiesAuthorizedOrgMembers.teamId],
       references: [teams.id]
+    }),
+    space: one(spaces, {
+      fields: [emailIdentitiesAuthorizedOrgMembers.spaceId],
+      references: [spaces.id]
     })
   })
 );
@@ -912,9 +1158,9 @@ export const emailIdentitiesPersonal = mysqlTable(
   'email_identities_personal',
   {
     id: serial('id').primaryKey(),
+    orgId: foreignKey('org_id').notNull(),
     publicId: publicId('emailIdentitiesPersonal', 'public_id').notNull(),
     accountId: foreignKey('account_id').notNull(),
-    orgId: foreignKey('org_id').notNull(),
     emailIdentityId: foreignKey('email_identity_id').notNull(),
     createdAt: timestamp('created_at')
       .notNull()
@@ -952,8 +1198,8 @@ export const emailIdentityExternal = mysqlTable(
   'email_identity_external',
   {
     id: serial('id').primaryKey(),
-    publicId: publicId('emailIdentitiesExternal', 'public_id').notNull(),
     orgId: foreignKey('org_id').notNull(),
+    publicId: publicId('emailIdentitiesExternal', 'public_id').notNull(),
     nickname: varchar('nickname', { length: 128 }).notNull(),
     createdBy: foreignKey('created_by').notNull(),
     username: varchar('username', {
@@ -1021,7 +1267,155 @@ export const convosRelations = relations(convos, ({ one, many }) => ({
   attachments: many(convoAttachments),
   entries: many(convoEntries),
   subjects: many(convoSubjects),
-  seen: many(convoSeenTimestamps)
+  seen: many(convoSeenTimestamps),
+  spaces: many(convoToSpaces),
+  statuses: many(convoStatuses),
+  tags: many(convoTags)
+}));
+
+export const convoToSpaces = mysqlTable(
+  'convo_to_spaces',
+  {
+    id: serial('id').primaryKey(),
+    orgId: foreignKey('org_id').notNull(),
+    publicId: publicId('convoToSpaces', 'public_id').notNull(),
+    convoId: foreignKey('convo_id').notNull(),
+    spaceId: foreignKey('space_id').notNull()
+  },
+  (table) => ({
+    orgIdIndex: index('org_id_idx').on(table.orgId),
+    publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
+    convoIdIndex: index('convo_id_idx').on(table.convoId),
+    spaceIdIndex: index('space_id_idx').on(table.spaceId)
+  })
+);
+
+export const convoToSpacesRelations = relations(
+  convoToSpaces,
+  ({ one, many }) => ({
+    org: one(orgs, {
+      fields: [convoToSpaces.orgId],
+      references: [orgs.id]
+    }),
+    convo: one(convos, {
+      fields: [convoToSpaces.convoId],
+      references: [convos.id]
+    }),
+    space: one(spaces, {
+      fields: [convoToSpaces.spaceId],
+      references: [spaces.id]
+    }),
+    statuses: many(convoStatuses),
+    tags: many(convoTags)
+  })
+);
+
+export const convoStatuses = mysqlTable(
+  'convo_statuses',
+  {
+    id: serial('id').primaryKey(),
+    orgId: foreignKey('org_id').notNull(),
+    publicId: publicId('convoStatuses', 'public_id').notNull(),
+    convoId: foreignKey('convo_id').notNull(),
+    spaceId: foreignKey('space_id').notNull(),
+    convoToSpaceId: foreignKey('convo_to_space_id').notNull(),
+    status: foreignKey('status_id'),
+    byOrgMemberId: foreignKey('by_org_member_id').notNull(),
+    createdAt: timestamp('created_at')
+      .notNull()
+      .$defaultFn(() => new Date())
+  },
+  (table) => ({
+    orgIdIndex: index('org_id_idx').on(table.orgId),
+    publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
+    convoIdIndex: index('convo_id_idx').on(table.convoId),
+    spaceIdIndex: index('space_id_idx').on(table.spaceId),
+    convoToSpacesIdIndex: index('convo_to_spaces_id_idx').on(
+      table.convoToSpaceId
+    ),
+    statusIndex: index('status_idx').on(table.status)
+  })
+);
+
+export const convoStatusesRelations = relations(convoStatuses, ({ one }) => ({
+  org: one(orgs, {
+    fields: [convoStatuses.orgId],
+    references: [orgs.id]
+  }),
+  convo: one(convos, {
+    fields: [convoStatuses.convoId],
+    references: [convos.id]
+  }),
+  space: one(spaces, {
+    fields: [convoStatuses.spaceId],
+    references: [spaces.id]
+  }),
+  convoToSpace: one(convoToSpaces, {
+    fields: [convoStatuses.convoToSpaceId],
+    references: [convoToSpaces.id]
+  }),
+  status: one(spaceStatuses, {
+    fields: [convoStatuses.status],
+    references: [spaceStatuses.id]
+  }),
+  byOrgMember: one(orgMembers, {
+    fields: [convoStatuses.byOrgMemberId],
+    references: [orgMembers.id]
+  })
+}));
+
+export const convoTags = mysqlTable(
+  'convo_tags',
+  {
+    id: serial('id').primaryKey(),
+    orgId: foreignKey('org_id').notNull(),
+    publicId: publicId('convoTags', 'public_id').notNull(),
+    convoId: foreignKey('convo_id').notNull(),
+    spaceId: foreignKey('space_id').notNull(),
+    convoToSpaceId: foreignKey('convo_to_space_id').notNull(),
+    tagId: foreignKey('tag_id').notNull(),
+    addedByOrgMemberId: foreignKey('added_by_org_member_id').notNull(),
+    addedAt: timestamp('added_at')
+      .notNull()
+      .$defaultFn(() => new Date())
+  },
+  (table) => ({
+    orgIdIndex: index('org_id_idx').on(table.orgId),
+    publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
+    convoIdIndex: index('convo_id_idx').on(table.convoId),
+    spaceIdIndex: index('space_id_idx').on(table.spaceId),
+    convoToSpacesIdIndex: index('convo_to_spaces_id_idx').on(
+      table.convoToSpaceId
+    ),
+    tagIndex: index('tag_idx').on(table.tagId)
+  })
+);
+
+export const convoTagsRelations = relations(convoTags, ({ one }) => ({
+  org: one(orgs, {
+    fields: [convoTags.orgId],
+    references: [orgs.id]
+  }),
+  convo: one(convos, {
+    fields: [convoTags.convoId],
+    references: [convos.id]
+  }),
+  space: one(spaces, {
+    fields: [convoTags.spaceId],
+    references: [spaces.id]
+  }),
+  convoToSpace: one(convoToSpaces, {
+    fields: [convoTags.convoToSpaceId],
+    references: [convoToSpaces.id]
+  }),
+  tag: one(spaceTags, {
+    fields: [convoTags.tagId],
+    references: [spaceTags.id]
+  }),
+  addedByOrgMember: one(orgMembers, {
+    fields: [convoTags.addedByOrgMemberId],
+    references: [orgMembers.id]
+  })
 }));
 
 export const convoSubjects = mysqlTable(
@@ -1224,8 +1618,8 @@ export const pendingAttachments = mysqlTable(
   'pending_attachments',
   {
     id: serial('id').primaryKey(),
-    publicId: publicId('convoAttachments', 'public_id').notNull(),
     orgId: foreignKey('org_id').notNull(),
+    publicId: publicId('convoAttachments', 'public_id').notNull(),
     orgPublicId: publicId('org', 'org_public_id').notNull(),
     filename: varchar('filename', { length: 256 }).notNull(),
     createdAt: timestamp('created_at')

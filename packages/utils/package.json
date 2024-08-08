@@ -13,7 +13,8 @@
     "./typeid": "./typeid.ts",
     "./colors": "./uiColors.ts",
     "./zodSchemas": "./zodSchemas.ts",
-    "./discord": "./discord.ts"
+    "./discord": "./discord.ts",
+    "./spaces": "./spaces.ts"
   },
   "keywords": [],
   "author": "",

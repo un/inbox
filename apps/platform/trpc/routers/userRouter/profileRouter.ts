@@ -1,5 +1,11 @@
-import { orgMemberProfiles, orgs, orgMembers } from '@u22n/database/schema';
+import {
+  orgMemberProfiles,
+  orgs,
+  orgMembers,
+  spaces
+} from '@u22n/database/schema';
 import { router, accountProcedure } from '~platform/trpc/trpc';
+import { validateSpaceShortCode } from '../spaceRouter/utils';
 import { typeIdValidator } from '@u22n/utils/typeid';
 import { and, eq } from '@u22n/database/orm';
 import { TRPCError } from '@trpc/server';
@@ -90,6 +96,33 @@ export const profileRouter = router({
       const accountId = account.id;
       const [firstName, ...lastName] = input.name.split(' ');
 
+      const orgMemberProfileQuery = await db.query.orgMemberProfiles.findFirst({
+        where: and(
+          eq(orgMemberProfiles.accountId, accountId),
+          eq(orgMemberProfiles.publicId, input.profilePublicId)
+        ),
+        columns: {
+          id: true,
+          orgId: true,
+          handle: true
+        },
+        with: {
+          orgMember: {
+            columns: {
+              id: true,
+              personalSpaceId: true
+            }
+          }
+        }
+      });
+
+      if (!orgMemberProfileQuery) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Profile not found'
+        });
+      }
+
       await db
         .update(orgMemberProfiles)
         .set({
@@ -99,12 +132,27 @@ export const profileRouter = router({
           blurb: input.blurb,
           handle: input.handle
         })
-        .where(
-          and(
-            eq(orgMemberProfiles.publicId, input.profilePublicId),
-            eq(orgMemberProfiles.accountId, accountId)
-          )
-        );
+        .where(eq(orgMemberProfiles.id, orgMemberProfileQuery.id));
+
+      if (orgMemberProfileQuery.orgMember.personalSpaceId) {
+        const validatedShortcode = await validateSpaceShortCode({
+          db: db,
+          shortcode: `${input.handle}-personal`,
+          orgId: orgMemberProfileQuery.orgId,
+          spaceId: orgMemberProfileQuery.orgMember.personalSpaceId
+        });
+
+        await db
+          .update(spaces)
+          .set({
+            name: `${firstName}'s Personal Space`,
+            shortcode: validatedShortcode.shortcode,
+            description: `${firstName}${lastName.length ? ' ' + lastName.join(' ') : ''}'s Personal Space`
+          })
+          .where(
+            eq(spaces.id, orgMemberProfileQuery.orgMember.personalSpaceId)
+          );
+      }
 
       return {
         success: true
