@@ -25,3 +25,5 @@ servicesApi.post(
     return c.json({ results });
   }
 );
+
+servicesApi.post();
