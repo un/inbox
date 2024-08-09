@@ -3,8 +3,8 @@
 import { useLayoutEffect, useState } from 'react';
 
 function useMaxWidth(maxWidth: number) {
-  if (typeof window === 'undefined') false;
-  const [isHittingMaxWidth, setIsHittingMaxWidth] = useState(false);
+  if (typeof window === 'undefined') true;
+  const [isHittingMaxWidth, setIsHittingMaxWidth] = useState(true);
 
   useLayoutEffect(() => {
     const handleSize = () => {
