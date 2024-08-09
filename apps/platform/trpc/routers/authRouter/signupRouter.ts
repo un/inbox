@@ -1,4 +1,8 @@
-import { blockedUsernames, reservedUsernames } from '~platform/utils/signup';
+import {
+  blockedUsernames,
+  containsBannedWords,
+  reservedUsernames
+} from '~platform/utils/signup';
 import { calculatePasswordStrength } from '@u22n/utils/password';
 import { router, publicProcedure } from '~platform/trpc/trpc';
 import { ratelimiter } from '~platform/trpc/ratelimit';
@@ -22,13 +26,21 @@ export async function validateUsername(
   if (registeredUser) {
     return {
       available: false,
-      error: 'Already taken'
+      error: 'Username unavailable'
     };
   }
+
+  if (containsBannedWords(username.toLowerCase())) {
+    return {
+      available: false,
+      error: 'Username unavailable'
+    };
+  }
+
   if (blockedUsernames.includes(username.toLowerCase())) {
     return {
       available: false,
-      error: 'Username not allowed'
+      error: 'Username unavailable'
     };
   }
   if (reservedUsernames.includes(username.toLowerCase())) {
