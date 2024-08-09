@@ -15,7 +15,7 @@ import {
   convoSubjects,
   domains,
   emailIdentities,
-  emailIdentitiesAuthorizedOrgMembers,
+  emailIdentitiesAuthorizedSenders,
   emailIdentitiesPersonal,
   emailIdentityExternal,
   emailRoutingRules,
@@ -1294,10 +1294,8 @@ export const securityRouter = router({
           .delete(emailIdentities)
           .where(inArray(emailIdentities.orgId, orgIdsArray)),
         db
-          .delete(emailIdentitiesAuthorizedOrgMembers)
-          .where(
-            inArray(emailIdentitiesAuthorizedOrgMembers.orgId, orgIdsArray)
-          ),
+          .delete(emailIdentitiesAuthorizedSenders)
+          .where(inArray(emailIdentitiesAuthorizedSenders.orgId, orgIdsArray)),
         db
           .delete(emailIdentitiesPersonal)
           .where(inArray(emailIdentitiesPersonal.orgId, orgIdsArray)),

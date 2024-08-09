@@ -1,14 +1,13 @@
 'use client';
 
-import { ExternalEmailModal } from './_components/add-external-email-modal';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
-import { AddEmailModal } from './_components/add-address-modal';
 import { PageTitle } from '../../../_components/page-title';
+import { Button } from '@/src/components/shadcn-ui/button';
 import { DataTable } from '@/src/components/shared/table';
 import { SpinnerGap } from '@phosphor-icons/react';
 import { columns } from './_components/columns';
 import { platform } from '@/src/lib/trpc';
-import { useState } from 'react';
+import Link from 'next/link';
 
 export default function Page() {
   const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
@@ -17,19 +16,16 @@ export default function Page() {
       orgShortcode
     });
 
-  const [addExternalModalOpen, setAddExternalModalOpen] =
-    useState<boolean>(false);
-
   return (
     <div className="flex w-full flex-col gap-2 p-4">
       <PageTitle
         title="Addresses"
         description="Manage Your Org Members">
-        <AddEmailModal addExternalModalOpen={setAddExternalModalOpen} />
-        <ExternalEmailModal
-          open={addExternalModalOpen}
-          addExternalModalOpen={setAddExternalModalOpen}
-        />
+        <Button asChild>
+          <Link href={`/${orgShortcode}/settings/org/mail/addresses/add`}>
+            Add new
+          </Link>
+        </Button>
       </PageTitle>
       {isLoading && (
         <div className="flex w-full justify-center gap-2 text-center font-bold">

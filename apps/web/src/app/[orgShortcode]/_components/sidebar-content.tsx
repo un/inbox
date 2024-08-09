@@ -70,46 +70,6 @@ export function SidebarContent() {
       {!isMobile && <OrgMenu />}
       <SpacesNav />
       <NavAppVersion />
-      <OrgMenu />
-      {/* <div
-        className={cn(
-          'flex w-full grow flex-col items-start justify-start gap-4 p-0'
-        )}>
-        <div className="flex w-full flex-col gap-0 p-0">
-          <div className="flex w-full flex-row items-center justify-between gap-2">
-            <span className="text-slate-10 p-1 text-[10px] font-semibold uppercase">
-              Spaces
-            </span>
-            <NewSpaceModal />
-          </div>
-          {spaceData?.map((space) => (
-            <SpaceItem
-              space={space}
-              key={space.publicId}
-              isPersonal={space.publicId === unsortedSpaceData?.personalSpaceId}
-            />
-          ))}
-          <Link
-            className="hover:bg-base-1 flex w-full max-w-full flex-row items-center gap-2 truncate rounded-lg p-1.5"
-            href={`/${orgShortcode}/convo`}>
-            <div className="bg-blue-4 text-blue-9 flex h-6 w-6 items-center justify-center rounded-sm">
-              <User
-                weight="bold"
-                className={'h-4 w-4'}
-              />
-            </div>
-            <span className="text-base-12 font-medium">My personal space</span>
-          </Link>
-        </div>
-      </div> */}
-      <div className="flex w-full flex-row items-center justify-between p-1">
-        <span className={cn('font-display text-slate-11 text-sm')}>
-          UnInbox
-        </span>
-        <span className={cn('text-slate-11 text-xs')}>
-          v{env.NEXT_PUBLIC_APP_VERSION}
-        </span>
-      </div>
     </div>
   );
 }

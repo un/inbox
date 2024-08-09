@@ -55,7 +55,6 @@ import {
 } from '@/src/components/shadcn-ui/tooltip';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { type SpaceStatus, type SpaceType } from '@u22n/utils/spaces';
-import { NEXT_CACHE_TAG_MAX_ITEMS } from 'next/dist/lib/constants';
 import { typeIdValidator, type TypeId } from '@u22n/utils/typeid';
 import { SettingsTitle } from './_components/settingsTitle';
 import { type UiColor, uiColors } from '@u22n/utils/colors';
@@ -1543,18 +1542,15 @@ function Tags({
   spaceShortcode: string;
   isSpaceAdmin: boolean;
 }) {
-  const { data: spaceTags, isLoading: tagsLoading } =
-    platform.spaces.tags.getSpacesTags.useQuery({
-      orgShortcode: orgShortcode,
-      spaceShortcode: spaceShortcode
-    });
+  const { data: spaceTags } = platform.spaces.tags.getSpacesTags.useQuery({
+    orgShortcode: orgShortcode,
+    spaceShortcode: spaceShortcode
+  });
 
   const spaceTagsQueryCache = platform.useUtils().spaces.tags.getSpacesTags;
 
   const { mutateAsync: addNewSpaceTag } =
     platform.spaces.tags.addNewSpaceTag.useMutation();
-
-  const [showNewTagForm, setShowNewTagForm] = useState(false);
 
   const addNewTag = async () => {
     const randomColor =

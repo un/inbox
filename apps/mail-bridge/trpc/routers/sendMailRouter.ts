@@ -6,7 +6,6 @@ import {
   convoEntries,
   type ConvoEntryMetadataEmailAddress,
   contacts,
-  emailIdentitiesAuthorizedOrgMembers,
   orgMembers,
   teams,
   type ConvoEntryMetadataMissingParticipant,
@@ -87,7 +86,8 @@ export const sendMailRouter = router({
               publicId: true,
               orgMemberId: true,
               teamId: true,
-              contactId: true
+              contactId: true,
+              emailIdentityId: true
             },
             where: inArray(convoParticipants.role, ['assigned', 'contributor'])
           }
@@ -117,21 +117,19 @@ export const sendMailRouter = router({
         (participant) => participant.teamId
       );
 
+      // if now external contact (a.k.a email participants) are found, we return early
+      // This should not be reachable as we check on platform before calling mail-bridge, but if it is, we return success
       if (
         convoResponse.participants.length === 0 ||
         !contactConvoParticipants.length ||
         contactConvoParticipants.length === 0
       ) {
-        console.error('🚨 no contact participants found', {
-          orgId,
-          convoId,
-          entryId,
-          sendAsEmailIdentityPublicId
-        });
         return {
           success: true
         };
       }
+
+      // get the convo entry to send
 
       const convoEntryResponse = await db.query.convoEntries.findFirst({
         where: eq(convoEntries.id, entryId),
@@ -148,7 +146,9 @@ export const sendMailRouter = router({
         with: {
           author: {
             columns: {
-              orgMemberId: true
+              orgMemberId: true,
+              teamId: true,
+              emailIdentityId: true
             }
           },
           subject: {
@@ -192,7 +192,7 @@ export const sendMailRouter = router({
         };
       }
 
-      // remove the author from the array of orgMemberParticipants
+      // remove the author from the array of orgMemberParticipants to not include them twice in the sending email
       if (convoEntryResponse.author?.orgMemberId) {
         orgMemberParticipants.splice(
           orgMemberParticipants.findIndex(
@@ -240,14 +240,11 @@ export const sendMailRouter = router({
         };
       }
 
-      //* Handle getting the email addresses
-
-      // if this is a new convo, we need to pass in the particpants ID to get their email address
-      // if(input.newConvoToParticipantId) {
-      // }
+      //* CONVO EMAIL PARTICIPANTS SECTION
+      //* Handle getting the email addresses for all participants
 
       const convoMetadataFromAddress: ConvoEntryMetadataEmailAddress = {
-        id: +sendAsEmailIdentity.id,
+        id: Number(sendAsEmailIdentity.id),
         type: 'emailIdentity',
         publicId: sendAsEmailIdentity.publicId,
         email: `${sendAsEmailIdentity.username}@${sendAsEmailIdentity.domainName}`
@@ -261,8 +258,6 @@ export const sendMailRouter = router({
 
       const missingEmailIdentitiesWarnings: ConvoEntryMetadataMissingParticipant[] =
         [];
-
-      //* CONVO EMAIL PARTICIPANTS SECTION
 
       // get the email addresses for all contacts
       await Promise.all(
@@ -307,30 +302,18 @@ export const sendMailRouter = router({
       if (orgMemberParticipants.length) {
         await Promise.all(
           orgMemberParticipants.map(async (orgMemberParticipant) => {
-            const emailIdentityResponse =
-              await db.query.emailIdentitiesAuthorizedOrgMembers.findFirst({
-                where: and(
-                  eq(
-                    emailIdentitiesAuthorizedOrgMembers.orgMemberId,
-                    orgMemberParticipant.orgMemberId!
-                  ),
-                  eq(emailIdentitiesAuthorizedOrgMembers.default, true)
-                ),
-                columns: {
-                  id: true
-                },
-                with: {
-                  emailIdentity: {
-                    columns: {
-                      id: true,
-                      publicId: true,
-                      username: true,
-                      domainName: true
-                    }
-                  }
-                }
-              });
-            if (!emailIdentityResponse) {
+            // get the orgMembers default email identity
+            const orgMemberQueryResponse = await db.query.orgMembers.findFirst({
+              where: eq(orgMembers.id, orgMemberParticipant.orgMemberId!),
+              columns: {
+                defaultEmailIdentityId: true
+              }
+            });
+
+            if (
+              !orgMemberQueryResponse ??
+              !orgMemberQueryResponse?.defaultEmailIdentityId
+            ) {
               const memberProfile = await db.query.orgMembers.findFirst({
                 where: eq(orgMembers.id, orgMemberParticipant.orgMemberId!),
                 columns: {
@@ -354,27 +337,44 @@ export const sendMailRouter = router({
                 return;
               }
             }
+
+            const emailIdentityResponse =
+              await db.query.emailIdentities.findFirst({
+                //! FIX THIS IS DIRTY SHEBANG USAGE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                where: eq(
+                  emailIdentities.id,
+                  orgMemberQueryResponse!.defaultEmailIdentityId!
+                ),
+                columns: {
+                  id: true,
+                  publicId: true,
+                  username: true,
+                  domainName: true,
+                  sendName: true
+                }
+              });
+
             if (emailIdentityResponse) {
               if (
                 orgMemberParticipant.publicId ===
                 input.newConvoToParticipantPublicId
               ) {
                 convoMetadataToAddress = {
-                  id: Number(emailIdentityResponse.emailIdentity.id),
+                  id: Number(emailIdentityResponse.id),
                   type: 'emailIdentity',
-                  publicId: emailIdentityResponse.emailIdentity.publicId,
-                  email: `${emailIdentityResponse.emailIdentity.username}@${emailIdentityResponse.emailIdentity.domainName}`
+                  publicId: emailIdentityResponse.publicId,
+                  email: `${emailIdentityResponse.username}@${emailIdentityResponse.domainName}`
                 };
-                convoToAddress = `${emailIdentityResponse.emailIdentity.username}@${emailIdentityResponse.emailIdentity.domainName}`;
+                convoToAddress = `${emailIdentityResponse.username}@${emailIdentityResponse.domainName}`;
               } else {
                 convoMetadataCcAddresses.push({
-                  id: Number(emailIdentityResponse.emailIdentity.id),
+                  id: Number(emailIdentityResponse.id),
                   type: 'emailIdentity',
-                  publicId: emailIdentityResponse.emailIdentity.publicId,
-                  email: `${emailIdentityResponse.emailIdentity.username}@${emailIdentityResponse.emailIdentity.domainName}`
+                  publicId: emailIdentityResponse.publicId,
+                  email: `${emailIdentityResponse.username}@${emailIdentityResponse.domainName}`
                 });
                 convoCcAddresses.push(
-                  `${emailIdentityResponse.emailIdentity.username}@${emailIdentityResponse.emailIdentity.domainName}`
+                  `${emailIdentityResponse.username}@${emailIdentityResponse.domainName}`
                 );
               }
             }
@@ -386,29 +386,65 @@ export const sendMailRouter = router({
       if (teamParticipants.length) {
         await Promise.all(
           teamParticipants.map(async (teamParticipant) => {
+            const teamQueryResponse = await db.query.teams.findFirst({
+              where: eq(teams.id, teamParticipant.teamId!),
+              columns: {
+                name: true,
+                defaultEmailIdentityId: true,
+                publicId: true
+              }
+            });
+
+            if (
+              !teamQueryResponse ??
+              !teamQueryResponse?.defaultEmailIdentityId
+            ) {
+              missingEmailIdentitiesWarnings.push({
+                type: 'team',
+                publicId: teamParticipant.publicId,
+                name: teamQueryResponse?.name ?? 'unknown team'
+              });
+              return;
+            }
+            // const emailIdentityResponse =
+            //   await db.query.emailIdentitiesAuthorizedSenders.findFirst({
+            //     where: and(
+            //       eq(
+            //         emailIdentitiesAuthorizedSenders.teamId,
+            //         teamParticipant.teamId!
+            //       ),
+            //       eq(emailIdentitiesAuthorizedSenders.default, true)
+            //     ),
+            //     columns: {
+            //       id: true
+            //     },
+            //     with: {
+            //       emailIdentity: {
+            //         columns: {
+            //           id: true,
+            //           publicId: true,
+            //           username: true,
+            //           domainName: true
+            //         }
+            //       }
+            //     }
+            //   });
+
             const emailIdentityResponse =
-              await db.query.emailIdentitiesAuthorizedOrgMembers.findFirst({
-                where: and(
-                  eq(
-                    emailIdentitiesAuthorizedOrgMembers.teamId,
-                    teamParticipant.teamId!
-                  ),
-                  eq(emailIdentitiesAuthorizedOrgMembers.default, true)
+              await db.query.emailIdentities.findFirst({
+                where: eq(
+                  emailIdentities.id,
+                  teamQueryResponse.defaultEmailIdentityId
                 ),
                 columns: {
-                  id: true
-                },
-                with: {
-                  emailIdentity: {
-                    columns: {
-                      id: true,
-                      publicId: true,
-                      username: true,
-                      domainName: true
-                    }
-                  }
+                  id: true,
+                  publicId: true,
+                  username: true,
+                  domainName: true,
+                  sendName: true
                 }
               });
+
             if (!emailIdentityResponse) {
               const orgTeamResponse = await db.query.teams.findFirst({
                 where: eq(teams.id, teamParticipant.teamId!),
@@ -427,26 +463,27 @@ export const sendMailRouter = router({
                 return;
               }
             }
+
             if (emailIdentityResponse) {
               if (
                 teamParticipant.publicId === input.newConvoToParticipantPublicId
               ) {
                 convoMetadataToAddress = {
-                  id: Number(emailIdentityResponse.emailIdentity.id),
+                  id: Number(emailIdentityResponse.id),
                   type: 'emailIdentity',
-                  publicId: emailIdentityResponse.emailIdentity.publicId,
-                  email: `${emailIdentityResponse.emailIdentity.username}@${emailIdentityResponse.emailIdentity.domainName}`
+                  publicId: emailIdentityResponse.publicId,
+                  email: `${emailIdentityResponse.username}@${emailIdentityResponse.domainName}`
                 };
-                convoToAddress = `${emailIdentityResponse.emailIdentity.username}@${emailIdentityResponse.emailIdentity.domainName}`;
+                convoToAddress = `${emailIdentityResponse.username}@${emailIdentityResponse.domainName}`;
               } else {
                 convoMetadataCcAddresses.push({
                   id: Number(emailIdentityResponse.id),
                   type: 'emailIdentity',
-                  publicId: emailIdentityResponse.emailIdentity.publicId,
-                  email: `${emailIdentityResponse.emailIdentity.username}@${emailIdentityResponse.emailIdentity.domainName}`
+                  publicId: emailIdentityResponse.publicId,
+                  email: `${emailIdentityResponse.username}@${emailIdentityResponse.domainName}`
                 });
                 convoCcAddresses.push(
-                  `${emailIdentityResponse.emailIdentity.username}@${emailIdentityResponse.emailIdentity.domainName}`
+                  `${emailIdentityResponse.username}@${emailIdentityResponse.domainName}`
                 );
               }
             }

@@ -387,6 +387,7 @@ export const orgMembers = mysqlTable(
     role: mysqlEnum('role', ['member', 'admin']).notNull(),
     personalSpaceId: foreignKey('personal_space_id'),
     orgMemberProfileId: foreignKey('org_member_profile_id').notNull(),
+    defaultEmailIdentityId: foreignKey('default_email_identity_id'),
     addedAt: timestamp('added_at')
       .notNull()
       .$defaultFn(() => new Date()),
@@ -415,11 +416,13 @@ export const orgMembersRelations = relations(orgMembers, ({ one, many }) => ({
     fields: [orgMembers.orgMemberProfileId],
     references: [orgMemberProfiles.id]
   }),
-  routingRuleDestinations: many(emailRoutingRulesDestinations),
-  authorizedEmailIdentities: many(emailIdentitiesAuthorizedOrgMembers),
   personalSpace: one(spaces, {
     fields: [orgMembers.personalSpaceId],
     references: [spaces.id]
+  }),
+  defaultEmailIdentity: one(emailIdentities, {
+    fields: [orgMembers.defaultEmailIdentityId],
+    references: [emailIdentities.id]
   }),
   spaceMemberships: many(spaceMembers, { relationName: 'member' })
 }));
@@ -475,6 +478,7 @@ export const teams = mysqlTable(
     name: varchar('name', { length: 128 }).notNull(),
     color: mysqlEnum('color', [...uiColors]),
     description: text('description'),
+    defaultEmailIdentityId: foreignKey('default_email_identity_id'),
     createdAt: timestamp('created_at')
       .notNull()
       .$defaultFn(() => new Date())
@@ -492,9 +496,11 @@ export const teamsRelations = relations(teams, ({ one, many }) => ({
     fields: [teams.orgId],
     references: [orgs.id]
   }),
+  defaultEmailIdentity: one(emailIdentities, {
+    fields: [teams.defaultEmailIdentityId],
+    references: [emailIdentities.id]
+  }),
   members: many(teamMembers),
-  routingRuleDestinations: many(emailRoutingRulesDestinations),
-  authorizedEmailIdentities: many(emailIdentitiesAuthorizedOrgMembers),
   spaceMemberships: many(spaceMembers)
 }));
 
@@ -590,6 +596,10 @@ export const spaceRelations = relations(spaces, ({ one, many }) => ({
   createdByOrgMember: one(orgMembers, {
     fields: [spaces.createdByOrgMemberId],
     references: [orgMembers.id]
+  }),
+  personalSpaceOwner: one(orgMembers, {
+    fields: [spaces.id],
+    references: [orgMembers.personalSpaceId]
   }),
   subSpaces: many(spaces, { relationName: 'parent' }),
   members: many(spaceMembers),
@@ -994,10 +1004,9 @@ export const emailRoutingRulesDestinations = mysqlTable(
     orgId: foreignKey('org_id').notNull(),
     publicId: publicId('emailRoutingRuleDestinations', 'public_id').notNull(),
     ruleId: foreignKey('rule_id').notNull(),
-    teamId: foreignKey('team_id'),
-    orgMemberId: foreignKey('org_member_id'),
-    spaceId: foreignKey('space_id'),
-    assignToSpaceMemberId: foreignKey('assign_to_space_member_id'),
+    teamId: foreignKey('team_id'), //! DELETE AFTER MIGRATION TO SPACES SUCCESS
+    orgMemberId: foreignKey('org_member_id'), //! DELETE AFTER MIGRATION TO SPACES SUCCESS
+    spaceId: foreignKey('space_id'), //! Set to NOT NULL after migration to spaces is complete
     createdAt: timestamp('created_at')
       .notNull()
       .$defaultFn(() => new Date())
@@ -1006,14 +1015,15 @@ export const emailRoutingRulesDestinations = mysqlTable(
     orgIdIndex: index('org_id_idx').on(table.orgId),
     publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
     ruleIdIndex: index('rule_id_idx').on(table.ruleId),
-    teamIdIndex: index('team_id_idx').on(table.teamId),
-    orgMemberIdIndex: index('org_member_id_idx').on(table.orgMemberId)
+    spaceIdIndex: index('space_id_idx').on(table.spaceId),
+    teamIdIndex: index('team_id_idx').on(table.teamId), //! DELETE AFTER MIGRATION TO SPACES SUCCESS
+    orgMemberIdIndex: index('org_member_id_idx').on(table.orgMemberId) //! DELETE AFTER MIGRATION TO SPACES SUCCESS
     //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit : orgMemberId//teamId//spaceId
   })
 );
 export const emailRoutingRulesDestinationsRelations = relations(
   emailRoutingRulesDestinations,
-  ({ one }) => ({
+  ({ one, many }) => ({
     org: one(orgs, {
       fields: [emailRoutingRulesDestinations.orgId],
       references: [orgs.id]
@@ -1034,9 +1044,46 @@ export const emailRoutingRulesDestinationsRelations = relations(
       fields: [emailRoutingRulesDestinations.spaceId],
       references: [spaces.id]
     }),
-    assignToSpaceMember: one(spaceMembers, {
-      fields: [emailRoutingRulesDestinations.assignToSpaceMemberId],
-      references: [spaceMembers.id]
+    assignees: many(emailRoutingRuleAssignees)
+  })
+);
+
+export const emailRoutingRuleAssignees = mysqlTable(
+  'email_routing_rule_assignees',
+  {
+    id: serial('id').primaryKey(),
+    orgId: foreignKey('org_id').notNull(),
+    ruleDestinationId: foreignKey('rule_destination_id').notNull(),
+    orgMemberId: foreignKey('org_member_id').notNull(),
+    teamId: foreignKey('team_id'),
+    createdAt: timestamp('created_at')
+      .notNull()
+      .$defaultFn(() => new Date())
+  },
+  (table) => ({
+    ruleDestinationId: index('rule_destination_id_idx').on(
+      table.ruleDestinationId
+    ),
+    orgId: index('org_id_idx').on(table.orgId),
+    orgMemberId: index('org_member_id_idx').on(table.orgMemberId),
+    teamId: index('team_id_idx').on(table.teamId)
+  })
+);
+
+export const emailRoutingRuleAssigneesRelations = relations(
+  emailRoutingRuleAssignees,
+  ({ one }) => ({
+    ruleDestination: one(emailRoutingRulesDestinations, {
+      fields: [emailRoutingRuleAssignees.ruleDestinationId],
+      references: [emailRoutingRulesDestinations.id]
+    }),
+    orgMember: one(orgMembers, {
+      fields: [emailRoutingRuleAssignees.orgMemberId],
+      references: [orgMembers.id]
+    }),
+    team: one(teams, {
+      fields: [emailRoutingRuleAssignees.teamId],
+      references: [teams.id]
     })
   })
 );
@@ -1086,7 +1133,7 @@ export const emailIdentitiesRelations = relations(
       fields: [emailIdentities.domainId],
       references: [domains.id]
     }),
-    authorizedOrgMembers: many(emailIdentitiesAuthorizedOrgMembers),
+    authorizedSenders: many(emailIdentitiesAuthorizedSenders),
     routingRules: one(emailRoutingRules, {
       fields: [emailIdentities.routingRuleId],
       references: [emailRoutingRules.id]
@@ -1098,7 +1145,7 @@ export const emailIdentitiesRelations = relations(
   })
 );
 
-export const emailIdentitiesAuthorizedOrgMembers = mysqlTable(
+export const emailIdentitiesAuthorizedSenders = mysqlTable(
   'email_identities_authorized_org_members',
   {
     id: serial('id').primaryKey(),
@@ -1106,8 +1153,8 @@ export const emailIdentitiesAuthorizedOrgMembers = mysqlTable(
     identityId: foreignKey('identity_id').notNull(),
     orgMemberId: foreignKey('org_member_id'),
     teamId: foreignKey('team_id'),
+    // default: boolean('default').notNull().default(false),
     spaceId: foreignKey('space_id'),
-    default: boolean('default').notNull().default(false),
     addedBy: foreignKey('added_by').notNull(),
     createdAt: timestamp('created_at')
       .notNull()
@@ -1117,6 +1164,7 @@ export const emailIdentitiesAuthorizedOrgMembers = mysqlTable(
     //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit : orgMemberId//teamId, orgMemberId//default, teamId//default
     orgIdIndex: index('org_id_idx').on(table.orgId),
     identityIdIndex: index('identity_id_idx').on(table.identityId),
+    spaceIdIndex: index('space_id_idx').on(table.spaceId),
     orgMemberToIdentityIndex: uniqueIndex('org_member_to_identity_idx').on(
       table.identityId,
       table.orgMemberId
@@ -1129,26 +1177,26 @@ export const emailIdentitiesAuthorizedOrgMembers = mysqlTable(
 );
 
 export const emailIdentitiesAuthorizedOrgMemberRelations = relations(
-  emailIdentitiesAuthorizedOrgMembers,
+  emailIdentitiesAuthorizedSenders,
   ({ one }) => ({
     org: one(orgs, {
-      fields: [emailIdentitiesAuthorizedOrgMembers.orgId],
+      fields: [emailIdentitiesAuthorizedSenders.orgId],
       references: [orgs.id]
     }),
     emailIdentity: one(emailIdentities, {
-      fields: [emailIdentitiesAuthorizedOrgMembers.identityId],
+      fields: [emailIdentitiesAuthorizedSenders.identityId],
       references: [emailIdentities.id]
     }),
     orgMember: one(orgMembers, {
-      fields: [emailIdentitiesAuthorizedOrgMembers.orgMemberId],
+      fields: [emailIdentitiesAuthorizedSenders.orgMemberId],
       references: [orgMembers.id]
     }),
     team: one(teams, {
-      fields: [emailIdentitiesAuthorizedOrgMembers.teamId],
+      fields: [emailIdentitiesAuthorizedSenders.teamId],
       references: [teams.id]
     }),
     space: one(spaces, {
-      fields: [emailIdentitiesAuthorizedOrgMembers.spaceId],
+      fields: [emailIdentitiesAuthorizedSenders.spaceId],
       references: [spaces.id]
     })
   })
