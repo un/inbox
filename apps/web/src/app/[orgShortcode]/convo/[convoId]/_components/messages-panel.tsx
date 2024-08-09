@@ -1,6 +1,15 @@
 'use client';
 
 import {
+  forwardRef,
+  memo,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useState
+} from 'react';
+import {
   ArrowBendDoubleUpLeft,
   FileDashed,
   Hash,
@@ -11,14 +20,6 @@ import {
   TooltipTrigger,
   TooltipContent
 } from '@/src/components/shadcn-ui/tooltip';
-import {
-  forwardRef,
-  memo,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState
-} from 'react';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { type JSONContent, generateHTML } from '@u22n/tiptap/react';
 import { Virtuoso, type VirtuosoHandle } from 'react-virtuoso';
@@ -45,20 +46,28 @@ type MessagesPanelProps = {
   >[];
 };
 
-export const MessagesPanel = forwardRef<VirtuosoHandle, MessagesPanelProps>(
-  ({ convoId, participantOwnPublicId, formattedParticipants }, ref) => {
-    const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
-    // This is the index of the first item in the list. It is set to a high number to ensure that the list starts at the bottom
-    // This also means the list can't be longer than 10000 items (which is fine for our most cases)
-    const INVERSE_LIST_START_INDEX = 10000;
-    const [firstItemIndex, setFirstItemIndex] = useState(
-      INVERSE_LIST_START_INDEX
-    );
+export const MessagesPanel = memo(
+  forwardRef<VirtuosoHandle, MessagesPanelProps>(
+    ({ convoId, participantOwnPublicId, formattedParticipants }, ref) => {
+      const orgShortcode = useGlobalStore(
+        (state) => state.currentOrg.shortcode
+      );
+      // This is the index of the first item in the list. It is set to a high number to ensure that the list starts at the bottom
+      // This also means the list can't be longer than 10000 items (which is fine for our most cases)
+      const INVERSE_LIST_START_INDEX = 10000;
+      const [firstItemIndex, setFirstItemIndex] = useState(
+        INVERSE_LIST_START_INDEX
+      );
 
-    const setReplyTo = useSetAtom(replyToMessageAtom);
+      const setReplyTo = useSetAtom(replyToMessageAtom);
 
-    const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } =
-      platform.convos.entries.getConvoEntries.useInfiniteQuery(
+      const {
+        data,
+        isLoading,
+        hasNextPage,
+        fetchNextPage,
+        isFetchingNextPage
+      } = platform.convos.entries.getConvoEntries.useInfiniteQuery(
         {
           convoPublicId: convoId,
           orgShortcode
@@ -69,83 +78,88 @@ export const MessagesPanel = forwardRef<VirtuosoHandle, MessagesPanelProps>(
         }
       );
 
-    const [allMessages, setAllMessages] = useState<
-      RouterOutputs['convos']['entries']['getConvoEntries']['entries']
-    >([]);
+      const [allMessages, setAllMessages] = useState<
+        RouterOutputs['convos']['entries']['getConvoEntries']['entries']
+      >([]);
 
-    useEffect(() => {
-      const messages = data
-        ? data.pages.flatMap(({ entries }) => entries).reverse()
-        : [];
-      setFirstItemIndex(() => INVERSE_LIST_START_INDEX - messages.length);
-      setAllMessages(messages);
-    }, [data]);
+      useLayoutEffect(() => {
+        const messages = data
+          ? data.pages.flatMap(({ entries }) => entries).reverse()
+          : [];
+        setFirstItemIndex(() => INVERSE_LIST_START_INDEX - messages.length);
+        setAllMessages(messages);
+      }, [data]);
 
-    useEffect(() => {
-      const lastMessage = allMessages.at(-1);
-      setReplyTo(lastMessage?.publicId ?? null);
-    }, [allMessages, setReplyTo]);
+      useEffect(() => {
+        const lastMessage = allMessages.at(-1);
+        setReplyTo(lastMessage?.publicId ?? null);
+      }, [allMessages, setReplyTo]);
 
-    const itemRenderer = useCallback(
-      (index: number, message: (typeof allMessages)[number]) => (
-        <div
-          key={message.publicId}
-          className="py-4">
-          {index === firstItemIndex && hasNextPage ? (
-            <div className="flex w-full items-center justify-center gap-2 text-center font-bold">
-              <SpinnerGap
-                className="size-4 animate-spin"
-                size={16}
-              />
-              Loading...
-            </div>
-          ) : null}
-          <MessageItem
-            message={message}
-            participantOwnPublicId={participantOwnPublicId}
-            formattedParticipants={formattedParticipants}
+      const startReached = useCallback(() => {
+        if (isFetchingNextPage || !hasNextPage) return;
+        void fetchNextPage();
+      }, [isFetchingNextPage, hasNextPage, fetchNextPage]);
+
+      const itemRenderer = useCallback(
+        (_: number, message: (typeof allMessages)[number]) => (
+          <div
+            className="py-4"
+            key={message.publicId}>
+            <MessageItem
+              message={message}
+              participantOwnPublicId={participantOwnPublicId}
+              formattedParticipants={formattedParticipants}
+            />
+          </div>
+        ),
+        [participantOwnPublicId, formattedParticipants]
+      );
+
+      const Header = useCallback(() => {
+        if (!isFetchingNextPage) return null;
+        return (
+          <div className="flex w-full items-center justify-center gap-2 text-center font-bold">
+            <SpinnerGap
+              className="size-4 animate-spin"
+              size={16}
+            />
+            <span>Loading...</span>
+          </div>
+        );
+      }, [isFetchingNextPage]);
+
+      return isLoading ? (
+        <div className="flex h-full flex-1 items-center justify-center gap-2 font-bold">
+          <SpinnerGap
+            className="size-4 animate-spin"
+            size={16}
+          />
+          <span>Loading...</span>
+        </div>
+      ) : (
+        <div className="flex h-full w-full flex-col items-center justify-center gap-2 px-4 py-1">
+          <Virtuoso
+            startReached={startReached}
+            data={allMessages}
+            initialTopMostItemIndex={{
+              align: 'start',
+              index: Math.max(0, allMessages.length - 1)
+            }}
+            computeItemKey={(_, message) => message.publicId}
+            firstItemIndex={firstItemIndex}
+            itemContent={itemRenderer}
+            style={{ overscrollBehavior: 'none', overflowX: 'clip' }}
+            className="w-full"
+            ref={ref}
+            increaseViewportBy={500}
+            components={{
+              Header
+            }}
           />
         </div>
-      ),
-      [
-        participantOwnPublicId,
-        formattedParticipants,
-        firstItemIndex,
-        hasNextPage
-      ]
-    );
-
-    return isLoading ? (
-      <div className="flex h-full flex-1 items-center justify-center gap-2 font-bold">
-        <SpinnerGap
-          className="size-4 animate-spin"
-          size={16}
-        />
-        <span>Loading...</span>
-      </div>
-    ) : (
-      <div className="flex h-full w-full flex-col items-center justify-center gap-2 px-4 py-1">
-        <Virtuoso
-          startReached={() => {
-            if (isFetchingNextPage || !hasNextPage) return;
-            void fetchNextPage();
-          }}
-          data={allMessages}
-          initialTopMostItemIndex={{
-            align: 'start',
-            index: Math.max(0, allMessages.length - 1)
-          }}
-          computeItemKey={(_, message) => message.publicId}
-          firstItemIndex={firstItemIndex}
-          itemContent={itemRenderer}
-          style={{ overscrollBehavior: 'none', overflowX: 'clip' }}
-          className="w-full"
-          ref={ref}
-          increaseViewportBy={500}
-        />
-      </div>
-    );
-  }
+      );
+    }
+  )
 );
 
 MessagesPanel.displayName = 'MessagesPanel';

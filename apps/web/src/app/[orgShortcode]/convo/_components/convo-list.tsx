@@ -2,11 +2,11 @@
 
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { convoListSelection, lastSelectedConvo } from '../atoms';
+import { platform, type RouterOutputs } from '@/src/lib/trpc';
 import { SpinnerGap } from '@phosphor-icons/react';
+import { memo, useCallback, useMemo } from 'react';
 import { type TypeId } from '@u22n/utils/typeid';
 import { ConvoItem } from './convo-list-item';
-import { useCallback, useMemo } from 'react';
-import { platform } from '@/src/lib/trpc';
 import { Virtuoso } from 'react-virtuoso';
 import { ms } from '@u22n/utils/ms';
 import { useAtom } from 'jotai';
@@ -15,7 +15,9 @@ type Props = {
   hidden: boolean;
 };
 
-export function ConvoList(props: Props) {
+type Convo = RouterOutputs['convos']['getOrgMemberConvos']['data'][number];
+
+export function ConvoList({ hidden }: Props) {
   const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
   const [selections, setSelections] = useAtom(convoListSelection);
   const [lastSelected, setLastSelected] = useAtom(lastSelectedConvo);
@@ -29,13 +31,17 @@ export function ConvoList(props: Props) {
   } = platform.convos.getOrgMemberConvos.useInfiniteQuery(
     {
       orgShortcode,
-      includeHidden: props.hidden ? true : undefined
+      includeHidden: hidden ? true : undefined
     },
     {
       getNextPageParam: (lastPage) => lastPage.cursor ?? undefined,
       staleTime: ms('1 hour')
     }
   );
+
+  const nextPageFetcher = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) void fetchNextPage();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const allConvos = useMemo(
     () => (convos ? convos.pages.flatMap(({ data }) => data) : []),
@@ -61,52 +67,50 @@ export function ConvoList(props: Props) {
     [lastSelected, allConvos, setLastSelected, selections, setSelections]
   );
 
+  const onSelect = useCallback(
+    (convo: Convo, shiftKey: boolean, selected: boolean) => {
+      if (shiftKey) {
+        rangeSelect(convo.publicId);
+      } else {
+        setSelections((prev) =>
+          selected
+            ? prev.filter((c) => c !== convo.publicId)
+            : prev.concat(convo.publicId)
+        );
+        setLastSelected(convo.publicId);
+      }
+    },
+    [rangeSelect, setLastSelected, setSelections]
+  );
+
   const itemRenderer = useCallback(
-    (index: number, convo: (typeof allConvos)[number]) => {
+    (_: number, convo: Convo) => {
       const selected = selections.includes(convo.publicId);
       return (
-        <div
+        <MemoizedConvoItem
           key={convo.publicId}
-          className="py-0.5">
-          <ConvoItem
-            convo={convo}
-            selected={selected}
-            onSelect={(shiftKey) => {
-              if (shiftKey) {
-                rangeSelect(convo.publicId);
-              } else {
-                setSelections((prev) =>
-                  selected
-                    ? prev.filter((c) => c !== convo.publicId)
-                    : prev.concat(convo.publicId)
-                );
-                setLastSelected(convo.publicId);
-              }
-            }}
-            hidden={props.hidden}
-          />
-          {index === allConvos.length - 1 && hasNextPage && (
-            <div className="flex w-full items-center justify-center gap-1 text-center font-semibold">
-              <SpinnerGap
-                className="size-4 animate-spin"
-                size={16}
-              />
-              Loading...
-            </div>
-          )}
-        </div>
+          convo={convo}
+          selected={selected}
+          onSelect={onSelect}
+          hidden={hidden}
+        />
       );
     },
-    [
-      props.hidden,
-      allConvos.length,
-      hasNextPage,
-      rangeSelect,
-      selections,
-      setLastSelected,
-      setSelections
-    ]
+    [onSelect, hidden, selections]
   );
+
+  const LoadingFooter = useCallback(() => {
+    if (!isFetchingNextPage) return null;
+    return (
+      <div className="flex w-full items-center justify-center gap-1 text-center font-semibold">
+        <SpinnerGap
+          className="size-4 animate-spin"
+          size={16}
+        />
+        Loading...
+      </div>
+    );
+  }, [isFetchingNextPage]);
 
   return (
     <div className="flex h-full flex-col">
@@ -123,10 +127,11 @@ export function ConvoList(props: Props) {
           data={allConvos}
           itemContent={itemRenderer}
           style={{ overscrollBehavior: 'contain', overflowX: 'clip' }}
-          endReached={async () => {
-            if (hasNextPage && !isFetchingNextPage) await fetchNextPage();
-          }}
+          endReached={nextPageFetcher}
           increaseViewportBy={500}
+          components={{
+            Footer: LoadingFooter
+          }}
         />
       ) : (
         <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-center">
@@ -136,7 +141,7 @@ export function ConvoList(props: Props) {
             alt="You have no convos"
             className="aspect-square w-full"
           />
-          {props.hidden ? (
+          {hidden ? (
             <span className="font-semibold">There are no hidden convos</span>
           ) : (
             <>
@@ -149,3 +154,28 @@ export function ConvoList(props: Props) {
     </div>
   );
 }
+
+type MemoizedConvoItemProps = {
+  convo: Convo;
+  selected: boolean;
+  onSelect: (convo: Convo, shiftKey: boolean, selected: boolean) => void;
+  hidden: boolean;
+};
+
+const MemoizedConvoItem = memo(function MemoizedConvoItem({
+  convo,
+  selected,
+  onSelect,
+  hidden
+}: MemoizedConvoItemProps) {
+  return (
+    <div className="py-0.5">
+      <ConvoItem
+        convo={convo}
+        selected={selected}
+        onSelect={(shiftKey) => onSelect(convo, shiftKey, selected)}
+        hidden={hidden}
+      />
+    </div>
+  );
+});

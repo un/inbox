@@ -7,5 +7,3 @@ export const convoListSelecting = atom(
   (get) => get(convoListSelection).length > 0
 );
 export const lastSelectedConvo = atom<TypeId<'convos'> | null>(null);
-
-export const shiftKeyPressed = atom(false);

@@ -1,9 +1,24 @@
 'use client';
-import { useWindowSize } from '@uidotdev/usehooks';
+
+import { useLayoutEffect, useState } from 'react';
 
 function useMaxWidth(maxWidth: number) {
-  const { width } = useWindowSize();
-  return width ? width <= maxWidth : true;
+  if (typeof window === 'undefined') false;
+  const [isHittingMaxWidth, setIsHittingMaxWidth] = useState(false);
+
+  useLayoutEffect(() => {
+    const handleSize = () => {
+      const isCurrentlyHitting = window.innerWidth <= maxWidth;
+      if (isCurrentlyHitting !== isHittingMaxWidth) {
+        setIsHittingMaxWidth(isCurrentlyHitting);
+      }
+    };
+    handleSize();
+    window.addEventListener('resize', handleSize);
+    return () => window.removeEventListener('resize', handleSize);
+  });
+
+  return isHittingMaxWidth;
 }
 
 export const useIsMobile = () => useMaxWidth(768);

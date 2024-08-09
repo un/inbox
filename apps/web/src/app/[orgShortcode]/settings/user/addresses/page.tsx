@@ -2,17 +2,20 @@
 
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { ClaimAddressModal } from './_components/claim-address-modal';
-import useAwaitableModal from '@/src/hooks/use-awaitable-modal';
 import { Skeleton } from '@/src/components/shadcn-ui/skeleton';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { DataTable } from '@/src/components/shared/table';
 import { PageTitle } from '../../_components/page-title';
 import { columns } from './_components/columns';
 import { platform } from '@/src/lib/trpc';
+import { useState } from 'react';
 
 export default function Page() {
   const username = useGlobalStore((state) => state.user.username);
   const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const [claimAddressValue, setClaimAddressValue] = useState<string | null>(
+    null
+  );
 
   const { data: proStatus } = platform.org.setup.billing.isPro.useQuery({
     orgShortcode
@@ -24,11 +27,6 @@ export default function Page() {
     error: personalAddressesError,
     refetch: refetchPersonalAddresses
   } = platform.account.addresses.getPersonalAddresses.useQuery();
-
-  const [ClaimAddressModalRoot, claimAddress] = useAwaitableModal(
-    ClaimAddressModal,
-    { address: '' }
-  );
 
   return (
     <div className="flex flex-col gap-4 p-4">
@@ -57,13 +55,7 @@ export default function Page() {
               </span>
               <Button
                 variant="default"
-                onClick={() => {
-                  void claimAddress({
-                    address: `${username}@${domain}`
-                  })
-                    .then(() => refetchPersonalAddresses())
-                    .catch(() => null);
-                }}>
+                onClick={() => setClaimAddressValue(`${username}@${domain}`)}>
                 Claim
               </Button>
             </div>
@@ -106,7 +98,17 @@ export default function Page() {
         </>
       )}
 
-      <ClaimAddressModalRoot />
+      {claimAddressValue && (
+        <ClaimAddressModal
+          address={claimAddressValue}
+          setOpen={(open) => {
+            if (!open) {
+              setClaimAddressValue(null);
+            }
+          }}
+          onSuccess={() => refetchPersonalAddresses()}
+        />
+      )}
     </div>
   );
 }

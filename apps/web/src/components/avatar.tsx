@@ -8,15 +8,11 @@ import {
   User,
   UsersThree
 } from '@phosphor-icons/react';
-import {
-  Avatar as AvatarShad,
-  AvatarFallback,
-  AvatarImage
-} from './shadcn-ui/avatar';
 import { Tooltip, TooltipContent, TooltipTrigger } from './shadcn-ui/tooltip';
 import { cn, generateAvatarUrl, getInitials } from '@/src/lib/utils';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { type TypeId, inferTypeId } from '@u22n/utils/typeid';
+import * as AvatarPrimitives from './shadcn-ui/avatar';
 import * as React from 'react';
 
 export type AvatarProps = {
@@ -71,7 +67,11 @@ const avatarVariants = cva(
   }
 );
 
-export function Avatar(props: AvatarProps) {
+const AvatarShad = React.memo(AvatarPrimitives.Avatar);
+const AvatarFallback = React.memo(AvatarPrimitives.AvatarFallback);
+const AvatarImage = React.memo(AvatarPrimitives.AvatarImage);
+
+export const Avatar = React.memo(function Avatar(props: AvatarProps) {
   const avatarUrl =
     props.avatarProfilePublicId === 'no_avatar'
       ? undefined
@@ -119,7 +119,7 @@ export function Avatar(props: AvatarProps) {
       </TooltipContent>
     </Tooltip>
   );
-}
+});
 
 const avatarIconVariants = cva('', {
   variants: {

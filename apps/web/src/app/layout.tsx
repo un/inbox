@@ -1,3 +1,4 @@
+import { ModifierClassProvider } from '../components/modifier-class-provider';
 import { TooltipProvider } from '@/src/components/shadcn-ui/tooltip';
 import { PHProvider } from '@/src/providers/posthog-provider';
 import { CookiesProvider } from 'next-client-cookies/server';
@@ -61,12 +62,14 @@ export default function RootLayout({
               enableColorScheme
               defaultTheme="system"
               disableTransitionOnChange>
-              <TooltipProvider>
-                <TRPCReactProvider>
-                  {children}
-                  <Toaster />
-                </TRPCReactProvider>
-              </TooltipProvider>
+              <ModifierClassProvider>
+                <TooltipProvider>
+                  <TRPCReactProvider>
+                    {children}
+                    <Toaster />
+                  </TRPCReactProvider>
+                </TooltipProvider>
+              </ModifierClassProvider>
             </ThemeProvider>
           </CookiesProvider>
         </body>
