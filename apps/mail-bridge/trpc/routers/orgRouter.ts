@@ -1,6 +1,7 @@
 import {
   addMailServer,
   createOrg,
+  removeOrg,
   setMailServerConfig,
   setMailServerEventWebhook,
   setMailServerKey,
@@ -131,5 +132,16 @@ export const orgRouter = router({
           defaultIpPool: activePostalServer.defaultNewPool
         }
       };
+    }),
+  deletePostalOrg: protectedProcedure
+    .input(
+      z.object({
+        orgPublicId: typeIdValidator('org')
+      })
+    )
+    .mutation(async ({ input }) => {
+      const { orgPublicId } = input;
+      await removeOrg(orgPublicId);
+      return { success: true };
     })
 });

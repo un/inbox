@@ -26,6 +26,8 @@ import {
   randomAlphaNumeric
 } from './generators';
 import { connection as rawMySqlConnection, postalDB } from '.';
+import type { TypeId } from '@u22n/utils/typeid';
+import { discord } from '@u22n/utils/discord';
 import { and, eq, sql } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 import { env } from '../env';
@@ -51,6 +53,51 @@ export async function createOrg(input: CreateOrgInput) {
   return {
     orgId: insertId
   };
+}
+
+export async function removeOrg(orgPublicId: TypeId<'org'>) {
+  const org = await postalDB.query.organizations.findFirst({
+    where: eq(organizations.name, orgPublicId),
+    columns: {
+      id: true,
+      name: true
+    }
+  });
+
+  if (!org) throw new Error('Organization not found');
+
+  const server = await postalDB.query.servers.findFirst({
+    where: eq(servers.organizationId, org.id),
+    columns: {
+      id: true
+    }
+  });
+
+  if (!server) {
+    await discord.alert(
+      `Organization ${org.name} (${org.id}) is deleting but no mail server found`
+    );
+    return;
+  }
+
+  await postalDB.delete(organizations).where(eq(organizations.id, org.id));
+  await postalDB
+    .delete(organizationIpPools)
+    .where(eq(organizationIpPools.organizationId, org.id));
+  await postalDB.delete(domains).where(eq(domains.ownerId, org.id));
+
+  const serverId = server.id;
+  await postalDB.delete(servers).where(eq(servers.id, serverId));
+  await postalDB.delete(credentials).where(eq(credentials.serverId, serverId));
+  await postalDB.delete(routes).where(eq(routes.serverId, serverId));
+  await postalDB.delete(webhooks).where(eq(webhooks.serverId, serverId));
+  await postalDB
+    .delete(httpEndpoints)
+    .where(eq(httpEndpoints.serverId, serverId));
+
+  await rawMySqlConnection.query(
+    `DROP DATABASE IF EXISTS \`postal-server-${serverId}\``
+  );
 }
 
 export type CreateDomainInput = {
