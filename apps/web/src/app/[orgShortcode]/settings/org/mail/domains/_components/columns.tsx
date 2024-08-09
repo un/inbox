@@ -3,6 +3,7 @@
 import { createColumnHelper, type ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/src/components/shadcn-ui/badge';
 import type { RouterOutputs } from '@/src/lib/trpc';
+import { cn } from '@/src/lib/utils';
 
 type Domain =
   RouterOutputs['org']['mail']['domains']['getOrgDomains']['domainData'][number];
@@ -14,7 +15,15 @@ export const columns: ColumnDef<Domain>[] = [
     id: 'domain',
     header: 'Domain',
     cell: ({ row }) => {
-      return <div className="flex items-center">{row.original.domain}</div>;
+      return (
+        <div
+          className={cn(
+            `flex items-center`,
+            row.original.disabled && 'opacity-50'
+          )}>
+          {row.original.domain}
+        </div>
+      );
     }
   }),
   columnHelper.display({
@@ -22,7 +31,10 @@ export const columns: ColumnDef<Domain>[] = [
     header: 'Status',
     cell: ({ row }) => (
       <div className="flex h-full w-full items-center">
-        <Badge className="uppercase">{row.original.domainStatus}</Badge>
+        <Badge
+          className={cn('uppercase', row.original.disabled && 'opacity-50')}>
+          {row.original.domainStatus}
+        </Badge>
       </div>
     )
   }),
@@ -32,7 +44,10 @@ export const columns: ColumnDef<Domain>[] = [
     cell: ({ row }) => {
       return (
         <div className="flex h-full items-center">
-          <Badge className="uppercase">{row.original.sendingMode}</Badge>
+          <Badge
+            className={cn('uppercase', row.original.disabled && 'opacity-50')}>
+            {row.original.sendingMode}
+          </Badge>
         </div>
       );
     }
@@ -43,7 +58,10 @@ export const columns: ColumnDef<Domain>[] = [
     cell: ({ row }) => {
       return (
         <div className="flex h-full items-center">
-          <Badge className="uppercase">{row.original.receivingMode}</Badge>
+          <Badge
+            className={cn('uppercase', row.original.disabled && 'opacity-50')}>
+            {row.original.receivingMode}
+          </Badge>
         </div>
       );
     }

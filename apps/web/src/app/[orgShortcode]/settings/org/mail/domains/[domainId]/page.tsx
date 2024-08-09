@@ -1,6 +1,16 @@
 'use client';
 
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTrigger,
+  DialogDescription,
+  DialogTitle,
+  DialogFooter,
+  DialogClose
+} from '@/src/components/shadcn-ui/dialog';
+import {
   Accordion,
   AccordionContent,
   AccordionItem,
@@ -18,6 +28,7 @@ import { CopyButton } from '@/src/components/copy-button';
 import { Badge } from '@/src/components/shadcn-ui/badge';
 import { useTimeAgo } from '@/src/hooks/use-time-ago';
 import { type TypeId } from '@u22n/utils/typeid';
+import { useRouter } from 'next/navigation';
 import { platform } from '@/src/lib/trpc';
 import Link from 'next/link';
 
@@ -43,10 +54,15 @@ export default function Page({
     refetch: recheckDNS,
     error: dnsError,
     isRefetching: isRecheckingDNS
-  } = platform.org.mail.domains.getDomainDns.useQuery({
-    orgShortcode,
-    domainPublicId: params.domainId
-  });
+  } = platform.org.mail.domains.getDomainDns.useQuery(
+    {
+      orgShortcode,
+      domainPublicId: params.domainId
+    },
+    {
+      enabled: domainInfo?.domainData?.disabled === false
+    }
+  );
 
   const lastChecked = useTimeAgo(domainDNSRecord?.checked ?? new Date());
 
@@ -70,6 +86,9 @@ export default function Page({
           <Badge className="uppercase">
             {domainInfo?.domainData?.domainStatus}
           </Badge>
+        )}
+        {!domainInfo?.domainData?.disabled && (
+          <DisableDomainButton domainId={params.domainId} />
         )}
       </div>
       {isLoading && <div>Loading...</div>}
@@ -255,30 +274,32 @@ export default function Page({
               </AccordionItem>
             </Accordion>
           </div>
-          <div className="flex justify-between">
-            <div className="flex flex-col">
-              <div className="text-base-11 font-bold uppercase">
-                DNS Records
-              </div>
-              {!dnsLoading && (
-                <div className="text-base-11 text-sm">
-                  Last Checked: {lastChecked}
+          {!domainInfo?.domainData?.disabled && (
+            <div className="flex justify-between">
+              <div className="flex flex-col">
+                <div className="text-base-11 font-bold uppercase">
+                  DNS Records
                 </div>
-              )}
+                {!dnsLoading && (
+                  <div className="text-base-11 text-sm">
+                    Last Checked: {lastChecked}
+                  </div>
+                )}
+              </div>
+              <Button
+                onClick={async () => {
+                  await recheckDNS();
+                  await refetch();
+                }}
+                variant="outline"
+                disabled={isRecheckingDNS}
+                size="icon">
+                <ArrowClockwise
+                  className={`size-4 ${isRecheckingDNS && 'animate-spin'}`}
+                />
+              </Button>
             </div>
-            <Button
-              onClick={async () => {
-                await recheckDNS();
-                await refetch();
-              }}
-              variant="outline"
-              disabled={isRecheckingDNS}
-              size="icon">
-              <ArrowClockwise
-                className={`size-4 ${isRecheckingDNS && 'animate-spin'}`}
-              />
-            </Button>
-          </div>
+          )}
 
           {dnsError && (
             <Alert>
@@ -689,5 +710,60 @@ export default function Page({
         )
       )}
     </div>
+  );
+}
+
+function DisableDomainButton({ domainId }: { domainId: TypeId<'domains'> }) {
+  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const router = useRouter();
+  const utils = platform.useUtils();
+
+  const { mutate: disableDomain, isPending } =
+    platform.org.mail.domains.disableDomain.useMutation({
+      onSuccess: () => {
+        router.push('./');
+        void utils.org.mail.domains.getOrgDomains.invalidate();
+        void utils.org.mail.domains.getDomain.invalidate({
+          domainPublicId: domainId
+        });
+      }
+    });
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="destructive">Disable</Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Disable Domain</DialogTitle>
+          <DialogDescription>
+            Disabling a domain will prevent it from being used to send or
+            receive email. Its equivalent to deleting the domain.
+            <br />
+            Are you sure you want to disable this domain? If you want to undo
+            this you would need to contact support.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="flex gap-2">
+          <DialogClose asChild>
+            <Button
+              variant="secondary"
+              className="flex-1">
+              Cancel
+            </Button>
+          </DialogClose>
+          <Button
+            variant="destructive"
+            className="flex-1"
+            loading={isPending}
+            onClick={() =>
+              disableDomain({ orgShortcode, domainPublicId: domainId })
+            }>
+            Disable
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

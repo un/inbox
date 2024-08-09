@@ -8,7 +8,7 @@ import { mailBridgeTrpcClient } from '~platform/utils/tRPCServerClients';
 import { typeIdGenerator, typeIdValidator } from '@u22n/utils/typeid';
 import { updateDnsRecords } from '~platform/utils/updateDnsRecords';
 import { iCanHazCallerFactory } from '../iCanHaz/iCanHazRouter';
-import { and, eq } from '@u22n/database/orm';
+import { and, asc, eq } from '@u22n/database/orm';
 import { lookupNS } from '@u22n/utils/dns';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
@@ -193,7 +193,8 @@ export const domainsRouter = router({
           sendingMode: true,
           receivingMode: true,
           domainStatus: true,
-          verificationToken: true
+          verificationToken: true,
+          disabled: true
         }
       });
 
@@ -230,12 +231,67 @@ export const domainsRouter = router({
         sendingMode: true,
         forwardingAddress: true,
         createdAt: true,
-        lastDnsCheckAt: true
-      }
+        lastDnsCheckAt: true,
+        disabled: true
+      },
+      orderBy: asc(domains.disabled)
     });
 
     return {
       domainData: domainResponse
     };
-  })
+  }),
+  disableDomain: orgAdminProcedure
+    .input(
+      z.object({
+        domainPublicId: typeIdValidator('domains')
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { db, org } = ctx;
+      const orgId = org.id;
+      const { domainPublicId } = input;
+
+      const domainResponse = await db.query.domains.findFirst({
+        where: and(
+          eq(domains.publicId, domainPublicId),
+          eq(domains.orgId, orgId)
+        ),
+        columns: {
+          publicId: true,
+          domain: true,
+          domainStatus: true,
+          disabled: true
+        }
+      });
+
+      if (!domainResponse) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Domain not found'
+        });
+      }
+
+      if (domainResponse.disabled) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Domain is already disabled'
+        });
+      }
+
+      await db
+        .update(domains)
+        .set({
+          disabled: true,
+          domainStatus: 'disabled',
+          sendingMode: 'disabled',
+          receivingMode: 'disabled',
+          disabledAt: new Date()
+        })
+        .where(eq(domains.publicId, domainPublicId));
+
+      return {
+        success: true
+      };
+    })
 });
