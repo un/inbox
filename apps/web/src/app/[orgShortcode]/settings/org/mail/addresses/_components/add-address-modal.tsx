@@ -259,11 +259,11 @@ export function AddEmailModal({
                           setValues={(actionOrValue) => {
                             if (typeof actionOrValue === 'function') {
                               form.setValue(
-                                'deliversTo.users',
+                                'deliversTo.teams',
                                 actionOrValue(field.value)
                               );
                             } else {
-                              form.setValue('deliversTo.users', actionOrValue);
+                              form.setValue('deliversTo.teams', actionOrValue);
                             }
                           }}
                           items={
