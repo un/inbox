@@ -1,9 +1,12 @@
 'use client';
 
-import { Toaster as Sonner } from 'sonner';
+import { Toaster as _Sonner } from 'sonner';
 import { useTheme } from 'next-themes';
+import { memo } from 'react';
 
 type ToasterProps = React.ComponentProps<typeof Sonner>;
+
+const Sonner = memo(_Sonner);
 
 const Toaster = ({ ...props }: ToasterProps) => {
   const { theme = 'system' } = useTheme();

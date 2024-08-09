@@ -30,18 +30,17 @@ import {
   TooltipTrigger
 } from '@/src/components/shadcn-ui/tooltip';
 import { useDeleteConvo$Cache, type formatParticipantData } from '../../utils';
+import { useModifierKeys } from '@/src/components/modifier-class-provider';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { type VariantProps, cva } from 'class-variance-authority';
 import { type RouterOutputs, platform } from '@/src/lib/trpc';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { useIsMobile } from '@/src/hooks/use-is-mobile';
+import { memo, useCallback, useState } from 'react';
 import { type TypeId } from '@u22n/utils/typeid';
 import { Participants } from './participants';
-import { shiftKeyPressed } from '../../atoms';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/src/lib/utils';
-import { useAtomValue } from 'jotai';
-import { useState } from 'react';
 import { toast } from 'sonner';
 import Link from 'next/link';
 
@@ -69,20 +68,8 @@ export default function TopBar({
 }: TopBarProps) {
   const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
   const isMobile = useIsMobile();
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const router = useRouter();
-  const removeConvoFromList = useDeleteConvo$Cache();
-  const shiftKey = useAtomValue(shiftKeyPressed);
-
   const { mutate: hideConvo, isPending: hidingConvo } =
     platform.convos.hideConvo.useMutation();
-  const { mutate: deleteConvo, isPending: deletingConvo } =
-    platform.convos.deleteConvo.useMutation({
-      onSuccess: () => {
-        void removeConvoFromList(convoId);
-        router.push(`/${orgShortcode}/convo`);
-      }
-    });
 
   return (
     <div className="border-base-5 bg-base-1 flex w-full flex-col items-center justify-between border-b p-0">
@@ -108,34 +95,10 @@ export default function TopBar({
         </div>
         <div className="flex flex-row gap-2">
           <Participants participants={participants} />
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant={shiftKey ? 'destructive' : 'outline'}
-                size={'icon-sm'}
-                className={cn(
-                  !shiftKey &&
-                    'hover:bg-red-5 hover:text-red-11 hover:border-red-8'
-                )}
-                loading={deletingConvo}
-                onClick={async (e) => {
-                  e.preventDefault();
-                  if (e.shiftKey) {
-                    return deleteConvo({
-                      convoPublicId: convoId,
-                      orgShortcode
-                    });
-                  } else {
-                    setDeleteModalOpen(true);
-                  }
-                }}>
-                <Trash size={16} />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              {shiftKey ? 'Delete Convo without confirmation' : 'Delete Convo'}
-            </TooltipContent>
-          </Tooltip>
+          <DeleteButton
+            convoId={convoId}
+            hidden={convoHidden}
+          />
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -180,18 +143,78 @@ export default function TopBar({
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+type DeleteButtonProps = {
+  convoId: TypeId<'convos'>;
+  hidden: boolean | null;
+};
+
+const DeleteButton = memo(function DeleteButton({
+  convoId,
+  hidden
+}: DeleteButtonProps) {
+  const { shiftKey } = useModifierKeys();
+  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const router = useRouter();
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const removeConvoFromList = useDeleteConvo$Cache();
+  const { mutate: deleteConvo, isPending: deletingConvo } =
+    platform.convos.deleteConvo.useMutation({
+      onSuccess: () => {
+        void removeConvoFromList(convoId);
+        router.push(`/${orgShortcode}/convo`);
+      }
+    });
+
+  const onDelete = useCallback(
+    async (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.preventDefault();
+      if (e.shiftKey) {
+        return deleteConvo({
+          convoPublicId: convoId,
+          orgShortcode
+        });
+      } else {
+        setDeleteModalOpen(true);
+      }
+    },
+    [convoId, deleteConvo, orgShortcode]
+  );
+
+  return (
+    <>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant={shiftKey ? 'destructive' : 'outline'}
+            size={'icon-sm'}
+            className={cn(
+              !shiftKey && 'hover:bg-red-5 hover:text-red-11 hover:border-red-8'
+            )}
+            loading={deletingConvo}
+            onClick={onDelete}>
+            <Trash size={16} />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          {shiftKey ? 'Delete Convo without confirmation' : 'Delete Convo'}
+        </TooltipContent>
+      </Tooltip>
       {deleteModalOpen && (
         <DeleteModal
           open={deleteModalOpen}
           setOpen={setDeleteModalOpen}
           convoId={convoId}
-          convoHidden={convoHidden}
+          convoHidden={hidden}
           onSuccess={() => router.push(`/${orgShortcode}/convo`)}
         />
       )}
-    </div>
+    </>
   );
-}
+});
 
 type DeleteModalProps = {
   open: boolean;

@@ -17,30 +17,40 @@ import { Avatar, AvatarIcon } from '@/src/components/avatar';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { type formatParticipantData } from '../../utils';
 import { Dot, PenNib, X } from '@phosphor-icons/react';
+import { memo, useMemo } from 'react';
 
-export function Participants({
+export const Participants = memo(function Participants({
   participants
 }: {
   participants: NonNullable<ReturnType<typeof formatParticipantData>>[];
 }) {
-  const orderedParticipants: NonNullable<
-    ReturnType<typeof formatParticipantData>
-  >[] = [];
-  orderedParticipants.push(
-    ...participants.filter((p) => p.role === 'assigned')
-  );
-  orderedParticipants.push(
-    ...participants.filter((p) => p.role === 'contributor')
-  );
-  orderedParticipants.push(
-    ...participants.filter((p) => p.role === 'commenter')
-  );
-  orderedParticipants.push(...participants.filter((p) => p.role === 'guest'));
-  orderedParticipants.push(...participants.filter((p) => p.role === 'watcher'));
+  const orderedParticipants = useMemo(() => {
+    const orderedParticipants: NonNullable<
+      ReturnType<typeof formatParticipantData>
+    >[] = [];
+    orderedParticipants.push(
+      ...participants.filter((p) => p.role === 'assigned')
+    );
+    orderedParticipants.push(
+      ...participants.filter((p) => p.role === 'contributor')
+    );
+    orderedParticipants.push(
+      ...participants.filter((p) => p.role === 'commenter')
+    );
+    orderedParticipants.push(...participants.filter((p) => p.role === 'guest'));
+    orderedParticipants.push(
+      ...participants.filter((p) => p.role === 'watcher')
+    );
+    return orderedParticipants;
+  }, [participants]);
 
-  const assignedParticipantIds = orderedParticipants
-    .filter((p) => p.role === 'assigned')
-    .map((p) => p.participantPublicId);
+  const assignedParticipantIds = useMemo(
+    () =>
+      orderedParticipants
+        .filter((p) => p.role === 'assigned')
+        .map((p) => p.participantPublicId),
+    [orderedParticipants]
+  );
 
   return (
     <Drawer
@@ -161,4 +171,4 @@ export function Participants({
       </DrawerContent>
     </Drawer>
   );
-}
+});

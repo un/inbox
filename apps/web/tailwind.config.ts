@@ -3,8 +3,16 @@ import { fontFamily } from 'tailwindcss/defaultTheme';
 import { createPlugin } from 'windy-radix-palette';
 import animatePlugin from 'tailwindcss-animate';
 import type { Config } from 'tailwindcss';
+import plugin from 'tailwindcss/plugin';
 
 const colors = createPlugin();
+
+const modifierPlugin = plugin((_) => {
+  _.addVariant('shift-key', '.shift-key &');
+  _.addVariant('ctrl-key', '.ctrl-key &');
+  _.addVariant('alt-key', '.alt-key &');
+  _.addVariant('meta-key', '.meta-key &');
+});
 
 const config = {
   darkMode: ['class'],
@@ -96,7 +104,7 @@ const config = {
       }
     }
   },
-  plugins: [colors.plugin, animatePlugin, typographyPlugin()]
+  plugins: [colors.plugin, animatePlugin, typographyPlugin(), modifierPlugin]
 } satisfies Config;
 
 export default config;

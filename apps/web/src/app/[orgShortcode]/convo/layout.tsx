@@ -23,12 +23,6 @@ import {
   User
 } from '@phosphor-icons/react';
 import {
-  convoListSelecting,
-  convoListSelection,
-  shiftKeyPressed,
-  showNewConvoPanel
-} from './atoms';
-import {
   Tooltip,
   TooltipContent,
   TooltipTrigger
@@ -39,6 +33,11 @@ import {
   type SetStateAction,
   useEffect
 } from 'react';
+import {
+  convoListSelecting,
+  convoListSelection,
+  showNewConvoPanel
+} from './atoms';
 import { DeleteMultipleConvosModal } from './_components/delete-convos-modal';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { useRealtime } from '@/src/providers/realtime-provider';
@@ -102,7 +101,6 @@ function ConvoNavHeader({
   const setNewPanelOpen = useSetAtom(showNewConvoPanel);
   const selectingMode = useAtomValue(convoListSelecting);
   const [selection, setSelection] = useAtom(convoListSelection);
-  const setShiftKeyPressed = useSetAtom(shiftKeyPressed);
 
   useEffect(() => {
     client.on('convo:new', ({ publicId }) => addConvo(publicId));
@@ -133,27 +131,6 @@ function ConvoNavHeader({
     updateConvoMessageList,
     adminIssuesCache
   ]);
-
-  useEffect(() => {
-    const globalModifierListener = (e: Event) => {
-      if (e instanceof KeyboardEvent) {
-        if (e.key !== 'Shift') return;
-        setShiftKeyPressed(e.shiftKey);
-      } else {
-        setShiftKeyPressed(false);
-      }
-    };
-    window.addEventListener('keydown', globalModifierListener);
-    window.addEventListener('keyup', globalModifierListener);
-    window.addEventListener('focus', globalModifierListener);
-    window.addEventListener('blur', globalModifierListener);
-    return () => {
-      window.removeEventListener('keydown', globalModifierListener);
-      window.removeEventListener('keyup', globalModifierListener);
-      window.removeEventListener('focus', globalModifierListener);
-      window.removeEventListener('blur', globalModifierListener);
-    };
-  }, [setShiftKeyPressed]);
 
   const isInConvo =
     !pathname.endsWith('/convo') && !pathname.endsWith('/convo/new');

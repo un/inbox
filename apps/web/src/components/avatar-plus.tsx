@@ -7,6 +7,7 @@ import {
 } from './shadcn-ui/hover-card';
 import { Avatar, type AvatarProps } from './avatar';
 import { type TypeId } from '@u22n/utils/typeid';
+import { memo } from 'react';
 
 type AvatarPlusProps = {
   size: AvatarProps['size'];
@@ -18,7 +19,10 @@ type AvatarPlusProps = {
   }[];
 };
 
-export default function AvatarPlus({ size, users }: AvatarPlusProps) {
+export const AvatarPlus = memo(function AvatarPlus({
+  size,
+  users
+}: AvatarPlusProps) {
   const [primary, ...rest] = users;
   if (!primary) {
     return null;
@@ -61,4 +65,4 @@ export default function AvatarPlus({ size, users }: AvatarPlusProps) {
       </HoverCard>
     </div>
   );
-}
+});

@@ -12,7 +12,7 @@ import {
 } from '@phosphor-icons/react';
 import { useGlobalStore } from '../../providers/global-store-provider';
 import { type VariantProps, cva } from 'class-variance-authority';
-import { useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 import { cn, prettyBytes } from '../../lib/utils';
 import { type TypeId } from '@u22n/utils/typeid';
 import uploadTracker from '../../lib/upload';
@@ -213,7 +213,11 @@ export function useAttachmentUploader(defaultList?: Attachment[]) {
     [uploadAttachments]
   );
 
-  function AttachmentArray({ attachments }: { attachments: Attachment[] }) {
+  const AttachmentArray = memo(function AttachmentArray({
+    attachments
+  }: {
+    attachments: Attachment[];
+  }) {
     const completedAttachments = useMemo(
       () => attachments.filter((attachment) => attachment.uploadComplete),
       [attachments]
@@ -257,7 +261,7 @@ export function useAttachmentUploader(defaultList?: Attachment[]) {
         })}
       </div>
     );
-  }
+  });
 
   return {
     attachments,

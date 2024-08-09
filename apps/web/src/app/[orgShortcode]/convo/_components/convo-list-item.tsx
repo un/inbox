@@ -11,21 +11,21 @@ import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { formatParticipantData, useDeleteConvo$Cache } from '../utils';
 import { Eye, EyeSlash, Trash } from '@phosphor-icons/react/dist/ssr';
 import { Checkbox } from '@/src/components/shadcn-ui/checkbox';
-import { convoListSelecting, shiftKeyPressed } from '../atoms';
 import { platform, type RouterOutputs } from '@/src/lib/trpc';
+import { AvatarPlus } from '@/src/components/avatar-plus';
 import { useIsMobile } from '@/src/hooks/use-is-mobile';
-import AvatarPlus from '@/src/components/avatar-plus';
 import { useTimeAgo } from '@/src/hooks/use-time-ago';
 import { useLongPress } from '@uidotdev/usehooks';
 import { Avatar } from '@/src/components/avatar';
 import { type TypeId } from '@u22n/utils/typeid';
 import { usePathname } from 'next/navigation';
+import { convoListSelecting } from '../atoms';
+import { memo, useMemo } from 'react';
 import { cn } from '@/src/lib/utils';
 import { useAtomValue } from 'jotai';
-import { useMemo } from 'react';
 import Link from 'next/link';
 
-export function ConvoItem({
+export const ConvoItem = memo(function ConvoItem({
   convo,
   selected,
   onSelect,
@@ -38,7 +38,6 @@ export function ConvoItem({
 }) {
   const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
   const selecting = useAtomValue(convoListSelecting);
-  const shiftKey = useAtomValue(shiftKeyPressed);
   const isMobile = useIsMobile();
 
   const deleteConvoFromCache = useDeleteConvo$Cache();
@@ -120,7 +119,7 @@ export function ConvoItem({
               ? 'border-accent-8'
               : 'hover:border-base-6 border-transparent',
             selected && 'bg-accent-3',
-            shiftKey && !selecting && 'group'
+            !selecting && 'group'
           )}
           {...(isMobile ? longPressHandlers : {})}>
           {selecting ? (
@@ -142,8 +141,8 @@ export function ConvoItem({
                 e.stopPropagation();
                 onSelect(false);
               }}>
-              <div className="bg-accent-2 hidden size-6 rounded-lg border group-hover:block" />
-              <div className="group-hover:hidden">
+              <div className="bg-accent-2 shift-key:group-hover:block hidden size-6 rounded-lg border" />
+              <div className="shift-key:group-hover:hidden">
                 <AvatarPlus
                   size="md"
                   users={participantData}
@@ -223,4 +222,4 @@ export function ConvoItem({
       </ContextMenuContent>
     </ContextMenu>
   );
-}
+});

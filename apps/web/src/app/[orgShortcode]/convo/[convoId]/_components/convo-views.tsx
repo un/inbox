@@ -3,11 +3,11 @@
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { usePageTitle } from '@/src/hooks/use-page-title';
 import { type VirtuosoHandle } from 'react-virtuoso';
+import { useCallback, useMemo, useRef } from 'react';
 import { formatParticipantData } from '../../utils';
 import { type TypeId } from '@u22n/utils/typeid';
 import { MessagesPanel } from './messages-panel';
 import { platform } from '@/src/lib/trpc';
-import { useMemo, useRef } from 'react';
 import { ReplyBox } from './reply-box';
 import { ms } from '@u22n/utils/ms';
 import { env } from '@/src/env';
@@ -83,6 +83,11 @@ export function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
     [convoData?.data.participants, participantOwnPublicId]
   );
 
+  const onReply = useCallback(
+    () => virtuosoRef.current?.scrollToIndex({ index: 'LAST' }),
+    []
+  );
+
   if (convoError && convoError.data?.code === 'NOT_FOUND') {
     return <ConvoNotFound />;
   }
@@ -113,7 +118,7 @@ export function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
       </div>
       <ReplyBox
         convoId={convoId}
-        onReply={() => virtuosoRef.current?.scrollToIndex({ index: 'LAST' })}
+        onReply={onReply}
         hasExternalParticipants={hasExternalParticipants}
         defaultEmailIdentity={defaultEmailIdentity}
       />

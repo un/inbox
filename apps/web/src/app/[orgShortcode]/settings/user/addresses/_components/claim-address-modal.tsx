@@ -4,33 +4,38 @@ import {
   DialogTitle
 } from '@/src/components/shadcn-ui/dialog';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
-import { type ModalComponent } from '@/src/hooks/use-awaitable-modal';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { platform } from '@/src/lib/trpc';
 import Link from 'next/link';
 
+type ClaimAddressModalProps = {
+  address: string;
+  setOpen: (open: boolean) => void;
+  onSuccess: () => void;
+};
+
 export function ClaimAddressModal({
+  setOpen,
   address,
-  open,
-  onClose,
-  onResolve
-}: ModalComponent<{ address: string }>) {
+  onSuccess
+}: ClaimAddressModalProps) {
   const currentOrgName = useGlobalStore((state) => state.currentOrg.name);
   const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
 
   const { mutate: claimAddressConfirm, isPending: isClaiming } =
     platform.account.addresses.claimPersonalAddress.useMutation({
-      onError: () => onClose(),
-      onSuccess: () => onResolve(null)
+      onSuccess: () => {
+        setOpen(false);
+        onSuccess();
+      }
     });
 
   return (
     <Dialog
-      open={open}
-      onOpenChange={(open) => {
-        if (!open) {
-          onClose();
-        }
+      open={!!address}
+      onOpenChange={() => {
+        if (isClaiming) return;
+        setOpen(!open);
       }}>
       <DialogContent>
         <DialogTitle>
@@ -68,13 +73,12 @@ export function ClaimAddressModal({
         <div className="mt-4 flex items-center justify-end gap-3">
           <Button
             variant="outline"
-            onClick={() => onClose()}>
+            onClick={() => setOpen(false)}>
             Cancel
           </Button>
           <Button
             variant="default"
             onClick={() => {
-              if (address === '') return;
               claimAddressConfirm({
                 emailIdentity: address,
                 orgShortcode
