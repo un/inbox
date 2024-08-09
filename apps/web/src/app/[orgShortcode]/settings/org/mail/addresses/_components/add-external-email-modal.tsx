@@ -357,12 +357,12 @@ export function ExternalEmailModal({
                             setValues={(actionOrValue) => {
                               if (typeof actionOrValue === 'function') {
                                 form.setValue(
-                                  'deliversTo.users',
+                                  'deliversTo.teams',
                                   actionOrValue(field.value)
                                 );
                               } else {
                                 form.setValue(
-                                  'deliversTo.users',
+                                  'deliversTo.teams',
                                   actionOrValue
                                 );
                               }
