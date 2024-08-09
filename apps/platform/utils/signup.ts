@@ -203,6 +203,7 @@ export const blockedUsernames = [
   'director',
   'disconnect',
   'discuss',
+  'discord',
   'dns',
   'dns0',
   'dns1',
@@ -658,6 +659,20 @@ export const blockedUsernames = [
   '|',
   '~'
 ];
+
+export const bannedWords = [
+  'discord',
+  'd1scord',
+  'disc0rd',
+  'd1sc0rd',
+  'di5cord',
+  'd15cord',
+  'di5c0rd',
+  'd15c0rd'
+];
+export function containsBannedWords(inputString: string) {
+  return bannedWords.some((substring) => inputString.includes(substring));
+}
 
 // These are a few reserved username mostly consisting of tech brands and trademarks (>4 letters)
 // This list is non exhaustive and Uninbox reserves the right to revoke any address upon a claim by the trademark holder
