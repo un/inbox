@@ -66,7 +66,7 @@ async function resolveOrgAndMailserver({
       }
     });
     if (!rootEmailIdentity)
-      throw new Error(`No email identity found for root email`);
+      throw new Error(`No email identity found for root email: ${rcpt_to}`);
     return {
       orgId: rootEmailIdentity.orgId,
       orgPublicId: rootEmailIdentity.org.publicId,
@@ -119,7 +119,12 @@ async function resolveOrgAndMailserver({
       }
     });
     if (!mailServer || mailServer.orgId !== orgId)
-      throw new Error(`Mailserver not found or does not belong to the org`);
+      throw new Error(
+        `Mailserver not found or does not belong to the org ${JSON.stringify({
+          orgId,
+          mailserverId
+        })}`
+      );
 
     return {
       orgId: mailServer.orgId,
@@ -493,7 +498,9 @@ export const worker = createWorker<MailProcessorJobData>(
           span?.setAttributes({
             'message.addressIds': JSON.stringify(messageAddressIds)
           });
-          throw new Error('No email identity ids found');
+          throw new Error(
+            `No email identity ids found: ${JSON.stringify(messageAddressIds, null, 2)}`
+          );
         }
 
         // get the routing rule destinations for each of the email addresses, then get the users and contacts within those routing rules
@@ -1014,7 +1021,7 @@ export const worker = createWorker<MailProcessorJobData>(
         });
       } catch (e) {
         span?.recordException(e as Error);
-        console.error('Error processing email');
+        console.error('Error processing email', e);
         await discord.info(`Mailbridge Queue Error\n${(e as Error).message}`);
         // Throw the error to be caught by the worker, and moving to failed jobs
         throw e;
