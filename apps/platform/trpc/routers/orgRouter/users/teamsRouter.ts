@@ -1,7 +1,12 @@
+import {
+  typeIdGenerator,
+  typeIdValidator,
+  type TypeId
+} from '@u22n/utils/typeid';
 import { router, orgProcedure, orgAdminProcedure } from '~platform/trpc/trpc';
-import { typeIdGenerator, typeIdValidator } from '@u22n/utils/typeid';
+import { teams, spaces, spaceMembers } from '@u22n/database/schema';
+import { validateSpaceShortCode } from '../../spaceRouter/utils';
 import { addOrgMemberToTeamHandler } from './teamsHandler';
-import { teams } from '@u22n/database/schema';
 import { uiColors } from '@u22n/utils/colors';
 import { eq, and } from '@u22n/database/orm';
 import { TRPCError } from '@trpc/server';
@@ -13,26 +18,68 @@ export const teamsRouter = router({
       z.object({
         teamName: z.string().min(2).max(50),
         teamDescription: z.string().min(0).max(500).optional(),
-        teamColor: z.enum(uiColors)
+        teamColor: z.enum(uiColors),
+        createSpace: z.boolean().default(false)
       })
     )
     .mutation(async ({ ctx, input }) => {
       const { db, org } = ctx;
 
       const orgId = org.id;
-      const { teamName, teamDescription, teamColor } = input;
-      const newPublicId = typeIdGenerator('teams');
+      const { teamName, teamDescription, teamColor, createSpace } = input;
+      const newTeamPublicId = typeIdGenerator('teams');
 
-      await db.insert(teams).values({
-        publicId: newPublicId,
+      // Create the new team
+      const newTeamResponse = await db.insert(teams).values({
+        publicId: newTeamPublicId,
         name: teamName,
         description: teamDescription,
         color: teamColor,
         orgId: orgId
       });
 
+      const newTeamId = newTeamResponse.insertId;
+
+      let newSpacePublicId: TypeId<'spaces'> | undefined;
+      if (createSpace) {
+        newSpacePublicId = typeIdGenerator('spaces');
+        const newSpaceMemberPublicId = typeIdGenerator('spaceMembers');
+
+        const spaceShortcode = await validateSpaceShortCode({
+          db: db,
+          shortcode: teamName,
+          orgId: orgId
+        });
+
+        // Create a space for the new team
+        const newSpaceResponse = await db.insert(spaces).values({
+          publicId: newSpacePublicId,
+          orgId: Number(orgId),
+          name: teamName,
+          color: teamColor,
+          createdByOrgMemberId: org.memberId,
+          shortcode: spaceShortcode.shortcode,
+          type: 'private',
+          icon: 'squares-four'
+        });
+
+        const newSpaceId = newSpaceResponse.insertId;
+
+        // Add the team to the space
+        await db.insert(spaceMembers).values({
+          publicId: newSpaceMemberPublicId,
+          orgId: orgId,
+          spaceId: Number(newSpaceId),
+          teamId: Number(newTeamId),
+          addedByOrgMemberId: org.memberId,
+          orgMemberId: org.memberId,
+          role: 'member'
+        });
+      }
+
       return {
-        newTeamPublicId: newPublicId
+        newTeamPublicId: newTeamPublicId,
+        newSpacePublicId: newSpacePublicId
       };
     }),
   getOrgTeams: orgProcedure.query(async ({ ctx }) => {
