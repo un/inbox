@@ -149,11 +149,6 @@ export function NewTeamModal() {
       });
     }
 
-    if (values.createSpace) {
-      // Create space for the team
-      // ...
-    }
-
     form.reset();
     setOpen(false);
   };
