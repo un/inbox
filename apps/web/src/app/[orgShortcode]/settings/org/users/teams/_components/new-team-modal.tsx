@@ -10,6 +10,15 @@ import {
   DialogClose
 } from '@/src/components/shadcn-ui/dialog';
 import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+  FormDescription
+} from '@/src/components/shadcn-ui/form';
+import {
   Select,
   SelectContent,
   SelectGroup,
@@ -17,15 +26,8 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/src/components/shadcn-ui/select';
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage
-} from '@/src/components/shadcn-ui/form';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
+import { Checkbox } from '@/src/components/shadcn-ui/checkbox';
 import { type UiColor, uiColors } from '@u22n/utils/colors';
 import { Switch } from '@/src/components/shadcn-ui/switch';
 import { Button } from '@/src/components/shadcn-ui/button';
@@ -54,13 +56,16 @@ const teamFormSchema = z.object({
       .optional(),
     domain: z.string().min(1, 'You must select a domain').optional(),
     sendName: z.string().min(1, 'You must enter a send name').max(64).optional()
-  })
+  }),
+  createSpace: z.boolean().default(false)
 });
 
 export function NewTeamModal() {
   const [open, setOpen] = useState(false);
   const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
   const invalidateTeams = platform.useUtils().org.users.teams.getOrgTeams;
+
+  const invalidateSpaces = platform.useUtils().spaces.getOrgMemberSpaces;
 
   const utils = platform.useUtils();
   const checkEmailAvailability =
@@ -84,6 +89,7 @@ export function NewTeamModal() {
   } = platform.org.users.teams.createTeam.useMutation({
     onSuccess: () => {
       void invalidateTeams.invalidate();
+      void invalidateSpaces.invalidate();
     }
   });
 
@@ -106,7 +112,8 @@ export function NewTeamModal() {
         address: '',
         domain: '',
         sendName: ''
-      }
+      },
+      createSpace: false
     }
   });
 
@@ -127,7 +134,8 @@ export function NewTeamModal() {
       orgShortcode,
       teamName: values.teamName,
       teamColor: values.color,
-      teamDescription: values.description ?? undefined
+      teamDescription: values.description ?? undefined,
+      createSpace: values.createSpace // Add this line
     });
 
     if (values.email.create) {
@@ -139,6 +147,11 @@ export function NewTeamModal() {
         catchAll: false,
         routeToTeamsPublicIds: [team.newTeamPublicId]
       });
+    }
+
+    if (values.createSpace) {
+      // Create space for the team
+      // ...
     }
 
     form.reset();
@@ -361,6 +374,27 @@ export function NewTeamModal() {
                 )}
               </div>
 
+              <FormField
+                control={form.control}
+                name="createSpace"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>Create Space for Team</FormLabel>
+                      <FormDescription>
+                        Automatically create a space for this team
+                      </FormDescription>
+                    </div>
+                  </FormItem>
+                )}
+              />
+
               <div className="mt-1 flex w-full flex-col gap-2">
                 <div className="text-red-10">
                   {formError ?? teamError?.message ?? emailError?.message}
@@ -370,6 +404,7 @@ export function NewTeamModal() {
                   <DialogClose asChild>
                     <Button
                       className="flex-1"
+                      variant="secondary"
                       disabled={isCreatingTeam || isCreatingEmailIdentity}>
                       Cancel
                     </Button>
