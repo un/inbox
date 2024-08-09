@@ -181,7 +181,7 @@ export const ConvoItem = memo(function ConvoItem({
               </div>
 
               <span className="line-clamp-2 overflow-ellipsis whitespace-break-spaces break-words">
-                {convo.entries[0]?.bodyPlainText ?? ''}
+                {convo.entries[0]?.bodyPlainText.trim() ?? ''}
               </span>
             </div>
           </div>
