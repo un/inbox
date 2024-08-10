@@ -288,10 +288,9 @@ export const spaceRouter = router({
     )
     .query(async ({ ctx, input }) => {
       const { db, org } = ctx;
-      const { spaceShortCode, includeHidden, cursor } = input;
+      const { spaceShortCode, cursor } = input;
       const orgId = org.id;
 
-      const orgMemberId = org.memberId;
       const LIMIT = 15;
 
       const inputLastUpdatedAt = cursor.lastUpdatedAt
@@ -317,30 +316,29 @@ export const spaceRouter = router({
           message: 'Space not found'
         });
       }
-      console.log('space', space);
-      // make a another queryy that is more simple to find out why it does not return anything
-      // Fix the syntax error and use the space.id
+
+      // Get all convos associated with the space
       const convoQueryDifferent = await db.query.convoToSpaces.findMany({
         where: eq(convoToSpaces.spaceId, space.id),
         columns: {
           convoId: true
-        },
-        with: {
-          convo: {
-            columns: {
-              publicId: true
-            }
-          }
         }
       });
 
-      // Get all convos associated with the space
-      console.log('convoQueryDifferent', convoQueryDifferent);
       const convoQuery = await db.query.convos.findMany({
         orderBy: [desc(convos.lastUpdatedAt), desc(convos.publicId)],
-        where: inArray(
-          convos.id,
-          convoQueryDifferent.map((c) => c.convoId)
+        where: and(
+          inArray(
+            convos.id,
+            convoQueryDifferent.map((c) => c.convoId)
+          ),
+          or(
+            and(
+              eq(convos.lastUpdatedAt, inputLastUpdatedAt),
+              lt(convos.publicId, inputLastPublicId)
+            ),
+            lt(convos.lastUpdatedAt, inputLastUpdatedAt)
+          )
         ),
         columns: {
           publicId: true,
@@ -452,7 +450,6 @@ export const spaceRouter = router({
           }
         }
       });
-      console.log('convoQuery', convoQuery);
 
       // As we fetch ${LIMIT + 1} convos at a time, if the length is <= ${LIMIT}, we know we've reached the end
       if (convoQuery.length <= LIMIT) {
@@ -462,16 +459,12 @@ export const spaceRouter = router({
         };
       }
 
-      console.log('before convoQuery', convoQuery);
       // If we have ${LIMIT + 1} convos, we pop the last one as we return ${LIMIT} convos
       convoQuery.pop();
 
       const newCursorLastUpdatedAt =
         convoQuery[convoQuery.length - 1]!.lastUpdatedAt;
       const newCursorLastPublicId = convoQuery[convoQuery.length - 1]!.publicId;
-      console.log('newCursorLastUpdatedAt', newCursorLastUpdatedAt);
-      console.log('newCursorLastPublicId', newCursorLastPublicId);
-      console.log('convoQuery', convoQuery);
 
       return {
         data: convoQuery,
