@@ -11,7 +11,6 @@ export default function SpaceConvoPage({
 }: {
   params: {
     convoId: string;
-    spaceShortCode: string;
   };
 }) {
   return (
@@ -19,10 +18,7 @@ export default function SpaceConvoPage({
       {!validateTypeId('convos', params.convoId) ? (
         <ConvoNotFound />
       ) : (
-        <ConvoView
-          convoId={params.convoId}
-          spaceShortCode={params.spaceShortCode}
-        />
+        <ConvoView convoId={params.convoId} />
       )}
     </>
   );

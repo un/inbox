@@ -1,8 +1,8 @@
 'use client';
 
 import { useGlobalStore } from '@/src/providers/global-store-provider';
+import { ConvoItemWrapper } from './convo-item-wrapper';
 import { ConvoListBase } from './convo-list-base';
-import { ConvoItem } from './convo-list-item';
 import { platform } from '@/src/lib/trpc';
 import { ms } from '@u22n/utils/ms';
 
@@ -38,7 +38,12 @@ export function ConvoList(props: Props) {
       hasNextPage={hasNextPage}
       isFetchingNextPage={isFetchingNextPage}
       fetchNextPage={fetchNextPage}
-      ConvoItem={ConvoItem}
+      ConvoItem={(itemProps) => (
+        <ConvoItemWrapper
+          {...itemProps}
+          isSpaceConvo={false}
+        />
+      )}
     />
   );
 }
