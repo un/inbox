@@ -20,6 +20,7 @@ import { useLongPress } from '@uidotdev/usehooks';
 import { Avatar } from '@/src/components/avatar';
 import { type TypeId } from '@u22n/utils/typeid';
 import { usePathname } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { cn } from '@/src/lib/utils';
 import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
@@ -31,12 +32,13 @@ export function ConvoItem({
   onSelect,
   hidden
 }: {
-  convo: RouterOutputs['convos']['getOrgMemberConvos']['data'][number];
+  convo: RouterOutputs['spaces']['getSpaceConvos']['data'][number];
   selected: boolean;
   onSelect: (shiftKey: boolean) => void;
   hidden: boolean;
 }) {
   const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const { spaceShortCode } = useParams();
   const selecting = useAtomValue(convoListSelecting);
   const shiftKey = useAtomValue(shiftKeyPressed);
   const isMobile = useIsMobile();
@@ -86,7 +88,7 @@ export function ConvoItem({
   }, [participantData]);
 
   const currentPath = usePathname();
-  const link = `/${orgShortcode}/convo/${convo.publicId}`;
+  const link = `/${orgShortcode}/${spaceShortCode}/convo/${convo.publicId}`;
 
   const isActive = currentPath === link;
 

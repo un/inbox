@@ -304,13 +304,12 @@ export default function Layout({
   children
 }: Readonly<{ children: React.ReactNode }>) {
   const isMobile = useIsMobile();
-
   const params = useParams();
   const pathname = usePathname();
   const [showHidden, setShowHidden] = useState(false);
 
   const isInConvo = !!params.convoId;
-  const isNewPage = pathname.endsWith('/convo/new');
+  const isNewPage = pathname.endsWith('/new');
 
   return (
     <div

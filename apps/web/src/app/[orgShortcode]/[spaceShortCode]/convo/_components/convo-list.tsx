@@ -32,7 +32,7 @@ export function ConvoList(props: Props) {
     {
       orgShortcode,
       spaceShortCode: spaceShortCode as string,
-      includeHidden: props.hidden ? true : undefined
+      includeHidden: props.hidden
     },
     {
       getNextPageParam: (lastPage) => lastPage.cursor ?? undefined,
@@ -40,7 +40,7 @@ export function ConvoList(props: Props) {
     }
   );
 
-  console.log('convos inisde spaces', convos);
+  console.log('convos', convos);
 
   const allConvos = useMemo(
     () => (convos ? convos.pages.flatMap(({ data }) => data) : []),
