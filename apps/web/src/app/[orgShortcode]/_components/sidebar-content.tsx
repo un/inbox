@@ -564,7 +564,7 @@ export function SpacesNav() {
               className={'h-4 w-4'}
             />
           </div>
-          <span className="text-base-12 font-medium">My personal space</span>
+          <span className="text-base-12 font-medium">All Conversations</span>
         </Link>
       </div>
     </div>
