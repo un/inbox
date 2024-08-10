@@ -52,6 +52,10 @@ import type {
   RegistrationResponseJSON
 } from '@simplewebauthn/types';
 import {
+  billingTrpcClient,
+  mailBridgeTrpcClient
+} from '~platform/utils/tRPCServerClients';
+import {
   strongPasswordSchema,
   calculatePasswordStrength
 } from '@u22n/utils/password';
@@ -59,7 +63,6 @@ import { accountIdentifier, ratelimiter } from '~platform/trpc/ratelimit';
 import { createAuthenticator } from '~platform/utils/auth/passkeyUtils';
 import { refreshOrgShortcodeCache } from '~platform/utils/orgShortcode';
 import { deleteCookie, getCookie, setCookie } from '@u22n/hono/helpers';
-import { billingTrpcClient } from '~platform/utils/tRPCServerClients';
 import { router, accountProcedure } from '~platform/trpc/trpc';
 import { TOTPController, createTOTPKeyURI } from 'oslo/otp';
 import { inArray, isNotNull } from '@u22n/database/orm';
@@ -1249,6 +1252,9 @@ export const securityRouter = router({
         id: true,
         publicId: true,
         shortcode: true
+      },
+      with: {
+        postalConfig: true
       }
     });
 
@@ -1334,6 +1340,19 @@ export const securityRouter = router({
           .where(inArray(convoEntrySeenTimestamps.orgId, orgIdsArray))
       ]);
 
+      const orgPublicIdsArray = orgsQuery.map((org) => org.publicId);
+
+      // Delete orgs from Postal DB
+      await Promise.allSettled(
+        orgsQuery
+          .filter((org) => org.postalConfig)
+          .map(({ publicId }) =>
+            mailBridgeTrpcClient.postal.org.deletePostalOrg.mutate({
+              orgPublicId: publicId
+            })
+          )
+      );
+
       // Delete orgShortcode Cache
 
       const orgShortcodesArray = orgsQuery.map((org) => org.shortcode);
@@ -1344,8 +1363,6 @@ export const securityRouter = router({
       );
 
       // Delete attachments
-
-      const orgPublicIdsArray = orgsQuery.map((org) => org.publicId);
 
       const deleteStorageResponse = (await fetch(
         `${env.STORAGE_URL}/api/orgs/delete`,
