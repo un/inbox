@@ -1,20 +1,10 @@
 'use client';
 
-import {
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent
-} from '@/src/components/shadcn-ui/tooltip';
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage
-} from '@/src/components/shadcn-ui/avatar';
 import { createColumnHelper, type ColumnDef } from '@tanstack/react-table';
-import { generateAvatarUrl, getInitials } from '@/src/lib/utils';
 import { CopyButton } from '@/src/components/copy-button';
 import { Badge } from '@/src/components/shadcn-ui/badge';
 import type { RouterOutputs } from '@/src/lib/trpc';
+import { Avatar } from '@/src/components/avatar';
 import { format } from 'date-fns';
 import { env } from '@/src/env';
 
@@ -42,27 +32,14 @@ export const columns: ColumnDef<Member>[] = [
       const { publicId, avatarTimestamp, firstName, lastName } =
         row.original.orgMember?.profile ?? {};
 
-      const avatarUrl =
-        avatarTimestamp && publicId
-          ? generateAvatarUrl({
-              avatarTimestamp,
-              publicId,
-              size: 'lg'
-            })
-          : null;
-      const initials = getInitials(`${firstName} ${lastName}`);
       return (
         <div className="flex items-center gap-2">
-          <Avatar className="h-8 w-8">
-            <AvatarImage
-              src={avatarUrl ?? undefined}
-              alt={firstName ?? ''}
-            />
-            <AvatarFallback>{initials}</AvatarFallback>
-          </Avatar>
-          <span>
-            {firstName} {lastName}
-          </span>
+          <Avatar
+            avatarProfilePublicId={publicId ?? 'no_avatar'}
+            avatarTimestamp={avatarTimestamp ?? null}
+            name={`${firstName ?? ''} ${lastName ?? ''}`}
+          />
+          <span className="whitespace-nowrap text-xs">{`${firstName} ${lastName}`}</span>
         </div>
       );
     }
@@ -130,30 +107,13 @@ export const columns: ColumnDef<Member>[] = [
     cell: ({ row }) => {
       const { publicId, avatarTimestamp, firstName, lastName } =
         row.original.invitedByOrgMember.profile;
-
-      const avatarUrl =
-        avatarTimestamp && publicId
-          ? generateAvatarUrl({
-              avatarTimestamp,
-              publicId,
-              size: 'lg'
-            })
-          : null;
-      const initials = getInitials(`${firstName} ${lastName}`);
       return (
         <div className="flex items-center justify-center gap-2">
-          <Tooltip>
-            <TooltipTrigger>
-              <Avatar className="h-8 w-8">
-                <AvatarImage
-                  src={avatarUrl ?? undefined}
-                  alt={firstName ?? ''}
-                />
-                <AvatarFallback>{initials}</AvatarFallback>
-              </Avatar>
-            </TooltipTrigger>
-            <TooltipContent>{`${firstName} ${lastName}`}</TooltipContent>
-          </Tooltip>
+          <Avatar
+            avatarProfilePublicId={publicId ?? 'no_avatar'}
+            avatarTimestamp={avatarTimestamp ?? null}
+            name={`${firstName ?? ''} ${lastName ?? ''}`}
+          />
         </div>
       );
     }
@@ -164,7 +124,7 @@ export const columns: ColumnDef<Member>[] = [
     cell: ({ row }) => {
       const expiry = row.original.expiresAt;
       return expiry ? (
-        <div className="flex h-full items-center">
+        <div className="flex h-full items-center whitespace-nowrap">
           {format(expiry, 'eee, do MMM yyyy')}
         </div>
       ) : null;

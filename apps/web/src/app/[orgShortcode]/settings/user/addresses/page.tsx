@@ -29,7 +29,7 @@ export default function Page() {
   } = platform.account.addresses.getPersonalAddresses.useQuery();
 
   return (
-    <div className="flex flex-col gap-4 p-4">
+    <div className="flex w-full flex-col gap-4 p-4">
       <PageTitle title="Your Addresses" />
 
       {personalAddressesLoading && <Skeleton className="h-10 w-full" />}
