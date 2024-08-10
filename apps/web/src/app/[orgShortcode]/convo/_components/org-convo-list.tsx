@@ -31,7 +31,6 @@ export function ConvoList(props: Props) {
   );
   if (!convos) return null;
   const allConvos = convos.pages.flatMap((page) => page.data);
-  console.log('allConvos', allConvos);
 
   return (
     <ConvoListBase

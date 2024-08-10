@@ -36,7 +36,6 @@ export function ConvoList(props: Props) {
 
   const allConvos = convos.pages.flatMap((page) => page.data);
 
-  console.log('allConvos', allConvos);
   return (
     <ConvoListBase
       hidden={props.hidden}
