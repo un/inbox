@@ -141,7 +141,7 @@ function SpaceItem({
     <div className="hover:bg-slate-1 group flex w-full max-w-full flex-row items-center gap-2 truncate rounded-lg p-0.5">
       <Link
         className="flex w-full max-w-full flex-row items-center gap-4 truncate p-1"
-        href={`/${orgShortCode}/${spaceData.shortcode}/convos`}>
+        href={`/${orgShortCode}/${spaceData.shortcode}/convo`}>
         <div
           className="flex h-6 min-h-6 w-6 min-w-6 items-center justify-center rounded-sm"
           style={{

@@ -1,11 +1,12 @@
 'use client';
 
+import { convoListSelection, lastSelectedConvo } from '../../../convo/atoms';
+import { ConvoItem } from '../../../convo/_components/convo-list-item';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
-import { convoListSelection, lastSelectedConvo } from '../atoms';
 import { SpinnerGap } from '@phosphor-icons/react';
 import { type TypeId } from '@u22n/utils/typeid';
-import { ConvoItem } from './convo-list-item';
 import { useCallback, useMemo } from 'react';
+import { useParams } from 'next/navigation';
 import { platform } from '@/src/lib/trpc';
 import { Virtuoso } from 'react-virtuoso';
 import { ms } from '@u22n/utils/ms';
@@ -16,6 +17,7 @@ type Props = {
 };
 
 export function ConvoList(props: Props) {
+  const { spaceShortCode } = useParams();
   const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
   const [selections, setSelections] = useAtom(convoListSelection);
   const [lastSelected, setLastSelected] = useAtom(lastSelectedConvo);
@@ -26,9 +28,10 @@ export function ConvoList(props: Props) {
     isLoading,
     hasNextPage,
     isFetchingNextPage
-  } = platform.convos.getOrgMemberConvos.useInfiniteQuery(
+  } = platform.spaces.getSpaceConvos.useInfiniteQuery(
     {
       orgShortcode,
+      spaceShortCode: spaceShortCode as string,
       includeHidden: props.hidden ? true : undefined
     },
     {
@@ -36,7 +39,8 @@ export function ConvoList(props: Props) {
       staleTime: ms('1 hour')
     }
   );
-  console.log('convos', convos);
+
+  console.log('convos inisde spaces', convos);
 
   const allConvos = useMemo(
     () => (convos ? convos.pages.flatMap(({ data }) => data) : []),
@@ -65,6 +69,7 @@ export function ConvoList(props: Props) {
   const itemRenderer = useCallback(
     (index: number, convo: (typeof allConvos)[number]) => {
       const selected = selections.includes(convo.publicId);
+      console.log('convo', convo);
       return (
         <div
           key={convo.publicId}
@@ -108,6 +113,7 @@ export function ConvoList(props: Props) {
       setSelections
     ]
   );
+  console.log('allConvos space', allConvos);
 
   return (
     <div className="flex h-full flex-col">

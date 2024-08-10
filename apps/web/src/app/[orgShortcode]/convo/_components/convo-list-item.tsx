@@ -40,6 +40,7 @@ export function ConvoItem({
   const selecting = useAtomValue(convoListSelecting);
   const shiftKey = useAtomValue(shiftKeyPressed);
   const isMobile = useIsMobile();
+  console.log('convo', convo, 'selected', selected, 'hidden', hidden);
 
   const deleteConvoFromCache = useDeleteConvo$Cache();
   const { mutate: deleteConvo } = platform.convos.deleteConvo.useMutation({

@@ -5,14 +5,18 @@ import {
   accounts,
   spaces,
   spaceMembers,
-  teamMembers
+  teamMembers,
+  convos,
+  convoToSpaces,
+  convoParticipants,
+  convoEntries
 } from '@u22n/database/schema';
 import { router, accountProcedure, orgProcedure } from '~platform/trpc/trpc';
 import { iCanHazCallerFactory } from '../orgRouter/iCanHaz/iCanHazRouter';
-import { eq, and, like, inArray, or } from '@u22n/database/orm';
+import { eq, and, like, inArray, or, desc, lt } from '@u22n/database/orm';
+import { typeIdGenerator, typeIdValidator } from '@u22n/utils/typeid';
 import { spaceSettingsRouter } from './spaceSettingsRouter';
 import { spaceStatusesRouter } from './statusesRouter';
-import { typeIdGenerator } from '@u22n/utils/typeid';
 import { spaceMembersRouter } from './membersRouter';
 import { validateSpaceShortCode } from './utils';
 import { spaceTagsRouter } from './tagsRouter';
@@ -266,6 +270,215 @@ export const spaceRouter = router({
       return {
         userOrgs: orgMembersQuery,
         adminOrgShortCodes: adminOrgShortCodes
+      };
+    }),
+
+  getSpaceConvos: orgProcedure
+    .input(
+      z.object({
+        spaceShortCode: z.string(),
+        includeHidden: z.boolean().default(false),
+        cursor: z
+          .object({
+            lastUpdatedAt: z.date().optional(),
+            lastPublicId: typeIdValidator('convos').optional()
+          })
+          .default({})
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const { db, org } = ctx;
+      const { spaceShortCode, includeHidden, cursor } = input;
+      const orgId = org.id;
+
+      const orgMemberId = org.memberId;
+      const LIMIT = 15;
+
+      const inputLastUpdatedAt = cursor.lastUpdatedAt
+        ? new Date(cursor.lastUpdatedAt)
+        : new Date();
+
+      const inputLastPublicId = cursor.lastPublicId ?? 'c_';
+
+      // First, get the space ID from the shortcode
+      const space = await db.query.spaces.findFirst({
+        where: and(
+          eq(spaces.orgId, orgId),
+          eq(spaces.shortcode, spaceShortCode)
+        ),
+        columns: {
+          id: true
+        }
+      });
+
+      if (!space) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Space not found'
+        });
+      }
+      console.log('space', space);
+      // make a another queryy that is more simple to find out why it does not return anything
+      // Fix the syntax error and use the space.id
+      const convoQueryDifferent = await db.query.convoToSpaces.findMany({
+        where: eq(convoToSpaces.spaceId, space.id),
+        columns: {
+          convoId: true
+        },
+        with: {
+          convo: {
+            columns: {
+              publicId: true
+            }
+          }
+        }
+      });
+
+      // Get all convos associated with the space
+      console.log('convoQueryDifferent', convoQueryDifferent);
+      const convoQuery = await db.query.convos.findMany({
+        orderBy: [desc(convos.lastUpdatedAt), desc(convos.publicId)],
+        where: inArray(
+          convos.id,
+          convoQueryDifferent.map((c) => c.convoId)
+        ),
+        columns: {
+          publicId: true,
+          lastUpdatedAt: true
+        },
+        limit: LIMIT + 1,
+        with: {
+          subjects: {
+            columns: {
+              subject: true
+            }
+          },
+          participants: {
+            columns: {
+              role: true,
+              publicId: true,
+              hidden: true,
+              notifications: true
+            },
+            with: {
+              orgMember: {
+                columns: { publicId: true },
+                with: {
+                  profile: {
+                    columns: {
+                      publicId: true,
+                      firstName: true,
+                      lastName: true,
+                      avatarTimestamp: true,
+                      handle: true
+                    }
+                  }
+                }
+              },
+              team: {
+                columns: {
+                  publicId: true,
+                  name: true,
+                  color: true,
+                  avatarTimestamp: true
+                }
+              },
+              contact: {
+                columns: {
+                  publicId: true,
+                  name: true,
+                  avatarTimestamp: true,
+                  setName: true,
+                  emailUsername: true,
+                  emailDomain: true,
+                  type: true,
+                  signaturePlainText: true,
+                  signatureHtml: true
+                }
+              }
+            }
+          },
+          entries: {
+            orderBy: [desc(convoEntries.createdAt)],
+            limit: 1,
+            columns: {
+              bodyPlainText: true,
+              type: true
+            },
+            with: {
+              author: {
+                columns: {
+                  publicId: true
+                },
+                with: {
+                  orgMember: {
+                    columns: {
+                      publicId: true
+                    },
+                    with: {
+                      profile: {
+                        columns: {
+                          publicId: true,
+                          firstName: true,
+                          lastName: true,
+                          avatarTimestamp: true,
+                          handle: true
+                        }
+                      }
+                    }
+                  },
+                  team: {
+                    columns: {
+                      publicId: true,
+                      name: true,
+                      color: true,
+                      avatarTimestamp: true
+                    }
+                  },
+                  contact: {
+                    columns: {
+                      publicId: true,
+                      name: true,
+                      avatarTimestamp: true,
+                      setName: true,
+                      emailUsername: true,
+                      emailDomain: true,
+                      type: true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      });
+      console.log('convoQuery', convoQuery);
+
+      // As we fetch ${LIMIT + 1} convos at a time, if the length is <= ${LIMIT}, we know we've reached the end
+      if (convoQuery.length <= LIMIT) {
+        return {
+          data: convoQuery,
+          cursor: null
+        };
+      }
+
+      console.log('before convoQuery', convoQuery);
+      // If we have ${LIMIT + 1} convos, we pop the last one as we return ${LIMIT} convos
+      convoQuery.pop();
+
+      const newCursorLastUpdatedAt =
+        convoQuery[convoQuery.length - 1]!.lastUpdatedAt;
+      const newCursorLastPublicId = convoQuery[convoQuery.length - 1]!.publicId;
+      console.log('newCursorLastUpdatedAt', newCursorLastUpdatedAt);
+      console.log('newCursorLastPublicId', newCursorLastPublicId);
+      console.log('convoQuery', convoQuery);
+
+      return {
+        data: convoQuery,
+        cursor: {
+          lastUpdatedAt: newCursorLastUpdatedAt,
+          lastPublicId: newCursorLastPublicId
+        }
       };
     })
 });
