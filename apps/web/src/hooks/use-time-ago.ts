@@ -3,7 +3,7 @@ import { intlFormatDistance } from 'date-fns';
 import { ms } from '@u22n/utils/ms';
 
 function format(time: Date) {
-  return intlFormatDistance(time, new Date());
+  return intlFormatDistance(time, new Date(), { locale: 'en' });
 }
 
 function calculateOptimalInterval(time: Date) {
