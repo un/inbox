@@ -98,7 +98,7 @@ export function AddDomainModal() {
                     domainName: domain
                   });
                 }}
-                disabled={isAddingDomain}>
+                loading={isAddingDomain}>
                 Add Domain
               </Button>
             </div>
