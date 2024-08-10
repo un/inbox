@@ -10,6 +10,10 @@ export default function Page() {
   const { spaceShortCode } = useParams();
   const isMobile = useIsMobile();
 
+  if (!orgShortcode || !spaceShortCode || Array.isArray(spaceShortCode)) {
+    return <div>No org or space shortcode</div>;
+  }
+
   return isMobile ? null : (
     <div className="flex flex-1 flex-col items-center justify-center gap-2 p-4 text-center">
       <span className="text-pretty font-medium">

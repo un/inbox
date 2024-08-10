@@ -1,34 +1,26 @@
 'use client';
-
-import { InfiniteData, UseInfiniteQueryResult } from '@tanstack/react-query';
 import { convoListSelection, lastSelectedConvo } from '../atoms';
 import { SpinnerGap } from '@phosphor-icons/react';
 import { type TypeId } from '@u22n/utils/typeid';
-import { useCallback, useMemo } from 'react';
+import { RouterOutputs } from '@/src/lib/trpc';
 import { Virtuoso } from 'react-virtuoso';
+import { useCallback } from 'react';
 import { useAtom } from 'jotai';
+
+// Define a union type for the convo object
+type Convo =
+  | RouterOutputs['spaces']['getSpaceConvos']['data'][number]
+  | RouterOutputs['convos']['getOrgMemberConvos']['data'][number];
 
 type ConvoListBaseProps = {
   hidden: boolean;
-  convos: UseInfiniteQueryResult<
-    InfiniteData<{
-      data: Array<{
-        publicId: TypeId<'convos'>;
-        // Add other properties of the convo object here
-      }>;
-      cursor: string | null;
-    }>,
-    unknown
-  >;
+  convos: Convo[];
   isLoading: boolean;
   hasNextPage: boolean | undefined;
   isFetchingNextPage: boolean;
   fetchNextPage: () => Promise<unknown>;
   ConvoItem: React.ComponentType<{
-    convo: {
-      publicId: TypeId<'convos'>;
-      // Add other properties of the convo object here
-    };
+    convo: Convo;
     selected: boolean;
     onSelect: (shiftKey: boolean) => void;
     hidden: boolean;
@@ -46,11 +38,7 @@ export function ConvoListBase({
 }: ConvoListBaseProps) {
   const [selections, setSelections] = useAtom(convoListSelection);
   const [lastSelected, setLastSelected] = useAtom(lastSelectedConvo);
-
-  const allConvos = useMemo(
-    () => (convos ? convos.pages.flatMap(({ data }) => data) : []),
-    [convos]
-  );
+  const allConvos = convos;
 
   const rangeSelect = useCallback(
     (upto: TypeId<'convos'>) => {
@@ -73,9 +61,11 @@ export function ConvoListBase({
     },
     [lastSelected, allConvos, setLastSelected, selections, setSelections]
   );
-
   const itemRenderer = useCallback(
-    (index: number, convo: (typeof allConvos)[number]) => {
+    (index: number, convo: Convo) => {
+      if (!convo.publicId) {
+        return null;
+      }
       const selected = selections.includes(convo.publicId);
       return (
         <div

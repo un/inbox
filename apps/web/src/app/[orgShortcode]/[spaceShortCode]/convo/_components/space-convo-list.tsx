@@ -1,8 +1,9 @@
 'use client';
 
+import { ConvoItemWrapper } from '../../../convo/_components/convo-item-wrapper';
+import { ConvoListBase } from '../../../convo/_components/convo-list-base';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
-import { ConvoItemWrapper } from './convo-item-wrapper';
-import { ConvoListBase } from './convo-list-base';
+import { useParams } from 'next/navigation';
 import { platform } from '@/src/lib/trpc';
 import { ms } from '@u22n/utils/ms';
 
@@ -11,6 +12,7 @@ type Props = {
 };
 
 export function ConvoList(props: Props) {
+  const { spaceShortCode } = useParams();
   const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
 
   const {
@@ -19,21 +21,26 @@ export function ConvoList(props: Props) {
     isLoading,
     hasNextPage,
     isFetchingNextPage
-  } = platform.convos.getOrgMemberConvos.useInfiniteQuery(
+  } = platform.spaces.getSpaceConvos.useInfiniteQuery(
     {
       orgShortcode,
-      includeHidden: props.hidden ? true : undefined
+      spaceShortCode: spaceShortCode as string,
+      includeHidden: props.hidden
     },
     {
       getNextPageParam: (lastPage) => lastPage.cursor ?? undefined,
       staleTime: ms('1 hour')
     }
   );
+  if (!convos) return null;
 
+  const allConvos = convos.pages.flatMap((page) => page.data);
+
+  console.log('allConvos', allConvos);
   return (
     <ConvoListBase
       hidden={props.hidden}
-      convos={convos}
+      convos={allConvos}
       isLoading={isLoading}
       hasNextPage={hasNextPage}
       isFetchingNextPage={isFetchingNextPage}
@@ -41,7 +48,7 @@ export function ConvoList(props: Props) {
       ConvoItem={(itemProps) => (
         <ConvoItemWrapper
           {...itemProps}
-          isSpaceConvo={false}
+          isSpaceConvo={true}
         />
       )}
     />

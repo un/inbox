@@ -1,5 +1,5 @@
 'use client';
-import { ConvoList as SpaceConvoList } from './_components/convo-list';
+import { ConvoList as SpaceConvoList } from './_components/space-convo-list';
 import { ConvoLayoutWrapper } from '../../convo/layout';
 import { useState } from 'react';
 
