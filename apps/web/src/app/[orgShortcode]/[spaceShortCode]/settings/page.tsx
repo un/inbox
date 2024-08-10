@@ -397,7 +397,7 @@ function ColorField({
     <div className="flex flex-col gap-2">
       <SettingsTitle title="Color" />
       <div
-        className="grid grid-cols-10 gap-3 w-fit"
+        className="grid w-fit grid-cols-10 gap-3"
         style={{ padding: '0px' }}>
         {uiColors.map((color) => (
           <div
@@ -932,7 +932,7 @@ function StatusItem({
         <div className="flex flex-row items-center justify-between gap-4 py-1.5">
           <div
             className={cn(
-              'flex flex-row items-center gap-7 w-full',
+              'flex w-full flex-row items-center gap-7',
               status.disabled ? 'opacity-70' : null
             )}>
             <div
@@ -950,11 +950,11 @@ function StatusItem({
                 }}
               />
             </div>
-            <div className="grid gap-2 grid-cols-8 w-full place-items-center">
-              <div className="font-medium col-span-3 w-full">
+            <div className="grid w-full grid-cols-8 place-items-center gap-2">
+              <div className="col-span-3 w-full font-medium">
                 <span>{status.name}</span>
               </div>
-              <div className="text-base-11 text-balance text-xs col-span-5 w-full pl-2">
+              <div className="text-base-11 col-span-5 w-full text-balance pl-2 text-xs">
                 <span>{status.description ?? 'No description'}</span>
               </div>
             </div>
@@ -1035,7 +1035,7 @@ function StatusItem({
                       </PopoverTrigger>
                       <PopoverContent className="w-fit">
                         <div
-                          className="grid grid-cols-5 gap-3 w-fit"
+                          className="grid w-fit grid-cols-5 gap-3"
                           style={{ padding: '0px' }}>
                           {uiColors.map((color) => (
                             <div
@@ -1093,7 +1093,7 @@ function StatusItem({
               control={form.control}
               name="description"
               render={({ field }) => (
-                <FormItem className=" min-w-32 max-w-80">
+                <FormItem className="min-w-32 max-w-80">
                   <FormControl>
                     <Input
                       label="Description"
@@ -1211,7 +1211,7 @@ function NewSpaceStatus({
                     </PopoverTrigger>
                     <PopoverContent className="w-fit">
                       <div
-                        className="grid grid-cols-5 gap-3 w-fit"
+                        className="grid w-fit grid-cols-5 gap-3"
                         style={{ padding: '0px' }}>
                         {uiColors.map((color) => (
                           <div
@@ -1638,7 +1638,7 @@ function Tag({
   const TagItemBlock = (
     <>
       <div
-        className="flex flex-row gap-1 items-center justify-center rounded-sm px-1 py-0.5"
+        className="flex flex-row items-center justify-center gap-1 rounded-sm px-1 py-0.5"
         style={{
           backgroundColor: `var(--${color}9)`,
           color: `var(--${color}1)`
