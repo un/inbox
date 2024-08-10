@@ -16,9 +16,7 @@ import {
   convoParticipantTeamMembers,
   emailIdentities,
   convoEntryPrivateVisibilityParticipants,
-  convoEntryRawHtmlEmails,
-  convoToSpaces,
-  spaces
+  convoEntryRawHtmlEmails
 } from '@u22n/database/schema';
 import {
   type InferInsertModel,
@@ -435,33 +433,6 @@ export const convoRouter = router({
         lastUpdatedAt: newConvoTimestamp
       });
 
-      // If a space public ID is provided, associate the conversation with the space
-      const space = await db.query.spaces.findFirst({
-        where: and(eq(spaces.orgId, orgId), eq(spaces.id, 18)),
-        columns: {
-          id: true
-        }
-      });
-      console.log('space', space);
-
-      if (!space) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Space not found'
-        });
-      }
-
-      console.log('hello');
-      const convoToSpacePublicId = typeIdGenerator('convoToSpac');
-      console.log('convoToSpacePublicId', convoToSpacePublicId);
-      await db.insert(convoToSpaces).values({
-        orgId: orgId,
-        publicId: convoToSpacePublicId,
-        convoId: Number(insertConvoResponse.insertId),
-        spaceId: space.id
-      });
-      console.log('convoToSpacePublicId', convoToSpacePublicId);
-
       // create conversationSubject entry
       const newConvoSubjectPublicId = typeIdGenerator('convoSubjects');
       const insertConvoSubjectResponse = await db.insert(convoSubjects).values({
@@ -470,7 +441,6 @@ export const convoRouter = router({
         publicId: newConvoSubjectPublicId,
         subject: topic
       });
-      console.log('insertConvoSubjectResponse', insertConvoSubjectResponse);
 
       //* create conversationParticipants Entries
       if (orgMemberIds.length) {
@@ -500,10 +470,6 @@ export const convoRouter = router({
           .insert(convoParticipants)
           .values(convoParticipantsDbInsertValuesArray);
       }
-      console.log(
-        'orgMemberPublicIdsForNotifications',
-        orgMemberPublicIdsForNotifications
-      );
 
       if (orgTeamIds.length) {
         for (const teamId of orgTeamIds) {
@@ -1397,7 +1363,6 @@ export const convoRouter = router({
         : new Date();
 
       const inputLastPublicId = cursor.lastPublicId ?? 'c_';
-      console.log('inputLastPublicId', inputLastPublicId);
 
       const convoQuery = await db.query.convos.findMany({
         orderBy: [desc(convos.lastUpdatedAt), desc(convos.publicId)],
@@ -1554,15 +1519,12 @@ export const convoRouter = router({
         };
       }
 
-      console.log('vefore pop convoQuery', convoQuery);
       // If we have ${LIMIT + 1} convos, we pop the last one as we return ${LIMIT} convos
       convoQuery.pop();
 
       const newCursorLastUpdatedAt =
         convoQuery[convoQuery.length - 1]!.lastUpdatedAt;
       const newCursorLastPublicId = convoQuery[convoQuery.length - 1]!.publicId;
-      // print convoQuery
-      console.log('convoQuery', convoQuery);
 
       return {
         data: convoQuery,
