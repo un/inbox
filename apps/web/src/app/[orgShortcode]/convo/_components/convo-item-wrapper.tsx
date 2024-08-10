@@ -23,9 +23,22 @@ export function ConvoItemWrapper({
   const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
   const { spaceShortCode } = useParams();
 
-  const link = isSpaceConvo
-    ? `/${orgShortcode}/${spaceShortCode}/convo/${convo.publicId}`
-    : `/${orgShortcode}/convo/${convo.publicId}`;
+  if (isSpaceConvo) {
+    if (!spaceShortCode || Array.isArray(spaceShortCode)) {
+      return <div>Missing space shortcode</div>;
+    }
+    return (
+      <ConvoItem
+        convo={convo}
+        selected={selected}
+        onSelect={onSelect}
+        hidden={hidden}
+        link={`/${orgShortcode}/${spaceShortCode}/convo/${convo.publicId}`}
+      />
+    );
+  }
+
+  const link = `/${orgShortcode}/convo/${convo.publicId}`;
 
   return (
     <ConvoItem
