@@ -1,7 +1,7 @@
 'use client';
 
-import { ConvoItemWrapper } from '../../../convo/_components/convo-item-wrapper';
 import { ConvoListBase } from '../../../convo/_components/convo-list-base';
+import { ConvoItem } from '../../../convo/_components/convo-list-item';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { useParams } from 'next/navigation';
 import { platform } from '@/src/lib/trpc';
@@ -44,12 +44,17 @@ export function ConvoList(props: Props) {
       hasNextPage={hasNextPage}
       isFetchingNextPage={isFetchingNextPage}
       fetchNextPage={fetchNextPage}
-      ConvoItem={(itemProps) => (
-        <ConvoItemWrapper
-          {...itemProps}
-          isSpaceConvo={true}
-        />
-      )}
+      ConvoItem={(itemProps) => {
+        if (!spaceShortCode || Array.isArray(spaceShortCode)) {
+          return <div>Missing space shortcode</div>;
+        }
+        return (
+          <ConvoItem
+            {...itemProps}
+            link={`/${orgShortcode}/${spaceShortCode}/convo/${itemProps.convo.publicId}`}
+          />
+        );
+      }}
     />
   );
 }
