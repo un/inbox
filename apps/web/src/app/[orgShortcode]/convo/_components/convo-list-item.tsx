@@ -29,12 +29,14 @@ export const ConvoItem = memo(function ConvoItem({
   convo,
   selected,
   onSelect,
-  hidden
+  hidden,
+  link
 }: {
-  convo: RouterOutputs['convos']['getOrgMemberConvos']['data'][number];
+  convo: RouterOutputs['spaces']['getSpaceConvos']['data'][number];
   selected: boolean;
   onSelect: (shiftKey: boolean) => void;
   hidden: boolean;
+  link: string;
 }) {
   const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
   const selecting = useAtomValue(convoListSelecting);
@@ -84,8 +86,6 @@ export const ConvoItem = memo(function ConvoItem({
   }, [participantData]);
 
   const currentPath = usePathname();
-  const link = `/${orgShortcode}/convo/${convo.publicId}`;
-
   const isActive = currentPath === link;
 
   const longPressHandlers = useLongPress(

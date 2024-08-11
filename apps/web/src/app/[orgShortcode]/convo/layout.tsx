@@ -39,6 +39,7 @@ import {
   showNewConvoPanel
 } from './atoms';
 import { DeleteMultipleConvosModal } from './_components/delete-convos-modal';
+import { ConvoList as OrgConvoList } from './_components/org-convo-list';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { useRealtime } from '@/src/providers/realtime-provider';
 import { OrgIssueAlerts } from './_components/org-issue-alerts';
@@ -46,7 +47,6 @@ import { Button } from '@/src/components/shadcn-ui/button';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { useParams, usePathname } from 'next/navigation';
 import { useIsMobile } from '@/src/hooks/use-is-mobile';
-import { ConvoList } from './_components/convo-list';
 import { platform } from '@/src/lib/trpc';
 import { cn } from '@/src/lib/utils';
 import { ms } from '@u22n/utils/ms';
@@ -271,19 +271,25 @@ function ConvoNav({
         showHidden={showHidden}
         setShowHidden={setShowHidden}
       />
-      <ConvoList hidden={showHidden} />
+      <OrgConvoList hidden={showHidden} />
     </div>
   );
 }
 
-export default function Layout({
-  children
-}: Readonly<{ children: React.ReactNode }>) {
+export function ConvoLayoutWrapper({
+  children,
+  convoList,
+  showHidden,
+  setShowHidden
+}: {
+  children: React.ReactNode;
+  convoList: React.ReactNode;
+  showHidden: boolean;
+  setShowHidden: Dispatch<SetStateAction<boolean>>;
+}) {
   const isMobile = useIsMobile();
-
   const params = useParams();
   const pathname = usePathname();
-  const [showHidden, setShowHidden] = useState(false);
 
   const isInConvo = !!params.convoId;
   const isNewPage = pathname.endsWith('/convo/new');
@@ -295,23 +301,40 @@ export default function Layout({
       )}>
       {!isMobile && (
         <>
-          <ConvoNav
-            setShowHidden={setShowHidden}
-            showHidden={showHidden}
-          />
+          <div className="flex h-full w-full min-w-96 flex-col gap-2 p-2 pt-3 xl:col-span-1 xl:min-w-80">
+            <ConvoNavHeader
+              showHidden={showHidden}
+              setShowHidden={setShowHidden}
+            />
+            {convoList}
+          </div>
           <ChildrenWithOrgIssues>{children}</ChildrenWithOrgIssues>
         </>
       )}
 
       {isMobile &&
         (!isInConvo && !isNewPage ? (
-          <ConvoNav
-            setShowHidden={setShowHidden}
-            showHidden={showHidden}
-          />
+          <div className="flex h-full w-full min-w-96 flex-col gap-2 p-2 pt-3 xl:col-span-1 xl:min-w-80">
+            <ConvoNavHeader
+              showHidden={showHidden}
+              setShowHidden={setShowHidden}
+            />
+            {convoList}
+          </div>
         ) : (
           <ChildrenWithOrgIssues>{children}</ChildrenWithOrgIssues>
         ))}
     </div>
+  );
+}
+export default function Layout({ children }: { children: React.ReactNode }) {
+  const [showHidden, setShowHidden] = useState(false);
+  return (
+    <ConvoLayoutWrapper
+      convoList={<OrgConvoList hidden={showHidden} />}
+      showHidden={showHidden}
+      setShowHidden={setShowHidden}>
+      {children}
+    </ConvoLayoutWrapper>
   );
 }
