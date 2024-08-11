@@ -383,14 +383,21 @@ const MessageItem = memo(
   (prev, curr) => prev.message.publicId === curr.message.publicId
 );
 
+const emptyMessage = `<span class="text-base-11 text-sm">THIS MESSAGE CONTAINS NO VALID TEXT CONTENT</span>`;
+
+// Doing the Fixes Client Side so that we can revert them later if needed
+const clientSideHtmlFixes = (html: string) =>
+  html.replaceAll('&nbsp;', ' ').replaceAll('&#160;', ' ').trim();
+
 // It is important to memoize the HTMLMessage component to prevent unnecessary re-renders which can cause infinite fetch loops for images
 const HTMLMessage = memo(
   function MemoedMessage({ html }: { html: string }) {
-    const emptyMessage = `<span class="text-base-11 text-sm">THIS MESSAGE CONTAINS NO VALID TEXT CONTENT</span>`;
-    const __html = html === '<p></p>' ? emptyMessage : html;
+    const __html =
+      html === '<p></p>' ? emptyMessage : clientSideHtmlFixes(html);
 
     return (
       <div
+        data-html-email-message
         dangerouslySetInnerHTML={{ __html }}
         className="prose dark:prose-invert prose-a:decoration-blue-9 text-base-12 w-fit min-w-min overflow-ellipsis text-pretty [overflow-wrap:anywhere]"
       />
