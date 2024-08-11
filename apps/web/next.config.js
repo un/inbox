@@ -20,6 +20,7 @@ const config = {
     },
     instrumentationHook: true
   },
+  productionBrowserSourceMaps: true,
   // https://posthog.com/docs/advanced/proxy/nextjs
   async rewrites() {
     return [
