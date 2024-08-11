@@ -9,13 +9,17 @@ import {
   DrawerTrigger
 } from '@/src/components/shadcn-ui/drawer';
 import { showNewConvoPanel } from '@/src/app/[orgShortcode]/convo/atoms';
+import { useGlobalStore } from '@/src/providers/global-store-provider';
+import { ArrowsOutSimple, Plus, X } from '@phosphor-icons/react';
 import { Button } from '@/src/components/shadcn-ui/button';
 import CreateConvoForm from './create-convo-form';
-import { Plus, X } from '@phosphor-icons/react';
+import { useRouter } from 'next/navigation';
 import { useAtom } from 'jotai';
 
 export function NewConvoSheet() {
   const [open, setOpen] = useAtom(showNewConvoPanel);
+  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const router = useRouter();
 
   return (
     <Drawer
@@ -43,12 +47,30 @@ export function NewConvoSheet() {
           </DrawerDescription>
         </DrawerHeader>
 
-        <Button
-          variant={'ghost'}
-          onClick={() => setOpen(false)}
-          className="fixed right-1 top-1">
-          <X className="h-4 w-4" />
-        </Button>
+        <div className="absolute right-1 top-1 flex gap-0 p-1">
+          <Button
+            size={'icon'}
+            variant={'ghost'}
+            onClick={() => {
+              router.push(`/${orgShortcode}/convo/new`);
+              setOpen(false);
+            }}>
+            <ArrowsOutSimple
+              className="size-4"
+              size={16}
+            />
+          </Button>
+          <Button
+            size={'icon'}
+            variant={'ghost'}
+            onClick={() => setOpen(false)}>
+            <X
+              className="size-4"
+              size={16}
+            />
+          </Button>
+        </div>
+
         <CreateConvoForm />
       </DrawerContent>
     </Drawer>

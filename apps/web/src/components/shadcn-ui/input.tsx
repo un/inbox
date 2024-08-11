@@ -34,7 +34,11 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     const [hasValue, setHasValue] = React.useState(false);
 
     React.useEffect(() => {
-      props.value && setHasValue(true);
+      if (!props.value) {
+        setHasValue(false);
+      } else {
+        setHasValue(true);
+      }
     }, [props.value]);
 
     return (

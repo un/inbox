@@ -71,10 +71,10 @@ export function ReplyBox({
   const { mutateAsync: replyToConvo, isPending: replyToConvoLoading } =
     platform.convos.replyToConvo.useMutation({
       onSuccess: () => {
+        resetDraft();
         editorRef.current?.clearContent();
         setEditorText(emptyTiptapEditorContent);
         removeAllAttachments();
-        resetDraft();
       }
     });
 
@@ -195,7 +195,25 @@ export function ReplyBox({
 
   return (
     <div className="flex min-h-32 flex-col p-4">
-      <div className="border-base-5 flex max-h-[250px] w-full flex-col gap-1 rounded-md border p-1">
+      <div
+        className={cn(
+          'border-base-5 group relative mt-3 flex max-h-[250px] w-full flex-col gap-1 rounded-md border px-2 py-1',
+          !isEditorEmpty && 'hover:rounded-tr-none'
+        )}>
+        {!isEditorEmpty && (
+          <Button
+            variant="link"
+            size="xs"
+            className="text-base-11 border-base-5 bg-base-1 absolute -top-5 right-[-1px] h-5 translate-y-4 cursor-pointer rounded-b-none border border-b-0 py-0 text-xs opacity-0 transition-all delay-100 group-hover:translate-y-0 group-hover:opacity-100"
+            onClick={() => {
+              resetDraft();
+              editorRef.current?.clearContent();
+              removeAllAttachments();
+              setEditorText(emptyTiptapEditorContent);
+            }}>
+            Clear Draft
+          </Button>
+        )}
         <Editor
           initialValue={editorText}
           onChange={setEditorText}
