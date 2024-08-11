@@ -88,3 +88,8 @@
 .tiptap .is-editor-empty:first-child::before {
   @apply text-base-9 pointer-events-none float-left h-0 text-sm font-medium leading-7 content-['Type_something...'] md:content-[attr(data-placeholder)];
 }
+
+/* Hides the `color: transparent` as it was not meant to be visible but people can still select it which is annoying */
+div[data-html-email-message] *[style*='color: transparent'] {
+  @apply hidden;
+}
