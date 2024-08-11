@@ -387,7 +387,13 @@ const emptyMessage = `<span class="text-base-11 text-sm">THIS MESSAGE CONTAINS N
 
 // Doing the Fixes Client Side so that we can revert them later if needed
 const clientSideHtmlFixes = (html: string) =>
-  html.replaceAll('&nbsp;', ' ').replaceAll('&#160;', ' ').trim();
+  html
+    .replaceAll('&nbsp;', ' ')
+    .replaceAll('&#160;', ' ')
+    .replaceAll('&shy;', ' ')
+    .replaceAll('&#173;', ' ')
+    .replaceAll(/\u00AD/, ' ')
+    .trim();
 
 // It is important to memoize the HTMLMessage component to prevent unnecessary re-renders which can cause infinite fetch loops for images
 const HTMLMessage = memo(
