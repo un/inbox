@@ -21,11 +21,11 @@ import {
   AlertDescription,
   AlertTitle
 } from '@/src/components/shadcn-ui/alert';
-import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { ArrowLeft, ArrowClockwise } from '@phosphor-icons/react';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { CopyButton } from '@/src/components/copy-button';
 import { Badge } from '@/src/components/shadcn-ui/badge';
+import { useOrgShortcode } from '@/src/hooks/use-params';
 import { useTimeAgo } from '@/src/hooks/use-time-ago';
 import { type TypeId } from '@u22n/utils/typeid';
 import { useRouter } from 'next/navigation';
@@ -37,7 +37,7 @@ export default function Page({
 }: {
   params: { domainId: TypeId<'domains'> };
 }) {
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const orgShortcode = useOrgShortcode();
 
   const {
     data: domainInfo,
@@ -87,7 +87,7 @@ export default function Page({
             {domainInfo?.domainData?.domainStatus}
           </Badge>
         )}
-        {!domainInfo?.domainData?.disabled && (
+        {!domainInfo?.domainData?.disabled && !isLoading && (
           <DisableDomainButton domainId={params.domainId} />
         )}
       </div>
@@ -714,7 +714,7 @@ export default function Page({
 }
 
 function DisableDomainButton({ domainId }: { domainId: TypeId<'domains'> }) {
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const orgShortcode = useOrgShortcode();
   const router = useRouter();
   const utils = platform.useUtils();
 

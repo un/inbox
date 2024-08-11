@@ -37,7 +37,7 @@ import {
   FormItem,
   FormMessage
 } from '@/src/components/shadcn-ui/form';
-import RecoveryEmailSection from './_components/RecoveryEmailSection';
+import RecoveryEmailSection from './_components/recovery-email-section';
 import { Input } from '@/src/components/shadcn-ui/input';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Avatar } from '@/src/components/avatar';

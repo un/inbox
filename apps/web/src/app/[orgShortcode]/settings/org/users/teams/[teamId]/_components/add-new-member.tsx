@@ -5,8 +5,8 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/src/components/shadcn-ui/select';
-import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { Button } from '@/src/components/shadcn-ui/button';
+import { useOrgShortcode } from '@/src/hooks/use-params';
 import { type TypeId } from '@u22n/utils/typeid';
 import { platform } from '@/src/lib/trpc';
 import { useState } from 'react';
@@ -18,7 +18,7 @@ type Props = {
 };
 
 export function AddNewMember({ teamId, existingMembers, complete }: Props) {
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const orgShortcode = useOrgShortcode();
   const { data: allMembers, isLoading } =
     platform.org.users.members.getOrgMembers.useQuery({
       orgShortcode

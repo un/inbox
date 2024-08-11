@@ -8,14 +8,17 @@ import {
   DialogHeader,
   DialogTrigger
 } from '@/src/components/shadcn-ui/dialog';
-import { useGlobalStore } from '@/src/providers/global-store-provider';
+import {
+  useCurrentConvoId,
+  useOrgScopedRouter,
+  useOrgShortcode
+} from '@/src/hooks/use-params';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { useDeleteConvo$Cache } from '../utils';
 import { convoListSelection } from '../atoms';
 import { platform } from '@/src/lib/trpc';
 import { useState } from 'react';
 import { useAtom } from 'jotai';
-import { toast } from 'sonner';
 
 export function DeleteMultipleConvosModal({
   children
@@ -24,7 +27,9 @@ export function DeleteMultipleConvosModal({
 }) {
   const [open, setOpen] = useState(false);
   const deleteConvoCache = useDeleteConvo$Cache();
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const orgShortcode = useOrgShortcode();
+  const currentConvo = useCurrentConvoId();
+  const { scopedNavigate } = useOrgScopedRouter();
   const [selections, setSelections] = useAtom(convoListSelection);
 
   const { mutate: deleteConvo, isPending: deletingConvos } =
@@ -33,12 +38,6 @@ export function DeleteMultipleConvosModal({
         setOpen(false);
         await deleteConvoCache(selections);
         setSelections([]);
-      },
-      onError: (error) => {
-        setOpen(false);
-        toast.error('Something went wrong while deleting convos', {
-          description: error.message
-        });
       }
     });
 
@@ -72,12 +71,15 @@ export function DeleteMultipleConvosModal({
             variant="destructive"
             className="flex-1"
             loading={deletingConvos}
-            onClick={() =>
+            onClick={() => {
+              if (currentConvo && selections.includes(currentConvo)) {
+                scopedNavigate('/convo');
+              }
               deleteConvo({
                 orgShortcode,
                 convoPublicId: selections
-              })
-            }>
+              });
+            }}>
             Delete
           </Button>
         </DialogFooter>

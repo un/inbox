@@ -28,9 +28,9 @@ import {
 } from '@u22n/tiptap/components';
 import { useAttachmentUploader } from '@/src/components/shared/attachments';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { emailIdentityAtom, replyToMessageAtom } from '../atoms';
 import { Button } from '@/src/components/shadcn-ui/button';
+import { useOrgShortcode } from '@/src/hooks/use-params';
 import { useIsMobile } from '@/src/hooks/use-is-mobile';
 import { emptyTiptapEditorContent } from '@u22n/tiptap';
 import { useDraft } from '@/src/stores/draft-store';
@@ -57,7 +57,7 @@ export function ReplyBox({
 }: ReplyBoxProps) {
   const { draft, setDraft, resetDraft } = useDraft(convoId);
   const [editorText, setEditorText] = useState(draft.content);
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const orgShortcode = useOrgShortcode();
   const replyTo = useAtomValue(replyToMessageAtom);
   const addConvoToCache = useUpdateConvoMessageList$Cache();
   const updateConvoData = useUpdateConvoData$Cache();

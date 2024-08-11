@@ -15,12 +15,12 @@ import {
   FormMessage
 } from '@/src/components/shadcn-ui/form';
 import { cn, generateAvatarUrl, openFilePicker } from '@/src/lib/utils';
-import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { useAvatarUploader } from '@/src/hooks/use-avatar-uploader';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { Camera, SpinnerGap } from '@phosphor-icons/react';
 import { Input } from '@/src/components/shadcn-ui/input';
 import { PageTitle } from '../../_components/page-title';
+import { useOrgShortcode } from '@/src/hooks/use-params';
 import AvatarCrop from '@/src/components/avatar-crop';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useState, useMemo } from 'react';
@@ -37,16 +37,14 @@ const profileFormSchema = z.object({
 });
 
 export default function Page() {
-  const profile = useGlobalStore((state) => state.currentOrg.orgMemberProfile);
-  const currentOrg = useGlobalStore((state) => state.currentOrg);
-  const updateOrg = useGlobalStore((state) => state.updateOrg);
+  const orgShortcode = useOrgShortcode();
 
   const {
     data: profileData,
     isLoading: profileLoading,
     refetch: revalidateProfile
   } = platform.account.profile.getOrgMemberProfile.useQuery({
-    orgShortcode: currentOrg.shortcode
+    orgShortcode
   });
 
   const form = useForm<z.infer<typeof profileFormSchema>>({
@@ -83,16 +81,13 @@ export default function Page() {
 
   useEffect(() => {
     if (profileData) {
-      updateOrg(currentOrg.shortcode, {
-        orgMemberProfile: profileData.profile
-      });
       form.setValue('firstName', profileData.profile.firstName ?? '');
       form.setValue('lastName', profileData.profile.lastName ?? '');
       form.setValue('title', profileData.profile.title ?? '');
       form.setValue('blurb', profileData.profile.blurb ?? '');
       setAvatarTimestamp(profileData.profile.avatarTimestamp);
     }
-  }, [currentOrg.shortcode, form, profileData, updateOrg]);
+  }, [form, profileData]);
 
   const { mutate: updateProfile, isPending: updatingProfile } =
     platform.account.profile.updateOrgMemberProfile.useMutation({
@@ -233,7 +228,7 @@ export default function Page() {
           </Form>
         </div>
       </div>
-      {file && (
+      {file && profileData && (
         <AlertDialog
           open={file !== null}
           onOpenChange={() => setFile(null)}>
@@ -249,10 +244,10 @@ export default function Page() {
                 input={file}
                 onCrop={(e) => {
                   upload({
-                    file: new File([e], profile.publicId, {
+                    file: new File([e], profileData.profile.publicId, {
                       type: 'image/png'
                     }),
-                    publicId: profile.publicId,
+                    publicId: profileData.profile.publicId,
                     type: 'orgMember'
                   });
                   setFile(null);

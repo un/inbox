@@ -5,12 +5,15 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger
 } from '@/src/components/shadcn-ui/dropdown-menu';
-import { useGlobalStore } from '@/src/providers/global-store-provider';
+import { useOrgScopedRouter, useOrgShortcode } from '@/src/hooks/use-params';
+import { ChatCircle, Plus, SpinnerGap } from '@phosphor-icons/react';
 import { Button } from '@/src/components/shadcn-ui/button';
-import { ChatCircle, Plus } from '@phosphor-icons/react';
 import { OrgMenuContent } from './sidebar-content';
 import { Avatar } from '@/src/components/avatar';
 import { usePathname } from 'next/navigation';
+import { platform } from '@/src/lib/trpc';
+import { ms } from '@u22n/utils/ms';
+import { useMemo } from 'react';
 import Link from 'next/link';
 
 export function BottomNav() {
@@ -35,7 +38,7 @@ export function BottomNav() {
 }
 
 function NewConvoButton() {
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const { scopedUrl } = useOrgScopedRouter();
   const pathname = usePathname();
   const isActive = pathname.endsWith('/convo/new');
 
@@ -46,7 +49,7 @@ function NewConvoButton() {
         aria-current={isActive}
         className="hover:bg-accent-2 hover:text-base-9 text-base-9 [&[aria-current=true]]:text-base-12 group flex h-20 w-24 flex-col items-center justify-center gap-2 px-1 py-1"
         asChild>
-        <Link href={`/${orgShortcode}/convo/new`}>
+        <Link href={scopedUrl('/convo/new')}>
           <div className="bg-accent-9 text-base-1 group-[&[aria-current=true]]:bg-accent-10 rounded-lg p-2">
             <Plus
               size={16}
@@ -59,8 +62,9 @@ function NewConvoButton() {
     </>
   );
 }
+
 function ConvoSpacesButton() {
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const { scopedUrl } = useOrgScopedRouter();
   const pathname = usePathname();
   const isActive = pathname.endsWith('/convo');
 
@@ -71,7 +75,7 @@ function ConvoSpacesButton() {
         aria-current={isActive}
         className="hover:bg-accent-2 hover:text-base-9 text-base-9 [&[aria-current=true]]:text-base-12 flex h-20 w-24 flex-col items-center justify-center gap-2 px-1 py-1"
         asChild>
-        <Link href={`/${orgShortcode}/convo`}>
+        <Link href={scopedUrl('/convo')}>
           <div className="p-1">
             <ChatCircle
               size={24}
@@ -164,7 +168,16 @@ function ConvoSpacesButton() {
 // }
 
 function UserContextMenu() {
-  const currentOrg = useGlobalStore((state) => state.currentOrg);
+  const { data: orgData, isLoading } =
+    platform.org.crud.getAccountOrgs.useQuery({}, { staleTime: ms('1 hour') });
+  const orgShortcode = useOrgShortcode();
+
+  const currentOrg = useMemo(
+    () =>
+      orgData?.userOrgs.find((org) => org.org.shortcode === orgShortcode)
+        ?.org ?? null,
+    [orgData?.userOrgs, orgShortcode]
+  );
 
   return (
     <DropdownMenu>
@@ -173,13 +186,22 @@ function UserContextMenu() {
           'data-[state=open]:text-base-12 text-base-9 group flex h-20 w-24 flex-row items-center justify-between opacity-90 data-[state=open]:opacity-100'
         }>
         <div className={'flex w-full flex-col items-center gap-2'}>
-          <Avatar
-            avatarProfilePublicId={currentOrg.publicId}
-            avatarTimestamp={currentOrg.avatarTimestamp}
-            name={currentOrg.name}
-            size="lg"
-            hideTooltip
-          />
+          {isLoading || !currentOrg ? (
+            <div className="flex size-8 items-center justify-center rounded-full border">
+              <SpinnerGap
+                className="size-6 animate-spin"
+                size={24}
+              />
+            </div>
+          ) : (
+            <Avatar
+              avatarProfilePublicId={currentOrg.publicId}
+              avatarTimestamp={currentOrg.avatarTimestamp}
+              name={currentOrg.name}
+              size="lg"
+              hideTooltip
+            />
+          )}
           <span className="text-sm font-medium">Menu</span>
         </div>
       </DropdownMenuTrigger>

@@ -1,14 +1,14 @@
 'use client';
 
-import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { PageTitle } from '../../../_components/page-title';
 import { NewTeamModal } from './_components/new-team-modal';
 import { DataTable } from '@/src/components/shared/table';
+import { useOrgShortcode } from '@/src/hooks/use-params';
 import { columns } from './_components/columns';
 import { platform } from '@/src/lib/trpc';
 
 export default function Page() {
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const orgShortcode = useOrgShortcode();
   const { data: teamList, isLoading } =
     platform.org.users.teams.getOrgTeams.useQuery({
       orgShortcode

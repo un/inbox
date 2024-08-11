@@ -5,10 +5,10 @@ import {
   AlertDescription,
   AlertTitle
 } from '@/src/components/shadcn-ui/alert';
-import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { ArrowLeft, Info, SpinnerGap } from '@phosphor-icons/react';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { Badge } from '@/src/components/shadcn-ui/badge';
+import { useOrgShortcode } from '@/src/hooks/use-params';
 import { Avatar } from '@/src/components/avatar';
 import { type TypeId } from '@u22n/utils/typeid';
 import { platform } from '@/src/lib/trpc';
@@ -19,7 +19,7 @@ export default function Page({
 }: {
   params: { addressId: TypeId<'emailIdentities'> };
 }) {
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const orgShortcode = useOrgShortcode();
 
   const { data: emailInfo, isLoading } =
     platform.org.mail.emailIdentities.getEmailIdentity.useQuery({

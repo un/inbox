@@ -46,9 +46,7 @@ export const profileRouter = router({
               eq(orgMembers.accountId, accountId),
               eq(orgMembers.orgId, orgId)
             ),
-        columns: {
-          orgMemberProfileId: true
-        },
+        columns: {},
         with: {
           profile: {
             columns: {
@@ -59,6 +57,11 @@ export const profileRouter = router({
               handle: true,
               title: true,
               blurb: true
+            }
+          },
+          account: {
+            columns: {
+              username: true
             }
           }
         }
@@ -71,9 +74,7 @@ export const profileRouter = router({
         });
       }
 
-      return {
-        profile: userOrgMembershipQuery?.profile
-      };
+      return userOrgMembershipQuery;
     }),
   updateOrgMemberProfile: accountProcedure
     .input(

@@ -6,13 +6,13 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/src/components/shadcn-ui/dialog';
-import { useGlobalStore } from '@/src/providers/global-store-provider';
+import { useOrgScopedRouter } from '@/src/hooks/use-params';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { DialogDescription } from '@radix-ui/react-dialog';
 import Link from 'next/link';
 
 export function ClaimEmailIdentity() {
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const { scopedUrl } = useOrgScopedRouter();
   return (
     <Dialog defaultOpen>
       <DialogContent>
@@ -40,7 +40,7 @@ export function ClaimEmailIdentity() {
             <Button
               asChild
               className="flex-1">
-              <Link href={`/${orgShortcode}/settings/user/addresses`}>
+              <Link href={scopedUrl('/settings/user/addresses')}>
                 Claim Free @uninbox.me Address
               </Link>
             </Button>

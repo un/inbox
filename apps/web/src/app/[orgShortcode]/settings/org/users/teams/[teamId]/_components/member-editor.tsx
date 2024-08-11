@@ -2,9 +2,9 @@
  * This Component is ready but the backend is yet to implemented, so we are currently using a simpler one member at a time setup until the backend is ready
  */
 
-import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { MultiSelect } from '@/src/components/shared/multiselect';
 import { Button } from '@/src/components/shadcn-ui/button';
+import { useOrgShortcode } from '@/src/hooks/use-params';
 import { type TypeId } from '@u22n/utils/typeid';
 import { useState, useEffect } from 'react';
 import { platform } from '@/src/lib/trpc';
@@ -16,7 +16,7 @@ type Props = {
 };
 
 export function EditMemberList({ teamId, existingMembers, complete }: Props) {
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const orgShortcode = useOrgShortcode();
   const { data: allMembers, isLoading } =
     platform.org.users.members.getOrgMembers.useQuery({
       orgShortcode

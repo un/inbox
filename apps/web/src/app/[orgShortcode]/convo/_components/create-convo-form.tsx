@@ -49,8 +49,8 @@ import {
   TooltipContent,
   TooltipTrigger
 } from '@/src/components/shadcn-ui/tooltip';
+import { useOrgScopedRouter, useOrgShortcode } from '@/src/hooks/use-params';
 import { useAttachmentUploader } from '@/src/components/shared/attachments';
-import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { type EditorFunctions } from '@u22n/tiptap/components';
 import { useComposingDraft } from '@/src/stores/draft-store';
 import { Avatar, AvatarIcon } from '@/src/components/avatar';
@@ -66,7 +66,6 @@ import { type TypeId } from '@u22n/utils/typeid';
 import { useDebounce } from '@uidotdev/usehooks';
 import { usePrevious } from '@uidotdev/usehooks';
 import { showNewConvoPanel } from '../atoms';
-import { useRouter } from 'next/navigation';
 import { platform } from '@/src/lib/trpc';
 import { stringify } from 'superjson';
 import { cn } from '@/src/lib/utils';
@@ -123,7 +122,8 @@ export default function CreateConvoForm({
   initialEmails?: string[];
   initialSubject?: string;
 }) {
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const orgShortcode = useOrgShortcode();
+  const { scopedNavigate } = useOrgScopedRouter();
   const lastOrg = usePrevious(orgShortcode);
   const { draft, setDraft, resetDraft } = useComposingDraft();
   const isMobile = useIsMobile();
@@ -191,8 +191,6 @@ export default function CreateConvoForm({
       ),
     [selectedParticipants]
   );
-
-  const router = useRouter();
 
   const [selectedEmailIdentity, setSelectedEmailIdentity] = useState<
     string | null
@@ -495,7 +493,7 @@ export default function CreateConvoForm({
       void addConvo(data.publicId).then(() => {
         resetDraft();
         setNewPanelOpen(false);
-        router.push(`/${orgShortcode}/convo/${data.publicId}`);
+        scopedNavigate(`/convo/${data.publicId}`);
       });
     }
   });

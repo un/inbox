@@ -23,11 +23,11 @@ import {
   DialogTitle,
   DialogClose
 } from '@/src/components/shadcn-ui/dialog';
-import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { MultiSelect } from '@/src/components/shared/multiselect';
 import { PasswordInput } from '@/src/components/password-input';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { Input } from '@/src/components/shadcn-ui/input';
+import { useOrgShortcode } from '@/src/hooks/use-params';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
@@ -59,7 +59,7 @@ export function ExternalEmailModal({
   addExternalModalOpen: (value: boolean) => void;
   open: boolean;
 }) {
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const orgShortcode = useOrgShortcode();
   const invalidateEmails =
     platform.useUtils().org.mail.emailIdentities.getOrgEmailIdentities;
   const { mutateAsync: checkSMTPConnection } =

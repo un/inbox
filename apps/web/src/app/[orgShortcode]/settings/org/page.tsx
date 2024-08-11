@@ -7,8 +7,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle
 } from '@/src/components/shadcn-ui/alert-dialog';
+import { useOrgScopedRouter, useOrgShortcode } from '@/src/hooks/use-params';
 import { cn, generateAvatarUrl, openFilePicker } from '@/src/lib/utils';
-import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { useAvatarUploader } from '@/src/hooks/use-avatar-uploader';
 import { Skeleton } from '@/src/components/shadcn-ui/skeleton';
 import { Button } from '@/src/components/shadcn-ui/button';
@@ -16,32 +16,38 @@ import { Camera, FloppyDisk } from '@phosphor-icons/react';
 import { Input } from '@/src/components/shadcn-ui/input';
 import AvatarCrop from '@/src/components/avatar-crop';
 import { PageTitle } from '../_components/page-title';
-import { useRouter } from 'next/navigation';
+import { useState, useMemo, useEffect } from 'react';
 import { platform } from '@/src/lib/trpc';
-import { useState, useMemo } from 'react';
 import { toast } from 'sonner';
 
 export default function ProfileComponent() {
-  const router = useRouter();
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
-  const currentOrg = useGlobalStore((state) => state.currentOrg);
-  const updateOrg = useGlobalStore((state) => state.updateOrg);
+  const orgShortcode = useOrgShortcode();
+  const { scopedRedirect } = useOrgScopedRouter();
 
+  const utils = platform.useUtils();
+
+  const { data: orgData, refetch } =
+    platform.org.setup.profile.getOrgProfile.useQuery({
+      orgShortcode
+    });
   const { data: isAdmin, isLoading: adminLoading } =
     platform.org.users.members.isOrgMemberAdmin.useQuery({
       orgShortcode
     });
+  const { mutate: updateOrgProfile, isPending: updatingOrgProfile } =
+    platform.org.setup.profile.setOrgProfile.useMutation();
 
-  const [orgNameValue, setOrgNameValue] = useState<string>(currentOrg.name);
+  const [orgNameValue, setOrgNameValue] = useState<string>('');
   const [file, setFile] = useState<File | null>(null);
 
   const avatarUrl = useMemo(() => {
+    if (!orgData?.orgProfile) return null;
     return generateAvatarUrl({
-      publicId: currentOrg.publicId,
-      avatarTimestamp: currentOrg.avatarTimestamp,
+      publicId: orgData.orgProfile.publicId,
+      avatarTimestamp: orgData.orgProfile.avatarTimestamp,
       size: '5xl'
     });
-  }, [currentOrg.publicId, currentOrg.avatarTimestamp]);
+  }, [orgData?.orgProfile]);
 
   const { uploading, progress, upload } = useAvatarUploader({
     onError: (error) => {
@@ -49,22 +55,20 @@ export default function ProfileComponent() {
         description: error.message
       });
     },
-    onUploaded: (response) => {
-      updateOrg(orgShortcode, {
-        avatarTimestamp: response.avatarTimestamp
-      });
+    onUploaded: () => {
+      void utils.org.crud.getAccountOrgs.refetch();
+      void refetch();
     }
   });
 
-  const { mutate: updateOrgProfile, isPending: updatingOrgProfile } =
-    platform.org.setup.profile.setOrgProfile.useMutation({
-      onSuccess: () => {
-        updateOrg(orgShortcode, { name: orgNameValue });
-      }
-    });
+  useEffect(() => {
+    if (orgData?.orgProfile.name) {
+      setOrgNameValue(orgData.orgProfile.name);
+    }
+  }, [orgData?.orgProfile.name]);
 
   if (!adminLoading && !isAdmin) {
-    router.push(`/${orgShortcode}/settings`);
+    scopedRedirect('/settings');
   }
 
   return (
@@ -122,7 +126,7 @@ export default function ProfileComponent() {
           Save
         </Button>
       </div>
-      {file && (
+      {file && orgData && (
         <AlertDialog
           open={file !== null}
           onOpenChange={() => setFile(null)}>
@@ -138,10 +142,10 @@ export default function ProfileComponent() {
                 input={file}
                 onCrop={(e) => {
                   upload({
-                    file: new File([e], currentOrg.publicId, {
+                    file: new File([e], orgData.orgProfile.publicId, {
                       type: 'image/png'
                     }),
-                    publicId: currentOrg.publicId,
+                    publicId: orgData.orgProfile.publicId,
                     type: 'org'
                   });
                   setFile(null);

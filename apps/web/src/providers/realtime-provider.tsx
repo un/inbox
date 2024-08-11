@@ -5,7 +5,7 @@ import {
   useState,
   type PropsWithChildren
 } from 'react';
-import { useGlobalStore } from './global-store-provider';
+import { useOrgShortcode } from '../hooks/use-params';
 import RealtimeClient from '@u22n/realtime/client';
 import { toast } from 'sonner';
 import { env } from '../env';
@@ -13,7 +13,7 @@ import { env } from '../env';
 const realtimeContext = createContext<RealtimeClient | null>(null);
 
 export function RealtimeProvider({ children }: PropsWithChildren) {
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const orgShortcode = useOrgShortcode();
 
   const [client] = useState(
     () =>

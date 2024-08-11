@@ -25,11 +25,11 @@ import {
   FormControl,
   FormMessage
 } from '@/src/components/shadcn-ui/form';
-import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { type UiColor, uiColors } from '@u22n/utils/colors';
 import { Switch } from '@/src/components/shadcn-ui/switch';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { Input } from '@/src/components/shadcn-ui/input';
+import { useOrgShortcode } from '@/src/hooks/use-params';
 import { At, SpinnerGap } from '@phosphor-icons/react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { type TypeId } from '@u22n/utils/typeid';
@@ -59,7 +59,7 @@ const teamFormSchema = z.object({
 
 export function NewTeamModal() {
   const [open, setOpen] = useState(false);
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const orgShortcode = useOrgShortcode();
   const invalidateTeams = platform.useUtils().org.users.teams.getOrgTeams;
 
   const utils = platform.useUtils();

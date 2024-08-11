@@ -3,8 +3,8 @@ import {
   AlertTitle,
   AlertDescription
 } from '@/src/components/shadcn-ui/alert';
-import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { usePreferencesState } from '@/src/stores/preferences-store';
+import { useOrgScopedRouter } from '@/src/hooks/use-params';
 import { Badge } from '@/src/components/shadcn-ui/badge';
 import { type RouterOutputs } from '@/src/lib/trpc';
 import Link from 'next/link';
@@ -25,7 +25,8 @@ export function OrgIssueAlerts({ issues }: { issues: Issues }) {
 }
 
 function RenderAlert({ issue }: { issue: Issues[number] }) {
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const { scopedUrl } = useOrgScopedRouter();
+
   const [issueType, issuePublicId] = issue.id.split(':') as SplitIssue<
     typeof issue.id
   >;
@@ -45,7 +46,7 @@ function RenderAlert({ issue }: { issue: Issues[number] }) {
           <AlertTitle className="text-red-9 font-bold">
             DNS issue detected for your Org domain{' '}
             <Link
-              href={`/${orgShortcode}/settings/org/mail/domains/${issuePublicId}`}
+              href={scopedUrl(`/settings/org/mail/domains/${issuePublicId}`)}
               className="underline">
               {issue.data.domain}
             </Link>

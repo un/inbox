@@ -10,9 +10,9 @@ import {
   File,
   X
 } from '@phosphor-icons/react';
-import { useGlobalStore } from '../../providers/global-store-provider';
 import { type VariantProps, cva } from 'class-variance-authority';
 import { memo, useCallback, useMemo, useState } from 'react';
+import { useOrgShortcode } from '@/src/hooks/use-params';
 import { cn, prettyBytes } from '../../lib/utils';
 import { type TypeId } from '@u22n/utils/typeid';
 import uploadTracker from '../../lib/upload';
@@ -49,7 +49,7 @@ export function toTrpcUploadFormat(attachments: Attachment[]) {
 }
 
 export function useAttachmentUploader(defaultList?: Attachment[]) {
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const orgShortcode = useOrgShortcode();
   const [attachments, setAttachments] = useState(defaultList ?? []);
   const totalAttachmentSize = useMemo(
     () => attachments.reduce((acc, { size }) => acc + size, 0),

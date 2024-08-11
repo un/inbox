@@ -1,15 +1,15 @@
 'use client';
 
-import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { PageTitle } from '../../../_components/page-title';
 import { DataTable } from '@/src/components/shared/table';
 import { InviteModal } from './_components/invite-modal';
+import { useOrgShortcode } from '@/src/hooks/use-params';
 import { SpinnerGap } from '@phosphor-icons/react';
 import { columns } from './_components/columns';
 import { platform } from '@/src/lib/trpc';
 
 export default function Page() {
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const orgShortcode = useOrgShortcode();
   const { data: inviteList, isLoading } =
     platform.org.users.invites.viewInvites.useQuery({
       orgShortcode

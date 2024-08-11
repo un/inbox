@@ -1,6 +1,6 @@
-import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { platform, type RouterOutputs } from '@/src/lib/trpc';
 import { type InfiniteData } from '@tanstack/react-query';
+import { useOrgShortcode } from '@/src/hooks/use-params';
 import { type TypeId } from '@u22n/utils/typeid';
 import { useCallback } from 'react';
 
@@ -62,7 +62,7 @@ export function formatParticipantData(
 }
 
 export function useAddSingleConvo$Cache() {
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const orgShortcode = useOrgShortcode();
   const utils = platform.useUtils();
 
   return useCallback(
@@ -116,7 +116,7 @@ const deleteConvoFromInfiniteData = (
 };
 
 export function useDeleteConvo$Cache() {
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const orgShortcode = useOrgShortcode();
   const utils = platform.useUtils();
 
   return useCallback(
@@ -213,7 +213,7 @@ const infiniteConvoListUpdater = (
 
 // TODO: Simplify this function later, its too complex
 export function useToggleConvoHidden$Cache() {
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const orgShortcode = useOrgShortcode();
   const utils = platform.useUtils();
 
   return useCallback(
@@ -312,7 +312,7 @@ export function useToggleConvoHidden$Cache() {
 }
 
 export function useUpdateConvoMessageList$Cache() {
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const orgShortcode = useOrgShortcode();
   const utils = platform.useUtils();
   const updateConvoData = useUpdateConvoData$Cache();
 
@@ -391,7 +391,7 @@ type ConvoUpdater =
   RouterOutputs['convos']['getOrgMemberConvos']['data'][number];
 
 export function useUpdateConvoData$Cache() {
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const orgShortcode = useOrgShortcode();
   const utils = platform.useUtils();
 
   return useCallback(

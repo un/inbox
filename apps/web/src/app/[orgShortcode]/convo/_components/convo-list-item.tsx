@@ -7,7 +7,7 @@ import {
   ContextMenuTrigger,
   ContextMenuItem
 } from '@/src/components/shadcn-ui/context-menu';
-import { useGlobalStore } from '@/src/providers/global-store-provider';
+import { useOrgScopedRouter, useOrgShortcode } from '@/src/hooks/use-params';
 import { formatParticipantData, useDeleteConvo$Cache } from '../utils';
 import { Eye, EyeSlash, Trash } from '@phosphor-icons/react/dist/ssr';
 import { Checkbox } from '@/src/components/shadcn-ui/checkbox';
@@ -36,7 +36,8 @@ export const ConvoItem = memo(function ConvoItem({
   onSelect: (shiftKey: boolean) => void;
   hidden: boolean;
 }) {
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const orgShortcode = useOrgShortcode();
+  const { scopedUrl } = useOrgScopedRouter();
   const selecting = useAtomValue(convoListSelecting);
   const isMobile = useIsMobile();
 
@@ -84,7 +85,7 @@ export const ConvoItem = memo(function ConvoItem({
   }, [participantData]);
 
   const currentPath = usePathname();
-  const link = `/${orgShortcode}/convo/${convo.publicId}`;
+  const link = scopedUrl(`/convo/${convo.publicId}`);
 
   const isActive = currentPath === link;
 

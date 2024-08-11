@@ -5,9 +5,9 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/src/components/shadcn-ui/dialog';
-import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { ScrollArea } from '@/src/components/shadcn-ui/scroll-area';
 import { Separator } from '@/src/components/shadcn-ui/separator';
+import { useOrgShortcode } from '@/src/hooks/use-params';
 import { SpinnerGap } from '@phosphor-icons/react';
 import { type TypeId } from '@u22n/utils/typeid';
 import { memo, useRef, useState } from 'react';
@@ -20,11 +20,11 @@ export function OriginalMessageView({
   setOpen: (open: boolean) => void;
   messagePublicId: TypeId<'convoEntries'>;
 }) {
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const orgShortcode = useOrgShortcode();
 
   const { data, isLoading, error } =
     platform.convos.entries.getConvoSingleEntryRawEmail.useQuery({
-      orgShortcode: orgShortcode,
+      orgShortcode,
       convoEntryPublicId: messagePublicId
     });
 

@@ -1,5 +1,6 @@
 'use client';
-import { useGlobalStore } from '@/src/providers/global-store-provider';
+
+import { useOrgScopedRouter } from '@/src/hooks/use-params';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { useIsMobile } from '@/src/hooks/use-is-mobile';
 import { ArrowLeft } from '@phosphor-icons/react';
@@ -11,7 +12,7 @@ type PageTitleProps = {
   children?: React.ReactNode;
 };
 export function PageTitle({ title, description, children }: PageTitleProps) {
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const { scopedUrl } = useOrgScopedRouter();
   const isMobile = useIsMobile();
 
   return (
@@ -22,7 +23,7 @@ export function PageTitle({ title, description, children }: PageTitleProps) {
             variant="outline"
             size="icon-sm"
             asChild>
-            <Link href={`/${orgShortcode}/settings`}>
+            <Link href={scopedUrl('/settings')}>
               <ArrowLeft className="size-4" />
             </Link>
           </Button>

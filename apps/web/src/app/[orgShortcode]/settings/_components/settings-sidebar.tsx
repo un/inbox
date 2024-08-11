@@ -12,7 +12,7 @@ import {
   UserPlus,
   HandHeart
 } from '@phosphor-icons/react';
-import { useGlobalStore } from '@/src/providers/global-store-provider';
+import { useOrgShortcode } from '@/src/hooks/use-params';
 import { usePathname } from 'next/navigation';
 import { platform } from '@/src/lib/trpc';
 import { type ReactNode } from 'react';
@@ -26,7 +26,7 @@ type NavLinks = {
 };
 
 export default function SettingsSidebarContent() {
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const orgShortcode = useOrgShortcode();
 
   const { data: isAdmin } =
     platform.org.users.members.isOrgMemberAdmin.useQuery({
