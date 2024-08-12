@@ -1227,49 +1227,7 @@ export const convoRouter = router({
       const accountOrgMemberId = org.memberId;
       const { convoPublicId } = input;
 
-      // check if the conversation belongs to the same org, early return if not before multiple db selects
-      const convoResponse = await db.query.convos.findFirst({
-        where: eq(convos.publicId, convoPublicId),
-        columns: {
-          id: true,
-          orgId: true
-        }
-      });
-      if (!convoResponse) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Conversation not found'
-        });
-      }
-      if (Number(convoResponse.orgId) !== orgId) {
-        const convoOrgOwnerMembersIds = await db.query.orgMembers.findMany({
-          where: eq(orgMembers.orgId, convoResponse.orgId),
-          columns: {
-            accountId: true
-          },
-          with: {
-            org: {
-              columns: {
-                name: true
-              }
-            }
-          }
-        });
-        const convoOrgOwnerUserIds = convoOrgOwnerMembersIds.map((member) =>
-          Number(member?.accountId ?? 0)
-        );
-        if (!convoOrgOwnerUserIds.includes(accountId)) {
-          throw new TRPCError({
-            code: 'NOT_FOUND',
-            message: 'Conversation not found'
-          });
-        }
-        throw new TRPCError({
-          code: 'UNAUTHORIZED',
-          message: `Conversation is not owned by your organization.`
-        });
-      }
-
+      // initial low column select to verify convo exists
       // TODO: Add filtering for org based on input.filterOrgPublicId
       const convoDetails = await db.query.convos.findFirst({
         columns: {
@@ -1277,7 +1235,7 @@ export const convoRouter = router({
           lastUpdatedAt: true,
           createdAt: true
         },
-        where: eq(convos.id, convoResponse.id),
+        where: and(eq(convos.orgId, orgId), eq(convos.publicId, convoPublicId)),
         with: {
           subjects: {
             columns: {
@@ -1361,6 +1319,18 @@ export const convoRouter = router({
               inline: true,
               createdAt: true
             }
+          },
+          spaces: {
+            columns: {
+              publicId: true
+            },
+            with: {
+              space: {
+                columns: {
+                  shortcode: true
+                }
+              }
+            }
           }
         }
       });
@@ -1371,32 +1341,49 @@ export const convoRouter = router({
         });
       }
 
+      const allSpacesShortcodes = convoDetails.spaces.map(
+        (space) => space.space.shortcode
+      );
+      const orgMemberIsSpaceMember = allSpacesShortcodes.some(
+        async (spaceShortcode) => {
+          const spaceMembershipResponse = await isOrgMemberSpaceMember({
+            db,
+            orgId,
+            spaceShortcode: spaceShortcode,
+            orgMemberId: org.memberId
+          });
+          if (spaceMembershipResponse.role !== null) {
+            return true;
+          }
+          return false;
+        }
+      );
+
+      if (!orgMemberIsSpaceMember) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'You do not have permission to access this conversation'
+        });
+      }
+
       // Find the participant.publicId for the accountOrgMemberId
-      let participantPublicId: string | undefined;
+      let ownParticipantPublicId: string | undefined;
 
       // Check if the user's orgMemberId is in the conversation participants
       convoDetails?.participants.forEach((participant) => {
         if (participant.orgMember?.id === accountOrgMemberId) {
-          participantPublicId = participant.publicId;
+          ownParticipantPublicId = participant.publicId;
         }
       });
 
       // If not found, check if the user's orgMemberId is in any participant's team members
-      if (!participantPublicId) {
+      if (!ownParticipantPublicId) {
         convoDetails?.participants.forEach((participant) => {
           participant.team?.members.forEach((teamMember) => {
             if (teamMember.orgMemberId === accountOrgMemberId) {
-              participantPublicId = participant.publicId;
+              ownParticipantPublicId = participant.publicId;
             }
           });
-        });
-      }
-
-      // If participantPublicId is still not found, the user is not a participant of this conversation
-      if (!participantPublicId) {
-        throw new TRPCError({
-          code: 'UNAUTHORIZED',
-          message: 'You are not a participant of this conversation'
         });
       }
 
@@ -1409,18 +1396,23 @@ export const convoRouter = router({
       });
 
       // updates the lastReadAt of the participant
-      await db
-        .update(convoParticipants)
-        .set({
-          lastReadAt: new Date()
-        })
-        .where(
-          eq(convoParticipants.publicId, participantPublicId as `cp_${string}`)
-        );
+      if (ownParticipantPublicId) {
+        await db
+          .update(convoParticipants)
+          .set({
+            lastReadAt: new Date()
+          })
+          .where(
+            eq(
+              convoParticipants.publicId,
+              ownParticipantPublicId as `cp_${string}`
+            )
+          );
+      }
 
       return {
         data: convoDetails,
-        ownParticipantPublicId: participantPublicId
+        ownParticipantPublicId: ownParticipantPublicId
       };
     }),
 
