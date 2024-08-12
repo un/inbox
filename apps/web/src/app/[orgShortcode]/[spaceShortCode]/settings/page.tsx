@@ -189,10 +189,6 @@ export default function ShorcodeTestPage() {
               spaceShortcode={spaceShortcode}
               isSpaceAdmin={isSpaceAdmin}
             />
-
-            <span>
-              Hello {spaceShortcode} {JSON.stringify(spaceSettings, null, '\t')}
-            </span>
           </div>
         )}
       </div>
