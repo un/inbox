@@ -8,7 +8,7 @@ import {
   mysqlEnum,
   mysqlTable,
   primaryKey,
-  serial,
+  // serial, - DRIZZLE ISSUE 2180: serial does not work and must be manually declared https://github.com/drizzle-team/drizzle-orm/issues/2180
   timestamp,
   index,
   json,
@@ -45,6 +45,12 @@ const foreignKey = customType<{ data: number }>({
     return Number(value);
   }
 });
+function serial(name: string) {
+  return bigint(name, { mode: 'number', unsigned: true })
+    .notNull()
+    .unique()
+    .autoincrement();
+}
 
 //******************* */
 //* Account tables
