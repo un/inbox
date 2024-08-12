@@ -392,7 +392,7 @@ const clientSideHtmlFixes = (html: string) =>
     .replaceAll('&#160;', ' ')
     .replaceAll('&shy;', ' ')
     .replaceAll('&#173;', ' ')
-    .replaceAll(/\u00AD/, ' ')
+    .replaceAll(/\u00AD/g, ' ')
     .trim();
 
 // It is important to memoize the HTMLMessage component to prevent unnecessary re-renders which can cause infinite fetch loops for images
