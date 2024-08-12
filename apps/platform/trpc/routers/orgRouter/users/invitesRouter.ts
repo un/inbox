@@ -3,7 +3,7 @@ import {
   emailIdentities,
   emailRoutingRules,
   emailRoutingRulesDestinations,
-  emailIdentitiesAuthorizedOrgMembers,
+  emailIdentitiesAuthorizedSenders,
   orgInvitations,
   orgMembers,
   orgMemberProfiles,
@@ -84,9 +84,9 @@ export const invitesRouter = router({
         const orgMemberProfileId = +orgMemberProfileResponse.insertId;
 
         // Insert orgMember - save ID
-        const orgMemberPublicId = typeIdGenerator('orgMembers');
-        const orgMemberResponse = await db.insert(orgMembers).values({
-          publicId: orgMemberPublicId,
+        const newOrgMemberPublicId = typeIdGenerator('orgMembers');
+        const newOrgMemberResponse = await db.insert(orgMembers).values({
+          publicId: newOrgMemberPublicId,
           orgId: orgId,
           invitedByOrgMemberId: orgMemberId,
           status: 'invited',
@@ -108,7 +108,7 @@ export const invitesRouter = router({
           personalSpace: true,
           color: 'cyan',
           icon: 'house',
-          createdByOrgMemberId: Number(orgMemberResponse.insertId),
+          createdByOrgMemberId: Number(newOrgMemberResponse.insertId),
           shortcode: spaceShortcode.shortcode
         });
 
@@ -116,8 +116,8 @@ export const invitesRouter = router({
           orgId: orgId,
           spaceId: Number(newSpaceResponse.insertId),
           publicId: typeIdGenerator('spaceMembers'),
-          orgMemberId: Number(orgMemberResponse.insertId),
-          addedByOrgMemberId: Number(orgMemberResponse.insertId),
+          orgMemberId: Number(newOrgMemberResponse.insertId),
+          addedByOrgMemberId: Number(newOrgMemberResponse.insertId),
           role: 'admin',
           canCreate: true,
           canRead: true,
@@ -138,7 +138,7 @@ export const invitesRouter = router({
           .set({
             personalSpaceId: Number(newSpaceResponse.insertId)
           })
-          .where(eq(orgMembers.id, Number(orgMemberResponse.insertId)));
+          .where(eq(orgMembers.id, Number(newOrgMemberResponse.insertId)));
 
         // Insert teamMemberships - save ID
         if (teamsInput) {
@@ -146,7 +146,7 @@ export const invitesRouter = router({
             await addOrgMemberToTeamHandler(db, {
               orgId: org.id,
               teamPublicId: teamPublicId,
-              orgMemberPublicId: orgMemberPublicId,
+              orgMemberPublicId: newOrgMemberPublicId,
               orgMemberId: org.memberId
             });
           }
@@ -185,7 +185,7 @@ export const invitesRouter = router({
             publicId: newRoutingRuleDestinationPublicId,
             orgId: orgId,
             ruleId: +emailRoutingRulesResponse.insertId,
-            orgMemberId: +orgMemberResponse.insertId
+            spaceId: Number(newSpaceResponse.insertId)
           });
 
           const emailIdentityPublicId = typeIdGenerator('emailIdentities');
@@ -207,13 +207,19 @@ export const invitesRouter = router({
               sendName: email.sendName
             });
 
-          await db.insert(emailIdentitiesAuthorizedOrgMembers).values({
+          await db.insert(emailIdentitiesAuthorizedSenders).values({
             orgId: orgId,
-            identityId: +emailIdentityResponse.insertId,
-            default: true,
+            identityId: Number(emailIdentityResponse.insertId),
             addedBy: orgMemberId,
-            orgMemberId: +orgMemberResponse.insertId
+            spaceId: Number(newSpaceResponse.insertId)
           });
+
+          await db
+            .update(orgMembers)
+            .set({
+              personalSpaceId: Number(newSpaceResponse.insertId)
+            })
+            .where(eq(orgMembers.id, Number(newOrgMemberResponse.insertId)));
         }
 
         // Insert orgInvitations - save ID
@@ -225,7 +231,7 @@ export const invitesRouter = router({
           publicId: newInvitePublicId,
           orgId: orgId,
           invitedByOrgMemberId: orgMemberId,
-          orgMemberId: +orgMemberResponse.insertId,
+          orgMemberId: +newOrgMemberResponse.insertId,
           role: newOrgMember.role,
           email: notification?.notificationEmailAddress ?? null,
           inviteToken: newInviteToken,

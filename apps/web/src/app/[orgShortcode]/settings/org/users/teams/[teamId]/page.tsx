@@ -3,7 +3,6 @@
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { Separator } from '@/src/components/shadcn-ui/separator';
 import { PageTitle } from '../../../../_components/page-title';
-// import { EditMemberList } from './_components/member-editor';
 import { AddNewMember } from './_components/add-new-member';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { DataTable } from '@/src/components/shared/table';
@@ -47,9 +46,9 @@ export default function Page({
           </div>
           <div>
             <span className="font-bold">Team Email:</span>{' '}
-            {handleEmail(
-              teamInfo.team?.authorizedEmailIdentities[0]?.emailIdentity
-            )}
+            {teamInfo.defaultEmailIdentity?.domainName
+              ? handleEmail(teamInfo.defaultEmailIdentity)
+              : 'No email set'}
           </div>
           <Separator />
           <div className="font-bold">Team Members</div>
@@ -59,13 +58,6 @@ export default function Page({
           />
           <div>
             {editMode ? (
-              // <EditMemberList
-              //   complete={() => setEditMode(false)}
-              //   teamId={params.teamId}
-              //   existingMembers={
-              //     teamInfo.team?.members.map((m) => m.orgMember.publicId) ?? []
-              //   }
-              // />
               <AddNewMember
                 complete={async () => {
                   await refetch();

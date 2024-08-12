@@ -72,8 +72,7 @@ export const teamsRouter = router({
           spaceId: Number(newSpaceId),
           teamId: Number(newTeamId),
           addedByOrgMemberId: org.memberId,
-          orgMemberId: org.memberId,
-          role: 'member'
+          role: 'admin'
         });
       }
 
@@ -177,23 +176,19 @@ export const teamsRouter = router({
               }
             }
           },
-          authorizedEmailIdentities: {
-            columns: {},
-            with: {
-              emailIdentity: {
-                columns: {
-                  username: true,
-                  sendName: true,
-                  domainName: true
-                }
-              }
+          defaultEmailIdentity: {
+            columns: {
+              username: true,
+              domainName: true,
+              sendName: true
             }
           }
         }
       });
 
       return {
-        team: teamQuery
+        team: teamQuery,
+        defaultEmailIdentity: teamQuery?.defaultEmailIdentity
       };
     }),
   addOrgMemberToTeam: orgAdminProcedure

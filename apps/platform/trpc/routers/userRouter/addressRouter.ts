@@ -3,10 +3,15 @@ import {
   emailIdentitiesPersonal,
   accounts,
   emailRoutingRules,
-  emailIdentitiesAuthorizedOrgMembers,
+  emailIdentitiesAuthorizedSenders,
   emailRoutingRulesDestinations
 } from '@u22n/database/schema';
-import { orgProcedure, router, accountProcedure } from '~platform/trpc/trpc';
+import {
+  orgProcedure,
+  router,
+  accountProcedure,
+  orgAdminProcedure
+} from '~platform/trpc/trpc';
 import { typeIdGenerator, typeIdValidator } from '@u22n/utils/typeid';
 import { nanoIdToken } from '@u22n/utils/zodSchemas';
 import { orgMembers } from '@u22n/database/schema';
@@ -156,7 +161,9 @@ export const addressRouter = router({
       // get the account orgMemberProfile profile
       const accountOrgMembershipResponse = await db.query.orgMembers.findFirst({
         where: eq(orgMembers.id, accountOrgMembership.id),
-        columns: {},
+        columns: {
+          personalSpaceId: true
+        },
         with: {
           profile: {
             columns: {
@@ -202,8 +209,8 @@ export const addressRouter = router({
       await db.insert(emailRoutingRulesDestinations).values({
         publicId: newRoutingRuleDestinationPublicId,
         orgId: orgId,
-        ruleId: +routingRuleInsertResponse.insertId,
-        orgMemberId: accountOrgMembership.id
+        ruleId: Number(routingRuleInsertResponse.insertId),
+        spaceId: Number(accountOrgMembershipResponse.personalSpaceId)
       });
 
       const newEmailIdentityPublicId = typeIdGenerator('emailIdentities');
@@ -243,11 +250,12 @@ export const addressRouter = router({
         })
         .where(eq(emailIdentities.id, +insertEmailIdentityResponse.insertId));
 
-      await db.insert(emailIdentitiesAuthorizedOrgMembers).values({
+      await db.insert(emailIdentitiesAuthorizedSenders).values({
         orgId: orgId,
         addedBy: accountOrgMembership.id,
         identityId: +insertEmailIdentityResponse.insertId,
-        orgMemberId: accountOrgMembership.id
+        orgMemberId: accountOrgMembership.id,
+        spaceId: Number(accountOrgMembershipResponse.personalSpaceId)
       });
 
       return {
@@ -255,7 +263,7 @@ export const addressRouter = router({
         emailIdentity: rootUserEmailAddress
       };
     }),
-  editSendName: orgProcedure
+  editSendName: orgAdminProcedure
     .input(
       z.object({
         emailIdentityPublicId: typeIdValidator('emailIdentities'),
@@ -281,20 +289,6 @@ export const addressRouter = router({
         where: eq(emailIdentities.publicId, input.emailIdentityPublicId),
         columns: {
           id: true
-        },
-        with: {
-          authorizedOrgMembers: {
-            columns: {
-              orgMemberId: true
-            },
-            with: {
-              orgMember: {
-                columns: {
-                  id: true
-                }
-              }
-            }
-          }
         }
       });
 
@@ -304,16 +298,7 @@ export const addressRouter = router({
           message: 'Email Identity not found'
         });
       }
-      const authorizedOrgMembersIds =
-        emailIdentityResponse.authorizedOrgMembers.map(
-          (authorizedOrgMember) => authorizedOrgMember.orgMember?.id
-        );
-      if (!authorizedOrgMembersIds.includes(accountOrgMembershipResponse.id)) {
-        throw new TRPCError({
-          code: 'UNPROCESSABLE_CONTENT',
-          message: 'Org Member ID is not authorized'
-        });
-      }
+
       await db
         .update(emailIdentities)
         .set({ sendName: input.newSendName })

@@ -138,14 +138,19 @@ export function NewTeamModal() {
       createSpace: values.createSpace // Add this line
     });
 
-    if (values.email.create) {
+    if (values.email.create && team.newSpacePublicId) {
       await createEmailIdentity({
         orgShortcode,
         domainPublicId: values.email.domain!,
         emailUsername: values.email.address!,
         sendName: values.email.sendName!,
         catchAll: false,
-        routeToTeamsPublicIds: [team.newTeamPublicId]
+        routeToSpacesPublicIds: [team.newSpacePublicId],
+        canSend: {
+          anyone: false,
+          users: [],
+          teams: [team.newTeamPublicId]
+        }
       });
     }
 
@@ -266,114 +271,12 @@ export function NewTeamModal() {
                   )}
                 />
               </div>
-              <div className="mt-4 flex w-full flex-col gap-2">
-                <FormField
-                  control={form.control}
-                  name="email.create"
-                  render={({ field }) => (
-                    <FormItem className="mb-2 flex items-center gap-4">
-                      <div className="mt-2 text-sm font-bold">
-                        Create an Address for the User
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {form.watch('email.create') && (
-                  <>
-                    {orgDomainsLoading && <div>Loading...</div>}
-                    {orgDomains && (
-                      <>
-                        <div className="flex gap-1">
-                          <FormField
-                            control={form.control}
-                            name="email.address"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormControl>
-                                  <Input
-                                    fullWidth
-                                    label="Email Username"
-                                    {...field}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <span className="my-[10px] flex items-start">
-                            <At
-                              className="size-4"
-                              weight="bold"
-                            />
-                          </span>
-                          <FormField
-                            control={form.control}
-                            name="email.domain"
-                            render={({ field }) => (
-                              <FormItem>
-                                <Select
-                                  name={field.name}
-                                  value={field.value}
-                                  onValueChange={(e: TypeId<'domains'>) =>
-                                    field.onChange(e)
-                                  }>
-                                  <SelectTrigger className="w-full">
-                                    <SelectValue placeholder="Select domain" />
-                                  </SelectTrigger>
-                                  <SelectContent
-                                    id={field.name}
-                                    onBlur={field.onBlur}>
-                                    <SelectGroup>
-                                      {orgDomains.domainData.map((domain) => (
-                                        <SelectItem
-                                          key={domain.publicId}
-                                          value={domain.publicId}>
-                                          {domain.domain}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectGroup>
-                                  </SelectContent>
-                                </Select>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                        <FormField
-                          control={form.control}
-                          name="email.sendName"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormControl>
-                                <Input
-                                  fullWidth
-                                  label="Send Name"
-                                  {...field}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </>
-                    )}
-                  </>
-                )}
-              </div>
 
               <FormField
                 control={form.control}
                 name="createSpace"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                  <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4">
                     <FormControl>
                       <Checkbox
                         checked={field.value}
@@ -389,6 +292,111 @@ export function NewTeamModal() {
                   </FormItem>
                 )}
               />
+
+              {form.watch('createSpace') && (
+                <div className="mt-4 flex w-full flex-col gap-2">
+                  <FormField
+                    control={form.control}
+                    name="email.create"
+                    render={({ field }) => (
+                      <FormItem className="mb-2 flex items-center gap-4">
+                        <div className="mt-2 text-sm font-bold">
+                          Create an email address for the team
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {form.watch('email.create') && (
+                    <>
+                      {orgDomainsLoading && <div>Loading...</div>}
+                      {orgDomains && (
+                        <>
+                          <div className="flex gap-1">
+                            <FormField
+                              control={form.control}
+                              name="email.address"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormControl>
+                                    <Input
+                                      fullWidth
+                                      label="Email Username"
+                                      {...field}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <span className="my-[10px] flex items-start">
+                              <At
+                                className="size-4"
+                                weight="bold"
+                              />
+                            </span>
+                            <FormField
+                              control={form.control}
+                              name="email.domain"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <Select
+                                    name={field.name}
+                                    value={field.value}
+                                    onValueChange={(e: TypeId<'domains'>) =>
+                                      field.onChange(e)
+                                    }>
+                                    <SelectTrigger className="w-full">
+                                      <SelectValue placeholder="Select domain" />
+                                    </SelectTrigger>
+                                    <SelectContent
+                                      id={field.name}
+                                      onBlur={field.onBlur}>
+                                      <SelectGroup>
+                                        {orgDomains.domainData.map((domain) => (
+                                          <SelectItem
+                                            key={domain.publicId}
+                                            value={domain.publicId}>
+                                            {domain.domain}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectGroup>
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                          <FormField
+                            control={form.control}
+                            name="email.sendName"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormControl>
+                                  <Input
+                                    fullWidth
+                                    label="Send Name"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
 
               <div className="mt-1 flex w-full flex-col gap-2">
                 <div className="text-red-10">

@@ -4,8 +4,9 @@ import {
   emailRoutingRules,
   emailRoutingRulesDestinations,
   emailIdentities,
-  emailIdentitiesAuthorizedOrgMembers,
-  emailIdentityExternal
+  emailIdentitiesAuthorizedSenders,
+  emailIdentityExternal,
+  spaces
 } from '@u22n/database/schema';
 import { and, eq, inArray, type InferInsertModel } from '@u22n/database/orm';
 import { mailBridgeTrpcClient } from '~platform/utils/tRPCServerClients';
@@ -97,32 +98,29 @@ export const emailIdentityExternalRouter = router({
           encryption: z.enum(['none', 'ssl', 'tls', 'starttls']),
           authMethod: z.enum(['plain', 'login'])
         }),
-        routeToOrgMemberPublicIds: z
-          .array(typeIdValidator('orgMembers'))
-          .optional(),
-        routeToTeamsPublicIds: z.array(typeIdValidator('teams')).optional()
+        routeToSpacesPublicIds: z.array(typeIdValidator('spaces')),
+        canSend: z.object({
+          anyone: z.boolean(),
+          users: z.array(typeIdValidator('orgMembers')).optional(),
+          teams: z.array(typeIdValidator('teams')).optional()
+        })
       })
     )
     .mutation(async ({ ctx, input }) => {
       const { db, org } = ctx;
       const orgId = org.id;
-      const {
-        sendName,
-        smtp,
-        routeToOrgMemberPublicIds,
-        routeToTeamsPublicIds,
-        emailAddress
-      } = input;
+      const { emailAddress, sendName, smtp, routeToSpacesPublicIds, canSend } =
+        input;
 
       const [emailUsername, emailDomain] = emailAddress.split('@') as [
         string,
         string
       ];
 
-      if (!routeToOrgMemberPublicIds && !routeToTeamsPublicIds) {
+      if (canSend.anyone && !canSend.users && !canSend.teams) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
-          message: 'Must route to at least one user or team'
+          message: 'At least one user or team must be allowed to send'
         });
       }
 
@@ -142,59 +140,6 @@ export const emailIdentityExternalRouter = router({
         });
       }
 
-      // get orgmembers and teams
-      const orgMemberObjects: { id: number; hasDefault: boolean }[] = [];
-      const orgMemberIdsResponse =
-        routeToOrgMemberPublicIds && routeToOrgMemberPublicIds.length > 0
-          ? await db.query.orgMembers.findMany({
-              where: inArray(orgMembers.publicId, routeToOrgMemberPublicIds),
-              columns: {
-                id: true
-              },
-              with: {
-                authorizedEmailIdentities: {
-                  columns: {
-                    default: true
-                  }
-                }
-              }
-            })
-          : [];
-      orgMemberIdsResponse.forEach((orgMember) => {
-        orgMemberObjects.push({
-          id: orgMember.id,
-          hasDefault: orgMember.authorizedEmailIdentities.some(
-            (identity) => identity.default
-          )
-        });
-      });
-
-      const userTeamObjects: { id: number; hasDefault: boolean }[] = [];
-      const userTeamIdsResponse =
-        routeToTeamsPublicIds && routeToTeamsPublicIds.length > 0
-          ? await db.query.teams.findMany({
-              where: inArray(teams.publicId, routeToTeamsPublicIds),
-              columns: {
-                id: true
-              },
-              with: {
-                authorizedEmailIdentities: {
-                  columns: {
-                    default: true
-                  }
-                }
-              }
-            })
-          : [];
-      userTeamIdsResponse.forEach((userTeam) => {
-        userTeamObjects.push({
-          id: userTeam.id,
-          hasDefault: userTeam.authorizedEmailIdentities.some(
-            (identity) => identity.default
-          )
-        });
-      });
-
       // create email routing rule
       const newRoutingRulePublicId = typeIdGenerator('emailRoutingRules');
       const insertEmailRoutingRule = await db.insert(emailRoutingRules).values({
@@ -205,42 +150,7 @@ export const emailIdentityExternalRouter = router({
         description: `Email routing rule for external address: ${emailUsername}@${emailDomain}`
       });
 
-      type InsertRoutingRuleDestination = InferInsertModel<
-        typeof emailRoutingRulesDestinations
-      >;
-      // create email routing rule destinations
-      const routingRuleInsertValues: InsertRoutingRuleDestination[] = [];
-      if (orgMemberObjects.length > 0) {
-        orgMemberObjects.forEach((orgMemberObject) => {
-          const newRoutingRuleDestinationPublicId = typeIdGenerator(
-            'emailRoutingRuleDestinations'
-          );
-          routingRuleInsertValues.push({
-            publicId: newRoutingRuleDestinationPublicId,
-            orgId: orgId,
-            ruleId: +insertEmailRoutingRule.insertId,
-            orgMemberId: orgMemberObject.id
-          });
-        });
-      }
-      if (userTeamObjects.length > 0) {
-        userTeamObjects.forEach((userTeamObject) => {
-          const newRoutingRuleDestinationPublicId = typeIdGenerator(
-            'emailRoutingRuleDestinations'
-          );
-          routingRuleInsertValues.push({
-            publicId: newRoutingRuleDestinationPublicId,
-            orgId: orgId,
-            ruleId: +insertEmailRoutingRule.insertId,
-            teamId: userTeamObject.id
-          });
-        });
-      }
-
-      await db
-        .insert(emailRoutingRulesDestinations)
-        .values(routingRuleInsertValues);
-
+      // create email identity
       const emailIdentityPublicId = typeIdGenerator('emailIdentities');
       const mailDomains = env.MAIL_DOMAINS;
       const fwdDomain = mailDomains.fwd[0];
@@ -261,40 +171,92 @@ export const emailIdentityExternalRouter = router({
           isCatchAll: false
         });
 
-      type InsertEmailIdentityAuthorizedOrgMembers = InferInsertModel<
-        typeof emailIdentitiesAuthorizedOrgMembers
+      // create email routing rule destinations
+      type InsertRoutingRuleDestination = InferInsertModel<
+        typeof emailRoutingRulesDestinations
       >;
-      const emailIdentityAuthorizedOrgMembersObjects: InsertEmailIdentityAuthorizedOrgMembers[] =
+      const routingRuleInsertValues: InsertRoutingRuleDestination[] = [];
+
+      const destinationSpaceIdsResponse = await db.query.spaces.findMany({
+        where: inArray(spaces.publicId, routeToSpacesPublicIds),
+        columns: {
+          id: true
+        }
+      });
+
+      destinationSpaceIdsResponse.forEach((space) => {
+        const newRoutingRuleDestinationPublicId = typeIdGenerator(
+          'emailRoutingRuleDestinations'
+        );
+        routingRuleInsertValues.push({
+          publicId: newRoutingRuleDestinationPublicId,
+          orgId: orgId,
+          ruleId: +insertEmailRoutingRule.insertId,
+          spaceId: space.id
+        });
+      });
+      await db
+        .insert(emailRoutingRulesDestinations)
+        .values(routingRuleInsertValues);
+
+      // create email Authorizations
+      type InsertEmailIdentityAuthorizedInsert = InferInsertModel<
+        typeof emailIdentitiesAuthorizedSenders
+      >;
+      const emailIdentityAuthorizedInsertObjects: InsertEmailIdentityAuthorizedInsert[] =
         [];
 
-      if (orgMemberObjects.length > 0) {
-        orgMemberObjects.forEach((orgMemberObject) => {
-          emailIdentityAuthorizedOrgMembersObjects.push({
+      if (canSend.anyone) {
+        destinationSpaceIdsResponse.forEach((space) => {
+          emailIdentityAuthorizedInsertObjects.push({
             orgId: orgId,
             identityId: +insertEmailIdentityResponse.insertId,
             addedBy: org.memberId,
-            orgMemberId: orgMemberObject.id,
-            default: !orgMemberObject.hasDefault
+            spaceId: space.id
+          });
+        });
+      } else {
+        const orgMemberIdsResponse =
+          canSend.users && canSend.users.length > 0
+            ? await db.query.orgMembers.findMany({
+                where: inArray(orgMembers.publicId, canSend.users),
+                columns: {
+                  id: true
+                }
+              })
+            : [];
+        orgMemberIdsResponse.forEach((orgMember) => {
+          emailIdentityAuthorizedInsertObjects.push({
+            orgId: orgId,
+            identityId: +insertEmailIdentityResponse.insertId,
+            addedBy: org.memberId,
+            orgMemberId: orgMember.id
+          });
+        });
+
+        const teamIdsResponse =
+          canSend.teams && canSend.teams.length > 0
+            ? await db.query.teams.findMany({
+                where: inArray(teams.publicId, canSend.teams),
+                columns: {
+                  id: true
+                }
+              })
+            : [];
+        teamIdsResponse.forEach((userTeam) => {
+          emailIdentityAuthorizedInsertObjects.push({
+            orgId: orgId,
+            identityId: +insertEmailIdentityResponse.insertId,
+            addedBy: org.memberId,
+            teamId: userTeam.id
           });
         });
       }
 
-      if (userTeamObjects.length > 0) {
-        userTeamObjects.forEach((userTeamObject) => {
-          emailIdentityAuthorizedOrgMembersObjects.push({
-            orgId: orgId,
-            identityId: +insertEmailIdentityResponse.insertId,
-            addedBy: org.memberId,
-            teamId: userTeamObject.id,
-            default: !userTeamObject.hasDefault
-          });
-        });
-      }
-
-      if (emailIdentityAuthorizedOrgMembersObjects.length > 0) {
+      if (emailIdentityAuthorizedInsertObjects.length > 0) {
         await db
-          .insert(emailIdentitiesAuthorizedOrgMembers)
-          .values(emailIdentityAuthorizedOrgMembersObjects);
+          .insert(emailIdentitiesAuthorizedSenders)
+          .values(emailIdentityAuthorizedInsertObjects);
       }
 
       const emailIdentityExternalPublicId = typeIdGenerator(

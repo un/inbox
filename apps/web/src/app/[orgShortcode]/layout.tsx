@@ -29,7 +29,7 @@ export default function Layout({
   const isMobile = useIsMobile();
 
   const { data: hasEmailIdentity } =
-    platform.org.mail.emailIdentities.userHasEmailIdentities.useQuery({
+    platform.org.mail.emailIdentities.getUserEmailIdentities.useQuery({
       orgShortcode
     });
 
@@ -100,9 +100,10 @@ export default function Layout({
 
           {isMobile && <BottomNav />}
           {!isMobile && <NewConvoSheet />}
-          {hasEmailIdentity && !hasEmailIdentity.hasIdentity && (
-            <ClaimEmailIdentity />
-          )}
+          {hasEmailIdentity &&
+            hasEmailIdentity.emailIdentities.length === 0 && (
+              <ClaimEmailIdentity />
+            )}
         </div>
       </RealtimeProvider>
     </GlobalStoreProvider>

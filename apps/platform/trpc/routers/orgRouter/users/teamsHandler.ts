@@ -1,10 +1,4 @@
-import {
-  convoParticipantTeamMembers,
-  convoParticipants,
-  teamMembers,
-  teams,
-  orgMembers
-} from '@u22n/database/schema';
+import { teamMembers, teams, orgMembers } from '@u22n/database/schema';
 import { typeIdGenerator, type TypeId } from '@u22n/utils/typeid';
 import { and, eq } from '@u22n/database/orm';
 import type { DBType } from '@u22n/database';
@@ -72,63 +66,63 @@ export async function addOrgMemberToTeamHandler(
     });
   }
 
-  const teamParticipationConvoIdsQuery =
-    await db.query.convoParticipants.findMany({
-      columns: {
-        convoId: true
-      },
-      where: and(
-        eq(convoParticipants.orgId, orgId),
-        eq(convoParticipants.teamId, teamQuery.id)
-      )
-    });
+  // const teamParticipationConvoIdsQuery =
+  //   await db.query.convoParticipants.findMany({
+  //     columns: {
+  //       convoId: true
+  //     },
+  //     where: and(
+  //       eq(convoParticipants.orgId, orgId),
+  //       eq(convoParticipants.teamId, teamQuery.id)
+  //     )
+  //   });
 
-  const teamParticipationConvoIds = teamParticipationConvoIdsQuery.map(
-    (convo) => convo.convoId
-  );
+  // const teamParticipationConvoIds = teamParticipationConvoIdsQuery.map(
+  //   (convo) => convo.convoId
+  // );
 
-  if (teamParticipationConvoIds.length > 0) {
-    for (const convoId of teamParticipationConvoIds) {
-      const convoParticipantPublicId = typeIdGenerator('convoParticipants');
-      let convoParticipantId: number | undefined;
-      try {
-        const insertConvoParticipantResponse = await db
-          .insert(convoParticipants)
-          .values({
-            orgId: orgId,
-            publicId: convoParticipantPublicId,
-            convoId: convoId,
-            orgMemberId: orgMember.id,
-            role: 'teamMember',
-            notifications: 'active'
-          });
-        if (insertConvoParticipantResponse) {
-          convoParticipantId = Number(insertConvoParticipantResponse.insertId);
-        }
-      } catch (retry) {
-        const existingConvoParticipant =
-          await db.query.convoParticipants.findFirst({
-            columns: {
-              id: true
-            },
-            where: and(
-              eq(convoParticipants.orgId, orgId),
-              eq(convoParticipants.convoId, convoId),
-              eq(convoParticipants.orgMemberId, orgMember.id)
-            )
-          });
-        if (existingConvoParticipant) {
-          convoParticipantId = Number(existingConvoParticipant.id);
-        }
-      }
-      if (convoParticipantId) {
-        await db.insert(convoParticipantTeamMembers).values({
-          convoParticipantId: Number(convoParticipantId),
-          teamId: teamQuery.id,
-          orgId: orgId
-        });
-      }
-    }
-  }
+  // if (teamParticipationConvoIds.length > 0) {
+  //   for (const convoId of teamParticipationConvoIds) {
+  //     const convoParticipantPublicId = typeIdGenerator('convoParticipants');
+  //     let convoParticipantId: number | undefined;
+  //     try {
+  //       const insertConvoParticipantResponse = await db
+  //         .insert(convoParticipants)
+  //         .values({
+  //           orgId: orgId,
+  //           publicId: convoParticipantPublicId,
+  //           convoId: convoId,
+  //           orgMemberId: orgMember.id,
+  //           role: 'teamMember',
+  //           notifications: 'active'
+  //         });
+  //       if (insertConvoParticipantResponse) {
+  //         convoParticipantId = Number(insertConvoParticipantResponse.insertId);
+  //       }
+  //     } catch (retry) {
+  //       const existingConvoParticipant =
+  //         await db.query.convoParticipants.findFirst({
+  //           columns: {
+  //             id: true
+  //           },
+  //           where: and(
+  //             eq(convoParticipants.orgId, orgId),
+  //             eq(convoParticipants.convoId, convoId),
+  //             eq(convoParticipants.orgMemberId, orgMember.id)
+  //           )
+  //         });
+  //       if (existingConvoParticipant) {
+  //         convoParticipantId = Number(existingConvoParticipant.id);
+  //       }
+  //     }
+  //     if (convoParticipantId) {
+  //       await db.insert(convoParticipantTeamMembers).values({
+  //         convoParticipantId: Number(convoParticipantId),
+  //         teamId: teamQuery.id,
+  //         orgId: orgId
+  //       });
+  //     }
+  //   }
+  // }
   return newTeamMemberPublicId;
 }

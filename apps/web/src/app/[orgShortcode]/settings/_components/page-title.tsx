@@ -9,8 +9,14 @@ type PageTitleProps = {
   title: string;
   description?: string;
   children?: React.ReactNode;
+  backButtonLink?: string;
 };
-export function PageTitle({ title, description, children }: PageTitleProps) {
+export function PageTitle({
+  title,
+  description,
+  children,
+  backButtonLink
+}: PageTitleProps) {
   const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
   const isMobile = useIsMobile();
 
@@ -22,7 +28,7 @@ export function PageTitle({ title, description, children }: PageTitleProps) {
             variant="outline"
             size="icon-sm"
             asChild>
-            <Link href={`/${orgShortcode}/settings`}>
+            <Link href={backButtonLink ?? `/${orgShortcode}/settings`}>
               <ArrowLeft className="size-4" />
             </Link>
           </Button>

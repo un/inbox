@@ -96,30 +96,29 @@ export default function Page({
           <div>
             <div className="text-base-11 font-bold uppercase">Delivers To</div>
             <div className="flex flex-wrap gap-2">
-              {emailInfo.emailIdentityData?.authorizedOrgMembers.map(
-                (member) => {
-                  const profile = member.orgMember?.profile;
-                  if (!profile) return null;
-                  return (
-                    <div
-                      key={profile.publicId}
-                      className="bg-muted flex gap-2 rounded p-3">
-                      <Avatar
-                        avatarProfilePublicId={profile.publicId}
-                        avatarTimestamp={profile.avatarTimestamp}
-                        name={`${profile.firstName} ${profile.lastName}`}
-                        size="lg"
-                      />
-                      <div className="flex flex-col">
-                        <div>{`${profile.firstName} ${profile.lastName}`}</div>
-                        <div className="text-base-11 text-xs">
-                          @{profile.handle}
-                        </div>
+              {JSON.stringify(emailInfo.emailIdentityData?.routingRules)}
+              {/* {emailInfo.emailIdentityData?.authorizedSenders.map((member) => {
+                const profile = member.orgMember?.profile;
+                if (!profile) return null;
+                return (
+                  <div
+                    key={profile.publicId}
+                    className="bg-muted flex gap-2 rounded p-3">
+                    <Avatar
+                      avatarProfilePublicId={profile.publicId}
+                      avatarTimestamp={profile.avatarTimestamp}
+                      name={`${profile.firstName} ${profile.lastName}`}
+                      size="lg"
+                    />
+                    <div className="flex flex-col">
+                      <div>{`${profile.firstName} ${profile.lastName}`}</div>
+                      <div className="text-base-11 text-xs">
+                        @{profile.handle}
                       </div>
                     </div>
-                  );
-                }
-              )}
+                  </div>
+                );
+              })} */}
             </div>
           </div>
         </>
