@@ -167,7 +167,10 @@ export const convoRouter = router({
         orgMemberId: org.memberId
       });
 
-      if (spaceMembershipResponse.role === null) {
+      if (
+        spaceMembershipResponse.type !== 'open' &&
+        spaceMembershipResponse.role === null
+      ) {
         throw new TRPCError({
           code: 'FORBIDDEN',
           message: 'You are not allowed to send a message in this space'
@@ -1289,7 +1292,7 @@ export const convoRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      const { db, account, org } = ctx;
+      const { db, org } = ctx;
       const orgId = org.id;
       const accountOrgMemberId = org.memberId;
       const { convoPublicId } = input;
@@ -1419,10 +1422,13 @@ export const convoRouter = router({
             spaceShortcode: spaceShortcode,
             orgMemberId: org.memberId
           });
-          if (spaceMembershipResponse.role !== null) {
-            return true;
+          if (
+            spaceMembershipResponse.type !== 'open' &&
+            spaceMembershipResponse.role === null
+          ) {
+            return false;
           }
-          return false;
+          return true;
         }
       );
 
