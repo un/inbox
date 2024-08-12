@@ -14,7 +14,7 @@ export const idTypes = {
   convoEntries: 'ce',
   convoParticipants: 'cp',
   convoSubjects: 'cs',
-  convoToSpaces: 'c2s',
+  convoToSpaces: 'cts',
   convoStatuses: 'css',
   convoTags: 'cst',
   domains: 'dom',

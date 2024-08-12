@@ -16,7 +16,9 @@ import {
   convoParticipantTeamMembers,
   emailIdentities,
   convoEntryPrivateVisibilityParticipants,
-  convoEntryRawHtmlEmails
+  convoEntryRawHtmlEmails,
+  spaces,
+  convoToSpaces
 } from '@u22n/database/schema';
 import {
   type InferInsertModel,
@@ -38,6 +40,7 @@ import {
 } from '@u22n/utils/typeid';
 import { realtime, sendRealtimeNotification } from '~platform/utils/realtime';
 import { mailBridgeTrpcClient } from '~platform/utils/tRPCServerClients';
+import { isOrgMemberSpaceMember } from '../spaceRouter/utils';
 import { createExtensionSet } from '@u22n/tiptap/extensions';
 import { router, orgProcedure } from '~platform/trpc/trpc';
 import { type JSONContent } from '@u22n/tiptap/react';
@@ -95,7 +98,8 @@ export const convoRouter = router({
             type: z.string()
           })
         ),
-        hide: z.boolean().default(false)
+        hide: z.boolean().default(false),
+        spaceShortcode: z.string()
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -111,10 +115,67 @@ export const convoRouter = router({
         participantsContactsPublicIds,
         topic,
         to: convoMessageTo,
-        firstMessageType
+        firstMessageType,
+        spaceShortcode
       } = input;
 
       const message = input.message as JSONContent;
+
+      // if there is a send as email identity, check if that email identity is enabled
+      if (sendAsEmailIdentityPublicId) {
+        const emailIdentityResponse = await db.query.emailIdentities.findFirst({
+          where: and(
+            eq(emailIdentities.orgId, orgId),
+            eq(emailIdentities.publicId, sendAsEmailIdentityPublicId)
+          ),
+          columns: {},
+          with: {
+            domain: {
+              columns: {
+                domainStatus: true,
+                sendingMode: true
+              }
+            }
+          }
+        });
+
+        if (!emailIdentityResponse) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Send as email identity not found'
+          });
+        }
+
+        if (emailIdentityResponse.domain) {
+          if (
+            emailIdentityResponse.domain.domainStatus !== 'active' ||
+            emailIdentityResponse.domain.sendingMode === 'disabled'
+          ) {
+            throw new TRPCError({
+              code: 'UNPROCESSABLE_CONTENT',
+              message:
+                'You cant send from that email address due to a configuration issue. Please contact your administrator or select a different email identity.'
+            });
+          }
+        }
+      }
+
+      const spaceMembershipResponse = await isOrgMemberSpaceMember({
+        db,
+        orgId,
+        spaceShortcode: input.spaceShortcode,
+        orgMemberId: org.memberId
+      });
+
+      if (spaceMembershipResponse.role === null) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'You are not allowed to send a message in this space'
+        });
+      }
+
+      const spaceId = spaceMembershipResponse.spaceId;
+
       let convoParticipantToPublicId: TypeId<'convoParticipants'>;
       let convoMessageToNewContactPublicId: TypeId<'contacts'>;
 
@@ -404,6 +465,16 @@ export const convoRouter = router({
         publicId: newConvoPublicId,
         orgId: orgId,
         lastUpdatedAt: newConvoTimestamp
+      });
+
+      // add the conversation to the space
+
+      const newConvoToSpacePublicId = typeIdGenerator('convoToSpaces');
+      await db.insert(convoToSpaces).values({
+        publicId: newConvoToSpacePublicId,
+        convoId: Number(insertConvoResponse.insertId),
+        spaceId: spaceId,
+        orgId: orgId
       });
 
       // create conversationSubject entry
