@@ -1,6 +1,6 @@
 import { orgMembers, spaces, teamMembers } from '@u22n/database/schema';
+import type { SpaceMemberRole, SpaceType } from '@u22n/utils/spaces';
 import { eq, and, like, inArray } from '@u22n/database/orm';
-import type { SpaceMemberRole } from '@u22n/utils/spaces';
 import type { DBType } from '@u22n/database';
 import { TRPCError } from '@trpc/server';
 
@@ -115,6 +115,7 @@ export async function validateSpaceShortCode({
 type IsOrgMemberSpaceMemberResponse = {
   role: SpaceMemberRole | null;
   spaceId: number;
+  type: SpaceType;
   permissions: {
     canCreate: boolean;
     canRead: boolean;
@@ -146,7 +147,8 @@ export async function isOrgMemberSpaceMember({
     where: and(eq(spaces.orgId, orgId), eq(spaces.shortcode, spaceShortcode)),
     columns: {
       id: true,
-      publicId: true
+      publicId: true,
+      type: true
     },
     with: {
       members: {
@@ -219,6 +221,7 @@ export async function isOrgMemberSpaceMember({
   const spaceMembershipResponse: IsOrgMemberSpaceMemberResponse = {
     role: null,
     spaceId: spaceQueryResponse.id,
+    type: spaceQueryResponse.type,
     permissions: {
       canCreate: false,
       canRead: false,

@@ -239,7 +239,10 @@ export const convoRouter = router({
             orgMemberId: orgMemberParticipant.id
           });
 
-          if (canUserAccessSpace.role === null) {
+          if (
+            canUserAccessSpace.role === null &&
+            canUserAccessSpace.type !== 'open'
+          ) {
             const orgMemberQueryResponse = await db.query.orgMembers.findFirst({
               where: and(
                 eq(orgMembers.orgId, orgId),
@@ -291,7 +294,8 @@ export const convoRouter = router({
             ),
             columns: {
               id: true,
-              publicId: true
+              publicId: true,
+              type: true
             },
             with: {
               members: {
@@ -301,11 +305,17 @@ export const convoRouter = router({
               }
             }
           });
+
+          if (!spaceQueryResponse) break;
+
           const spaceTeamMembership = spaceQueryResponse?.members.filter(
             (spaceMember) => spaceMember.teamId !== null
           );
 
-          if (!spaceTeamMembership || spaceTeamMembership.length === 0) {
+          if (
+            spaceTeamMembership.length === 0 &&
+            spaceQueryResponse?.type !== 'open'
+          ) {
             const teamQueryResponse = await db.query.teams.findFirst({
               where: and(
                 eq(teams.orgId, orgId),
@@ -1280,7 +1290,6 @@ export const convoRouter = router({
     )
     .query(async ({ ctx, input }) => {
       const { db, account, org } = ctx;
-      const accountId = account.id;
       const orgId = org.id;
       const accountOrgMemberId = org.memberId;
       const { convoPublicId } = input;
