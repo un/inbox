@@ -3,6 +3,7 @@
 import { convoListSelection, lastSelectedConvo } from '../atoms';
 import { platform, type RouterOutputs } from '@/src/lib/trpc';
 import { useOrgShortcode } from '@/src/hooks/use-params';
+import { motion, AnimatePresence } from 'framer-motion';
 import { SpinnerGap } from '@phosphor-icons/react';
 import { memo, useCallback, useMemo } from 'react';
 import { type TypeId } from '@u22n/utils/typeid';
@@ -112,6 +113,11 @@ export function ConvoList({ hidden }: Props) {
     );
   }, [isFetchingNextPage]);
 
+  const computeItemKey = useCallback(
+    (_: number, data: Convo) => data.publicId,
+    []
+  );
+
   return (
     <div className="flex h-full flex-col">
       {isLoading ? (
@@ -129,6 +135,7 @@ export function ConvoList({ hidden }: Props) {
           style={{ overscrollBehavior: 'contain', overflowX: 'clip' }}
           endReached={nextPageFetcher}
           increaseViewportBy={500}
+          computeItemKey={computeItemKey}
           components={{
             Footer: LoadingFooter
           }}
@@ -169,13 +176,18 @@ const MemoizedConvoItem = memo(function MemoizedConvoItem({
   hidden
 }: MemoizedConvoItemProps) {
   return (
-    <div className="py-0.5">
-      <ConvoItem
-        convo={convo}
-        selected={selected}
-        onSelect={(shiftKey) => onSelect(convo, shiftKey, selected)}
-        hidden={hidden}
-      />
-    </div>
+    <AnimatePresence mode="sync">
+      <motion.div
+        layout
+        className="py-0.5"
+        transition={{ duration: 0.25, type: 'spring' }}>
+        <ConvoItem
+          convo={convo}
+          selected={selected}
+          onSelect={(shiftKey) => onSelect(convo, shiftKey, selected)}
+          hidden={hidden}
+        />
+      </motion.div>
+    </AnimatePresence>
   );
 });
