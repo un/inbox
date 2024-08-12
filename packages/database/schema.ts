@@ -583,7 +583,11 @@ export const spaces = mysqlTable(
   },
   (table) => ({
     publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
-    shortcodeIndex: uniqueIndex('shortcode_idx').on(table.shortcode),
+    shortcodeIndex: index('shortcode_idx').on(table.shortcode),
+    shortcodeOrgUniqueIndex: uniqueIndex('shortcode_org_unique_idx').on(
+      table.shortcode,
+      table.orgId
+    ),
     orgIdIndex: index('org_id_idx').on(table.orgId)
   })
 );
