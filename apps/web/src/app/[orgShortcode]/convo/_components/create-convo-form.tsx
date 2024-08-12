@@ -63,6 +63,7 @@ import { Input } from '@/src/components/shadcn-ui/input';
 import { Badge } from '@/src/components/shadcn-ui/badge';
 import { useIsMobile } from '@/src/hooks/use-is-mobile';
 import { emptyTiptapEditorContent } from '@u22n/tiptap';
+import { useParams, useRouter } from 'next/navigation';
 import { useMutation } from '@tanstack/react-query';
 import { useAddSingleConvo$Cache } from '../utils';
 import { Editor } from '@/src/components/editor';
@@ -124,9 +125,12 @@ export default function CreateConvoForm({
 }: {
   initialEmails?: string[];
   initialSubject?: string;
+  initialSpaceShortcode?: string | null;
 }) {
   const orgShortcode = useOrgShortcode();
   const { scopedNavigate } = useOrgScopedRouter();
+  const { spaceShortCode } = useParams();
+  const initialSpaceShortcode = spaceShortCode ?? null;
   const lastOrg = usePrevious(orgShortcode);
   const { draft, setDraft, resetDraft } = useComposingDraft();
   const isMobile = useIsMobile();
@@ -219,6 +223,21 @@ export default function CreateConvoForm({
         setEditorText(emptyTiptapEditorContent);
       }
     });
+
+  const [selectedSpace, setSelectedSpace] = useState<string | null>(
+    initialSpaceShortcode as string | null
+  );
+
+  const { data: spacesResponse } = platform.spaces.getOrgMemberSpaces.useQuery({
+    orgShortcode
+  });
+  const spaces = spacesResponse?.spaces;
+
+  useEffect(() => {
+    if (!initialSpaceShortcode) {
+      setSelectedSpace(spaces?.[0]?.shortcode ?? null);
+    }
+  }, [initialSpaceShortcode, selectedSpace, setSelectedSpace, spaces]);
 
   // Set default email identity on load
   useEffect(() => {
@@ -419,7 +438,8 @@ export default function CreateConvoForm({
       (hasExternalParticipants ? selectedEmailIdentity !== null : true) &&
       isTextPresent &&
       topic.length > 0 &&
-      selectedParticipants.length > 0
+      selectedParticipants.length > 0 &&
+      selectedSpace !== null
     )
       return true;
     return false;
@@ -428,7 +448,8 @@ export default function CreateConvoForm({
     selectedEmailIdentity,
     isTextPresent,
     topic.length,
-    selectedParticipants.length
+    selectedParticipants.length,
+    selectedSpace
   ]);
 
   const canClearDraft = useMemo(
@@ -465,6 +486,10 @@ export default function CreateConvoForm({
             publicId: firstParticipant.publicId
           };
 
+    if (!selectedSpace) {
+      throw new Error('Please select a space for the conversation.');
+    }
+
     return createConvoFn({
       firstMessageType: type,
       topic,
@@ -476,7 +501,8 @@ export default function CreateConvoForm({
       participantsEmails,
       message: editorText,
       attachments: getTrpcUploadFormat(),
-      orgShortcode
+      orgShortcode,
+      spaceShortcode: selectedSpace
     });
   }
 
@@ -649,6 +675,25 @@ export default function CreateConvoForm({
             </Button>
           </div>
         </div>
+      </div>
+
+      <div className="flex w-full flex-col gap-2 text-sm">
+        <Select
+          value={selectedSpace ?? undefined}
+          onValueChange={(space) => setSelectedSpace(space)}>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select a space" />
+          </SelectTrigger>
+          <SelectContent>
+            {spaces?.map((space) => (
+              <SelectItem
+                key={space.shortcode}
+                value={space.shortcode}>
+                {space.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
     </div>
   );
