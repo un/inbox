@@ -4,9 +4,9 @@ import { z } from 'zod';
 import { convoStatuses, spaces, spaceStatuses } from '@u22n/database/schema';
 import { typeIdGenerator, typeIdValidator } from '@u22n/utils/typeid';
 import { spaceStatusArray } from '@u22n/utils/spaces';
-import { eq, and, asc } from '@u22n/database/orm';
 import { isOrgMemberSpaceMember } from './utils';
 import { uiColors } from '@u22n/utils/colors';
+import { eq, and } from '@u22n/database/orm';
 import { TRPCError } from '@trpc/server';
 
 export const spaceStatusesRouter = router({

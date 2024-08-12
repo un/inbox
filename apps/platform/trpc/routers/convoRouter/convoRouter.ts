@@ -158,40 +158,17 @@ export const convoRouter = router({
           ),
           columns: {
             id: true,
-            publicId: true
-          },
-          with: {
-            authorizedEmailIdentities: {
-              columns: {
-                id: true,
-                default: true
-              },
-              with: {
-                emailIdentity: {
-                  columns: {
-                    id: true
-                  }
-                }
-              }
-            }
+            publicId: true,
+            defaultEmailIdentityId: true
           }
         });
 
         for (const orgMember of orgMemberResponses) {
-          let emailIdentityId = orgMember.authorizedEmailIdentities.find(
-            (emailIdentity) => emailIdentity.default
-          )?.emailIdentity.id;
-
-          if (!emailIdentityId) {
-            emailIdentityId =
-              orgMember.authorizedEmailIdentities[0]?.emailIdentity.id;
-          }
-          const orgMemberIdObject: IdPairOrgMembers = {
+          orgMemberIds.push({
             id: orgMember.id,
             publicId: orgMember.publicId,
-            emailIdentityId: emailIdentityId ?? null
-          };
-          orgMemberIds.push(orgMemberIdObject);
+            emailIdentityId: orgMember.defaultEmailIdentityId ?? null
+          });
         }
 
         if (orgMemberIds.length !== participantsOrgMembersPublicIds.length) {
@@ -211,40 +188,17 @@ export const convoRouter = router({
           ),
           columns: {
             id: true,
-            publicId: true
-          },
-          with: {
-            authorizedEmailIdentities: {
-              columns: {
-                id: true,
-                default: true
-              },
-              with: {
-                emailIdentity: {
-                  columns: {
-                    id: true
-                  }
-                }
-              }
-            }
+            publicId: true,
+            defaultEmailIdentityId: true
           }
         });
 
         for (const team of teamResponses) {
-          let emailIdentityId = team.authorizedEmailIdentities.find(
-            (emailIdentity) => emailIdentity.default
-          )?.emailIdentity.id;
-
-          if (!emailIdentityId) {
-            emailIdentityId =
-              team.authorizedEmailIdentities[0]?.emailIdentity.id;
-          }
-          const teamObject: IdPair = {
+          orgTeamIds.push({
             id: team.id,
             publicId: team.publicId,
-            emailIdentityId: emailIdentityId ?? null
-          };
-          orgTeamIds.push(teamObject);
+            emailIdentityId: team.defaultEmailIdentityId ?? null
+          });
         }
 
         if (orgTeamIds.length !== participantsTeamsPublicIds.length) {
@@ -874,6 +828,36 @@ export const convoRouter = router({
 
       // get the email identity the user wants to email from
       let emailIdentityId: number | null = null;
+
+      if (sendAsEmailIdentityPublicId) {
+        const sendAsEmailIdentityResponse =
+          await db.query.emailIdentities.findFirst({
+            where: and(
+              eq(emailIdentities.orgId, orgId),
+              eq(emailIdentities.publicId, sendAsEmailIdentityPublicId)
+            ),
+            columns: {
+              id: true
+            }
+          });
+
+        //! fix user authorization via spaceId
+        // const userIsAuthorized =
+        //   sendAsEmailIdentityResponse?.authorizedSenders.some(
+        //     (authorizedOrgMember) =>
+        //       authorizedOrgMember.orgMemberId === accountOrgMemberId ||
+        //       authorizedOrgMember.team?.members.some(
+        //         (teamMember) => teamMember.orgMemberId === accountOrgMemberId
+        //       )
+        //   );
+        // if (!userIsAuthorized) {
+        //   throw new TRPCError({
+        //     code: 'UNAUTHORIZED',
+        //     message: 'User is not authorized to send as this email identity'
+        //   });
+        // }
+        emailIdentityId = sendAsEmailIdentityResponse?.id ?? null;
+      }
 
       let authorConvoParticipantId: number | undefined;
       let authorConvoParticipantPublicId:

@@ -1,20 +1,16 @@
 import {
-  orgs,
   orgMembers,
-  orgMemberProfiles,
-  accounts,
   spaces,
   spaceMembers,
   teamMembers,
   convos,
   convoToSpaces,
-  convoParticipants,
   convoEntries
 } from '@u22n/database/schema';
 import { router, accountProcedure, orgProcedure } from '~platform/trpc/trpc';
 import { iCanHazCallerFactory } from '../orgRouter/iCanHaz/iCanHazRouter';
-import { eq, and, like, inArray, or, desc, lt } from '@u22n/database/orm';
 import { typeIdGenerator, typeIdValidator } from '@u22n/utils/typeid';
+import { eq, and, inArray, or, desc, lt } from '@u22n/database/orm';
 import { spaceSettingsRouter } from './spaceSettingsRouter';
 import { spaceStatusesRouter } from './statusesRouter';
 import { spaceMembersRouter } from './membersRouter';
@@ -60,6 +56,62 @@ export const spaceRouter = router({
     });
     return {
       spaces: orgSpaces
+    };
+  }),
+  getAllOrgSpacesWithPersonalSeparately: orgProcedure.query(async ({ ctx }) => {
+    const personalSpaces = await ctx.db.query.spaces.findMany({
+      where: and(eq(spaces.orgId, ctx.org.id), eq(spaces.personalSpace, true)),
+      columns: {
+        publicId: true,
+        shortcode: true,
+        name: true,
+        description: true,
+        type: true,
+        avatarTimestamp: true,
+        convoPrefix: true,
+        color: true,
+        icon: true,
+        personalSpace: true
+      },
+      with: {
+        personalSpaceOwner: {
+          columns: {
+            publicId: true
+          },
+          with: {
+            profile: {
+              columns: {
+                publicId: true,
+                avatarTimestamp: true,
+                firstName: true,
+                lastName: true,
+                handle: true,
+                title: true
+              }
+            }
+          }
+        }
+      }
+    });
+
+    const orgSpaces = await ctx.db.query.spaces.findMany({
+      where: and(eq(spaces.orgId, ctx.org.id), eq(spaces.personalSpace, false)),
+      columns: {
+        publicId: true,
+        shortcode: true,
+        name: true,
+        description: true,
+        type: true,
+        avatarTimestamp: true,
+        convoPrefix: true,
+        color: true,
+        icon: true
+      }
+    });
+
+    return {
+      personalSpaces: personalSpaces,
+      orgSpaces: orgSpaces
     };
   }),
 
@@ -177,7 +229,7 @@ export const spaceRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const { db, account, org } = ctx;
+      const { db, org } = ctx;
       const { spaceName, spaceDescription, spaceColor, spaceType } = input;
 
       const iCanHazCaller = iCanHazCallerFactory(ctx);

@@ -1,7 +1,7 @@
 'use client';
 
 import { useCurrentConvoId, useOrgShortcode } from '@/src/hooks/use-params';
-import { ClaimEmailIdentity } from './_components/claim-email-identity';
+// import { ClaimEmailIdentity } from './_components/claim-email-identity';
 import { RealtimeProvider } from '@/src/providers/realtime-provider';
 import { NewConvoSheet } from './convo/_components/new-convo-sheet';
 import { Button } from '@/src/components/shadcn-ui/button';
@@ -32,16 +32,17 @@ export default function Layout({
       }
     );
 
-  const { data: hasEmailIdentity } =
-    platform.org.mail.emailIdentities.userHasEmailIdentities.useQuery(
-      {
-        orgShortcode
-      },
-      {
-        staleTime: ms('1 hour'),
-        enabled: !!access?.hasAccess
-      }
-    );
+  //! TODO: enable this later
+  // const { data: hasEmailIdentity } =
+  //   platform.org.mail.emailIdentities.userHasEmailIdentities.useQuery(
+  //     {
+  //       orgShortcode
+  //     },
+  //     {
+  //       staleTime: ms('1 hour'),
+  //       enabled: !!access?.hasAccess
+  //     }
+  //   );
 
   if (accessLoading) {
     return (
@@ -78,9 +79,9 @@ export default function Layout({
         <div className="min-w-0 flex-1 grow overflow-x-auto">{children}</div>
         {isMobile && !convoId && <BottomNav />}
         {!isMobile && <NewConvoSheet />}
-        {hasEmailIdentity && !hasEmailIdentity.hasIdentity && (
+        {/* {hasEmailIdentity && !hasEmailIdentity.hasIdentity && (
           <ClaimEmailIdentity />
-        )}
+        )} */}
       </div>
     </RealtimeProvider>
   );

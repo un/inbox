@@ -1,10 +1,8 @@
-import { orgMembers, spaces, teamMembers, teams } from '@u22n/database/schema';
+import { orgMembers, spaces, teamMembers } from '@u22n/database/schema';
 import { eq, and, like, inArray } from '@u22n/database/orm';
 import type { SpaceMemberRole } from '@u22n/utils/spaces';
-import type { TypeId } from '@u22n/utils/typeid';
 import type { DBType } from '@u22n/database';
 import { TRPCError } from '@trpc/server';
-import type { TypeOf } from 'zod';
 
 // Find a user's personal space
 export async function personalSpaceLookup({

@@ -6,6 +6,7 @@ import {
   convoEntryReplies,
   convoParticipants,
   convoSubjects,
+  convoToSpaces,
   convos,
   emailIdentities,
   orgs,
@@ -383,7 +384,6 @@ export const worker = createWorker<MailProcessorJobData>(
           });
 
         if (alreadyProcessedMessageWithThisId) {
-          logger.warn('Message already processed');
           return;
         }
 
@@ -454,6 +454,7 @@ export const worker = createWorker<MailProcessorJobData>(
               signaturePlainText: true
             }
           });
+          // TODO: if contact has no avatar timestamp, or timestamp older than 28 days, fetch the avatar from UnAvatar
 
           if (!contact) {
             throw new Error('No contact found for from address');
@@ -522,8 +523,7 @@ export const worker = createWorker<MailProcessorJobData>(
               with: {
                 destinations: {
                   columns: {
-                    teamId: true,
-                    orgMemberId: true
+                    spaceId: true
                   }
                 }
               }
@@ -531,23 +531,16 @@ export const worker = createWorker<MailProcessorJobData>(
           }
         });
 
-        const { routingRuleOrgMemberIds, routingRuleTeamIds } =
-          emailIdentityResponse.reduce(
-            (values, { routingRules }) => {
-              for (const destination of routingRules.destinations) {
-                if (destination.teamId) {
-                  values.routingRuleTeamIds.push(destination.teamId);
-                } else if (destination.orgMemberId) {
-                  values.routingRuleOrgMemberIds.push(destination.orgMemberId);
-                }
+        const routingRuleSpaceIds = [] as number[];
+        emailIdentityResponse.map((ei) => {
+          if (ei.routingRules.destinations.length > 0) {
+            ei.routingRules.destinations.map((dr) => {
+              if (dr.spaceId) {
+                routingRuleSpaceIds.push(dr.spaceId);
               }
-              return values;
-            },
-            {
-              routingRuleTeamIds: [] as number[],
-              routingRuleOrgMemberIds: [] as number[]
-            }
-          );
+            });
+          }
+        });
 
         //* start to process the conversation
         let hasReplyToButIsNewConvo: boolean | null = null;
@@ -591,9 +584,7 @@ export const worker = createWorker<MailProcessorJobData>(
                   participants: {
                     columns: {
                       id: true,
-                      contactId: true,
-                      teamId: true,
-                      orgMemberId: true
+                      contactId: true
                     }
                   }
                 }
@@ -648,16 +639,6 @@ export const worker = createWorker<MailProcessorJobData>(
             const missingContacts = contactIds.filter(
               (c) => !existingConvoParticipantsContactIds.includes(c)
             );
-            const existingConvoParticipantsOrgMemberIds =
-              existingMessage.convo.participants.map((p) => p.orgMemberId);
-            const missingOrgMembers = routingRuleOrgMemberIds.filter(
-              (c) => !existingConvoParticipantsOrgMemberIds.includes(c)
-            );
-            const existingConvoParticipantsTeamIds =
-              existingMessage.convo.participants.map((p) => p.teamId);
-            const missingUserTeams = routingRuleTeamIds.filter(
-              (c) => !existingConvoParticipantsTeamIds.includes(c)
-            );
 
             // - if not, then add them to the convo participants to add array
             if (missingContacts.length) {
@@ -671,28 +652,44 @@ export const worker = createWorker<MailProcessorJobData>(
                 }))
               );
             }
-            if (missingOrgMembers.length) {
-              convoParticipantsToAdd.push(
-                ...missingOrgMembers.map((orgMemberId) => ({
-                  convoId,
-                  orgMemberId,
-                  orgId,
-                  publicId: typeIdGenerator('convoParticipants'),
-                  role: 'contributor' as const
-                }))
-              );
-            }
-            if (missingUserTeams.length) {
-              convoParticipantsToAdd.push(
-                ...missingUserTeams.map((teamId) => ({
-                  convoId,
-                  teamId,
-                  orgId,
-                  publicId: typeIdGenerator('convoParticipants'),
-                  role: 'contributor' as const
-                }))
-              );
-            }
+
+            // check all the spaces the convo is meant to be in, and add it to missing spaces via the convoToSpaces table
+
+            const existingConvoToSpacesEntries =
+              await db.query.convoToSpaces.findMany({
+                where: and(
+                  eq(convoToSpaces.orgId, orgId),
+                  eq(convoToSpaces.convoId, Number(convoId))
+                ),
+                columns: {
+                  spaceId: true
+                }
+              });
+
+            const existingSpaceIds = existingConvoToSpacesEntries.map(
+              (entry) => entry.spaceId
+            );
+            // remove the existing spaceIds from the routingRuleSpaceIds
+            const missingSpaceIds = routingRuleSpaceIds.filter(
+              (spaceId) => !existingSpaceIds.includes(spaceId)
+            );
+
+            // add convo to the missing spaces
+            type ConvoToSpaceInsertDbType = typeof convoToSpaces.$inferInsert;
+            const convoToSpacesInsertValuesArray: ConvoToSpaceInsertDbType[] =
+              [];
+            missingSpaceIds.forEach((spaceId) => {
+              convoToSpacesInsertValuesArray.push({
+                orgId: orgId,
+                convoId: Number(convoId),
+                spaceId: spaceId,
+                publicId: typeIdGenerator('convoToSpaces')
+              });
+            });
+
+            await db
+              .insert(convoToSpaces)
+              .values(convoToSpacesInsertValuesArray);
           } else {
             // if there is a reply to header but we cant find the conversation, we handle this like its a new convo
             hasReplyToButIsNewConvo = true;
@@ -730,28 +727,20 @@ export const worker = createWorker<MailProcessorJobData>(
               }))
             );
           }
-          if (routingRuleOrgMemberIds.length) {
-            convoParticipantsToAdd.push(
-              ...routingRuleOrgMemberIds.map((orgMemberId) => ({
-                convoId,
-                orgMemberId,
-                orgId,
-                publicId: typeIdGenerator('convoParticipants'),
-                role: 'contributor' as const
-              }))
-            );
-          }
-          if (routingRuleTeamIds.length) {
-            convoParticipantsToAdd.push(
-              ...routingRuleTeamIds.map((teamId) => ({
-                convoId: convoId,
-                teamId: teamId,
-                orgId: orgId,
-                publicId: typeIdGenerator('convoParticipants'),
-                role: 'contributor' as const
-              }))
-            );
-          }
+
+          type ConvoToSpaceInsertDbType = typeof convoToSpaces.$inferInsert;
+
+          const convoToSpacesInsertValuesArray: ConvoToSpaceInsertDbType[] = [];
+          routingRuleSpaceIds.forEach((spaceId) => {
+            convoToSpacesInsertValuesArray.push({
+              orgId: orgId,
+              convoId: Number(convoId),
+              spaceId: spaceId,
+              publicId: typeIdGenerator('convoToSpaces')
+            });
+          });
+
+          await db.insert(convoToSpaces).values(convoToSpacesInsertValuesArray);
         }
 
         //* start to handle creating the message in the convo
@@ -781,67 +770,71 @@ export const worker = createWorker<MailProcessorJobData>(
             // @ts-expect-error we check and define earlier up
             fromAddressParticipantId = contactParticipant.id;
           } else if (fromAddressPlatformObject.type === 'emailIdentity') {
+            console.error(
+              '🚪 Adding participants from internal email identity with messages sent from external email services not supported yet'
+            );
+            //! TODO: How do we handle adding the participant to the convo if we only track spaces?
+            //! leave code below for ref and quick revert if needed
             // we need to get the first person/team in the routing rule and add them to the convo
-            const emailIdentityParticipant =
-              await db.query.emailIdentities.findFirst({
-                where: and(
-                  eq(emailIdentities.orgId, orgId),
-                  eq(emailIdentities.id, fromAddressPlatformObject?.id)
-                ),
-                columns: {
-                  id: true
-                },
-                with: {
-                  routingRules: {
-                    columns: {
-                      id: true
-                    },
-                    with: {
-                      destinations: {
-                        columns: {
-                          teamId: true,
-                          orgMemberId: true
-                        }
-                      }
-                    }
-                  }
-                }
-              });
-            const firstDestination =
-              // @ts-expect-error, taken form old code, will rewrite later
-              emailIdentityParticipant.routingRules.destinations[0]!;
-            let convoParticipantFromAddressIdentity;
-            if (firstDestination.orgMemberId) {
-              convoParticipantFromAddressIdentity =
-                await db.query.convoParticipants.findFirst({
-                  where: and(
-                    eq(convoParticipants.orgId, orgId),
-                    eq(convoParticipants.convoId, convoId),
+            // const emailIdentityParticipant =
+            //   await db.query.emailIdentities.findFirst({
+            //     where: and(
+            //       eq(emailIdentities.orgId, orgId),
+            //       eq(emailIdentities.id, fromAddressPlatformObject?.id)
+            //     ),
+            //     columns: {
+            //       id: true
+            //     },
+            //     with: {
+            //       routingRules: {
+            //         columns: {
+            //           id: true
+            //         },
+            //         with: {
+            //           destinations: {
+            //             columns: {
+            //               spaceId: true,
+            //             }
+            //           }
+            //         }
+            //       }
+            //     }
+            //   });
+            // const firstDestination =
+            //   // @ts-expect-error, taken form old code, will rewrite later
+            //   emailIdentityParticipant.routingRules.destinations[0]!;
+            // let convoParticipantFromAddressIdentity;
+            // if (firstDestination.orgMemberId) {
+            //   convoParticipantFromAddressIdentity =
+            //     await db.query.convoParticipants.findFirst({
+            //       where: and(
+            //         eq(convoParticipants.orgId, orgId),
+            //         eq(convoParticipants.convoId, convoId),
 
-                    eq(
-                      convoParticipants.orgMemberId,
-                      firstDestination.orgMemberId
-                    )
-                  ),
-                  columns: {
-                    id: true
-                  }
-                });
-            } else if (firstDestination.teamId) {
-              convoParticipantFromAddressIdentity =
-                await db.query.convoParticipants.findFirst({
-                  where: and(
-                    eq(convoParticipants.orgId, orgId),
-                    eq(convoParticipants.convoId, convoId || 0),
-                    eq(convoParticipants.teamId, firstDestination.teamId)
-                  ),
-                  columns: {
-                    id: true
-                  }
-                });
-            }
-            // @ts-expect-error, taken form old code, will rewrite later
-            fromAddressParticipantId = convoParticipantFromAddressIdentity.id;
+            //         eq(
+            //           convoParticipants.orgMemberId,
+            //           firstDestination.orgMemberId
+            //         )
+            //       ),
+            //       columns: {
+            //         id: true
+            //       }
+            //     });
+            // } else if (firstDestination.teamId) {
+            //   convoParticipantFromAddressIdentity =
+            //     await db.query.convoParticipants.findFirst({
+            //       where: and(
+            //         eq(convoParticipants.orgId, orgId),
+            //         eq(convoParticipants.convoId, convoId || 0),
+            //         eq(convoParticipants.teamId, firstDestination.teamId)
+            //       ),
+            //       columns: {
+            //         id: true
+            //       }
+            //     });
+            // }
+
+            // fromAddressParticipantId = convoParticipantFromAddressIdentity.id;
           }
         }
 

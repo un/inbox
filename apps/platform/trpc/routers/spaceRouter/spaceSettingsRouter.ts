@@ -1,9 +1,9 @@
 import { router, orgProcedure } from '~platform/trpc/trpc';
 import { z } from 'zod';
 
-import { spaceMembers, spaces } from '@u22n/database/schema';
 import { spaceTypeArray } from '@u22n/utils/spaces';
 import { isOrgMemberSpaceMember } from './utils';
+import { spaces } from '@u22n/database/schema';
 import { uiColors } from '@u22n/utils/colors';
 import { eq, and } from '@u22n/database/orm';
 import { TRPCError } from '@trpc/server';

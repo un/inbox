@@ -1,8 +1,8 @@
 'use client';
 import { convoListSelection, lastSelectedConvo } from '../atoms';
+import { type RouterOutputs } from '@/src/lib/trpc';
 import { SpinnerGap } from '@phosphor-icons/react';
 import { type TypeId } from '@u22n/utils/typeid';
-import { RouterOutputs } from '@/src/lib/trpc';
 import { Virtuoso } from 'react-virtuoso';
 import { useCallback } from 'react';
 import { useAtom } from 'jotai';
