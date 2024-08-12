@@ -74,6 +74,11 @@ export const teamsRouter = router({
           addedByOrgMemberId: org.memberId,
           role: 'admin'
         });
+
+        await db
+          .update(teams)
+          .set({ defaultSpaceId: Number(newSpaceId) })
+          .where(eq(teams.id, Number(newTeamId)));
       }
 
       return {

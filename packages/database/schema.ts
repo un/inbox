@@ -479,6 +479,7 @@ export const teams = mysqlTable(
     color: mysqlEnum('color', [...uiColors]),
     description: text('description'),
     defaultEmailIdentityId: foreignKey('default_email_identity_id'),
+    defaultSpaceId: foreignKey('default_space_id'),
     createdAt: timestamp('created_at')
       .notNull()
       .$defaultFn(() => new Date())
@@ -501,7 +502,11 @@ export const teamsRelations = relations(teams, ({ one, many }) => ({
     references: [emailIdentities.id]
   }),
   members: many(teamMembers),
-  spaceMemberships: many(spaceMembers)
+  spaceMemberships: many(spaceMembers),
+  defaultSpace: one(spaces, {
+    fields: [teams.defaultSpaceId],
+    references: [spaces.id]
+  })
 }));
 
 export const teamMembers = mysqlTable(

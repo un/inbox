@@ -113,7 +113,7 @@ export function NewTeamModal() {
         domain: '',
         sendName: ''
       },
-      createSpace: false
+      createSpace: true
     }
   });
 
@@ -279,6 +279,7 @@ export function NewTeamModal() {
                   <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4">
                     <FormControl>
                       <Checkbox
+                        disabled={true}
                         checked={field.value}
                         onCheckedChange={field.onChange}
                       />

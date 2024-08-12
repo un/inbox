@@ -173,8 +173,9 @@ export const convoRouter = router({
           message: 'You are not allowed to send a message in this space'
         });
       }
+      const spacesToAddConvoTo: number[] = [];
 
-      const spaceId = spaceMembershipResponse.spaceId;
+      spacesToAddConvoTo.push(spaceMembershipResponse.spaceId);
 
       let convoParticipantToPublicId: TypeId<'convoParticipants'>;
       let convoMessageToNewContactPublicId: TypeId<'contacts'>;
@@ -224,12 +225,34 @@ export const convoRouter = router({
           }
         });
 
-        for (const orgMember of orgMemberResponses) {
+        for (const orgMemberParticipant of orgMemberResponses) {
           orgMemberIds.push({
-            id: orgMember.id,
-            publicId: orgMember.publicId,
-            emailIdentityId: orgMember.defaultEmailIdentityId ?? null
+            id: orgMemberParticipant.id,
+            publicId: orgMemberParticipant.publicId,
+            emailIdentityId: orgMemberParticipant.defaultEmailIdentityId ?? null
           });
+
+          const canUserAccessSpace = await isOrgMemberSpaceMember({
+            db,
+            orgId,
+            spaceShortcode: input.spaceShortcode,
+            orgMemberId: orgMemberParticipant.id
+          });
+
+          if (canUserAccessSpace.role === null) {
+            const orgMemberQueryResponse = await db.query.orgMembers.findFirst({
+              where: and(
+                eq(orgMembers.orgId, orgId),
+                eq(orgMembers.id, orgMemberParticipant.id)
+              ),
+              columns: {
+                personalSpaceId: true
+              }
+            });
+
+            orgMemberQueryResponse?.personalSpaceId &&
+              spacesToAddConvoTo.push(orgMemberQueryResponse.personalSpaceId);
+          }
         }
 
         if (orgMemberIds.length !== participantsOrgMembersPublicIds.length) {
@@ -254,12 +277,47 @@ export const convoRouter = router({
           }
         });
 
-        for (const team of teamResponses) {
+        for (const teamParticipant of teamResponses) {
           orgTeamIds.push({
-            id: team.id,
-            publicId: team.publicId,
-            emailIdentityId: team.defaultEmailIdentityId ?? null
+            id: teamParticipant.id,
+            publicId: teamParticipant.publicId,
+            emailIdentityId: teamParticipant.defaultEmailIdentityId ?? null
           });
+
+          const spaceQueryResponse = await db.query.spaces.findFirst({
+            where: and(
+              eq(spaces.orgId, orgId),
+              eq(spaces.shortcode, spaceShortcode)
+            ),
+            columns: {
+              id: true,
+              publicId: true
+            },
+            with: {
+              members: {
+                columns: {
+                  teamId: true
+                }
+              }
+            }
+          });
+          const spaceTeamMembership = spaceQueryResponse?.members.filter(
+            (spaceMember) => spaceMember.teamId !== null
+          );
+
+          if (!spaceTeamMembership || spaceTeamMembership.length === 0) {
+            const teamQueryResponse = await db.query.teams.findFirst({
+              where: and(
+                eq(teams.orgId, orgId),
+                eq(teams.id, teamParticipant.id)
+              ),
+              columns: {
+                defaultSpaceId: true
+              }
+            });
+            teamQueryResponse?.defaultSpaceId &&
+              spacesToAddConvoTo.push(teamQueryResponse.defaultSpaceId);
+          }
         }
 
         if (orgTeamIds.length !== participantsTeamsPublicIds.length) {
@@ -469,13 +527,13 @@ export const convoRouter = router({
 
       // add the conversation to the space
 
-      const newConvoToSpacePublicId = typeIdGenerator('convoToSpaces');
-      await db.insert(convoToSpaces).values({
-        publicId: newConvoToSpacePublicId,
+      const convoToSpacesInsertValues = spacesToAddConvoTo.map((spaceId) => ({
+        publicId: typeIdGenerator('convoToSpaces'),
         convoId: Number(insertConvoResponse.insertId),
         spaceId: spaceId,
         orgId: orgId
-      });
+      }));
+      await db.insert(convoToSpaces).values(convoToSpacesInsertValues);
 
       // create conversationSubject entry
       const newConvoSubjectPublicId = typeIdGenerator('convoSubjects');
