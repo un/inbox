@@ -141,7 +141,7 @@ export const profileRouter = router({
       if (orgMemberProfileQuery.orgMember.personalSpaceId) {
         const validatedShortcode = await validateSpaceShortCode({
           db: db,
-          shortcode: `${input.handle}-personal`,
+          shortcode: `${input.handle ?? orgMemberProfileQuery.handle}-personal`,
           orgId: orgMemberProfileQuery.orgId,
           spaceId: orgMemberProfileQuery.orgMember.personalSpaceId
         });
