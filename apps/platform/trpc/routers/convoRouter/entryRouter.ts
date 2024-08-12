@@ -98,12 +98,12 @@ export const convoEntryRouter = router({
         });
       });
 
-      if (!convoParticipantsOrgMemberIds.includes(accountOrgMemberId)) {
-        throw new TRPCError({
-          code: 'UNAUTHORIZED',
-          message: 'You are not a participant of this conversation'
-        });
-      }
+      // if (!convoParticipantsOrgMemberIds.includes(accountOrgMemberId)) {
+      //   throw new TRPCError({
+      //     code: 'UNAUTHORIZED',
+      //     message: 'You are not a participant of this conversation'
+      //   });
+      // }
 
       const LIMIT = 15;
       // get the entries
@@ -274,12 +274,12 @@ export const convoEntryRouter = router({
         });
       });
 
-      if (!convoParticipantsOrgMemberIds.includes(accountOrgMemberId)) {
-        throw new TRPCError({
-          code: 'UNAUTHORIZED',
-          message: 'You are not a participant of this conversation'
-        });
-      }
+      // if (!convoParticipantsOrgMemberIds.includes(accountOrgMemberId)) {
+      //   throw new TRPCError({
+      //     code: 'UNAUTHORIZED',
+      //     message: 'You are not a participant of this conversation'
+      //   });
+      // }
 
       // get the entries
       const convoEntryQuery = await db.query.convoEntries.findFirst({
@@ -464,12 +464,12 @@ export const convoEntryRouter = router({
         });
       });
 
-      if (!convoParticipantsOrgMemberIds.includes(accountOrgMemberId)) {
-        throw new TRPCError({
-          code: 'UNAUTHORIZED',
-          message: 'You are not a participant of this conversation'
-        });
-      }
+      // if (!convoParticipantsOrgMemberIds.includes(accountOrgMemberId)) {
+      //   throw new TRPCError({
+      //     code: 'UNAUTHORIZED',
+      //     message: 'You are not a participant of this conversation'
+      //   });
+      // }
 
       return {
         rawEmailData: convoEntryQuery.rawHtml

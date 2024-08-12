@@ -1749,20 +1749,22 @@ export const convoRouter = router({
       });
 
       // If participant is still not found, the user is not a participant of this conversation
-      if (!participant) {
-        throw new TRPCError({
-          code: 'UNAUTHORIZED',
-          message: 'You are not a participant of this conversation'
-        });
-      }
+      // if (!participant) {
+      //   throw new TRPCError({
+      //     code: 'UNAUTHORIZED',
+      //     message: 'You are not a participant of this conversation'
+      //   });
+      // }
 
       // updates the lastReadAt of the participant
-      await db
-        .update(convoParticipants)
-        .set({
-          lastReadAt: new Date()
-        })
-        .where(eq(convoParticipants.publicId, participant.publicId));
+      if (participant) {
+        await db
+          .update(convoParticipants)
+          .set({
+            lastReadAt: new Date()
+          })
+          .where(eq(convoParticipants.publicId, participant.publicId));
+      }
 
       return convoQuery;
     }),
