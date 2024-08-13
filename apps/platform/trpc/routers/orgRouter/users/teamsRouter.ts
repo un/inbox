@@ -1,10 +1,15 @@
 import {
+  teams,
+  spaces,
+  spaceMembers,
+  emailIdentities
+} from '@u22n/database/schema';
+import {
   typeIdGenerator,
   typeIdValidator,
   type TypeId
 } from '@u22n/utils/typeid';
 import { router, orgProcedure, orgAdminProcedure } from '~platform/trpc/trpc';
-import { teams, spaces, spaceMembers } from '@u22n/database/schema';
 import { validateSpaceShortCode } from '../../spaceRouter/utils';
 import { addOrgMemberToTeamHandler } from './teamsHandler';
 import { uiColors } from '@u22n/utils/colors';
@@ -41,6 +46,7 @@ export const teamsRouter = router({
       const newTeamId = newTeamResponse.insertId;
 
       let newSpacePublicId: TypeId<'spaces'> | undefined;
+
       if (createSpace) {
         newSpacePublicId = typeIdGenerator('spaces');
         const newSpaceMemberPublicId = typeIdGenerator('spaceMembers');
@@ -265,5 +271,66 @@ export const teamsRouter = router({
         code: 'NOT_IMPLEMENTED',
         message: 'Not implemented'
       });
+    }),
+  setTeamDefaultEmailIdentity: orgAdminProcedure
+    .input(
+      z.object({
+        teamPublicId: typeIdValidator('teams'),
+        emailIdentityPublicId: typeIdValidator('emailIdentities')
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { db, org } = ctx;
+
+      const orgId = org.id;
+      const { teamPublicId, emailIdentityPublicId } = input;
+
+      // get then email identity id
+      const emailIdentityQueryResponse =
+        await db.query.emailIdentities.findFirst({
+          where: and(
+            eq(emailIdentities.publicId, emailIdentityPublicId),
+            eq(emailIdentities.orgId, orgId)
+          ),
+          columns: {
+            id: true
+          }
+        });
+
+      if (!emailIdentityQueryResponse) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Email identity not found'
+        });
+      }
+
+      // get team to verify it exists
+      const teamQueryResponse = await db.query.teams.findFirst({
+        where: and(eq(teams.publicId, teamPublicId), eq(teams.orgId, orgId)),
+        columns: {
+          id: true
+        }
+      });
+
+      if (!teamQueryResponse) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Team not found'
+        });
+      }
+
+      await db
+        .update(teams)
+        .set({ defaultEmailIdentityId: Number(emailIdentityQueryResponse.id) })
+        .where(
+          and(
+            eq(teams.orgId, orgId),
+            eq(teams.id, Number(teamQueryResponse.id))
+          )
+        );
+
+      return {
+        success: true
+      };
     })
 });

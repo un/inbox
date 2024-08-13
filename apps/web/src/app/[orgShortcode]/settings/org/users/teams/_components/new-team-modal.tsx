@@ -101,6 +101,13 @@ export function NewTeamModal() {
     onError: () => void 0
   });
 
+  const { mutateAsync: setTeamEmailIdentity } =
+    platform.org.users.teams.setTeamDefaultEmailIdentity.useMutation({
+      onSuccess: () => {
+        void invalidateTeams.invalidate();
+      }
+    });
+
   const form = useForm<z.infer<typeof teamFormSchema>>({
     resolver: zodResolver(teamFormSchema),
     defaultValues: {
@@ -139,7 +146,7 @@ export function NewTeamModal() {
     });
 
     if (values.email.create && team.newSpacePublicId) {
-      await createEmailIdentity({
+      const newEmailIdentity = await createEmailIdentity({
         orgShortcode,
         domainPublicId: values.email.domain!,
         emailUsername: values.email.address!,
@@ -152,6 +159,14 @@ export function NewTeamModal() {
           teams: [team.newTeamPublicId]
         }
       });
+
+      if (newEmailIdentity) {
+        await setTeamEmailIdentity({
+          orgShortcode,
+          teamPublicId: team.newTeamPublicId,
+          emailIdentityPublicId: newEmailIdentity.emailIdentity
+        });
+      }
     }
 
     form.reset();
