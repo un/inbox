@@ -185,7 +185,7 @@ const MessageItem = memo(
       () =>
         formattedParticipants.find(
           (p) => p.participantPublicId === message.author.publicId
-        )!,
+        ),
       [formattedParticipants, message.author.publicId]
     );
     const [replyTo, setReplyTo] = useAtom(replyToMessageAtom);
@@ -250,10 +250,12 @@ const MessageItem = memo(
               isUserAuthor ? 'flex-row-reverse' : 'flex-row'
             )}>
             <Avatar
-              avatarProfilePublicId={messageAuthor.avatarProfilePublicId}
-              avatarTimestamp={messageAuthor.avatarTimestamp}
-              name={messageAuthor.name}
-              color={messageAuthor.color}
+              avatarProfilePublicId={
+                messageAuthor?.avatarProfilePublicId ?? 'no_avatar'
+              }
+              avatarTimestamp={messageAuthor?.avatarTimestamp ?? null}
+              name={messageAuthor?.name ?? '...'}
+              color={messageAuthor?.color ?? 'accent'}
               hideTooltip
               size="xl"
             />
@@ -269,7 +271,7 @@ const MessageItem = memo(
                   isUserAuthor ? 'items-end' : 'items-start'
                 )}>
                 <span className="text-base font-medium leading-none">
-                  {messageAuthor.name}
+                  {messageAuthor?.name ?? '...'}
                 </span>
                 {viaAddress ? (
                   <span className="text-base-11 text-xs leading-none">
