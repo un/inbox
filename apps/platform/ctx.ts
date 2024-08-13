@@ -1,4 +1,5 @@
 import type { Context } from '@u22n/hono/helpers';
+import type { TypeId } from '@u22n/utils/typeid';
 import type { HonoContext } from '@u22n/hono';
 import type { DBType } from '@u22n/database';
 import type { DatabaseSession } from 'lucia';
@@ -9,7 +10,7 @@ export type Ctx = HonoContext<{
 
 export type OrgContext = {
   id: number;
-  publicId: string;
+  publicId: TypeId<'org'>;
   name: string;
   memberId?: number;
   members: {

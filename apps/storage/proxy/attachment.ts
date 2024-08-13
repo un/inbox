@@ -1,4 +1,4 @@
-import { convoAttachments, orgMembers, orgs } from '@u22n/database/schema';
+import { convoAttachments, orgMembers } from '@u22n/database/schema';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { GetObjectCommand } from '@aws-sdk/client-s3';
 import { typeIdValidator } from '@u22n/utils/typeid';
@@ -30,29 +30,27 @@ export const attachmentProxy = createHonoApp<Ctx>().get(
         fileName: true,
         orgId: true,
         public: true
+      },
+      with: {
+        org: {
+          columns: {
+            id: true,
+            shortcode: true,
+            publicId: true
+          }
+        }
       }
     });
 
     if (
       !attachmentQueryResponse ||
-      attachmentQueryResponse.fileName !== filename
+      attachmentQueryResponse.fileName !== filename ||
+      attachmentQueryResponse.org.shortcode !== orgShortcode
     ) {
       return c.json(
         { error: `Attachment ${filename} not found` },
         { status: 404 }
       );
-    }
-
-    const orgQueryResponse = await db.query.orgs.findFirst({
-      where: eq(orgs.shortcode, orgShortcode),
-      columns: {
-        id: true,
-        publicId: true
-      }
-    });
-
-    if (!orgQueryResponse) {
-      return c.json({ error: 'Invalid org' }, { status: 400 });
     }
 
     if (!attachmentQueryResponse.public) {
@@ -61,7 +59,7 @@ export const attachmentProxy = createHonoApp<Ctx>().get(
 
       const orgAccountMembershipResponse = await db.query.orgMembers.findFirst({
         where: and(
-          eq(orgMembers.orgId, orgQueryResponse.id),
+          eq(orgMembers.orgId, attachmentQueryResponse.org.id),
           eq(orgMembers.accountId, accountId)
         ),
         columns: {
@@ -72,10 +70,9 @@ export const attachmentProxy = createHonoApp<Ctx>().get(
         return c.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const orgPublicId = orgQueryResponse.publicId;
     const command = new GetObjectCommand({
       Bucket: env.STORAGE_S3_BUCKET_ATTACHMENTS,
-      Key: `${orgPublicId}/${attachmentId}/${filename}`
+      Key: `${attachmentQueryResponse.org.publicId}/${attachmentId}/${filename}`
     });
     const url = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
     const res = await fetch(url).then((res) => c.body(res.body, res));

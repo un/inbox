@@ -14,7 +14,7 @@ export const authMiddleware = createMiddleware<Ctx>(async (c, next) =>
     if (!sessionCookie) {
       c.set('account', null);
     } else {
-      const sessionObject = await storage.getItem(sessionCookie);
+      const sessionObject = await storage.session.getItem(sessionCookie);
 
       if (sessionObject) {
         span?.setAttributes(

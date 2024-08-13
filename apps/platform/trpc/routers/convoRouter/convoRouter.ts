@@ -28,21 +28,37 @@ import {
   lt
 } from '@u22n/database/orm';
 import {
+  tryParseInlineProxyUrl,
+  walkAndReplaceImages
+} from '~platform/utils/tiptap-utils';
+import {
   typeIdValidator,
   type TypeId,
   typeIdGenerator
 } from '@u22n/utils/typeid';
 import { realtime, sendRealtimeNotification } from '~platform/utils/realtime';
 import { mailBridgeTrpcClient } from '~platform/utils/tRPCServerClients';
-import { tipTapExtensions } from '@u22n/tiptap/extensions';
+import { createExtensionSet } from '@u22n/tiptap/extensions';
 import { router, orgProcedure } from '~platform/trpc/trpc';
 import { type JSONContent } from '@u22n/tiptap/react';
 import { convoEntryRouter } from './entryRouter';
 import { tiptapCore } from '@u22n/tiptap';
 import { TRPCError } from '@trpc/server';
 import { env } from '~platform/env';
-import { parse } from 'superjson';
 import { z } from 'zod';
+
+const tipTapExtensions = createExtensionSet({
+  storageUrl: env.STORAGE_URL
+});
+
+type Attachment = {
+  orgPublicId: TypeId<'org'>;
+  attachmentPublicId: TypeId<'convoAttachments'>;
+  fileName: string;
+  fileType: string;
+  size: number;
+  inline?: boolean;
+};
 
 export const convoRouter = router({
   entries: convoEntryRouter,
@@ -69,7 +85,7 @@ export const convoRouter = router({
             })
           ),
         topic: z.string().min(1),
-        message: z.string().min(1),
+        message: z.any(),
         firstMessageType: z.enum(['message', 'draft', 'comment']),
         attachments: z.array(
           z.object({
@@ -94,51 +110,11 @@ export const convoRouter = router({
         participantsTeamsPublicIds,
         participantsContactsPublicIds,
         topic,
-        message: messageString,
         to: convoMessageTo,
         firstMessageType
       } = input;
 
-      // if there is a send as email identity, check if that email identity is enabled
-      if (sendAsEmailIdentityPublicId) {
-        const emailIdentityResponse = await db.query.emailIdentities.findFirst({
-          where: and(
-            eq(emailIdentities.orgId, orgId),
-            eq(emailIdentities.publicId, sendAsEmailIdentityPublicId)
-          ),
-          columns: {},
-          with: {
-            domain: {
-              columns: {
-                domainStatus: true,
-                sendingMode: true
-              }
-            }
-          }
-        });
-
-        if (!emailIdentityResponse) {
-          throw new TRPCError({
-            code: 'NOT_FOUND',
-            message: 'Send as email identity not found'
-          });
-        }
-
-        if (emailIdentityResponse.domain) {
-          if (
-            emailIdentityResponse.domain.domainStatus !== 'active' ||
-            emailIdentityResponse.domain.sendingMode === 'disabled'
-          ) {
-            throw new TRPCError({
-              code: 'UNPROCESSABLE_CONTENT',
-              message:
-                'You cant send from that email address due to a configuration issue. Please contact your administrator or select a different email identity.'
-            });
-          }
-        }
-      }
-
-      const message: JSONContent = parse(messageString);
+      const message = input.message as JSONContent;
       let convoParticipantToPublicId: TypeId<'convoParticipants'>;
       let convoMessageToNewContactPublicId: TypeId<'contacts'>;
 
@@ -307,6 +283,49 @@ export const convoRouter = router({
             code: 'UNPROCESSABLE_CONTENT',
             message: 'One or more contacts is invalid'
           });
+        }
+      }
+
+      const convoHasEmailParticipants =
+        participantsContactsPublicIds.length > 0 ||
+        participantsEmails.length > 0;
+
+      // if there is a send as email identity, check if that email identity is enabled
+      if (sendAsEmailIdentityPublicId && convoHasEmailParticipants) {
+        const emailIdentityResponse = await db.query.emailIdentities.findFirst({
+          where: and(
+            eq(emailIdentities.orgId, orgId),
+            eq(emailIdentities.publicId, sendAsEmailIdentityPublicId)
+          ),
+          columns: {},
+          with: {
+            domain: {
+              columns: {
+                domainStatus: true,
+                sendingMode: true
+              }
+            }
+          }
+        });
+
+        if (!emailIdentityResponse) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Send as email identity not found'
+          });
+        }
+
+        if (emailIdentityResponse.domain) {
+          if (
+            emailIdentityResponse.domain.domainStatus !== 'active' ||
+            emailIdentityResponse.domain.sendingMode === 'disabled'
+          ) {
+            throw new TRPCError({
+              code: 'UNPROCESSABLE_CONTENT',
+              message:
+                'You cant send from that email address due to a configuration issue. Please contact your administrator or select a different email identity.'
+            });
+          }
         }
       }
 
@@ -620,6 +639,22 @@ export const convoRouter = router({
           role: 'assigned'
         });
 
+      const inlineAttachments: Attachment[] = [];
+
+      walkAndReplaceImages(message, (inlineUrl) => {
+        const inlineProxy = tryParseInlineProxyUrl(inlineUrl);
+        if (!inlineProxy) return inlineUrl;
+        inlineAttachments.push({
+          orgPublicId: org.publicId,
+          attachmentPublicId: inlineProxy.attachmentPublicId,
+          fileName: inlineProxy.fileName,
+          fileType: inlineProxy.fileType,
+          size: inlineProxy.size,
+          inline: true
+        });
+        return `${env.STORAGE_URL}/attachment/${inlineProxy.orgShortcode}/${inlineProxy.attachmentPublicId}/${inlineProxy.fileName}`;
+      });
+
       //* create convoEntry
       const newConvoBody = message;
       const newConvoBodyPlainText = tiptapCore.generateText(
@@ -663,18 +698,13 @@ export const convoRouter = router({
         .onDuplicateKeyUpdate({ set: { seenAt: newConvoTimestamp } });
 
       //* if convo has attachments, add them to the convo
-      const attachmentsToSend: {
-        orgPublicId: string;
-        attachmentPublicId: string;
-        fileName: string;
-        fileType: string;
-      }[] = [];
       const pendingAttachmentsToRemoveFromPending: TypeId<'convoAttachments'>[] =
         [];
+      const convoAttachmentsDbInsertValuesArray: InferInsertModel<
+        typeof convoAttachments
+      >[] = [];
+
       if (input.attachments.length > 0) {
-        const convoAttachmentsDbInsertValuesArray: InferInsertModel<
-          typeof convoAttachments
-        >[] = [];
         input.attachments.forEach((attachment) => {
           convoAttachmentsDbInsertValuesArray.push({
             orgId: orgId,
@@ -689,25 +719,41 @@ export const convoRouter = router({
             size: attachment.size,
             createdAt: newConvoTimestamp
           });
-          attachmentsToSend.push({
-            orgPublicId: org.publicId,
-            attachmentPublicId: attachment.attachmentPublicId,
+          pendingAttachmentsToRemoveFromPending.push(
+            attachment.attachmentPublicId
+          );
+        });
+      }
+
+      if (inlineAttachments.length > 0) {
+        inlineAttachments.forEach((attachment) => {
+          convoAttachmentsDbInsertValuesArray.push({
+            orgId: orgId,
+            convoId: Number(insertConvoResponse.insertId),
+            convoEntryId: Number(insertConvoEntryResponse.insertId),
+            convoParticipantId: Number(
+              insertAuthorConvoParticipantResponse.insertId
+            ),
+            publicId: attachment.attachmentPublicId,
             fileName: attachment.fileName,
-            fileType: attachment.type
+            type: attachment.fileType,
+            size: attachment.size,
+            createdAt: newConvoTimestamp,
+            inline: true
           });
           pendingAttachmentsToRemoveFromPending.push(
             attachment.attachmentPublicId
           );
         });
+      }
+
+      if (convoAttachmentsDbInsertValuesArray.length > 0) {
         await db
           .insert(convoAttachments)
           .values(convoAttachmentsDbInsertValuesArray);
       }
 
-      if (
-        input.attachments.length > 0 &&
-        pendingAttachmentsToRemoveFromPending.length > 0
-      ) {
+      if (pendingAttachmentsToRemoveFromPending.length > 0) {
         await db
           .delete(pendingAttachments)
           .where(
@@ -722,7 +768,6 @@ export const convoRouter = router({
       }
 
       //* if convo has contacts, send external email via mail bridge
-      const convoHasEmailParticipants = orgContactIds.length > 0;
 
       if (convoHasEmailParticipants && firstMessageType === 'message') {
         await mailBridgeTrpcClient.mail.send.sendConvoEntryEmail.mutate({
@@ -753,13 +798,14 @@ export const convoRouter = router({
         sendAsEmailIdentityPublicId:
           typeIdValidator('emailIdentities').optional(),
         replyToMessagePublicId: typeIdValidator('convoEntries'),
-        message: z.string().min(1),
+        message: z.any(),
         attachments: z.array(
           z.object({
             fileName: z.string(),
             attachmentPublicId: typeIdValidator('convoAttachments'),
             size: z.number(),
-            type: z.string()
+            type: z.string(),
+            inline: z.boolean().default(false)
           })
         ),
         messageType: z.enum(['message', 'draft', 'comment']),
@@ -770,52 +816,9 @@ export const convoRouter = router({
       const { db, org } = ctx;
       const accountOrgMemberId = org.memberId;
       const orgId = org.id;
-      const {
-        sendAsEmailIdentityPublicId,
-        message: messageString,
-        messageType
-      } = input;
+      const { sendAsEmailIdentityPublicId, messageType } = input;
 
-      // if there is a send as email identity, check if that email identity is enabled
-      if (sendAsEmailIdentityPublicId) {
-        const emailIdentityResponse = await db.query.emailIdentities.findFirst({
-          where: and(
-            eq(emailIdentities.orgId, orgId),
-            eq(emailIdentities.publicId, sendAsEmailIdentityPublicId)
-          ),
-          columns: {},
-          with: {
-            domain: {
-              columns: {
-                domainStatus: true,
-                sendingMode: true
-              }
-            }
-          }
-        });
-
-        if (!emailIdentityResponse) {
-          throw new TRPCError({
-            code: 'NOT_FOUND',
-            message: 'Send as email identity not found'
-          });
-        }
-
-        if (emailIdentityResponse.domain) {
-          if (
-            emailIdentityResponse.domain.domainStatus !== 'active' ||
-            emailIdentityResponse.domain.sendingMode === 'disabled'
-          ) {
-            throw new TRPCError({
-              code: 'UNPROCESSABLE_CONTENT',
-              message:
-                'You cant send from that email address due to a configuration issue. Please contact your administrator or select a different email identity.'
-            });
-          }
-        }
-      }
-
-      const message: JSONContent = parse(messageString);
+      const message = input.message as JSONContent;
 
       const convoEntryToReplyToQueryResponse =
         await db.query.convoEntries.findFirst({
@@ -872,56 +875,6 @@ export const convoRouter = router({
       // get the email identity the user wants to email from
       let emailIdentityId: number | null = null;
 
-      if (sendAsEmailIdentityPublicId) {
-        const sendAsEmailIdentityResponse =
-          await db.query.emailIdentities.findFirst({
-            where: and(
-              eq(emailIdentities.orgId, orgId),
-              eq(emailIdentities.publicId, sendAsEmailIdentityPublicId)
-            ),
-            columns: {
-              id: true
-            },
-            with: {
-              authorizedOrgMembers: {
-                columns: {
-                  orgMemberId: true,
-                  teamId: true
-                },
-                with: {
-                  team: {
-                    columns: {
-                      id: true
-                    },
-                    with: {
-                      members: {
-                        columns: {
-                          orgMemberId: true
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          });
-        const userIsAuthorized =
-          sendAsEmailIdentityResponse?.authorizedOrgMembers.some(
-            (authorizedOrgMember) =>
-              authorizedOrgMember.orgMemberId === accountOrgMemberId ||
-              authorizedOrgMember.team?.members.some(
-                (teamMember) => teamMember.orgMemberId === accountOrgMemberId
-              )
-          );
-        if (!userIsAuthorized) {
-          throw new TRPCError({
-            code: 'UNAUTHORIZED',
-            message: 'User is not authorized to send as this email identity'
-          });
-        }
-        emailIdentityId = sendAsEmailIdentityResponse?.id ?? null;
-      }
-
       let authorConvoParticipantId: number | undefined;
       let authorConvoParticipantPublicId:
         | TypeId<'convoParticipants'>
@@ -973,6 +926,74 @@ export const convoRouter = router({
         convoEntryToReplyToQueryResponse.convo.participants.some(
           (participant) => participant.contactId !== null
         );
+
+      if (sendAsEmailIdentityPublicId && convoHasContactParticipants) {
+        const sendAsEmailIdentityResponse =
+          await db.query.emailIdentities.findFirst({
+            where: and(
+              eq(emailIdentities.orgId, orgId),
+              eq(emailIdentities.publicId, sendAsEmailIdentityPublicId)
+            ),
+            columns: {
+              id: true
+            },
+            with: {
+              authorizedOrgMembers: {
+                columns: {
+                  orgMemberId: true,
+                  teamId: true
+                },
+                with: {
+                  team: {
+                    columns: {
+                      id: true
+                    },
+                    with: {
+                      members: {
+                        columns: {
+                          orgMemberId: true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          });
+
+        const userIsAuthorized =
+          sendAsEmailIdentityResponse?.authorizedOrgMembers.some(
+            (authorizedOrgMember) =>
+              authorizedOrgMember.orgMemberId === accountOrgMemberId ||
+              authorizedOrgMember.team?.members.some(
+                (teamMember) => teamMember.orgMemberId === accountOrgMemberId
+              )
+          );
+        if (!userIsAuthorized) {
+          throw new TRPCError({
+            code: 'UNAUTHORIZED',
+            message: 'User is not authorized to send as this email identity'
+          });
+        }
+        emailIdentityId = sendAsEmailIdentityResponse?.id ?? null;
+      }
+
+      const inlineAttachments: Attachment[] = [];
+
+      walkAndReplaceImages(message, (inlineUrl) => {
+        const inlineProxy = tryParseInlineProxyUrl(inlineUrl);
+        if (!inlineProxy) return inlineUrl;
+        inlineAttachments.push({
+          orgPublicId: org.publicId,
+          attachmentPublicId: inlineProxy.attachmentPublicId,
+          fileName: inlineProxy.fileName,
+          fileType: inlineProxy.fileType,
+          size: inlineProxy.size,
+          inline: true
+        });
+        return `${env.STORAGE_URL}/attachment/${inlineProxy.orgShortcode}/${inlineProxy.attachmentPublicId}/${inlineProxy.fileName}`;
+      });
+
       // create convoEntry
 
       const newConvoEntryBody = message;
@@ -1014,18 +1035,13 @@ export const convoRouter = router({
       });
 
       //* if convo has attachments, add them to the convo
-      const attachmentsToSend: {
-        orgPublicId: string;
-        attachmentPublicId: string;
-        fileName: string;
-        fileType: string;
-      }[] = [];
+      const convoAttachmentsDbInsertValuesArray: InferInsertModel<
+        typeof convoAttachments
+      >[] = [];
       const pendingAttachmentsToRemoveFromPending: TypeId<'convoAttachments'>[] =
         [];
+
       if (input.attachments.length > 0) {
-        const convoAttachmentsDbInsertValuesArray: InferInsertModel<
-          typeof convoAttachments
-        >[] = [];
         input.attachments.forEach((attachment) => {
           convoAttachmentsDbInsertValuesArray.push({
             orgId: orgId,
@@ -1036,28 +1052,43 @@ export const convoRouter = router({
             fileName: attachment.fileName,
             type: attachment.type,
             size: attachment.size,
-            createdAt: newConvoEntryTimestamp
+            createdAt: newConvoEntryTimestamp,
+            inline: true
           });
-          attachmentsToSend.push({
-            orgPublicId: org.publicId,
-            attachmentPublicId: attachment.attachmentPublicId,
+
+          pendingAttachmentsToRemoveFromPending.push(
+            attachment.attachmentPublicId
+          );
+        });
+      }
+
+      if (inlineAttachments.length > 0) {
+        inlineAttachments.forEach((attachment) => {
+          convoAttachmentsDbInsertValuesArray.push({
+            orgId: orgId,
+            convoId: Number(convoEntryToReplyToQueryResponse.convoId),
+            convoEntryId: Number(insertConvoEntryResponse.insertId),
+            convoParticipantId: Number(authorConvoParticipantId),
+            publicId: attachment.attachmentPublicId,
             fileName: attachment.fileName,
-            fileType: attachment.type
+            type: attachment.fileType,
+            size: attachment.size,
+            createdAt: newConvoEntryTimestamp,
+            inline: true
           });
           pendingAttachmentsToRemoveFromPending.push(
             attachment.attachmentPublicId
           );
         });
+      }
+
+      if (convoAttachmentsDbInsertValuesArray.length > 0) {
         await db
           .insert(convoAttachments)
           .values(convoAttachmentsDbInsertValuesArray);
-
-        // insertedAttachmentIds = Number(insertAttachmentsResponse.insertId;
       }
-      if (
-        input.attachments.length > 0 &&
-        pendingAttachmentsToRemoveFromPending.length > 0
-      ) {
+
+      if (pendingAttachmentsToRemoveFromPending.length > 0) {
         await db
           .delete(pendingAttachments)
           .where(
@@ -1067,13 +1098,6 @@ export const convoRouter = router({
             )
           );
       }
-
-      //* send notifications
-      await sendRealtimeNotification({
-        newConvo: false,
-        convoId: Number(convoEntryToReplyToQueryResponse.convoId),
-        convoEntryId: Number(insertConvoEntryResponse.insertId)
-      });
 
       //* if convo has contacts, send external email via mail bridge
 
@@ -1119,6 +1143,14 @@ export const convoRouter = router({
           })
           .where(eq(convoParticipants.id, authorConvoParticipantId));
       }
+
+      //* send notifications
+      await sendRealtimeNotification({
+        newConvo: false,
+        convoId: Number(convoEntryToReplyToQueryResponse.convoId),
+        convoEntryId: Number(insertConvoEntryResponse.insertId)
+      });
+
       return {
         status: 'success',
         publicId: newConvoEntryPublicId,
@@ -1138,7 +1170,6 @@ export const convoRouter = router({
       const accountId = account.id;
       const orgId = org.id;
       const accountOrgMemberId = org.memberId;
-
       const { convoPublicId } = input;
 
       // check if the conversation belongs to the same org, early return if not before multiple db selects

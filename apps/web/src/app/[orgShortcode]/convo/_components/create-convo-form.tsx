@@ -32,7 +32,8 @@ import {
   useEffect,
   type Dispatch,
   type SetStateAction,
-  useRef
+  useRef,
+  useCallback
 } from 'react';
 import {
   HoverCard,
@@ -49,9 +50,12 @@ import {
   TooltipContent,
   TooltipTrigger
 } from '@/src/components/shadcn-ui/tooltip';
+import {
+  type JSONContent,
+  type EditorFunctions
+} from '@u22n/tiptap/components';
 import { useOrgScopedRouter, useOrgShortcode } from '@/src/hooks/use-params';
 import { useAttachmentUploader } from '@/src/components/shared/attachments';
-import { type EditorFunctions } from '@u22n/tiptap/components';
 import { useComposingDraft } from '@/src/stores/draft-store';
 import { Avatar, AvatarIcon } from '@/src/components/avatar';
 import { Button } from '@/src/components/shadcn-ui/button';
@@ -67,7 +71,6 @@ import { useDebounce } from '@uidotdev/usehooks';
 import { usePrevious } from '@uidotdev/usehooks';
 import { showNewConvoPanel } from '../atoms';
 import { platform } from '@/src/lib/trpc';
-import { stringify } from 'superjson';
 import { cn } from '@/src/lib/utils';
 import { ms } from '@u22n/utils/ms';
 import { useSetAtom } from 'jotai';
@@ -201,7 +204,8 @@ export default function CreateConvoForm({
     openFilePicker,
     getTrpcUploadFormat,
     removeAllAttachments,
-    AttachmentArray
+    AttachmentArray,
+    canUpload
   } = useAttachmentUploader(draft.attachments);
 
   const { mutateAsync: createConvoFn } =
@@ -393,17 +397,21 @@ export default function CreateConvoForm({
     orgShortcode
   ]);
 
-  const isTextPresent = useMemo(() => {
+  const emptyEditorChecker = useCallback((editorText: JSONContent) => {
     const contentArray = editorText?.content;
-    if (!contentArray) return false;
-    if (contentArray.length === 0) return false;
-    if (
-      contentArray[0] &&
-      (!contentArray[0].content || contentArray[0].content.length === 0)
-    )
-      return false;
-    return true;
-  }, [editorText]);
+    if (!contentArray) return true;
+    if (contentArray.length === 0) return true;
+    const firstElementWithContent = contentArray.find(
+      (element) => element.content?.length && element.content.length > 0
+    );
+    if (!firstElementWithContent) return true;
+    return false;
+  }, []);
+
+  const isTextPresent = useMemo(
+    () => emptyEditorChecker(editorText),
+    [emptyEditorChecker, editorText]
+  );
 
   const isFormValid = useMemo(() => {
     if (
@@ -465,7 +473,7 @@ export default function CreateConvoForm({
       participantsTeamsPublicIds,
       participantsContactsPublicIds,
       participantsEmails,
-      message: stringify(editorText),
+      message: editorText,
       attachments: getTrpcUploadFormat(),
       orgShortcode
     });
@@ -546,6 +554,7 @@ export default function CreateConvoForm({
         <Editor
           initialValue={editorText}
           onChange={setEditorText}
+          canUpload={canUpload}
           ref={editorRef}
         />
 

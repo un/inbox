@@ -33,6 +33,7 @@
     "mailauth": "^4.6.8",
     "mailparser": "^3.7.1",
     "mime": "^4.0.4",
+    "mimetext": "^3.0.24",
     "mysql2": "^3.10.1",
     "nanoid": "^5.0.7",
     "nodemailer": "^6.9.14",
