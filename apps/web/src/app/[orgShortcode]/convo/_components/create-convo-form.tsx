@@ -135,15 +135,6 @@ export default function CreateConvoForm({
   const { draft, setDraft, resetDraft } = useComposingDraft();
   const isMobile = useIsMobile();
 
-  const { data: userEmailIdentities, isLoading: emailIdentitiesLoading } =
-    platform.org.mail.emailIdentities.getUserEmailIdentities.useQuery(
-      {
-        orgShortcode
-      },
-      {
-        staleTime: ms('1 hour')
-      }
-    );
   const { data: orgMemberList, isLoading: orgMemberListLoading } =
     platform.org.users.members.getOrgMembersList.useQuery({ orgShortcode });
   const { data: orgTeamsData, isLoading: orgTeamsLoading } =
@@ -224,9 +215,19 @@ export default function CreateConvoForm({
       }
     });
 
-  const [selectedSpace, setSelectedSpace] = useState<string | null>(
-    initialSpaceShortcode as string | null
+  const [selectedSpace, setSelectedSpace] = useState<string | undefined>(
+    initialSpaceShortcode as string | undefined
   );
+  const { data: userEmailIdentities, isLoading: emailIdentitiesLoading } =
+    platform.org.mail.emailIdentities.getUserEmailIdentities.useQuery(
+      {
+        orgShortcode,
+        spaceShortcode: selectedSpace
+      },
+      {
+        staleTime: ms('1 hour')
+      }
+    );
 
   const { data: spacesResponse } = platform.spaces.getOrgMemberSpaces.useQuery({
     orgShortcode
@@ -235,9 +236,9 @@ export default function CreateConvoForm({
 
   useEffect(() => {
     if (!initialSpaceShortcode) {
-      setSelectedSpace(spaces?.[0]?.shortcode ?? null);
+      setSelectedSpace(spaces?.[0]?.shortcode ?? undefined);
     }
-  }, [initialSpaceShortcode, selectedSpace, setSelectedSpace, spaces]);
+  }, [initialSpaceShortcode]);
 
   // Set default email identity on load
   useEffect(() => {
@@ -680,7 +681,9 @@ export default function CreateConvoForm({
       <div className="flex w-full flex-col gap-2 text-sm">
         <Select
           value={selectedSpace ?? undefined}
-          onValueChange={(space) => setSelectedSpace(space)}>
+          onValueChange={(space) => {
+            setSelectedSpace(space);
+          }}>
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Select a space" />
           </SelectTrigger>

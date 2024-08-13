@@ -528,153 +528,181 @@ export const emailIdentityRouter = router({
       emailIdentityData: emailIdentityResponse
     };
   }),
-  getUserEmailIdentities: orgProcedure.query(async ({ ctx }) => {
-    const { db, org } = ctx;
-    const orgId = org.id;
-    const orgMemberId = org?.memberId || 0;
+  getUserEmailIdentities: orgProcedure
+    .input(
+      z.object({
+        spaceShortcode: z.string().min(1).max(64).optional().nullable()
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const { db, org } = ctx;
+      const orgId = org.id;
+      const orgMemberId = org?.memberId || 0;
+      let spaceId: number | undefined;
 
-    // get all space memberships for the orgMember
-    const spaceMemberships = await db.query.spaceMembers.findMany({
-      where: eq(spaceMembers.orgMemberId, orgMemberId),
-      columns: {
-        spaceId: true
-      }
-    });
-    const orgOpenSpaces = await db.query.spaces.findMany({
-      where: and(eq(spaces.orgId, orgId), eq(spaces.type, 'open')),
-      columns: {
-        id: true
-      }
-    });
-
-    // create an array with unique spaceIds
-    const allUniqueSpaceIds = Array.from(
-      new Set(
-        spaceMemberships
-          .map((spaceMembership) => spaceMembership.spaceId)
-          .concat(orgOpenSpaces.map((space) => space.id))
-      )
-    );
-
-    // search for user org team memberships, get id of org team
-
-    const userOrgTeamMembershipQuery = await db.query.teamMembers.findMany({
-      where: and(
-        eq(teamMembers.orgId, orgId),
-        eq(teamMembers.orgMemberId, orgMemberId)
-      ),
-      columns: {
-        teamId: true
-      },
-      with: {
-        team: {
+      if (input.spaceShortcode) {
+        const spaceQueryResponse = await db.query.spaces.findFirst({
+          where: and(
+            eq(spaces.orgId, orgId),
+            eq(spaces.shortcode, input.spaceShortcode)
+          ),
           columns: {
-            id: true,
-            orgId: true
+            id: true
           }
+        });
+        if (spaceQueryResponse?.id) {
+          spaceId = spaceQueryResponse.id;
         }
       }
-    });
 
-    const orgTeamIds = userOrgTeamMembershipQuery.filter(
-      (userOrgTeamMembership) => userOrgTeamMembership.team.orgId === orgId
-    );
+      // get all space memberships for the orgMember
+      const spaceMemberships = await db.query.spaceMembers.findMany({
+        where: eq(spaceMembers.orgMemberId, orgMemberId),
+        columns: {
+          spaceId: true
+        }
+      });
+      const orgOpenSpaces = await db.query.spaces.findMany({
+        where: and(eq(spaces.orgId, orgId), eq(spaces.type, 'open')),
+        columns: {
+          id: true
+        }
+      });
 
-    const userTeamIds = orgTeamIds.map((orgTeamIds) => orgTeamIds.team.id);
-    const uniqueUserTeamIds = [...new Set(userTeamIds)];
+      // create an array with unique spaceIds
+      const allUniqueSpaceIds = Array.from(
+        new Set(
+          spaceMemberships
+            .map((spaceMembership) => spaceMembership.spaceId)
+            .concat(orgOpenSpaces.map((space) => space.id))
+        )
+      );
 
-    if (!uniqueUserTeamIds.length) {
-      uniqueUserTeamIds.push(0);
-    }
+      // search for user org team memberships, get id of org team
 
-    // search email routingRulesDestinations for spaceId or orgMemberId or orgTeamId
-
-    const authorizedEmailIdentities =
-      await db.query.emailIdentitiesAuthorizedSenders.findMany({
-        where: or(
-          inArray(emailIdentitiesAuthorizedSenders.spaceId, allUniqueSpaceIds),
-          eq(emailIdentitiesAuthorizedSenders.orgMemberId, orgMemberId),
-          inArray(emailIdentitiesAuthorizedSenders.teamId, uniqueUserTeamIds)
+      const userOrgTeamMembershipQuery = await db.query.teamMembers.findMany({
+        where: and(
+          eq(teamMembers.orgId, orgId),
+          eq(teamMembers.orgMemberId, orgMemberId)
         ),
         columns: {
-          orgMemberId: true,
-          teamId: true,
-          spaceId: true
+          teamId: true
         },
         with: {
-          emailIdentity: {
+          team: {
             columns: {
               id: true,
-              publicId: true,
-              username: true,
-              domainName: true,
-              sendName: true
-            },
-            with: {
-              domain: {
-                columns: {
-                  domainStatus: true,
-                  sendingMode: true
-                }
-              }
+              orgId: true
             }
           }
         }
       });
 
-    if (!authorizedEmailIdentities.length) {
-      return {
-        emailIdentities: [],
-        defaultEmailIdentity: undefined
-      };
-    }
-
-    const orgMemberQueryResponse = await db.query.orgMembers.findFirst({
-      where: eq(orgMembers.id, orgMemberId),
-      columns: {
-        defaultEmailIdentityId: true
-      }
-    });
-
-    let defaultEmailIdentityPublicId: TypeId<'emailIdentities'> | undefined;
-    if (
-      orgMemberQueryResponse &&
-      orgMemberQueryResponse.defaultEmailIdentityId !== undefined
-    ) {
-      defaultEmailIdentityPublicId =
-        authorizedEmailIdentities.find(
-          (emailIdentityAuthorization) =>
-            emailIdentityAuthorization.emailIdentity.id ===
-            orgMemberQueryResponse.defaultEmailIdentityId
-        )?.emailIdentity.publicId ?? undefined;
-    } else {
-      defaultEmailIdentityPublicId = undefined;
-    }
-
-    const emailIdentities = authorizedEmailIdentities
-      .map((emailIdentityAuthorization) => {
-        const emailIdentity = emailIdentityAuthorization.emailIdentity;
-        const sendingEnabled = emailIdentity?.domain
-          ? emailIdentity.domain.domainStatus === 'active' &&
-            emailIdentity.domain.sendingMode !== 'disabled'
-          : true;
-
-        return {
-          publicId: emailIdentity.publicId,
-          username: emailIdentity.username,
-          domainName: emailIdentity.domainName,
-          sendName: emailIdentity.sendName,
-          sendingEnabled
-        };
-      })
-      .filter(
-        (identity, index, self) =>
-          index === self.findIndex((t) => t.publicId === identity.publicId)
+      const orgTeamIds = userOrgTeamMembershipQuery.filter(
+        (userOrgTeamMembership) => userOrgTeamMembership.team.orgId === orgId
       );
 
-    return {
-      emailIdentities: emailIdentities,
-      defaultEmailIdentity: defaultEmailIdentityPublicId
-    };
-  })
+      const userTeamIds = orgTeamIds.map((orgTeamIds) => orgTeamIds.team.id);
+      const uniqueUserTeamIds = [...new Set(userTeamIds)];
+
+      if (!uniqueUserTeamIds.length) {
+        uniqueUserTeamIds.push(0);
+      }
+
+      // search email routingRulesDestinations for spaceId or orgMemberId or orgTeamId
+
+      const authorizedEmailIdentities =
+        await db.query.emailIdentitiesAuthorizedSenders.findMany({
+          where: or(
+            inArray(
+              emailIdentitiesAuthorizedSenders.spaceId,
+              allUniqueSpaceIds
+            ),
+            eq(emailIdentitiesAuthorizedSenders.orgMemberId, orgMemberId),
+            inArray(emailIdentitiesAuthorizedSenders.teamId, uniqueUserTeamIds),
+            spaceId
+              ? eq(emailIdentitiesAuthorizedSenders.spaceId, spaceId)
+              : undefined
+          ),
+          columns: {
+            orgMemberId: true,
+            teamId: true,
+            spaceId: true
+          },
+          with: {
+            emailIdentity: {
+              columns: {
+                id: true,
+                publicId: true,
+                username: true,
+                domainName: true,
+                sendName: true
+              },
+              with: {
+                domain: {
+                  columns: {
+                    domainStatus: true,
+                    sendingMode: true
+                  }
+                }
+              }
+            }
+          }
+        });
+
+      if (!authorizedEmailIdentities.length) {
+        return {
+          emailIdentities: [],
+          defaultEmailIdentity: undefined
+        };
+      }
+
+      const orgMemberQueryResponse = await db.query.orgMembers.findFirst({
+        where: eq(orgMembers.id, orgMemberId),
+        columns: {
+          defaultEmailIdentityId: true
+        }
+      });
+
+      let defaultEmailIdentityPublicId: TypeId<'emailIdentities'> | undefined;
+      if (
+        orgMemberQueryResponse &&
+        orgMemberQueryResponse.defaultEmailIdentityId !== undefined
+      ) {
+        defaultEmailIdentityPublicId =
+          authorizedEmailIdentities.find(
+            (emailIdentityAuthorization) =>
+              emailIdentityAuthorization.emailIdentity.id ===
+              orgMemberQueryResponse.defaultEmailIdentityId
+          )?.emailIdentity.publicId ?? undefined;
+      } else {
+        defaultEmailIdentityPublicId = undefined;
+      }
+
+      const emailIdentities = authorizedEmailIdentities
+        .map((emailIdentityAuthorization) => {
+          const emailIdentity = emailIdentityAuthorization.emailIdentity;
+          const sendingEnabled = emailIdentity?.domain
+            ? emailIdentity.domain.domainStatus === 'active' &&
+              emailIdentity.domain.sendingMode !== 'disabled'
+            : true;
+
+          return {
+            publicId: emailIdentity.publicId,
+            username: emailIdentity.username,
+            domainName: emailIdentity.domainName,
+            sendName: emailIdentity.sendName,
+            sendingEnabled
+          };
+        })
+        .filter(
+          (identity, index, self) =>
+            index === self.findIndex((t) => t.publicId === identity.publicId)
+        );
+
+      return {
+        emailIdentities: emailIdentities,
+        defaultEmailIdentity: defaultEmailIdentityPublicId
+      };
+    })
 });

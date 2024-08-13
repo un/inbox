@@ -38,6 +38,7 @@ import { Editor } from '@/src/components/editor';
 import { type TypeId } from '@u22n/utils/typeid';
 import { useDebounce } from '@uidotdev/usehooks';
 import { useAtom, useAtomValue } from 'jotai';
+import { useParams } from 'next/navigation';
 import { platform } from '@/src/lib/trpc';
 import { cn } from '@/src/lib/utils';
 import { ms } from '@u22n/utils/ms';
@@ -55,6 +56,7 @@ export function ReplyBox({
   hasExternalParticipants
 }: ReplyBoxProps) {
   const { draft, setDraft, resetDraft } = useDraft(convoId);
+  const { spaceShortCode } = useParams();
   const [editorText, setEditorText] = useState(draft.content);
   const orgShortcode = useOrgShortcode();
   const replyTo = useAtomValue(replyToMessageAtom);
@@ -96,12 +98,14 @@ export function ReplyBox({
   const { data: emailIdentities, isLoading: emailIdentitiesLoading } =
     platform.org.mail.emailIdentities.getUserEmailIdentities.useQuery(
       {
-        orgShortcode
+        orgShortcode,
+        spaceShortcode: spaceShortCode as string
       },
       {
         staleTime: ms('1 hour')
       }
     );
+
   const { data: isAdmin } =
     platform.org.users.members.isOrgMemberAdmin.useQuery(
       {
