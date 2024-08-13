@@ -279,7 +279,8 @@ export const convoRouter = router({
           columns: {
             id: true,
             publicId: true,
-            defaultEmailIdentityId: true
+            defaultEmailIdentityId: true,
+            defaultSpaceId: true
           }
         });
 
@@ -290,6 +291,7 @@ export const convoRouter = router({
             emailIdentityId: teamParticipant.defaultEmailIdentityId ?? null
           });
 
+          // Check if the team already has access to the space the convo was created in, if yes, dont add the convo to their default space, else, add convo to their default space
           const spaceQueryResponse = await db.query.spaces.findFirst({
             where: and(
               eq(spaces.orgId, orgId),
@@ -311,12 +313,12 @@ export const convoRouter = router({
 
           if (!spaceQueryResponse) break;
 
-          const spaceTeamMembership = spaceQueryResponse?.members.filter(
+          const spaceMembersWhoAreTeams = spaceQueryResponse?.members.filter(
             (spaceMember) => spaceMember.teamId !== null
           );
 
           if (
-            spaceTeamMembership.length === 0 &&
+            spaceMembersWhoAreTeams.length === 0 &&
             spaceQueryResponse?.type !== 'open'
           ) {
             const teamQueryResponse = await db.query.teams.findFirst({
@@ -328,6 +330,7 @@ export const convoRouter = router({
                 defaultSpaceId: true
               }
             });
+
             teamQueryResponse?.defaultSpaceId &&
               spacesToAddConvoTo.push(teamQueryResponse.defaultSpaceId);
           }
@@ -546,6 +549,7 @@ export const convoRouter = router({
         spaceId: spaceId,
         orgId: orgId
       }));
+
       await db.insert(convoToSpaces).values(convoToSpacesInsertValues);
 
       // create conversationSubject entry
