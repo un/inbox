@@ -43,6 +43,7 @@
     "db:drop": "dotenv -e .env.local -- turbo run db:drop",
     "start:all:r": "infisical run --env=remote -- turbo run start",
     "dev:r": "infisical run --env=remote -- turbo run dev",
+    "dev:spaces": "infisical run --env=spacesremote -- turbo run dev",
     "db:push:r": "infisical run --env=remote -- pnpm --dir packages/database db:push:r",
     "db:studio:r": "infisical run --env=remote -- turbo run db:studio",
     "db:generate:r": "infisical run --env=remote -- turbo run db:generate",
