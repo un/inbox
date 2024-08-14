@@ -16,6 +16,8 @@ type AvatarCropProps = {
   onCancel: () => void;
 };
 
+const MAX_AVATAR_SIZE = 1024 * 1024; // 1MB
+
 export default function AvatarCrop({
   input,
   onCrop,
@@ -27,7 +29,7 @@ export default function AvatarCrop({
   const imageRef = useRef<HTMLImageElement | null>(null);
   const [cropLoading, setCropLoading] = useState(false);
 
-  const convertCropToBlob = async (crop: Crop) => {
+  const convertCropToBlob = async (crop: Crop, quality: number) => {
     if (!imageRef.current) throw new Error('No image ref');
     const image = imageRef.current;
 
@@ -76,7 +78,7 @@ export default function AvatarCrop({
 
     ctx.restore();
 
-    const blob = await canvas.convertToBlob({ type: 'image/png' });
+    const blob = await canvas.convertToBlob({ type: 'image/jpeg', quality });
     return blob;
   };
 
@@ -142,7 +144,11 @@ export default function AvatarCrop({
           onClick={async () => {
             if (!crop || cropLoading) return;
             setCropLoading(true);
-            const blob = await convertCropToBlob(crop);
+            let blob = await convertCropToBlob(crop, 1);
+            if (blob.size > MAX_AVATAR_SIZE) {
+              const qualityFactor = MAX_AVATAR_SIZE / blob.size;
+              blob = await convertCropToBlob(crop, qualityFactor);
+            }
             URL.revokeObjectURL(imageSrc);
             setCropLoading(false);
             onCrop(blob);
