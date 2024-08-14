@@ -107,6 +107,7 @@ async function resolveOrgAndMailserver({
     mailserverId !== 'fwd'
   ) {
     //verify the mailserver actually exists
+    console.error('test42 - inputs 🔥', { orgId, mailserverId });
     const mailServer = await db.query.postalServers.findFirst({
       where: eq(postalServers.publicId, mailserverId),
       columns: {
@@ -121,13 +122,17 @@ async function resolveOrgAndMailserver({
         }
       }
     });
-    if (!mailServer || mailServer.orgId !== orgId)
+    console.error('test42 db response 🔥', { mailServer });
+
+    if (!mailServer || mailServer.orgId !== orgId) {
+      console.error('test42 trow 🫡');
       throw new Error(
         `Mailserver not found or does not belong to the org ${JSON.stringify({
           orgId,
           mailserverId
         })}`
       );
+    }
 
     return {
       orgId: mailServer.orgId,
