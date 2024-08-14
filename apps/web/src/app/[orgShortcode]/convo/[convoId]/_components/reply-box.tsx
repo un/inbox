@@ -29,35 +29,31 @@ import {
 import { useAttachmentUploader } from '@/src/components/shared/attachments';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
+import { emailIdentityAtom, replyToMessageAtom } from '../atoms';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { useIsMobile } from '@/src/hooks/use-is-mobile';
 import { emptyTiptapEditorContent } from '@u22n/tiptap';
 import { useDraft } from '@/src/stores/draft-store';
-import { atom, useAtom, useAtomValue } from 'jotai';
 import { Editor } from '@/src/components/editor';
 import { type TypeId } from '@u22n/utils/typeid';
 import { useDebounce } from '@uidotdev/usehooks';
-import { replyToMessageAtom } from '../atoms';
+import { useAtom, useAtomValue } from 'jotai';
 import { platform } from '@/src/lib/trpc';
 import { stringify } from 'superjson';
 import { cn } from '@/src/lib/utils';
 import { ms } from '@u22n/utils/ms';
 import { toast } from 'sonner';
 
-const selectedEmailIdentityAtom = atom<null | TypeId<'emailIdentities'>>(null);
-
 type ReplyBoxProps = {
   convoId: TypeId<'convos'>;
   onReply: () => void;
   hasExternalParticipants: boolean;
-  defaultEmailIdentity?: TypeId<'emailIdentities'>;
 };
 
 export function ReplyBox({
   convoId,
   onReply,
-  hasExternalParticipants,
-  defaultEmailIdentity
+  hasExternalParticipants
 }: ReplyBoxProps) {
   const { draft, setDraft, resetDraft } = useDraft(convoId);
   const [editorText, setEditorText] = useState(draft.content);
@@ -99,8 +95,6 @@ export function ReplyBox({
     [emptyEditorChecker, editorText]
   );
 
-  const [emailIdentity, setEmailIdentity] = useAtom(selectedEmailIdentityAtom);
-
   const { data: emailIdentities, isLoading: emailIdentitiesLoading } =
     platform.org.mail.emailIdentities.getUserEmailIdentities.useQuery(
       {
@@ -120,17 +114,7 @@ export function ReplyBox({
       }
     );
 
-  useEffect(() => {
-    setEmailIdentity((prev) => {
-      if (prev) return prev;
-      return (
-        defaultEmailIdentity ??
-        emailIdentities?.defaultEmailIdentity ??
-        emailIdentities?.emailIdentities[0]?.publicId ??
-        null
-      );
-    });
-  }, [defaultEmailIdentity, emailIdentities, setEmailIdentity]);
+  const [emailIdentity, setEmailIdentity] = useAtom(emailIdentityAtom);
 
   const {
     attachments,

@@ -5,6 +5,7 @@ import { usePageTitle } from '@/src/hooks/use-page-title';
 import { type VirtuosoHandle } from 'react-virtuoso';
 import { useCallback, useMemo, useRef } from 'react';
 import { formatParticipantData } from '../../utils';
+import { SpinnerGap } from '@phosphor-icons/react';
 import { type TypeId } from '@u22n/utils/typeid';
 import { MessagesPanel } from './messages-panel';
 import { platform } from '@/src/lib/trpc';
@@ -75,14 +76,6 @@ export function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
     [formattedParticipants]
   );
 
-  const defaultEmailIdentity = useMemo(
-    () =>
-      convoData?.data.participants.find(
-        (p) => p.publicId === participantOwnPublicId
-      )?.emailIdentity?.publicId,
-    [convoData?.data.participants, participantOwnPublicId]
-  );
-
   const onReply = useCallback(
     () => virtuosoRef.current?.scrollToIndex({ index: 'LAST' }),
     []
@@ -102,26 +95,33 @@ export function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
         participants={formattedParticipants}
         attachments={attachments}
       />
-      <div className="flex w-full flex-1 flex-col">
-        {convoDataLoading || !participantOwnPublicId ? (
-          <span>Loading</span>
-        ) : (
-          <MessagesPanel
-            convoId={convoId}
-            formattedParticipants={formattedParticipants}
-            participantOwnPublicId={
-              participantOwnPublicId as TypeId<'convoParticipants'>
-            }
-            ref={virtuosoRef}
+      {convoDataLoading || !participantOwnPublicId ? (
+        <div className="flex h-full w-full items-center justify-center gap-2 text-center font-bold">
+          <SpinnerGap
+            className="size-4 animate-spin"
+            size={16}
           />
-        )}
-      </div>
-      <ReplyBox
-        convoId={convoId}
-        onReply={onReply}
-        hasExternalParticipants={hasExternalParticipants}
-        defaultEmailIdentity={defaultEmailIdentity}
-      />
+          <span>Loading...</span>
+        </div>
+      ) : (
+        <>
+          <div className="flex w-full flex-1 flex-col">
+            <MessagesPanel
+              convoId={convoId}
+              formattedParticipants={formattedParticipants}
+              participantOwnPublicId={
+                participantOwnPublicId as TypeId<'convoParticipants'>
+              }
+              ref={virtuosoRef}
+            />
+          </div>
+          <ReplyBox
+            convoId={convoId}
+            onReply={onReply}
+            hasExternalParticipants={hasExternalParticipants}
+          />
+        </>
+      )}
     </div>
   );
 }
