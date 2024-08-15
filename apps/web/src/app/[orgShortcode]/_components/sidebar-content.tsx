@@ -105,7 +105,7 @@ function OrgMenu() {
           className={
             'bg-base-1 border-base-5 hover:bg-base-2 flex w-full flex-row items-center justify-between gap-2 rounded-lg border p-3 shadow-sm'
           }>
-          <div className={'flex flex-row items-center gap-2'}>
+          <div className={'flex w-full flex-row items-center gap-2'}>
             {isLoading || !currentOrg ? (
               <div className="flex size-8 items-center justify-center rounded-full border">
                 <SpinnerGap
@@ -122,22 +122,29 @@ function OrgMenu() {
                 hideTooltip
               />
             )}
-            <div className={'flex flex-col items-start justify-start'}>
-              <span className={cn('text-sm font-semibold leading-none')}>
+            <div
+              className={
+                'flex w-full flex-col items-start justify-start gap-1 overflow-hidden'
+              }>
+              <span
+                className={cn(
+                  'block w-full truncate text-left text-sm font-semibold leading-none'
+                )}>
                 {currentOrg?.name ?? '...'}
               </span>
               <span
-                className={cn('text-base-11 text-xs font-medium leading-none')}>
+                className={cn(
+                  'text-base-11 block w-full truncate text-left text-xs font-medium leading-none'
+                )}>
                 {displayName}
               </span>
             </div>
-          </div>
-
-          <div className={'h-5 w-5 p-0.5'}>
-            <CaretUpDown className={'h-4 w-4'} />
+            <div className={'h-5 w-5 p-0.5 pl-1'}>
+              <CaretUpDown className={'h-4 w-4'} />
+            </div>
           </div>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="bg-base-1 border-base-5 flex w-fit flex-col gap-0 p-0">
+        <DropdownMenuContent className="bg-base-1 border-base-5 flex w-fit max-w-[250px] flex-col gap-0 p-0">
           <OrgMenuContent />
         </DropdownMenuContent>
       </DropdownMenu>
@@ -190,11 +197,11 @@ export function OrgMenuContent() {
   return (
     <>
       <DropdownMenuLabel className={'px-0 py-0'}>
-        <div className="flex flex-col items-start justify-start gap-2 p-3">
+        <div className="flex w-full flex-col items-start justify-start gap-2 p-3">
           <span className={'text-base-11 text-xs font-medium uppercase'}>
             Signed in as
           </span>
-          <div className={'flex flex-row gap-2'}>
+          <div className={'flex w-full flex-row gap-2'}>
             {isLoading || !currentOrg ? (
               <div className="flex size-8 items-center justify-center rounded-full border">
                 <SpinnerGap
@@ -211,8 +218,11 @@ export function OrgMenuContent() {
                 hideTooltip
               />
             )}
-            <div className="flex flex-col items-start justify-center">
-              <span className={'text-base-12 text-sm font-medium leading-none'}>
+            <div className="flex w-full flex-col items-start justify-center gap-2 overflow-hidden">
+              <span
+                className={
+                  'text-base-12 block w-full truncate text-sm font-medium leading-none'
+                }>
                 {displayName}
               </span>
               <span className={'text-base-11 text-xs font-normal leading-none'}>
