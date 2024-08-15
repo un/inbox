@@ -59,11 +59,11 @@ export const Editor = memo(
       <div className="overflow-y-auto">
         <EditorRoot>
           <EditorContent
-            className="editor-content h-full w-full p-1"
+            className="h-full w-full p-1"
             initialContent={initialValue}
             editorProps={{
               attributes: {
-                class: `prose dark:prose-invert focus:outline-none max-w-full text-base-12 prose-p:my-0 prose-a:decoration-blue-9`,
+                class: `prose dark:prose-invert focus:outline-none max-w-full text-base-12 prose-p:my-0 prose-a:decoration-blue-9 prose-a:cursor-pointer`,
                 role: 'textbox',
                 id: 'rich-editor'
               },

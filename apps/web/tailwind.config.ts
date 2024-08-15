@@ -14,14 +14,6 @@ const modifierPlugin = plugin((_) => {
   _.addVariant('meta-key', '.meta-key &');
 });
 
-const linkPlugin = plugin(function ({ addUtilities }) {
-  addUtilities({
-    '.editor-content a': {
-      cursor: 'pointer'
-    }
-  });
-});
-
 const config = {
   darkMode: ['class'],
   content: [
@@ -112,13 +104,7 @@ const config = {
       }
     }
   },
-  plugins: [
-    colors.plugin,
-    animatePlugin,
-    typographyPlugin(),
-    modifierPlugin,
-    linkPlugin
-  ]
+  plugins: [colors.plugin, animatePlugin, typographyPlugin(), modifierPlugin]
 } satisfies Config;
 
 export default config;
