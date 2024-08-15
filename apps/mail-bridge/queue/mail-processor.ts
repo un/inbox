@@ -18,9 +18,9 @@ import {
   type TypeId
 } from '@u22n/utils/typeid';
 import { createQueue, createWorker } from '../utils/queue-helpers';
+import { createExtensionSet } from '@u22n/tiptap/extensions';
 import { sendRealtimeNotification } from '../utils/realtime';
 import { simpleParser, type EmailAddress } from 'mailparser';
-import { tipTapExtensions } from '@u22n/tiptap/extensions';
 import { parseAddressIds } from '../utils/contactParsing';
 import { eq, and, inArray } from '@u22n/database/orm';
 import { tiptapCore, tiptapHtml } from '@u22n/tiptap';
@@ -34,6 +34,8 @@ import { db } from '@u22n/database';
 import { env } from '../env';
 import mime from 'mime';
 import { z } from 'zod';
+
+const tipTapExtensions = createExtensionSet();
 
 async function resolveOrgAndMailserver({
   mailserverId,

@@ -7,6 +7,7 @@
     "./react": "./react.ts",
     "./extensions": "./extensions/index.ts",
     "./extensions/slash-command": "./extensions/slash-command.ts",
+    "./extensions/image-uploader": "./extensions/image-uploader.ts",
     "./components": "./components/index.ts"
   },
   "scripts": {
@@ -19,7 +20,6 @@
     "@radix-ui/react-slot": "^1.1.0",
     "@tiptap/core": "^2.5.8",
     "@tiptap/extension-color": "^2.5.8",
-    "@tiptap/extension-image": "^2.5.8",
     "@tiptap/extension-link": "^2.5.8",
     "@tiptap/extension-placeholder": "^2.5.8",
     "@tiptap/extension-subscript": "^2.5.8",
@@ -27,6 +27,7 @@
     "@tiptap/extension-text-style": "^2.5.8",
     "@tiptap/extension-underline": "^2.5.8",
     "@tiptap/html": "^2.5.8",
+    "@tiptap/pm": "^2.5.9",
     "@tiptap/react": "^2.5.8",
     "@tiptap/starter-kit": "^2.5.8",
     "@tiptap/suggestion": "^2.5.8",
@@ -34,6 +35,7 @@
     "cmdk": "^1.0.0",
     "jotai": "^2.9.1",
     "tippy.js": "^6.3.7",
+    "tiptap-extension-resize-image": "^1.1.8",
     "tiptap-markdown": "^0.8.10",
     "tunnel-rat": "^0.1.2"
   },

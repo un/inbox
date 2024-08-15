@@ -25,7 +25,7 @@ import { emailIdentityAtom, replyToMessageAtom } from '../atoms';
 import { Virtuoso, type VirtuosoHandle } from 'react-virtuoso';
 import { OriginalMessageView } from './original-message-view';
 import { type RouterOutputs, platform } from '@/src/lib/trpc';
-import { tipTapExtensions } from '@u22n/tiptap/extensions';
+import { createExtensionSet } from '@u22n/tiptap/extensions';
 import { useOrgShortcode } from '@/src/hooks/use-params';
 import { type formatParticipantData } from '../../utils';
 import { useCopyToClipboard } from '@uidotdev/usehooks';
@@ -35,6 +35,7 @@ import { type TypeId } from '@u22n/utils/typeid';
 import { cva } from 'class-variance-authority';
 import { cn } from '@/src/lib/utils';
 import { ms } from '@u22n/utils/ms';
+import { env } from '@/src/env';
 import { useAtom } from 'jotai';
 import { toast } from 'sonner';
 
@@ -207,6 +208,10 @@ export const MessagesPanel = memo(
 );
 
 MessagesPanel.displayName = 'MessagesPanel';
+
+const tipTapExtensions = createExtensionSet({
+  storageUrl: env.NEXT_PUBLIC_STORAGE_URL
+});
 
 const MessageItem = memo(
   function MessageItem({

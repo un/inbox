@@ -13,14 +13,21 @@ import {
   orgs,
   convoParticipants
 } from '@u22n/database/schema';
-import { tipTapExtensions } from '@u22n/tiptap/extensions';
+import {
+  tryParseInlineAttachmentUrl,
+  walkAndReplaceImages
+} from '../../utils/tiptap-utils';
+import { createExtensionSet } from '@u22n/tiptap/extensions';
 import { and, eq, inArray } from '@u22n/database/orm';
 import { type JSONContent } from '@u22n/tiptap/react';
 import { typeIdValidator } from '@u22n/utils/typeid';
 import { router, protectedProcedure } from '../trpc';
 import { sendEmail } from '../../smtp/sendEmail';
+import { createMimeMessage } from 'mimetext';
 import { tiptapHtml } from '@u22n/tiptap';
 import { z } from 'zod';
+
+const tipTapExtensions = createExtensionSet();
 
 export const sendMailRouter = router({
   sendConvoEntryEmail: protectedProcedure
@@ -79,7 +86,8 @@ export const sendMailRouter = router({
       const convoResponse = await db.query.convos.findFirst({
         where: eq(convos.id, convoId),
         columns: {
-          orgId: true
+          orgId: true,
+          publicId: true
         },
         with: {
           participants: {
@@ -143,7 +151,8 @@ export const sendMailRouter = router({
           replyToId: true,
           subjectId: true,
           metadata: true,
-          emailMessageId: true
+          emailMessageId: true,
+          publicId: true
         },
         with: {
           author: {
@@ -161,7 +170,8 @@ export const sendMailRouter = router({
               id: true,
               publicId: true,
               fileName: true,
-              type: true
+              type: true,
+              inline: true
             }
           },
           replyTo: {
@@ -253,7 +263,6 @@ export const sendMailRouter = router({
         email: `${sendAsEmailIdentity.username}@${sendAsEmailIdentity.domainName}`
       };
       const convoSenderEmailAddress = `${sendAsEmailIdentity.username}@${sendAsEmailIdentity.domainName}`;
-      const convoFromStringObject = `${sendAsEmailIdentity.sendName} <${convoSenderEmailAddress}>`;
       let convoMetadataToAddress: ConvoEntryMetadataEmailAddress | undefined;
       let convoToAddress: string | undefined;
       const convoMetadataCcAddresses: ConvoEntryMetadataEmailAddress[] = [];
@@ -494,7 +503,7 @@ export const sendMailRouter = router({
       let postalServerAPIKey: string;
 
       if (sendAsEmailIdentity.personalEmailIdentityId) {
-        postalServerUrl = `https://${config.MAILBRIDGE_POSTAL_SERVER_PERSONAL_CREDENTIALS.apiUrl}/api/v1/send/message`;
+        postalServerUrl = `https://${config.MAILBRIDGE_POSTAL_SERVER_PERSONAL_CREDENTIALS.apiUrl}/api/v1/send/raw`;
         postalServerAPIKey =
           config.MAILBRIDGE_POSTAL_SERVER_PERSONAL_CREDENTIALS.apiKey;
       } else {
@@ -525,17 +534,19 @@ export const sendMailRouter = router({
           (server) =>
             server.url === orgPostalServerResponse.orgPostalConfigs.host
         );
-        postalServerUrl = `https://${postalServerConfigItem?.url}/api/v1/send/message`;
+        postalServerUrl = `https://${postalServerConfigItem?.url}/api/v1/send/raw`;
       }
 
       //* Attachments
-      // expected postal type: { name: attachment["name"], content_type: attachment["content_type"], data: attachment["data"], base64: true }
       const attachments = convoEntryResponse.attachments;
+
       type PostalAttachmentType = {
         name: string;
         content_type: string;
         data: string;
         base64: boolean;
+        content_id?: string;
+        inline?: boolean;
       };
       const postalAttachments: PostalAttachmentType[] = [];
 
@@ -551,7 +562,6 @@ export const sendMailRouter = router({
           `${config.STORAGE_URL}/api/attachments/mailfetch`,
           {
             method: 'post',
-
             headers: {
               'Content-Type': 'application/json',
               Authorization: config.STORAGE_KEY
@@ -577,6 +587,7 @@ export const sendMailRouter = router({
           throw error; // Rethrow to handle it in the outer catch block
         }
       }
+
       if (attachments && attachments.length > 0) {
         for (const attachment of attachments) {
           try {
@@ -589,7 +600,9 @@ export const sendMailRouter = router({
               name: attachment.fileName,
               content_type: attachment.type,
               data: base64,
-              base64: true
+              base64: true,
+              inline: attachment.inline,
+              content_id: attachment.publicId
             });
           } catch (error) {
             console.error('Error getting attachment:', error);
@@ -597,8 +610,19 @@ export const sendMailRouter = router({
         }
       }
 
-      //* Prep and Send email
+      // replace inline attachments with cid
+      walkAndReplaceImages(convoEntryResponse.body as JSONContent, (url) => {
+        const inlineAttachment = tryParseInlineAttachmentUrl(url);
+        if (!inlineAttachment) return url;
+        const replacementContentId = postalAttachments.find(
+          (attachment) =>
+            attachment.content_id === inlineAttachment.attachmentPublicId
+        );
+        if (!replacementContentId) return url;
+        return `cid:${replacementContentId.content_id}`;
+      });
 
+      //* Prep and Send email
       const emailBodyHTML = tiptapHtml.generateHTML(
         convoEntryResponse.body as JSONContent,
         tipTapExtensions
@@ -625,22 +649,53 @@ export const sendMailRouter = router({
         }
       );
 
+      const rawEmail = createMimeMessage();
+      rawEmail.setTo(convoToAddress);
+      if (convoCcAddressesFiltered.length > 0) {
+        rawEmail.setCc(convoCcAddressesFiltered);
+      }
+      rawEmail.setSender({
+        name: sendAsEmailIdentity.sendName ?? undefined,
+        addr: convoSenderEmailAddress
+      });
+      rawEmail.setSubject(convoEntryResponse.subject?.subject ?? 'No Subject');
+      rawEmail.addMessage({
+        contentType: 'text/plain',
+        data: emailBodyPlainText
+      });
+      rawEmail.addMessage({
+        contentType: 'text/html',
+        data: emailBodyHTML
+      });
+      for (const attachment of postalAttachments) {
+        rawEmail.addAttachment({
+          contentType: attachment.content_type,
+          data: attachment.data,
+          filename: attachment.name,
+          inline: attachment.inline,
+          headers: {
+            'Content-ID': attachment.content_id,
+            'Content-Type': attachment.content_type
+          }
+        });
+      }
+      rawEmail.setHeaders(emailHeaders);
+      rawEmail.setHeader(
+        'Message-ID',
+        `<${convoEntryResponse.publicId.substring(3)}_${convoResponse.publicId.substring(2)}@${sendAsEmailIdentity.domainName}>`
+      );
+
       // If there is external email credentials then the identity is external, use their smtp server instead of postal's
-      if (sendAsEmailIdentity.externalCredentialsId) {
-        const auth = sendAsEmailIdentity.externalCredentials!; // it should be defined here
+      if (sendAsEmailIdentity.externalCredentials) {
+        const auth = sendAsEmailIdentity.externalCredentials; // it should be defined here
 
         const sentEmail = await sendEmail({
           auth,
           email: {
-            to: [`${convoToAddress}`],
-            cc: convoCcAddressesFiltered,
-            from: convoFromStringObject,
-            sender: convoSenderEmailAddress,
-            subject: convoEntryResponse.subject?.subject ?? 'No Subject',
-            plainBody: emailBodyPlainText,
-            htmlBody: emailBodyHTML,
-            attachments: postalAttachments,
-            headers: emailHeaders
+            to: [`${convoToAddress}`, ...convoCcAddressesFiltered],
+            from: `${sendAsEmailIdentity.sendName} <${convoSenderEmailAddress}>`,
+            headers: emailHeaders,
+            raw: Buffer.from(rawEmail.asRaw()).toString('base64')
           }
         }).catch((e) => {
           console.error('🚨 error sending email as external identity', e);
@@ -652,7 +707,7 @@ export const sendMailRouter = router({
         if ('success' in sentEmail && sentEmail.success === false) {
           console.error(
             '🚨 error sending email as external identity',
-            `send convoId: ${entryId} from convoId: ${convoId}`
+            `send convoEntryId: ${entryId} from convoId: ${convoId}`
           );
           return {
             success: false
@@ -682,7 +737,7 @@ export const sendMailRouter = router({
         } else {
           console.error(
             '🚨 error sending email as external identity, no idea what went wrong. didnt get success or fail',
-            `send convoId: ${entryId} from convoId: ${convoId}`
+            `send convoEntryId: ${entryId} from convoId: ${convoId}`
           );
           return {
             success: false
@@ -719,18 +774,13 @@ export const sendMailRouter = router({
         method: 'POST',
         headers: {
           'X-Server-API-Key': `${postalServerAPIKey}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          Sender: `${convoSenderEmailAddress}`
         },
         body: JSON.stringify({
-          to: [`${convoToAddress}`],
-          cc: convoCcAddressesFiltered,
-          from: convoFromStringObject,
-          sender: convoSenderEmailAddress,
-          subject: convoEntryResponse.subject?.subject ?? 'No Subject',
-          plain_body: emailBodyPlainText,
-          html_body: emailBodyHTML,
-          attachments: postalAttachments,
-          headers: emailHeaders
+          mail_from: convoSenderEmailAddress,
+          rcpt_to: [`${convoToAddress}`, ...convoCcAddressesFiltered],
+          data: Buffer.from(rawEmail.asRaw()).toString('base64')
         })
       })
         .then((res) => res.json())
@@ -773,8 +823,8 @@ export const sendMailRouter = router({
         };
       } else {
         console.error(
-          `🚨 attempted to send convoId: ${entryId} from convoId: ${convoId}, but got the following error`,
-          sendMailPostalResponse.data.message
+          `🚨 attempted to send convoEntryId: ${entryId} from convoId: ${convoId}, but got the following error`,
+          sendMailPostalResponse
         );
         return {
           success: false

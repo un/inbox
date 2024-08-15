@@ -10,6 +10,7 @@ import {
 import { deleteAttachmentsApi } from './api/deleteAttachments';
 import { internalPresignApi } from './api/internalPresign';
 import { attachmentProxy } from './proxy/attachment';
+import { inlineProxy } from './proxy/inline-proxy';
 import { deleteOrgsApi } from './api/deleteOrg';
 import { opentelemetry } from '@u22n/otel/hono';
 import { mailfetchApi } from './api/mailfetch';
@@ -34,6 +35,7 @@ app.use('*', authMiddleware);
 // Proxies
 app.route('/avatar', avatarProxy);
 app.route('/attachment', attachmentProxy);
+app.route('/inline-proxy', inlineProxy);
 
 // APIs
 app.route('/api', avatarApi);

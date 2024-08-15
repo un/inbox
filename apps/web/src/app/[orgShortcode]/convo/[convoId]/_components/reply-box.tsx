@@ -39,7 +39,6 @@ import { type TypeId } from '@u22n/utils/typeid';
 import { useDebounce } from '@uidotdev/usehooks';
 import { useAtom, useAtomValue } from 'jotai';
 import { platform } from '@/src/lib/trpc';
-import { stringify } from 'superjson';
 import { cn } from '@/src/lib/utils';
 import { ms } from '@u22n/utils/ms';
 import { toast } from 'sonner';
@@ -82,11 +81,10 @@ export function ReplyBox({
     const contentArray = editorText?.content;
     if (!contentArray) return true;
     if (contentArray.length === 0) return true;
-    if (
-      contentArray[0] &&
-      (!contentArray[0].content || contentArray[0].content.length === 0)
-    )
-      return true;
+    const firstElementWithContent = contentArray.find(
+      (element) => element.content?.length && element.content.length > 0
+    );
+    if (!firstElementWithContent) return true;
     return false;
   }, []);
 
@@ -121,7 +119,8 @@ export function ReplyBox({
     openFilePicker,
     getTrpcUploadFormat,
     AttachmentArray,
-    removeAllAttachments
+    removeAllAttachments,
+    canUpload
   } = useAttachmentUploader(draft.attachments);
 
   // Autosave draft
@@ -154,7 +153,7 @@ export function ReplyBox({
       const { publicId, bodyPlainText } = await replyToConvo({
         attachments: getTrpcUploadFormat(),
         orgShortcode,
-        message: stringify(editorText),
+        message: editorText,
         replyToMessagePublicId: replyTo,
         messageType: type,
         sendAsEmailIdentityPublicId: emailIdentity ?? undefined
@@ -217,6 +216,7 @@ export function ReplyBox({
         <Editor
           initialValue={editorText}
           onChange={setEditorText}
+          canUpload={canUpload}
           ref={editorRef}
         />
         <AttachmentArray attachments={attachments} />

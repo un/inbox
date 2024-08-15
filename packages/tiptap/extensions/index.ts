@@ -1,77 +1,107 @@
+import _ExtensionPlaceholder from '@tiptap/extension-placeholder';
+import ExtensionImageResize from 'tiptap-extension-resize-image';
+import ExtensionSuperscript from '@tiptap/extension-superscript';
+import { Markdown as _ExtensionMarkdown } from 'tiptap-markdown';
 import ExtensionTextStyle from '@tiptap/extension-text-style';
-import Placeholder from '@tiptap/extension-placeholder';
-import Superscript from '@tiptap/extension-superscript';
+import ExtensionUnderline from '@tiptap/extension-underline';
+import ExtensionSubscript from '@tiptap/extension-subscript';
+import ExtensionStarterKit from '@tiptap/starter-kit';
+import { UploadImagesPlugin } from './image-uploader';
 import ExtensionColor from '@tiptap/extension-color';
-import Underline from '@tiptap/extension-underline';
-import Subscript from '@tiptap/extension-subscript';
-import type { AnyExtension } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import Image from '@tiptap/extension-image';
-import { Markdown } from 'tiptap-markdown';
-import Link from '@tiptap/extension-link';
+import _ExtensionLink from '@tiptap/extension-link';
+import { type AnyExtension } from '@tiptap/react';
 
-const starterKitExtension = StarterKit;
-const textStyleExtension = ExtensionTextStyle;
-const colorExtension = ExtensionColor;
-const underlineExtension = Underline;
-const subscriptExtension = Subscript;
-const superscriptExtension = Superscript;
+type CreateExtensionSetOptions = {
+  storageUrl?: string;
+  className?: {
+    link?: string;
+    image?: string;
+    placeholderImage?: string;
+  };
+};
 
-const imageExtension = Image.configure({
-  inline: true,
-  HTMLAttributes: {
-    crossorigin: 'use-credentials'
-  }
-});
-
-const markdownExtension = Markdown.configure({
-  html: false,
-  transformCopiedText: true
-});
-
-const linkExtension = Link.configure({
-  linkOnPaste: true,
-  autolink: true,
-  openOnClick: true,
-  HTMLAttributes: {
-    class: 'text-blue-12'
-  }
-});
-
-const placeholderExtension = Placeholder.configure({
-  placeholder: ({ node }) => {
-    if (node.type.name === 'heading') {
-      return `Heading ${node.attrs.level}`;
+export const createExtensionSet = ({
+  storageUrl,
+  className
+}: CreateExtensionSetOptions = {}) => {
+  const ExtensionImage = ExtensionImageResize.extend({
+    addAttributes() {
+      return {
+        ...this.parent?.(),
+        width: {
+          default: null
+        },
+        height: {
+          default: null
+        }
+      };
+    },
+    renderHTML: ({ HTMLAttributes, node }) => {
+      const isInternalImage =
+        storageUrl &&
+        typeof node.attrs.src === 'string' &&
+        node.attrs.src.startsWith(storageUrl);
+      return [
+        'img',
+        isInternalImage
+          ? {
+              ...node.attrs,
+              ...HTMLAttributes,
+              crossorigin: 'use-credentials'
+            }
+          : { ...node.attrs, ...HTMLAttributes }
+      ];
+    },
+    addProseMirrorPlugins: () => {
+      return [
+        UploadImagesPlugin({
+          imageClass: className?.placeholderImage ?? ''
+        })
+      ];
     }
-    return 'Press / for commands';
-  },
-  includeChildren: true,
-  emptyEditorClass: 'is-editor-empty',
-  emptyNodeClass: 'is-empty'
-});
+  }).configure({
+    inline: true,
+    HTMLAttributes: { class: className?.image ?? undefined }
+  });
 
-export const tipTapExtensions: AnyExtension[] = [
-  starterKitExtension,
-  textStyleExtension,
-  colorExtension,
-  imageExtension,
-  markdownExtension,
-  linkExtension,
-  placeholderExtension,
-  underlineExtension,
-  subscriptExtension,
-  superscriptExtension
-];
+  const ExtensionMarkdown = _ExtensionMarkdown.configure({
+    html: false,
+    transformCopiedText: true
+  });
 
-export {
-  starterKitExtension,
-  textStyleExtension,
-  colorExtension,
-  imageExtension,
-  markdownExtension,
-  linkExtension,
-  placeholderExtension,
-  underlineExtension,
-  subscriptExtension,
-  superscriptExtension
+  const ExtensionLinks = _ExtensionLink.configure({
+    linkOnPaste: true,
+    autolink: true,
+    openOnClick: true,
+    HTMLAttributes: {
+      class: className?.link ?? ''
+    }
+  });
+
+  const ExtensionPlaceholder = _ExtensionPlaceholder.configure({
+    placeholder: ({ node }) => {
+      if (node.type.name === 'heading') {
+        return `Heading ${node.attrs.level}`;
+      }
+      return 'Press / for commands';
+    },
+    includeChildren: true,
+    emptyEditorClass: 'is-editor-empty',
+    emptyNodeClass: 'is-empty'
+  });
+
+  const tipTapExtensions: AnyExtension[] = [
+    ExtensionStarterKit,
+    ExtensionTextStyle,
+    ExtensionColor,
+    ExtensionImage,
+    ExtensionMarkdown,
+    ExtensionLinks,
+    ExtensionPlaceholder,
+    ExtensionUnderline,
+    ExtensionSubscript,
+    ExtensionSuperscript
+  ];
+
+  return tipTapExtensions;
 };

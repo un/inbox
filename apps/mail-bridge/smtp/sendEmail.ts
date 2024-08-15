@@ -3,34 +3,14 @@ import type { AuthOptions } from './auth';
 
 export type SendEmailOptions = {
   to: string[];
-  cc: string[];
   from: string;
-  sender: string;
-  subject: string;
-  plainBody: string;
-  htmlBody: string;
-  attachments: {
-    name: string;
-    content_type: string;
-    data: string;
-    base64: boolean;
-  }[];
   headers: Record<string, string>;
+  raw: string;
 };
 
 export async function sendEmail({
   auth: { host, port, username, password, encryption, authMethod },
-  email: {
-    to,
-    cc,
-    from,
-    sender,
-    subject,
-    plainBody,
-    htmlBody,
-    attachments,
-    headers
-  }
+  email: { to, from, headers, raw }
 }: {
   auth: AuthOptions;
   email: SendEmailOptions;
@@ -46,24 +26,9 @@ export async function sendEmail({
     }
   });
   const res = await transport.sendMail({
-    envelope: {
-      to,
-      from
-    },
-    to,
-    cc,
-    from,
-    sender,
-    subject,
-    html: htmlBody,
-    text: plainBody,
-    attachments: attachments.map(({ name, content_type, data, base64 }) => ({
-      contentType: content_type,
-      filename: name,
-      content: data,
-      encoding: base64 ? 'base64' : 'utf8'
-    })),
-    headers
+    envelope: { to, from },
+    headers,
+    raw
   });
   return res;
 }

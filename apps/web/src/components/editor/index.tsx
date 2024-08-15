@@ -12,32 +12,47 @@ import {
   EditorBubble
 } from '@u22n/tiptap/components';
 import {
+  handleImageDrop,
+  handleImagePaste
+} from '@u22n/tiptap/extensions/image-uploader';
+import {
   ColorSelector,
   LinkSelector,
   NodeSelector,
   TextButtons
 } from './selectors';
 import { handleCommandNavigation } from '@u22n/tiptap/extensions/slash-command';
+import { useInlineUploader } from '@/src/hooks/use-inline-uploader';
 import { slashCommand, suggestionItems } from './slash-commands';
-import { tipTapExtensions } from '@u22n/tiptap/extensions';
+import { createExtensionSet } from '@u22n/tiptap/extensions';
 import { useIsMobile } from '@/src/hooks/use-is-mobile';
 import { forwardRef, memo, useState } from 'react';
+import { env } from '@/src/env';
+
+const tipTapExtensions = createExtensionSet({
+  storageUrl: env.NEXT_PUBLIC_STORAGE_URL,
+  className: {
+    placeholderImage: 'rounded-md border opacity-50'
+  }
+});
 
 interface EditorProp {
   initialValue?: JSONContent;
   onChange: (value: JSONContent) => void;
+  canUpload: (file: File) => boolean;
 }
 
 const extensions = [...tipTapExtensions, slashCommand];
 
 export const Editor = memo(
   forwardRef<EditorFunctions, EditorProp>(function Editor(
-    { initialValue, onChange },
+    { initialValue, onChange, canUpload },
     ref
   ) {
     const [openNode, setOpenNode] = useState(false);
     const [openColor, setOpenColor] = useState(false);
     const [openLink, setOpenLink] = useState(false);
+    const inlineUploader = useInlineUploader(canUpload);
     const isMobile = useIsMobile();
 
     return (
@@ -63,7 +78,11 @@ export const Editor = memo(
                     e.preventDefault();
                   }
                 }
-              }
+              },
+              handlePaste: (view, event) =>
+                handleImagePaste(view, event, inlineUploader),
+              handleDrop: (view, event, _slice, moved) =>
+                handleImageDrop(view, event, moved, inlineUploader)
             }}
             extensions={extensions}
             onUpdate={({ editor }) => onChange(editor.getJSON())}
