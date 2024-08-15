@@ -941,28 +941,35 @@ export const worker = createWorker<MailProcessorJobData>(
           tipTapExtensions
         );
 
-        console.log('Inserting new convo entry', {
-          orgId,
-          convoId,
-          fromAddressParticipantId,
-          replyToId,
-          subjectId
-        });
-        const insertNewConvoEntry = await db.insert(convoEntries).values({
-          orgId,
-          publicId: typeIdGenerator('convoEntries'),
-          convoId,
-          visibility: 'all_participants',
-          type: 'message',
-          metadata: convoEntryMetadata,
-          author: fromAddressParticipantId!,
-          body: convoEntryBody,
-          bodyPlainText: convoEntryBodyPlainText,
-          replyToId,
-          subjectId
-        });
+        // Before inserting a new convo entry, add a check to ensure we have valid data
+        if (convoId && fromAddressParticipantId && subjectId) {
+          console.log('Inserting new convo entry', {
+            orgId,
+            convoId,
+            fromAddressParticipantId,
+            replyToId,
+            subjectId
+          });
+          const insertNewConvoEntry = await db.insert(convoEntries).values({
+            orgId,
+            publicId: typeIdGenerator('convoEntries'),
+            convoId,
+            visibility: 'all_participants',
+            type: 'message',
+            metadata: convoEntryMetadata,
+            author: fromAddressParticipantId,
+            body: convoEntryBody,
+            bodyPlainText: convoEntryBodyPlainText,
+            replyToId,
+            subjectId
+          });
 
-        console.log('Inserted new convo entry', insertNewConvoEntry);
+          console.log('Inserted new convo entry', insertNewConvoEntry);
+        } else {
+          throw new Error(
+            'Missing required data for inserting new convo entry'
+          );
+        }
 
         await db
           .update(convos)
