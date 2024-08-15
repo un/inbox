@@ -22,6 +22,7 @@ import {
 } from '@/src/components/shadcn-ui/tooltip';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { type JSONContent, generateHTML } from '@u22n/tiptap/react';
+import { emailIdentityAtom, replyToMessageAtom } from '../atoms';
 import { Virtuoso, type VirtuosoHandle } from 'react-virtuoso';
 import { OriginalMessageView } from './original-message-view';
 import { type RouterOutputs, platform } from '@/src/lib/trpc';
@@ -32,10 +33,9 @@ import { useTimeAgo } from '@/src/hooks/use-time-ago';
 import { Avatar } from '@/src/components/avatar';
 import { type TypeId } from '@u22n/utils/typeid';
 import { cva } from 'class-variance-authority';
-import { replyToMessageAtom } from '../atoms';
-import { useAtom, useSetAtom } from 'jotai';
 import { cn } from '@/src/lib/utils';
 import { ms } from '@u22n/utils/ms';
+import { useAtom } from 'jotai';
 import { toast } from 'sonner';
 
 type MessagesPanelProps = {
@@ -59,7 +59,18 @@ export const MessagesPanel = memo(
         INVERSE_LIST_START_INDEX
       );
 
-      const setReplyTo = useSetAtom(replyToMessageAtom);
+      const [replyTo, setReplyTo] = useAtom(replyToMessageAtom);
+      const [, setEmailIdentity] = useAtom(emailIdentityAtom);
+
+      const { data: emailIdentities } =
+        platform.org.mail.emailIdentities.getUserEmailIdentities.useQuery(
+          {
+            orgShortcode
+          },
+          {
+            staleTime: ms('1 hour')
+          }
+        );
 
       const {
         data,
@@ -94,6 +105,41 @@ export const MessagesPanel = memo(
         const lastMessage = allMessages.at(-1);
         setReplyTo(lastMessage?.publicId ?? null);
       }, [allMessages, setReplyTo]);
+
+      useEffect(() => {
+        const emailEntry = allMessages.find((_) => _.publicId === replyTo);
+        if (emailEntry) {
+          const metaData = emailEntry.metadata;
+          if (!emailIdentities) return;
+          let newEmailIdentity: TypeId<'emailIdentities'> | null = null;
+          for (const key of ['to', 'from', 'cc'] as const) {
+            const addressPublicIds = metaData?.email?.[key]
+              .filter((_) => _.type === 'emailIdentity')
+              .map((_) => _.publicId);
+
+            const foundPublicId = addressPublicIds?.find((id) =>
+              emailIdentities.emailIdentities.some((e) => e.publicId === id)
+            );
+
+            if (foundPublicId) {
+              const emailIdentityMetaEntry =
+                emailIdentities.emailIdentities.find(
+                  (_) => _.publicId === foundPublicId
+                );
+              if (emailIdentityMetaEntry) {
+                newEmailIdentity = emailIdentityMetaEntry.publicId;
+              }
+            }
+          }
+          setEmailIdentity((prev) => {
+            if (!newEmailIdentity) {
+              newEmailIdentity =
+                prev ?? emailIdentities.emailIdentities[0]?.publicId ?? null;
+            }
+            return newEmailIdentity;
+          });
+        }
+      }, [allMessages, emailIdentities, replyTo, setEmailIdentity]);
 
       const startReached = useCallback(() => {
         if (isFetchingNextPage || !hasNextPage) return;
@@ -320,9 +366,7 @@ const MessageItem = memo(
                     replyTo === message.publicId && 'bg-accent-4 text-accent-11'
                   )}
                   onClick={() => {
-                    setReplyTo(
-                      replyTo === message.publicId ? null : message.publicId
-                    );
+                    setReplyTo(message.publicId);
                   }}>
                   <ArrowBendDoubleUpLeft />
                 </button>
