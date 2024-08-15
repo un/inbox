@@ -298,6 +298,7 @@ export const worker = createWorker<MailProcessorJobData>(
   (job) =>
     tracer.startActiveSpan('Mail Processor', async (span) => {
       try {
+        console.log('Starting mail processor job', { jobId: job.id });
         span?.setAttributes({
           'job.id': job.id,
           'job.data': JSON.stringify(job.data)
@@ -306,12 +307,18 @@ export const worker = createWorker<MailProcessorJobData>(
         const { rawMessage, params } = job.data;
         const { id, rcpt_to, message, base64 } = rawMessage;
 
+        console.log('Resolving org and mailserver', { rcpt_to, ...params });
         const { orgId, orgPublicId, forwardedEmailAddress } =
           await resolveOrgAndMailserver({
             rcpt_to,
             ...params
           });
 
+        console.log('Resolved org and mailserver', {
+          orgId,
+          orgPublicId,
+          forwardedEmailAddress
+        });
         span?.addEvent('mail-processor.resolved_org_mailserver', {
           orgId,
           orgPublicId,
@@ -412,7 +419,11 @@ export const worker = createWorker<MailProcessorJobData>(
           cleanStyles: true
         });
 
-        //* get the contact and emailIdentityIds for the message
+        console.log('Parsing email addresses', {
+          messageFrom,
+          messageTo,
+          messageCc
+        });
         const [
           messageToPlatformObject,
           messageFromPlatformObject,
@@ -436,6 +447,12 @@ export const worker = createWorker<MailProcessorJobData>(
               })
             : Promise.resolve([])
         ]);
+
+        console.log('Email addresses parsed', {
+          messageToPlatformObject,
+          messageFromPlatformObject,
+          messageCcPlatformObject
+        });
 
         if (!messageToPlatformObject?.[0] || !messageFromPlatformObject?.[0]) {
           span?.setAttributes({
@@ -548,6 +565,7 @@ export const worker = createWorker<MailProcessorJobData>(
         });
 
         //* start to process the conversation
+        console.log('Processing conversation', { inReplyToEmailId });
         let hasReplyToButIsNewConvo: boolean | null = null;
         let convoId = -1;
         let replyToId: number | null = null;
@@ -570,6 +588,9 @@ export const worker = createWorker<MailProcessorJobData>(
         // - if no, then we assume this is a new convo and handle it at such
 
         if (inReplyToEmailId) {
+          console.log('Checking for existing message with inReplyToEmailId', {
+            inReplyToEmailId
+          });
           const existingMessage = await db.query.convoEntries.findFirst({
             where: and(
               eq(convoEntries.orgId, orgId),
@@ -602,6 +623,8 @@ export const worker = createWorker<MailProcessorJobData>(
               }
             }
           });
+
+          console.log('Existing message query result', { existingMessage });
 
           if (existingMessage) {
             hasReplyToButIsNewConvo = false;
@@ -696,10 +719,18 @@ export const worker = createWorker<MailProcessorJobData>(
               .insert(convoToSpaces)
               .values(convoToSpacesInsertValuesArray);
           } else {
-            // if there is a reply to header but we cant find the conversation, we handle this like its a new convo
+            console.log(
+              'No existing message found, treating as new conversation'
+            );
             hasReplyToButIsNewConvo = true;
           }
         }
+
+        console.log('Creating new conversation or adding to existing', {
+          isNewConvo: !inReplyToEmailId || hasReplyToButIsNewConvo,
+          convoId,
+          subjectId
+        });
 
         // create a new convo with new participants
         if (!inReplyToEmailId || hasReplyToButIsNewConvo) {
@@ -756,7 +787,12 @@ export const worker = createWorker<MailProcessorJobData>(
         }
 
         if (convoParticipantsToAdd.length) {
+          console.log('Inserting new convo participants', {
+            count: convoParticipantsToAdd.length
+          });
           await db.insert(convoParticipants).values(convoParticipantsToAdd);
+        } else {
+          console.log('No new convo participants to add');
         }
 
         if (!fromAddressParticipantId) {
@@ -905,6 +941,13 @@ export const worker = createWorker<MailProcessorJobData>(
           tipTapExtensions
         );
 
+        console.log('Inserting new convo entry', {
+          orgId,
+          convoId,
+          fromAddressParticipantId,
+          replyToId,
+          subjectId
+        });
         const insertNewConvoEntry = await db.insert(convoEntries).values({
           orgId,
           publicId: typeIdGenerator('convoEntries'),
@@ -919,6 +962,8 @@ export const worker = createWorker<MailProcessorJobData>(
           subjectId
         });
 
+        console.log('Inserted new convo entry', insertNewConvoEntry);
+
         await db
           .update(convos)
           .set({
@@ -926,6 +971,7 @@ export const worker = createWorker<MailProcessorJobData>(
           })
           .where(eq(convos.id, convoId));
 
+        console.log('Uploading attachments');
         const uploadedAttachments = await Promise.allSettled(
           attachments.map((attachment) =>
             uploadAndAttachAttachment(
@@ -970,6 +1016,8 @@ export const worker = createWorker<MailProcessorJobData>(
             }[]
         );
 
+        console.log('Uploaded attachments', uploadedAttachments);
+
         const parsedEmailMessageHtmlWithAttachments = replaceCidWithUrl(
           strippedEmail.parsedMessageHtml,
           uploadedAttachments
@@ -1006,6 +1054,7 @@ export const worker = createWorker<MailProcessorJobData>(
           uploadedAttachments
         );
 
+        console.log('Inserting convo entry raw HTML email');
         await db.insert(convoEntryRawHtmlEmails).values({
           orgId: orgId,
           entryId: Number(insertNewConvoEntry.insertId),
@@ -1014,14 +1063,19 @@ export const worker = createWorker<MailProcessorJobData>(
           wipeDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 28) // 28 days
         });
 
+        console.log('Sending realtime notification');
         await sendRealtimeNotification({
           newConvo: (!inReplyToEmailId || hasReplyToButIsNewConvo) ?? false,
           convoId: convoId,
           convoEntryId: +insertNewConvoEntry.insertId
         });
+
+        console.log('Mail processor job completed successfully');
       } catch (e) {
-        span?.recordException(e as Error);
         console.error('Error processing email', e);
+        span?.recordException(e as Error);
+        // Log the full error stack trace
+        console.error('Full error stack:', (e as Error).stack);
         // Throw the error to be caught by the worker, and moving to failed jobs
         throw e;
       }
