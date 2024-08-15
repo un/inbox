@@ -1022,7 +1022,6 @@ export const worker = createWorker<MailProcessorJobData>(
       } catch (e) {
         span?.recordException(e as Error);
         console.error('Error processing email', e);
-        await discord.info(`Mailbridge Queue Error\n${(e as Error).message}`);
         // Throw the error to be caught by the worker, and moving to failed jobs
         throw e;
       }
