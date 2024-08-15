@@ -59,7 +59,7 @@ export const Editor = memo(
       <div className="overflow-y-auto">
         <EditorRoot>
           <EditorContent
-            className="h-full w-full p-1"
+            className="editor-content h-full w-full p-1"
             initialContent={initialValue}
             editorProps={{
               attributes: {

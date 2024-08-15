@@ -28,6 +28,7 @@ import {
 import { Button } from '../shadcn-ui/button';
 import { useEffect, useRef } from 'react';
 import { cn } from '@/src/lib/utils';
+import { toast } from 'sonner';
 
 export const TextButtons = () => {
   const { editor } = useEditor();
@@ -210,6 +211,9 @@ export function getUrlFromString(str: string) {
   try {
     if (str.includes('.') && !str.includes(' ')) {
       return new URL(`https://${str}`).toString();
+    } else {
+      toast.error('Please enter a valid link');
+      return null;
     }
   } catch (e) {
     return null;
@@ -279,7 +283,8 @@ export const LinkSelector = ({ open, onOpenChange }: LinkSelectorProps) => {
               variant="outline"
               type="button"
               className="text-red-6 hover:bg-red-1 dark:hover:bg-red-8 flex h-8 items-center rounded-sm p-1 transition-all"
-              onClick={() => {
+              onClick={(e) => {
+                e.preventDefault();
                 editor.chain().focus().unsetLink().run();
                 onOpenChange(false);
               }}>
