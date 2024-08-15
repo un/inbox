@@ -2,8 +2,8 @@ import { createStorage, type Driver, type StorageValue } from 'unstorage';
 import redisDriver from 'unstorage/drivers/redis';
 import type { TypeId } from '@u22n/utils/typeid';
 import type { DatabaseSession } from 'lucia';
+import { seconds } from '@u22n/utils/ms';
 import type { OrgContext } from './ctx';
-import { ms } from '@u22n/utils/ms';
 import { env } from './env';
 
 const createCachedStorage = <T extends StorageValue = StorageValue>(
@@ -21,40 +21,43 @@ const createCachedStorage = <T extends StorageValue = StorageValue>(
 export const storage = {
   passkeyChallenges: createCachedStorage<PasskeyChallenges>(
     'passkey-challenges',
-    ms('5 minutes')
+    seconds('5 minutes')
   ),
   twoFactorLoginChallenges: createCachedStorage<TwoFactorLoginChallenges>(
     'two-factor-login-challenges',
-    ms('5 minutes')
+    seconds('5 minutes')
   ),
   twoFactorResetChallenges: createCachedStorage<TwoFactorResetChallenges>(
     'two-factor-reset-challenges',
-    ms('5 minutes')
+    seconds('5 minutes')
   ),
   // used when a user wants to recover a password
   accountRecoveryVerificationCodes:
     createCachedStorage<AccountRecoveryVerificationCodes>(
       'account-recovery-verification-codes',
-      ms('15 minutes')
+      seconds('15 minutes')
     ),
   // used when user adds a recovery email
   recoveryEmailVerificationCodes:
     createCachedStorage<RecoveryEmailVerificationCodes>(
       'recovery-email-verification-codes',
-      ms('15 minutes')
+      seconds('15 minutes')
     ),
   elevatedTokens: createCachedStorage<ElevatedTokens>(
     'elevated-tokens',
-    ms('5 minutes')
+    seconds('5 minutes')
   ),
-  orgContext: createCachedStorage<OrgContext>('org-context', ms('12 hours')),
+  orgContext: createCachedStorage<OrgContext>(
+    'org-context',
+    seconds('12 hours')
+  ),
   session: createCachedStorage<DatabaseSession>(
     'sessions',
-    env.NODE_ENV === 'development' ? ms('12 hours') : ms('30 days')
+    env.NODE_ENV === 'development' ? seconds('12 hours') : seconds('30 days')
   ),
   resetTokens: createCachedStorage<ResetTokens>(
     'reset-tokens',
-    ms('15 minutes')
+    seconds('15 minutes')
   )
 };
 
