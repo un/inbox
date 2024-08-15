@@ -20,13 +20,13 @@ import {
   TooltipTrigger,
   TooltipContent
 } from '@/src/components/shadcn-ui/tooltip';
-import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { type JSONContent, generateHTML } from '@u22n/tiptap/react';
 import { emailIdentityAtom, replyToMessageAtom } from '../atoms';
 import { Virtuoso, type VirtuosoHandle } from 'react-virtuoso';
 import { OriginalMessageView } from './original-message-view';
 import { type RouterOutputs, platform } from '@/src/lib/trpc';
 import { tipTapExtensions } from '@u22n/tiptap/extensions';
+import { useOrgShortcode } from '@/src/hooks/use-params';
 import { type formatParticipantData } from '../../utils';
 import { useCopyToClipboard } from '@uidotdev/usehooks';
 import { useTimeAgo } from '@/src/hooks/use-time-ago';
@@ -49,9 +49,7 @@ type MessagesPanelProps = {
 export const MessagesPanel = memo(
   forwardRef<VirtuosoHandle, MessagesPanelProps>(
     ({ convoId, participantOwnPublicId, formattedParticipants }, ref) => {
-      const orgShortcode = useGlobalStore(
-        (state) => state.currentOrg.shortcode
-      );
+      const orgShortcode = useOrgShortcode();
       // This is the index of the first item in the list. It is set to a high number to ensure that the list starts at the bottom
       // This also means the list can't be longer than 10000 items (which is fine for our most cases)
       const INVERSE_LIST_START_INDEX = 10000;

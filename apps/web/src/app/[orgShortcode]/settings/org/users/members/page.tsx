@@ -1,15 +1,15 @@
 'use client';
 
-import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { PageTitle } from '../../../_components/page-title';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { DataTable } from '@/src/components/shared/table';
+import { useOrgShortcode } from '@/src/hooks/use-params';
 import { columns } from './_components/columns';
 import { platform } from '@/src/lib/trpc';
 import Link from 'next/link';
 
 export default function Page() {
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const orgShortcode = useOrgShortcode();
   const { data: memberList, isLoading } =
     platform.org.users.members.getOrgMembers.useQuery({
       orgShortcode

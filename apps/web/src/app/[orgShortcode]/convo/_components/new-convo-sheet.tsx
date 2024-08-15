@@ -9,17 +9,15 @@ import {
   DrawerTrigger
 } from '@/src/components/shadcn-ui/drawer';
 import { showNewConvoPanel } from '@/src/app/[orgShortcode]/convo/atoms';
-import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { ArrowsOutSimple, Plus, X } from '@phosphor-icons/react';
+import { useOrgScopedRouter } from '@/src/hooks/use-params';
 import { Button } from '@/src/components/shadcn-ui/button';
 import CreateConvoForm from './create-convo-form';
-import { useRouter } from 'next/navigation';
 import { useAtom } from 'jotai';
 
 export function NewConvoSheet() {
   const [open, setOpen] = useAtom(showNewConvoPanel);
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
-  const router = useRouter();
+  const { scopedNavigate } = useOrgScopedRouter();
 
   return (
     <Drawer
@@ -52,7 +50,7 @@ export function NewConvoSheet() {
             size={'icon'}
             variant={'ghost'}
             onClick={() => {
-              router.push(`/${orgShortcode}/convo/new`);
+              scopedNavigate('/convo/new');
               setOpen(false);
             }}>
             <ArrowsOutSimple

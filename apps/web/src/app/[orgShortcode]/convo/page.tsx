@@ -1,11 +1,11 @@
 'use client';
-import { useGlobalStore } from '@/src/providers/global-store-provider';
+import { useOrgScopedRouter } from '@/src/hooks/use-params';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { useIsMobile } from '@/src/hooks/use-is-mobile';
 import Link from 'next/link';
 
 export default function Page() {
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const { scopedUrl } = useOrgScopedRouter();
   const isMobile = useIsMobile();
 
   return isMobile ? null : (
@@ -14,7 +14,7 @@ export default function Page() {
         Select a Convo from Sidebar or Create a New One
       </span>
       <Button asChild>
-        <Link href={`/${orgShortcode}/convo/new`}>Create New Convo</Link>
+        <Link href={scopedUrl(`/convo/new`)}>Create New Convo</Link>
       </Button>
     </div>
   );

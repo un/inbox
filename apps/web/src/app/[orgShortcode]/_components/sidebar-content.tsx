@@ -29,7 +29,8 @@ import {
   Palette,
   Monitor,
   Question,
-  User
+  User,
+  SpinnerGap
 } from '@phosphor-icons/react';
 import {
   Tooltip,
@@ -40,16 +41,19 @@ import {
   ToggleGroup,
   ToggleGroupItem
 } from '@/src/components/shadcn-ui/toggle-group';
-import { useGlobalStore } from '@/src/providers/global-store-provider';
+import { useOrgScopedRouter, useOrgShortcode } from '@/src/hooks/use-params';
 import { useIsMobile } from '@/src/hooks/use-is-mobile';
 import { useMutation } from '@tanstack/react-query';
 import { Avatar } from '@/src/components/avatar';
 import { sidebarSubmenuOpenAtom } from './atoms';
 import { useRouter } from 'next/navigation';
+import { platform } from '@/src/lib/trpc';
 import { useTheme } from 'next-themes';
 import { cn } from '@/src/lib/utils';
+import { ms } from '@u22n/utils/ms';
 import { useSetAtom } from 'jotai';
 import { env } from '@/src/env';
+import { useMemo } from 'react';
 import Link from 'next/link';
 
 export function SidebarContent() {
@@ -68,12 +72,31 @@ export function SidebarContent() {
 }
 
 function OrgMenu() {
-  const currentOrg = useGlobalStore((state) => state.currentOrg);
-  const username = useGlobalStore((state) => state.user.username);
   const setSidebarSubmenuOpen = useSetAtom(sidebarSubmenuOpenAtom);
+  const orgShortcode = useOrgShortcode();
 
-  const displayName =
-    `${currentOrg.orgMemberProfile.firstName ?? username} ${currentOrg.orgMemberProfile.lastName}`.trim();
+  const { data: orgData, isLoading } =
+    platform.org.crud.getAccountOrgs.useQuery({}, { staleTime: ms('1 hour') });
+  const { data: memberProfile } =
+    platform.account.profile.getOrgMemberProfile.useQuery(
+      {
+        orgShortcode
+      },
+      {
+        staleTime: ms('1 hour')
+      }
+    );
+
+  const currentOrg = useMemo(
+    () =>
+      orgData?.userOrgs.find((org) => org.org.shortcode === orgShortcode)
+        ?.org ?? null,
+    [orgData?.userOrgs, orgShortcode]
+  );
+
+  const displayName = memberProfile?.profile
+    ? `${memberProfile.profile.firstName ?? memberProfile.account?.username ?? ''} ${memberProfile.profile.lastName}`.trim()
+    : '...';
 
   return (
     <div className={'w-full'}>
@@ -83,16 +106,25 @@ function OrgMenu() {
             'bg-base-1 border-base-5 hover:bg-base-2 flex w-full flex-row items-center justify-between gap-2 rounded-lg border p-3 shadow-sm'
           }>
           <div className={'flex flex-row items-center gap-2'}>
-            <Avatar
-              avatarProfilePublicId={currentOrg.publicId}
-              avatarTimestamp={currentOrg.avatarTimestamp}
-              name={currentOrg.name}
-              size="lg"
-              hideTooltip
-            />
+            {isLoading || !currentOrg ? (
+              <div className="flex size-8 items-center justify-center rounded-full border">
+                <SpinnerGap
+                  className="size-6 animate-spin"
+                  size={24}
+                />
+              </div>
+            ) : (
+              <Avatar
+                avatarProfilePublicId={currentOrg.publicId}
+                avatarTimestamp={currentOrg.avatarTimestamp}
+                name={currentOrg.name}
+                size="lg"
+                hideTooltip
+              />
+            )}
             <div className={'flex flex-col items-start justify-start'}>
               <span className={cn('text-sm font-semibold leading-none')}>
-                {currentOrg.name}
+                {currentOrg?.name ?? '...'}
               </span>
               <span
                 className={cn('text-base-11 text-xs font-medium leading-none')}>
@@ -114,10 +146,28 @@ function OrgMenu() {
 }
 
 export function OrgMenuContent() {
-  const setCurrentOrg = useGlobalStore((state) => state.setCurrentOrg);
-  const currentOrg = useGlobalStore((state) => state.currentOrg);
-  const username = useGlobalStore((state) => state.user.username);
-  const orgs = useGlobalStore((state) => state.orgs);
+  const orgShortcode = useOrgShortcode();
+  const { scopedUrl } = useOrgScopedRouter();
+
+  const { data: orgData, isLoading } =
+    platform.org.crud.getAccountOrgs.useQuery({}, { staleTime: ms('1 hour') });
+  const { data: memberProfile } =
+    platform.account.profile.getOrgMemberProfile.useQuery(
+      {
+        orgShortcode
+      },
+      {
+        staleTime: ms('1 hour')
+      }
+    );
+
+  const currentOrg = useMemo(
+    () =>
+      orgData?.userOrgs.find((org) => org.org.shortcode === orgShortcode)
+        ?.org ?? null,
+    [orgData?.userOrgs, orgShortcode]
+  );
+
   const setSidebarSubmenuOpen = useSetAtom(sidebarSubmenuOpenAtom);
   const { theme, setTheme } = useTheme();
   const router = useRouter();
@@ -133,8 +183,9 @@ export function OrgMenuContent() {
     }
   });
 
-  const displayName =
-    `${currentOrg.orgMemberProfile.firstName ?? username} ${currentOrg.orgMemberProfile.lastName}`.trim();
+  const displayName = memberProfile?.profile
+    ? `${memberProfile.profile.firstName ?? memberProfile.account?.username ?? ''} ${memberProfile.profile.lastName}`.trim()
+    : '...';
 
   return (
     <>
@@ -144,19 +195,28 @@ export function OrgMenuContent() {
             Signed in as
           </span>
           <div className={'flex flex-row gap-2'}>
-            <Avatar
-              avatarProfilePublicId={currentOrg.orgMemberProfile.publicId}
-              avatarTimestamp={currentOrg.orgMemberProfile.avatarTimestamp}
-              name={currentOrg.orgMemberProfile.firstName ?? username}
-              size="lg"
-              hideTooltip
-            />
+            {isLoading || !currentOrg ? (
+              <div className="flex size-8 items-center justify-center rounded-full border">
+                <SpinnerGap
+                  className="size-6 animate-spin"
+                  size={24}
+                />
+              </div>
+            ) : (
+              <Avatar
+                avatarProfilePublicId={currentOrg.publicId}
+                avatarTimestamp={currentOrg.avatarTimestamp}
+                name={currentOrg.name}
+                size="lg"
+                hideTooltip
+              />
+            )}
             <div className="flex flex-col items-start justify-center">
               <span className={'text-base-12 text-sm font-medium leading-none'}>
                 {displayName}
               </span>
               <span className={'text-base-11 text-xs font-normal leading-none'}>
-                @{username}
+                @{memberProfile?.account?.username ?? '...'}
               </span>
             </div>
           </div>
@@ -173,14 +233,13 @@ export function OrgMenuContent() {
             Organizations
           </span>
         </DropdownMenuLabel>
-        {orgs.map((org) => (
+        {orgData?.userOrgs.map(({ org }) => (
           <DropdownMenuItem
             key={org.publicId}
             className="focus:bg-base-3 rounded-sm p-0"
             asChild>
             <div
               onClick={() => {
-                setCurrentOrg(org.shortcode);
                 router.push(`/${org.shortcode}/convo`);
               }}
               className={
@@ -198,7 +257,7 @@ export function OrgMenuContent() {
                   {org.name}
                 </span>
               </div>
-              {org.shortcode === currentOrg.shortcode && <Check />}
+              {org.shortcode === currentOrg?.shortcode && <Check />}
             </div>
           </DropdownMenuItem>
         ))}
@@ -234,7 +293,7 @@ export function OrgMenuContent() {
       <DropdownMenuGroup className={'p-2'}>
         <DropdownMenuItem asChild>
           <Link
-            href={`/${currentOrg.shortcode}/settings`}
+            href={scopedUrl('/settings')}
             className="text-base-11 flex w-full flex-row items-center gap-2 font-medium">
             <Gear className={'h-4 w-4'} />
             <span>Settings</span>
@@ -323,7 +382,9 @@ export function OrgMenuContent() {
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <Link
-                  href={`${env.NEXT_PUBLIC_WEBAPP_URL}/${currentOrg.shortcode}/convo/new?emails=support@uninbox.com&subject=Need%20help%20getting%20unblocked`}
+                  href={scopedUrl(
+                    `/convo/new?emails=support@uninbox.com&subject=Need%20help%20getting%20unblocked`
+                  )}
                   target="_blank">
                   <div
                     className={
@@ -366,7 +427,7 @@ export function OrgMenuContent() {
           </DropdownMenuPortal>
         </DropdownMenuSub>
       </DropdownMenuGroup>
-      <DropdownMenuSeparator className="" />
+      <DropdownMenuSeparator />
       <DropdownMenuItem
         onMouseDown={() => {
           setSidebarSubmenuOpen(false);
@@ -384,7 +445,7 @@ export function OrgMenuContent() {
 }
 
 export function SpacesNav() {
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const { scopedUrl } = useOrgScopedRouter();
 
   return (
     <div
@@ -397,7 +458,7 @@ export function SpacesNav() {
         </span>
         <Link
           className="hover:bg-base-1 flex w-full max-w-full flex-row items-center gap-2 truncate rounded-lg p-1.5"
-          href={`/${orgShortcode}/convo`}>
+          href={scopedUrl('/convo')}>
           <div className="bg-blue-4 text-blue-9 flex h-6 w-6 items-center justify-center rounded-sm">
             <User
               weight="bold"

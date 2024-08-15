@@ -9,15 +9,15 @@ import {
   DialogDescription,
   DialogClose
 } from '@/src/components/shadcn-ui/dialog';
-import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { Input } from '@/src/components/shadcn-ui/input';
+import { useOrgShortcode } from '@/src/hooks/use-params';
 import { platform } from '@/src/lib/trpc';
 import { useState } from 'react';
 import { z } from 'zod';
 
 export function AddDomainModal() {
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const orgShortcode = useOrgShortcode();
   const invalidateDomains = platform.useUtils().org.mail.domains.getOrgDomains;
 
   const {

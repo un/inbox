@@ -1,17 +1,17 @@
 'use client';
 
 import { ExternalEmailModal } from './_components/add-external-email-modal';
-import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { AddEmailModal } from './_components/add-address-modal';
 import { PageTitle } from '../../../_components/page-title';
 import { DataTable } from '@/src/components/shared/table';
+import { useOrgShortcode } from '@/src/hooks/use-params';
 import { SpinnerGap } from '@phosphor-icons/react';
 import { columns } from './_components/columns';
 import { platform } from '@/src/lib/trpc';
 import { useState } from 'react';
 
 export default function Page() {
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const orgShortcode = useOrgShortcode();
   const { data: emailsList, isLoading } =
     platform.org.mail.emailIdentities.getOrgEmailIdentities.useQuery({
       orgShortcode

@@ -16,9 +16,9 @@ import {
   CardTitle
 } from '@/src/components/shadcn-ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/src/components/shadcn-ui/tabs';
-import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { Check, SpinnerGap } from '@phosphor-icons/react';
+import { useOrgShortcode } from '@/src/hooks/use-params';
 import { useEffect, useState } from 'react';
 import { platform } from '@/src/lib/trpc';
 import { cn } from '@/src/lib/utils';
@@ -294,7 +294,7 @@ type StripeModalProps = {
 };
 
 function StripeModal({ open, isYearly, plan, setOpen }: StripeModalProps) {
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const orgShortcode = useOrgShortcode();
   const utils = platform.useUtils();
 
   const {

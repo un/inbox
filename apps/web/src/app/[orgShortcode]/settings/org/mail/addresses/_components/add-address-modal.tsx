@@ -24,12 +24,12 @@ import {
   FormItem,
   FormMessage
 } from '@/src/components/shadcn-ui/form';
-import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { MultiSelect } from '@/src/components/shared/multiselect';
 import { Separator } from '@/src/components/shadcn-ui/separator';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { Switch } from '@/src/components/shadcn-ui/switch';
 import { Input } from '@/src/components/shadcn-ui/input';
+import { useOrgShortcode } from '@/src/hooks/use-params';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { At } from '@phosphor-icons/react';
 import { useForm } from 'react-hook-form';
@@ -59,7 +59,7 @@ export function AddEmailModal({
 }: {
   addExternalModalOpen: (value: boolean) => void;
 }) {
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const orgShortcode = useOrgShortcode();
   const invalidateEmails =
     platform.useUtils().org.mail.emailIdentities.getOrgEmailIdentities;
 

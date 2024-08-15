@@ -1,7 +1,7 @@
 'use client';
 
-import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { usePageTitle } from '@/src/hooks/use-page-title';
+import { useOrgShortcode } from '@/src/hooks/use-params';
 import { type VirtuosoHandle } from 'react-virtuoso';
 import { useCallback, useMemo, useRef } from 'react';
 import { formatParticipantData } from '../../utils';
@@ -15,7 +15,7 @@ import { env } from '@/src/env';
 import TopBar from './top-bar';
 
 export function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const orgShortcode = useOrgShortcode();
   const {
     data: convoData,
     isLoading: convoDataLoading,

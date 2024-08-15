@@ -1,8 +1,8 @@
 import { type NewConvoParticipant } from '../app/[orgShortcode]/convo/_components/create-convo-form';
-import { useGlobalStore } from '../providers/global-store-provider';
 import { type Attachment } from '../components/shared/attachments';
 import { persist, type PersistStorage } from 'zustand/middleware';
 import { emptyTiptapEditorContent } from '@u22n/tiptap';
+import { useOrgShortcode } from '../hooks/use-params';
 import { type JSONContent } from '@u22n/tiptap/react';
 import { type TypeId } from '@u22n/utils/typeid';
 import { useCallback } from 'react';
@@ -159,7 +159,7 @@ export const useDraft = (convoId: TypeId<'convos'>) => {
 };
 
 export const useComposingDraft = () => {
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const orgShortcode = useOrgShortcode();
   // Add this when we support spaces
   const spaceShortcode = null;
 

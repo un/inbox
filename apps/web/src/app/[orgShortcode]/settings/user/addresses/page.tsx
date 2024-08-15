@@ -1,18 +1,17 @@
 'use client';
 
-import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { ClaimAddressModal } from './_components/claim-address-modal';
 import { Skeleton } from '@/src/components/shadcn-ui/skeleton';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { DataTable } from '@/src/components/shared/table';
 import { PageTitle } from '../../_components/page-title';
+import { useOrgShortcode } from '@/src/hooks/use-params';
 import { columns } from './_components/columns';
 import { platform } from '@/src/lib/trpc';
 import { useState } from 'react';
 
 export default function Page() {
-  const username = useGlobalStore((state) => state.user.username);
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const orgShortcode = useOrgShortcode();
   const [claimAddressValue, setClaimAddressValue] = useState<string | null>(
     null
   );
@@ -20,7 +19,10 @@ export default function Page() {
   const { data: proStatus } = platform.org.setup.billing.isPro.useQuery({
     orgShortcode
   });
-
+  const { data: orgMember } =
+    platform.account.profile.getOrgMemberProfile.useQuery({
+      orgShortcode
+    });
   const {
     data: personalAddresses,
     isLoading: personalAddressesLoading,
@@ -51,11 +53,15 @@ export default function Page() {
               className="flex flex-row items-center justify-between gap-2"
               key={domain}>
               <span className="font-mono">
-                {username}@{domain}
+                {orgMember?.account?.username}@{domain}
               </span>
               <Button
                 variant="default"
-                onClick={() => setClaimAddressValue(`${username}@${domain}`)}>
+                onClick={() =>
+                  setClaimAddressValue(
+                    `${orgMember?.account?.username}@${domain}`
+                  )
+                }>
                 Claim
               </Button>
             </div>
@@ -77,7 +83,7 @@ export default function Page() {
               className="flex flex-row items-center justify-between gap-2"
               key={domain}>
               <span className="font-mono">
-                {username}@{domain}
+                {orgMember?.account?.username}@{domain}
               </span>
               <Button
                 disabled={!proStatus?.isPro || !personalAddresses.hasUninBonus}>

@@ -39,7 +39,7 @@ import {
   showNewConvoPanel
 } from './atoms';
 import { DeleteMultipleConvosModal } from './_components/delete-convos-modal';
-import { useGlobalStore } from '@/src/providers/global-store-provider';
+import { useOrgScopedRouter, useOrgShortcode } from '@/src/hooks/use-params';
 import { useRealtime } from '@/src/providers/realtime-provider';
 import { OrgIssueAlerts } from './_components/org-issue-alerts';
 import { Button } from '@/src/components/shadcn-ui/button';
@@ -54,7 +54,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 
 function ChildrenWithOrgIssues({ children }: { children: ReactNode }) {
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const orgShortcode = useOrgShortcode();
   const { data: issueData } = platform.org.store.getOrgIssues.useQuery(
     {
       orgShortcode
@@ -80,8 +80,8 @@ function ConvoNavHeader({
   showHidden: boolean;
   setShowHidden: Dispatch<SetStateAction<boolean>>;
 }) {
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
-  // const isMobile = useIsMobile();
+  const orgShortcode = useOrgShortcode();
+  const { scopedUrl } = useOrgScopedRouter();
 
   const { mutate: hideConvo } = platform.convos.hideConvo.useMutation({
     onSettled: () => {
@@ -221,7 +221,7 @@ function ConvoNavHeader({
                     />
                   </div>
                   <BreadcrumbLink asChild>
-                    <Link href={`/${orgShortcode}/convo`}>
+                    <Link href={scopedUrl('/convo')}>
                       {showHidden ? 'Hidden Conversations' : 'Conversations'}
                     </Link>
                   </BreadcrumbLink>
@@ -241,7 +241,7 @@ function ConvoNavHeader({
                 variant="default"
                 asChild
                 size="xs">
-                <Link href={`/${orgShortcode}/convo/new`}>New</Link>
+                <Link href={scopedUrl('/convo/new')}>New</Link>
               </Button>
             ) : (
               <Button

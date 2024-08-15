@@ -1,14 +1,14 @@
 'use client';
 
-import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { AddDomainModal } from './_components/add-domain-modal';
 import { PageTitle } from '../../../_components/page-title';
 import { DataTable } from '@/src/components/shared/table';
+import { useOrgShortcode } from '@/src/hooks/use-params';
 import { columns } from './_components/columns';
 import { platform } from '@/src/lib/trpc';
 
 export default function Page() {
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const orgShortcode = useOrgShortcode();
   const { data: domainList, isLoading } =
     platform.org.mail.domains.getOrgDomains.useQuery({
       orgShortcode

@@ -1,6 +1,6 @@
-import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { Badge } from '@/src/components/shadcn-ui/badge';
+import { useOrgShortcode } from '@/src/hooks/use-params';
 import { type PrimitiveAtom, useAtom } from 'jotai';
 import { useMemo, useRef, useState } from 'react';
 import { type TypeId } from '@u22n/utils/typeid';
@@ -33,9 +33,7 @@ export function AttachmentButton({ attachmentsAtom }: AttachmentButtonProps) {
     { progress: number; fileName: string }[]
   >([]);
   const [processing, setProcessing] = useState(false);
-  const currentOrgShortcode = useGlobalStore(
-    (state) => state.currentOrg.shortcode
-  );
+  const orgShortcode = useOrgShortcode();
   const uploadedAttachmentSize = useMemo(
     () => attachments.reduce((acc, { size }) => acc + size, 0),
     [attachments]
@@ -61,7 +59,7 @@ export function AttachmentButton({ attachmentsAtom }: AttachmentButtonProps) {
     const results = await Promise.allSettled(
       files.map(async (file) => {
         const preSignedData = (await fetch(
-          `${env.NEXT_PUBLIC_STORAGE_URL}/api/attachments/presign?orgShortcode=${currentOrgShortcode}&filename=${file.name}`,
+          `${env.NEXT_PUBLIC_STORAGE_URL}/api/attachments/presign?orgShortcode=${orgShortcode}&filename=${file.name}`,
           {
             method: 'GET',
             credentials: 'include'

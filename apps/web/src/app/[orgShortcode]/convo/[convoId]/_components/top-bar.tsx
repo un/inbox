@@ -25,13 +25,17 @@ import {
   DialogTitle
 } from '@/src/components/shadcn-ui/dialog';
 import {
+  useCurrentConvoId,
+  useOrgScopedRouter,
+  useOrgShortcode
+} from '@/src/hooks/use-params';
+import {
   Tooltip,
   TooltipContent,
   TooltipTrigger
 } from '@/src/components/shadcn-ui/tooltip';
 import { useDeleteConvo$Cache, type formatParticipantData } from '../../utils';
 import { useModifierKeys } from '@/src/components/modifier-class-provider';
-import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { type VariantProps, cva } from 'class-variance-authority';
 import { type RouterOutputs, platform } from '@/src/lib/trpc';
 import { Button } from '@/src/components/shadcn-ui/button';
@@ -39,7 +43,6 @@ import { useIsMobile } from '@/src/hooks/use-is-mobile';
 import { memo, useCallback, useState } from 'react';
 import { type TypeId } from '@u22n/utils/typeid';
 import { Participants } from './participants';
-import { useRouter } from 'next/navigation';
 import { cn } from '@/src/lib/utils';
 import { toast } from 'sonner';
 import Link from 'next/link';
@@ -66,7 +69,7 @@ export default function TopBar({
   participants,
   attachments
 }: TopBarProps) {
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const orgShortcode = useOrgShortcode();
   const isMobile = useIsMobile();
   const { mutate: hideConvo, isPending: hidingConvo } =
     platform.convos.hideConvo.useMutation();
@@ -157,15 +160,16 @@ const DeleteButton = memo(function DeleteButton({
   hidden
 }: DeleteButtonProps) {
   const { shiftKey } = useModifierKeys();
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
-  const router = useRouter();
+  const orgShortcode = useOrgShortcode();
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const removeConvoFromList = useDeleteConvo$Cache();
+  const { scopedNavigate } = useOrgScopedRouter();
+  const currentConvo = useCurrentConvoId();
+
   const { mutate: deleteConvo, isPending: deletingConvo } =
     platform.convos.deleteConvo.useMutation({
       onSuccess: () => {
         void removeConvoFromList(convoId);
-        router.push(`/${orgShortcode}/convo`);
       }
     });
 
@@ -173,6 +177,9 @@ const DeleteButton = memo(function DeleteButton({
     async (e: React.MouseEvent<HTMLButtonElement>) => {
       e.preventDefault();
       if (e.shiftKey) {
+        if (currentConvo === convoId) {
+          scopedNavigate('/convo');
+        }
         return deleteConvo({
           convoPublicId: convoId,
           orgShortcode
@@ -181,7 +188,7 @@ const DeleteButton = memo(function DeleteButton({
         setDeleteModalOpen(true);
       }
     },
-    [convoId, deleteConvo, orgShortcode]
+    [convoId, currentConvo, deleteConvo, orgShortcode, scopedNavigate]
   );
 
   return (
@@ -209,7 +216,6 @@ const DeleteButton = memo(function DeleteButton({
           setOpen={setDeleteModalOpen}
           convoId={convoId}
           convoHidden={hidden}
-          onSuccess={() => router.push(`/${orgShortcode}/convo`)}
         />
       )}
     </>
@@ -219,7 +225,6 @@ const DeleteButton = memo(function DeleteButton({
 type DeleteModalProps = {
   open: boolean;
   setOpen: (open: boolean) => void;
-  onSuccess: () => void;
   convoId: TypeId<'convos'>;
   convoHidden: boolean | null;
 };
@@ -230,7 +235,9 @@ function DeleteModal({
   convoHidden,
   setOpen
 }: DeleteModalProps) {
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const orgShortcode = useOrgShortcode();
+  const { scopedNavigate } = useOrgScopedRouter();
+  const currentConvo = useCurrentConvoId();
   const removeConvoFromList = useDeleteConvo$Cache();
 
   const { mutate: hideConvo, isPending: hidingConvo } =
@@ -251,12 +258,6 @@ function DeleteModal({
     platform.convos.deleteConvo.useMutation({
       onSuccess: () => {
         void removeConvoFromList(convoId);
-        setOpen(false);
-      },
-      onError: (error) => {
-        toast.error('Something went wrong while deleting the convo', {
-          description: error.message
-        });
         setOpen(false);
       }
     });
@@ -319,12 +320,15 @@ function DeleteModal({
             className="flex-1"
             disabled={hidingConvo}
             loading={deletingConvo}
-            onClick={() =>
+            onClick={() => {
+              if (currentConvo === convoId) {
+                scopedNavigate('/convo');
+              }
               deleteConvo({
                 convoPublicId: convoId,
                 orgShortcode
-              })
-            }>
+              });
+            }}>
             Delete
           </Button>
         </DialogFooter>

@@ -1,8 +1,8 @@
 'use client';
 
-import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { convoListSelection, lastSelectedConvo } from '../atoms';
 import { platform, type RouterOutputs } from '@/src/lib/trpc';
+import { useOrgShortcode } from '@/src/hooks/use-params';
 import { SpinnerGap } from '@phosphor-icons/react';
 import { memo, useCallback, useMemo } from 'react';
 import { type TypeId } from '@u22n/utils/typeid';
@@ -18,7 +18,7 @@ type Props = {
 type Convo = RouterOutputs['convos']['getOrgMemberConvos']['data'][number];
 
 export function ConvoList({ hidden }: Props) {
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const orgShortcode = useOrgShortcode();
   const [selections, setSelections] = useAtom(convoListSelection);
   const [lastSelected, setLastSelected] = useAtom(lastSelectedConvo);
 

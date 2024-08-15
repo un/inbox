@@ -3,8 +3,8 @@ import {
   DialogContent,
   DialogTitle
 } from '@/src/components/shadcn-ui/dialog';
-import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { Button } from '@/src/components/shadcn-ui/button';
+import { useOrgShortcode } from '@/src/hooks/use-params';
 import { platform } from '@/src/lib/trpc';
 import Link from 'next/link';
 
@@ -19,8 +19,7 @@ export function ClaimAddressModal({
   address,
   onSuccess
 }: ClaimAddressModalProps) {
-  const currentOrgName = useGlobalStore((state) => state.currentOrg.name);
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const orgShortcode = useOrgShortcode();
 
   const { mutate: claimAddressConfirm, isPending: isClaiming } =
     platform.account.addresses.claimPersonalAddress.useMutation({
@@ -44,7 +43,7 @@ export function ClaimAddressModal({
 
         <div className="flex flex-col gap-4">
           <div className="text-sm">
-            You are about to link {address} to the Org {currentOrgName}. This
+            You are about to link {address} to the Org {orgShortcode}. This
             action is irreversible.
           </div>
           <div className="text-sm">
@@ -65,8 +64,8 @@ export function ClaimAddressModal({
           </div>
 
           <div className="text-red-10 text-sm">
-            Make sure you want to claim this address with {currentOrgName}, if
-            not Cancel this action, change the selected Org and try again.
+            Make sure you want to claim this address with {orgShortcode}, if not
+            Cancel this action, change the selected Org and try again.
           </div>
         </div>
 
