@@ -27,6 +27,14 @@ import {
   SelectValue
 } from '@/src/components/shadcn-ui/select';
 import {
+  useState,
+  useMemo,
+  useEffect,
+  type Dispatch,
+  type SetStateAction,
+  useRef
+} from 'react';
+import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger
@@ -41,21 +49,16 @@ import {
   TooltipContent,
   TooltipTrigger
 } from '@/src/components/shadcn-ui/tooltip';
-import {
-  useState,
-  useMemo,
-  useEffect,
-  type Dispatch,
-  type SetStateAction
-} from 'react';
 import { useAttachmentUploader } from '@/src/components/shared/attachments';
 import { useGlobalStore } from '@/src/providers/global-store-provider';
+import { type EditorFunctions } from '@u22n/tiptap/components';
 import { useComposingDraft } from '@/src/stores/draft-store';
 import { Avatar, AvatarIcon } from '@/src/components/avatar';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { Input } from '@/src/components/shadcn-ui/input';
 import { Badge } from '@/src/components/shadcn-ui/badge';
 import { useIsMobile } from '@/src/hooks/use-is-mobile';
+import { emptyTiptapEditorContent } from '@u22n/tiptap';
 import { useMutation } from '@tanstack/react-query';
 import { useAddSingleConvo$Cache } from '../utils';
 import { Editor } from '@/src/components/editor';
@@ -151,33 +154,33 @@ export default function CreateConvoForm({
     );
 
   const [newEmailParticipants, setNewEmailParticipants] = useState<string[]>(
-    initialEmails ?? []
+    initialEmails.length > 0
+      ? Array.from(new Set(initialEmails))
+      : draft.participants
+          .filter((p) => p.type === 'email')
+          .map((p) => p.publicId)
   );
+
   const [selectedParticipants, setSelectedParticipants] = useState<
     NewConvoParticipant[]
   >(() => {
-    const uniqueEmails = Array.from(new Set(initialEmails));
-
-    const newParticipants = uniqueEmails.map((email) => ({
-      type: 'email' as const,
-      publicId: email,
-      address: email,
-      keywords: [email],
-      avatarPublicId: null,
-      avatarTimestamp: null,
-      color: null,
-      own: false,
-      name: email
-    }));
-
-    return draft.participants.concat(
-      newParticipants.filter(
-        (p) =>
-          !draft.participants.some(
-            (existing) => existing.publicId === p.publicId
-          )
-      )
-    );
+    if (initialEmails.length > 0) {
+      const uniqueEmails = Array.from(new Set(initialEmails));
+      const newParticipants = uniqueEmails.map((email) => ({
+        type: 'email' as const,
+        publicId: email,
+        address: email,
+        keywords: [email],
+        avatarPublicId: null,
+        avatarTimestamp: null,
+        color: null,
+        own: false,
+        name: email
+      }));
+      return newParticipants;
+    } else {
+      return draft.participants;
+    }
   });
 
   const hasExternalParticipants = useMemo(
@@ -189,22 +192,31 @@ export default function CreateConvoForm({
     [selectedParticipants]
   );
 
-  const { mutateAsync: createConvoFn } =
-    platform.convos.createNewConvo.useMutation({
-      onSuccess: () => {
-        setSelectedParticipants([]);
-        resetDraft();
-      }
-    });
-
   const router = useRouter();
 
   const [selectedEmailIdentity, setSelectedEmailIdentity] = useState<
     string | null
   >(draft.from ?? null);
   const [topic, setTopic] = useState(initialSubject || draft.topic);
-  const { attachments, openFilePicker, getTrpcUploadFormat, AttachmentArray } =
-    useAttachmentUploader(draft.attachments);
+  const {
+    attachments,
+    openFilePicker,
+    getTrpcUploadFormat,
+    removeAllAttachments,
+    AttachmentArray
+  } = useAttachmentUploader(draft.attachments);
+
+  const { mutateAsync: createConvoFn } =
+    platform.convos.createNewConvo.useMutation({
+      onSuccess: () => {
+        resetDraft();
+        setSelectedParticipants([]);
+        removeAllAttachments();
+        setTopic('');
+        editorRef.current?.clearContent();
+        setEditorText(emptyTiptapEditorContent);
+      }
+    });
 
   // Set default email identity on load
   useEffect(() => {
@@ -236,6 +248,22 @@ export default function CreateConvoForm({
 
   const allParticipants = useMemo(() => {
     const participants: NewConvoParticipant[] = [];
+
+    if (newEmailParticipants.length > 0) {
+      for (const emailParticipant of newEmailParticipants) {
+        participants.push({
+          type: 'email',
+          avatarPublicId: null,
+          avatarTimestamp: null,
+          publicId: emailParticipant,
+          address: null,
+          keywords: [emailParticipant],
+          color: null,
+          own: false,
+          name: emailParticipant
+        });
+      }
+    }
 
     if (orgMemberList?.ownMembershipId) {
       const ownOrgMemberData = orgMemberList.members?.find(
@@ -333,21 +361,6 @@ export default function CreateConvoForm({
       }
     }
 
-    if (newEmailParticipants.length > 0) {
-      for (const emailParticipant of newEmailParticipants) {
-        participants.push({
-          type: 'email',
-          avatarPublicId: null,
-          avatarTimestamp: null,
-          publicId: emailParticipant,
-          address: null,
-          keywords: [emailParticipant],
-          color: null,
-          own: false,
-          name: emailParticipant
-        });
-      }
-    }
     return participants;
   }, [
     orgContacts?.contacts,
@@ -358,6 +371,7 @@ export default function CreateConvoForm({
   ]);
 
   const [editorText, setEditorText] = useState(draft.content);
+  const editorRef = useRef<EditorFunctions>(null);
 
   // Autosave draft
   const debouncedEditorText = useDebounce(editorText, 500);
@@ -409,6 +423,11 @@ export default function CreateConvoForm({
     topic.length,
     selectedParticipants.length
   ]);
+
+  const canClearDraft = useMemo(
+    () => isTextPresent || topic.length > 0 || selectedParticipants.length > 0,
+    [isTextPresent, topic.length, selectedParticipants.length]
+  );
 
   async function startConvoCreation(type: 'message' | 'comment') {
     const getPublicIdsByType = (
@@ -504,10 +523,32 @@ export default function CreateConvoForm({
         />
       </div>
 
-      <div className="border-base-5 flex max-h-[250px] w-full flex-col gap-1 rounded-md border px-2 py-1">
+      <div
+        className={cn(
+          'border-base-5 group relative mt-3 flex max-h-[250px] w-full flex-col gap-1 rounded-md border px-2 py-1',
+          canClearDraft && 'hover:rounded-tr-none'
+        )}>
+        {canClearDraft && (
+          <Button
+            variant="link"
+            size="xs"
+            className="text-base-11 border-base-5 bg-base-1 absolute -top-5 right-[-1px] h-5 translate-y-4 cursor-pointer rounded-b-none border border-b-0 py-0 text-xs opacity-0 transition-all delay-100 group-hover:translate-y-0 group-hover:opacity-100"
+            onClick={() => {
+              resetDraft();
+              setSelectedParticipants([]);
+              setTopic('');
+              editorRef.current?.clearContent();
+              setEditorText(emptyTiptapEditorContent);
+              removeAllAttachments();
+            }}>
+            Clear Draft
+          </Button>
+        )}
+
         <Editor
           initialValue={editorText}
           onChange={setEditorText}
+          ref={editorRef}
         />
 
         <AttachmentArray attachments={attachments} />
@@ -787,6 +828,7 @@ function ParticipantsComboboxPopover({
                     value={participant.publicId}
                     keywords={participant.keywords}
                     onSelect={(value) => {
+                      if (participant.own) return;
                       setSelectedParticipants((prev) =>
                         prev.find((p) => p.publicId === value)
                           ? prev.filter((p) => p.publicId !== value)
@@ -797,7 +839,7 @@ function ParticipantsComboboxPopover({
                       <Button
                         variant={'ghost'}
                         className={cn(
-                          'my-1 w-full justify-start px-1',
+                          'my-1 w-full items-center justify-start gap-2 px-1',
                           selectedParticipants.find(
                             (p) => p.publicId === participant.publicId
                           )
