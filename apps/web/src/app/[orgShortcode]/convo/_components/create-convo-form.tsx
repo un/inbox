@@ -400,6 +400,7 @@ export default function CreateConvoForm({
   const emptyEditorChecker = useCallback((editorText: JSONContent) => {
     const contentArray = editorText?.content;
     if (!contentArray) return true;
+
     if (contentArray.length === 0) return true;
     const firstElementWithContent = contentArray.find(
       (element) => element.content?.length && element.content.length > 0
@@ -409,7 +410,7 @@ export default function CreateConvoForm({
   }, []);
 
   const isTextPresent = useMemo(
-    () => emptyEditorChecker(editorText),
+    () => !emptyEditorChecker(editorText),
     [emptyEditorChecker, editorText]
   );
 
