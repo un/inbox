@@ -114,13 +114,15 @@ function OrgMenu() {
                 />
               </div>
             ) : (
-              <Avatar
-                avatarProfilePublicId={currentOrg.publicId}
-                avatarTimestamp={currentOrg.avatarTimestamp}
-                name={currentOrg.name}
-                size="lg"
-                hideTooltip
-              />
+              <div>
+                <Avatar
+                  avatarProfilePublicId={currentOrg.publicId}
+                  avatarTimestamp={currentOrg.avatarTimestamp}
+                  name={currentOrg.name}
+                  size="lg"
+                  hideTooltip
+                />
+              </div>
             )}
             <div
               className={
@@ -210,13 +212,15 @@ export function OrgMenuContent() {
                 />
               </div>
             ) : (
-              <Avatar
-                avatarProfilePublicId={currentOrg.publicId}
-                avatarTimestamp={currentOrg.avatarTimestamp}
-                name={currentOrg.name}
-                size="lg"
-                hideTooltip
-              />
+              <div>
+                <Avatar
+                  avatarProfilePublicId={currentOrg.publicId}
+                  avatarTimestamp={currentOrg.avatarTimestamp}
+                  name={currentOrg.name}
+                  size="lg"
+                  hideTooltip
+                />
+              </div>
             )}
             <div className="flex w-full flex-col items-start justify-center gap-2 overflow-hidden">
               <span
