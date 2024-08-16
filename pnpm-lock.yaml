@@ -233,6 +233,25 @@ importers:
         specifier: 5.5.3
         version: 5.5.3
 
+  apps/scripts:
+    dependencies:
+      '@t3-oss/env-core':
+        specifier: ^0.11.0
+        version: 0.11.0(typescript@5.5.3)(zod@3.23.8)
+      '@u22n/platform':
+        specifier: workspace:^
+        version: link:../platform
+      zod:
+        specifier: ^3.23.8
+        version: 3.23.8
+    devDependencies:
+      '@types/node':
+        specifier: ^20.14.10
+        version: 20.14.13
+      typescript:
+        specifier: 5.5.3
+        version: 5.5.3
+
   apps/storage:
     dependencies:
       '@aws-sdk/client-s3':
