@@ -1,10 +1,10 @@
 'use client';
 
+import { useCurrentConvoId, useOrgShortcode } from '@/src/hooks/use-params';
 import { ClaimEmailIdentity } from './_components/claim-email-identity';
 import { RealtimeProvider } from '@/src/providers/realtime-provider';
 import { NewConvoSheet } from './convo/_components/new-convo-sheet';
 import { Button } from '@/src/components/shadcn-ui/button';
-import { useOrgShortcode } from '@/src/hooks/use-params';
 import { useIsMobile } from '@/src/hooks/use-is-mobile';
 import { BottomNav } from './_components/bottom-nav';
 import { SpinnerGap } from '@phosphor-icons/react';
@@ -18,6 +18,7 @@ export default function Layout({
   children
 }: Readonly<{ children: React.ReactNode }>) {
   const orgShortcode = useOrgShortcode();
+  const convoId = useCurrentConvoId();
   const isMobile = useIsMobile();
 
   const { data: access, isLoading: accessLoading } =
@@ -75,7 +76,7 @@ export default function Layout({
         className={cn('bg-base-1 flex h-full gap-0', isMobile && 'flex-col')}>
         {!isMobile && <Sidebar />}
         <div className="min-w-0 flex-1 grow overflow-x-auto">{children}</div>
-        {isMobile && <BottomNav />}
+        {isMobile && !convoId && <BottomNav />}
         {!isMobile && <NewConvoSheet />}
         {hasEmailIdentity && !hasEmailIdentity.hasIdentity && (
           <ClaimEmailIdentity />
