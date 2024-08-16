@@ -1,0 +1,24 @@
+{
+  "name": "@u22n/v1migration",
+  "private": true,
+  "type": "module",
+  "version": "0.9.0",
+  "scripts": {
+    "dev": "tsx watch --clear-screen=false --import ./tracing.ts app.ts",
+    "start": "node --import ./.output/tracing.js .output/app.js",
+    "build": "tsup",
+    "check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@t3-oss/env-core": "^0.11.0",
+    "@u22n/database": "workspace:*",
+    "@u22n/tsconfig": "^0.0.2",
+    "@u22n/utils": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.10",
+    "tsup": "^8.1.2",
+    "tsx": "^4.16.2",
+    "typescript": "5.5.3"
+  }
+}

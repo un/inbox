@@ -282,6 +282,34 @@ importers:
         specifier: 5.5.3
         version: 5.5.3
 
+  apps/v1Migration:
+    dependencies:
+      '@t3-oss/env-core':
+        specifier: ^0.11.0
+        version: 0.11.0(typescript@5.5.3)(zod@3.23.8)
+      '@u22n/database':
+        specifier: workspace:*
+        version: link:../../packages/database
+      '@u22n/tsconfig':
+        specifier: ^0.0.2
+        version: 0.0.2
+      '@u22n/utils':
+        specifier: workspace:*
+        version: link:../../packages/utils
+    devDependencies:
+      '@types/node':
+        specifier: ^20.14.10
+        version: 20.14.13
+      tsup:
+        specifier: ^8.1.2
+        version: 8.2.3(jiti@1.21.6)(postcss@8.4.40)(tsx@4.16.3)(typescript@5.5.3)(yaml@2.5.0)
+      tsx:
+        specifier: ^4.16.2
+        version: 4.16.3
+      typescript:
+        specifier: 5.5.3
+        version: 5.5.3
+
   apps/web:
     dependencies:
       '@calcom/embed-react':
