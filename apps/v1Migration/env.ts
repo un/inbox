@@ -15,7 +15,5 @@ export const env = createEnv({
     PORT: z.coerce.number().int().min(1).max(65535).default(3200),
     NODE_ENV: z.enum(['development', 'production']).default('development')
   },
-  client: {},
-  clientPrefix: '_', // Not used, just for making TS happy
   runtimeEnv: process.env
 });

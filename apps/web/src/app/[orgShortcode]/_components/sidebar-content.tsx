@@ -55,10 +55,10 @@ import { useRouter } from 'next/navigation';
 import { platform } from '@/src/lib/trpc';
 import { useTheme } from 'next-themes';
 import { cn } from '@/src/lib/utils';
-import { use, useMemo } from 'react';
 import { ms } from '@u22n/utils/ms';
 import { useSetAtom } from 'jotai';
 import { env } from '@/src/env';
+import { useMemo } from 'react';
 import Link from 'next/link';
 
 export function SidebarContent() {

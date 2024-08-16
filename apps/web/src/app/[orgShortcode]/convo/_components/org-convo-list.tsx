@@ -1,6 +1,6 @@
 'use client';
 
-import { useGlobalStore } from '@/src/providers/global-store-provider';
+import { useOrgShortcode } from '@/src/hooks/use-params';
 import { ConvoListBase } from './convo-list-base';
 import { ConvoItem } from './convo-list-item';
 import { platform } from '@/src/lib/trpc';
@@ -11,7 +11,7 @@ type Props = {
 };
 
 export function ConvoList(props: Props) {
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const orgShortcode = useOrgShortcode();
 
   const {
     data: convos,

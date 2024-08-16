@@ -8,7 +8,7 @@ export const inboundApi = createHonoApp<Ctx>();
 
 // Add logging middleware
 inboundApi.use('*', async (c, next) => {
-  console.log(`Incoming request: ${c.req.method} ${c.req.url}`);
+  console.info(`Incoming request: ${c.req.method} ${c.req.url}`);
   await next();
 });
 

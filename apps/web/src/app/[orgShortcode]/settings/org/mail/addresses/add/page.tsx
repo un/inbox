@@ -18,7 +18,6 @@ import {
   SelectValue
 } from '@/src/components/shadcn-ui/select';
 import { Tabs, TabsList, TabsTrigger } from '@/src/components/shadcn-ui/tabs';
-import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { MultiSelect } from '@/src/components/shared/multiselect';
 import { type TypeId, typeIdValidator } from '@u22n/utils/typeid';
 import { Separator } from '@/src/components/shadcn-ui/separator';
@@ -28,6 +27,7 @@ import { PageTitle } from '../../../../_components/page-title';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { Switch } from '@/src/components/shadcn-ui/switch';
 import { Input } from '@/src/components/shadcn-ui/input';
+import { useOrgShortcode } from '@/src/hooks/use-params';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { SquaresFour } from '@phosphor-icons/react';
 import { Avatar } from '@/src/components/avatar';
@@ -40,7 +40,7 @@ import { toast } from 'sonner';
 import { z } from 'zod';
 
 export default function Page() {
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const orgShortcode = useOrgShortcode();
   const [addMode, setAddMode] = useState<'native' | 'external'>('native');
 
   return (
@@ -92,7 +92,7 @@ const addressFormSchema = z.object({
 });
 
 function AddEmail() {
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const orgShortcode = useOrgShortcode();
 
   const invalidateEmails =
     platform.useUtils().org.mail.emailIdentities.getOrgEmailIdentities;
@@ -630,7 +630,7 @@ const externalAddressFormSchema = z.object({
 });
 
 function AddExternalEmail() {
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const orgShortcode = useOrgShortcode();
   const invalidateEmails =
     platform.useUtils().org.mail.emailIdentities.getOrgEmailIdentities;
   const invalidateUserEmails =

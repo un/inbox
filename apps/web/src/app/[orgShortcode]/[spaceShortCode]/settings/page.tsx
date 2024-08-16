@@ -53,7 +53,6 @@ import {
   TooltipContent,
   TooltipTrigger
 } from '@/src/components/shadcn-ui/tooltip';
-import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { type SpaceStatus, type SpaceType } from '@u22n/utils/spaces';
 import { typeIdValidator, type TypeId } from '@u22n/utils/typeid';
 import { SettingsTitle } from './_components/settingsTitle';
@@ -63,6 +62,7 @@ import { Switch } from '@/src/components/shadcn-ui/switch';
 import { CopyButton } from '@/src/components/copy-button';
 import { Input } from '@/src/components/shadcn-ui/input';
 import { Badge } from '@/src/components/shadcn-ui/badge';
+import { useOrgShortcode } from '@/src/hooks/use-params';
 import { PopoverAnchor } from '@radix-ui/react-popover';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useMemo, useState } from 'react';
@@ -75,7 +75,7 @@ import Link from 'next/link';
 import { z } from 'zod';
 
 export default function ShorcodeTestPage() {
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const orgShortcode = useOrgShortcode();
   const spaceShortcode = useParams().spaceShortCode as string;
 
   const [showSaved, setShowSaved] = useState(false);

@@ -296,6 +296,9 @@ importers:
       '@u22n/utils':
         specifier: workspace:*
         version: link:../../packages/utils
+      zod:
+        specifier: ^3.23.8
+        version: 3.23.8
     devDependencies:
       '@types/node':
         specifier: ^20.14.10

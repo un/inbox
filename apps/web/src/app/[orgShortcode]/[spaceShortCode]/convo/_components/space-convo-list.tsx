@@ -2,7 +2,7 @@
 
 import { ConvoListBase } from '../../../convo/_components/convo-list-base';
 import { ConvoItem } from '../../../convo/_components/convo-list-item';
-import { useGlobalStore } from '@/src/providers/global-store-provider';
+import { useOrgShortcode } from '@/src/hooks/use-params';
 import { useParams } from 'next/navigation';
 import { platform } from '@/src/lib/trpc';
 import { ms } from '@u22n/utils/ms';
@@ -13,7 +13,7 @@ type Props = {
 
 export function ConvoList(props: Props) {
   const { spaceShortCode } = useParams();
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const orgShortcode = useOrgShortcode();
 
   const {
     data: convos,

@@ -40,10 +40,10 @@ import {
   SquaresFour,
   UsersThree
 } from '@phosphor-icons/react';
-import { useGlobalStore } from '@/src/providers/global-store-provider';
 import { spaceTypeArray, type SpaceType } from '@u22n/utils/spaces';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { Input } from '@/src/components/shadcn-ui/input';
+import { useOrgShortcode } from '@/src/hooks/use-params';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { uiColors } from '@u22n/utils/colors';
 import { useRouter } from 'next/navigation';
@@ -60,7 +60,7 @@ const newSpaceFormSchema = z.object({
 });
 
 export function NewSpaceModal() {
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const orgShortcode = useOrgShortcode();
   const invalidateSpaces = platform.useUtils().spaces.getOrgMemberSpaces;
   const router = useRouter();
 

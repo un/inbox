@@ -319,10 +319,7 @@ export const sendMailRouter = router({
               }
             });
 
-            if (
-              !orgMemberQueryResponse ??
-              !orgMemberQueryResponse?.defaultEmailIdentityId
-            ) {
+            if (!orgMemberQueryResponse?.defaultEmailIdentityId) {
               const memberProfile = await db.query.orgMembers.findFirst({
                 where: eq(orgMembers.id, orgMemberParticipant.orgMemberId!),
                 columns: {

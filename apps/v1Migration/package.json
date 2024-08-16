@@ -4,16 +4,15 @@
   "type": "module",
   "version": "0.9.0",
   "scripts": {
-    "dev": "tsx watch --clear-screen=false --import ./tracing.ts app.ts",
-    "start": "node --import ./.output/tracing.js .output/app.js",
-    "build": "tsup",
+    "migration:start": "tsx app.ts",
     "check": "tsc --noEmit"
   },
   "dependencies": {
     "@t3-oss/env-core": "^0.11.0",
     "@u22n/database": "workspace:*",
     "@u22n/tsconfig": "^0.0.2",
-    "@u22n/utils": "workspace:*"
+    "@u22n/utils": "workspace:*",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/node": "^20.14.10",

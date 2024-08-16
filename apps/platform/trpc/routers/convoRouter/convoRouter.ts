@@ -1068,7 +1068,7 @@ export const convoRouter = router({
               id: true
             },
             with: {
-              authorizedOrgMembers: {
+              authorizedSenders: {
                 columns: {
                   orgMemberId: true,
                   teamId: true
@@ -1092,7 +1092,7 @@ export const convoRouter = router({
           });
 
         const userIsAuthorized =
-          sendAsEmailIdentityResponse?.authorizedOrgMembers.some(
+          sendAsEmailIdentityResponse?.authorizedSenders.some(
             (authorizedOrgMember) =>
               authorizedOrgMember.orgMemberId === accountOrgMemberId ||
               authorizedOrgMember.team?.members.some(

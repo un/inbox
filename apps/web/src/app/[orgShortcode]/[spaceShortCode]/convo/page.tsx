@@ -1,12 +1,13 @@
 'use client';
-import { useGlobalStore } from '@/src/providers/global-store-provider';
+
 import { Button } from '@/src/components/shadcn-ui/button';
+import { useOrgShortcode } from '@/src/hooks/use-params';
 import { useIsMobile } from '@/src/hooks/use-is-mobile';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 
 export default function Page() {
-  const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
+  const orgShortcode = useOrgShortcode();
   const { spaceShortCode } = useParams();
   const isMobile = useIsMobile();
 
