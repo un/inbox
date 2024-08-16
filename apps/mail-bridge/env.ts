@@ -68,6 +68,14 @@ export const env = createEnv({
         fwd: z.array(z.string())
       })
     ),
+    MAILBRIDGE_TRANSACTIONAL_CREDENTIALS: stringToJSON.pipe(
+      z.object({
+        apiUrl: z.string().url(),
+        apiKey: z.string().min(1),
+        sendAsName: z.string().min(1),
+        sendAsEmail: z.string().email()
+      })
+    ),
     MAILBRIDGE_POSTAL_SERVERS_DNS_ROOT_URL: z.string().min(1),
     MAILBRIDGE_LOCAL_MODE: z
       .string()
