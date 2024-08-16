@@ -940,38 +940,34 @@ export const worker = createWorker<MailProcessorJobData>(
           tipTapExtensions
         );
 
-        let insertNewConvoEntryId: number | null = null;
         // Before inserting a new convo entry, add a check to ensure we have valid data
-        if (convoId && fromAddressParticipantId && subjectId) {
-          console.info('Inserting new convo entry', {
-            orgId,
-            convoId,
-            fromAddressParticipantId,
-            replyToId,
-            subjectId
-          });
-          const insertNewConvoEntry = await db.insert(convoEntries).values({
-            orgId,
-            publicId: typeIdGenerator('convoEntries'),
-            convoId,
-            visibility: 'all_participants',
-            type: 'message',
-            metadata: convoEntryMetadata,
-            author: fromAddressParticipantId,
-            body: convoEntryBody,
-            bodyPlainText: convoEntryBodyPlainText,
-            replyToId,
-            subjectId
-          });
+        console.info('Inserting new convo entry', {
+          orgId,
+          convoId,
+          fromAddressParticipantId,
+          replyToId,
+          subjectId
+        });
 
-          insertNewConvoEntryId = Number(insertNewConvoEntryId!) || null;
-
-          console.info('Inserted new convo entry', insertNewConvoEntry);
-        } else {
-          throw new Error(
-            'Missing required data for inserting new convo entry'
-          );
+        if (!fromAddressParticipantId) {
+          throw new Error('No from address participant id found');
         }
+
+        const insertNewConvoEntry = await db.insert(convoEntries).values({
+          orgId,
+          publicId: typeIdGenerator('convoEntries'),
+          convoId,
+          visibility: 'all_participants',
+          type: 'message',
+          metadata: convoEntryMetadata,
+          author: fromAddressParticipantId,
+          body: convoEntryBody,
+          bodyPlainText: convoEntryBodyPlainText,
+          replyToId,
+          subjectId
+        });
+
+        console.info('Inserted new convo entry', insertNewConvoEntry);
 
         await db
           .update(convos)
@@ -998,8 +994,7 @@ export const worker = createWorker<MailProcessorJobData>(
                 fileType: attachment.contentType,
                 fileContent: attachment.content,
                 convoId: convoId,
-                //! TODO: fix shebang to handle null
-                convoEntryId: insertNewConvoEntryId!,
+                convoEntryId: Number(insertNewConvoEntry.insertId),
                 convoParticipantId: fromAddressParticipantId ?? 0,
                 fileSize: attachment.size,
                 inline: attachment.contentDisposition === 'inline',
@@ -1049,12 +1044,12 @@ export const worker = createWorker<MailProcessorJobData>(
             body: convoEntryBodyWithAttachments,
             bodyCleanedHtml: sanitize(parsedFullEmailMessageHtmlWithAttachments)
           })
-          .where(eq(convoEntries.id, insertNewConvoEntryId!));
+          .where(eq(convoEntries.id, Number(insertNewConvoEntry.insertId)));
 
         if (replyToId) {
           await db.insert(convoEntryReplies).values({
             entrySourceId: replyToId,
-            entryReplyId: insertNewConvoEntryId!,
+            entryReplyId: Number(insertNewConvoEntry.insertId),
             orgId: orgId
           });
         }
@@ -1067,7 +1062,7 @@ export const worker = createWorker<MailProcessorJobData>(
         console.info('Inserting convo entry raw HTML email');
         await db.insert(convoEntryRawHtmlEmails).values({
           orgId: orgId,
-          entryId: insertNewConvoEntryId!,
+          entryId: Number(insertNewConvoEntry.insertId),
           html: originalEmailWithAttachments,
           headers: Object.fromEntries(parsedEmail.headers),
           wipeDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 28) // 28 days
@@ -1077,7 +1072,7 @@ export const worker = createWorker<MailProcessorJobData>(
         await sendRealtimeNotification({
           newConvo: (!inReplyToEmailId || hasReplyToButIsNewConvo) ?? false,
           convoId: convoId,
-          convoEntryId: +insertNewConvoEntryId!
+          convoEntryId: Number(insertNewConvoEntry.insertId)
         });
 
         console.info('Mail processor job completed successfully');
