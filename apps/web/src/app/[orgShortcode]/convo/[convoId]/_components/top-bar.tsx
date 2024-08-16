@@ -178,7 +178,7 @@ const DeleteButton = memo(function DeleteButton({
       e.preventDefault();
       if (e.shiftKey) {
         if (currentConvo === convoId) {
-          scopedNavigate('/convo');
+          scopedNavigate('/convo', true);
         }
         return deleteConvo({
           convoPublicId: convoId,
@@ -322,7 +322,7 @@ function DeleteModal({
             loading={deletingConvo}
             onClick={() => {
               if (currentConvo === convoId) {
-                scopedNavigate('/convo');
+                scopedNavigate('/convo', true);
               }
               deleteConvo({
                 convoPublicId: convoId,

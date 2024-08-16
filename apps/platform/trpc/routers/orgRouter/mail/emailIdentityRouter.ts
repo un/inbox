@@ -531,7 +531,7 @@ export const emailIdentityRouter = router({
   getUserEmailIdentities: orgProcedure
     .input(
       z.object({
-        spaceShortcode: z.string().min(1).max(64).optional().nullable()
+        spaceShortcode: z.string().min(1).max(64).nullable().optional()
       })
     )
     .query(async ({ ctx, input }) => {

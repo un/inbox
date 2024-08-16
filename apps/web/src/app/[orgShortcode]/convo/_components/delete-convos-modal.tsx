@@ -73,7 +73,7 @@ export function DeleteMultipleConvosModal({
             loading={deletingConvos}
             onClick={() => {
               if (currentConvo && selections.includes(currentConvo)) {
-                scopedNavigate('/convo');
+                scopedNavigate('/convo', true);
               }
               deleteConvo({
                 orgShortcode,

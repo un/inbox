@@ -14,7 +14,7 @@ export default function Page() {
         Select a Convo from Sidebar or Create a New One
       </span>
       <Button asChild>
-        <Link href={scopedUrl(`/convo/new`)}>Create New Convo</Link>
+        <Link href={scopedUrl(`/convo/new`, true)}>Create New Convo</Link>
       </Button>
     </div>
   );

@@ -23,30 +23,35 @@ import {
   User
 } from '@phosphor-icons/react';
 import {
+  type Dispatch,
+  type ReactNode,
+  type SetStateAction,
+  useEffect,
+  useMemo
+} from 'react';
+import {
+  useCurrentConvoId,
+  useOrgScopedRouter,
+  useOrgShortcode
+} from '@/src/hooks/use-params';
+import {
   Tooltip,
   TooltipContent,
   TooltipTrigger
 } from '@/src/components/shadcn-ui/tooltip';
-import {
-  type Dispatch,
-  type ReactNode,
-  type SetStateAction,
-  useEffect
-} from 'react';
 import {
   convoListSelecting,
   convoListSelection,
   showNewConvoPanel
 } from './atoms';
 import { DeleteMultipleConvosModal } from './_components/delete-convos-modal';
-import { useOrgScopedRouter, useOrgShortcode } from '@/src/hooks/use-params';
 import { ConvoList as OrgConvoList } from './_components/org-convo-list';
 import { useRealtime } from '@/src/providers/realtime-provider';
 import { OrgIssueAlerts } from './_components/org-issue-alerts';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { useParams, usePathname } from 'next/navigation';
 import { useIsMobile } from '@/src/hooks/use-is-mobile';
+import { usePathname } from 'next/navigation';
 import { platform } from '@/src/lib/trpc';
 import { cn } from '@/src/lib/utils';
 import { ms } from '@u22n/utils/ms';
@@ -221,7 +226,7 @@ function ConvoNavHeader({
                     />
                   </div>
                   <BreadcrumbLink asChild>
-                    <Link href={scopedUrl('/convo')}>
+                    <Link href={scopedUrl('/convo', true)}>
                       {showHidden ? 'Hidden Conversations' : 'Conversations'}
                     </Link>
                   </BreadcrumbLink>
@@ -241,7 +246,7 @@ function ConvoNavHeader({
                 variant="default"
                 asChild
                 size="xs">
-                <Link href={scopedUrl('/convo/new')}>New</Link>
+                <Link href={scopedUrl('/convo/new', true)}>New</Link>
               </Button>
             ) : (
               <Button
@@ -258,23 +263,23 @@ function ConvoNavHeader({
   );
 }
 
-function ConvoNav({
-  showHidden,
-  setShowHidden
-}: {
-  showHidden: boolean;
-  setShowHidden: Dispatch<SetStateAction<boolean>>;
-}) {
-  return (
-    <div className="flex h-full w-full min-w-96 flex-col gap-2 p-2 pt-3 xl:col-span-1 xl:min-w-80">
-      <ConvoNavHeader
-        showHidden={showHidden}
-        setShowHidden={setShowHidden}
-      />
-      <OrgConvoList hidden={showHidden} />
-    </div>
-  );
-}
+// function ConvoNav({
+//   showHidden,
+//   setShowHidden
+// }: {
+//   showHidden: boolean;
+//   setShowHidden: Dispatch<SetStateAction<boolean>>;
+// }) {
+//   return (
+//     <div className="flex h-full w-full min-w-96 flex-col gap-2 p-2 pt-3 xl:col-span-1 xl:min-w-80">
+//       <ConvoNavHeader
+//         showHidden={showHidden}
+//         setShowHidden={setShowHidden}
+//       />
+//       <OrgConvoList hidden={showHidden} />
+//     </div>
+//   );
+// }
 
 export function ConvoLayoutWrapper({
   children,
@@ -288,10 +293,10 @@ export function ConvoLayoutWrapper({
   setShowHidden: Dispatch<SetStateAction<boolean>>;
 }) {
   const isMobile = useIsMobile();
-  const params = useParams();
+  const convoId = useCurrentConvoId();
   const pathname = usePathname();
 
-  const isInConvo = !!params.convoId;
+  const isInConvo = Boolean(convoId);
   const isNewPage = pathname.endsWith('/convo/new');
 
   return (
@@ -329,9 +334,14 @@ export function ConvoLayoutWrapper({
 }
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [showHidden, setShowHidden] = useState(false);
+  const convoList = useMemo(
+    () => <OrgConvoList hidden={showHidden} />,
+    [showHidden]
+  );
+
   return (
     <ConvoLayoutWrapper
-      convoList={<OrgConvoList hidden={showHidden} />}
+      convoList={convoList}
       showHidden={showHidden}
       setShowHidden={setShowHidden}>
       {children}

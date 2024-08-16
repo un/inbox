@@ -27,10 +27,10 @@ import {
   type EditorFunctions
 } from '@u22n/tiptap/components';
 import { useAttachmentUploader } from '@/src/components/shared/attachments';
+import { useOrgShortcode, useSpaceShortcode } from '@/src/hooks/use-params';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { emailIdentityAtom, replyToMessageAtom } from '../atoms';
 import { Button } from '@/src/components/shadcn-ui/button';
-import { useOrgShortcode } from '@/src/hooks/use-params';
 import { useIsMobile } from '@/src/hooks/use-is-mobile';
 import { emptyTiptapEditorContent } from '@u22n/tiptap';
 import { useDraft } from '@/src/stores/draft-store';
@@ -38,7 +38,6 @@ import { Editor } from '@/src/components/editor';
 import { type TypeId } from '@u22n/utils/typeid';
 import { useDebounce } from '@uidotdev/usehooks';
 import { useAtom, useAtomValue } from 'jotai';
-import { useParams } from 'next/navigation';
 import { platform } from '@/src/lib/trpc';
 import { cn } from '@/src/lib/utils';
 import { ms } from '@u22n/utils/ms';
@@ -56,9 +55,9 @@ export function ReplyBox({
   hasExternalParticipants
 }: ReplyBoxProps) {
   const { draft, setDraft, resetDraft } = useDraft(convoId);
-  const { spaceShortCode } = useParams();
   const [editorText, setEditorText] = useState(draft.content);
   const orgShortcode = useOrgShortcode();
+  const spaceShortcode = useSpaceShortcode(false);
   const replyTo = useAtomValue(replyToMessageAtom);
   const addConvoToCache = useUpdateConvoMessageList$Cache();
   const updateConvoData = useUpdateConvoData$Cache();
@@ -99,7 +98,7 @@ export function ReplyBox({
     platform.org.mail.emailIdentities.getUserEmailIdentities.useQuery(
       {
         orgShortcode,
-        spaceShortcode: spaceShortCode as string
+        spaceShortcode
       },
       {
         staleTime: ms('1 hour')

@@ -41,6 +41,11 @@ import {
   HoverCardTrigger
 } from '@/src/components/shadcn-ui/hover-card';
 import {
+  useOrgScopedRouter,
+  useOrgShortcode,
+  useSpaceShortcode
+} from '@/src/hooks/use-params';
+import {
   Popover,
   PopoverTrigger,
   PopoverContent
@@ -54,7 +59,6 @@ import {
   type JSONContent,
   type EditorFunctions
 } from '@u22n/tiptap/components';
-import { useOrgScopedRouter, useOrgShortcode } from '@/src/hooks/use-params';
 import { useAttachmentUploader } from '@/src/components/shared/attachments';
 import { useComposingDraft } from '@/src/stores/draft-store';
 import { Avatar, AvatarIcon } from '@/src/components/avatar';
@@ -63,7 +67,6 @@ import { Input } from '@/src/components/shadcn-ui/input';
 import { Badge } from '@/src/components/shadcn-ui/badge';
 import { useIsMobile } from '@/src/hooks/use-is-mobile';
 import { emptyTiptapEditorContent } from '@u22n/tiptap';
-import { useParams, useRouter } from 'next/navigation';
 import { useMutation } from '@tanstack/react-query';
 import { useAddSingleConvo$Cache } from '../utils';
 import { Editor } from '@/src/components/editor';
@@ -129,8 +132,7 @@ export default function CreateConvoForm({
 }) {
   const orgShortcode = useOrgShortcode();
   const { scopedNavigate } = useOrgScopedRouter();
-  const { spaceShortCode } = useParams();
-  const initialSpaceShortcode = spaceShortCode ?? null;
+  const spaceShortcode = useSpaceShortcode(false);
   const lastOrg = usePrevious(orgShortcode);
   const { draft, setDraft, resetDraft } = useComposingDraft();
   const isMobile = useIsMobile();
@@ -215,8 +217,8 @@ export default function CreateConvoForm({
       }
     });
 
-  const [selectedSpace, setSelectedSpace] = useState<string | undefined>(
-    initialSpaceShortcode as string | undefined
+  const [selectedSpace, setSelectedSpace] = useState<string | null>(
+    spaceShortcode
   );
   const { data: userEmailIdentities, isLoading: emailIdentitiesLoading } =
     platform.org.mail.emailIdentities.getUserEmailIdentities.useQuery(
@@ -235,10 +237,8 @@ export default function CreateConvoForm({
   const spaces = spacesResponse?.spaces;
 
   useEffect(() => {
-    if (!initialSpaceShortcode) {
-      setSelectedSpace(spaces?.[0]?.shortcode ?? undefined);
-    }
-  }, [initialSpaceShortcode]);
+    if (!spaceShortcode) setSelectedSpace(spaces?.[0]?.shortcode ?? null);
+  }, [spaceShortcode, spaces]);
 
   // Set default email identity on load
   useEffect(() => {
@@ -529,7 +529,7 @@ export default function CreateConvoForm({
       void addConvo(data.publicId).then(() => {
         resetDraft();
         setNewPanelOpen(false);
-        scopedNavigate(`/convo/${data.publicId}`);
+        scopedNavigate(`/convo/${data.publicId}`, true);
       });
     }
   });

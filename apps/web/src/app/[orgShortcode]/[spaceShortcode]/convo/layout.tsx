@@ -1,16 +1,22 @@
 'use client';
+
 import { ConvoList as SpaceConvoList } from './_components/space-convo-list';
 import { ConvoLayoutWrapper } from '../../convo/layout';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 export default function Layout({
   children
 }: Readonly<{ children: React.ReactNode }>) {
   const [showHidden, setShowHidden] = useState(false);
 
+  const convoList = useMemo(
+    () => <SpaceConvoList hidden={showHidden} />,
+    [showHidden]
+  );
+
   return (
     <ConvoLayoutWrapper
-      convoList={<SpaceConvoList hidden={showHidden} />}
+      convoList={convoList}
       showHidden={showHidden}
       setShowHidden={setShowHidden}>
       {children}

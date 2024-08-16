@@ -328,7 +328,7 @@ export const spaceRouter = router({
   getSpaceConvos: orgProcedure
     .input(
       z.object({
-        spaceShortCode: z.string(),
+        spaceShortcode: z.string(),
         includeHidden: z.boolean().default(false),
         cursor: z
           .object({
@@ -340,7 +340,7 @@ export const spaceRouter = router({
     )
     .query(async ({ ctx, input }) => {
       const { db, org } = ctx;
-      const { spaceShortCode, cursor } = input;
+      const { spaceShortcode, cursor } = input;
       const orgId = org.id;
 
       const LIMIT = 15;
@@ -355,7 +355,7 @@ export const spaceRouter = router({
       const space = await db.query.spaces.findFirst({
         where: and(
           eq(spaces.orgId, orgId),
-          eq(spaces.shortcode, spaceShortCode)
+          eq(spaces.shortcode, spaceShortcode)
         ),
         columns: {
           id: true

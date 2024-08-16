@@ -37,7 +37,10 @@ module.exports = {
     {
       files: ['./apps/web/**/*'],
       extends: ['next/core-web-vitals'],
-      rules: { 'react/no-children-prop': ['warn', { allowFunctions: true }] }
+      rules: {
+        'react/no-children-prop': ['warn', { allowFunctions: true }],
+        '@next/next/no-img-element': 'off'
+      }
     }
   ]
 };

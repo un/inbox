@@ -7,12 +7,12 @@ import {
   ContextMenuTrigger,
   ContextMenuItem
 } from '@/src/components/shadcn-ui/context-menu';
-import { useOrgScopedRouter, useOrgShortcode } from '@/src/hooks/use-params';
 import { formatParticipantData, useDeleteConvo$Cache } from '../utils';
 import { Eye, EyeSlash, Trash } from '@phosphor-icons/react/dist/ssr';
 import { Checkbox } from '@/src/components/shadcn-ui/checkbox';
 import { platform, type RouterOutputs } from '@/src/lib/trpc';
 import { AvatarPlus } from '@/src/components/avatar-plus';
+import { useOrgShortcode } from '@/src/hooks/use-params';
 import { useIsMobile } from '@/src/hooks/use-is-mobile';
 import { useTimeAgo } from '@/src/hooks/use-time-ago';
 import { useLongPress } from '@uidotdev/usehooks';
@@ -30,16 +30,15 @@ export const ConvoItem = memo(function ConvoItem({
   selected,
   onSelect,
   hidden,
-  link
+  linkBase
 }: {
   convo: RouterOutputs['spaces']['getSpaceConvos']['data'][number];
   selected: boolean;
-  onSelect: (shiftKey: boolean) => void;
   hidden: boolean;
-  link: string;
+  linkBase: string;
+  onSelect: (shiftKey: boolean) => void;
 }) {
   const orgShortcode = useOrgShortcode();
-  const { scopedUrl } = useOrgScopedRouter();
   const selecting = useAtomValue(convoListSelecting);
   const isMobile = useIsMobile();
 
@@ -87,7 +86,7 @@ export const ConvoItem = memo(function ConvoItem({
   }, [participantData]);
 
   const currentPath = usePathname();
-  const isActive = currentPath === link;
+  const isActive = currentPath === `${linkBase}/${convo.publicId}`;
 
   const longPressHandlers = useLongPress(
     (e) => {
@@ -113,7 +112,7 @@ export const ConvoItem = memo(function ConvoItem({
             : undefined
         }>
         <Link
-          href={link}
+          href={`${linkBase}/${convo.publicId}`}
           className={cn(
             'flex h-full flex-row gap-2 overflow-visible rounded-xl border-2 px-2 py-3',
             isActive
