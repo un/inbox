@@ -357,6 +357,8 @@ export const worker = createWorker<MailProcessorJobData>(
             : parsedEmail.cc.value
           : [];
 
+        console.info(parsedEmail)
+
         const inReplyToEmailId = parsedEmail.inReplyTo
           ? (parsedEmail.inReplyTo
               .split(/\s+/g) // split by whitespace
