@@ -1489,7 +1489,7 @@ export const convoRouter = router({
 
       return {
         data: convoDetails,
-        ownParticipantPublicId: ownParticipantPublicId
+        ownParticipantPublicId: ownParticipantPublicId ?? null
       };
     }),
 

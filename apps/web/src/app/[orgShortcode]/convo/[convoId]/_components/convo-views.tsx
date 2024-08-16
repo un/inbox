@@ -95,7 +95,7 @@ export function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
         participants={formattedParticipants}
         attachments={attachments}
       />
-      {convoDataLoading || !participantOwnPublicId ? (
+      {convoDataLoading ? (
         <div className="flex h-full w-full items-center justify-center gap-2 text-center font-bold">
           <SpinnerGap
             className="size-4 animate-spin"
@@ -110,7 +110,7 @@ export function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
               convoId={convoId}
               formattedParticipants={formattedParticipants}
               participantOwnPublicId={
-                participantOwnPublicId as TypeId<'convoParticipants'>
+                participantOwnPublicId as TypeId<'convoParticipants'> | null
               }
               ref={virtuosoRef}
             />
