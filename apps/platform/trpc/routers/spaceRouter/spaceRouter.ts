@@ -13,7 +13,7 @@ import { isOrgMemberSpaceMember, validateSpaceShortCode } from './utils';
 import { typeIdGenerator, typeIdValidator } from '@u22n/utils/typeid';
 import { eq, and, inArray, or, desc, lt } from '@u22n/database/orm';
 import { spaceSettingsRouter } from './spaceSettingsRouter';
-import { spaceStatusesRouter } from './statusesRouter';
+import { spaceWorkflowsRouter } from './workflowsRouter';
 import { spaceMembersRouter } from './membersRouter';
 import { spaceTagsRouter } from './tagsRouter';
 import { uiColors } from '@u22n/utils/colors';
@@ -22,7 +22,7 @@ import { z } from 'zod';
 
 export const spaceRouter = router({
   members: spaceMembersRouter,
-  statuses: spaceStatusesRouter,
+  workflows: spaceWorkflowsRouter,
   tags: spaceTagsRouter,
   settings: spaceSettingsRouter,
   getAllOrgSpaces: orgProcedure.query(async ({ ctx }) => {

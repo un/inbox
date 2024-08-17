@@ -133,7 +133,7 @@ export function NewSpaceModal() {
           <DialogTitle>Create a new Space</DialogTitle>
           <DialogDescription>
             Spaces are where a team, department, or group, can work with their
-            own Conversations, Statuses and Tags.
+            own Conversations, Workflows and Tags.
           </DialogDescription>
         </DialogHeader>
 

@@ -22,7 +22,6 @@ export const convoEntryRouter = router({
       const { db, org } = ctx;
 
       const orgId = org.id;
-      const accountOrgMemberId = org.memberId;
 
       const {
         convoPublicId,
@@ -206,7 +205,6 @@ export const convoEntryRouter = router({
     .query(async ({ ctx, input }) => {
       const { db, org } = ctx;
       const orgId = org.id;
-      const accountOrgMemberId = org.memberId;
 
       const { convoPublicId, convoEntryPublicId } = input;
 
@@ -363,7 +361,6 @@ export const convoEntryRouter = router({
     .query(async ({ ctx, input }) => {
       const { db, org } = ctx;
       const orgId = org.id;
-      const accountOrgMemberId = org.memberId;
 
       const { convoEntryPublicId } = input;
 

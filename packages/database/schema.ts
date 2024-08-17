@@ -22,7 +22,7 @@ import {
 import {
   spaceMemberNotificationArray,
   spaceMemberRoleArray,
-  spaceStatusArray
+  spaceWorkflowArray
 } from '@u22n/utils/spaces';
 import { typeIdDataType as publicId } from '@u22n/utils/typeid';
 import { uiColors } from '@u22n/utils/colors';
@@ -612,7 +612,7 @@ export const spaceRelations = relations(spaces, ({ one, many }) => ({
   }),
   subSpaces: many(spaces, { relationName: 'parent' }),
   members: many(spaceMembers),
-  statuses: many(spaceStatuses),
+  workflows: many(spaceWorkflows),
   tags: many(spaceTags)
 }));
 
@@ -643,8 +643,8 @@ export const spaceMembers = mysqlTable(
     canComment: boolean('can_comment').notNull().default(true),
     canReply: boolean('can_reply').notNull().default(true),
     canDelete: boolean('can_delete').notNull().default(true),
-    canChangeStatus: boolean('can_change_status').notNull().default(true),
-    canSetStatusToClosed: boolean('can_set_status_to_closed')
+    canChangeWorkflow: boolean('can_change_workflow').notNull().default(true),
+    canSetWorkflowToClosed: boolean('can_set_workflow_to_closed')
       .notNull()
       .default(true),
     canAddTags: boolean('can_add_tags').notNull().default(true),
@@ -689,14 +689,14 @@ export const spaceMemberRelations = relations(spaceMembers, ({ one }) => ({
   })
 }));
 
-export const spaceStatuses = mysqlTable(
-  'space_statuses',
+export const spaceWorkflows = mysqlTable(
+  'space_workflows',
   {
     id: serial('id').primaryKey(),
     orgId: foreignKey('org_id').notNull(),
-    publicId: publicId('spaceStatuses', 'public_id').notNull(),
+    publicId: publicId('spaceWorkflows', 'public_id').notNull(),
     spaceId: foreignKey('space_id').notNull(),
-    type: mysqlEnum('type', [...spaceStatusArray]).notNull(),
+    type: mysqlEnum('type', [...spaceWorkflowArray]).notNull(),
     order: tinyint('order', { unsigned: true }).notNull(),
     name: varchar('name', { length: 32 }).notNull(),
     color: mysqlEnum('color', [...uiColors]).notNull(),
@@ -715,22 +715,22 @@ export const spaceStatuses = mysqlTable(
   })
 );
 
-export const spaceStatusesRelations = relations(
-  spaceStatuses,
+export const spaceWorkflowsRelations = relations(
+  spaceWorkflows,
   ({ one, many }) => ({
     org: one(orgs, {
-      fields: [spaceStatuses.orgId],
+      fields: [spaceWorkflows.orgId],
       references: [orgs.id]
     }),
     space: one(spaces, {
-      fields: [spaceStatuses.spaceId],
+      fields: [spaceWorkflows.spaceId],
       references: [spaces.id]
     }),
     createdByOrgMember: one(orgMembers, {
-      fields: [spaceStatuses.createdByOrgMemberId],
+      fields: [spaceWorkflows.createdByOrgMemberId],
       references: [orgMembers.id]
     }),
-    convoStatuses: many(convoStatuses)
+    convoWorkflows: many(convoWorkflows)
   })
 );
 
@@ -1326,7 +1326,7 @@ export const convosRelations = relations(convos, ({ one, many }) => ({
   subjects: many(convoSubjects),
   seen: many(convoSeenTimestamps),
   spaces: many(convoToSpaces),
-  statuses: many(convoStatuses),
+  workflows: many(convoWorkflows),
   tags: many(convoTags)
 }));
 
@@ -1362,21 +1362,21 @@ export const convoToSpacesRelations = relations(
       fields: [convoToSpaces.spaceId],
       references: [spaces.id]
     }),
-    statuses: many(convoStatuses),
+    workflows: many(convoWorkflows),
     tags: many(convoTags)
   })
 );
 
-export const convoStatuses = mysqlTable(
-  'convo_statuses',
+export const convoWorkflows = mysqlTable(
+  'convo_workflows',
   {
     id: serial('id').primaryKey(),
     orgId: foreignKey('org_id').notNull(),
-    publicId: publicId('convoStatuses', 'public_id').notNull(),
+    publicId: publicId('convoWorkflows', 'public_id').notNull(),
     convoId: foreignKey('convo_id').notNull(),
     spaceId: foreignKey('space_id').notNull(),
     convoToSpaceId: foreignKey('convo_to_space_id').notNull(),
-    status: foreignKey('status_id'),
+    workflow: foreignKey('workflow_id'),
     byOrgMemberId: foreignKey('by_org_member_id').notNull(),
     createdAt: timestamp('created_at')
       .notNull()
@@ -1390,33 +1390,33 @@ export const convoStatuses = mysqlTable(
     convoToSpacesIdIndex: index('convo_to_spaces_id_idx').on(
       table.convoToSpaceId
     ),
-    statusIndex: index('status_idx').on(table.status)
+    workflowIndex: index('workflow_idx').on(table.workflow)
   })
 );
 
-export const convoStatusesRelations = relations(convoStatuses, ({ one }) => ({
+export const convoWorkflowsRelations = relations(convoWorkflows, ({ one }) => ({
   org: one(orgs, {
-    fields: [convoStatuses.orgId],
+    fields: [convoWorkflows.orgId],
     references: [orgs.id]
   }),
   convo: one(convos, {
-    fields: [convoStatuses.convoId],
+    fields: [convoWorkflows.convoId],
     references: [convos.id]
   }),
   space: one(spaces, {
-    fields: [convoStatuses.spaceId],
+    fields: [convoWorkflows.spaceId],
     references: [spaces.id]
   }),
   convoToSpace: one(convoToSpaces, {
-    fields: [convoStatuses.convoToSpaceId],
+    fields: [convoWorkflows.convoToSpaceId],
     references: [convoToSpaces.id]
   }),
-  status: one(spaceStatuses, {
-    fields: [convoStatuses.status],
-    references: [spaceStatuses.id]
+  workflow: one(spaceWorkflows, {
+    fields: [convoWorkflows.workflow],
+    references: [spaceWorkflows.id]
   }),
   byOrgMember: one(orgMembers, {
-    fields: [convoStatuses.byOrgMemberId],
+    fields: [convoWorkflows.byOrgMemberId],
     references: [orgMembers.id]
   })
 }));

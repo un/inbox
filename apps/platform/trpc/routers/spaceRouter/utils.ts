@@ -122,8 +122,8 @@ type IsOrgMemberSpaceMemberResponse = {
     canComment: boolean;
     canReply: boolean;
     canDelete: boolean;
-    canChangeStatus: boolean;
-    canSetStatusToClosed: boolean;
+    canChangeWorkflow: boolean;
+    canSetWorkflowToClosed: boolean;
     canAddTags: boolean;
     canMoveToAnotherSpace: boolean;
     canAddToAnotherSpace: boolean;
@@ -161,15 +161,15 @@ export async function isOrgMemberSpaceMember({
           canAddParticipants: true,
           canAddTags: true,
           canAddToAnotherSpace: true,
-          canChangeStatus: true,
+          canChangeWorkflow: true,
+          canSetWorkflowToClosed: true,
           canComment: true,
           canCreate: true,
           canDelete: true,
           canMergeConvos: true,
           canMoveToAnotherSpace: true,
           canRead: true,
-          canReply: true,
-          canSetStatusToClosed: true
+          canReply: true
         }
       }
     }
@@ -228,8 +228,8 @@ export async function isOrgMemberSpaceMember({
       canComment: false,
       canReply: false,
       canDelete: false,
-      canChangeStatus: false,
-      canSetStatusToClosed: false,
+      canChangeWorkflow: false,
+      canSetWorkflowToClosed: false,
       canAddTags: false,
       canMoveToAnotherSpace: false,
       canAddToAnotherSpace: false,
@@ -260,12 +260,12 @@ export async function isOrgMemberSpaceMember({
         canDelete:
           spaceMembershipResponse.permissions.canDelete ||
           spaceMembership.canDelete,
-        canChangeStatus:
-          spaceMembershipResponse.permissions.canChangeStatus ||
-          spaceMembership.canChangeStatus,
-        canSetStatusToClosed:
-          spaceMembershipResponse.permissions.canSetStatusToClosed ||
-          spaceMembership.canSetStatusToClosed,
+        canChangeWorkflow:
+          spaceMembershipResponse.permissions.canChangeWorkflow ||
+          spaceMembership.canChangeWorkflow,
+        canSetWorkflowToClosed:
+          spaceMembershipResponse.permissions.canSetWorkflowToClosed ||
+          spaceMembership.canSetWorkflowToClosed,
         canAddTags:
           spaceMembershipResponse.permissions.canAddTags ||
           spaceMembership.canAddTags,

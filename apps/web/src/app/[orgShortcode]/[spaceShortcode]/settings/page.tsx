@@ -54,7 +54,7 @@ import {
   TooltipTrigger
 } from '@/src/components/shadcn-ui/tooltip';
 import { useOrgShortcode, useSpaceShortcode } from '@/src/hooks/use-params';
-import { type SpaceStatus, type SpaceType } from '@u22n/utils/spaces';
+import { type SpaceWorkflow, type SpaceType } from '@u22n/utils/spaces';
 import { typeIdValidator, type TypeId } from '@u22n/utils/typeid';
 import { SettingsTitle } from './_components/settingsTitle';
 import { type UiColor, uiColors } from '@u22n/utils/colors';
@@ -176,7 +176,7 @@ export default function SettingsPage() {
               showSaved={setShowSaved}
               isSpaceAdmin={isSpaceAdmin}
             />
-            <Statuses
+            <Workflows
               orgShortcode={orgShortcode}
               spaceShortcode={spaceShortcode}
               showSaved={setShowSaved}
@@ -548,7 +548,7 @@ function VisibilityField({
   );
 }
 
-function Statuses({
+function Workflows({
   orgShortcode,
   spaceShortcode,
   showSaved,
@@ -559,63 +559,68 @@ function Statuses({
   isSpaceAdmin: boolean;
   showSaved: (value: boolean) => void;
 }) {
-  const { data: spaceStatuses, isLoading: statusLoading } =
-    platform.spaces.statuses.getSpacesStatuses.useQuery({
+  const { data: spaceWorkflows, isLoading: workflowsLoading } =
+    platform.spaces.workflows.getSpacesWorkflows.useQuery({
       orgShortcode: orgShortcode,
       spaceShortcode: spaceShortcode
     });
 
-  const { data: canIHazStatuses } = platform.org.iCanHaz.spaceStatus.useQuery({
-    orgShortcode: orgShortcode
-  });
+  const { data: canIHazWorkflows } =
+    platform.org.iCanHaz.spaceWorkflow.useQuery({
+      orgShortcode: orgShortcode
+    });
 
-  const hasStatusesConfigured = useMemo(() => {
+  const hasWorkflowsConfigured = useMemo(() => {
     return (
-      !!spaceStatuses?.open?.length ||
-      !!spaceStatuses?.active?.length ||
-      !!spaceStatuses?.closed?.length
+      !!spaceWorkflows?.open?.length ||
+      !!spaceWorkflows?.active?.length ||
+      !!spaceWorkflows?.closed?.length
     );
-  }, [spaceStatuses]);
+  }, [spaceWorkflows]);
 
-  const [useStatuses, setUseStatuses] = useState<boolean>(
-    hasStatusesConfigured
+  const [useWorkflows, setUseWorkflows] = useState<boolean>(
+    hasWorkflowsConfigured
   );
 
-  const canAddOpenStatus = useMemo(() => {
-    if (!canIHazStatuses) return false;
-    return (canIHazStatuses.open ?? 0) > (spaceStatuses?.open?.length ?? 0);
-  }, [canIHazStatuses, spaceStatuses]);
+  const canAddOpenWorkflow = useMemo(() => {
+    if (!canIHazWorkflows) return false;
+    return (canIHazWorkflows.open ?? 0) > (spaceWorkflows?.open?.length ?? 0);
+  }, [canIHazWorkflows, spaceWorkflows]);
 
-  const [showNewOpenStatus, setShowNewOpenStatus] = useState(false);
+  const [showNewOpenWorkflow, setShowNewOpenWorkflow] = useState(false);
   useEffect(() => {
-    if (showNewOpenStatus) return;
+    if (showNewOpenWorkflow) return;
     showSaved(true);
-    setShowNewOpenStatus(false);
-  }, [showNewOpenStatus, showSaved]);
+    setShowNewOpenWorkflow(false);
+  }, [showNewOpenWorkflow, showSaved]);
 
-  const canAddActiveStatus = useMemo(() => {
-    if (!canIHazStatuses) return false;
-    return (canIHazStatuses.active ?? 0) > (spaceStatuses?.active?.length ?? 0);
-  }, [canIHazStatuses, spaceStatuses]);
+  const canAddActiveWorkflow = useMemo(() => {
+    if (!canIHazWorkflows) return false;
+    return (
+      (canIHazWorkflows.active ?? 0) > (spaceWorkflows?.active?.length ?? 0)
+    );
+  }, [canIHazWorkflows, spaceWorkflows]);
 
-  const [showNewActiveStatus, setShowNewActiveStatus] = useState(false);
+  const [showNewActiveWorkflow, setShowNewActiveWorkflow] = useState(false);
   useEffect(() => {
-    if (showNewActiveStatus) return;
+    if (showNewActiveWorkflow) return;
     showSaved(true);
-    setShowNewActiveStatus(false);
-  }, [showNewActiveStatus, showSaved]);
+    setShowNewActiveWorkflow(false);
+  }, [showNewActiveWorkflow, showSaved]);
 
-  const canAddClosedStatus = useMemo(() => {
-    if (!canIHazStatuses) return false;
-    return (canIHazStatuses.closed ?? 0) > (spaceStatuses?.closed?.length ?? 0);
-  }, [canIHazStatuses, spaceStatuses]);
+  const canAddClosedWorkflow = useMemo(() => {
+    if (!canIHazWorkflows) return false;
+    return (
+      (canIHazWorkflows.closed ?? 0) > (spaceWorkflows?.closed?.length ?? 0)
+    );
+  }, [canIHazWorkflows, spaceWorkflows]);
 
-  const [showNewClosedStatus, setShowNewClosedStatus] = useState(false);
+  const [showNewClosedWorkflow, setShowNewClosedWorkflow] = useState(false);
   useEffect(() => {
-    if (showNewClosedStatus) return;
+    if (showNewClosedWorkflow) return;
     showSaved(true);
-    setShowNewClosedStatus(false);
-  }, [showNewClosedStatus, showSaved]);
+    setShowNewClosedWorkflow(false);
+  }, [showNewClosedWorkflow, showSaved]);
 
   const [subShowSaved, setSubShowSaved] = useState(false);
   useEffect(() => {
@@ -628,15 +633,15 @@ function Statuses({
 
   return (
     <div className="flex w-full flex-col gap-2">
-      <SettingsTitle title="Statuses" />
-      {statusLoading ? (
+      <SettingsTitle title="Workflows" />
+      {workflowsLoading ? (
         <div>
-          <span>Loading Statuses...</span>
+          <span>Loading Workflows...</span>
         </div>
-      ) : !useStatuses && !hasStatusesConfigured ? (
+      ) : !useWorkflows && !hasWorkflowsConfigured ? (
         <div className="flex w-full flex-row items-center justify-between gap-8">
-          <span>Enable Statuses</span>
-          <Switch onClick={() => setUseStatuses(true)} />
+          <span>Enable Workflows</span>
+          <Switch onClick={() => setUseWorkflows(true)} />
         </div>
       ) : (
         <div className="bg-base-2 border-base-5 flex flex-col gap-2 rounded-md border p-4">
@@ -644,11 +649,11 @@ function Statuses({
             <div className="bg-base-3 flex w-full flex-row justify-between gap-2 rounded-md p-4">
               <span className="text-base-11 text-sm font-semibold">Open</span>
               {isSpaceAdmin &&
-                (canAddOpenStatus ? (
+                (canAddOpenWorkflow ? (
                   <Button
                     variant={'ghost'}
                     size={'icon-sm'}
-                    onClick={() => setShowNewOpenStatus(true)}>
+                    onClick={() => setShowNewOpenWorkflow(true)}>
                     <Plus />
                   </Button>
                 ) : (
@@ -668,37 +673,36 @@ function Statuses({
                     </TooltipTrigger>
                     <TooltipContent>
                       Upgrade to <span className="font-semibold">Pro</span> plan
-                      to add more statuses
+                      to add more Workflows
                     </TooltipContent>
                   </Tooltip>
                 ))}
             </div>
             <div className="dragdrop-area flex flex-col gap-6 p-4">
-              {!spaceStatuses?.open?.length ? (
-                <span>No Statuses</span>
+              {!spaceWorkflows?.open?.length ? (
+                <span>No Workflows</span>
               ) : (
-                spaceStatuses?.open?.map((status) => (
-                  <StatusItem
-                    key={status.publicId}
-                    status={status}
+                spaceWorkflows?.open?.map((workflow) => (
+                  <WorkflowItem
+                    key={workflow.publicId}
+                    workflow={workflow}
                     orgShortcode={orgShortcode}
                     spaceShortcode={spaceShortcode}
-                    showSavedStatus={setSubShowSaved}
                     isAdmin={isSpaceAdmin}
                   />
                 ))
               )}
-              {showNewOpenStatus && (
-                <NewSpaceStatus
+              {showNewOpenWorkflow && (
+                <NewSpaceWorkflow
                   orgShortcode={orgShortcode}
                   order={
-                    spaceStatuses?.open?.length
-                      ? spaceStatuses?.open?.length + 1
+                    spaceWorkflows?.open?.length
+                      ? spaceWorkflows?.open?.length + 1
                       : 1
                   }
                   spaceShortcode={spaceShortcode}
                   type="open"
-                  showNewStatusComponent={setShowNewOpenStatus}
+                  showNewWorkflowComponent={setShowNewOpenWorkflow}
                 />
               )}
             </div>
@@ -707,11 +711,11 @@ function Statuses({
             <div className="bg-base-3 flex w-full flex-row justify-between gap-2 rounded-md p-4">
               <span className="text-base-11 text-sm font-semibold">Active</span>
               {isSpaceAdmin &&
-                (canAddActiveStatus ? (
+                (canAddActiveWorkflow ? (
                   <Button
                     variant={'ghost'}
                     size={'icon-sm'}
-                    onClick={() => setShowNewActiveStatus(true)}>
+                    onClick={() => setShowNewActiveWorkflow(true)}>
                     <Plus />
                   </Button>
                 ) : (
@@ -731,37 +735,36 @@ function Statuses({
                     </TooltipTrigger>
                     <TooltipContent>
                       Upgrade to <span className="font-semibold">Pro</span> plan
-                      to add more statuses
+                      to add more Workflows
                     </TooltipContent>
                   </Tooltip>
                 ))}
             </div>
             <div className="dragdrop-area flex flex-col gap-6 p-4">
-              {!spaceStatuses?.active?.length ? (
-                <span>No Statuses</span>
+              {!spaceWorkflows?.active?.length ? (
+                <span>No Workflows</span>
               ) : (
-                spaceStatuses?.active?.map((status) => (
-                  <StatusItem
-                    key={status.publicId}
-                    status={status}
+                spaceWorkflows?.active?.map((workflow) => (
+                  <WorkflowItem
+                    key={workflow.publicId}
+                    workflow={workflow}
                     orgShortcode={orgShortcode}
                     spaceShortcode={spaceShortcode}
-                    showSavedStatus={setSubShowSaved}
                     isAdmin={isSpaceAdmin}
                   />
                 ))
               )}
-              {showNewActiveStatus && (
-                <NewSpaceStatus
+              {showNewActiveWorkflow && (
+                <NewSpaceWorkflow
                   orgShortcode={orgShortcode}
                   order={
-                    spaceStatuses?.active?.length
-                      ? spaceStatuses?.active?.length + 1
+                    spaceWorkflows?.active?.length
+                      ? spaceWorkflows?.active?.length + 1
                       : 1
                   }
                   spaceShortcode={spaceShortcode}
                   type="active"
-                  showNewStatusComponent={setShowNewActiveStatus}
+                  showNewWorkflowComponent={setShowNewActiveWorkflow}
                 />
               )}
             </div>
@@ -770,11 +773,11 @@ function Statuses({
             <div className="bg-base-3 flex w-full flex-row justify-between gap-2 rounded-md p-4">
               <span className="text-base-11 text-sm font-semibold">Closed</span>
               {isSpaceAdmin &&
-                (canAddClosedStatus ? (
+                (canAddClosedWorkflow ? (
                   <Button
                     variant={'ghost'}
                     size={'icon-sm'}
-                    onClick={() => setShowNewClosedStatus(true)}>
+                    onClick={() => setShowNewClosedWorkflow(true)}>
                     <Plus />
                   </Button>
                 ) : (
@@ -794,37 +797,36 @@ function Statuses({
                     </TooltipTrigger>
                     <TooltipContent>
                       Upgrade to <span className="font-semibold">Pro</span> plan
-                      to add more statuses
+                      to add more Workflows
                     </TooltipContent>
                   </Tooltip>
                 ))}
             </div>
             <div className="dragdrop-area flex flex-col gap-6 p-4">
-              {!spaceStatuses?.closed?.length ? (
-                <span>No Statuses</span>
+              {!spaceWorkflows?.closed?.length ? (
+                <span>No Workflows</span>
               ) : (
-                spaceStatuses?.closed?.map((status) => (
-                  <StatusItem
-                    key={status.publicId}
-                    status={status}
+                spaceWorkflows?.closed?.map((workflow) => (
+                  <WorkflowItem
+                    key={workflow.publicId}
+                    workflow={workflow}
                     orgShortcode={orgShortcode}
                     spaceShortcode={spaceShortcode}
-                    showSavedStatus={setSubShowSaved}
                     isAdmin={isSpaceAdmin}
                   />
                 ))
               )}
-              {showNewClosedStatus && (
-                <NewSpaceStatus
+              {showNewClosedWorkflow && (
+                <NewSpaceWorkflow
                   orgShortcode={orgShortcode}
                   order={
-                    spaceStatuses?.closed?.length
-                      ? spaceStatuses?.closed?.length + 1
+                    spaceWorkflows?.closed?.length
+                      ? spaceWorkflows?.closed?.length + 1
                       : 1
                   }
                   spaceShortcode={spaceShortcode}
                   type="closed"
-                  showNewStatusComponent={setShowNewClosedStatus}
+                  showNewWorkflowComponent={setShowNewClosedWorkflow}
                 />
               )}
             </div>
@@ -835,125 +837,123 @@ function Statuses({
   );
 }
 
-function StatusItem({
+function WorkflowItem({
   orgShortcode,
   spaceShortcode,
-  status,
-  showSavedStatus,
+  workflow,
   isAdmin
 }: {
   orgShortcode: string;
   spaceShortcode: string;
-  showSavedStatus: (value: boolean) => void;
   // TODO: make this type based on the return of the query
-  status: {
+  workflow: {
     name: string;
     color: UiColor;
     description: string | null;
-    publicId: TypeId<'spaceStatuses'>;
+    publicId: TypeId<'spaceWorkflows'>;
     icon: string;
     disabled: boolean;
-    type: SpaceStatus;
+    type: SpaceWorkflow;
     order: number;
   };
   isAdmin: boolean;
 }) {
-  const [editStatus, setEditStatus] = useState<boolean>(false);
+  const [editWorkflow, setEditWorkflow] = useState<boolean>(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState<boolean>(false);
 
-  const { mutateAsync: editSpaceStatus, isPending } =
-    platform.spaces.statuses.editSpaceStatus.useMutation();
-  const { mutateAsync: disableSpaceStatus } =
-    platform.spaces.statuses.disableSpaceStatus.useMutation();
+  const { mutateAsync: editSpaceWorkflow, isPending } =
+    platform.spaces.workflows.editSpaceWorkflow.useMutation();
+  const { mutateAsync: disableSpaceWorkflow } =
+    platform.spaces.workflows.disableSpaceWorkflow.useMutation();
 
   const orgMemberSpacesQueryCache =
     platform.useUtils().spaces.getOrgMemberSpaces;
-  const spaceStatusQueryCache =
-    platform.useUtils().spaces.statuses.getSpacesStatuses;
+  const spaceWorkflowQueryCache =
+    platform.useUtils().spaces.workflows.getSpacesWorkflows;
 
-  const editSpaceStatusFormSchema = z.object({
+  const editSpaceWorkflowFormSchema = z.object({
     name: z.string().min(1).max(32),
     description: z.string().min(0).max(128).optional(),
     color: z.enum(uiColors)
   });
 
-  const form = useForm<z.infer<typeof editSpaceStatusFormSchema>>({
-    resolver: zodResolver(editSpaceStatusFormSchema),
+  const form = useForm<z.infer<typeof editSpaceWorkflowFormSchema>>({
+    resolver: zodResolver(editSpaceWorkflowFormSchema),
     defaultValues: {
-      name: status.name,
-      description: status.description ?? '',
-      color: status.color
+      name: workflow.name,
+      description: workflow.description ?? '',
+      color: workflow.color
     }
   });
 
   const handleSubmit = async (
-    values: z.infer<typeof editSpaceStatusFormSchema>
+    values: z.infer<typeof editSpaceWorkflowFormSchema>
   ) => {
-    await editSpaceStatus({
+    await editSpaceWorkflow({
       orgShortcode: orgShortcode,
       spaceShortcode: spaceShortcode,
       name: values.name,
       description: values.description,
       color: values.color,
-      spaceStatusPublicId: status.publicId
+      spaceWorkflowPublicId: workflow.publicId
     });
 
-    showSavedStatus(true);
-    setEditStatus(false);
+    true;
+    setEditWorkflow(false);
     await orgMemberSpacesQueryCache.invalidate();
-    await spaceStatusQueryCache.invalidate();
+    await spaceWorkflowQueryCache.invalidate();
     form.reset();
   };
 
-  const handleDisableStatus = async () => {
-    await disableSpaceStatus({
+  const handleDisableWorkflow = async () => {
+    await disableSpaceWorkflow({
       orgShortcode: orgShortcode,
       spaceShortcode: spaceShortcode,
-      spaceStatusPublicId: status.publicId,
-      disable: !status.disabled
+      spaceWorkflowPublicId: workflow.publicId,
+      disable: !workflow.disabled
     });
 
-    showSavedStatus(true);
-    setEditStatus(false);
+    true;
+    setEditWorkflow(false);
     await orgMemberSpacesQueryCache.invalidate();
-    await spaceStatusQueryCache.invalidate();
+    await spaceWorkflowQueryCache.invalidate();
     form.reset();
   };
   return (
     <>
-      {!editStatus ? (
+      {!editWorkflow ? (
         <div className="flex flex-row items-center justify-between gap-4 py-1.5">
           <div
             className={cn(
               'flex w-full flex-row items-center gap-7',
-              status.disabled ? 'opacity-70' : null
+              workflow.disabled ? 'opacity-70' : null
             )}>
             <div
               className={
                 'flex size-8 min-h-8 min-w-8 items-center justify-center rounded-sm'
               }
               style={{
-                backgroundColor: `var(--${status.color}4)`
+                backgroundColor: `var(--${workflow.color}4)`
               }}>
               <Circle
                 className={'size-5'}
                 weight="regular"
                 style={{
-                  color: `var(--${status.color}9)`
+                  color: `var(--${workflow.color}9)`
                 }}
               />
             </div>
             <div className="grid w-full grid-cols-8 place-items-center gap-2">
               <div className="col-span-3 w-full font-medium">
-                <span>{status.name}</span>
+                <span>{workflow.name}</span>
               </div>
               <div className="text-base-11 col-span-5 w-full text-balance pl-2 text-xs">
-                <span>{status.description ?? 'No description'}</span>
+                <span>{workflow.description ?? 'No description'}</span>
               </div>
             </div>
           </div>
           <div className="flex flex-row items-center gap-4">
-            {status.disabled && (
+            {workflow.disabled && (
               <Badge variant={'outline'}>
                 <span className="">Disabled</span>
               </Badge>
@@ -970,31 +970,31 @@ function StatusItem({
                 <DropdownMenuContent>
                   <DropdownMenuItem
                     onSelect={() => {
-                      setEditStatus(true);
+                      setEditWorkflow(true);
                     }}>
-                    Edit Status
+                    Edit Workflow
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onSelect={() => {
-                      void handleDisableStatus();
+                      void handleDisableWorkflow();
                     }}>
-                    {status.disabled ? 'Enable Status' : 'Disable Status'}
+                    {workflow.disabled ? 'Enable Workflow' : 'Disable Workflow'}
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onSelect={() => {
                       void setDeleteModalOpen(true);
                     }}>
-                    Delete Status
+                    Delete Workflow
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
             {deleteModalOpen && (
-              <DeleteStatusModal
+              <DeleteWorkflowModal
                 orgShortcode={orgShortcode}
                 spaceShortcode={spaceShortcode}
-                key={status.publicId}
-                statusToDelete={status}
+                key={workflow.publicId}
+                workflowToDelete={workflow}
               />
             )}
           </div>
@@ -1103,7 +1103,7 @@ function StatusItem({
               loading={isPending}
               variant={'secondary'}
               size={'sm'}
-              onClick={() => setEditStatus(false)}>
+              onClick={() => setEditWorkflow(false)}>
               Cancel
             </Button>
             <Button
@@ -1119,35 +1119,35 @@ function StatusItem({
   );
 }
 
-function NewSpaceStatus({
+function NewSpaceWorkflow({
   orgShortcode,
   spaceShortcode,
-  showNewStatusComponent,
+  showNewWorkflowComponent,
   type,
   order
 }: {
   orgShortcode: string;
   spaceShortcode: string;
-  type: SpaceStatus;
+  type: SpaceWorkflow;
   order: number;
-  showNewStatusComponent: (value: boolean) => void;
+  showNewWorkflowComponent: (value: boolean) => void;
 }) {
-  const { mutateAsync: addNewSpaceStatus, isPending } =
-    platform.spaces.statuses.addNewSpaceStatus.useMutation();
+  const { mutateAsync: addNewSpaceWorkflow, isPending } =
+    platform.spaces.workflows.addNewSpaceWorkflow.useMutation();
 
   const orgMemberSpacesQueryCache =
     platform.useUtils().spaces.getOrgMemberSpaces;
-  const spaceStatusQueryCache =
-    platform.useUtils().spaces.statuses.getSpacesStatuses;
+  const spaceWorkflowQueryCache =
+    platform.useUtils().spaces.workflows.getSpacesWorkflows;
 
-  const newSpaceStatusFormSchema = z.object({
+  const newSpaceWorkflowFormSchema = z.object({
     name: z.string().min(1).max(32),
     description: z.string().min(0).max(128).optional(),
     color: z.enum(uiColors)
   });
 
-  const form = useForm<z.infer<typeof newSpaceStatusFormSchema>>({
-    resolver: zodResolver(newSpaceStatusFormSchema),
+  const form = useForm<z.infer<typeof newSpaceWorkflowFormSchema>>({
+    resolver: zodResolver(newSpaceWorkflowFormSchema),
     defaultValues: {
       name: '',
       description: '',
@@ -1156,9 +1156,9 @@ function NewSpaceStatus({
   });
 
   const handleSubmit = async (
-    values: z.infer<typeof newSpaceStatusFormSchema>
+    values: z.infer<typeof newSpaceWorkflowFormSchema>
   ) => {
-    await addNewSpaceStatus({
+    await addNewSpaceWorkflow({
       orgShortcode: orgShortcode,
       spaceShortcode: spaceShortcode,
       type: type,
@@ -1168,9 +1168,9 @@ function NewSpaceStatus({
       order: order
     });
 
-    showNewStatusComponent(false);
+    showNewWorkflowComponent(false);
     await orgMemberSpacesQueryCache.invalidate();
-    await spaceStatusQueryCache.invalidate();
+    await spaceWorkflowQueryCache.invalidate();
     form.reset();
   };
 
@@ -1278,7 +1278,7 @@ function NewSpaceStatus({
           <Button
             loading={isPending}
             variant={'secondary'}
-            onClick={() => showNewStatusComponent(false)}>
+            onClick={() => showNewWorkflowComponent(false)}>
             Cancel
           </Button>
           <Button
@@ -1292,69 +1292,69 @@ function NewSpaceStatus({
   );
 }
 
-export function DeleteStatusModal({
+export function DeleteWorkflowModal({
   orgShortcode,
   spaceShortcode,
-  statusToDelete
+  workflowToDelete
 }: {
   orgShortcode: string;
   spaceShortcode: string;
-  statusToDelete: {
+  workflowToDelete: {
     name: string;
     color: UiColor;
     description: string | null;
-    publicId: TypeId<'spaceStatuses'>;
+    publicId: TypeId<'spaceWorkflows'>;
     icon: string;
     disabled: boolean;
-    type: SpaceStatus;
+    type: SpaceWorkflow;
     order: number;
   };
 }) {
-  const { data: spaceStatuses } =
-    platform.spaces.statuses.getSpacesStatuses.useQuery({
+  const { data: spaceWorkflows } =
+    platform.spaces.workflows.getSpacesWorkflows.useQuery({
       orgShortcode: orgShortcode,
       spaceShortcode: spaceShortcode
     });
 
-  const { mutateAsync: deleteSpaceStatus, isPending: isSubmitting } =
-    platform.spaces.statuses.deleteSpaceStatus.useMutation();
+  const { mutateAsync: deleteSpaceWorkflow, isPending: isSubmitting } =
+    platform.spaces.workflows.deleteSpaceWorkflow.useMutation();
 
   const orgMemberSpacesQueryCache =
     platform.useUtils().spaces.getOrgMemberSpaces;
-  const spaceStatusQueryCache =
-    platform.useUtils().spaces.statuses.getSpacesStatuses;
+  const spaceWorkflowQueryCache =
+    platform.useUtils().spaces.workflows.getSpacesWorkflows;
 
-  const deleteSpaceStatusSchema = z.object({
-    replacementSpaceStatusPublicId: typeIdValidator('spaceStatuses')
+  const deleteSpaceWorkflowSchema = z.object({
+    replacementSpaceWorkflowPublicId: typeIdValidator('spaceWorkflows')
   });
 
-  const form = useForm<z.infer<typeof deleteSpaceStatusSchema>>({
-    resolver: zodResolver(deleteSpaceStatusSchema),
+  const form = useForm<z.infer<typeof deleteSpaceWorkflowSchema>>({
+    resolver: zodResolver(deleteSpaceWorkflowSchema),
     defaultValues: {
-      replacementSpaceStatusPublicId:
-        spaceStatuses?.open.filter(
-          (status) => status.publicId !== statusToDelete.publicId
+      replacementSpaceWorkflowPublicId:
+        spaceWorkflows?.open.filter(
+          (Workflow) => Workflow.publicId !== workflowToDelete.publicId
         )[0]?.publicId ??
-        spaceStatuses?.active.filter(
-          (status) => status.publicId !== statusToDelete.publicId
+        spaceWorkflows?.active.filter(
+          (Workflow) => Workflow.publicId !== workflowToDelete.publicId
         )[0]?.publicId ??
-        spaceStatuses?.closed.filter(
-          (status) => status.publicId !== statusToDelete.publicId
+        spaceWorkflows?.closed.filter(
+          (Workflow) => Workflow.publicId !== workflowToDelete.publicId
         )[0]?.publicId
     }
   });
 
   const handleSubmit = async (
-    values: z.infer<typeof deleteSpaceStatusSchema>
+    values: z.infer<typeof deleteSpaceWorkflowSchema>
   ) => {
-    await deleteSpaceStatus({
+    await deleteSpaceWorkflow({
       orgShortcode: orgShortcode,
       spaceShortcode: spaceShortcode,
-      spaceStatusPublicId: statusToDelete.publicId,
-      replacementSpaceStatusPublicId: values.replacementSpaceStatusPublicId
+      spaceWorkflowPublicId: workflowToDelete.publicId,
+      replacementSpaceWorkflowPublicId: values.replacementSpaceWorkflowPublicId
     });
     await orgMemberSpacesQueryCache.invalidate();
-    await spaceStatusQueryCache.invalidate();
+    await spaceWorkflowQueryCache.invalidate();
     form.reset();
   };
 
@@ -1362,10 +1362,10 @@ export function DeleteStatusModal({
     <Dialog defaultOpen>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Delete {statusToDelete.name} Status?</DialogTitle>
+          <DialogTitle>Delete {workflowToDelete.name} Workflow?</DialogTitle>
           <DialogDescription>
             <span>
-              Select a replacement for Conversations using this status.
+              Select a replacement for Conversations using this Workflow.
             </span>
           </DialogDescription>
         </DialogHeader>
@@ -1374,7 +1374,7 @@ export function DeleteStatusModal({
             <div className="flex w-full gap-2">
               <FormField
                 control={form.control}
-                name="replacementSpaceStatusPublicId"
+                name="replacementSpaceWorkflowPublicId"
                 render={({ field }) => (
                   <FormItem>
                     <Select
@@ -1391,32 +1391,32 @@ export function DeleteStatusModal({
                       <SelectContent>
                         <SelectGroup>
                           <SelectLabel>Open</SelectLabel>
-                          {spaceStatuses?.open
+                          {spaceWorkflows?.open
                             .filter(
-                              (status) =>
-                                status.publicId !== statusToDelete.publicId
+                              (workflow) =>
+                                workflow.publicId !== workflowToDelete.publicId
                             )
-                            .map((status) => (
+                            .map((workflow) => (
                               <SelectItem
-                                key={status.publicId}
-                                value={status.publicId}
+                                key={workflow.publicId}
+                                value={workflow.publicId}
                                 className="hover:bg-base-5 w-full rounded-sm">
                                 <div className="flex flex-row items-center gap-2">
                                   <div
                                     className="flex size-6 min-h-6 min-w-6 items-center justify-center rounded-sm"
                                     style={{
-                                      backgroundColor: `var(--${status.color}4)`
+                                      backgroundColor: `var(--${workflow.color}4)`
                                     }}>
                                     <Circle
                                       className={'size-4'}
                                       weight="regular"
                                       style={{
-                                        color: `var(--${status.color}9)`
+                                        color: `var(--${workflow.color}9)`
                                       }}
                                     />
                                   </div>
                                   <span className="text-base-12 text-sm font-medium">
-                                    {status.name}
+                                    {workflow.name}
                                   </span>
                                 </div>
                               </SelectItem>
@@ -1425,32 +1425,32 @@ export function DeleteStatusModal({
                         <SelectSeparator />
                         <SelectGroup>
                           <SelectLabel>Active</SelectLabel>
-                          {spaceStatuses?.active
+                          {spaceWorkflows?.active
                             .filter(
-                              (status) =>
-                                status.publicId !== statusToDelete.publicId
+                              (workflow) =>
+                                workflow.publicId !== workflowToDelete.publicId
                             )
-                            .map((status) => (
+                            .map((workflow) => (
                               <SelectItem
-                                key={status.publicId}
-                                value={status.publicId}
+                                key={workflow.publicId}
+                                value={workflow.publicId}
                                 className="hover:bg-base-5 w-full rounded-sm">
                                 <div className="flex flex-row items-center gap-2">
                                   <div
                                     className="flex size-6 min-h-6 min-w-6 items-center justify-center rounded-sm"
                                     style={{
-                                      backgroundColor: `var(--${status.color}4)`
+                                      backgroundColor: `var(--${workflow.color}4)`
                                     }}>
                                     <Circle
                                       className={'size-4'}
                                       weight="regular"
                                       style={{
-                                        color: `var(--${status.color}9)`
+                                        color: `var(--${workflow.color}9)`
                                       }}
                                     />
                                   </div>
                                   <span className="text-base-12 text-sm font-medium">
-                                    {status.name}
+                                    {workflow.name}
                                   </span>
                                 </div>
                               </SelectItem>
@@ -1459,32 +1459,32 @@ export function DeleteStatusModal({
                         <SelectSeparator />
                         <SelectGroup>
                           <SelectLabel>Closed</SelectLabel>
-                          {spaceStatuses?.closed
+                          {spaceWorkflows?.closed
                             .filter(
-                              (status) =>
-                                status.publicId !== statusToDelete.publicId
+                              (workflow) =>
+                                workflow.publicId !== workflowToDelete.publicId
                             )
-                            .map((status) => (
+                            .map((workflow) => (
                               <SelectItem
-                                key={status.publicId}
-                                value={status.publicId}
+                                key={workflow.publicId}
+                                value={workflow.publicId}
                                 className="hover:bg-base-5 w-full rounded-sm">
                                 <div className="flex flex-row items-center gap-2">
                                   <div
                                     className="flex size-6 min-h-6 min-w-6 items-center justify-center rounded-sm"
                                     style={{
-                                      backgroundColor: `var(--${status.color}4)`
+                                      backgroundColor: `var(--${workflow.color}4)`
                                     }}>
                                     <Circle
                                       className={'size-4'}
                                       weight="regular"
                                       style={{
-                                        color: `var(--${status.color}9)`
+                                        color: `var(--${workflow.color}9)`
                                       }}
                                     />
                                   </div>
                                   <span className="text-base-12 text-sm font-medium">
-                                    {status.name}
+                                    {workflow.name}
                                   </span>
                                 </div>
                               </SelectItem>

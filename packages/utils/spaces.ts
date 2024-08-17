@@ -8,5 +8,5 @@ export const spaceMemberNotificationArray = ['active', 'muted', 'off'] as const;
 export type SpaceMemberNotification =
   (typeof spaceMemberNotificationArray)[number];
 
-export const spaceStatusArray = ['open', 'active', 'closed'] as const;
-export type SpaceStatus = (typeof spaceStatusArray)[number];
+export const spaceWorkflowArray = ['open', 'active', 'closed'] as const;
+export type SpaceWorkflow = (typeof spaceWorkflowArray)[number];

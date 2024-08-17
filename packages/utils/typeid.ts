@@ -15,7 +15,7 @@ export const idTypes = {
   convoParticipants: 'cp',
   convoSubjects: 'cs',
   convoToSpaces: 'cts',
-  convoStatuses: 'css',
+  convoWorkflows: 'cw',
   convoTags: 'cst',
   domains: 'dom',
   emailRoutingRules: 'rr',
@@ -32,7 +32,7 @@ export const idTypes = {
   orgMemberProfile: 'omp',
   spaces: 's',
   spaceMembers: 'sm',
-  spaceStatuses: 'ss',
+  spaceWorkflows: 'sw',
   spaceTags: 'st'
 } as const;
 

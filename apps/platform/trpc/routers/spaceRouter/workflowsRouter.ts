@@ -1,16 +1,16 @@
 import { router, orgProcedure } from '~platform/trpc/trpc';
 import { z } from 'zod';
 
-import { convoStatuses, spaces, spaceStatuses } from '@u22n/database/schema';
+import { convoWorkflows, spaces, spaceWorkflows } from '@u22n/database/schema';
 import { typeIdGenerator, typeIdValidator } from '@u22n/utils/typeid';
-import { spaceStatusArray } from '@u22n/utils/spaces';
+import { spaceWorkflowArray } from '@u22n/utils/spaces';
 import { isOrgMemberSpaceMember } from './utils';
 import { uiColors } from '@u22n/utils/colors';
 import { eq, and } from '@u22n/database/orm';
 import { TRPCError } from '@trpc/server';
 
-export const spaceStatusesRouter = router({
-  getSpacesStatuses: orgProcedure
+export const spaceWorkflowsRouter = router({
+  getSpacesWorkflows: orgProcedure
     .input(
       z.object({
         spaceShortcode: z.string().min(1).max(64)
@@ -34,11 +34,11 @@ export const spaceStatusesRouter = router({
         });
       }
 
-      const spaceStatusesQueryResponse =
-        await ctx.db.query.spaceStatuses.findMany({
+      const spaceWorkflowsQueryResponse =
+        await ctx.db.query.spaceWorkflows.findMany({
           where: and(
-            eq(spaceStatuses.orgId, ctx.org.id),
-            eq(spaceStatuses.spaceId, spaceQueryResponse.id)
+            eq(spaceWorkflows.orgId, ctx.org.id),
+            eq(spaceWorkflows.spaceId, spaceQueryResponse.id)
           ),
           columns: {
             publicId: true,
@@ -52,27 +52,27 @@ export const spaceStatusesRouter = router({
           }
         });
 
-      const openStatuses = spaceStatusesQueryResponse
-        .filter((status) => status.type === 'open')
+      const openWorkflows = spaceWorkflowsQueryResponse
+        .filter((workflow) => workflow.type === 'open')
         .sort((a, b) => a.order - b.order);
-      const activeStatuses = spaceStatusesQueryResponse
-        .filter((status) => status.type === 'active')
+      const activeWorkflows = spaceWorkflowsQueryResponse
+        .filter((workflow) => workflow.type === 'active')
         .sort((a, b) => a.order - b.order);
-      const closedStatuses = spaceStatusesQueryResponse
-        .filter((status) => status.type === 'closed')
+      const closedWorkflows = spaceWorkflowsQueryResponse
+        .filter((workflow) => workflow.type === 'closed')
         .sort((a, b) => a.order - b.order);
 
       return {
-        open: openStatuses,
-        active: activeStatuses,
-        closed: closedStatuses
+        open: openWorkflows,
+        active: activeWorkflows,
+        closed: closedWorkflows
       };
     }),
-  addNewSpaceStatus: orgProcedure
+  addNewSpaceWorkflow: orgProcedure
     .input(
       z.object({
         spaceShortcode: z.string().min(1).max(64),
-        type: z.enum(spaceStatusArray),
+        type: z.enum(spaceWorkflowArray),
         order: z.number(),
         name: z.string().min(1).max(32),
         color: z.enum(uiColors),
@@ -98,10 +98,10 @@ export const spaceStatusesRouter = router({
       }
 
       try {
-        await db.insert(spaceStatuses).values({
+        await db.insert(spaceWorkflows).values({
           orgId: orgId,
           spaceId: spaceMembershipResponse.spaceId,
-          publicId: typeIdGenerator('spaceStatuses'),
+          publicId: typeIdGenerator('spaceWorkflows'),
           type: input.type,
           name: input.name,
           color: input.color,
@@ -113,7 +113,7 @@ export const spaceStatusesRouter = router({
         console.error(error);
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: 'Error while creating the new Space Status'
+          message: 'Error while creating the new Space Workflow'
         });
       }
 
@@ -121,11 +121,11 @@ export const spaceStatusesRouter = router({
         success: true
       };
     }),
-  editSpaceStatus: orgProcedure
+  editSpaceWorkflow: orgProcedure
     .input(
       z.object({
         spaceShortcode: z.string().min(1).max(64),
-        spaceStatusPublicId: typeIdValidator('spaceStatuses'),
+        spaceWorkflowPublicId: typeIdValidator('spaceWorkflows'),
         name: z.string().min(1).max(32),
         color: z.enum(uiColors),
         description: z.string().optional()
@@ -151,7 +151,7 @@ export const spaceStatusesRouter = router({
 
       try {
         await db
-          .update(spaceStatuses)
+          .update(spaceWorkflows)
           .set({
             name: input.name,
             color: input.color,
@@ -159,16 +159,16 @@ export const spaceStatusesRouter = router({
           })
           .where(
             and(
-              eq(spaceStatuses.orgId, orgId),
-              eq(spaceStatuses.spaceId, spaceMembershipResponse.spaceId),
-              eq(spaceStatuses.publicId, input.spaceStatusPublicId)
+              eq(spaceWorkflows.orgId, orgId),
+              eq(spaceWorkflows.spaceId, spaceMembershipResponse.spaceId),
+              eq(spaceWorkflows.publicId, input.spaceWorkflowPublicId)
             )
           );
       } catch (error) {
         console.error(error);
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: 'Error while saving the Space Status changes'
+          message: 'Error while saving the Space Workflow changes'
         });
       }
 
@@ -176,11 +176,11 @@ export const spaceStatusesRouter = router({
         success: true
       };
     }),
-  disableSpaceStatus: orgProcedure
+  disableSpaceWorkflow: orgProcedure
     .input(
       z.object({
         spaceShortcode: z.string().min(1).max(64),
-        spaceStatusPublicId: typeIdValidator('spaceStatuses'),
+        spaceWorkflowPublicId: typeIdValidator('spaceWorkflows'),
         disable: z.boolean()
       })
     )
@@ -204,22 +204,22 @@ export const spaceStatusesRouter = router({
 
       try {
         await db
-          .update(spaceStatuses)
+          .update(spaceWorkflows)
           .set({
             disabled: input.disable
           })
           .where(
             and(
-              eq(spaceStatuses.orgId, orgId),
-              eq(spaceStatuses.spaceId, spaceMembershipResponse.spaceId),
-              eq(spaceStatuses.publicId, input.spaceStatusPublicId)
+              eq(spaceWorkflows.orgId, orgId),
+              eq(spaceWorkflows.spaceId, spaceMembershipResponse.spaceId),
+              eq(spaceWorkflows.publicId, input.spaceWorkflowPublicId)
             )
           );
       } catch (error) {
         console.error(error);
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: 'Error while saving the Space Status changes'
+          message: 'Error while saving the Space Workflow changes'
         });
       }
 
@@ -227,12 +227,12 @@ export const spaceStatusesRouter = router({
         success: true
       };
     }),
-  deleteSpaceStatus: orgProcedure
+  deleteSpaceWorkflow: orgProcedure
     .input(
       z.object({
         spaceShortcode: z.string().min(1).max(64),
-        spaceStatusPublicId: typeIdValidator('spaceStatuses'),
-        replacementSpaceStatusPublicId: typeIdValidator('spaceStatuses')
+        spaceWorkflowPublicId: typeIdValidator('spaceWorkflows'),
+        replacementSpaceWorkflowPublicId: typeIdValidator('spaceWorkflows')
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -253,69 +253,70 @@ export const spaceStatusesRouter = router({
         });
       }
 
-      const spaceStatusQueryResponse = await db.query.spaceStatuses.findFirst({
-        where: and(
-          eq(spaceStatuses.orgId, orgId),
-          eq(spaceStatuses.publicId, input.spaceStatusPublicId),
-          eq(spaceStatuses.spaceId, spaceMembershipResponse.spaceId)
-        ),
-        columns: {
-          id: true
-        }
-      });
-
-      if (!spaceStatusQueryResponse?.id) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'We cant find the Space Status, try again'
-        });
-      }
-
-      const replacementSpaceStatusQueryResponse =
-        await db.query.spaceStatuses.findFirst({
+      const spaceWorkflowQueryResponse =
+        await db.query.spaceWorkflows.findFirst({
           where: and(
-            eq(spaceStatuses.orgId, orgId),
-            eq(spaceStatuses.publicId, input.replacementSpaceStatusPublicId),
-            eq(spaceStatuses.spaceId, spaceMembershipResponse.spaceId)
+            eq(spaceWorkflows.orgId, orgId),
+            eq(spaceWorkflows.publicId, input.spaceWorkflowPublicId),
+            eq(spaceWorkflows.spaceId, spaceMembershipResponse.spaceId)
           ),
           columns: {
             id: true
           }
         });
 
-      if (!replacementSpaceStatusQueryResponse?.id) {
+      if (!spaceWorkflowQueryResponse?.id) {
         throw new TRPCError({
           code: 'NOT_FOUND',
-          message: 'We cant find the replacement Space Status, try again'
+          message: 'We cant find the Space Workflow, try again'
+        });
+      }
+
+      const replacementSpaceWorkflowQueryResponse =
+        await db.query.spaceWorkflows.findFirst({
+          where: and(
+            eq(spaceWorkflows.orgId, orgId),
+            eq(spaceWorkflows.publicId, input.replacementSpaceWorkflowPublicId),
+            eq(spaceWorkflows.spaceId, spaceMembershipResponse.spaceId)
+          ),
+          columns: {
+            id: true
+          }
+        });
+
+      if (!replacementSpaceWorkflowQueryResponse?.id) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'We cant find the replacement Space Workflow, try again'
         });
       }
 
       try {
         await db
-          .update(convoStatuses)
+          .update(convoWorkflows)
           .set({
-            status: replacementSpaceStatusQueryResponse.id
+            workflow: replacementSpaceWorkflowQueryResponse.id
           })
           .where(
             and(
-              eq(convoStatuses.orgId, orgId),
-              eq(convoStatuses.status, spaceStatusQueryResponse.id)
+              eq(convoWorkflows.orgId, orgId),
+              eq(convoWorkflows.workflow, spaceWorkflowQueryResponse.id)
             )
           );
 
         await db
-          .delete(spaceStatuses)
+          .delete(spaceWorkflows)
           .where(
             and(
-              eq(spaceStatuses.orgId, orgId),
-              eq(spaceStatuses.id, spaceStatusQueryResponse.id)
+              eq(spaceWorkflows.orgId, orgId),
+              eq(spaceWorkflows.id, spaceWorkflowQueryResponse.id)
             )
           );
       } catch (error) {
         console.error(error);
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: 'Error while setting the replacement Space Status'
+          message: 'Error while setting the replacement Space Workflow'
         });
       }
 

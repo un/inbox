@@ -176,7 +176,7 @@ export function PricingTable() {
       features: [
         '@uninbox.me email address',
         'Personal Spaces',
-        '3 Statuses per Space',
+        '3 Workflows per Space',
         '7 day raw email retention',
         'Community/email support'
       ],
@@ -193,7 +193,7 @@ export function PricingTable() {
     //     '1 Custom Domains',
     //     'Tags',
     //     '1 Shared Space',
-    //     '5 Statuses per Space',
+    //     '5 Workflows per Space',
     //     '3 Day activity history',
     //     '14 Day raw email retention'
     //   ],
@@ -211,7 +211,7 @@ export function PricingTable() {
         'Unlimited Shared & Public Spaces',
         'SMTP & API Access',
         'Convo Assignees',
-        '15 Statuses per Space',
+        '15 Workflows per Space',
         '365 Day activity history',
         '30 Day raw email retention',
         'Priority Chat Support',

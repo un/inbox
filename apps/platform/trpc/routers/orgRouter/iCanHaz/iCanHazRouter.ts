@@ -26,7 +26,7 @@ export const iCanHazRouter = router({
     }
     return await billingTrpcClient.iCanHaz.space.query({ orgId: org.id });
   }),
-  spaceStatus: orgProcedure.query(async ({ ctx }) => {
+  spaceWorkflow: orgProcedure.query(async ({ ctx }) => {
     const { org, selfHosted } = ctx;
     if (selfHosted) {
       return {
@@ -35,7 +35,9 @@ export const iCanHazRouter = router({
         closed: 8
       };
     }
-    return await billingTrpcClient.iCanHaz.spaceStatus.query({ orgId: org.id });
+    return await billingTrpcClient.iCanHaz.spaceWorkflow.query({
+      orgId: org.id
+    });
   }),
   spaceTag: orgProcedure.query(async ({ ctx }) => {
     const { org, selfHosted } = ctx;
