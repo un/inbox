@@ -1,10 +1,15 @@
 'use client';
 
-import { useOrgShortcode, useSpaceShortcode } from '@/src/hooks/use-params';
+import {
+  useOrgScopedRouter,
+  useOrgShortcode,
+  useSpaceShortcode
+} from '@/src/hooks/use-params';
 import { ConvoListBase } from '../../../convo/_components/convo-list-base';
+import { useRouter } from 'next/navigation';
+import { useEffect, useMemo } from 'react';
 import { platform } from '@/src/lib/trpc';
 import { ms } from '@u22n/utils/ms';
-import { useMemo } from 'react';
 
 type Props = {
   hidden: boolean;
@@ -13,13 +18,16 @@ type Props = {
 export function ConvoList({ hidden }: Props) {
   const orgShortcode = useOrgShortcode();
   const spaceShortcode = useSpaceShortcode();
+  const { scopedUrl } = useOrgScopedRouter();
+  const router = useRouter();
 
   const {
     data: convos,
     fetchNextPage,
     isLoading,
     hasNextPage,
-    isFetchingNextPage
+    isFetchingNextPage,
+    error
   } = platform.spaces.getSpaceConvos.useInfiniteQuery(
     {
       orgShortcode,
@@ -36,6 +44,12 @@ export function ConvoList({ hidden }: Props) {
     () => (convos ? convos?.pages.flatMap((page) => page.data) : []),
     [convos]
   );
+
+  useEffect(() => {
+    if (error?.data?.code === 'FORBIDDEN') {
+      router.push(scopedUrl('/personal/convo'));
+    }
+  }, [error, router, scopedUrl]);
 
   return (
     <ConvoListBase

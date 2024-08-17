@@ -9,12 +9,12 @@ import {
 } from '@u22n/database/schema';
 import { router, accountProcedure, orgProcedure } from '~platform/trpc/trpc';
 import { iCanHazCallerFactory } from '../orgRouter/iCanHaz/iCanHazRouter';
+import { isOrgMemberSpaceMember, validateSpaceShortCode } from './utils';
 import { typeIdGenerator, typeIdValidator } from '@u22n/utils/typeid';
 import { eq, and, inArray, or, desc, lt } from '@u22n/database/orm';
 import { spaceSettingsRouter } from './spaceSettingsRouter';
 import { spaceStatusesRouter } from './statusesRouter';
 import { spaceMembersRouter } from './membersRouter';
-import { validateSpaceShortCode } from './utils';
 import { spaceTagsRouter } from './tagsRouter';
 import { uiColors } from '@u22n/utils/colors';
 import { TRPCError } from '@trpc/server';
@@ -425,16 +425,21 @@ export const spaceRouter = router({
           spaceIdsArray.push(space.spaceId)
         );
       } else {
-        const spaceQuery = await db.query.spaces.findFirst({
-          where: and(
-            eq(spaces.orgId, orgId),
-            eq(spaces.shortcode, spaceShortcode)
-          ),
-          columns: {
-            id: true
-          }
+        const spaceMembership = await isOrgMemberSpaceMember({
+          db,
+          orgId,
+          spaceShortcode: spaceShortcode,
+          orgMemberId: org.memberId
         });
-        spaceQuery?.id && spaceIdsArray.push(spaceQuery.id);
+
+        if (!spaceMembership.role && spaceMembership.type !== 'open') {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'You are not a member of this space'
+          });
+        }
+
+        spaceIdsArray.push(spaceMembership.spaceId);
       }
 
       if (spaceIdsArray.length === 0) {
@@ -443,24 +448,6 @@ export const spaceRouter = router({
           message: 'Space not found'
         });
       }
-
-      // // First, get the space ID from the shortcode
-      // const space = await db.query.spaces.findFirst({
-      //   where: and(
-      //     eq(spaces.orgId, orgId),
-      //     eq(spaces.shortcode, spaceShortcode)
-      //   ),
-      //   columns: {
-      //     id: true
-      //   }
-      // });
-
-      // if (!space) {
-      //   throw new TRPCError({
-      //     code: 'NOT_FOUND',
-      //     message: 'Space not found'
-      //   });
-      // }
 
       // Get all convos associated with the space(s)
       const convoQueryDifferent = await db.query.convoToSpaces.findMany({
