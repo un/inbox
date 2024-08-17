@@ -89,13 +89,16 @@ export const profileRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { db, account } = ctx;
       const accountId = account.id;
-      const [firstName, ...lastName] = input.name.split(' ');
+      const [firstName, lastName] = [
+        input.name.split(' ').slice(0, -1).join(' '),
+        input.name.split(' ').slice(-1).join(' ')
+      ];
 
       await db
         .update(orgMemberProfiles)
         .set({
-          firstName,
-          lastName: lastName.join(' '),
+          firstName: firstName,
+          lastName: lastName ?? '',
           title: input.title,
           blurb: input.blurb,
           handle: input.handle

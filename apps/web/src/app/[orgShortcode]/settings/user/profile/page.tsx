@@ -30,8 +30,21 @@ import { toast } from 'sonner';
 import { z } from 'zod';
 
 const profileFormSchema = z.object({
-  firstName: z.string().min(1, { message: 'First name is required' }),
-  lastName: z.string(),
+  firstName: z
+    .string()
+    .min(1, { message: 'First name is required' })
+    .refine((val) => val.trim().length > 0, {
+      message: 'First name cannot be only spaces'
+    }),
+  lastName: z
+    .string()
+    .optional()
+    .refine(
+      (val) => {
+        return val === '' || (val && val.trim().length > 0);
+      },
+      { message: 'Last name cannot be only spaces' }
+    ),
   title: z.string(),
   blurb: z.string()
 });
