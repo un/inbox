@@ -27,7 +27,8 @@ import {
 import {
   useCurrentConvoId,
   useOrgScopedRouter,
-  useOrgShortcode
+  useOrgShortcode,
+  useSpaceShortcode
 } from '@/src/hooks/use-params';
 import {
   Tooltip,
@@ -165,12 +166,11 @@ const DeleteButton = memo(function DeleteButton({
   const removeConvoFromList = useDeleteConvo$Cache();
   const { scopedNavigate } = useOrgScopedRouter();
   const currentConvo = useCurrentConvoId();
+  const spaceShortcode = useSpaceShortcode(false);
 
   const { mutate: deleteConvo, isPending: deletingConvo } =
     platform.convos.deleteConvo.useMutation({
-      onSuccess: () => {
-        void removeConvoFromList(convoId);
-      }
+      onSuccess: () => removeConvoFromList(convoId, spaceShortcode)
     });
 
   const onDelete = useCallback(
@@ -238,12 +238,13 @@ function DeleteModal({
   const orgShortcode = useOrgShortcode();
   const { scopedNavigate } = useOrgScopedRouter();
   const currentConvo = useCurrentConvoId();
+  const spaceShortcode = useSpaceShortcode(false);
   const removeConvoFromList = useDeleteConvo$Cache();
 
   const { mutate: hideConvo, isPending: hidingConvo } =
     platform.convos.hideConvo.useMutation({
-      onSuccess: () => {
-        void removeConvoFromList(convoId);
+      onSuccess: async () => {
+        await removeConvoFromList(convoId, spaceShortcode);
         setOpen(false);
       },
       onError: (error) => {
@@ -256,8 +257,8 @@ function DeleteModal({
 
   const { mutate: deleteConvo, isPending: deletingConvo } =
     platform.convos.deleteConvo.useMutation({
-      onSuccess: () => {
-        void removeConvoFromList(convoId);
+      onSuccess: async () => {
+        await removeConvoFromList(convoId, spaceShortcode);
         setOpen(false);
       }
     });

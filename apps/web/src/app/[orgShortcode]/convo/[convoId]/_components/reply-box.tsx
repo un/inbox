@@ -162,21 +162,25 @@ export function ReplyBox({
         sendAsEmailIdentityPublicId: emailIdentity ?? undefined
       });
       await addConvoToCache(convoId, publicId);
-      await updateConvoData(convoId, (oldData) => {
-        const author = oldData.participants.find(
-          (participant) =>
-            participant.publicId === oldData.entries[0]?.author.publicId
-        );
-        if (!author) return oldData;
-        const newEntry: (typeof oldData.entries)[0] = {
-          author: structuredClone(author),
-          bodyPlainText,
-          type
-        };
-        oldData.lastUpdatedAt = new Date();
-        oldData.entries.unshift(newEntry);
-        return oldData;
-      });
+      await updateConvoData(
+        convoId,
+        (oldData) => {
+          const author = oldData.participants.find(
+            (participant) =>
+              participant.publicId === oldData.entries[0]?.author.publicId
+          );
+          if (!author) return oldData;
+          const newEntry: (typeof oldData.entries)[0] = {
+            author: structuredClone(author),
+            bodyPlainText,
+            type
+          };
+          oldData.lastUpdatedAt = new Date();
+          oldData.entries.unshift(newEntry);
+          return oldData;
+        },
+        spaceShortcode
+      );
 
       onReply();
     },
@@ -191,6 +195,7 @@ export function ReplyBox({
       orgShortcode,
       replyTo,
       replyToConvo,
+      spaceShortcode,
       updateConvoData
     ]
   );

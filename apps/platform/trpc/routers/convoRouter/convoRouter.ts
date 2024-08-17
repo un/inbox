@@ -26,8 +26,7 @@ import {
   eq,
   inArray,
   desc,
-  or,
-  lt
+  or
 } from '@u22n/database/orm';
 import {
   tryParseInlineProxyUrl,
@@ -882,7 +881,8 @@ export const convoRouter = router({
       await realtime.emit({
         orgMemberPublicIds: orgMemberPublicIdsForNotifications,
         event: 'convo:new',
-        data: { publicId: newConvoPublicId }
+        // TODO: Add spaceShortcode
+        data: { publicId: newConvoPublicId, spaceShortcode: null }
       });
 
       return {
@@ -1493,202 +1493,6 @@ export const convoRouter = router({
       };
     }),
 
-  getOrgMemberConvos: orgProcedure
-    .input(
-      z.object({
-        includeHidden: z.boolean().default(false),
-        cursor: z
-          .object({
-            lastUpdatedAt: z.date().optional(),
-            lastPublicId: typeIdValidator('convos').optional()
-          })
-          .default({})
-      })
-    )
-    .query(async ({ ctx, input }) => {
-      const { db, org } = ctx;
-      const { cursor } = input;
-      const orgId = org.id;
-
-      const orgMemberId = org.memberId;
-      const LIMIT = 15;
-
-      const inputLastUpdatedAt = cursor.lastUpdatedAt
-        ? new Date(cursor.lastUpdatedAt)
-        : new Date();
-
-      const inputLastPublicId = cursor.lastPublicId ?? 'c_';
-
-      const convoQuery = await db.query.convos.findMany({
-        orderBy: [desc(convos.lastUpdatedAt), desc(convos.publicId)],
-        limit: LIMIT + 1,
-        columns: {
-          publicId: true,
-          lastUpdatedAt: true
-        },
-        where: and(
-          or(
-            and(
-              eq(convos.orgId, orgId),
-              eq(convos.lastUpdatedAt, inputLastUpdatedAt),
-              lt(convos.publicId, inputLastPublicId)
-            ),
-            and(
-              eq(convos.orgId, orgId),
-              lt(convos.lastUpdatedAt, inputLastUpdatedAt)
-            )
-          ),
-          inArray(
-            convos.id,
-            db
-              .select({ id: convoParticipants.convoId })
-              .from(convoParticipants)
-              .where(
-                and(
-                  eq(convoParticipants.hidden, input.includeHidden),
-                  or(
-                    eq(convoParticipants.orgMemberId, orgMemberId),
-                    inArray(
-                      convoParticipants.teamId,
-                      db
-                        .select({ id: teamMembers.teamId })
-                        .from(teamMembers)
-                        .where(eq(teamMembers.orgMemberId, orgMemberId))
-                    )
-                  )
-                )
-              )
-          )
-        ),
-        with: {
-          subjects: {
-            columns: {
-              subject: true
-            }
-          },
-          participants: {
-            columns: {
-              role: true,
-              publicId: true,
-              hidden: true,
-              notifications: true
-            },
-            with: {
-              orgMember: {
-                columns: { publicId: true },
-                with: {
-                  profile: {
-                    columns: {
-                      publicId: true,
-                      firstName: true,
-                      lastName: true,
-                      avatarTimestamp: true,
-                      handle: true
-                    }
-                  }
-                }
-              },
-              team: {
-                columns: {
-                  publicId: true,
-                  name: true,
-                  color: true,
-                  avatarTimestamp: true
-                }
-              },
-              contact: {
-                columns: {
-                  publicId: true,
-                  name: true,
-                  avatarTimestamp: true,
-                  setName: true,
-                  emailUsername: true,
-                  emailDomain: true,
-                  type: true,
-                  signaturePlainText: true,
-                  signatureHtml: true
-                }
-              }
-            }
-          },
-          entries: {
-            orderBy: [desc(convoEntries.createdAt)],
-            limit: 1,
-            columns: {
-              bodyPlainText: true,
-              type: true
-            },
-            with: {
-              author: {
-                columns: {
-                  publicId: true
-                },
-                with: {
-                  orgMember: {
-                    columns: {
-                      publicId: true
-                    },
-                    with: {
-                      profile: {
-                        columns: {
-                          publicId: true,
-                          firstName: true,
-                          lastName: true,
-                          avatarTimestamp: true,
-                          handle: true
-                        }
-                      }
-                    }
-                  },
-                  team: {
-                    columns: {
-                      publicId: true,
-                      name: true,
-                      color: true,
-                      avatarTimestamp: true
-                    }
-                  },
-                  contact: {
-                    columns: {
-                      publicId: true,
-                      name: true,
-                      avatarTimestamp: true,
-                      setName: true,
-                      emailUsername: true,
-                      emailDomain: true,
-                      type: true
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      });
-
-      // As we fetch ${LIMIT + 1} convos at a time, if the length is <= ${LIMIT}, we know we've reached the end
-      if (convoQuery.length <= LIMIT) {
-        return {
-          data: convoQuery,
-          cursor: null
-        };
-      }
-
-      // If we have ${LIMIT + 1} convos, we pop the last one as we return ${LIMIT} convos
-      convoQuery.pop();
-
-      const newCursorLastUpdatedAt =
-        convoQuery[convoQuery.length - 1]!.lastUpdatedAt;
-      const newCursorLastPublicId = convoQuery[convoQuery.length - 1]!.publicId;
-
-      return {
-        data: convoQuery,
-        cursor: {
-          lastUpdatedAt: newCursorLastUpdatedAt,
-          lastPublicId: newCursorLastPublicId
-        }
-      };
-    }),
   // used for data store
   getOrgMemberSpecificConvo: orgProcedure
     .input(
@@ -1773,7 +1577,9 @@ export const convoRouter = router({
             },
             with: {
               author: {
-                columns: {},
+                columns: {
+                  publicId: true
+                },
                 with: {
                   orgMember: {
                     columns: {
@@ -1924,7 +1730,12 @@ export const convoRouter = router({
       await realtime.emit({
         orgMemberPublicIds: orgMemberPublicIdsForNotifications,
         event: 'convo:hidden',
-        data: { publicId: convoPublicIds, hidden: !input.unhide }
+        // TODO: Add spaceShortcode
+        data: {
+          publicId: convoPublicIds,
+          hidden: !input.unhide,
+          spaceShortcode: null
+        }
       });
 
       return { success: true };
@@ -2182,7 +1993,8 @@ export const convoRouter = router({
         await realtime.emit({
           orgMemberPublicIds: orgMemberPublicIdsForNotifications,
           event: 'convo:deleted',
-          data: { publicId: convoPublicId }
+          // TODO: Add spaceShortcode
+          data: { publicId: convoPublicId, spaceShortcode: null }
         });
       }
 

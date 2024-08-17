@@ -1,10 +1,14 @@
 'use client';
 
-import { useOrgShortcode } from '@/src/hooks/use-params';
+import {
+  useOrgScopedRouter,
+  useOrgShortcode,
+  useSpaceShortcode
+} from '@/src/hooks/use-params';
 import { ConvoListBase } from './convo-list-base';
+import { useEffect, useMemo } from 'react';
 import { platform } from '@/src/lib/trpc';
 import { ms } from '@u22n/utils/ms';
-import { useMemo } from 'react';
 
 type Props = {
   hidden: boolean;
@@ -12,17 +16,21 @@ type Props = {
 
 export function ConvoList({ hidden }: Props) {
   const orgShortcode = useOrgShortcode();
+  const spaceShortcode = useSpaceShortcode(false);
+  const { scopedRedirect, scopedUrl } = useOrgScopedRouter();
 
   const {
     data: convos,
     fetchNextPage,
     isLoading,
     hasNextPage,
-    isFetchingNextPage
-  } = platform.convos.getOrgMemberConvos.useInfiniteQuery(
+    isFetchingNextPage,
+    error
+  } = platform.spaces.getSpaceConvos.useInfiniteQuery(
     {
       orgShortcode,
-      includeHidden: hidden ? true : undefined
+      spaceShortcode: spaceShortcode ?? 'all',
+      includeHidden: hidden
     },
     {
       getNextPageParam: (lastPage) => lastPage.cursor ?? undefined,
@@ -31,9 +39,15 @@ export function ConvoList({ hidden }: Props) {
   );
 
   const allConvos = useMemo(
-    () => (convos ? convos.pages.flatMap((page) => page.data) : []),
+    () => (convos ? convos?.pages.flatMap((page) => page.data) : []),
     [convos]
   );
+
+  useEffect(() => {
+    if (error?.data?.code === 'FORBIDDEN') {
+      scopedRedirect('/personal/convo');
+    }
+  }, [error, scopedRedirect]);
 
   return (
     <ConvoListBase
@@ -43,7 +57,7 @@ export function ConvoList({ hidden }: Props) {
       hasNextPage={hasNextPage}
       isFetchingNextPage={isFetchingNextPage}
       fetchNextPage={fetchNextPage}
-      linkBase={`/${orgShortcode}/convo`}
+      linkBase={scopedUrl('/convo', true)}
     />
   );
 }

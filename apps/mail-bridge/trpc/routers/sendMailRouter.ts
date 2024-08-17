@@ -401,10 +401,7 @@ export const sendMailRouter = router({
               }
             });
 
-            if (
-              !teamQueryResponse ??
-              !teamQueryResponse?.defaultEmailIdentityId
-            ) {
+            if (!teamQueryResponse?.defaultEmailIdentityId) {
               missingEmailIdentitiesWarnings.push({
                 type: 'team',
                 publicId: teamParticipant.publicId,

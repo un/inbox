@@ -1,18 +1,14 @@
 'use client';
 import { convoListSelection, lastSelectedConvo } from '../atoms';
+import { memo, useCallback, useEffect, useMemo } from 'react';
+import { useSpaceShortcode } from '@/src/hooks/use-params';
 import { AnimatePresence, motion } from 'framer-motion';
-import { type RouterOutputs } from '@/src/lib/trpc';
 import { SpinnerGap } from '@phosphor-icons/react';
 import { type TypeId } from '@u22n/utils/typeid';
 import { ConvoItem } from './convo-list-item';
 import { Virtuoso } from 'react-virtuoso';
-import { memo, useCallback } from 'react';
+import { type Convo } from '../utils';
 import { useAtom } from 'jotai';
-
-// Define a union type for the convo object
-type Convo =
-  | RouterOutputs['spaces']['getSpaceConvos']['data'][number]
-  | RouterOutputs['convos']['getOrgMemberConvos']['data'][number];
 
 type ConvoListBaseProps = {
   hidden: boolean;
@@ -33,8 +29,15 @@ export function ConvoListBase({
   fetchNextPage,
   linkBase
 }: ConvoListBaseProps) {
+  const spaceShortcode = useSpaceShortcode(false);
   const [selections, setSelections] = useAtom(convoListSelection);
   const [lastSelected, setLastSelected] = useAtom(lastSelectedConvo);
+
+  // Reset selections when space changes to avoid cross-space selections
+  useEffect(() => {
+    setSelections([]);
+    setLastSelected(null);
+  }, [setLastSelected, setSelections, spaceShortcode]);
 
   const rangeSelect = useCallback(
     (upto: TypeId<'convos'>) => {
@@ -142,19 +145,31 @@ export function ConvoListBase({
     []
   );
 
-  return (
-    <div className="flex h-full flex-col">
-      <Virtuoso
-        data={convos}
-        increaseViewportBy={500}
-        itemContent={itemRenderer}
-        endReached={nextPageFetcher}
-        computeItemKey={computeItemKey}
-        components={{ Footer, EmptyPlaceholder }}
-        style={{ overscrollBehavior: 'contain', overflowX: 'clip' }}
-      />
-    </div>
+  const ConvoList = useMemo(
+    () => (
+      <div className="flex h-full flex-col">
+        <Virtuoso
+          data={convos}
+          increaseViewportBy={500}
+          itemContent={itemRenderer}
+          endReached={nextPageFetcher}
+          computeItemKey={computeItemKey}
+          components={{ Footer, EmptyPlaceholder }}
+          style={{ overscrollBehavior: 'contain', overflowX: 'clip' }}
+        />
+      </div>
+    ),
+    [
+      EmptyPlaceholder,
+      Footer,
+      computeItemKey,
+      convos,
+      itemRenderer,
+      nextPageFetcher
+    ]
   );
+
+  return ConvoList;
 }
 
 type MemoizedConvoItemProps = {

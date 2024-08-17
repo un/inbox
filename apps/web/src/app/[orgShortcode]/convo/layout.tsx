@@ -14,6 +14,14 @@ import {
   useUpdateConvoMessageList$Cache
 } from './utils';
 import {
+  type Dispatch,
+  memo,
+  type ReactNode,
+  type SetStateAction,
+  useEffect,
+  useMemo
+} from 'react';
+import {
   CaretRight,
   ChatCircle,
   Eye,
@@ -22,13 +30,6 @@ import {
   Trash,
   User
 } from '@phosphor-icons/react';
-import {
-  type Dispatch,
-  type ReactNode,
-  type SetStateAction,
-  useEffect,
-  useMemo
-} from 'react';
 import {
   useCurrentConvoId,
   useOrgScopedRouter,
@@ -45,18 +46,58 @@ import {
   showNewConvoPanel
 } from './atoms';
 import { DeleteMultipleConvosModal } from './_components/delete-convos-modal';
-import { ConvoList as OrgConvoList } from './_components/org-convo-list';
 import { useRealtime } from '@/src/providers/realtime-provider';
 import { OrgIssueAlerts } from './_components/org-issue-alerts';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { useIsMobile } from '@/src/hooks/use-is-mobile';
+import { ConvoList } from './_components/convo-list';
 import { usePathname } from 'next/navigation';
 import { platform } from '@/src/lib/trpc';
 import { cn } from '@/src/lib/utils';
 import { ms } from '@u22n/utils/ms';
 import { useState } from 'react';
 import Link from 'next/link';
+
+const RealtimeHandlers = memo(function RealtimeHandler() {
+  const client = useRealtime();
+  const addConvo = useAddSingleConvo$Cache();
+  const toggleConvoHidden = useToggleConvoHidden$Cache();
+  const deleteConvo = useDeleteConvo$Cache();
+  const updateConvoMessageList = useUpdateConvoMessageList$Cache();
+  const adminIssuesCache = platform.useUtils().org.store.getOrgIssues;
+
+  useEffect(() => {
+    client.on('convo:new', ({ publicId }) => addConvo(publicId));
+    client.on('convo:hidden', ({ publicId, hidden, spaceShortcode }) =>
+      toggleConvoHidden(publicId, spaceShortcode, hidden)
+    );
+    client.on('convo:deleted', ({ publicId, spaceShortcode }) =>
+      deleteConvo(publicId, spaceShortcode)
+    );
+    client.on('convo:entry:new', ({ convoPublicId, convoEntryPublicId }) =>
+      updateConvoMessageList(convoPublicId, convoEntryPublicId)
+    );
+    client.on('admin:issue:refresh', () => adminIssuesCache.refetch());
+
+    return () => {
+      client.off('convo:new');
+      client.off('convo:hidden');
+      client.off('convo:deleted');
+      client.off('convo:entry:new');
+      client.off('admin:issue:refresh');
+    };
+  }, [
+    client,
+    addConvo,
+    toggleConvoHidden,
+    deleteConvo,
+    updateConvoMessageList,
+    adminIssuesCache
+  ]);
+
+  return null;
+});
 
 function ChildrenWithOrgIssues({ children }: { children: ReactNode }) {
   const orgShortcode = useOrgShortcode();
@@ -94,48 +135,10 @@ function ConvoNavHeader({
     }
   });
 
-  const adminIssuesCache = platform.useUtils().org.store.getOrgIssues;
-
-  const addConvo = useAddSingleConvo$Cache();
-  const toggleConvoHidden = useToggleConvoHidden$Cache();
-  const deleteConvo = useDeleteConvo$Cache();
-  const updateConvoMessageList = useUpdateConvoMessageList$Cache();
-  const client = useRealtime();
-
   const pathname = usePathname();
   const setNewPanelOpen = useSetAtom(showNewConvoPanel);
   const selectingMode = useAtomValue(convoListSelecting);
   const [selection, setSelection] = useAtom(convoListSelection);
-
-  useEffect(() => {
-    client.on('convo:new', ({ publicId }) => addConvo(publicId));
-    client.on('convo:hidden', ({ publicId, hidden }) =>
-      toggleConvoHidden(publicId, hidden)
-    );
-    client.on('convo:deleted', ({ publicId }) => deleteConvo(publicId));
-    client.on('convo:entry:new', ({ convoPublicId, convoEntryPublicId }) =>
-      updateConvoMessageList(convoPublicId, convoEntryPublicId)
-    );
-    client.on(
-      'admin:issue:refresh',
-      async () => void adminIssuesCache.refetch()
-    );
-
-    return () => {
-      client.off('convo:new');
-      client.off('convo:hidden');
-      client.off('convo:deleted');
-      client.off('convo:entry:new');
-      client.off('admin:issue:refresh');
-    };
-  }, [
-    client,
-    addConvo,
-    toggleConvoHidden,
-    deleteConvo,
-    updateConvoMessageList,
-    adminIssuesCache
-  ]);
 
   const isInConvo =
     !pathname.endsWith('/convo') && !pathname.endsWith('/convo/new');
@@ -332,19 +335,24 @@ export function ConvoLayoutWrapper({
     </div>
   );
 }
+
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [showHidden, setShowHidden] = useState(false);
   const convoList = useMemo(
-    () => <OrgConvoList hidden={showHidden} />,
+    () => <ConvoList hidden={showHidden} />,
     [showHidden]
   );
+  const realtime = useMemo(() => <RealtimeHandlers />, []);
 
   return (
-    <ConvoLayoutWrapper
-      convoList={convoList}
-      showHidden={showHidden}
-      setShowHidden={setShowHidden}>
-      {children}
-    </ConvoLayoutWrapper>
+    <>
+      {realtime}
+      <ConvoLayoutWrapper
+        convoList={convoList}
+        showHidden={showHidden}
+        setShowHidden={setShowHidden}>
+        {children}
+      </ConvoLayoutWrapper>
+    </>
   );
 }

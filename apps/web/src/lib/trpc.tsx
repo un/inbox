@@ -20,7 +20,10 @@ import { env } from '../env';
 
 const queryClient = new QueryClient({
   queryCache: new QueryCache({
-    onError: (err) => toast.error(err.message)
+    onError: (err, { meta }) => {
+      if (meta && meta.noGlobalError === true) return;
+      toast.error(err.message);
+    }
   }),
   defaultOptions: {
     queries: {
@@ -90,3 +93,8 @@ export type ReactQueryOptions =
   inferReactQueryProcedureOptions<TrpcPlatformRouter>;
 export type RouterInputs = inferRouterInputs<TrpcPlatformRouter>;
 export type RouterOutputs = inferRouterOutputs<TrpcPlatformRouter>;
+
+export function logoutCleanup() {
+  localStorage.clear();
+  window.location.replace('/');
+}

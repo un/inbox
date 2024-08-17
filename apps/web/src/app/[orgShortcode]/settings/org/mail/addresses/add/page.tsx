@@ -93,12 +93,7 @@ const addressFormSchema = z.object({
 
 function AddEmail() {
   const orgShortcode = useOrgShortcode();
-
-  const invalidateEmails =
-    platform.useUtils().org.mail.emailIdentities.getOrgEmailIdentities;
-  const invalidateUserEmails =
-    platform.useUtils().org.mail.emailIdentities.getUserEmailIdentities;
-
+  const utils = platform.useUtils();
   const router = useRouter();
 
   const {
@@ -106,9 +101,10 @@ function AddEmail() {
     isPending: isCreatingIdentity,
     error: emailIdentityError
   } = platform.org.mail.emailIdentities.createNewEmailIdentity.useMutation({
-    onSuccess: () => {
+    onSuccess: async () => {
       form.reset();
-      void invalidateEmails.invalidate();
+      await utils.org.mail.emailIdentities.getOrgEmailIdentities.invalidate();
+      await utils.org.mail.emailIdentities.getUserEmailIdentities.invalidate();
     }
   });
 
@@ -171,9 +167,6 @@ function AddEmail() {
         teams: values.canSend.teams
       }
     });
-
-    await invalidateUserEmails.invalidate();
-    await invalidateEmails.invalidate();
 
     router.push(`/${orgShortcode}/settings/org/mail/addresses`);
   };
@@ -631,10 +624,7 @@ const externalAddressFormSchema = z.object({
 
 function AddExternalEmail() {
   const orgShortcode = useOrgShortcode();
-  const invalidateEmails =
-    platform.useUtils().org.mail.emailIdentities.getOrgEmailIdentities;
-  const invalidateUserEmails =
-    platform.useUtils().org.mail.emailIdentities.getUserEmailIdentities;
+  const utils = platform.useUtils();
 
   const router = useRouter();
 
@@ -646,9 +636,10 @@ function AddExternalEmail() {
   const { mutateAsync: createExternalEmailIdentity, isPending: isAdding } =
     platform.org.mail.emailIdentities.external.createNewExternalIdentity.useMutation(
       {
-        onSuccess: () => {
+        onSuccess: async () => {
           form.reset();
-          void invalidateEmails.invalidate();
+          await utils.org.mail.emailIdentities.getOrgEmailIdentities.invalidate();
+          await utils.org.mail.emailIdentities.getUserEmailIdentities.invalidate();
         },
         onError: (e) => {
           toast.error("Couldn't verify SMTP Credentials", {
@@ -733,9 +724,6 @@ function AddExternalEmail() {
       }
     });
 
-    await invalidateUserEmails.invalidate();
-    await invalidateEmails.invalidate();
-
     router.push(`/${orgShortcode}/settings/org/mail/addresses`);
   };
 
@@ -743,7 +731,6 @@ function AddExternalEmail() {
     <div>
       <Form {...form}>
         <div className="my-2 flex w-full flex-col gap-2">
-          {/* {JSON.stringify(spaces)} */}
           <div className="text-sm font-bold">External Email Address</div>
           <div className="grid w-full grid-cols-2 gap-2">
             <FormField

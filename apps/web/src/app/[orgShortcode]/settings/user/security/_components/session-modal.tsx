@@ -8,7 +8,7 @@ import {
   DialogTitle
 } from '@/src/components/shadcn-ui/dialog';
 import { Button } from '@/src/components/shadcn-ui/button';
-import { platform } from '@/src/lib/trpc';
+import { logoutCleanup, platform } from '@/src/lib/trpc';
 import { toast } from 'sonner';
 
 type DeleteAllSessionsModalProps = {
@@ -23,7 +23,7 @@ export function RemoveAllSessionsModal({
   const { mutate: logoutAll, isPending: isLoggingOut } =
     platform.account.security.removeAllSessions.useMutation({
       onSuccess: () => {
-        window.location.replace('/');
+        logoutCleanup();
       },
       onError: (err) => {
         toast.error('Something went wrong', {

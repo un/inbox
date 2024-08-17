@@ -218,7 +218,7 @@ export default function CreateConvoForm({
     });
 
   const [selectedSpace, setSelectedSpace] = useState<string | null>(
-    spaceShortcode
+    ['all', 'personal', null].includes(spaceShortcode) ? null : spaceShortcode
   );
   const { data: userEmailIdentities, isLoading: emailIdentitiesLoading } =
     platform.org.mail.emailIdentities.getUserEmailIdentities.useQuery(
@@ -523,14 +523,12 @@ export default function CreateConvoForm({
       }
       return startConvoCreation(type);
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
+      await addConvo(data.publicId, spaceShortcode);
+      resetDraft();
+      setNewPanelOpen(false);
       toast.success('Convo created, redirecting you to your conversion');
-
-      void addConvo(data.publicId).then(() => {
-        resetDraft();
-        setNewPanelOpen(false);
-        scopedNavigate(`/convo/${data.publicId}`, true);
-      });
+      scopedNavigate(`/convo/${data.publicId}`, true);
     }
   });
 

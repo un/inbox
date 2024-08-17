@@ -29,7 +29,6 @@ import {
   Palette,
   Monitor,
   Question,
-  User,
   SpinnerGap,
   SquaresFour,
   DotsThree
@@ -46,13 +45,13 @@ import {
 import { useOrgScopedRouter, useOrgShortcode } from '@/src/hooks/use-params';
 import { type InferQueryLikeData } from '@trpc/react-query/shared';
 import { Button } from '@/src/components/shadcn-ui/button';
+import { logoutCleanup, platform } from '@/src/lib/trpc';
 import { useIsMobile } from '@/src/hooks/use-is-mobile';
 import { useMutation } from '@tanstack/react-query';
 import { NewSpaceModal } from './new-space-modal';
 import { Avatar } from '@/src/components/avatar';
 import { sidebarSubmenuOpenAtom } from './atoms';
 import { useRouter } from 'next/navigation';
-import { platform } from '@/src/lib/trpc';
 import { useTheme } from 'next-themes';
 import { cn } from '@/src/lib/utils';
 import { ms } from '@u22n/utils/ms';
@@ -201,15 +200,15 @@ function OrgMenu() {
             'bg-base-1 border-base-5 hover:bg-base-2 flex w-full flex-row items-center justify-between gap-2 rounded-lg border p-3 shadow-sm'
           }>
           <div className={'flex w-full flex-row items-center gap-2'}>
-            {isLoading || !currentOrg ? (
-              <div className="flex size-8 items-center justify-center rounded-full border">
-                <SpinnerGap
-                  className="size-6 animate-spin"
-                  size={24}
-                />
-              </div>
-            ) : (
-              <div>
+            <div>
+              {isLoading || !currentOrg ? (
+                <div className="flex size-8 items-center justify-center rounded-full border">
+                  <SpinnerGap
+                    className="size-6 animate-spin"
+                    size={24}
+                  />
+                </div>
+              ) : (
                 <Avatar
                   avatarProfilePublicId={currentOrg.publicId}
                   avatarTimestamp={currentOrg.avatarTimestamp}
@@ -217,8 +216,8 @@ function OrgMenu() {
                   size="lg"
                   hideTooltip
                 />
-              </div>
-            )}
+              )}
+            </div>
             <div
               className={
                 'flex w-full flex-col items-start justify-start gap-1 overflow-hidden'
@@ -283,7 +282,7 @@ export function OrgMenuContent() {
         method: 'POST',
         credentials: 'include'
       });
-      window.location.replace('/');
+      logoutCleanup();
     }
   });
 

@@ -46,9 +46,7 @@ export async function sendRealtimeNotification({
     }
   });
 
-  if (!convoQuery) {
-    return;
-  }
+  if (!convoQuery) return;
 
   const convoPublicId = convoQuery.publicId;
   const orgMembersForNotificationPublicIds: TypeId<'orgMembers'>[] = [];
@@ -90,7 +88,9 @@ export async function sendRealtimeNotification({
         event: 'convo:new',
         orgMemberPublicIds: orgMembersForNotificationPublicIds,
         data: {
-          publicId: convoPublicId
+          publicId: convoPublicId,
+          // TODO: Add spaceShortcode
+          spaceShortcode: null
         }
       })
       .catch(console.error);
@@ -125,7 +125,9 @@ export async function sendRealtimeNotification({
           orgMemberPublicIds: orgMemberPublicIds,
           data: {
             publicId: convoPublicId,
-            hidden: false
+            hidden: false,
+            // TODO: Add spaceShortcode
+            spaceShortcode: null
           }
         })
         .catch(console.error);

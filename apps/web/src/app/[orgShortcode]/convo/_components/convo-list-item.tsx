@@ -7,12 +7,15 @@ import {
   ContextMenuTrigger,
   ContextMenuItem
 } from '@/src/components/shadcn-ui/context-menu';
-import { formatParticipantData, useDeleteConvo$Cache } from '../utils';
+import {
+  type Convo,
+  formatParticipantData,
+  useDeleteConvo$Cache
+} from '../utils';
+import { useOrgShortcode, useSpaceShortcode } from '@/src/hooks/use-params';
 import { Eye, EyeSlash, Trash } from '@phosphor-icons/react/dist/ssr';
 import { Checkbox } from '@/src/components/shadcn-ui/checkbox';
-import { platform, type RouterOutputs } from '@/src/lib/trpc';
 import { AvatarPlus } from '@/src/components/avatar-plus';
-import { useOrgShortcode } from '@/src/hooks/use-params';
 import { useIsMobile } from '@/src/hooks/use-is-mobile';
 import { useTimeAgo } from '@/src/hooks/use-time-ago';
 import { useLongPress } from '@uidotdev/usehooks';
@@ -20,6 +23,7 @@ import { Avatar } from '@/src/components/avatar';
 import { type TypeId } from '@u22n/utils/typeid';
 import { usePathname } from 'next/navigation';
 import { convoListSelecting } from '../atoms';
+import { platform } from '@/src/lib/trpc';
 import { memo, useMemo } from 'react';
 import { cn } from '@/src/lib/utils';
 import { useAtomValue } from 'jotai';
@@ -32,20 +36,21 @@ export const ConvoItem = memo(function ConvoItem({
   hidden,
   linkBase
 }: {
-  convo: RouterOutputs['spaces']['getSpaceConvos']['data'][number];
+  convo: Convo;
   selected: boolean;
   hidden: boolean;
   linkBase: string;
   onSelect: (shiftKey: boolean) => void;
 }) {
   const orgShortcode = useOrgShortcode();
+  const spaceShortcode = useSpaceShortcode(false);
   const selecting = useAtomValue(convoListSelecting);
   const isMobile = useIsMobile();
 
   const deleteConvoFromCache = useDeleteConvo$Cache();
   const { mutate: deleteConvo } = platform.convos.deleteConvo.useMutation({
     onSuccess: (_, { convoPublicId }) =>
-      deleteConvoFromCache(convoPublicId as TypeId<'convos'>)
+      deleteConvoFromCache(convoPublicId as TypeId<'convos'>, spaceShortcode)
   });
   const { mutate: hideConvo } = platform.convos.hideConvo.useMutation();
 

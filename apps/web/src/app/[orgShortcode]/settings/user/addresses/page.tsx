@@ -26,8 +26,7 @@ export default function Page() {
   const {
     data: personalAddresses,
     isLoading: personalAddressesLoading,
-    error: personalAddressesError,
-    refetch: refetchPersonalAddresses
+    error: personalAddressesError
   } = platform.account.addresses.getPersonalAddresses.useQuery();
 
   return (
@@ -112,7 +111,6 @@ export default function Page() {
               setClaimAddressValue(null);
             }
           }}
-          onSuccess={() => refetchPersonalAddresses()}
         />
       )}
     </div>

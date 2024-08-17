@@ -9,7 +9,6 @@ import { ArrowLeft, Info, SpinnerGap } from '@phosphor-icons/react';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { Badge } from '@/src/components/shadcn-ui/badge';
 import { useOrgShortcode } from '@/src/hooks/use-params';
-import { Avatar } from '@/src/components/avatar';
 import { type TypeId } from '@u22n/utils/typeid';
 import { platform } from '@/src/lib/trpc';
 import Link from 'next/link';
