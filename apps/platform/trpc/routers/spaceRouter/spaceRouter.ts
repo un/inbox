@@ -351,27 +351,120 @@ export const spaceRouter = router({
 
       const inputLastPublicId = cursor.lastPublicId ?? 'c_';
 
-      // First, get the space ID from the shortcode
-      const space = await db.query.spaces.findFirst({
-        where: and(
-          eq(spaces.orgId, orgId),
-          eq(spaces.shortcode, spaceShortcode)
-        ),
-        columns: {
-          id: true
-        }
-      });
+      const spaceIdsArray: number[] = [];
 
-      if (!space) {
+      if (spaceShortcode === 'personal') {
+        const orgMemberQuery = await db.query.orgMembers.findFirst({
+          where: eq(orgMembers.orgId, orgId),
+          columns: {
+            id: true
+          },
+          with: {
+            personalSpace: {
+              columns: {
+                id: true
+              }
+            }
+          }
+        });
+        const spaceId = orgMemberQuery?.personalSpace?.id;
+
+        if (!spaceId) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message:
+              'You dont have a personal Space set, please contact support'
+          });
+        }
+        spaceIdsArray.push(spaceId);
+      } else if (spaceShortcode === 'all') {
+        const allOrgOpenSpaces = await db.query.spaces.findMany({
+          where: and(eq(spaces.orgId, orgId), eq(spaces.type, 'open')),
+          columns: {
+            id: true
+          }
+        });
+
+        allOrgOpenSpaces.map((space) => spaceIdsArray.push(space.id));
+
+        const teamMemberships = await db.query.teamMembers.findMany({
+          where: and(
+            eq(teamMembers.orgId, orgId),
+            eq(teamMembers.orgMemberId, org.memberId)
+          ),
+          columns: {
+            teamId: true
+          }
+        });
+        const allTeamIds = Array.from(
+          new Set(teamMemberships.map((tm) => tm.teamId))
+        );
+
+        const orgMemberSpaceMemberSpaces = await db.query.spaceMembers.findMany(
+          {
+            where:
+              allTeamIds.length === 0
+                ? and(
+                    eq(spaceMembers.orgId, orgId),
+                    eq(spaceMembers.orgMemberId, org.memberId)
+                  )
+                : and(
+                    eq(spaceMembers.orgId, orgId),
+                    or(
+                      eq(spaceMembers.orgMemberId, org.memberId),
+                      inArray(spaceMembers.teamId, allTeamIds)
+                    )
+                  ),
+            columns: {
+              spaceId: true
+            }
+          }
+        );
+
+        orgMemberSpaceMemberSpaces.map((space) =>
+          spaceIdsArray.push(space.spaceId)
+        );
+      } else {
+        const spaceQuery = await db.query.spaces.findFirst({
+          where: and(
+            eq(spaces.orgId, orgId),
+            eq(spaces.shortcode, spaceShortcode)
+          ),
+          columns: {
+            id: true
+          }
+        });
+        spaceQuery?.id && spaceIdsArray.push(spaceQuery.id);
+      }
+
+      if (spaceIdsArray.length === 0) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'Space not found'
         });
       }
 
-      // Get all convos associated with the space
+      // // First, get the space ID from the shortcode
+      // const space = await db.query.spaces.findFirst({
+      //   where: and(
+      //     eq(spaces.orgId, orgId),
+      //     eq(spaces.shortcode, spaceShortcode)
+      //   ),
+      //   columns: {
+      //     id: true
+      //   }
+      // });
+
+      // if (!space) {
+      //   throw new TRPCError({
+      //     code: 'NOT_FOUND',
+      //     message: 'Space not found'
+      //   });
+      // }
+
+      // Get all convos associated with the space(s)
       const convoQueryDifferent = await db.query.convoToSpaces.findMany({
-        where: eq(convoToSpaces.spaceId, space.id),
+        where: inArray(convoToSpaces.spaceId, spaceIdsArray),
         columns: {
           convoId: true
         }

@@ -88,6 +88,7 @@ function SpaceItem({
   space: SingleSpaceResponse;
   isPersonal: boolean;
 }) {
+  const { scopedUrl } = useOrgScopedRouter();
   const router = useRouter();
   const orgShortCode = useOrgShortcode();
 
@@ -104,7 +105,11 @@ function SpaceItem({
     <div className="hover:bg-slate-1 group flex w-full max-w-full flex-row items-center gap-2 truncate rounded-lg p-0.5">
       <Link
         className="flex w-full max-w-full flex-row items-center gap-4 truncate p-1"
-        href={`/${orgShortCode}/${spaceData.shortcode}/convo`}>
+        href={
+          isPersonal
+            ? scopedUrl('/personal/convo')
+            : scopedUrl(`/${spaceData.shortcode}/convo`)
+        }>
         <div
           className="flex h-6 min-h-6 w-6 min-w-6 items-center justify-center rounded-sm"
           style={{
@@ -580,6 +585,24 @@ export function SpacesNav() {
           </span>
           <NewSpaceModal />
         </div>
+        {spaceData && spaceData?.length > 1 && (
+          <div className="hover:bg-slate-1 group flex w-full max-w-full flex-row items-center gap-2 truncate rounded-lg p-0.5">
+            <Link
+              className="flex w-full max-w-full flex-row items-center gap-4 truncate p-1"
+              href={scopedUrl('/all/convo')}>
+              <div className="bg-accent-4 text-accent-9 flex h-6 min-h-6 w-6 min-w-6 items-center justify-center rounded-sm">
+                <SquaresFour
+                  className="h-4 w-4"
+                  weight="bold"
+                />
+              </div>
+              <span className="text-slate-12 h-full truncate font-medium">
+                All Conversations
+              </span>
+            </Link>
+          </div>
+        )}
+
         {spaceData?.map((space) => (
           <SpaceItem
             space={space}
@@ -587,40 +610,8 @@ export function SpacesNav() {
             isPersonal={space.publicId === unsortedSpaceData?.personalSpaceId}
           />
         ))}
-        <Link
-          className="hover:bg-base-1 flex w-full max-w-full flex-row items-center gap-2 truncate rounded-lg p-1.5"
-          href={scopedUrl('/convo')}>
-          <div className="bg-blue-4 text-blue-9 flex h-6 w-6 items-center justify-center rounded-sm">
-            <User
-              weight="bold"
-              className={'h-4 w-4'}
-            />
-          </div>
-          <span className="text-base-12 font-medium">All Conversations</span>
-        </Link>
       </div>
     </div>
-    // <div
-    //   className={cn(
-    //     'flex w-full grow flex-col items-start justify-start gap-4 p-0'
-    //   )}>
-    //   <div className="flex w-full flex-col gap-0 p-0">
-    //     <span className="text-base-10 p-1 text-[10px] font-semibold uppercase">
-    //       Spaces
-    //     </span>
-    //     <Link
-    //       className="hover:bg-base-1 flex w-full max-w-full flex-row items-center gap-2 truncate rounded-lg p-1.5"
-    //       href={`/${orgShortcode}/convo`}>
-    //       <div className="bg-blue-4 text-blue-9 flex h-6 w-6 items-center justify-center rounded-sm">
-    //         <User
-    //           weight="bold"
-    //           className={'h-4 w-4'}
-    //         />
-    //       </div>
-    //       <span className="text-base-12 font-medium">My personal space</span>
-    //     </Link>
-    //   </div>
-    // </div>
   );
 }
 
