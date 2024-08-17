@@ -44,6 +44,7 @@ import {
 } from '@/src/components/shadcn-ui/toggle-group';
 import { useOrgScopedRouter, useOrgShortcode } from '@/src/hooks/use-params';
 import { type InferQueryLikeData } from '@trpc/react-query/shared';
+import { Separator } from '@/src/components/shadcn-ui/separator';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { logoutCleanup, platform } from '@/src/lib/trpc';
 import { useIsMobile } from '@/src/hooks/use-is-mobile';
@@ -578,12 +579,10 @@ export function SpacesNav() {
         'flex w-full grow flex-col items-start justify-start gap-4 p-0'
       )}>
       <div className="flex w-full flex-col gap-0 p-0">
-        <div className="flex w-full flex-row items-center justify-between gap-2">
-          <span className="text-slate-10 p-1 text-[10px] font-semibold uppercase">
-            Spaces
-          </span>
-          <NewSpaceModal />
-        </div>
+        <span className="text-slate-10 p-1 text-xs font-semibold uppercase">
+          Spaces
+        </span>
+
         {spaceData && spaceData?.length > 1 && (
           <div className="hover:bg-slate-1 group flex w-full max-w-full flex-row items-center gap-2 truncate rounded-lg p-0.5">
             <Link
@@ -602,13 +601,36 @@ export function SpacesNav() {
           </div>
         )}
 
-        {spaceData?.map((space) => (
-          <SpaceItem
-            space={space}
-            key={space.publicId}
-            isPersonal={space.publicId === unsortedSpaceData?.personalSpaceId}
-          />
-        ))}
+        {spaceData
+          ?.filter(
+            (space) => space.publicId === unsortedSpaceData?.personalSpaceId
+          )
+          .map((space) => (
+            <SpaceItem
+              space={space}
+              key={space.publicId}
+              isPersonal={true}
+            />
+          ))}
+        <Separator className="my-4" />
+
+        <span className="text-slate-10 p-1 text-[10px] font-semibold uppercase">
+          Shared Spaces
+        </span>
+
+        {spaceData
+          ?.filter(
+            (space) => space.publicId !== unsortedSpaceData?.personalSpaceId
+          )
+          .map((space) => (
+            <SpaceItem
+              space={space}
+              key={space.publicId}
+              isPersonal={false}
+            />
+          ))}
+
+        <NewSpaceModal />
       </div>
     </div>
   );

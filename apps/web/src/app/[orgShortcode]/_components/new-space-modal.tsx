@@ -112,17 +112,20 @@ export function NewSpaceModal() {
         setOpen(!open);
       }}>
       <DialogTrigger asChild>
-        <Button
-          size={'icon-sm'}
-          variant={'ghost'}
-          onClick={() => setOpen(true)}>
-          <Tooltip>
-            <TooltipTrigger asChild>
+        <div>
+          <Button
+            size={'xs'}
+            variant={'ghost'}
+            onClick={() => setOpen(true)}
+            asChild>
+            <div className="flex cursor-pointer flex-row gap-2">
               <Plus />
-            </TooltipTrigger>
-            <TooltipContent>Add new Space</TooltipContent>
-          </Tooltip>
-        </Button>
+              <span className="text-slate-10 p-1 text-[10px] font-semibold uppercase">
+                Add Shared Space
+              </span>
+            </div>
+          </Button>
+        </div>
       </DialogTrigger>
 
       <DialogContent>
