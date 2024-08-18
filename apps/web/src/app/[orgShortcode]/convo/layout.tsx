@@ -8,11 +8,28 @@ import {
   BreadcrumbSeparator
 } from '@/src/components/shadcn-ui/breadcrumb';
 import {
+  CaretRight,
+  ChatCircle,
+  Eye,
+  EyeSlash,
+  Minus,
+  SpinnerGap,
+  SquaresFour,
+  Trash,
+  User
+} from '@phosphor-icons/react';
+import {
   useAddSingleConvo$Cache,
   useDeleteConvo$Cache,
   useToggleConvoHidden$Cache,
   useUpdateConvoMessageList$Cache
 } from './utils';
+import {
+  useCurrentConvoId,
+  useOrgScopedRouter,
+  useOrgShortcode,
+  useSpaceShortcode
+} from '@/src/hooks/use-params';
 import {
   type Dispatch,
   memo,
@@ -21,20 +38,6 @@ import {
   useEffect,
   useMemo
 } from 'react';
-import {
-  CaretRight,
-  ChatCircle,
-  Eye,
-  EyeSlash,
-  Minus,
-  Trash,
-  User
-} from '@phosphor-icons/react';
-import {
-  useCurrentConvoId,
-  useOrgScopedRouter,
-  useOrgShortcode
-} from '@/src/hooks/use-params';
 import {
   Tooltip,
   TooltipContent,
@@ -127,6 +130,7 @@ function ConvoNavHeader({
   setShowHidden: Dispatch<SetStateAction<boolean>>;
 }) {
   const orgShortcode = useOrgShortcode();
+  const spaceShortcode = useSpaceShortcode();
   const { scopedUrl } = useOrgScopedRouter();
 
   const { mutate: hideConvo } = platform.convos.hideConvo.useMutation({
@@ -134,6 +138,18 @@ function ConvoNavHeader({
       setSelection([]);
     }
   });
+
+  const spaceDisplayPropertiesQuery =
+    platform.spaces.getSpaceDisplayProperties.useQuery({
+      orgShortcode: orgShortcode,
+      spaceShortcode: spaceShortcode
+    });
+
+  const {
+    data: spaceDisplayProperties,
+    isLoading: spaceDisplayPropertiesLoading,
+    error: spaceDisplayPropertiesError
+  } = spaceDisplayPropertiesQuery;
 
   const pathname = usePathname();
   const setNewPanelOpen = useSetAtom(showNewConvoPanel);
@@ -210,13 +226,31 @@ function ConvoNavHeader({
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem>
-                  <div className="bg-blue-5 text-blue-9 flex h-6 w-6 items-center justify-center rounded-sm">
-                    <User
-                      weight="bold"
-                      className="h-4 w-4"
+                  {spaceDisplayPropertiesLoading ? (
+                    <SpinnerGap
+                      className="size-4 animate-spin"
+                      size={16}
                     />
-                  </div>
-                  <BreadcrumbEllipsis />
+                  ) : spaceDisplayPropertiesError ? (
+                    <span>Unnamed Space</span>
+                  ) : (
+                    <div className="flex w-full max-w-full flex-row items-center gap-2 truncate p-1">
+                      <div
+                        className="flex h-6 min-h-6 w-6 min-w-6 items-center justify-center rounded-sm"
+                        style={{
+                          backgroundColor: `var(--${spaceDisplayProperties?.space?.color ?? 'base'}4)`,
+                          color: `var(--${spaceDisplayProperties?.space?.color ?? 'base'}9)`
+                        }}>
+                        <SquaresFour
+                          className="h-4 w-4"
+                          weight="bold"
+                        />
+                      </div>
+                      <span className="text-slate-11 h-full truncate">
+                        {spaceDisplayProperties?.space?.name ?? 'Unnamed Space'}
+                      </span>
+                    </div>
+                  )}
                 </BreadcrumbItem>
                 <BreadcrumbSeparator>
                   <CaretRight />
