@@ -5,5 +5,5 @@ export function GET(
   _: NextRequest,
   { params }: { params: { orgShortcode: string } }
 ) {
-  redirect(`/${params.orgShortcode}/convo`);
+  redirect(`/${params.orgShortcode}/personal/convo`);
 }

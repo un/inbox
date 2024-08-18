@@ -349,7 +349,7 @@ export function OrgMenuContent() {
             asChild>
             <div
               onClick={() => {
-                router.push(`/${org.shortcode}/convo`);
+                router.push(`/${org.shortcode}/personal/convo`);
               }}
               className={
                 'flex w-full cursor-pointer flex-row items-center justify-between gap-2'

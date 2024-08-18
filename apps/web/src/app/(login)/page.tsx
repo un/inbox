@@ -107,7 +107,7 @@ export default function Page() {
         toast.success('Sign in successful!', {
           description: 'Redirecting you to your conversations'
         });
-        router.replace(`/${defaultOrg}/convo`);
+        router.replace(`/${defaultOrg}/personal/convo`);
       }
     }
   });
@@ -138,7 +138,7 @@ export default function Page() {
           if (!defaultOrgShortcode) {
             router.replace('/join/org');
           } else {
-            router.replace(`/${defaultOrgShortcode}/convo`);
+            router.replace(`/${defaultOrgShortcode}/personal/convo`);
           }
         } else {
           setTwoFactorDialogOpen(true);
