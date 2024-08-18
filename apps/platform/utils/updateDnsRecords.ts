@@ -223,7 +223,7 @@ export async function updateDnsRecords(
     });
     await realtime.emit({
       event: 'admin:issue:refresh',
-      data: null,
+      data: {},
       orgMemberPublicIds: orgAdmins.map((_) => _.publicId)
     });
   }

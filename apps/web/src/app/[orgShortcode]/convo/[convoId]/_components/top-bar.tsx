@@ -170,7 +170,11 @@ const DeleteButton = memo(function DeleteButton({
 
   const { mutate: deleteConvo, isPending: deletingConvo } =
     platform.convos.deleteConvo.useMutation({
-      onSuccess: () => removeConvoFromList(convoId, spaceShortcode)
+      onSuccess: () =>
+        removeConvoFromList({
+          convoPublicId: convoId,
+          spaceShortcode: spaceShortcode ?? 'personal'
+        })
     });
 
   const onDelete = useCallback(
@@ -244,7 +248,10 @@ function DeleteModal({
   const { mutate: hideConvo, isPending: hidingConvo } =
     platform.convos.hideConvo.useMutation({
       onSuccess: async () => {
-        await removeConvoFromList(convoId, spaceShortcode);
+        await removeConvoFromList({
+          convoPublicId: convoId,
+          spaceShortcode: spaceShortcode ?? 'personal'
+        });
         setOpen(false);
       },
       onError: (error) => {
@@ -258,7 +265,10 @@ function DeleteModal({
   const { mutate: deleteConvo, isPending: deletingConvo } =
     platform.convos.deleteConvo.useMutation({
       onSuccess: async () => {
-        await removeConvoFromList(convoId, spaceShortcode);
+        await removeConvoFromList({
+          convoPublicId: convoId,
+          spaceShortcode: spaceShortcode ?? 'personal'
+        });
         setOpen(false);
       }
     });

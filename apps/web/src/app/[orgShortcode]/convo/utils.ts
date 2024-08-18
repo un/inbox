@@ -1,7 +1,8 @@
-import { useOrgShortcode, useSpaceShortcode } from '@/src/hooks/use-params';
 import { platform, type RouterOutputs } from '@/src/lib/trpc';
 import { type InfiniteData } from '@tanstack/react-query';
+import { useOrgShortcode } from '@/src/hooks/use-params';
 import { type TypeId } from '@u22n/utils/typeid';
+import { ms } from '@u22n/utils/ms';
 import { useCallback } from 'react';
 import { produce } from 'immer';
 
@@ -75,31 +76,45 @@ export function useAddSingleConvo$Cache() {
   const utils = platform.useUtils();
 
   return useCallback(
-    async (convoPublicId: TypeId<'convos'>, spaceShortcode?: string | null) => {
-      const convo = await utils.convos.getOrgMemberSpecificConvo.ensureData({
-        convoPublicId,
-        orgShortcode
-      });
-      const targets = spaceShortcode ? [spaceShortcode, 'all'] : ['all'];
+    async ({
+      convoPublicId,
+      spaceShortcode
+    }: {
+      convoPublicId: TypeId<'convos'>;
+      spaceShortcode: string;
+    }) => {
+      const convo = await utils.convos.getOrgMemberSpecificConvo.ensureData(
+        {
+          convoPublicId,
+          orgShortcode
+        },
+        { staleTime: ms('1 minute') }
+      );
+      const targets = [spaceShortcode, 'all']
+        .map((spaceShortcode) =>
+          [true, false].map((includeHidden) => ({
+            orgShortcode,
+            spaceShortcode,
+            includeHidden
+          }))
+        )
+        .flat();
       // Update the target space and all conversations
       for (const target of targets) {
-        utils.spaces.getSpaceConvos.setInfiniteData(
-          { orgShortcode, spaceShortcode: target },
-          (updater) => {
-            if (!updater || !convo) return;
-            // If convo already exists in the cache, don't add it again
-            if (
-              updater.pages.some((page) =>
-                page.data.some((c) => c.publicId === convoPublicId)
-              )
+        utils.spaces.getSpaceConvos.setInfiniteData(target, (updater) => {
+          if (!updater || !convo) return;
+          // If convo already exists in the cache, don't add it again
+          if (
+            updater.pages.some((page) =>
+              page.data.some((c) => c.publicId === convoPublicId)
             )
-              return;
-            return produce(updater, (draft) => {
-              const targetPage = draft.pages[0];
-              if (targetPage) targetPage.data.unshift(structuredClone(convo));
-            });
-          }
-        );
+          )
+            return;
+          return produce(updater, (draft) => {
+            const targetPage = draft.pages[0];
+            if (targetPage) targetPage.data.unshift(structuredClone(convo));
+          });
+        });
       }
     },
     [
@@ -140,10 +155,13 @@ export function useDeleteConvo$Cache() {
   const utils = platform.useUtils();
 
   return useCallback(
-    async (
-      convoPublicId: TypeId<'convos'> | TypeId<'convos'>[],
-      spaceShortcode: string | null
-    ) => {
+    async ({
+      convoPublicId,
+      spaceShortcode
+    }: {
+      convoPublicId: TypeId<'convos'> | TypeId<'convos'>[];
+      spaceShortcode: string;
+    }) => {
       const convos = Array.isArray(convoPublicId)
         ? convoPublicId
         : [convoPublicId];
@@ -182,7 +200,7 @@ export function useDeleteConvo$Cache() {
             )
             .catch(() => void 0);
 
-          const targets = (spaceShortcode ? [spaceShortcode, 'all'] : ['all'])
+          const targets = [spaceShortcode, 'all']
             .map((spaceShortcode) =>
               [true, false].map((includeHidden) => ({
                 orgShortcode,
@@ -262,11 +280,15 @@ export function useToggleConvoHidden$Cache() {
   const utils = platform.useUtils();
 
   return useCallback(
-    async (
-      convoId: TypeId<'convos'> | TypeId<'convos'>[],
-      spaceShortcode: string | null,
+    async ({
+      convoId,
+      spaceShortcode,
       hide = false
-    ) => {
+    }: {
+      convoId: TypeId<'convos'> | TypeId<'convos'>[];
+      spaceShortcode: string;
+      hide: boolean;
+    }) => {
       const convos = Array.isArray(convoId) ? convoId : [convoId];
 
       await Promise.allSettled(
@@ -288,12 +310,15 @@ export function useToggleConvoHidden$Cache() {
           );
 
           const convoToAdd =
-            await utils.convos.getOrgMemberSpecificConvo.ensureData({
-              convoPublicId: convoId,
-              orgShortcode
-            });
+            await utils.convos.getOrgMemberSpecificConvo.ensureData(
+              {
+                convoPublicId: convoId,
+                orgShortcode
+              },
+              { staleTime: ms('1 minute') }
+            );
 
-          const targets = (spaceShortcode ? [spaceShortcode, 'all'] : ['all'])
+          const targets = [spaceShortcode, 'all']
             .map((spaceShortcode) =>
               [true, false].map((includeHidden) => ({
                 orgShortcode,
@@ -340,47 +365,58 @@ export function useUpdateConvoMessageList$Cache() {
   const orgShortcode = useOrgShortcode();
   const utils = platform.useUtils();
   const updateConvoData = useUpdateConvoData$Cache();
-  const spaceShortcode = useSpaceShortcode(false);
 
   // TODO: make the reply mutation return the new convo entry, to save one API call
   return useCallback(
-    async (
-      convoId: TypeId<'convos'>,
-      convoEntryPublicId: TypeId<'convoEntries'>
-    ) => {
+    async ({
+      convoEntryPublicId,
+      spaceShortcode,
+      convoId
+    }: {
+      convoId: TypeId<'convos'>;
+      convoEntryPublicId: TypeId<'convoEntries'>;
+      spaceShortcode: string;
+    }) => {
       await utils.convos.entries.getConvoEntries.cancel({
         convoPublicId: convoId,
         orgShortcode
       });
       const convoEntry =
-        await utils.convos.entries.getConvoSingleEntry.ensureData({
-          convoPublicId: convoId,
-          convoEntryPublicId,
-          orgShortcode
+        await utils.convos.entries.getConvoSingleEntry.ensureData(
+          {
+            convoPublicId: convoId,
+            convoEntryPublicId,
+            orgShortcode
+          },
+          { staleTime: ms('1 minute') }
+        );
+
+      const targets = [spaceShortcode, 'all'];
+
+      for (const target of targets) {
+        await updateConvoData({
+          convoId,
+          dataUpdater: (oldData) => {
+            const author = oldData.participants.find(
+              (participant) =>
+                participant.publicId === convoEntry.entry.author.publicId
+            );
+
+            if (!author) return oldData;
+
+            const newEntry: (typeof oldData.entries)[0] = {
+              author: structuredClone(author),
+              bodyPlainText: convoEntry.entry.bodyPlainText,
+              type: convoEntry.entry.type
+            };
+
+            oldData.lastUpdatedAt = new Date();
+            oldData.entries.unshift(newEntry);
+            return oldData;
+          },
+          spaceShortcode: target
         });
-
-      await updateConvoData(
-        convoId,
-        (oldData) => {
-          const author = oldData.participants.find(
-            (participant) =>
-              participant.publicId === convoEntry.entry.author.publicId
-          );
-
-          if (!author) return oldData;
-
-          const newEntry: (typeof oldData.entries)[0] = {
-            author: structuredClone(author),
-            bodyPlainText: convoEntry.entry.bodyPlainText,
-            type: convoEntry.entry.type
-          };
-
-          oldData.lastUpdatedAt = new Date();
-          oldData.entries.unshift(newEntry);
-          return oldData;
-        },
-        spaceShortcode
-      );
+      }
 
       utils.convos.entries.getConvoEntries.setInfiniteData(
         { convoPublicId: convoId, orgShortcode },
@@ -412,8 +448,7 @@ export function useUpdateConvoMessageList$Cache() {
       utils.convos.entries.getConvoSingleEntry,
       utils.convos.getConvo,
       orgShortcode,
-      updateConvoData,
-      spaceShortcode
+      updateConvoData
     ]
   );
 }
@@ -423,12 +458,16 @@ export function useUpdateConvoData$Cache() {
   const utils = platform.useUtils();
 
   return useCallback(
-    async (
-      convoId: TypeId<'convos'>,
-      dataUpdater: (oldData: Convo) => Convo,
-      spaceShortcode: string | null
-    ) => {
-      const targets = (spaceShortcode ? [spaceShortcode, 'all'] : ['all'])
+    async ({
+      convoId,
+      dataUpdater,
+      spaceShortcode
+    }: {
+      convoId: TypeId<'convos'>;
+      dataUpdater: (oldData: Convo) => Convo;
+      spaceShortcode: string;
+    }) => {
+      const targets = [spaceShortcode, 'all']
         .map((spaceShortcode) =>
           [true, false].map((includeHidden) => ({
             orgShortcode,

@@ -42,6 +42,16 @@ export async function sendRealtimeNotification({
             }
           }
         }
+      },
+      spaces: {
+        columns: {},
+        with: {
+          space: {
+            columns: {
+              publicId: true
+            }
+          }
+        }
       }
     }
   });
@@ -49,26 +59,32 @@ export async function sendRealtimeNotification({
   if (!convoQuery) return;
 
   const convoPublicId = convoQuery.publicId;
-  const orgMembersForNotificationPublicIds: TypeId<'orgMembers'>[] = [];
-  const orgMembersToUnhide: {
-    participantId: number;
-    orgMemberPublicId: TypeId<'orgMembers'>;
-  }[] = [];
+  const spacesForNotification = convoQuery.spaces.map(
+    (space) => space.space.publicId
+  );
+
+  // const orgMembersToUnhide: {
+  //   participantId: number;
+  //   spacePublicId: TypeId<'spaces'>;
+  // }[] = [];
 
   let convoEntryPublicId: TypeId<'convoEntries'> | null = null;
 
-  convoQuery.participants.forEach((participant) => {
-    if (participant.orgMember) {
-      orgMembersForNotificationPublicIds.push(participant.orgMember.publicId);
+  // convoQuery.participants.forEach((participant) => {
+  //   if (participant.orgMember) {
+  //     orgMembersForNotificationPublicIds.push({
+  //       orgMemberPublicId: participant.orgMember.publicId,
+  //       spaceShortcode: ''
+  //     });
 
-      if (participant.hidden) {
-        orgMembersToUnhide.push({
-          participantId: participant.id,
-          orgMemberPublicId: participant.orgMember.publicId
-        });
-      }
-    }
-  });
+  //     if (participant.hidden) {
+  //       orgMembersToUnhide.push({
+  //         participantId: participant.id,
+  //         orgMemberPublicId: participant.orgMember.publicId
+  //       });
+  //     }
+  //   }
+  // });
 
   if (!newConvo) {
     const convoEntryQuery = await db.query.convoEntries.findFirst({
@@ -83,54 +99,47 @@ export async function sendRealtimeNotification({
   }
 
   if (newConvo || !convoEntryPublicId) {
-    await realtime
-      .emit({
-        event: 'convo:new',
-        orgMemberPublicIds: orgMembersForNotificationPublicIds,
-        data: {
-          publicId: convoPublicId,
-          // TODO: Add spaceShortcode
-          spaceShortcode: null
-        }
-      })
-      .catch(console.error);
+    await Promise.allSettled(
+      spacesForNotification.map(
+        async (spacePublicId) =>
+          await realtime.emitOnChannels({
+            channel: `private-space-${spacePublicId}`,
+            event: 'convo:new',
+            data: {
+              publicId: convoPublicId
+            }
+          })
+      )
+    );
   } else {
-    await realtime
-      .emit({
-        event: 'convo:entry:new',
-        orgMemberPublicIds: orgMembersForNotificationPublicIds,
-        data: {
-          convoPublicId,
-          convoEntryPublicId
-        }
-      })
-      .catch(console.error);
-    if (orgMembersToUnhide.length > 0) {
-      const participantIds = orgMembersToUnhide.map(
-        (orgMember) => orgMember.participantId
-      );
-      await db
-        .update(convoParticipants)
-        .set({
-          hidden: false
-        })
-        .where(inArray(convoParticipants.id, participantIds));
+    await Promise.allSettled(
+      spacesForNotification.map(
+        async (spacePublicId) =>
+          await realtime.emitOnChannels({
+            channel: `private-space-${spacePublicId}`,
+            event: 'convo:entry:new',
+            data: {
+              convoPublicId,
+              convoEntryPublicId
+            }
+          })
+      )
+    );
 
-      const orgMemberPublicIds = orgMembersToUnhide.map(
-        (orgMember) => orgMember.orgMemberPublicId
-      );
-      await realtime
-        .emit({
-          event: 'convo:hidden',
-          orgMemberPublicIds: orgMemberPublicIds,
-          data: {
-            publicId: convoPublicId,
-            hidden: false,
-            // TODO: Add spaceShortcode
-            spaceShortcode: null
-          }
-        })
-        .catch(console.error);
-    }
+    //   if (orgMembersToUnhide.length > 0) {
+    //     const participantIds = orgMembersToUnhide.map(
+    //       (orgMember) => orgMember.participantId
+    //     );
+    //     await db
+    //       .update(convoParticipants)
+    //       .set({
+    //         hidden: false
+    //       })
+    //       .where(inArray(convoParticipants.id, participantIds));
+
+    //     const orgMemberPublicIds = orgMembersToUnhide.map(
+    //       (orgMember) => orgMember.orgMemberPublicId
+    //     );
+    //   }
   }
 }

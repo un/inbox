@@ -14,7 +14,7 @@ import { cn } from '@/src/lib/utils';
 import { ms } from '@u22n/utils/ms';
 import Link from 'next/link';
 
-export default function Layout({
+function UnWrappedLayout({
   children
 }: Readonly<{ children: React.ReactNode }>) {
   const orgShortcode = useOrgShortcode();
@@ -72,17 +72,24 @@ export default function Layout({
   }
 
   return (
-    <RealtimeProvider>
-      <div
-        className={cn('bg-base-1 flex h-full gap-0', isMobile && 'flex-col')}>
-        {!isMobile && <Sidebar />}
-        <div className="min-w-0 flex-1 grow overflow-x-auto">{children}</div>
-        {isMobile && !convoId && <BottomNav />}
-        {!isMobile && <NewConvoSheet />}
-        {/* {hasEmailIdentity && !hasEmailIdentity.hasIdentity && (
+    <div className={cn('bg-base-1 flex h-full gap-0', isMobile && 'flex-col')}>
+      {!isMobile && <Sidebar />}
+      <div className="min-w-0 flex-1 grow overflow-x-auto">{children}</div>
+      {isMobile && !convoId && <BottomNav />}
+      {!isMobile && <NewConvoSheet />}
+      {/* {hasEmailIdentity && !hasEmailIdentity.hasIdentity && (
           <ClaimEmailIdentity />
         )} */}
-      </div>
+    </div>
+  );
+}
+
+export default function Layout({
+  children
+}: Readonly<{ children: React.ReactNode }>) {
+  return (
+    <RealtimeProvider>
+      <UnWrappedLayout>{children}</UnWrappedLayout>
     </RealtimeProvider>
   );
 }

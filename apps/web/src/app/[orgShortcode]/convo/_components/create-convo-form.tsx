@@ -524,7 +524,10 @@ export default function CreateConvoForm({
       return startConvoCreation(type);
     },
     onSuccess: async (data) => {
-      await addConvo(data.publicId, spaceShortcode);
+      await addConvo({
+        convoPublicId: data.publicId,
+        spaceShortcode: spaceShortcode ?? 'personal'
+      });
       resetDraft();
       setNewPanelOpen(false);
       toast.success('Convo created, redirecting you to your conversion');

@@ -50,7 +50,10 @@ export const ConvoItem = memo(function ConvoItem({
   const deleteConvoFromCache = useDeleteConvo$Cache();
   const { mutate: deleteConvo } = platform.convos.deleteConvo.useMutation({
     onSuccess: (_, { convoPublicId }) =>
-      deleteConvoFromCache(convoPublicId as TypeId<'convos'>, spaceShortcode)
+      deleteConvoFromCache({
+        convoPublicId: convoPublicId as TypeId<'convos'>,
+        spaceShortcode: spaceShortcode ?? 'personal'
+      })
   });
   const { mutate: hideConvo } = platform.convos.hideConvo.useMutation();
 

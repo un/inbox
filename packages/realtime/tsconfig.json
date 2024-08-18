@@ -1,6 +1,7 @@
 {
   "extends": "@u22n/tsconfig",
   "compilerOptions": {
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "jsx": "preserve"
   }
 }

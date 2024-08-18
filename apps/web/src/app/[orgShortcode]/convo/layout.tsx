@@ -53,6 +53,7 @@ import { Button } from '@/src/components/shadcn-ui/button';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { useIsMobile } from '@/src/hooks/use-is-mobile';
 import { ConvoList } from './_components/convo-list';
+import { usePrevious } from '@uidotdev/usehooks';
 import { usePathname } from 'next/navigation';
 import { platform } from '@/src/lib/trpc';
 import { cn } from '@/src/lib/utils';
@@ -60,41 +61,80 @@ import { ms } from '@u22n/utils/ms';
 import { useState } from 'react';
 import Link from 'next/link';
 
+const arrayEquals = <T,>(a: T[], b: T[]) =>
+  a.length === b.length && a.every((v, i) => v === b[i]);
+
 const RealtimeHandlers = memo(function RealtimeHandler() {
   const client = useRealtime();
+  const orgShortcode = useOrgShortcode();
   const addConvo = useAddSingleConvo$Cache();
   const toggleConvoHidden = useToggleConvoHidden$Cache();
   const deleteConvo = useDeleteConvo$Cache();
   const updateConvoMessageList = useUpdateConvoMessageList$Cache();
   const adminIssuesCache = platform.useUtils().org.store.getOrgIssues;
 
-  useEffect(() => {
-    client.on('convo:new', ({ publicId }) => addConvo(publicId));
-    client.on('convo:hidden', ({ publicId, hidden, spaceShortcode }) =>
-      toggleConvoHidden(publicId, spaceShortcode, hidden)
-    );
-    client.on('convo:deleted', ({ publicId, spaceShortcode }) =>
-      deleteConvo(publicId, spaceShortcode)
-    );
-    client.on('convo:entry:new', ({ convoPublicId, convoEntryPublicId }) =>
-      updateConvoMessageList(convoPublicId, convoEntryPublicId)
-    );
-    client.on('admin:issue:refresh', () => adminIssuesCache.refetch());
+  const { data: spacesData } = platform.spaces.getOrgMemberSpaces.useQuery(
+    {
+      orgShortcode
+    },
+    {
+      staleTime: ms('1 hour')
+    }
+  );
+  const previousSpaces = usePrevious(spacesData?.spaces);
 
-    return () => {
-      client.off('convo:new');
-      client.off('convo:hidden');
-      client.off('convo:deleted');
-      client.off('convo:entry:new');
-      client.off('admin:issue:refresh');
-    };
+  // Root subscribers
+  useEffect(() => {
+    const unsubscribe = client.subscribe('admin:issue:refresh', () =>
+      adminIssuesCache.refetch()
+    );
+    return () => unsubscribe();
+  }, [client, adminIssuesCache]);
+
+  // Spaces subscribers
+  useEffect(() => {
+    if (
+      !spacesData?.spaces ||
+      arrayEquals(
+        spacesData.spaces.map((s) => s.publicId),
+        previousSpaces?.map((s) => s.publicId) ?? []
+      )
+    )
+      return;
+
+    spacesData.spaces.map((space) => {
+      const { listen, unsubscribe } = client.subscribeChannel(
+        `private-space-${space.publicId}`
+      );
+
+      const spaceShortcode = space.personalSpace ? 'personal' : space.shortcode;
+
+      listen('convo:new', ({ publicId }) => {
+        return addConvo({ convoPublicId: publicId, spaceShortcode });
+      });
+      listen('convo:hidden', ({ publicId, hidden }) =>
+        toggleConvoHidden({ convoId: publicId, spaceShortcode, hide: hidden })
+      );
+      listen('convo:deleted', ({ publicId }) =>
+        deleteConvo({ convoPublicId: publicId, spaceShortcode })
+      );
+      listen('convo:entry:new', ({ convoPublicId, convoEntryPublicId }) =>
+        updateConvoMessageList({
+          convoId: convoPublicId,
+          convoEntryPublicId,
+          spaceShortcode
+        })
+      );
+      return unsubscribe;
+    });
   }, [
-    client,
     addConvo,
-    toggleConvoHidden,
+    client,
     deleteConvo,
-    updateConvoMessageList,
-    adminIssuesCache
+    previousSpaces,
+    spacesData?.spaces,
+    toggleConvoHidden,
+    updateConvoMessageList
   ]);
 
   return null;

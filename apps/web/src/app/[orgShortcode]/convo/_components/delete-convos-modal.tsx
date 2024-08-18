@@ -38,7 +38,10 @@ export function DeleteMultipleConvosModal({
     platform.convos.deleteConvo.useMutation({
       onSuccess: async () => {
         setOpen(false);
-        await deleteConvoCache(selections, spaceShortcode);
+        await deleteConvoCache({
+          convoPublicId: selections,
+          spaceShortcode: spaceShortcode ?? 'personal'
+        });
         setSelections([]);
       }
     });

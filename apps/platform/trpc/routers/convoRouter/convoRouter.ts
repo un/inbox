@@ -878,11 +878,29 @@ export const convoRouter = router({
         });
       }
 
+      const spaceShortCodes = await db.query.convoToSpaces
+        .findMany({
+          where: eq(
+            convoToSpaces.convoId,
+            Number(insertConvoResponse.insertId)
+          ),
+          columns: {
+            id: true
+          },
+          with: {
+            space: {
+              columns: {
+                shortcode: true
+              }
+            }
+          }
+        })
+        .then((spaces) => spaces.map((space) => space.space.shortcode));
+
       await realtime.emit({
         orgMemberPublicIds: orgMemberPublicIdsForNotifications,
         event: 'convo:new',
-        // TODO: Add spaceShortcode
-        data: { publicId: newConvoPublicId, spaceShortcode: null }
+        data: { publicId: newConvoPublicId }
       });
 
       return {
@@ -1727,14 +1745,31 @@ export const convoRouter = router({
         new Set(orgMemberConvoParticipants.map((p) => p.orgMember!.publicId))
       );
 
+      const spaceShortCodes = await db.query.convoToSpaces
+        .findMany({
+          where: inArray(
+            convoToSpaces.convoId,
+            convosQuery.map((convo) => convo.id)
+          ),
+          columns: {
+            id: true
+          },
+          with: {
+            space: {
+              columns: {
+                shortcode: true
+              }
+            }
+          }
+        })
+        .then((spaces) => spaces.map((space) => space.space.shortcode));
+
       await realtime.emit({
         orgMemberPublicIds: orgMemberPublicIdsForNotifications,
         event: 'convo:hidden',
-        // TODO: Add spaceShortcode
         data: {
           publicId: convoPublicIds,
-          hidden: !input.unhide,
-          spaceShortcode: null
+          hidden: !input.unhide
         }
       });
 
@@ -1977,6 +2012,22 @@ export const convoRouter = router({
         }
       });
 
+      const spaceShortCodes = await db.query.convoToSpaces
+        .findMany({
+          where: inArray(convoToSpaces.convoId, convoIds),
+          columns: {
+            id: true
+          },
+          with: {
+            space: {
+              columns: {
+                shortcode: true
+              }
+            }
+          }
+        })
+        .then((spaces) => spaces.map((space) => space.space.shortcode));
+
       const orgMemberPublicIdsForNotifications = Array.from(
         new Set(
           convoQueryResponses
@@ -1993,8 +2044,7 @@ export const convoRouter = router({
         await realtime.emit({
           orgMemberPublicIds: orgMemberPublicIdsForNotifications,
           event: 'convo:deleted',
-          // TODO: Add spaceShortcode
-          data: { publicId: convoPublicId, spaceShortcode: null }
+          data: { publicId: convoPublicId }
         });
       }
 

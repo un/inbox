@@ -1,7 +1,8 @@
 import { orgMembers, spaces, teamMembers } from '@u22n/database/schema';
 import type { SpaceMemberRole, SpaceType } from '@u22n/utils/spaces';
 import { eq, and, like, inArray } from '@u22n/database/orm';
-import type { DBType } from '@u22n/database';
+import type { TypeId } from '@u22n/utils/typeid';
+import { db, type DBType } from '@u22n/database';
 import { TRPCError } from '@trpc/server';
 
 // Find a user's personal space
@@ -286,4 +287,28 @@ export async function isOrgMemberSpaceMember({
   }
 
   return spaceMembershipResponse;
+}
+
+export async function verifySpaceMembership({
+  orgId,
+  spacePublicId,
+  orgMemberId
+}: {
+  spacePublicId: TypeId<'spaces'>;
+  orgId: number;
+  orgMemberId: number;
+}) {
+  const space = await db.query.spaces.findFirst({
+    where: and(eq(spaces.orgId, orgId), eq(spaces.publicId, spacePublicId)),
+    columns: {
+      shortcode: true
+    }
+  });
+  if (!space) return false;
+  return isOrgMemberSpaceMember({
+    db,
+    orgId,
+    spaceShortcode: space.shortcode,
+    orgMemberId
+  }).then(({ permissions }) => permissions.canRead);
 }

@@ -161,10 +161,14 @@ export function ReplyBox({
         messageType: type,
         sendAsEmailIdentityPublicId: emailIdentity ?? undefined
       });
-      await addConvoToCache(convoId, publicId);
-      await updateConvoData(
+      await addConvoToCache({
         convoId,
-        (oldData) => {
+        convoEntryPublicId: publicId,
+        spaceShortcode: spaceShortcode ?? 'personal'
+      });
+      await updateConvoData({
+        convoId,
+        dataUpdater: (oldData) => {
           const author = oldData.participants.find(
             (participant) =>
               participant.publicId === oldData.entries[0]?.author.publicId
@@ -179,8 +183,8 @@ export function ReplyBox({
           oldData.entries.unshift(newEntry);
           return oldData;
         },
-        spaceShortcode
-      );
+        spaceShortcode: spaceShortcode ?? 'personal'
+      });
 
       onReply();
     },
