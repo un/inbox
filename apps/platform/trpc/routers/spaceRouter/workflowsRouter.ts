@@ -68,6 +68,90 @@ export const spaceWorkflowsRouter = router({
         closed: closedWorkflows
       };
     }),
+  enableSpacesWorkflows: orgProcedure
+    .input(
+      z.object({
+        spaceShortcode: z.string().min(1).max(64)
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { db, org } = ctx;
+
+      const spaceLookup = await isOrgMemberSpaceMember({
+        db,
+        orgId: org.id,
+        spaceShortcode: input.spaceShortcode,
+        orgMemberId: org.memberId
+      });
+
+      // check if the space already has workflows
+      const spaceWorkflowsQueryResponse =
+        await ctx.db.query.spaceWorkflows.findMany({
+          where: and(
+            eq(spaceWorkflows.orgId, ctx.org.id),
+            eq(spaceWorkflows.spaceId, spaceLookup.spaceId)
+          ),
+          columns: {
+            id: true
+          }
+        });
+
+      if (spaceWorkflowsQueryResponse.length > 0) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Space already has workflows'
+        });
+      }
+
+      type WorkflowInsert = typeof spaceWorkflows.$inferInsert;
+      const initialWorkflows: WorkflowInsert[] = [
+        {
+          publicId: typeIdGenerator('spaceWorkflows'),
+          orgId: org.id,
+          spaceId: spaceLookup.spaceId,
+          name: 'New',
+          description: '',
+          type: 'open',
+          icon: 'circle',
+          color: 'blue',
+          order: 1,
+          disabled: false,
+          createdByOrgMemberId: org.memberId
+        },
+        {
+          publicId: typeIdGenerator('spaceWorkflows'),
+          orgId: org.id,
+          spaceId: spaceLookup.spaceId,
+          name: 'In Progress',
+          description: '',
+          type: 'active',
+          icon: 'circle',
+          color: 'orange',
+          order: 1,
+          disabled: false,
+          createdByOrgMemberId: org.memberId
+        },
+        {
+          publicId: typeIdGenerator('spaceWorkflows'),
+          orgId: org.id,
+          spaceId: spaceLookup.spaceId,
+          name: 'Completed',
+          description: '',
+          type: 'closed',
+          icon: 'circle',
+          color: 'jade',
+          order: 1,
+          disabled: false,
+          createdByOrgMemberId: org.memberId
+        }
+      ];
+
+      await db.insert(spaceWorkflows).values(initialWorkflows);
+
+      return {
+        success: true
+      };
+    }),
   addNewSpaceWorkflow: orgProcedure
     .input(
       z.object({

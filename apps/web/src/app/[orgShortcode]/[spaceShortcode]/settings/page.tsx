@@ -18,6 +18,7 @@ import {
   Globe,
   Pencil,
   Plus,
+  SpinnerGap,
   SquaresFour,
   TagChevron,
   UsersThree
@@ -97,7 +98,7 @@ export default function SettingsPage() {
 
   return (
     <div className="flex w-full flex-col items-center overflow-y-auto">
-      <div className="flex max-w-screen-sm flex-col gap-8 p-4">
+      <div className="flex max-w-screen-md flex-col gap-8 p-4">
         {isLoading ? (
           <div>Loading...</div>
         ) : !spaceSettings?.settings ? (
@@ -153,8 +154,8 @@ export default function SettingsPage() {
             )}
             <div className="flex w-full flex-row items-center gap-4">
               <div className="flex flex-col gap-2">
-                <SettingsTitle title="Space ID" />
                 <div className="flex w-full flex-row items-center gap-2">
+                  <SettingsTitle title="Space ID" />
                   <span className="text-base-12 w-fit text-sm">
                     {spaceSettings?.settings?.publicId}
                   </span>
@@ -339,7 +340,11 @@ function DescriptionField({
         </div>
       ) : (
         <div className="flex flex-row items-center gap-2">
-          <span className="">{initialValue}</span>
+          {initialValue === '' ? (
+            <span className="text-base-10 text-xs">Description</span>
+          ) : (
+            <span className="">{initialValue}</span>
+          )}
           <Button
             variant={'ghost'}
             size={'icon-sm'}
@@ -565,9 +570,19 @@ function Workflows({
       spaceShortcode: spaceShortcode
     });
 
+  const spaceWorkflowUtils =
+    platform.useUtils().spaces.workflows.getSpacesWorkflows;
+
   const { data: canIHazWorkflows } =
     platform.org.iCanHaz.spaceWorkflow.useQuery({
       orgShortcode: orgShortcode
+    });
+
+  const { mutateAsync: enableWorkflows, isPending: enablingWorkflows } =
+    platform.spaces.workflows.enableSpacesWorkflows.useMutation({
+      onSuccess: () => {
+        void spaceWorkflowUtils.invalidate();
+      }
     });
 
   const hasWorkflowsConfigured = useMemo(() => {
@@ -577,10 +592,6 @@ function Workflows({
       !!spaceWorkflows?.closed?.length
     );
   }, [spaceWorkflows]);
-
-  const [useWorkflows, setUseWorkflows] = useState<boolean>(
-    hasWorkflowsConfigured
-  );
 
   const canAddOpenWorkflow = useMemo(() => {
     if (!canIHazWorkflows) return false;
@@ -638,45 +649,27 @@ function Workflows({
         <div>
           <span>Loading Workflows...</span>
         </div>
-      ) : !useWorkflows && !hasWorkflowsConfigured ? (
+      ) : !hasWorkflowsConfigured ? (
         <div className="flex w-full flex-row items-center justify-between gap-8">
           <span>Enable Workflows</span>
-          <Switch onClick={() => setUseWorkflows(true)} />
+          {enablingWorkflows ? (
+            <SpinnerGap className="text-base-11 h-8 w-8 animate-spin" />
+          ) : (
+            <Switch
+              onClick={() =>
+                enableWorkflows({
+                  orgShortcode: orgShortcode,
+                  spaceShortcode: spaceShortcode
+                })
+              }
+            />
+          )}
         </div>
       ) : (
         <div className="bg-base-2 border-base-5 flex flex-col gap-2 rounded-md border p-4">
           <div className="flex flex-col gap-2">
             <div className="bg-base-3 flex w-full flex-row justify-between gap-2 rounded-md p-4">
               <span className="text-base-11 text-sm font-semibold">Open</span>
-              {isSpaceAdmin &&
-                (canAddOpenWorkflow ? (
-                  <Button
-                    variant={'ghost'}
-                    size={'icon-sm'}
-                    onClick={() => setShowNewOpenWorkflow(true)}>
-                    <Plus />
-                  </Button>
-                ) : (
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <div className="flex flex-row items-center justify-start gap-4">
-                        <span className="text-base-1 bg-base-12 rounded-sm px-1.5 py-0.5 text-xs">
-                          Pro plan
-                        </span>
-                        <Button
-                          variant={'ghost'}
-                          size={'icon-sm'}
-                          disabled>
-                          <Plus />
-                        </Button>
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      Upgrade to <span className="font-semibold">Pro</span> plan
-                      to add more Workflows
-                    </TooltipContent>
-                  </Tooltip>
-                ))}
             </div>
             <div className="dragdrop-area flex flex-col gap-6 p-4">
               {!spaceWorkflows?.open?.length ? (
@@ -705,19 +698,21 @@ function Workflows({
                   showNewWorkflowComponent={setShowNewOpenWorkflow}
                 />
               )}
-            </div>
-          </div>
-          <div className="flex flex-col gap-2">
-            <div className="bg-base-3 flex w-full flex-row justify-between gap-2 rounded-md p-4">
-              <span className="text-base-11 text-sm font-semibold">Active</span>
               {isSpaceAdmin &&
-                (canAddActiveWorkflow ? (
-                  <Button
-                    variant={'ghost'}
-                    size={'icon-sm'}
-                    onClick={() => setShowNewActiveWorkflow(true)}>
-                    <Plus />
-                  </Button>
+                (canAddOpenWorkflow ? (
+                  <div className="-mt-4 w-fit">
+                    <Button
+                      variant={'ghost'}
+                      size={'xs'}
+                      onClick={() => setShowNewOpenWorkflow(true)}>
+                      <div className="flex flex-row items-center justify-start gap-4">
+                        <Plus />
+                        <span className="text-xs font-normal">
+                          Add New Workflow
+                        </span>
+                      </div>
+                    </Button>
+                  </div>
                 ) : (
                   <Tooltip>
                     <TooltipTrigger>
@@ -725,12 +720,17 @@ function Workflows({
                         <span className="text-base-1 bg-base-12 rounded-sm px-1.5 py-0.5 text-xs">
                           Pro plan
                         </span>
-                        <Button
-                          variant={'ghost'}
-                          size={'icon-sm'}
-                          disabled>
-                          <Plus />
-                        </Button>
+                        <div className="-mt-4 w-fit">
+                          <Button
+                            variant={'ghost'}
+                            size={'xs'}
+                            disabled>
+                            <div className="flex flex-row items-center justify-start gap-4">
+                              <Plus />{' '}
+                              <span className="text-xs">Add New Workflow</span>
+                            </div>
+                          </Button>
+                        </div>
                       </div>
                     </TooltipTrigger>
                     <TooltipContent>
@@ -739,6 +739,11 @@ function Workflows({
                     </TooltipContent>
                   </Tooltip>
                 ))}
+            </div>
+          </div>
+          <div className="flex flex-col gap-2">
+            <div className="bg-base-3 flex w-full flex-row justify-between gap-2 rounded-md p-4">
+              <span className="text-base-11 text-sm font-semibold">Active</span>
             </div>
             <div className="dragdrop-area flex flex-col gap-6 p-4">
               {!spaceWorkflows?.active?.length ? (
@@ -767,19 +772,21 @@ function Workflows({
                   showNewWorkflowComponent={setShowNewActiveWorkflow}
                 />
               )}
-            </div>
-          </div>
-          <div className="flex flex-col gap-2">
-            <div className="bg-base-3 flex w-full flex-row justify-between gap-2 rounded-md p-4">
-              <span className="text-base-11 text-sm font-semibold">Closed</span>
               {isSpaceAdmin &&
-                (canAddClosedWorkflow ? (
-                  <Button
-                    variant={'ghost'}
-                    size={'icon-sm'}
-                    onClick={() => setShowNewClosedWorkflow(true)}>
-                    <Plus />
-                  </Button>
+                (canAddActiveWorkflow ? (
+                  <div className="-mt-4 w-fit">
+                    <Button
+                      variant={'ghost'}
+                      size={'xs'}
+                      onClick={() => setShowNewActiveWorkflow(true)}>
+                      <div className="flex flex-row items-center justify-start gap-4">
+                        <Plus />
+                        <span className="text-xs font-normal">
+                          Add New Workflow
+                        </span>
+                      </div>
+                    </Button>
+                  </div>
                 ) : (
                   <Tooltip>
                     <TooltipTrigger>
@@ -787,12 +794,17 @@ function Workflows({
                         <span className="text-base-1 bg-base-12 rounded-sm px-1.5 py-0.5 text-xs">
                           Pro plan
                         </span>
-                        <Button
-                          variant={'ghost'}
-                          size={'icon-sm'}
-                          disabled>
-                          <Plus />
-                        </Button>
+                        <div className="-mt-4 w-fit">
+                          <Button
+                            variant={'ghost'}
+                            size={'xs'}
+                            disabled>
+                            <div className="flex flex-row items-center justify-start gap-4">
+                              <Plus />{' '}
+                              <span className="text-xs">Add New Workflow</span>
+                            </div>
+                          </Button>
+                        </div>
                       </div>
                     </TooltipTrigger>
                     <TooltipContent>
@@ -801,6 +813,11 @@ function Workflows({
                     </TooltipContent>
                   </Tooltip>
                 ))}
+            </div>
+          </div>
+          <div className="flex flex-col gap-2">
+            <div className="bg-base-3 flex w-full flex-row justify-between gap-2 rounded-md p-4">
+              <span className="text-base-11 text-sm font-semibold">Closed</span>
             </div>
             <div className="dragdrop-area flex flex-col gap-6 p-4">
               {!spaceWorkflows?.closed?.length ? (
@@ -829,6 +846,47 @@ function Workflows({
                   showNewWorkflowComponent={setShowNewClosedWorkflow}
                 />
               )}
+              {isSpaceAdmin &&
+                (canAddClosedWorkflow ? (
+                  <div className="-mt-4 w-fit">
+                    <Button
+                      variant={'ghost'}
+                      size={'xs'}
+                      onClick={() => setShowNewClosedWorkflow(true)}>
+                      <div className="flex flex-row items-center justify-start gap-4">
+                        <Plus />
+                        <span className="text-xs font-normal">
+                          Add New Workflow
+                        </span>
+                      </div>
+                    </Button>
+                  </div>
+                ) : (
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <div className="flex flex-row items-center justify-start gap-4">
+                        <span className="text-base-1 bg-base-12 rounded-sm px-1.5 py-0.5 text-xs">
+                          Pro plan
+                        </span>
+                        <div className="-mt-4 w-fit">
+                          <Button
+                            variant={'ghost'}
+                            size={'xs'}
+                            disabled>
+                            <div className="flex flex-row items-center justify-start gap-4">
+                              <Plus />{' '}
+                              <span className="text-xs">Add New Workflow</span>
+                            </div>
+                          </Button>
+                        </div>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      Upgrade to <span className="font-semibold">Pro</span> plan
+                      to add more Workflows
+                    </TooltipContent>
+                  </Tooltip>
+                ))}
             </div>
           </div>
         </div>
@@ -960,7 +1018,7 @@ function WorkflowItem({
             )}
             {isAdmin && (
               <DropdownMenu>
-                <DropdownMenuTrigger>
+                <DropdownMenuTrigger asChild>
                   <Button
                     size="icon-sm"
                     variant="ghost">

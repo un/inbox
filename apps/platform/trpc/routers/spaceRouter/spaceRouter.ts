@@ -280,6 +280,33 @@ export const spaceRouter = router({
         spaceShortcode: validatedSpaceShortcode.shortcode
       };
     }),
+  getSpaceDisplayProperties: orgProcedure
+    .input(
+      z.object({
+        spaceShortcode: z.string()
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const { db } = ctx;
+
+      const spaceQueryResponse = await db.query.spaces.findFirst({
+        where: and(
+          eq(spaces.orgId, ctx.org.id),
+          eq(spaces.shortcode, input.spaceShortcode)
+        ),
+        columns: {
+          publicId: true,
+          name: true,
+          avatarTimestamp: true,
+          color: true,
+          icon: true
+        }
+      });
+
+      return {
+        space: spaceQueryResponse
+      };
+    }),
 
   getAccountOrgs: accountProcedure
     .input(
