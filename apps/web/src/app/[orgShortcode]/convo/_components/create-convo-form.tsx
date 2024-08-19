@@ -573,6 +573,7 @@ export default function CreateConvoForm({
       <div className="flex w-full flex-col gap-2 text-sm">
         <h4 className="font-bold">Participants</h4>
         <ParticipantsComboboxPopover
+          disabled={userEmailIdentities?.emailIdentities.length === 0}
           participants={allParticipants}
           loading={allParticipantsLoaded}
           selectedParticipants={selectedParticipants}
@@ -646,39 +647,49 @@ export default function CreateConvoForm({
                     <SelectValue placeholder="Select an email address" />
                   </SelectTrigger>
                   <SelectContent>
-                    {userEmailIdentities?.emailIdentities.map((email) => (
-                      <SelectItem
-                        key={email.publicId}
-                        value={email.publicId}
-                        className="[&>span:last-child]:w-full">
-                        <span
-                          className={cn(
-                            'flex !min-w-0 items-center justify-between',
-                            !email.sendingEnabled && 'text-base-11'
-                          )}>
-                          <span className="truncate">
-                            {`${email.sendName} (${email.username}@${email.domainName})`}
+                    {userEmailIdentities?.emailIdentities.length == 0 ? (
+                      <span
+                        className={cn(
+                          'text-base-11 flex !min-w-0 items-center justify-between truncate text-sm'
+                        )}>
+                        {`No email identities available`}
+                      </span>
+                    ) : (
+                      userEmailIdentities?.emailIdentities.map((email) => (
+                        <SelectItem
+                          key={email.publicId}
+                          value={email.publicId}
+                          className="[&>span:last-child]:w-full">
+                          <span
+                            className={cn(
+                              'flex !min-w-0 items-center justify-between',
+                              !email.sendingEnabled && 'text-base-11'
+                            )}>
+                            <span className="truncate">
+                              {`${email.sendName} (${email.username}@${email.domainName})`}
+                            </span>
+                            {!email.sendingEnabled && (
+                              <Tooltip>
+                                <TooltipTrigger>
+                                  <Question size={14} />
+                                </TooltipTrigger>
+                                <TooltipContent className="flex flex-col">
+                                  <span>
+                                    Sending from this email identity is
+                                    disabled.
+                                  </span>
+                                  <span>
+                                    {isAdmin
+                                      ? 'Please check that the DNS records are correctly set up.'
+                                      : 'Please contact your admin for assistance.'}
+                                  </span>
+                                </TooltipContent>
+                              </Tooltip>
+                            )}
                           </span>
-                          {!email.sendingEnabled && (
-                            <Tooltip>
-                              <TooltipTrigger>
-                                <Question size={14} />
-                              </TooltipTrigger>
-                              <TooltipContent className="flex flex-col">
-                                <span>
-                                  Sending from this email identity is disabled.
-                                </span>
-                                <span>
-                                  {isAdmin
-                                    ? 'Please check that the DNS records are correctly set up.'
-                                    : 'Please contact your admin for assistance.'}
-                                </span>
-                              </TooltipContent>
-                            </Tooltip>
-                          )}
-                        </span>
-                      </SelectItem>
-                    ))}
+                        </SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -743,6 +754,7 @@ export default function CreateConvoForm({
 type ParticipantsComboboxPopoverProps = {
   participants: NewConvoParticipant[];
   loading: boolean;
+  disabled?: boolean;
   selectedParticipants: NewConvoParticipant[];
   setSelectedParticipants: Dispatch<SetStateAction<NewConvoParticipant[]>>;
   setNewEmailParticipants: Dispatch<SetStateAction<string[]>>;
@@ -751,6 +763,7 @@ type ParticipantsComboboxPopoverProps = {
 function ParticipantsComboboxPopover({
   participants,
   loading,
+  disabled = false,
   selectedParticipants,
   setSelectedParticipants,
   setNewEmailParticipants
@@ -768,6 +781,7 @@ function ParticipantsComboboxPopover({
   );
 
   const addEmailParticipant = (email: string) => {
+    if (disabled) return;
     setNewEmailParticipants((prev) =>
       prev.includes(email) ? prev : prev.concat(email)
     );
@@ -788,15 +802,26 @@ function ParticipantsComboboxPopover({
     );
   };
 
+  const handleDisabledClick = () => {
+    if (disabled) {
+      toast.warning(
+        'You cannot add participants to conversation until you have an email identity associated.'
+      );
+    }
+  };
+
   return (
-    <div className="flex w-full items-center space-x-4">
+    <div
+      onClick={() => handleDisabledClick()}
+      className="flex w-full items-center space-x-4">
       <Popover
         open={open}
         onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
-            variant={'outline'}
-            className="h-fit w-full justify-between">
+            variant="outline"
+            className="h-fit w-full justify-between"
+            disabled={disabled}>
             {selectedParticipants.length > 0 ? (
               <div className="flex flex-wrap gap-2 overflow-hidden">
                 {selectedParticipants.map((participant, i) => {
@@ -814,7 +839,6 @@ function ParticipantsComboboxPopover({
                         : participant.address!;
                       break;
                     case 'email':
-                      // eslint-disable-next-line @typescript-eslint/no-unused-vars
                       info = participant.address!;
                       break;
                   }
@@ -838,9 +862,13 @@ function ParticipantsComboboxPopover({
                           hideTooltip
                         />
                         <p className="text-base-11 text-sm">
-                          {participant.own && participant.own
+                          {participant.own
                             ? 'You (already a participant)'
-                            : `${participant.name} ${participant.title ? `(${participant.title})` : ''}`}
+                            : `${participant.name} ${
+                                participant.title
+                                  ? `(${participant.title})`
+                                  : ''
+                              }`}
                         </p>
                         <AvatarIcon
                           avatarProfilePublicId={
@@ -889,7 +917,6 @@ function ParticipantsComboboxPopover({
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={(e) => {
-                  // Hack to prevent cmdk from preventing Home and End keys
                   if (e.key === 'Home' || e.key === 'End') {
                     e.stopPropagation();
                   }
@@ -901,10 +928,8 @@ function ParticipantsComboboxPopover({
                     }
                   }
                 }}
-                onFocus={() => {
-                  // Remove current select value when input is focused
-                  setCurrentSelectValue('');
-                }}
+                onFocus={() => setCurrentSelectValue('')}
+                disabled={disabled}
               />
             </CommandInput>
             <CommandList className="max-h-[calc(var(--radix-popover-content-available-height)*0.9)] overflow-x-clip overflow-y-scroll">
@@ -922,7 +947,7 @@ function ParticipantsComboboxPopover({
                     value={participant.publicId}
                     keywords={participant.keywords}
                     onSelect={(value) => {
-                      if (participant.own) return;
+                      if (disabled || participant.own) return;
                       setSelectedParticipants((prev) =>
                         prev.find((p) => p.publicId === value)
                           ? prev.filter((p) => p.publicId !== value)
@@ -931,7 +956,7 @@ function ParticipantsComboboxPopover({
                     }}>
                     <HoverCard>
                       <Button
-                        variant={'ghost'}
+                        variant="ghost"
                         className={cn(
                           'my-1 w-full items-center justify-start gap-2 px-1',
                           selectedParticipants.find(
@@ -941,8 +966,9 @@ function ParticipantsComboboxPopover({
                             : 'text-base-11'
                         )}
                         disabled={
-                          participant.type === 'orgMember' &&
-                          participant.disabled
+                          disabled ||
+                          (participant.type === 'orgMember' &&
+                            participant.disabled)
                         }
                         onFocus={() =>
                           setCurrentSelectValue(participant.publicId)
@@ -964,9 +990,13 @@ function ParticipantsComboboxPopover({
                               hideTooltip
                             />
                             <p className="text-base-11 text-sm">
-                              {participant.own && participant.own
+                              {participant.own
                                 ? 'You (already a participant)'
-                                : `${participant.name} ${participant.title ? `(${participant.title})` : ''}`}
+                                : `${participant.name} ${
+                                    participant.title
+                                      ? `(${participant.title})`
+                                      : ''
+                                  }`}
                             </p>
                           </HoverCardTrigger>
                           <AvatarIcon
