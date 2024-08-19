@@ -1,12 +1,17 @@
 'use client';
 import {
   Breadcrumb,
-  BreadcrumbEllipsis,
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbSeparator
 } from '@/src/components/shadcn-ui/breadcrumb';
+import {
+  useAddSingleConvo$Cache,
+  useDeleteConvo$Cache,
+  useToggleConvoHidden$Cache,
+  useUpdateConvoMessageList$Cache
+} from './utils';
 import {
   CaretRight,
   ChatCircle,
@@ -15,15 +20,8 @@ import {
   Minus,
   SpinnerGap,
   SquaresFour,
-  Trash,
-  User
+  Trash
 } from '@phosphor-icons/react';
-import {
-  useAddSingleConvo$Cache,
-  useDeleteConvo$Cache,
-  useToggleConvoHidden$Cache,
-  useUpdateConvoMessageList$Cache
-} from './utils';
 import {
   useCurrentConvoId,
   useOrgScopedRouter,
