@@ -1780,7 +1780,8 @@ export const convoRouter = router({
         ),
         columns: {
           id: true,
-          orgId: true
+          orgId: true,
+          publicId: true
         },
         with: {
           participants: {
@@ -1810,6 +1811,16 @@ export const convoRouter = router({
           entries: {
             columns: {
               id: true
+            }
+          },
+          spaces: {
+            columns: {},
+            with: {
+              space: {
+                columns: {
+                  publicId: true
+                }
+              }
             }
           }
         }
@@ -1980,7 +1991,6 @@ export const convoRouter = router({
         } catch (error) {
           console.error('🔥 Failed to delete convo', error);
           // Rollback throws error for some reason, we need to return the trpc error not the rollback error
-
           try {
             db.rollback();
           } catch {}
@@ -1992,25 +2002,28 @@ export const convoRouter = router({
         }
       });
 
-      const orgMemberPublicIdsForNotifications = Array.from(
-        new Set(
-          convoQueryResponses
-            .flatMap((convo) =>
-              convo.participants.map(
-                (participant) => participant.orgMember?.publicId
-              )
-            )
-            .filter(Boolean) as TypeId<'orgMembers'>[]
-        )
-      );
+      const spaces: Record<TypeId<'spaces'>, TypeId<'convos'>[]> = {};
 
-      if (orgMemberPublicIdsForNotifications.length > 0) {
-        await realtime.emit({
-          orgMemberPublicIds: orgMemberPublicIdsForNotifications,
-          event: 'convo:deleted',
-          data: { publicId: convoPublicId }
+      convoQueryResponses.forEach((convo) => {
+        convo.spaces.forEach((space) => {
+          if (!spaces[space.space.publicId]) {
+            spaces[space.space.publicId] = [];
+          }
+          spaces[space.space.publicId]?.push(convo.publicId);
         });
-      }
+      });
+
+      await Promise.allSettled(
+        Object.entries(spaces).map(async ([spacePublicId, convos]) => {
+          await realtime.emitOnChannels({
+            channel: `private-space-${spacePublicId}`,
+            event: 'convo:deleted',
+            data: {
+              publicId: convos
+            }
+          });
+        })
+      );
 
       return {
         success: true
