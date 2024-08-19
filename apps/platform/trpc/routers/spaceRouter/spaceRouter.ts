@@ -356,7 +356,7 @@ export const spaceRouter = router({
     .input(
       z.object({
         spaceShortcode: z.string(),
-        includeHidden: z.boolean().default(false),
+        // includeHidden: z.boolean().default(false),
         cursor: z
           .object({
             lastUpdatedAt: z.date().optional(),

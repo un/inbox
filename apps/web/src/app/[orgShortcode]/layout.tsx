@@ -3,7 +3,7 @@
 import {
   useAddSingleConvo$Cache,
   useDeleteConvo$Cache,
-  useToggleConvoHidden$Cache,
+  // useToggleConvoHidden$Cache,
   useUpdateConvoMessageList$Cache
 } from './convo/utils';
 import { useCurrentConvoId, useOrgShortcode } from '@/src/hooks/use-params';
@@ -97,7 +97,7 @@ const RealtimeHandlers = memo(function RealtimeHandler() {
   const client = useRealtime();
   const orgShortcode = useOrgShortcode();
   const addConvo = useAddSingleConvo$Cache();
-  const toggleConvoHidden = useToggleConvoHidden$Cache();
+  // const toggleConvoHidden = useToggleConvoHidden$Cache();
   const deleteConvo = useDeleteConvo$Cache();
   const updateConvoMessageList = useUpdateConvoMessageList$Cache();
   const adminIssuesCache = platform.useUtils().org.store.getOrgIssues;
@@ -134,9 +134,9 @@ const RealtimeHandlers = memo(function RealtimeHandler() {
       listen('convo:new', ({ publicId }) => {
         return addConvo({ convoPublicId: publicId, spaceShortcode });
       });
-      listen('convo:hidden', ({ publicId, hidden }) =>
-        toggleConvoHidden({ convoId: publicId, spaceShortcode, hide: hidden })
-      );
+      // listen('convo:hidden', ({ publicId, hidden }) =>
+      //   toggleConvoHidden({ convoId: publicId, spaceShortcode, hide: hidden })
+      // );
       listen('convo:deleted', ({ publicId }) =>
         deleteConvo({ convoPublicId: publicId, spaceShortcode })
       );
@@ -155,7 +155,7 @@ const RealtimeHandlers = memo(function RealtimeHandler() {
     deleteConvo,
     previousSpaces,
     spacesData?.spaces,
-    toggleConvoHidden,
+    // toggleConvoHidden,
     updateConvoMessageList
   ]);
 

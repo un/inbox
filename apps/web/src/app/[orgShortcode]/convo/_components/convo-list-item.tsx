@@ -13,10 +13,10 @@ import {
   useDeleteConvo$Cache
 } from '../utils';
 import { useOrgShortcode, useSpaceShortcode } from '@/src/hooks/use-params';
-import { Eye, EyeSlash, Trash } from '@phosphor-icons/react/dist/ssr';
 import { Checkbox } from '@/src/components/shadcn-ui/checkbox';
 import { AvatarPlus } from '@/src/components/avatar-plus';
 import { useIsMobile } from '@/src/hooks/use-is-mobile';
+import { Trash } from '@phosphor-icons/react/dist/ssr';
 import { useTimeAgo } from '@/src/hooks/use-time-ago';
 import { useLongPress } from '@uidotdev/usehooks';
 import { Avatar } from '@/src/components/avatar';
@@ -33,12 +33,12 @@ export const ConvoItem = memo(function ConvoItem({
   convo,
   selected,
   onSelect,
-  hidden,
+  // hidden,
   linkBase
 }: {
   convo: Convo;
   selected: boolean;
-  hidden: boolean;
+  // hidden: boolean;
   linkBase: string;
   onSelect: (shiftKey: boolean) => void;
 }) {
@@ -55,7 +55,7 @@ export const ConvoItem = memo(function ConvoItem({
         spaceShortcode: spaceShortcode ?? 'personal'
       })
   });
-  const { mutate: hideConvo } = platform.convos.hideConvo.useMutation();
+  // const { mutate: hideConvo } = platform.convos.hideConvo.useMutation();
 
   const timeAgo = useTimeAgo(convo.lastUpdatedAt);
 
@@ -197,7 +197,7 @@ export const ConvoItem = memo(function ConvoItem({
       </ContextMenuTrigger>
       <ContextMenuContent>
         <ContextMenuGroup>
-          <ContextMenuItem
+          {/* <ContextMenuItem
             className="gap-2"
             onClick={() =>
               hideConvo({
@@ -215,7 +215,7 @@ export const ConvoItem = memo(function ConvoItem({
                 <EyeSlash /> Hide
               </>
             )}
-          </ContextMenuItem>
+          </ContextMenuItem> */}
           <ContextMenuItem
             className="gap-2"
             onClick={async () =>

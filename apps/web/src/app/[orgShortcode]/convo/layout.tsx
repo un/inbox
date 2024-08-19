@@ -9,8 +9,8 @@ import {
 import {
   CaretRight,
   ChatCircle,
-  Eye,
-  EyeSlash,
+  // Eye,
+  // EyeSlash,
   Minus,
   SpinnerGap,
   SquaresFour,
@@ -28,9 +28,9 @@ import {
   TooltipTrigger
 } from '@/src/components/shadcn-ui/tooltip';
 import {
-  type Dispatch,
+  // type Dispatch,
   type ReactNode,
-  type SetStateAction,
+  // type SetStateAction,
   useMemo
 } from 'react';
 import {
@@ -48,7 +48,6 @@ import { usePathname } from 'next/navigation';
 import { platform } from '@/src/lib/trpc';
 import { cn } from '@/src/lib/utils';
 import { ms } from '@u22n/utils/ms';
-import { useState } from 'react';
 import Link from 'next/link';
 
 function ChildrenWithOrgIssues({ children }: { children: ReactNode }) {
@@ -71,22 +70,24 @@ function ChildrenWithOrgIssues({ children }: { children: ReactNode }) {
   );
 }
 
-function ConvoNavHeader({
-  showHidden,
-  setShowHidden
-}: {
-  showHidden: boolean;
-  setShowHidden: Dispatch<SetStateAction<boolean>>;
-}) {
+function ConvoNavHeader(
+  {
+    // showHidden,
+    // setShowHidden
+  }: {
+    // showHidden: boolean;
+    // setShowHidden: Dispatch<SetStateAction<boolean>>;
+  }
+) {
   const orgShortcode = useOrgShortcode();
   const spaceShortcode = useSpaceShortcode();
   const { scopedUrl } = useOrgScopedRouter();
 
-  const { mutate: hideConvo } = platform.convos.hideConvo.useMutation({
-    onSettled: () => {
-      setSelection([]);
-    }
-  });
+  // const { mutate: hideConvo } = platform.convos.hideConvo.useMutation({
+  //   onSettled: () => {
+  //     setSelection([]);
+  //   }
+  // });
 
   const spaceDisplayPropertiesQuery =
     platform.spaces.getSpaceDisplayProperties.useQuery({
@@ -145,7 +146,7 @@ function ConvoNavHeader({
                 </Tooltip>
               </Button>
             </DeleteMultipleConvosModal>
-            <Button
+            {/* <Button
               variant="outline"
               size="icon-sm"
               onClick={() =>
@@ -163,7 +164,7 @@ function ConvoNavHeader({
                   {!showHidden ? 'Hide all selected' : 'Unhide all selected'}
                 </TooltipContent>
               </Tooltip>
-            </Button>
+            </Button> */}
           </div>
         </div>
       ) : (
@@ -213,7 +214,8 @@ function ConvoNavHeader({
                   </div>
                   <BreadcrumbLink asChild>
                     <Link href={scopedUrl('/convo', true)}>
-                      {showHidden ? 'Hidden Conversations' : 'Conversations'}
+                      Conversations
+                      {/* {showHidden ? 'Hidden Conversations' : 'Conversations'} */}
                     </Link>
                   </BreadcrumbLink>
                 </BreadcrumbItem>
@@ -221,12 +223,12 @@ function ConvoNavHeader({
             </Breadcrumb>
           </div>
           <div className={'flex w-fit flex-row gap-2'}>
-            <Button
+            {/* <Button
               variant="outline"
               size="icon"
               onClick={() => setShowHidden(!showHidden)}>
               {showHidden ? <EyeSlash /> : <Eye />}
-            </Button>
+            </Button> */}
             {!isInConvo ? (
               <Button
                 variant="default"
@@ -267,16 +269,16 @@ function ConvoNavHeader({
 //   );
 // }
 
-export function ConvoLayoutWrapper({
+function ConvoLayoutWrapper({
   children,
-  convoList,
-  showHidden,
-  setShowHidden
+  convoList
+  // showHidden,
+  // setShowHidden
 }: {
   children: React.ReactNode;
   convoList: React.ReactNode;
-  showHidden: boolean;
-  setShowHidden: Dispatch<SetStateAction<boolean>>;
+  // showHidden: boolean;
+  // setShowHidden: Dispatch<SetStateAction<boolean>>;
 }) {
   const isMobile = useIsMobile();
   const convoId = useCurrentConvoId();
@@ -294,8 +296,8 @@ export function ConvoLayoutWrapper({
         <>
           <div className="flex h-full w-full min-w-96 flex-col gap-2 p-2 pt-3 xl:col-span-1 xl:min-w-80">
             <ConvoNavHeader
-              showHidden={showHidden}
-              setShowHidden={setShowHidden}
+            // showHidden={showHidden}
+            // setShowHidden={setShowHidden}
             />
             {convoList}
           </div>
@@ -307,8 +309,8 @@ export function ConvoLayoutWrapper({
         (!isInConvo && !isNewPage ? (
           <div className="flex h-full w-full min-w-96 flex-col gap-2 p-2 pt-3 xl:col-span-1 xl:min-w-80">
             <ConvoNavHeader
-              showHidden={showHidden}
-              setShowHidden={setShowHidden}
+            // showHidden={showHidden}
+            // setShowHidden={setShowHidden}
             />
             {convoList}
           </div>
@@ -320,17 +322,23 @@ export function ConvoLayoutWrapper({
 }
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  const [showHidden, setShowHidden] = useState(false);
+  // const [showHidden, setShowHidden] = useState(false);
   const convoList = useMemo(
-    () => <ConvoList hidden={showHidden} />,
-    [showHidden]
+    () => (
+      <ConvoList
+      //  hidden={showHidden}
+      />
+    ),
+    // [showHidden]
+    []
   );
 
   return (
     <ConvoLayoutWrapper
       convoList={convoList}
-      showHidden={showHidden}
-      setShowHidden={setShowHidden}>
+      // showHidden={showHidden}
+      // setShowHidden={setShowHidden}
+    >
       {children}
     </ConvoLayoutWrapper>
   );

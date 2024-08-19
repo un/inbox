@@ -11,7 +11,7 @@ import { type Convo } from '../utils';
 import { useAtom } from 'jotai';
 
 type ConvoListBaseProps = {
-  hidden: boolean;
+  // hidden: boolean;
   convos: Convo[];
   isLoading: boolean;
   hasNextPage?: boolean;
@@ -21,7 +21,7 @@ type ConvoListBaseProps = {
 };
 
 export function ConvoListBase({
-  hidden,
+  // hidden,
   convos,
   isLoading,
   hasNextPage,
@@ -85,12 +85,12 @@ export function ConvoListBase({
           convo={convo}
           selected={selected}
           onSelect={onSelect}
-          hidden={hidden}
+          // hidden={hidden}
           linkBase={linkBase}
         />
       );
     },
-    [selections, onSelect, hidden, linkBase]
+    [selections, onSelect, linkBase]
   );
 
   const nextPageFetcher = useCallback(() => {
@@ -127,17 +127,17 @@ export function ConvoListBase({
             alt="You have no convos"
             className="aspect-square w-full"
           />
-          {hidden ? (
+          {/* {hidden ? (
             <span className="font-semibold">There are no hidden convos</span>
           ) : (
-            <>
-              <span className="font-semibold">There are no messages</span>
-              <span>Enjoy your day!</span>
-            </>
-          )}
+            <> */}
+          <span className="font-semibold">There are no messages</span>
+          <span>Enjoy your day!</span>
+          {/* </> */}
+          {/* )} */}
         </div>
       ),
-    [hidden, isLoading]
+    [isLoading]
   );
 
   const computeItemKey = useCallback(
@@ -175,7 +175,7 @@ export function ConvoListBase({
 type MemoizedConvoItemProps = {
   convo: Convo;
   selected: boolean;
-  hidden: boolean;
+  // hidden: boolean;
   linkBase: string;
   onSelect: (convo: Convo, shiftKey: boolean, selected: boolean) => void;
 };
@@ -184,7 +184,7 @@ const MemoizedConvoItem = memo(function AnimatedConvoItem({
   convo,
   selected,
   onSelect,
-  hidden,
+  // hidden,
   linkBase
 }: MemoizedConvoItemProps) {
   return (
@@ -197,7 +197,7 @@ const MemoizedConvoItem = memo(function AnimatedConvoItem({
           convo={convo}
           selected={selected}
           onSelect={(shiftKey) => onSelect(convo, shiftKey, selected)}
-          hidden={hidden}
+          // hidden={hidden}
           linkBase={linkBase}
         />
       </motion.div>

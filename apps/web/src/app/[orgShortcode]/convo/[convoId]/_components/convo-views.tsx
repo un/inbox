@@ -48,15 +48,15 @@ export function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
   }, [convoData, orgShortcode]);
 
   const participantOwnPublicId = convoData?.ownParticipantPublicId;
-  const convoHidden = useMemo(
-    () =>
-      convoData
-        ? (convoData?.data.participants.find(
-            (p) => p.publicId === participantOwnPublicId
-          )?.hidden ?? false)
-        : null,
-    [convoData, participantOwnPublicId]
-  );
+  // const convoHidden = useMemo(
+  //   () =>
+  //     convoData
+  //       ? (convoData?.data.participants.find(
+  //           (p) => p.publicId === participantOwnPublicId
+  //         )?.hidden ?? false)
+  //       : null,
+  //   [convoData, participantOwnPublicId]
+  // );
 
   const formattedParticipants = useMemo(() => {
     const formattedParticipantsData: NonNullable<
@@ -91,7 +91,7 @@ export function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
       <TopBar
         isConvoLoading={convoDataLoading}
         convoId={convoId}
-        convoHidden={convoHidden}
+        // convoHidden={convoHidden}
         subjects={convoData?.data.subjects}
         participants={formattedParticipants}
         attachments={attachments}

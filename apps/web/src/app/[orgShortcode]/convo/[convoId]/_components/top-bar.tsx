@@ -1,8 +1,8 @@
 'use client';
 
 import {
-  EyeSlash,
-  Eye,
+  // EyeSlash,
+  // Eye,
   Trash,
   FilePdf,
   FileDoc,
@@ -45,7 +45,7 @@ import { memo, useCallback, useState } from 'react';
 import { type TypeId } from '@u22n/utils/typeid';
 import { Participants } from './participants';
 import { cn } from '@/src/lib/utils';
-import { toast } from 'sonner';
+// import { toast } from 'sonner';
 import Link from 'next/link';
 
 type TopBarProps = {
@@ -58,22 +58,22 @@ type TopBarProps = {
   }[];
   isConvoLoading: boolean;
   convoId: TypeId<'convos'>;
-  convoHidden: boolean | null;
+  // convoHidden: boolean | null;
   subjects?: RouterOutputs['convos']['getConvo']['data']['subjects'];
 };
 
 export default function TopBar({
   isConvoLoading,
   convoId,
-  convoHidden,
+  // convoHidden,
   subjects,
   participants,
   attachments
 }: TopBarProps) {
-  const orgShortcode = useOrgShortcode();
+  // const orgShortcode = useOrgShortcode();
   const isMobile = useIsMobile();
-  const { mutate: hideConvo, isPending: hidingConvo } =
-    platform.convos.hideConvo.useMutation();
+  // const { mutate: hideConvo, isPending: hidingConvo } =
+  //   platform.convos.hideConvo.useMutation();
 
   return (
     <div className="border-base-5 bg-base-1 flex w-full flex-col items-center justify-between border-b p-0">
@@ -101,9 +101,9 @@ export default function TopBar({
           <Participants participants={participants} />
           <DeleteButton
             convoId={convoId}
-            hidden={convoHidden}
+            // hidden={convoHidden}
           />
-          <Tooltip>
+          {/* <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 variant={'outline'}
@@ -122,7 +122,7 @@ export default function TopBar({
             <TooltipContent>
               {convoHidden ? 'Unhide Convo' : 'Hide Convo'}
             </TooltipContent>
-          </Tooltip>
+          </Tooltip> */}
         </div>
       </div>
       <div
@@ -153,12 +153,12 @@ export default function TopBar({
 
 type DeleteButtonProps = {
   convoId: TypeId<'convos'>;
-  hidden: boolean | null;
+  // hidden: boolean | null;
 };
 
 const DeleteButton = memo(function DeleteButton({
-  convoId,
-  hidden
+  convoId
+  // hidden
 }: DeleteButtonProps) {
   const { shiftKey } = useModifierKeys();
   const orgShortcode = useOrgShortcode();
@@ -219,7 +219,7 @@ const DeleteButton = memo(function DeleteButton({
           open={deleteModalOpen}
           setOpen={setDeleteModalOpen}
           convoId={convoId}
-          convoHidden={hidden}
+          // convoHidden={hidden}
         />
       )}
     </>
@@ -230,13 +230,13 @@ type DeleteModalProps = {
   open: boolean;
   setOpen: (open: boolean) => void;
   convoId: TypeId<'convos'>;
-  convoHidden: boolean | null;
+  // convoHidden: boolean | null;
 };
 
 function DeleteModal({
   open,
   convoId,
-  convoHidden,
+  // convoHidden,
   setOpen
 }: DeleteModalProps) {
   const orgShortcode = useOrgShortcode();
@@ -245,22 +245,22 @@ function DeleteModal({
   const spaceShortcode = useSpaceShortcode(false);
   const removeConvoFromList = useDeleteConvo$Cache();
 
-  const { mutate: hideConvo, isPending: hidingConvo } =
-    platform.convos.hideConvo.useMutation({
-      onSuccess: async () => {
-        await removeConvoFromList({
-          convoPublicId: convoId,
-          spaceShortcode: spaceShortcode ?? 'personal'
-        });
-        setOpen(false);
-      },
-      onError: (error) => {
-        toast.error('Something went wrong while hiding the convo', {
-          description: error.message
-        });
-        setOpen(false);
-      }
-    });
+  // const { mutate: hideConvo, isPending: hidingConvo } =
+  //   platform.convos.hideConvo.useMutation({
+  //     onSuccess: async () => {
+  //       await removeConvoFromList({
+  //         convoPublicId: convoId,
+  //         spaceShortcode: spaceShortcode ?? 'personal'
+  //       });
+  //       setOpen(false);
+  //     },
+  //     onError: (error) => {
+  //       toast.error('Something went wrong while hiding the convo', {
+  //         description: error.message
+  //       });
+  //       setOpen(false);
+  //     }
+  //   });
 
   const { mutate: deleteConvo, isPending: deletingConvo } =
     platform.convos.deleteConvo.useMutation({
@@ -277,7 +277,7 @@ function DeleteModal({
     <Dialog
       open={open}
       onOpenChange={() => {
-        if (deletingConvo || hidingConvo) return;
+        if (deletingConvo) return;
         setOpen(false);
       }}>
       <DialogContent>
@@ -289,11 +289,11 @@ function DeleteModal({
               all the participants.
             </span>
             <span>Are you sure you want to delete this conversation?</span>
-            {!convoHidden && (
+            {/* {!convoHidden && (
               <span className="py-2">
                 You can also choose to hide this Convo
               </span>
-            )}
+            )} */}
             <span className="py-3 text-xs font-semibold">
               ProTip: Hold{' '}
               <kbd className="bg-base-2 rounded-md border p-1">Shift</kbd> next
@@ -307,11 +307,11 @@ function DeleteModal({
             <Button
               variant="secondary"
               className="flex-1"
-              disabled={hidingConvo || deletingConvo}>
+              disabled={deletingConvo}>
               Cancel
             </Button>
           </DialogClose>
-          {convoHidden ? null : (
+          {/* {convoHidden ? null : (
             <Button
               variant="secondary"
               className="flex-1"
@@ -325,11 +325,11 @@ function DeleteModal({
               }>
               Hide Instead
             </Button>
-          )}
+          )} */}
           <Button
             variant="destructive"
             className="flex-1"
-            disabled={hidingConvo}
+            // disabled={hidingConvo}
             loading={deletingConvo}
             onClick={() => {
               if (currentConvo === convoId) {

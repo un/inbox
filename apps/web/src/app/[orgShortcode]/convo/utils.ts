@@ -90,15 +90,10 @@ export function useAddSingleConvo$Cache() {
         },
         { staleTime: ms('1 minute') }
       );
-      const targets = [spaceShortcode, 'all']
-        .map((spaceShortcode) =>
-          [true, false].map((includeHidden) => ({
-            orgShortcode,
-            spaceShortcode,
-            includeHidden
-          }))
-        )
-        .flat();
+      const targets = [spaceShortcode, 'all'].map((spaceShortcode) => ({
+        orgShortcode,
+        spaceShortcode
+      }));
       // Update the target space and all conversations
       for (const target of targets) {
         utils.spaces.getSpaceConvos.setInfiniteData(target, (updater) => {
@@ -200,15 +195,10 @@ export function useDeleteConvo$Cache() {
             )
             .catch(() => void 0);
 
-          const targets = [spaceShortcode, 'all']
-            .map((spaceShortcode) =>
-              [true, false].map((includeHidden) => ({
-                orgShortcode,
-                spaceShortcode,
-                includeHidden
-              }))
-            )
-            .flat();
+          const targets = [spaceShortcode, 'all'].map((spaceShortcode) => ({
+            orgShortcode,
+            spaceShortcode
+          }));
 
           for (const target of targets) {
             utils.spaces.getSpaceConvos.setInfiniteData(target, (updater) =>
@@ -228,138 +218,138 @@ export function useDeleteConvo$Cache() {
   );
 }
 
-const infiniteConvoListUpdater = (
-  hideFromList: boolean,
-  convoToAdd: Convo | null,
-  convoToRemove: TypeId<'convos'> | null,
-  updater?: InfiniteConvoListUpdater
-) => {
-  if (!updater) return;
-  const clonedUpdater = structuredClone(updater);
+// const infiniteConvoListUpdater = (
+//   hideFromList: boolean,
+//   convoToAdd: Convo | null,
+//   convoToRemove: TypeId<'convos'> | null,
+//   updater?: InfiniteConvoListUpdater
+// ) => {
+//   if (!updater) return;
+//   const clonedUpdater = structuredClone(updater);
 
-  if (hideFromList) {
-    for (const page of clonedUpdater.pages) {
-      const convoIndex = page.data.findIndex(
-        (convo) => convo.publicId === convoToRemove
-      );
-      if (convoIndex === -1) continue;
-      page.data.splice(convoIndex, 1);
-      break;
-    }
-  } else {
-    if (!convoToAdd)
-      throw new Error(
-        'Trying to unhide from convo list without providing the convo to add'
-      );
-    const clonedConvo = structuredClone(convoToAdd);
-    let convoAlreadyAdded = false;
-    for (const page of clonedUpdater.pages) {
-      const insertIndex = page.data.findIndex(
-        (convo) => convo.lastUpdatedAt < clonedConvo.lastUpdatedAt
-      );
-      if (insertIndex === -1) {
-        continue;
-      } else {
-        page.data.splice(insertIndex, 0, clonedConvo);
-      }
-      convoAlreadyAdded = true;
-      break;
-    }
+//   if (hideFromList) {
+//     for (const page of clonedUpdater.pages) {
+//       const convoIndex = page.data.findIndex(
+//         (convo) => convo.publicId === convoToRemove
+//       );
+//       if (convoIndex === -1) continue;
+//       page.data.splice(convoIndex, 1);
+//       break;
+//     }
+//   } else {
+//     if (!convoToAdd)
+//       throw new Error(
+//         'Trying to unhide from convo list without providing the convo to add'
+//       );
+//     const clonedConvo = structuredClone(convoToAdd);
+//     let convoAlreadyAdded = false;
+//     for (const page of clonedUpdater.pages) {
+//       const insertIndex = page.data.findIndex(
+//         (convo) => convo.lastUpdatedAt < clonedConvo.lastUpdatedAt
+//       );
+//       if (insertIndex === -1) {
+//         continue;
+//       } else {
+//         page.data.splice(insertIndex, 0, clonedConvo);
+//       }
+//       convoAlreadyAdded = true;
+//       break;
+//     }
 
-    // If convo is the oldest, add it to the last page as the last item
-    if (!convoAlreadyAdded) {
-      clonedUpdater.pages.at(-1)?.data.push(clonedConvo);
-    }
-  }
-  return clonedUpdater;
-};
+//     // If convo is the oldest, add it to the last page as the last item
+//     if (!convoAlreadyAdded) {
+//       clonedUpdater.pages.at(-1)?.data.push(clonedConvo);
+//     }
+//   }
+//   return clonedUpdater;
+// };
 
 // TODO: Simplify this function later, its too complex
-export function useToggleConvoHidden$Cache() {
-  const orgShortcode = useOrgShortcode();
-  const utils = platform.useUtils();
+// export function useToggleConvoHidden$Cache() {
+//   const orgShortcode = useOrgShortcode();
+//   const utils = platform.useUtils();
 
-  return useCallback(
-    async ({
-      convoId,
-      spaceShortcode,
-      hide = false
-    }: {
-      convoId: TypeId<'convos'> | TypeId<'convos'>[];
-      spaceShortcode: string;
-      hide: boolean;
-    }) => {
-      const convos = Array.isArray(convoId) ? convoId : [convoId];
+//   return useCallback(
+//     async ({
+//       convoId,
+//       spaceShortcode,
+//       hide = false
+//     }: {
+//       convoId: TypeId<'convos'> | TypeId<'convos'>[];
+//       spaceShortcode: string;
+//       hide: boolean;
+//     }) => {
+//       const convos = Array.isArray(convoId) ? convoId : [convoId];
 
-      await Promise.allSettled(
-        convos.map(async (convoId) => {
-          utils.convos.getConvo.setData(
-            { convoPublicId: convoId, orgShortcode },
-            (updater) => {
-              if (!updater) return;
-              const clonedUpdater = structuredClone(updater);
-              const participantIndex =
-                clonedUpdater.data.participants.findIndex(
-                  (participant) =>
-                    participant.publicId === updater.ownParticipantPublicId
-                );
-              if (participantIndex === -1) return;
-              clonedUpdater.data.participants[participantIndex]!.hidden = hide;
-              return clonedUpdater;
-            }
-          );
+//       await Promise.allSettled(
+//         convos.map(async (convoId) => {
+//           utils.convos.getConvo.setData(
+//             { convoPublicId: convoId, orgShortcode },
+//             (updater) => {
+//               if (!updater) return;
+//               const clonedUpdater = structuredClone(updater);
+//               const participantIndex =
+//                 clonedUpdater.data.participants.findIndex(
+//                   (participant) =>
+//                     participant.publicId === updater.ownParticipantPublicId
+//                 );
+//               if (participantIndex === -1) return;
+//               clonedUpdater.data.participants[participantIndex]!.hidden = hide;
+//               return clonedUpdater;
+//             }
+//           );
 
-          const convoToAdd =
-            await utils.convos.getOrgMemberSpecificConvo.ensureData(
-              {
-                convoPublicId: convoId,
-                orgShortcode
-              },
-              { staleTime: ms('1 minute') }
-            );
+//           const convoToAdd =
+//             await utils.convos.getOrgMemberSpecificConvo.ensureData(
+//               {
+//                 convoPublicId: convoId,
+//                 orgShortcode
+//               },
+//               { staleTime: ms('1 minute') }
+//             );
 
-          const targets = [spaceShortcode, 'all']
-            .map((spaceShortcode) =>
-              [true, false].map((includeHidden) => ({
-                orgShortcode,
-                spaceShortcode,
-                includeHidden
-              }))
-            )
-            .flat();
+//           const targets = [spaceShortcode, 'all']
+//             .map((spaceShortcode) =>
+//               [true, false].map((includeHidden) => ({
+//                 orgShortcode,
+//                 spaceShortcode,
+//                 includeHidden
+//               }))
+//             )
+//             .flat();
 
-          for (const target of targets) {
-            if (hide) {
-              utils.spaces.getSpaceConvos.setInfiniteData(target, (updater) =>
-                infiniteConvoListUpdater(
-                  /* hide from non-hidden */ true,
-                  null,
-                  convoId,
-                  updater
-                )
-              );
-            } else {
-              utils.spaces.getSpaceConvos.setInfiniteData(target, (updater) =>
-                infiniteConvoListUpdater(
-                  /* add from hidden */ false,
-                  convoToAdd,
-                  null,
-                  updater
-                )
-              );
-            }
-          }
-        })
-      );
-    },
-    [
-      orgShortcode,
-      utils.convos.getConvo,
-      utils.spaces.getSpaceConvos,
-      utils.convos.getOrgMemberSpecificConvo
-    ]
-  );
-}
+//           for (const target of targets) {
+//             if (hide) {
+//               utils.spaces.getSpaceConvos.setInfiniteData(target, (updater) =>
+//                 infiniteConvoListUpdater(
+//                   /* hide from non-hidden */ true,
+//                   null,
+//                   convoId,
+//                   updater
+//                 )
+//               );
+//             } else {
+//               utils.spaces.getSpaceConvos.setInfiniteData(target, (updater) =>
+//                 infiniteConvoListUpdater(
+//                   /* add from hidden */ false,
+//                   convoToAdd,
+//                   null,
+//                   updater
+//                 )
+//               );
+//             }
+//           }
+//         })
+//       );
+//     },
+//     [
+//       orgShortcode,
+//       utils.convos.getConvo,
+//       utils.spaces.getSpaceConvos,
+//       utils.convos.getOrgMemberSpecificConvo
+//     ]
+//   );
+// }
 
 export function useUpdateConvoMessageList$Cache() {
   const orgShortcode = useOrgShortcode();
@@ -467,15 +457,10 @@ export function useUpdateConvoData$Cache() {
       dataUpdater: (oldData: Convo) => Convo;
       spaceShortcode: string;
     }) => {
-      const targets = [spaceShortcode, 'all']
-        .map((spaceShortcode) =>
-          [true, false].map((includeHidden) => ({
-            orgShortcode,
-            spaceShortcode,
-            includeHidden
-          }))
-        )
-        .flat();
+      const targets = [spaceShortcode, 'all'].map((spaceShortcode) => ({
+        orgShortcode,
+        spaceShortcode
+      }));
 
       for (const target of targets) {
         utils.spaces.getSpaceConvos.setInfiniteData(target, (updater) => {

@@ -1,7 +1,7 @@
-import { convoEntries, convoParticipants, convos } from '@u22n/database/schema';
+import { convoEntries, convos } from '@u22n/database/schema';
 import RealtimeServer from '@u22n/realtime/server';
-import { eq, inArray } from '@u22n/database/orm';
 import type { TypeId } from '@u22n/utils/typeid';
+import { eq } from '@u22n/database/orm';
 import { db } from '@u22n/database';
 import { env } from '../env';
 

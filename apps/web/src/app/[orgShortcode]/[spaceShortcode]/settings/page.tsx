@@ -1350,7 +1350,7 @@ function NewSpaceWorkflow({
   );
 }
 
-export function DeleteWorkflowModal({
+function DeleteWorkflowModal({
   orgShortcode,
   spaceShortcode,
   workflowToDelete

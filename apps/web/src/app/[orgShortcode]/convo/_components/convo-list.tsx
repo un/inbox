@@ -11,10 +11,10 @@ import { platform } from '@/src/lib/trpc';
 import { ms } from '@u22n/utils/ms';
 
 type Props = {
-  hidden: boolean;
+  // hidden: boolean;
 };
 
-export function ConvoList({ hidden }: Props) {
+export function ConvoList({} /*hidden*/ : Props) {
   const orgShortcode = useOrgShortcode();
   const spaceShortcode = useSpaceShortcode(false);
   const { scopedRedirect, scopedUrl } = useOrgScopedRouter();
@@ -29,8 +29,8 @@ export function ConvoList({ hidden }: Props) {
   } = platform.spaces.getSpaceConvos.useInfiniteQuery(
     {
       orgShortcode,
-      spaceShortcode: spaceShortcode ?? 'all',
-      includeHidden: hidden
+      spaceShortcode: spaceShortcode ?? 'all'
+      // includeHidden: hidden
     },
     {
       getNextPageParam: (lastPage) => lastPage.cursor ?? undefined,
@@ -51,7 +51,7 @@ export function ConvoList({ hidden }: Props) {
 
   return (
     <ConvoListBase
-      hidden={hidden}
+      // hidden={hidden}
       convos={allConvos}
       isLoading={isLoading}
       hasNextPage={hasNextPage}

@@ -49,9 +49,7 @@ import { TRPCError } from '@trpc/server';
 import { env } from '~platform/env';
 import { z } from 'zod';
 
-const tipTapExtensions = createExtensionSet({
-  storageUrl: env.STORAGE_URL
-});
+const tipTapExtensions = createExtensionSet({ storageUrl: env.STORAGE_URL });
 
 type Attachment = {
   orgPublicId: TypeId<'org'>;
@@ -97,7 +95,7 @@ export const convoRouter = router({
             type: z.string()
           })
         ),
-        hide: z.boolean().default(false),
+        // hide: z.boolean().default(false),
         spaceShortcode: z.string()
       })
     )
@@ -290,7 +288,7 @@ export const convoRouter = router({
             emailIdentityId: teamParticipant.defaultEmailIdentityId ?? null
           });
 
-          // Check if the team already has access to the space the convo was created in, if yes, dont add the convo to their default space, else, add convo to their default space
+          // Check if the team already has access to the space the convo was created in, if yes, don't add the convo to their default space, else, add convo to their default space
           const spaceQueryResponse = await db.query.spaces.findFirst({
             where: and(
               eq(spaces.orgId, orgId),
@@ -734,7 +732,8 @@ export const convoRouter = router({
           publicId: authorConvoParticipantPublicId,
           orgMemberId: accountOrgMemberId,
           emailIdentityId: authorEmailIdentityId,
-          hidden: input.hide,
+          // hidden: input.hide,
+          hidden: false,
           role: 'assigned'
         });
 
@@ -881,7 +880,7 @@ export const convoRouter = router({
       await sendRealtimeNotification({
         newConvo: true,
         convoId: Number(insertConvoResponse.insertId),
-        convoEntryId: 0
+        convoEntryId: -1
       });
 
       return {
@@ -907,8 +906,8 @@ export const convoRouter = router({
             inline: z.boolean().default(false)
           })
         ),
-        messageType: z.enum(['message', 'draft', 'comment']),
-        hide: z.boolean().default(false)
+        messageType: z.enum(['message', 'draft', 'comment'])
+        // hide: z.boolean().default(false)
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -1264,14 +1263,14 @@ export const convoRouter = router({
         })
         .onDuplicateKeyUpdate({ set: { seenAt: new Date() } });
 
-      if (input.hide) {
-        await db
-          .update(convoParticipants)
-          .set({
-            hidden: true
-          })
-          .where(eq(convoParticipants.id, authorConvoParticipantId));
-      }
+      // if (input.hide) {
+      //   await db
+      //     .update(convoParticipants)
+      //     .set({
+      //       hidden: true
+      //     })
+      //     .where(eq(convoParticipants.id, authorConvoParticipantId));
+      // }
 
       //* send notifications
       await sendRealtimeNotification({
@@ -1650,112 +1649,112 @@ export const convoRouter = router({
 
       return convoQuery;
     }),
-  hideConvo: orgProcedure
-    .input(
-      z.object({
-        convoPublicId: z
-          .array(typeIdValidator('convos'))
-          .or(typeIdValidator('convos')),
-        unhide: z.boolean().default(false)
-      })
-    )
-    .mutation(async ({ ctx, input }) => {
-      const { db, org } = ctx;
-      const { convoPublicId } = input;
-      const orgMemberId = org.memberId;
-      const convoPublicIds = Array.isArray(convoPublicId)
-        ? convoPublicId
-        : [convoPublicId];
+  // hideConvo: orgProcedure
+  //   .input(
+  //     z.object({
+  //       convoPublicId: z
+  //         .array(typeIdValidator('convos'))
+  //         .or(typeIdValidator('convos')),
+  //       unhide: z.boolean().default(false)
+  //     })
+  //   )
+  //   .mutation(async ({ ctx, input }) => {
+  //     const { db, org } = ctx;
+  //     const { convoPublicId } = input;
+  //     const orgMemberId = org.memberId;
+  //     const convoPublicIds = Array.isArray(convoPublicId)
+  //       ? convoPublicId
+  //       : [convoPublicId];
 
-      const convosQuery = await db.query.convos.findMany({
-        columns: {
-          id: true
-        },
-        where: and(
-          inArray(convos.publicId, convoPublicIds),
-          eq(convos.orgId, org.id)
-        ),
-        with: {
-          participants: {
-            columns: {
-              id: true
-            },
-            where: eq(convoParticipants.orgMemberId, orgMemberId),
-            with: {
-              orgMember: {
-                columns: {
-                  publicId: true
-                }
-              }
-            }
-          }
-        }
-      });
+  //     const convosQuery = await db.query.convos.findMany({
+  //       columns: {
+  //         id: true
+  //       },
+  //       where: and(
+  //         inArray(convos.publicId, convoPublicIds),
+  //         eq(convos.orgId, org.id)
+  //       ),
+  //       with: {
+  //         participants: {
+  //           columns: {
+  //             id: true
+  //           },
+  //           where: eq(convoParticipants.orgMemberId, orgMemberId),
+  //           with: {
+  //             orgMember: {
+  //               columns: {
+  //                 publicId: true
+  //               }
+  //             }
+  //           }
+  //         }
+  //       }
+  //     });
 
-      if (convosQuery.length !== convoPublicIds.length) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'One or more conversations not found'
-        });
-      }
+  //     if (convosQuery.length !== convoPublicIds.length) {
+  //       throw new TRPCError({
+  //         code: 'NOT_FOUND',
+  //         message: 'One or more conversations not found'
+  //       });
+  //     }
 
-      const orgMemberConvoParticipants = convosQuery
-        .map((convo) => convo.participants[0])
-        .filter((participant) => typeof participant !== 'undefined');
+  //     const orgMemberConvoParticipants = convosQuery
+  //       .map((convo) => convo.participants[0])
+  //       .filter((participant) => typeof participant !== 'undefined');
 
-      if (orgMemberConvoParticipants.length !== convoPublicIds.length) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'One or more conversations not found'
-        });
-      }
+  //     if (orgMemberConvoParticipants.length !== convoPublicIds.length) {
+  //       throw new TRPCError({
+  //         code: 'NOT_FOUND',
+  //         message: 'One or more conversations not found'
+  //       });
+  //     }
 
-      await db
-        .update(convoParticipants)
-        .set({
-          hidden: !input.unhide
-        })
-        .where(
-          inArray(
-            convoParticipants.id,
-            orgMemberConvoParticipants.map((p) => p.id)
-          )
-        );
+  //     await db
+  //       .update(convoParticipants)
+  //       .set({
+  //         hidden: !input.unhide
+  //       })
+  //       .where(
+  //         inArray(
+  //           convoParticipants.id,
+  //           orgMemberConvoParticipants.map((p) => p.id)
+  //         )
+  //       );
 
-      const orgMemberPublicIdsForNotifications = Array.from(
-        new Set(orgMemberConvoParticipants.map((p) => p.orgMember!.publicId))
-      );
+  //     const orgMemberPublicIdsForNotifications = Array.from(
+  //       new Set(orgMemberConvoParticipants.map((p) => p.orgMember!.publicId))
+  //     );
 
-      const spaceShortCodes = await db.query.convoToSpaces
-        .findMany({
-          where: inArray(
-            convoToSpaces.convoId,
-            convosQuery.map((convo) => convo.id)
-          ),
-          columns: {
-            id: true
-          },
-          with: {
-            space: {
-              columns: {
-                shortcode: true
-              }
-            }
-          }
-        })
-        .then((spaces) => spaces.map((space) => space.space.shortcode));
+  //     const spaceShortCodes = await db.query.convoToSpaces
+  //       .findMany({
+  //         where: inArray(
+  //           convoToSpaces.convoId,
+  //           convosQuery.map((convo) => convo.id)
+  //         ),
+  //         columns: {
+  //           id: true
+  //         },
+  //         with: {
+  //           space: {
+  //             columns: {
+  //               shortcode: true
+  //             }
+  //           }
+  //         }
+  //       })
+  //       .then((spaces) => spaces.map((space) => space.space.shortcode));
 
-      await realtime.emit({
-        orgMemberPublicIds: orgMemberPublicIdsForNotifications,
-        event: 'convo:hidden',
-        data: {
-          publicId: convoPublicIds,
-          hidden: !input.unhide
-        }
-      });
+  //     await realtime.emit({
+  //       orgMemberPublicIds: orgMemberPublicIdsForNotifications,
+  //       event: 'convo:hidden',
+  //       data: {
+  //         publicId: convoPublicIds,
+  //         hidden: !input.unhide
+  //       }
+  //     });
 
-      return { success: true };
-    }),
+  //     return { success: true };
+  //   }),
   deleteConvo: orgProcedure
     .input(
       z.object({
@@ -1992,22 +1991,6 @@ export const convoRouter = router({
           });
         }
       });
-
-      const spaceShortCodes = await db.query.convoToSpaces
-        .findMany({
-          where: inArray(convoToSpaces.convoId, convoIds),
-          columns: {
-            id: true
-          },
-          with: {
-            space: {
-              columns: {
-                shortcode: true
-              }
-            }
-          }
-        })
-        .then((spaces) => spaces.map((space) => space.space.shortcode));
 
       const orgMemberPublicIdsForNotifications = Array.from(
         new Set(
