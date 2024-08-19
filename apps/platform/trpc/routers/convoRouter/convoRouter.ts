@@ -1818,7 +1818,16 @@ export const convoRouter = router({
             with: {
               space: {
                 columns: {
-                  publicId: true
+                  publicId: true,
+                  shortcode: true,
+                  type: true
+                },
+                with: {
+                  members: {
+                    columns: {
+                      orgMemberId: true
+                    }
+                  }
                 }
               }
             }
@@ -1836,14 +1845,23 @@ export const convoRouter = router({
       }
 
       // Check if the user is a direct participant or a team member of the convo and create a boolean array
-      const userInConvos = convoQueryResponses.map((convo) =>
-        convo.participants.some(
-          (participant) =>
-            participant.orgMemberId === accountOrgMemberId ||
-            participant.team?.members.some(
-              (teamMember) => teamMember.orgMemberId === accountOrgMemberId
-            )
-        )
+      //! TODO: Add support for permission based on space
+      const userInConvos = convoQueryResponses.map(
+        (convo) =>
+          convo.participants.some(
+            (participant) =>
+              participant.orgMemberId === accountOrgMemberId ||
+              participant.team?.members.some(
+                (teamMember) => teamMember.orgMemberId === accountOrgMemberId
+              )
+          ) ||
+          convo.spaces.every(
+            (space) =>
+              space.space.type === 'open' ||
+              space.space.members.some(
+                (member) => member.orgMemberId === accountOrgMemberId
+              )
+          )
       );
 
       // If not all convos are owned by the user, throw an error
