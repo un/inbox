@@ -310,5 +310,7 @@ export async function verifySpaceMembership({
     orgId,
     spaceShortcode: space.shortcode,
     orgMemberId
-  }).then(({ permissions }) => permissions.canRead);
+  }).then(({ permissions, role, type }) => {
+    return type === 'open' ? true : role === 'admin' || permissions.canRead;
+  });
 }

@@ -7,12 +7,6 @@ import {
   BreadcrumbSeparator
 } from '@/src/components/shadcn-ui/breadcrumb';
 import {
-  useAddSingleConvo$Cache,
-  useDeleteConvo$Cache,
-  useToggleConvoHidden$Cache,
-  useUpdateConvoMessageList$Cache
-} from './utils';
-import {
   CaretRight,
   ChatCircle,
   Eye,
@@ -29,116 +23,33 @@ import {
   useSpaceShortcode
 } from '@/src/hooks/use-params';
 import {
-  type Dispatch,
-  memo,
-  type ReactNode,
-  type SetStateAction,
-  useEffect,
-  useMemo
-} from 'react';
-import {
   Tooltip,
   TooltipContent,
   TooltipTrigger
 } from '@/src/components/shadcn-ui/tooltip';
+import {
+  type Dispatch,
+  type ReactNode,
+  type SetStateAction,
+  useMemo
+} from 'react';
 import {
   convoListSelecting,
   convoListSelection,
   showNewConvoPanel
 } from './atoms';
 import { DeleteMultipleConvosModal } from './_components/delete-convos-modal';
-import { useRealtime } from '@/src/providers/realtime-provider';
 import { OrgIssueAlerts } from './_components/org-issue-alerts';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { useIsMobile } from '@/src/hooks/use-is-mobile';
 import { ConvoList } from './_components/convo-list';
-import { usePrevious } from '@uidotdev/usehooks';
 import { usePathname } from 'next/navigation';
 import { platform } from '@/src/lib/trpc';
 import { cn } from '@/src/lib/utils';
 import { ms } from '@u22n/utils/ms';
 import { useState } from 'react';
 import Link from 'next/link';
-
-const arrayEquals = <T,>(a: T[], b: T[]) =>
-  a.length === b.length && a.every((v, i) => v === b[i]);
-
-const RealtimeHandlers = memo(function RealtimeHandler() {
-  const client = useRealtime();
-  const orgShortcode = useOrgShortcode();
-  const addConvo = useAddSingleConvo$Cache();
-  const toggleConvoHidden = useToggleConvoHidden$Cache();
-  const deleteConvo = useDeleteConvo$Cache();
-  const updateConvoMessageList = useUpdateConvoMessageList$Cache();
-  const adminIssuesCache = platform.useUtils().org.store.getOrgIssues;
-
-  const { data: spacesData } = platform.spaces.getOrgMemberSpaces.useQuery(
-    {
-      orgShortcode
-    },
-    {
-      staleTime: ms('1 hour')
-    }
-  );
-  const previousSpaces = usePrevious(spacesData?.spaces);
-
-  // Root subscribers
-  useEffect(() => {
-    const unsubscribe = client.subscribe('admin:issue:refresh', () =>
-      adminIssuesCache.refetch()
-    );
-    return () => unsubscribe();
-  }, [client, adminIssuesCache]);
-
-  // Spaces subscribers
-  useEffect(() => {
-    if (
-      !spacesData?.spaces ||
-      arrayEquals(
-        spacesData.spaces.map((s) => s.publicId),
-        previousSpaces?.map((s) => s.publicId) ?? []
-      )
-    )
-      return;
-
-    spacesData.spaces.map((space) => {
-      const { listen, unsubscribe } = client.subscribeChannel(
-        `private-space-${space.publicId}`
-      );
-
-      const spaceShortcode = space.personalSpace ? 'personal' : space.shortcode;
-
-      listen('convo:new', ({ publicId }) => {
-        return addConvo({ convoPublicId: publicId, spaceShortcode });
-      });
-      listen('convo:hidden', ({ publicId, hidden }) =>
-        toggleConvoHidden({ convoId: publicId, spaceShortcode, hide: hidden })
-      );
-      listen('convo:deleted', ({ publicId }) =>
-        deleteConvo({ convoPublicId: publicId, spaceShortcode })
-      );
-      listen('convo:entry:new', ({ convoPublicId, convoEntryPublicId }) =>
-        updateConvoMessageList({
-          convoId: convoPublicId,
-          convoEntryPublicId,
-          spaceShortcode
-        })
-      );
-      return unsubscribe;
-    });
-  }, [
-    addConvo,
-    client,
-    deleteConvo,
-    previousSpaces,
-    spacesData?.spaces,
-    toggleConvoHidden,
-    updateConvoMessageList
-  ]);
-
-  return null;
-});
 
 function ChildrenWithOrgIssues({ children }: { children: ReactNode }) {
   const orgShortcode = useOrgShortcode();
@@ -414,17 +325,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     () => <ConvoList hidden={showHidden} />,
     [showHidden]
   );
-  const realtime = useMemo(() => <RealtimeHandlers />, []);
 
   return (
-    <>
-      {realtime}
-      <ConvoLayoutWrapper
-        convoList={convoList}
-        showHidden={showHidden}
-        setShowHidden={setShowHidden}>
-        {children}
-      </ConvoLayoutWrapper>
-    </>
+    <ConvoLayoutWrapper
+      convoList={convoList}
+      showHidden={showHidden}
+      setShowHidden={setShowHidden}>
+      {children}
+    </ConvoLayoutWrapper>
   );
 }

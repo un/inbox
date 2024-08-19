@@ -878,29 +878,10 @@ export const convoRouter = router({
         });
       }
 
-      const spaceShortCodes = await db.query.convoToSpaces
-        .findMany({
-          where: eq(
-            convoToSpaces.convoId,
-            Number(insertConvoResponse.insertId)
-          ),
-          columns: {
-            id: true
-          },
-          with: {
-            space: {
-              columns: {
-                shortcode: true
-              }
-            }
-          }
-        })
-        .then((spaces) => spaces.map((space) => space.space.shortcode));
-
-      await realtime.emit({
-        orgMemberPublicIds: orgMemberPublicIdsForNotifications,
-        event: 'convo:new',
-        data: { publicId: newConvoPublicId }
+      await sendRealtimeNotification({
+        newConvo: true,
+        convoId: Number(insertConvoResponse.insertId),
+        convoEntryId: 0
       });
 
       return {

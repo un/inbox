@@ -1,13 +1,22 @@
 'use client';
 
+import {
+  useAddSingleConvo$Cache,
+  useDeleteConvo$Cache,
+  useToggleConvoHidden$Cache,
+  useUpdateConvoMessageList$Cache
+} from './convo/utils';
 import { useCurrentConvoId, useOrgShortcode } from '@/src/hooks/use-params';
 // import { ClaimEmailIdentity } from './_components/claim-email-identity';
 import { RealtimeProvider } from '@/src/providers/realtime-provider';
 import { NewConvoSheet } from './convo/_components/new-convo-sheet';
+import { useRealtime } from '@/src/providers/realtime-provider';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { useIsMobile } from '@/src/hooks/use-is-mobile';
 import { BottomNav } from './_components/bottom-nav';
 import { SpinnerGap } from '@phosphor-icons/react';
+import { usePrevious } from '@uidotdev/usehooks';
+import { memo, useEffect, useMemo } from 'react';
 import Sidebar from './_components/sidebar';
 import { platform } from '@/src/lib/trpc';
 import { cn } from '@/src/lib/utils';
@@ -84,11 +93,82 @@ function UnWrappedLayout({
   );
 }
 
+const RealtimeHandlers = memo(function RealtimeHandler() {
+  const client = useRealtime();
+  const orgShortcode = useOrgShortcode();
+  const addConvo = useAddSingleConvo$Cache();
+  const toggleConvoHidden = useToggleConvoHidden$Cache();
+  const deleteConvo = useDeleteConvo$Cache();
+  const updateConvoMessageList = useUpdateConvoMessageList$Cache();
+  const adminIssuesCache = platform.useUtils().org.store.getOrgIssues;
+
+  const { data: spacesData } = platform.spaces.getOrgMemberSpaces.useQuery(
+    {
+      orgShortcode
+    },
+    {
+      staleTime: ms('1 hour')
+    }
+  );
+  const previousSpaces = usePrevious(spacesData?.spaces);
+
+  // Root subscribers
+  useEffect(() => {
+    const unsubscribe = client.subscribe('admin:issue:refresh', () =>
+      adminIssuesCache.refetch()
+    );
+    return () => unsubscribe();
+  }, [client, adminIssuesCache]);
+
+  // Spaces subscribers
+  useEffect(() => {
+    if (!spacesData?.spaces) return;
+
+    spacesData.spaces.map((space) => {
+      const { listen, unsubscribe } = client.subscribeChannel(
+        `private-space-${space.publicId}`
+      );
+
+      const spaceShortcode = space.personalSpace ? 'personal' : space.shortcode;
+
+      listen('convo:new', ({ publicId }) => {
+        return addConvo({ convoPublicId: publicId, spaceShortcode });
+      });
+      listen('convo:hidden', ({ publicId, hidden }) =>
+        toggleConvoHidden({ convoId: publicId, spaceShortcode, hide: hidden })
+      );
+      listen('convo:deleted', ({ publicId }) =>
+        deleteConvo({ convoPublicId: publicId, spaceShortcode })
+      );
+      listen('convo:entry:new', ({ convoPublicId, convoEntryPublicId }) =>
+        updateConvoMessageList({
+          convoId: convoPublicId,
+          convoEntryPublicId,
+          spaceShortcode
+        })
+      );
+      return unsubscribe;
+    });
+  }, [
+    addConvo,
+    client,
+    deleteConvo,
+    previousSpaces,
+    spacesData?.spaces,
+    toggleConvoHidden,
+    updateConvoMessageList
+  ]);
+
+  return null;
+});
+
 export default function Layout({
   children
 }: Readonly<{ children: React.ReactNode }>) {
+  const realtime = useMemo(() => <RealtimeHandlers />, []);
   return (
     <RealtimeProvider>
+      {realtime}
       <UnWrappedLayout>{children}</UnWrappedLayout>
     </RealtimeProvider>
   );
