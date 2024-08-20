@@ -1,1 +1,0 @@
-ALTER TABLE `convo_entries` MODIFY COLUMN `body_cleaned_html` longtext;

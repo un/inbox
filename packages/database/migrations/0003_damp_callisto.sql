@@ -1,1 +1,0 @@
-ALTER TABLE `convo_participants` ADD `hidden` boolean DEFAULT false NOT NULL;
