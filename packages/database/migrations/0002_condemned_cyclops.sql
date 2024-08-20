@@ -1,0 +1,1 @@
+ALTER TABLE `orgs` ADD `migrated_to_spaces` boolean DEFAULT false NOT NULL;

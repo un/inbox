@@ -11,18 +11,27 @@ import {
 import { eq, type InferInsertModel } from '@u22n/database/orm';
 import { typeIdGenerator } from '@u22n/utils/typeid';
 import { db } from '@u22n/database';
+import { logger } from './logger';
 
-export async function runOrgMigration({ orgId }: { orgId: number }) {
-  console.info(
-    '--------------------------------------------------------------------------------'
+export async function runOrgMigration({
+  orgId,
+  batchDistinctId
+}: {
+  orgId: number;
+  batchDistinctId: string;
+}) {
+  logger.log(
+    `[Batch ${batchDistinctId}] --------------------------------------------------------------------------------`
   );
-  console.info(
-    '--------------------------------------------------------------------------------'
+  logger.log(
+    `[Batch ${batchDistinctId}] --------------------------------------------------------------------------------`
   );
-  console.info(
-    '--------------------------------------------------------------------------------'
+  logger.log(
+    `[Batch ${batchDistinctId}] --------------------------------------------------------------------------------`
   );
-  console.info(`🏃‍♂️ Running migration for org ${orgId}`);
+  logger.log(
+    `[Batch ${batchDistinctId}] 🏃‍♂️ Running migration for org ${orgId}`
+  );
   const orgQueryResponse = await db.query.orgs.findFirst({
     where: eq(orgs.id, orgId),
     columns: {
@@ -31,7 +40,7 @@ export async function runOrgMigration({ orgId }: { orgId: number }) {
     }
   });
   if (!orgQueryResponse) {
-    console.error(`🚨 org not found for id ${orgId}`);
+    logger.log(`[Batch ${batchDistinctId}] 🚨 org not found for id ${orgId}`);
     return;
   }
 
@@ -50,7 +59,9 @@ export async function runOrgMigration({ orgId }: { orgId: number }) {
     }
   });
   if (!orgMembersQueryResponse) {
-    console.error(`🚨 No org members found for org ${orgId}`);
+    logger.log(
+      `[Batch ${batchDistinctId}] 🚨 No org members found for org ${orgId}`
+    );
     return;
   }
 
@@ -59,7 +70,9 @@ export async function runOrgMigration({ orgId }: { orgId: number }) {
     (orgMember) => orgMember.accountId === orgQueryResponse.ownerId
   )?.id;
   if (!orgOwnerMembershipId) {
-    console.error(`🚨 No org owner found for org ${orgId}`);
+    logger.log(
+      `[Batch ${batchDistinctId}] 🚨 No org owner found for org ${orgId}`
+    );
     return;
   }
 
@@ -68,7 +81,9 @@ export async function runOrgMigration({ orgId }: { orgId: number }) {
     orgMemberIdArray.push(orgMember.id);
   });
 
-  console.info(`🔍 Found ${orgMemberIdArray.length} org members`);
+  logger.log(
+    `[Batch ${batchDistinctId}] 🔍 Found ${orgMemberIdArray.length} org members`
+  );
 
   // For each member in orgMemberIdArray:
   for (const individualOrgMemberId of orgMemberIdArray) {
@@ -93,8 +108,8 @@ export async function runOrgMigration({ orgId }: { orgId: number }) {
     // Create a Private Space with defaults
     // check space name has not already been used
     if (!orgMemberProfileQueryResponse?.profile) {
-      console.error(
-        `🚨 orgMemberProfileQueryResponse not found for org ${orgId} member ${individualOrgMemberId}`
+      logger.log(
+        `[Batch ${batchDistinctId}] 🚨 orgMemberProfileQueryResponse not found for org ${orgId} member ${individualOrgMemberId}`
       );
       break;
     }
@@ -181,8 +196,8 @@ export async function runOrgMigration({ orgId }: { orgId: number }) {
       });
 
     if (routingRuleDestinationsQueryResponse.length === 0) {
-      console.info(
-        `🚨 No routing rule destinations found for org member ${individualOrgMemberId}`
+      logger.log(
+        `[Batch ${batchDistinctId}] 🚨 No routing rule destinations found for org member ${individualOrgMemberId}`
       );
       break;
     }
@@ -199,8 +214,8 @@ export async function runOrgMigration({ orgId }: { orgId: number }) {
           defaultEmailIdentityId: routingRuleEmailIdentityId
         })
         .where(eq(orgMembers.id, Number(individualOrgMemberId))));
-    console.info(
-      `📧 updated org member ${individualOrgMemberId} default email identity`
+    logger.log(
+      `[Batch ${batchDistinctId}] 📧 updated org member ${individualOrgMemberId} default email identity`
     );
 
     // fetch all convos.id where user is participant.type === assigned | contributor
@@ -209,22 +224,51 @@ export async function runOrgMigration({ orgId }: { orgId: number }) {
     const limit = 100;
     let hasMore = true;
 
+    logger.log(
+      `[Batch ${batchDistinctId}] 🔍 Fetching convos for orgMember ${individualOrgMemberId}`
+    );
+
     while (hasMore) {
+      logger.log(
+        `[Batch ${batchDistinctId}] 📊 Fetching chunk: offset=${offset}, limit=${limit}`
+      );
       const responseChunk = await db.query.convoParticipants.findMany({
         where: eq(convoParticipants.orgMemberId, individualOrgMemberId),
         columns: { convoId: true },
         limit: limit,
         offset: offset
       });
-      allConvoIds.push(...responseChunk.map((cp) => cp.convoId));
+      logger.log(
+        `[Batch ${batchDistinctId}] 📊 Chunk size: ${responseChunk.length}`
+      );
+
+      const newConvoIds = responseChunk.map((cp) => cp.convoId);
+      allConvoIds.push(...newConvoIds);
+      logger.log(
+        `[Batch ${batchDistinctId}] 📊 New convo IDs: ${newConvoIds.join(', ')}`
+      );
+      logger.log(
+        `[Batch ${batchDistinctId}] 📊 Total convo IDs so far: ${allConvoIds.length}`
+      );
+
       hasMore = responseChunk.length === limit;
       offset += limit;
+      logger.log(
+        `[Batch ${batchDistinctId}] 📊 Has more: ${hasMore}, New offset: ${offset}`
+      );
     }
+
+    logger.log(
+      `[Batch ${batchDistinctId}] 🔢 Total convos found: ${allConvoIds.length}`
+    );
 
     // insert convos2Spacestable entry
     const convosToSpacesInsertValuesArray: InferInsertModel<
       typeof convoToSpaces
     >[] = [];
+    logger.log(
+      `[Batch ${batchDistinctId}] 🏗️ Preparing convoToSpaces insert array`
+    );
     for (const convoId of allConvoIds) {
       const spaceId = Number(newSpaceResponse.insertId);
       convosToSpacesInsertValuesArray.push({
@@ -234,12 +278,21 @@ export async function runOrgMigration({ orgId }: { orgId: number }) {
         publicId: typeIdGenerator('convoToSpaces')
       });
     }
-
-    await db.insert(convoToSpaces).values(convosToSpacesInsertValuesArray);
-
-    console.info(
-      `🔗 linked ${convosToSpacesInsertValuesArray.length} convos to spaces`
+    logger.log(
+      `[Batch ${batchDistinctId}] 🏗️ Prepared ${convosToSpacesInsertValuesArray.length} entries for convoToSpaces insert`
     );
+
+    // Add this check before inserting
+    if (convosToSpacesInsertValuesArray.length > 0) {
+      await db.insert(convoToSpaces).values(convosToSpacesInsertValuesArray);
+      logger.log(
+        `[Batch ${batchDistinctId}] 🔗 linked ${convosToSpacesInsertValuesArray.length} convos to spaces`
+      );
+    } else {
+      logger.log(
+        `[Batch ${batchDistinctId}] ℹ️ No convos to link for this org member/team`
+      );
+    }
 
     for (const routingRuleDestination of routingRuleDestinationsQueryResponse) {
       await db
@@ -249,15 +302,15 @@ export async function runOrgMigration({ orgId }: { orgId: number }) {
           orgMemberId: null
         })
         .where(eq(emailRoutingRulesDestinations.id, routingRuleDestination.id));
-      console.info(
-        `🔺 updated orgMember ${Number(
+      logger.log(
+        `[Batch ${batchDistinctId}] 🔺 updated orgMember ${Number(
           individualOrgMemberId
         )} routing rule destination ${routingRuleDestination.id}`
       );
     }
   }
-  console.info(
-    `⏱️ Finished processing ${orgMemberIdArray.length} org member spaces`
+  logger.log(
+    `[Batch ${batchDistinctId}] ⏱️ Finished processing ${orgMemberIdArray.length} org member spaces`
   );
 
   //! Process Teams
@@ -270,7 +323,9 @@ export async function runOrgMigration({ orgId }: { orgId: number }) {
     }
   });
 
-  console.info(`🔍 Found ${orgTeamsQueryResponse.length} org teams`);
+  logger.log(
+    `[Batch ${batchDistinctId}] 🔍 Found ${orgTeamsQueryResponse.length} org teams`
+  );
   if (orgTeamsQueryResponse.length > 0) {
     // push all teamIds to teamIdArray
     orgTeamsQueryResponse.forEach((orgTeam) => {
@@ -290,8 +345,8 @@ export async function runOrgMigration({ orgId }: { orgId: number }) {
       });
 
       if (!teamQueryResponse) {
-        console.error(
-          `🚨 teamQueryResponse not found for org ${orgId} team ${individualTeamId}`
+        logger.log(
+          `[Batch ${batchDistinctId}] 🚨 teamQueryResponse not found for org ${orgId} team ${individualTeamId}`
         );
         break;
       }
@@ -376,8 +431,8 @@ export async function runOrgMigration({ orgId }: { orgId: number }) {
         });
 
       if (routingRuleDestinationsQueryResponse.length === 0) {
-        console.info(
-          `🚨 No routing rule destinations found for team ${Number(individualTeamId)}`
+        logger.log(
+          `[Batch ${batchDistinctId}] 🚨 No routing rule destinations found for team ${Number(individualTeamId)}`
         );
         break;
       }
@@ -394,8 +449,8 @@ export async function runOrgMigration({ orgId }: { orgId: number }) {
             defaultEmailIdentityId: routingRuleEmailIdentityId
           })
           .where(eq(teams.id, Number(Number(individualTeamId)))));
-      console.info(
-        `📧 updated team ${Number(individualTeamId)} default email identity`
+      logger.log(
+        `[Batch ${batchDistinctId}] 📧 updated team ${Number(individualTeamId)} default email identity`
       );
 
       // fetch all convos.id where team is participant
@@ -431,11 +486,17 @@ export async function runOrgMigration({ orgId }: { orgId: number }) {
         });
       }
 
-      await db.insert(convoToSpaces).values(convosToSpacesInsertValuesArray);
-
-      console.info(
-        `🔗 linked ${convosToSpacesInsertValuesArray.length} convos to spaces`
-      );
+      // Add this check before inserting
+      if (convosToSpacesInsertValuesArray.length > 0) {
+        await db.insert(convoToSpaces).values(convosToSpacesInsertValuesArray);
+        logger.log(
+          `[Batch ${batchDistinctId}] 🔗 linked ${convosToSpacesInsertValuesArray.length} convos to spaces`
+        );
+      } else {
+        logger.log(
+          `[Batch ${batchDistinctId}] ℹ️ No convos to link for this org member/team`
+        );
+      }
 
       for (const routingRuleDestination of routingRuleDestinationsQueryResponse) {
         await db
@@ -447,17 +508,21 @@ export async function runOrgMigration({ orgId }: { orgId: number }) {
           .where(
             eq(emailRoutingRulesDestinations.id, routingRuleDestination.id)
           );
-        console.info(
-          `🔺 updated team ${Number(
+        logger.log(
+          `[Batch ${batchDistinctId}] 🔺 updated team ${Number(
             individualTeamId
           )} routing rule destination ${routingRuleDestination.id}`
         );
       }
     }
-    console.info(`📦 created ${teamIdArray.length} team spaces`);
+    logger.log(
+      `[Batch ${batchDistinctId}] 📦 created ${teamIdArray.length} team spaces`
+    );
   }
 
-  console.info(`🏁 Finished processing orgId migration`);
+  logger.log(
+    `[Batch ${batchDistinctId}] 🏁 Finished processing orgId migration`
+  );
 }
 
 function generateSpaceShortcode({

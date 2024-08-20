@@ -1,7 +1,10 @@
 import { runOrgMigration } from './migrationJob';
+import { orgs } from '@u22n/database/schema';
+import { eq } from '@u22n/database/orm';
 import { db } from '@u22n/database';
+import { logger } from './logger';
 import readline from 'readline';
-import fs from 'fs';
+import crypto from 'crypto';
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -38,6 +41,8 @@ async function cliMigrationScript() {
   // Get organizations that haven't been migrated yet
   // We'll assume an organization is not migrated if it doesn't have a personal space for its owner
   const unmigratedOrgs = await db.query.orgs.findMany({
+    /* eslint-disable @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call */
+    where: (orgs) => eq(orgs.migratedToSpaces, false),
     columns: {
       id: true,
       name: true
@@ -62,6 +67,17 @@ async function cliMigrationScript() {
     console.info(`${index + 1}. ${org.name} (ID: ${org.id})`);
   });
 
+  // Add batch size prompt
+  const batchSize = await new Promise<number>((resolve) => {
+    rl.question(
+      'Enter the batch size for processing (default 10): ',
+      (answer) => {
+        const size = parseInt(answer, 10);
+        resolve(isNaN(size) ? 10 : size);
+      }
+    );
+  });
+
   const logFile = './logs.txt';
   const useLogFile = await new Promise<boolean>((resolve) => {
     rl.question(`Do you want to log to ${logFile}? (Y/n): `, (answer) => {
@@ -69,51 +85,47 @@ async function cliMigrationScript() {
     });
   });
 
-  let logStream: fs.WriteStream | null = null;
   if (useLogFile) {
-    logStream = fs.createWriteStream(logFile, { flags: 'a' });
+    logger.init(logFile);
+  } else {
+    logger.init();
   }
 
-  const log = (message: string) => {
-    console.info(message);
-    if (logStream) {
-      logStream.write(message + '\n');
-    }
-  };
-
-  for (const org of unmigratedOrgs) {
-    const shouldMigrate = await new Promise<boolean>((resolve) => {
-      rl.question(
-        `Migrate organization ${org.name} (ID: ${org.id})? (Y/n): `,
-        (answer) => {
-          resolve(answer.toLowerCase() !== 'n');
-        }
+  // Process organizations in batches
+  for (let i = 0; i < unmigratedOrgs.length; i += batchSize) {
+    const batchDistinctId = crypto.randomBytes(4).toString('hex');
+    const batch = unmigratedOrgs.slice(i, i + batchSize);
+    const migrationPromises = batch.map(async (org) => {
+      logger.log(
+        `[Batch ${batchDistinctId}] Starting migration for organization ${org.name} (ID: ${org.id})`
       );
+      try {
+        await runOrgMigration({ orgId: org.id, batchDistinctId });
+        // Mark the organization as migrated
+        await db
+          .update(orgs)
+          .set({ migratedToSpaces: true })
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-call
+          .where(eq(orgs.id, org.id));
+        logger.log(
+          `[Batch ${batchDistinctId}] Successfully migrated organization ${org.name} (ID: ${org.id}) and marked as migrated`
+        );
+      } catch (error) {
+        logger.log(
+          // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+          `[Batch ${batchDistinctId}] Error migrating organization ${org.name} (ID: ${org.id}): ${error}`
+        );
+      }
     });
 
-    if (shouldMigrate) {
-      log(`Starting migration for organization ${org.name} (ID: ${org.id})`);
-      try {
-        await runOrgMigration({ orgId: org.id });
-        log(`Successfully migrated organization ${org.name} (ID: ${org.id})`);
-      } catch (error) {
-        if (error instanceof Error) {
-          log(
-            `Error migrating organization ${org.name} (ID: ${org.id}): ${error.message}`
-          );
-        } else {
-          log(
-            `Error migrating organization ${org.name} (ID: ${org.id}): ${String(error)}`
-          );
-        }
-      }
-    }
+    await Promise.all(migrationPromises);
+    logger.log(
+      `[Batch ${batchDistinctId}] Completed batch ${Math.floor(i / batchSize) + 1} of ${Math.ceil(unmigratedOrgs.length / batchSize)}`
+    );
   }
 
-  log('Migration process completed.');
-  if (logStream) {
-    logStream.end();
-  }
+  logger.log('Migration process completed.');
+  logger.restore();
   rl.close();
 }
 

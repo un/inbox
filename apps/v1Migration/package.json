@@ -4,8 +4,10 @@
   "type": "module",
   "version": "0.9.0",
   "scripts": {
-    "migration:start": "dotenv -e ../../.env.test.local -- tsx migrate.ts",
-    "check": "tsc --noEmit"
+    "data:migration:branch": "dotenv -e ../../.env.test.local -- tsx migrate.ts",
+    "data:migrate:organization": "dotenv -e ../../.env.test.local -- tsx migrateOrg.ts",
+    "check": "tsc --noEmit",
+    "check:org-convos": "dotenv -e ../../.env.test.local -- tsx checkOrgConvos.ts"
   },
   "dependencies": {
     "@t3-oss/env-core": "^0.11.0",

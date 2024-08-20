@@ -10,6 +10,7 @@
   "scripts": {
     "check": "tsc --noEmit",
     "db:generate": "drizzle-kit generate --config=drizzle.config.ts",
+    "db:generate:branch": "dotenv -e ../../.env.test.local -- drizzle-kit generate --config=drizzle.config.ts",
     "db:push": "drizzle-kit push --config=drizzle.config.ts && tsx postPush.ts",
     "db:push:r": "drizzle-kit push --config=drizzle.config.ts && tsx postPush.ts",
     "db:check": "drizzle-kit check --config=drizzle.config.ts",
@@ -21,6 +22,7 @@
     "db:studio:r": "drizzle-kit studio --port 3333  --config=drizzle.config.ts",
     "db:seed:r": "tsx dbSeed.ts",
     "db:migrate": "tsx migrate.ts",
+    "db:migrate:branch": "dotenv -e ../../.env.test.local -- tsx migrate.ts",
     "db:clean:r": "infisical run --env=remote -- tsx dbClean.ts"
   },
   "dependencies": {

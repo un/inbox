@@ -239,6 +239,7 @@ export const orgs = mysqlTable(
     ownerId: foreignKey('owner_id').notNull(),
     name: varchar('name', { length: 64 }).notNull(),
     metadata: json('metadata').$type<OrgMetadata>().default({}),
+    migratedToSpaces: boolean('migrated_to_spaces').notNull().default(false),
     createdAt: timestamp('created_at')
       .notNull()
       .$defaultFn(() => new Date())
