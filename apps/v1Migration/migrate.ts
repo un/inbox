@@ -9,12 +9,12 @@ const rl = readline.createInterface({
 });
 
 async function cliMigrationScript() {
-  console.log('Welcome to the Organization Migration CLI');
+  console.info('Welcome to the Organization Migration CLI');
 
   // Get username from environment variable
   const currentUser = process.env.DB_PLANETSCALE_USERNAME;
   if (!currentUser) {
-    console.log(
+    console.info(
       'Error: DB_PLANETSCALE_USERNAME environment variable is not set.'
     );
     rl.close();
@@ -28,7 +28,7 @@ async function cliMigrationScript() {
   });
 
   if (!isCorrectUser) {
-    console.log(
+    console.info(
       'Please set the correct DB_PLANETSCALE_USERNAME environment variable.'
     );
     rl.close();
@@ -52,14 +52,14 @@ async function cliMigrationScript() {
   });
 
   if (unmigratedOrgs.length === 0) {
-    console.log('No unmigrated organizations found.');
+    console.info('No unmigrated organizations found.');
     rl.close();
     return;
   }
 
-  console.log('Unmigrated organizations:');
+  console.info('Unmigrated organizations:');
   unmigratedOrgs.forEach((org, index) => {
-    console.log(`${index + 1}. ${org.name} (ID: ${org.id})`);
+    console.info(`${index + 1}. ${org.name} (ID: ${org.id})`);
   });
 
   const logFile = './logs.txt';
@@ -75,7 +75,7 @@ async function cliMigrationScript() {
   }
 
   const log = (message: string) => {
-    console.log(message);
+    console.info(message);
     if (logStream) {
       logStream.write(message + '\n');
     }
@@ -97,9 +97,15 @@ async function cliMigrationScript() {
         await runOrgMigration({ orgId: org.id });
         log(`Successfully migrated organization ${org.name} (ID: ${org.id})`);
       } catch (error) {
-        log(
-          `Error migrating organization ${org.name} (ID: ${org.id}): ${error}`
-        );
+        if (error instanceof Error) {
+          log(
+            `Error migrating organization ${org.name} (ID: ${org.id}): ${error.message}`
+          );
+        } else {
+          log(
+            `Error migrating organization ${org.name} (ID: ${org.id}): ${String(error)}`
+          );
+        }
       }
     }
   }

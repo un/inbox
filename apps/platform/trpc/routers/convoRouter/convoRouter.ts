@@ -39,9 +39,9 @@ import {
   type TypeId,
   typeIdGenerator
 } from '@u22n/utils/typeid';
+import { addConvoToSpace, isOrgMemberSpaceMember } from '../spaceRouter/utils';
 import { realtime, sendRealtimeNotification } from '~platform/utils/realtime';
 import { mailBridgeTrpcClient } from '~platform/utils/tRPCServerClients';
-import { isOrgMemberSpaceMember } from '../spaceRouter/utils';
 import { createExtensionSet } from '@u22n/tiptap/extensions';
 import type { SpaceWorkflowType } from '@u22n/utils/spaces';
 import { router, orgProcedure } from '~platform/trpc/trpc';
@@ -544,14 +544,23 @@ export const convoRouter = router({
 
       // add the conversation to the space
 
-      const convoToSpacesInsertValues = spacesToAddConvoTo.map((spaceId) => ({
-        publicId: typeIdGenerator('convoToSpaces'),
-        convoId: Number(insertConvoResponse.insertId),
-        spaceId: spaceId,
-        orgId: orgId
-      }));
+      // const convoToSpacesInsertValues = spacesToAddConvoTo.map((spaceId) => ({
+      //   publicId: typeIdGenerator('convoToSpaces'),
+      //   convoId: Number(insertConvoResponse.insertId),
+      //   spaceId: spaceId,
+      //   orgId: orgId
+      // }));
 
-      await db.insert(convoToSpaces).values(convoToSpacesInsertValues);
+      // await db.insert(convoToSpaces).values(convoToSpacesInsertValues);
+
+      for (const spaceToAdd of spacesToAddConvoTo) {
+        await addConvoToSpace({
+          db,
+          orgId,
+          convoId: Number(insertConvoResponse.insertId),
+          spaceId: spaceToAdd
+        });
+      }
 
       // create conversationSubject entry
       const newConvoSubjectPublicId = typeIdGenerator('convoSubjects');
@@ -2360,5 +2369,225 @@ export const convoRouter = router({
       });
 
       return {};
+    }),
+  addConvoToSpace: orgProcedure
+    .input(
+      z.object({
+        convoPublicId: typeIdValidator('convos'),
+        spacePublicId: typeIdValidator('spaces')
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { db, org } = ctx;
+      const { convoPublicId, spacePublicId } = input;
+
+      const spaceQueryResponse = await db.query.spaces.findFirst({
+        where: and(
+          eq(spaces.orgId, org.id),
+          eq(spaces.publicId, spacePublicId)
+        ),
+        columns: {
+          id: true
+        }
+      });
+      if (!spaceQueryResponse) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Space not found'
+        });
+      }
+
+      const convoQueryResponse = await db.query.convos.findFirst({
+        where: and(
+          eq(convos.orgId, org.id),
+          eq(convos.publicId, convoPublicId)
+        ),
+        columns: {
+          id: true
+        }
+      });
+      if (!convoQueryResponse) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Conversation not found'
+        });
+      }
+
+      // get array of all spaces shortcodes the convo is currently in to see if user has permission to add to another space
+      const convoToSpacesQueryResponse = await db.query.convoToSpaces.findMany({
+        where: and(
+          eq(convoToSpaces.orgId, org.id),
+          eq(convoToSpaces.convoId, convoQueryResponse.id)
+        ),
+        columns: {
+          spaceId: true
+        },
+        with: {
+          space: {
+            columns: {
+              shortcode: true
+            }
+          }
+        }
+      });
+
+      if (
+        !convoToSpacesQueryResponse ||
+        convoToSpacesQueryResponse.length === 0
+      ) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message:
+            'Conversation exists but is not in any Spaces, please contact support'
+        });
+      }
+
+      const existingSpaceShortcodes = convoToSpacesQueryResponse.map(
+        (space) => space.space.shortcode
+      );
+
+      const orgMemberCanAddConvoToOtherSpace = existingSpaceShortcodes.some(
+        async (spaceShortcode) => {
+          const spaceMembershipResponse = await isOrgMemberSpaceMember({
+            db,
+            orgId: org.id,
+            spaceShortcode: spaceShortcode,
+            orgMemberId: org.memberId
+          });
+
+          return spaceMembershipResponse.permissions.canAddToAnotherSpace;
+        }
+      );
+
+      if (!orgMemberCanAddConvoToOtherSpace) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message:
+            'You are not allowed to add this Conversation to another Space'
+        });
+      }
+
+      await addConvoToSpace({
+        db,
+        orgId: org.id,
+        convoId: convoQueryResponse.id,
+        spaceId: spaceQueryResponse.id
+      });
+
+      return;
+    }),
+  moveConvoToSpace: orgProcedure
+    .input(
+      z.object({
+        convoPublicId: typeIdValidator('convos'),
+        spacePublicId: typeIdValidator('spaces')
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { db, org } = ctx;
+      const { convoPublicId, spacePublicId } = input;
+
+      const spaceQueryResponse = await db.query.spaces.findFirst({
+        where: and(
+          eq(spaces.orgId, org.id),
+          eq(spaces.publicId, spacePublicId)
+        ),
+        columns: {
+          id: true
+        }
+      });
+      if (!spaceQueryResponse) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Space not found'
+        });
+      }
+
+      const convoQueryResponse = await db.query.convos.findFirst({
+        where: and(
+          eq(convos.orgId, org.id),
+          eq(convos.publicId, convoPublicId)
+        ),
+        columns: {
+          id: true
+        }
+      });
+      if (!convoQueryResponse) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Conversation not found'
+        });
+      }
+
+      // get array of all spaces shortcodes the convo is currently in to see if user has permission to add to another space
+      const convoToSpacesQueryResponse = await db.query.convoToSpaces.findMany({
+        where: and(
+          eq(convoToSpaces.orgId, org.id),
+          eq(convoToSpaces.convoId, convoQueryResponse.id)
+        ),
+        columns: {
+          spaceId: true
+        },
+        with: {
+          space: {
+            columns: {
+              shortcode: true
+            }
+          }
+        }
+      });
+
+      if (
+        !convoToSpacesQueryResponse ||
+        convoToSpacesQueryResponse.length === 0
+      ) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message:
+            'Conversation exists but is not in any Spaces, please contact support'
+        });
+      }
+
+      const existingSpaceShortcodes = convoToSpacesQueryResponse.map(
+        (space) => space.space.shortcode
+      );
+
+      const orgMemberCanMoveConvoToOtherSpace = existingSpaceShortcodes.some(
+        async (spaceShortcode) => {
+          const spaceMembershipResponse = await isOrgMemberSpaceMember({
+            db,
+            orgId: org.id,
+            spaceShortcode: spaceShortcode,
+            orgMemberId: org.memberId
+          });
+
+          return spaceMembershipResponse.permissions.canMoveToAnotherSpace;
+        }
+      );
+      if (!orgMemberCanMoveConvoToOtherSpace) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message:
+            'You are not allowed to move this Conversation to another Space'
+        });
+      }
+
+      await db
+        .delete(convoToSpaces)
+        .where(
+          and(
+            eq(convoToSpaces.orgId, org.id),
+            eq(convoToSpaces.convoId, convoQueryResponse.id)
+          )
+        );
+
+      await addConvoToSpace({
+        db,
+        orgId: org.id,
+        convoId: convoQueryResponse.id,
+        spaceId: spaceQueryResponse.id
+      });
+
+      return;
     })
 });

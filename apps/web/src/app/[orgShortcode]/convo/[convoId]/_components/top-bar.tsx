@@ -14,12 +14,12 @@ import {
   FileTxt,
   File,
   ArrowLeft,
-  SpinnerGap,
   SquaresFour,
   CaretRight,
-  ChatCircle,
   Circle,
-  Check
+  Check,
+  ArrowSquareOut,
+  ArrowSquareIn
 } from '@phosphor-icons/react';
 import {
   Dialog,
@@ -118,6 +118,8 @@ export default function TopBar({
         </div>
         <div className="flex flex-row gap-2">
           <Participants participants={participants} />
+          <AddToSpaceButton convoId={convoId} />
+          <MoveToSpaceButton convoId={convoId} />
           <DeleteButton
             convoId={convoId}
             // hidden={convoHidden}
@@ -170,6 +172,250 @@ export default function TopBar({
         </div>
       </div>
     </div>
+  );
+}
+
+type AddToSpaceButtonProps = {
+  convoId: TypeId<'convos'>;
+};
+
+function AddToSpaceButton({ convoId }: AddToSpaceButtonProps) {
+  const [showSpaceList, setShowSpaceList] = useState(false);
+  const orgShortcode = useOrgShortcode();
+
+  const convoSpaceQuery = platform.useUtils().convos.getConvoSpaceWorkflows;
+
+  const { data: spaces, isLoading: spacesLoading } =
+    platform.spaces.getAllOrgSpacesWithPersonalSeparately.useQuery({
+      orgShortcode
+    });
+
+  const { mutateAsync: addConvoToSpace, isPending } =
+    platform.convos.addConvoToSpace.useMutation({
+      onSuccess: () => {
+        void convoSpaceQuery.invalidate();
+      }
+    });
+
+  async function handleAddToSpace(spacePublicId: TypeId<'spaces'>) {
+    await addConvoToSpace({
+      orgShortcode: orgShortcode,
+      convoPublicId: convoId,
+      spacePublicId: spacePublicId
+    });
+    setShowSpaceList(false);
+  }
+
+  return (
+    <>
+      <Popover open={showSpaceList}>
+        <PopoverTrigger
+          asChild
+          onClick={() => setShowSpaceList(!showSpaceList)}>
+          <Button
+            variant={'outline'}
+            size={'icon-sm'}
+            loading={isPending}>
+            <ArrowSquareIn className="size-4" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent onPointerDownOutside={() => setShowSpaceList(false)}>
+          <div className="flex w-full flex-col gap-4">
+            <span className="text-base-11 text-sm font-semibold">
+              Add Conversation to Space
+            </span>
+            {!spacesLoading &&
+              spaces?.personalSpaces &&
+              spaces?.personalSpaces?.length > 0 && (
+                <div className="flex w-full flex-col gap-2">
+                  <span className="text-base-10 text-xs font-semibold">
+                    Personal Spaces
+                  </span>
+                  {spaces?.personalSpaces.map((space) => (
+                    <Button
+                      variant={'ghost'}
+                      onClick={() => handleAddToSpace(space.publicId)}
+                      className="hover:bg-slate-1 group flex w-full max-w-full flex-row items-center gap-2 truncate rounded-lg p-0.5"
+                      key={space.publicId}>
+                      <div className="flex w-full max-w-full flex-row items-center gap-4 truncate p-1">
+                        <div
+                          className="flex h-6 min-h-6 w-6 min-w-6 items-center justify-center rounded-sm"
+                          style={{
+                            backgroundColor: `var(--${space.color}4)`,
+                            color: `var(--${space.color}9)`
+                          }}>
+                          <SquaresFour
+                            className="h-4 w-4"
+                            weight="bold"
+                          />
+                        </div>
+                        <span className="text-slate-12 h-full truncate font-medium">
+                          {space.name || 'Unnamed Space'}
+                        </span>
+                      </div>
+                    </Button>
+                  ))}
+                </div>
+              )}
+            {!spacesLoading &&
+              spaces?.orgSpaces &&
+              spaces?.orgSpaces?.length > 0 && (
+                <div className="flex w-full flex-col gap-2">
+                  <span className="text-base-10 text-xs font-semibold">
+                    Shared Spaces
+                  </span>
+                  {spaces?.orgSpaces.map((space) => (
+                    <Button
+                      variant={'ghost'}
+                      onClick={() => handleAddToSpace(space.publicId)}
+                      className="hover:bg-slate-1 group flex w-full max-w-full flex-row items-center gap-2 truncate rounded-lg p-0.5"
+                      key={space.publicId}>
+                      <div className="flex w-full max-w-full flex-row items-center gap-4 truncate p-1">
+                        <div
+                          className="flex h-6 min-h-6 w-6 min-w-6 items-center justify-center rounded-sm"
+                          style={{
+                            backgroundColor: `var(--${space.color}4)`,
+                            color: `var(--${space.color}9)`
+                          }}>
+                          <SquaresFour
+                            className="h-4 w-4"
+                            weight="bold"
+                          />
+                        </div>
+                        <span className="text-slate-12 h-full truncate font-medium">
+                          {space.name || 'Unnamed Space'}
+                        </span>
+                      </div>
+                    </Button>
+                  ))}
+                </div>
+              )}
+          </div>
+        </PopoverContent>
+      </Popover>
+    </>
+  );
+}
+
+type MoveToSpaceButtonProps = {
+  convoId: TypeId<'convos'>;
+};
+
+function MoveToSpaceButton({ convoId }: MoveToSpaceButtonProps) {
+  const [showSpaceList, setShowSpaceList] = useState(false);
+  const orgShortcode = useOrgShortcode();
+
+  const convoSpaceQuery = platform.useUtils().convos.getConvoSpaceWorkflows;
+
+  const { data: spaces, isLoading: spacesLoading } =
+    platform.spaces.getAllOrgSpacesWithPersonalSeparately.useQuery({
+      orgShortcode
+    });
+
+  const { mutateAsync: moveConvoToSpace, isPending } =
+    platform.convos.moveConvoToSpace.useMutation({
+      onSuccess: () => {
+        void convoSpaceQuery.invalidate();
+      }
+    });
+
+  async function handleMoveToSpace(spacePublicId: TypeId<'spaces'>) {
+    await moveConvoToSpace({
+      orgShortcode: orgShortcode,
+      convoPublicId: convoId,
+      spacePublicId: spacePublicId
+    });
+    setShowSpaceList(false);
+  }
+
+  return (
+    <>
+      <Popover open={showSpaceList}>
+        <PopoverTrigger
+          asChild
+          onClick={() => setShowSpaceList(!showSpaceList)}>
+          <Button
+            variant={'outline'}
+            size={'icon-sm'}
+            loading={isPending}>
+            <ArrowSquareOut className="size-4" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent onPointerDownOutside={() => setShowSpaceList(false)}>
+          <div className="flex w-full flex-col gap-4">
+            <span className="text-base-11 text-sm font-semibold">
+              Move Conversation to Space
+            </span>
+            {!spacesLoading &&
+              spaces?.personalSpaces &&
+              spaces?.personalSpaces?.length > 0 && (
+                <div className="flex w-full flex-col gap-2">
+                  <span className="text-base-10 text-xs font-semibold">
+                    Personal Spaces
+                  </span>
+                  {spaces?.personalSpaces.map((space) => (
+                    <Button
+                      variant={'ghost'}
+                      onClick={() => handleMoveToSpace(space.publicId)}
+                      className="hover:bg-slate-1 group flex w-full max-w-full flex-row items-center gap-2 truncate rounded-lg p-0.5"
+                      key={space.publicId}>
+                      <div className="flex w-full max-w-full flex-row items-center gap-4 truncate p-1">
+                        <div
+                          className="flex h-6 min-h-6 w-6 min-w-6 items-center justify-center rounded-sm"
+                          style={{
+                            backgroundColor: `var(--${space.color}4)`,
+                            color: `var(--${space.color}9)`
+                          }}>
+                          <SquaresFour
+                            className="h-4 w-4"
+                            weight="bold"
+                          />
+                        </div>
+                        <span className="text-slate-12 h-full truncate font-medium">
+                          {space.name || 'Unnamed Space'}
+                        </span>
+                      </div>
+                    </Button>
+                  ))}
+                </div>
+              )}
+            {!spacesLoading &&
+              spaces?.orgSpaces &&
+              spaces?.orgSpaces?.length > 0 && (
+                <div className="flex w-full flex-col gap-2">
+                  <span className="text-base-10 text-xs font-semibold">
+                    Shared Spaces
+                  </span>
+                  {spaces?.orgSpaces.map((space) => (
+                    <Button
+                      variant={'ghost'}
+                      onClick={() => handleMoveToSpace(space.publicId)}
+                      className="hover:bg-slate-1 group flex w-full max-w-full flex-row items-center gap-2 truncate rounded-lg p-0.5"
+                      key={space.publicId}>
+                      <div className="flex w-full max-w-full flex-row items-center gap-4 truncate p-1">
+                        <div
+                          className="flex h-6 min-h-6 w-6 min-w-6 items-center justify-center rounded-sm"
+                          style={{
+                            backgroundColor: `var(--${space.color}4)`,
+                            color: `var(--${space.color}9)`
+                          }}>
+                          <SquaresFour
+                            className="h-4 w-4"
+                            weight="bold"
+                          />
+                        </div>
+                        <span className="text-slate-12 h-full truncate font-medium">
+                          {space.name || 'Unnamed Space'}
+                        </span>
+                      </div>
+                    </Button>
+                  ))}
+                </div>
+              )}
+          </div>
+        </PopoverContent>
+      </Popover>
+    </>
   );
 }
 
@@ -464,16 +710,12 @@ function AttachmentBlock({ name, url, type, publicId }: AttachmentBlockProps) {
 function SpaceWorkflowBlock() {
   const orgShortcode = useOrgShortcode();
   const currentConvo = useCurrentConvoId();
-  const spaceShortcode = useSpaceShortcode(false);
 
-  const {
-    data: convoSpaceWorkflows,
-    isLoading,
-    error
-  } = platform.convos.getConvoSpaceWorkflows.useQuery({
-    orgShortcode: orgShortcode,
-    convoPublicId: currentConvo!
-  });
+  const { data: convoSpaceWorkflows } =
+    platform.convos.getConvoSpaceWorkflows.useQuery({
+      orgShortcode: orgShortcode,
+      convoPublicId: currentConvo!
+    });
 
   return (
     <div className="flex w-full max-w-full flex-col items-center justify-between gap-2 overflow-clip p-2">
@@ -601,17 +843,6 @@ function SpaceWorkflowBlockWorkflowList({
         <PopoverTrigger
           asChild
           onClick={() => setShowWorkflowList(!showWorkflowList)}>
-          {/* <button
-            className="focus-visible:ring-ring ring-base-5 inline-flex h-10 items-center justify-center whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50"
-            style={{
-              backgroundColor: `var(--${currentWorkflowItem?.color ?? 'slate'}4)`,
-              color: `var(--${currentWorkflowItem?.color ?? 'slate'}9)`
-            }}
-            onClick={() => setShowWorkflowList(!showWorkflowList)}>
-            <span className="text-xs">
-              {currentWorkflowItem?.name ?? 'No Workflow Status'}
-            </span>
-          </button> */}
           <Button
             variant={'ghost'}
             className="pl-2"
@@ -651,7 +882,6 @@ function SpaceWorkflowBlockWorkflowList({
                 <WorkflowItem
                   key={spaceWorkflow.publicId}
                   workflow={spaceWorkflow}
-                  spacePublicId={spacePublicId}
                   activeWorkflowPublicId={currentWorkflow?.publicId}
                   handler={() => handleSetConvoWorkflow(spaceWorkflow.publicId)}
                 />
@@ -663,7 +893,6 @@ function SpaceWorkflowBlockWorkflowList({
                 <WorkflowItem
                   key={spaceWorkflow.publicId}
                   workflow={spaceWorkflow}
-                  spacePublicId={spacePublicId}
                   activeWorkflowPublicId={currentWorkflow?.publicId}
                   handler={() => handleSetConvoWorkflow(spaceWorkflow.publicId)}
                 />
@@ -675,7 +904,6 @@ function SpaceWorkflowBlockWorkflowList({
                 <WorkflowItem
                   key={spaceWorkflow.publicId}
                   workflow={spaceWorkflow}
-                  spacePublicId={spacePublicId}
                   activeWorkflowPublicId={currentWorkflow?.publicId}
                   handler={() => handleSetConvoWorkflow(spaceWorkflow.publicId)}
                 />
@@ -690,12 +918,10 @@ function SpaceWorkflowBlockWorkflowList({
 
 function WorkflowItem({
   workflow,
-  spacePublicId,
   activeWorkflowPublicId,
   handler
 }: {
   workflow: SpaceWorkflowData;
-  spacePublicId: TypeId<'spaces'>;
   activeWorkflowPublicId: TypeId<'spaceWorkflows'> | null;
   handler: () => void;
 }) {

@@ -23,6 +23,7 @@ import { createExtensionSet } from '@u22n/tiptap/extensions';
 import { sendRealtimeNotification } from '../utils/realtime';
 import { simpleParser, type EmailAddress } from 'mailparser';
 import { parseAddressIds } from '../utils/contactParsing';
+import { addConvoToSpace } from '../utils/spaceUtils';
 import { eq, and, inArray } from '@u22n/database/orm';
 import { tiptapCore, tiptapHtml } from '@u22n/tiptap';
 import { typeIdValidator } from '@u22n/utils/typeid';
@@ -357,7 +358,7 @@ export const worker = createWorker<MailProcessorJobData>(
             : parsedEmail.cc.value
           : [];
 
-        console.info(parsedEmail)
+        console.info(parsedEmail);
 
         const inReplyToEmailId = parsedEmail.inReplyTo
           ? (parsedEmail.inReplyTo
@@ -704,21 +705,29 @@ export const worker = createWorker<MailProcessorJobData>(
             );
 
             // add convo to the missing spaces
-            type ConvoToSpaceInsertDbType = typeof convoToSpaces.$inferInsert;
-            const convoToSpacesInsertValuesArray: ConvoToSpaceInsertDbType[] =
-              [];
-            missingSpaceIds.forEach((spaceId) => {
-              convoToSpacesInsertValuesArray.push({
-                orgId: orgId,
-                convoId: Number(convoId),
-                spaceId: spaceId,
-                publicId: typeIdGenerator('convoToSpaces')
-              });
-            });
+            // type ConvoToSpaceInsertDbType = typeof convoToSpaces.$inferInsert;
+            // const convoToSpacesInsertValuesArray: ConvoToSpaceInsertDbType[] =
+            //   [];
+            // missingSpaceIds.forEach((spaceId) => {
+            //   convoToSpacesInsertValuesArray.push({
+            //     orgId: orgId,
+            //     convoId: Number(convoId),
+            //     spaceId: spaceId,
+            //     publicId: typeIdGenerator('convoToSpaces')
+            //   });
+            // });
+            // await db
+            //   .insert(convoToSpaces)
+            //   .values(convoToSpacesInsertValuesArray);
 
-            await db
-              .insert(convoToSpaces)
-              .values(convoToSpacesInsertValuesArray);
+            for (const spaceId of missingSpaceIds) {
+              await addConvoToSpace({
+                db,
+                orgId,
+                convoId: Number(convoId),
+                spaceId: spaceId
+              });
+            }
           } else {
             console.info(
               'No existing message found, treating as new conversation'
