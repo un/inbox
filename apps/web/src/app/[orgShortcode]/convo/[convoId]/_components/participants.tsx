@@ -12,6 +12,11 @@ import {
   HoverCardContent,
   HoverCardTrigger
 } from '@/src/components/shadcn-ui/hover-card';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger
+} from '@/src/components/shadcn-ui/tooltip';
 import { Separator } from '@/src/components/shadcn-ui/separator';
 import { Avatar, AvatarIcon } from '@/src/components/avatar';
 import { Button } from '@/src/components/shadcn-ui/button';
@@ -58,34 +63,39 @@ export const Participants = memo(function Participants({
       noBodyStyles
       shouldScaleBackground={false}>
       <DrawerTrigger asChild>
-        <div
-          className={
-            'hover:text-base-12 text-base-11 flex h-6 min-h-6 w-fit cursor-pointer flex-row items-center gap-0.5 p-0'
-          }>
-          {orderedParticipants.map((participant) => (
+        <Tooltip>
+          <TooltipTrigger asChild>
             <div
-              className="flex flex-col gap-1"
-              key={participant.participantPublicId}>
-              <div
-                className={
-                  assignedParticipantIds.includes(
-                    participant.participantPublicId
-                  )
-                    ? 'ring-accent-9 border-base-1 rounded-md border ring-1'
-                    : ''
-                }>
-                <Avatar
-                  avatarProfilePublicId={participant.avatarProfilePublicId}
-                  avatarTimestamp={participant.avatarTimestamp}
-                  name={participant.name}
-                  color={participant.color}
-                  size="md"
-                  hideTooltip
-                />
-              </div>
+              className={
+                'hover:text-base-12 text-base-11 flex h-6 min-h-6 w-fit cursor-pointer flex-row items-center gap-0.5 p-0'
+              }>
+              {orderedParticipants.map((participant) => (
+                <div
+                  className="flex flex-col gap-1"
+                  key={participant.participantPublicId}>
+                  <div
+                    className={
+                      assignedParticipantIds.includes(
+                        participant.participantPublicId
+                      )
+                        ? 'ring-accent-9 border-base-1 rounded-md border ring-1'
+                        : ''
+                    }>
+                    <Avatar
+                      avatarProfilePublicId={participant.avatarProfilePublicId}
+                      avatarTimestamp={participant.avatarTimestamp}
+                      name={participant.name}
+                      color={participant.color}
+                      size="md"
+                      hideTooltip
+                    />
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          </TooltipTrigger>
+          <TooltipContent>View Conversation Participants</TooltipContent>
+        </Tooltip>
       </DrawerTrigger>
 
       <DrawerContent className="max-w-[80%] focus-within:outline-none">
