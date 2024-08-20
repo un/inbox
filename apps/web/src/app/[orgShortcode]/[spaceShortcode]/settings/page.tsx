@@ -183,11 +183,11 @@ export default function SettingsPage() {
               showSaved={setShowSaved}
               isSpaceAdmin={isSpaceAdmin}
             />
-            <Tags
+            {/* <Tags
               orgShortcode={orgShortcode}
               spaceShortcode={spaceShortcode}
               isSpaceAdmin={isSpaceAdmin}
-            />
+            /> */}
           </div>
         )}
       </div>
