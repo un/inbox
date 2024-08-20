@@ -289,6 +289,44 @@ export const spaceRouter = router({
     .query(async ({ ctx, input }) => {
       const { db } = ctx;
 
+      if (input.spaceShortcode === 'all') {
+        return {
+          space: {
+            publicId: 'lala',
+            name: 'All Conversations',
+            avatarTimestamp: null,
+            color: 'cyan',
+            icon: 'squares-four'
+          }
+        };
+      }
+
+      if (input.spaceShortcode === 'personal') {
+        const orgMemberQuery = await db.query.orgMembers.findFirst({
+          where: and(
+            eq(orgMembers.orgId, ctx.org.id),
+            eq(orgMembers.id, ctx.org.memberId)
+          ),
+          columns: {
+            id: true
+          },
+          with: {
+            personalSpace: {
+              columns: {
+                publicId: true,
+                name: true,
+                avatarTimestamp: true,
+                color: true,
+                icon: true
+              }
+            }
+          }
+        });
+        return {
+          space: orgMemberQuery?.personalSpace
+        };
+      }
+
       const spaceQueryResponse = await db.query.spaces.findFirst({
         where: and(
           eq(spaces.orgId, ctx.org.id),
@@ -382,7 +420,10 @@ export const spaceRouter = router({
 
       if (spaceShortcode === 'personal') {
         const orgMemberQuery = await db.query.orgMembers.findFirst({
-          where: eq(orgMembers.orgId, orgId),
+          where: and(
+            eq(orgMembers.orgId, orgId),
+            eq(orgMembers.id, org.memberId)
+          ),
           columns: {
             id: true
           },

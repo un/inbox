@@ -77,7 +77,7 @@ export function NewSpaceModal() {
       onSuccess: (data) => {
         void invalidateSpaces.invalidate();
         setOpen(false);
-        void router.push(`/${orgShortcode}/${data.spaceShortcode}`);
+        void router.push(`/${orgShortcode}/${data.spaceShortcode}/settings`);
       }
     });
 
