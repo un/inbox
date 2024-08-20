@@ -55,7 +55,7 @@ import {
   TooltipTrigger
 } from '@/src/components/shadcn-ui/tooltip';
 import { useOrgShortcode, useSpaceShortcode } from '@/src/hooks/use-params';
-import { type SpaceWorkflow, type SpaceType } from '@u22n/utils/spaces';
+import { type SpaceWorkflowType, type SpaceType } from '@u22n/utils/spaces';
 import { typeIdValidator, type TypeId } from '@u22n/utils/typeid';
 import { SettingsTitle } from './_components/settingsTitle';
 import { type UiColor, uiColors } from '@u22n/utils/colors';
@@ -911,7 +911,7 @@ function WorkflowItem({
     publicId: TypeId<'spaceWorkflows'>;
     icon: string;
     disabled: boolean;
-    type: SpaceWorkflow;
+    type: SpaceWorkflowType;
     order: number;
   };
   isAdmin: boolean;
@@ -1186,7 +1186,7 @@ function NewSpaceWorkflow({
 }: {
   orgShortcode: string;
   spaceShortcode: string;
-  type: SpaceWorkflow;
+  type: SpaceWorkflowType;
   order: number;
   showNewWorkflowComponent: (value: boolean) => void;
 }) {
@@ -1364,7 +1364,7 @@ function DeleteWorkflowModal({
     publicId: TypeId<'spaceWorkflows'>;
     icon: string;
     disabled: boolean;
-    type: SpaceWorkflow;
+    type: SpaceWorkflowType;
     order: number;
   };
 }) {

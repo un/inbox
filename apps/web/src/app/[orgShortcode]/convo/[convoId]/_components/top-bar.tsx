@@ -13,7 +13,13 @@ import {
   FileZip,
   FileTxt,
   File,
-  ArrowLeft
+  ArrowLeft,
+  SpinnerGap,
+  SquaresFour,
+  CaretRight,
+  ChatCircle,
+  Circle,
+  Check
 } from '@phosphor-icons/react';
 import {
   Dialog,
@@ -25,6 +31,12 @@ import {
   DialogTitle
 } from '@/src/components/shadcn-ui/dialog';
 import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbList,
+  BreadcrumbSeparator
+} from '@/src/components/shadcn-ui/breadcrumb';
+import {
   useCurrentConvoId,
   useOrgScopedRouter,
   useOrgShortcode,
@@ -35,13 +47,20 @@ import {
   TooltipContent,
   TooltipTrigger
 } from '@/src/components/shadcn-ui/tooltip';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from '@/src/components/shadcn-ui/popover';
 import { useDeleteConvo$Cache, type formatParticipantData } from '../../utils';
 import { useModifierKeys } from '@/src/components/modifier-class-provider';
 import { type VariantProps, cva } from 'class-variance-authority';
 import { type RouterOutputs, platform } from '@/src/lib/trpc';
+import { type SpaceWorkflowType } from '@u22n/utils/spaces';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { useIsMobile } from '@/src/hooks/use-is-mobile';
 import { memo, useCallback, useState } from 'react';
+import { type UiColor } from '@u22n/utils/colors';
 import { type TypeId } from '@u22n/utils/typeid';
 import { Participants } from './participants';
 import { cn } from '@/src/lib/utils';
@@ -125,26 +144,29 @@ export default function TopBar({
           </Tooltip> */}
         </div>
       </div>
-      <div
-        className={cn(
-          'flex w-full flex-row flex-wrap items-center justify-end gap-2 transition-all',
-          isConvoLoading ? 'max-h-0 p-0' : 'max-h-52 p-4'
-        )}>
+      <div className="flex w-full max-w-full items-center justify-between gap-2 sm:flex-col md:flex-row">
+        <SpaceWorkflowBlock />
         <div
           className={cn(
-            'justify-ends flex flex-wrap items-center justify-end gap-2 transition-all',
-            isConvoLoading ? 'max-h-0' : 'max-h-52'
+            'flex w-full flex-row flex-wrap items-center justify-end gap-2 transition-all',
+            isConvoLoading ? 'max-h-0 p-0' : 'max-h-52 p-4'
           )}>
-          {attachments.length > 0 ? (
-            attachments.map((attachment) => (
-              <AttachmentBlock
-                key={attachment.publicId}
-                {...attachment}
-              />
-            ))
-          ) : (
-            <span className="text-xs">No Attachments</span>
-          )}
+          <div
+            className={cn(
+              'justify-ends flex flex-wrap items-center justify-end gap-2 transition-all',
+              isConvoLoading ? 'max-h-0' : 'max-h-52'
+            )}>
+            {attachments.length > 0 ? (
+              attachments.map((attachment) => (
+                <AttachmentBlock
+                  key={attachment.publicId}
+                  {...attachment}
+                />
+              ))
+            ) : (
+              <span className="text-xs">No Attachments</span>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -436,5 +458,288 @@ function AttachmentBlock({ name, url, type, publicId }: AttachmentBlockProps) {
         <span className="text-xs font-medium">{name}</span>
       </TooltipContent>
     </Tooltip>
+  );
+}
+
+function SpaceWorkflowBlock() {
+  const orgShortcode = useOrgShortcode();
+  const currentConvo = useCurrentConvoId();
+  const spaceShortcode = useSpaceShortcode(false);
+
+  const {
+    data: convoSpaceWorkflows,
+    isLoading,
+    error
+  } = platform.convos.getConvoSpaceWorkflows.useQuery({
+    orgShortcode: orgShortcode,
+    convoPublicId: currentConvo!
+  });
+
+  return (
+    <div className="flex w-full max-w-full flex-col items-center justify-between gap-2 overflow-clip p-2">
+      {convoSpaceWorkflows?.map((spaceWorkflow) => (
+        <div
+          key={spaceWorkflow.space.publicId}
+          className="flex w-full max-w-full flex-row items-center justify-between gap-2 overflow-clip">
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                {
+                  <div className="flex w-full max-w-full flex-row items-center gap-2 truncate p-1">
+                    <div
+                      className="flex h-6 min-h-6 w-6 min-w-6 items-center justify-center rounded-sm"
+                      style={{
+                        backgroundColor: `var(--${spaceWorkflow?.space?.color ?? 'base'}4)`,
+                        color: `var(--${spaceWorkflow?.space?.color ?? 'base'}9)`
+                      }}>
+                      <SquaresFour
+                        className="h-4 w-4"
+                        weight="bold"
+                      />
+                    </div>
+                    <span className="text-slate-11 h-full truncate">
+                      {spaceWorkflow?.space?.name ?? 'Unnamed Space'}
+                    </span>
+                  </div>
+                }
+              </BreadcrumbItem>
+              {spaceWorkflow.spaceWorkflows.open.length > 0 ||
+              spaceWorkflow.spaceWorkflows.active.length > 0 ||
+              spaceWorkflow.spaceWorkflows.closed.length > 0 ? (
+                <>
+                  <BreadcrumbSeparator>
+                    <CaretRight />
+                  </BreadcrumbSeparator>
+                  <BreadcrumbItem>
+                    <SpaceWorkflowBlockWorkflowList
+                      currentWorkflow={spaceWorkflow.currentWorkflow}
+                      spaceWorkflows={spaceWorkflow.spaceWorkflows}
+                      spacePublicId={spaceWorkflow.space.publicId}
+                    />
+                  </BreadcrumbItem>
+                </>
+              ) : null}
+            </BreadcrumbList>
+          </Breadcrumb>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+type SpaceWorkflowData = {
+  publicId: TypeId<'spaceWorkflows'>;
+  name: string;
+  color: UiColor;
+  icon: string;
+  description: string | null;
+  type: SpaceWorkflowType;
+  order: number;
+  disabled: boolean;
+};
+
+type SpaceWorkflowBlockWorkflowList = {
+  spacePublicId: TypeId<'spaces'>;
+  currentWorkflow: {
+    publicId: TypeId<'spaceWorkflows'> | null;
+  };
+  spaceWorkflows: {
+    open: SpaceWorkflowData[];
+    active: SpaceWorkflowData[];
+    closed: SpaceWorkflowData[];
+  };
+};
+
+function SpaceWorkflowBlockWorkflowList({
+  currentWorkflow,
+  spaceWorkflows,
+  spacePublicId
+}: SpaceWorkflowBlockWorkflowList) {
+  const convoId = useCurrentConvoId();
+  const orgShortcode = useOrgShortcode();
+  const [showWorkflowList, setShowWorkflowList] = useState(false);
+
+  const findWorkflow = (
+    workflows: SpaceWorkflowData[]
+  ): SpaceWorkflowData | undefined =>
+    workflows.find(
+      (spaceWorkflow: SpaceWorkflowData) =>
+        spaceWorkflow.publicId === currentWorkflow?.publicId
+    );
+
+  const currentWorkflowItem =
+    findWorkflow(spaceWorkflows.open) ??
+    findWorkflow(spaceWorkflows.active) ??
+    findWorkflow(spaceWorkflows.closed);
+
+  const convoSpaceWorkflowCache =
+    platform.useUtils().convos.getConvoSpaceWorkflows;
+
+  const { mutateAsync: setConvoWorkflow } =
+    platform.convos.setConvoSpaceWorkflow.useMutation({
+      onSuccess: () => {
+        void convoSpaceWorkflowCache.invalidate();
+        setShowWorkflowList(false);
+      }
+    });
+
+  async function handleSetConvoWorkflow(
+    spaceWorkflowPublicId: TypeId<'spaceWorkflows'>
+  ) {
+    if (!convoId) return;
+    await setConvoWorkflow({
+      orgShortcode: orgShortcode,
+      convoPublicId: convoId,
+      spacePublicId: spacePublicId,
+      workflowPublicId: spaceWorkflowPublicId
+    });
+  }
+
+  return (
+    <>
+      <Popover open={showWorkflowList}>
+        <PopoverTrigger
+          asChild
+          onClick={() => setShowWorkflowList(!showWorkflowList)}>
+          {/* <button
+            className="focus-visible:ring-ring ring-base-5 inline-flex h-10 items-center justify-center whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50"
+            style={{
+              backgroundColor: `var(--${currentWorkflowItem?.color ?? 'slate'}4)`,
+              color: `var(--${currentWorkflowItem?.color ?? 'slate'}9)`
+            }}
+            onClick={() => setShowWorkflowList(!showWorkflowList)}>
+            <span className="text-xs">
+              {currentWorkflowItem?.name ?? 'No Workflow Status'}
+            </span>
+          </button> */}
+          <Button
+            variant={'ghost'}
+            className="pl-2"
+            asChild>
+            <div
+              className={cn(
+                'bg-base-1 flex w-full cursor-pointer flex-row items-center justify-between gap-8 border'
+              )}>
+              <div className="flex w-full flex-row items-center gap-4">
+                <div
+                  className={
+                    'flex size-6 min-h-6 min-w-6 items-center justify-center rounded-sm'
+                  }
+                  style={{
+                    backgroundColor: `var(--${currentWorkflowItem?.color ?? 'slate'}4)`
+                  }}>
+                  <Circle
+                    className={'size-4'}
+                    weight="regular"
+                    style={{
+                      color: `var(--${currentWorkflowItem?.color ?? 'slate'}9)`
+                    }}
+                  />
+                </div>
+                <span className="text-base-11 text-sm font-medium">
+                  {currentWorkflowItem?.name ?? 'No Workflow Status'}
+                </span>
+              </div>
+            </div>
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent onPointerDownOutside={() => setShowWorkflowList(false)}>
+          <div className="flex w-full flex-col gap-4">
+            <div className="flex w-full flex-col gap-2">
+              <span className="text-base-10 text-xs font-semibold">Open</span>
+              {spaceWorkflows.open.map((spaceWorkflow: SpaceWorkflowData) => (
+                <WorkflowItem
+                  key={spaceWorkflow.publicId}
+                  workflow={spaceWorkflow}
+                  spacePublicId={spacePublicId}
+                  activeWorkflowPublicId={currentWorkflow?.publicId}
+                  handler={() => handleSetConvoWorkflow(spaceWorkflow.publicId)}
+                />
+              ))}
+            </div>
+            <div className="flex w-full flex-col gap-2">
+              <span className="text-base-10 text-xs font-semibold">Active</span>
+              {spaceWorkflows.active.map((spaceWorkflow: SpaceWorkflowData) => (
+                <WorkflowItem
+                  key={spaceWorkflow.publicId}
+                  workflow={spaceWorkflow}
+                  spacePublicId={spacePublicId}
+                  activeWorkflowPublicId={currentWorkflow?.publicId}
+                  handler={() => handleSetConvoWorkflow(spaceWorkflow.publicId)}
+                />
+              ))}
+            </div>
+            <div className="flex w-full flex-col gap-2">
+              <span className="text-base-10 text-xs font-semibold">Closed</span>
+              {spaceWorkflows.closed.map((spaceWorkflow: SpaceWorkflowData) => (
+                <WorkflowItem
+                  key={spaceWorkflow.publicId}
+                  workflow={spaceWorkflow}
+                  spacePublicId={spacePublicId}
+                  activeWorkflowPublicId={currentWorkflow?.publicId}
+                  handler={() => handleSetConvoWorkflow(spaceWorkflow.publicId)}
+                />
+              ))}
+            </div>
+          </div>
+        </PopoverContent>
+      </Popover>
+    </>
+  );
+}
+
+function WorkflowItem({
+  workflow,
+  spacePublicId,
+  activeWorkflowPublicId,
+  handler
+}: {
+  workflow: SpaceWorkflowData;
+  spacePublicId: TypeId<'spaces'>;
+  activeWorkflowPublicId: TypeId<'spaceWorkflows'> | null;
+  handler: () => void;
+}) {
+  return (
+    <Button
+      variant={'ghost'}
+      className="pl-2"
+      asChild
+      onClick={handler}>
+      <div
+        className={cn(
+          'bg-base-1 flex w-full cursor-pointer flex-row items-center justify-between gap-8 border',
+          workflow.disabled ? 'opacity-70' : null
+        )}>
+        <div className="flex w-full flex-row items-center gap-4">
+          <div
+            className={
+              'flex size-6 min-h-6 min-w-6 items-center justify-center rounded-sm'
+            }
+            style={{
+              backgroundColor: `var(--${workflow.color}4)`
+            }}>
+            <Circle
+              className={'size-4'}
+              weight="regular"
+              style={{
+                color: `var(--${workflow.color}9)`
+              }}
+            />
+          </div>
+          <span className="text-base-11 text-sm font-medium">
+            {workflow.name}
+          </span>
+        </div>
+        {activeWorkflowPublicId === workflow.publicId && (
+          <Check
+            className={'size-4'}
+            weight="regular"
+            style={{
+              color: `var(--${workflow.color}9)`
+            }}
+          />
+        )}
+      </div>
+    </Button>
   );
 }

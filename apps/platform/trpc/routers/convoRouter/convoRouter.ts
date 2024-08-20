@@ -18,7 +18,9 @@ import {
   convoEntryPrivateVisibilityParticipants,
   convoEntryRawHtmlEmails,
   spaces,
-  convoToSpaces
+  convoToSpaces,
+  spaceWorkflows,
+  convoWorkflows
 } from '@u22n/database/schema';
 import {
   type InferInsertModel,
@@ -41,8 +43,10 @@ import { realtime, sendRealtimeNotification } from '~platform/utils/realtime';
 import { mailBridgeTrpcClient } from '~platform/utils/tRPCServerClients';
 import { isOrgMemberSpaceMember } from '../spaceRouter/utils';
 import { createExtensionSet } from '@u22n/tiptap/extensions';
+import type { SpaceWorkflowType } from '@u22n/utils/spaces';
 import { router, orgProcedure } from '~platform/trpc/trpc';
 import { type JSONContent } from '@u22n/tiptap/react';
+import type { UiColor } from '@u22n/utils/colors';
 import { convoEntryRouter } from './entryRouter';
 import { tiptapCore } from '@u22n/tiptap';
 import { TRPCError } from '@trpc/server';
@@ -2046,5 +2050,315 @@ export const convoRouter = router({
       return {
         success: true
       };
+    }),
+  getConvoSpaceWorkflows: orgProcedure
+    .input(
+      z.object({
+        convoPublicId: typeIdValidator('convos')
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const { db, org } = ctx;
+      const { convoPublicId } = input;
+
+      const convosQuery = await db.query.convos.findFirst({
+        where: eq(convos.publicId, convoPublicId),
+        columns: {
+          id: true
+        }
+      });
+      if (!convosQuery) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Conversation not found'
+        });
+      }
+
+      const convoSpacesQuery = await db.query.convoToSpaces.findMany({
+        where: and(
+          eq(convoToSpaces.convoId, convosQuery.id),
+          eq(convoToSpaces.orgId, org.id)
+        ),
+        columns: {
+          spaceId: true
+        },
+        with: {
+          space: {
+            columns: {
+              publicId: true,
+              name: true,
+              color: true,
+              icon: true,
+              avatarTimestamp: true
+            },
+            with: {
+              workflows: {
+                columns: {
+                  publicId: true,
+                  name: true,
+                  color: true,
+                  icon: true,
+                  description: true,
+                  type: true,
+                  order: true,
+                  disabled: true
+                }
+              }
+            }
+          },
+          workflows: {
+            columns: {
+              spaceId: true,
+              createdAt: true
+            },
+            orderBy: [desc(spaceWorkflows.createdAt)],
+            with: {
+              workflow: {
+                columns: {
+                  publicId: true
+                }
+              },
+              space: {
+                columns: {
+                  publicId: true
+                }
+              }
+            }
+          }
+        }
+      });
+
+      if (!convoSpacesQuery) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message:
+            'Error: This Conversation is not in any Spaces, please contact support'
+        });
+      }
+
+      type ReturnSpaceData = {
+        space: {
+          publicId: TypeId<'spaces'>;
+          name: string;
+          color: UiColor;
+          icon: string;
+          avatarTimestamp: Date | null;
+        };
+        currentWorkflow: {
+          publicId: TypeId<'spaceWorkflows'> | null;
+        };
+        spaceWorkflows: {
+          open: {
+            publicId: TypeId<'spaceWorkflows'>;
+            name: string;
+            color: UiColor;
+            icon: string;
+            description: string | null;
+            type: SpaceWorkflowType;
+            order: number;
+            disabled: boolean;
+          }[];
+          active: {
+            publicId: TypeId<'spaceWorkflows'>;
+            name: string;
+            color: UiColor;
+            icon: string;
+            description: string | null;
+            type: SpaceWorkflowType;
+            order: number;
+            disabled: boolean;
+          }[];
+          closed: {
+            publicId: TypeId<'spaceWorkflows'>;
+            name: string;
+            color: UiColor;
+            icon: string;
+            description: string | null;
+            type: SpaceWorkflowType;
+            order: number;
+            disabled: boolean;
+          }[];
+        };
+      };
+
+      const returnData: ReturnSpaceData[] = convoSpacesQuery.map(
+        (convoSpace) => {
+          // Extract space data
+          const spaceData = {
+            publicId: convoSpace.space.publicId,
+            name: convoSpace.space.name,
+            color: convoSpace.space.color,
+            icon: convoSpace.space.icon,
+            avatarTimestamp: convoSpace.space.avatarTimestamp
+          };
+
+          // Extract current workflow data
+          const currentWorkflowData = {
+            publicId:
+              convoSpace.workflows?.find(
+                (workflow) => workflow.spaceId === convoSpace.spaceId
+              )?.workflow?.publicId ?? null
+          };
+
+          // Extract space workflows data
+          const spaceWorkflowsData = {
+            open: convoSpace.space.workflows
+              .filter((workflow) => workflow.type === 'open')
+              .sort((a, b) => a.order - b.order)
+              .map((workflow) => ({
+                publicId: workflow.publicId,
+                name: workflow.name,
+                color: workflow.color,
+                icon: workflow.icon,
+                description: workflow.description,
+                type: workflow.type,
+                order: workflow.order,
+                disabled: workflow.disabled
+              })),
+            active: convoSpace.space.workflows
+              .filter((workflow) => workflow.type === 'active')
+              .sort((a, b) => a.order - b.order)
+              .map((workflow) => ({
+                publicId: workflow.publicId,
+                name: workflow.name,
+                color: workflow.color,
+                icon: workflow.icon,
+                description: workflow.description,
+                type: workflow.type,
+                order: workflow.order,
+                disabled: workflow.disabled
+              })),
+            closed: convoSpace.space.workflows
+              .filter((workflow) => workflow.type === 'closed')
+              .sort((a, b) => a.order - b.order)
+              .map((workflow) => ({
+                publicId: workflow.publicId,
+                name: workflow.name,
+                color: workflow.color,
+                icon: workflow.icon,
+                description: workflow.description,
+                type: workflow.type,
+                order: workflow.order,
+                disabled: workflow.disabled
+              }))
+          };
+
+          // Combine the data into the ReturnSpaceData format
+          const returnSpaceData: ReturnSpaceData = {
+            space: spaceData,
+            currentWorkflow: currentWorkflowData,
+            spaceWorkflows: spaceWorkflowsData
+          };
+
+          return returnSpaceData;
+        }
+      );
+
+      return returnData;
+    }),
+  setConvoSpaceWorkflow: orgProcedure
+    .input(
+      z.object({
+        convoPublicId: typeIdValidator('convos'),
+        spacePublicId: typeIdValidator('spaces'),
+        workflowPublicId: typeIdValidator('spaceWorkflows')
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { db, org } = ctx;
+      const { convoPublicId, spacePublicId, workflowPublicId } = input;
+
+      const spaceQueryResponse = await db.query.spaces.findFirst({
+        where: and(
+          eq(spaces.orgId, org.id),
+          eq(spaces.publicId, spacePublicId)
+        ),
+        columns: {
+          shortcode: true
+        }
+      });
+      if (!spaceQueryResponse) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Space not found'
+        });
+      }
+
+      const orgMemberSpacePermissions = await isOrgMemberSpaceMember({
+        db,
+        orgId: org.id,
+        spaceShortcode: spaceQueryResponse?.shortcode,
+        orgMemberId: org.memberId
+      });
+
+      if (!orgMemberSpacePermissions.permissions.canChangeWorkflow) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'You are not allowed to change the workflow of this space'
+        });
+      }
+
+      const convoQueryResponse = await db.query.convos.findFirst({
+        where: and(
+          eq(convos.orgId, org.id),
+          eq(convos.publicId, convoPublicId)
+        ),
+        columns: {
+          id: true
+        }
+      });
+      if (!convoQueryResponse) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Conversation not found'
+        });
+      }
+
+      const convoToSpacesQueryResponse = await db.query.convoToSpaces.findFirst(
+        {
+          where: and(
+            eq(convoToSpaces.orgId, org.id),
+            eq(convoToSpaces.convoId, convoQueryResponse.id),
+            eq(convoToSpaces.spaceId, orgMemberSpacePermissions.spaceId)
+          ),
+          columns: {
+            id: true
+          }
+        }
+      );
+      if (!convoToSpacesQueryResponse) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Conversation is not in this space'
+        });
+      }
+
+      const workflowQueryResponse = await db.query.spaceWorkflows.findFirst({
+        where: and(
+          eq(spaceWorkflows.orgId, org.id),
+          eq(spaceWorkflows.publicId, workflowPublicId)
+        ),
+        columns: {
+          id: true
+        }
+      });
+      if (!workflowQueryResponse) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Workflow not found'
+        });
+      }
+
+      await db.insert(convoWorkflows).values({
+        publicId: typeIdGenerator('convoWorkflows'),
+        orgId: org.id,
+        convoId: convoQueryResponse.id,
+        convoToSpaceId: convoToSpacesQueryResponse.id,
+        spaceId: orgMemberSpacePermissions.spaceId,
+        workflow: workflowQueryResponse.id,
+        byOrgMemberId: org.memberId
+      });
+
+      return {};
     })
 });

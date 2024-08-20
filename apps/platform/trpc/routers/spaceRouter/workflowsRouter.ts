@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 import { convoWorkflows, spaces, spaceWorkflows } from '@u22n/database/schema';
 import { typeIdGenerator, typeIdValidator } from '@u22n/utils/typeid';
-import { spaceWorkflowArray } from '@u22n/utils/spaces';
+import { spaceWorkflowTypeArray } from '@u22n/utils/spaces';
 import { isOrgMemberSpaceMember } from './utils';
 import { uiColors } from '@u22n/utils/colors';
 import { eq, and } from '@u22n/database/orm';
@@ -156,7 +156,7 @@ export const spaceWorkflowsRouter = router({
     .input(
       z.object({
         spaceShortcode: z.string().min(1).max(64),
-        type: z.enum(spaceWorkflowArray),
+        type: z.enum(spaceWorkflowTypeArray),
         order: z.number(),
         name: z.string().min(1).max(32),
         color: z.enum(uiColors),

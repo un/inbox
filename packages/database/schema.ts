@@ -22,7 +22,7 @@ import {
 import {
   spaceMemberNotificationArray,
   spaceMemberRoleArray,
-  spaceWorkflowArray
+  spaceWorkflowTypeArray
 } from '@u22n/utils/spaces';
 import { typeIdDataType as publicId } from '@u22n/utils/typeid';
 import { uiColors } from '@u22n/utils/colors';
@@ -696,7 +696,7 @@ export const spaceWorkflows = mysqlTable(
     orgId: foreignKey('org_id').notNull(),
     publicId: publicId('spaceWorkflows', 'public_id').notNull(),
     spaceId: foreignKey('space_id').notNull(),
-    type: mysqlEnum('type', [...spaceWorkflowArray]).notNull(),
+    type: mysqlEnum('type', [...spaceWorkflowTypeArray]).notNull(),
     order: tinyint('order', { unsigned: true }).notNull(),
     name: varchar('name', { length: 32 }).notNull(),
     color: mysqlEnum('color', [...uiColors]).notNull(),

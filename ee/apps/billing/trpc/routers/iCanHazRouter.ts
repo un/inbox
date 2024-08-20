@@ -1,5 +1,5 @@
 import { domains, orgBilling, orgs } from '@u22n/database/schema';
-import type { SpaceWorkflow } from '@u22n/utils/spaces';
+import type { SpaceWorkflowType } from '@u22n/utils/spaces';
 import { router, protectedProcedure } from '../trpc';
 import { and, eq } from '@u22n/database/orm';
 import { TRPCError } from '@trpc/server';
@@ -113,7 +113,7 @@ export const iCanHazRouter = router({
       const { db } = ctx;
       const orgId = input.orgId;
 
-      let allowedWorkflows: Record<SpaceWorkflow, number> = {
+      let allowedWorkflows: Record<SpaceWorkflowType, number> = {
         open: 1,
         active: 1,
         closed: 1
