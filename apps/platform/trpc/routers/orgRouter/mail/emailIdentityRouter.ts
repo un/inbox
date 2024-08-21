@@ -7,7 +7,8 @@ import {
   emailIdentities,
   teamMembers,
   spaces,
-  emailIdentitiesAuthorizedSenders
+  emailIdentitiesAuthorizedSenders,
+  convos
 } from '@u22n/database/schema';
 import {
   and,
@@ -531,14 +532,15 @@ export const emailIdentityRouter = router({
   getUserEmailIdentities: orgProcedure
     .input(
       z.object({
-        spaceShortcode: z.string().min(1).max(64).nullable().optional()
+        spaceShortcode: z.string().min(1).max(64).nullable().optional(),
+        convoPublicId: typeIdValidator('convos').optional()
       })
     )
     .query(async ({ ctx, input }) => {
       const { db, org } = ctx;
       const orgId = org.id;
       const orgMemberId = org?.memberId || 0;
-      let spaceId: number | undefined;
+      const authorizedSpaceIds: number[] = [];
 
       if (input.spaceShortcode) {
         const spaceQueryResponse = await db.query.spaces.findFirst({
@@ -551,32 +553,61 @@ export const emailIdentityRouter = router({
           }
         });
         if (spaceQueryResponse?.id) {
-          spaceId = spaceQueryResponse.id;
+          authorizedSpaceIds.push(spaceQueryResponse.id);
+        }
+      }
+
+      if (input.convoPublicId) {
+        const convoQueryResponse = await db.query.convos.findFirst({
+          where: and(
+            eq(convos.publicId, input.convoPublicId),
+            eq(convos.orgId, orgId)
+          ),
+          columns: {
+            id: true
+          },
+          with: {
+            spaces: {
+              columns: {
+                id: true,
+                spaceId: true
+              }
+            }
+          }
+        });
+
+        if (convoQueryResponse?.spaces) {
+          convoQueryResponse.spaces.map((space) => {
+            authorizedSpaceIds.push(space.id);
+          });
         }
       }
 
       // get all space memberships for the orgMember
-      const spaceMemberships = await db.query.spaceMembers.findMany({
-        where: eq(spaceMembers.orgMemberId, orgMemberId),
-        columns: {
-          spaceId: true
-        }
-      });
-      const orgOpenSpaces = await db.query.spaces.findMany({
-        where: and(eq(spaces.orgId, orgId), eq(spaces.type, 'open')),
-        columns: {
-          id: true
-        }
-      });
+      if (!input.spaceShortcode) {
+        const spaceMemberships = await db.query.spaceMembers.findMany({
+          where: eq(spaceMembers.orgMemberId, orgMemberId),
+          columns: {
+            spaceId: true
+          }
+        });
+        const orgOpenSpaces = await db.query.spaces.findMany({
+          where: and(eq(spaces.orgId, orgId), eq(spaces.type, 'open')),
+          columns: {
+            id: true
+          }
+        });
 
-      // create an array with unique spaceIds
-      const allUniqueSpaceIds = Array.from(
-        new Set(
-          spaceMemberships
-            .map((spaceMembership) => spaceMembership.spaceId)
-            .concat(orgOpenSpaces.map((space) => space.id))
-        )
-      );
+        // create an array with unique spaceIds
+        const allUniqueSpaceIds = Array.from(
+          new Set(
+            spaceMemberships
+              .map((spaceMembership) => spaceMembership.spaceId)
+              .concat(orgOpenSpaces.map((space) => space.id))
+          )
+        );
+        authorizedSpaceIds.push(...allUniqueSpaceIds);
+      }
 
       // search for user org team memberships, get id of org team
 
@@ -614,15 +645,14 @@ export const emailIdentityRouter = router({
       const authorizedEmailIdentities =
         await db.query.emailIdentitiesAuthorizedSenders.findMany({
           where: or(
-            inArray(
-              emailIdentitiesAuthorizedSenders.spaceId,
-              allUniqueSpaceIds
-            ),
+            authorizedSpaceIds.length && authorizedSpaceIds.length > 0
+              ? inArray(
+                  emailIdentitiesAuthorizedSenders.spaceId,
+                  authorizedSpaceIds
+                )
+              : undefined,
             eq(emailIdentitiesAuthorizedSenders.orgMemberId, orgMemberId),
-            inArray(emailIdentitiesAuthorizedSenders.teamId, uniqueUserTeamIds),
-            spaceId
-              ? eq(emailIdentitiesAuthorizedSenders.spaceId, spaceId)
-              : undefined
+            inArray(emailIdentitiesAuthorizedSenders.teamId, uniqueUserTeamIds)
           ),
           columns: {
             orgMemberId: true,

@@ -98,7 +98,8 @@ export function ReplyBox({
     platform.org.mail.emailIdentities.getUserEmailIdentities.useQuery(
       {
         orgShortcode,
-        spaceShortcode
+        spaceShortcode,
+        convoPublicId: convoId
       },
       {
         staleTime: ms('1 hour')

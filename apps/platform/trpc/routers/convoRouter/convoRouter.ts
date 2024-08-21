@@ -542,16 +542,7 @@ export const convoRouter = router({
         lastUpdatedAt: newConvoTimestamp
       });
 
-      // add the conversation to the space
-
-      // const convoToSpacesInsertValues = spacesToAddConvoTo.map((spaceId) => ({
-      //   publicId: typeIdGenerator('convoToSpaces'),
-      //   convoId: Number(insertConvoResponse.insertId),
-      //   spaceId: spaceId,
-      //   orgId: orgId
-      // }));
-
-      // await db.insert(convoToSpaces).values(convoToSpacesInsertValues);
+      // add the conversation to the space(s)
 
       for (const spaceToAdd of spacesToAddConvoTo) {
         await addConvoToSpace({
@@ -953,6 +944,18 @@ export const convoRouter = router({
                 publicId: true
               },
               with: {
+                spaces: {
+                  columns: {
+                    id: true
+                  },
+                  with: {
+                    space: {
+                      columns: {
+                        id: true
+                      }
+                    }
+                  }
+                },
                 participants: {
                   columns: {
                     id: true,
@@ -982,6 +985,11 @@ export const convoRouter = router({
           message: 'Reply to message not found'
         });
       }
+
+      const allSpaceIdsWhereConvoAlreadyExists =
+        convoEntryToReplyToQueryResponse.convo.spaces.map(
+          (space) => space.space.id
+        );
 
       // get the email identity the user wants to email from
       let emailIdentityId: number | null = null;
@@ -1082,7 +1090,8 @@ export const convoRouter = router({
               authorizedSenders: {
                 columns: {
                   orgMemberId: true,
-                  teamId: true
+                  teamId: true,
+                  spaceId: true
                 },
                 with: {
                   team: {
@@ -1102,15 +1111,36 @@ export const convoRouter = router({
             }
           });
 
-        const userIsAuthorized =
-          sendAsEmailIdentityResponse?.authorizedSenders.some(
-            (authorizedOrgMember) =>
-              authorizedOrgMember.orgMemberId === accountOrgMemberId ||
-              authorizedOrgMember.team?.members.some(
-                (teamMember) => teamMember.orgMemberId === accountOrgMemberId
-              )
+        const authedOrgMemberIds =
+          sendAsEmailIdentityResponse?.authorizedSenders?.map(
+            (authorizedOrgMember) => authorizedOrgMember.orgMemberId
+          ) ?? [];
+        const authedTeamMemberIds: number[] = [];
+        sendAsEmailIdentityResponse?.authorizedSenders?.map(
+          (authorizedSender) =>
+            authorizedSender.team?.members.map((teamMember) =>
+              authedTeamMemberIds.push(teamMember.orgMemberId)
+            )
+        );
+        const authedSpacedIds =
+          sendAsEmailIdentityResponse?.authorizedSenders?.map(
+            (authorizedOrgMember) => authorizedOrgMember.spaceId
+          ) ?? [];
+
+        const orgMemberIsAuthorizedToUseEmailIdentity =
+          authedOrgMemberIds.some(
+            (authedOrgMemberId) => authedOrgMemberId === accountOrgMemberId
+          ) ||
+          authedTeamMemberIds?.some(
+            (authedTeamMemberId) => authedTeamMemberId === accountOrgMemberId
+          ) ||
+          authedSpacedIds.some(
+            (authedSpacedId) =>
+              authedSpacedId &&
+              allSpaceIdsWhereConvoAlreadyExists.includes(authedSpacedId)
           );
-        if (!userIsAuthorized) {
+
+        if (!orgMemberIsAuthorizedToUseEmailIdentity) {
           throw new TRPCError({
             code: 'UNAUTHORIZED',
             message: 'User is not authorized to send as this email identity'
