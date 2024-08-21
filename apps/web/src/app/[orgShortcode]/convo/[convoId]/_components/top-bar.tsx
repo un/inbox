@@ -209,23 +209,23 @@ function AddToSpaceButton({ convoId }: AddToSpaceButtonProps) {
   return (
     <>
       <Popover open={showSpaceList}>
-        <PopoverTrigger
-          asChild
-          onClick={() => setShowSpaceList(!showSpaceList)}>
-          <Tooltip>
-            <TooltipTrigger asChild>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <PopoverTrigger
+              asChild
+              onClick={() => setShowSpaceList(!showSpaceList)}>
               <Button
                 variant={'outline'}
                 size={'icon-sm'}
                 loading={isPending}>
                 <ArrowSquareIn className="size-4" />
               </Button>
-            </TooltipTrigger>
-            <TooltipContent>Add Conversation to another Space</TooltipContent>
-          </Tooltip>
-        </PopoverTrigger>
+            </PopoverTrigger>
+          </TooltipTrigger>
+          <TooltipContent>Add Conversation to another Space</TooltipContent>
+        </Tooltip>
         <PopoverContent onPointerDownOutside={() => setShowSpaceList(false)}>
-          <div className="flex w-full flex-col gap-4">
+          <div className="flex max-h-96 w-full flex-col gap-4 overflow-x-auto">
             <span className="text-base-11 text-sm font-semibold">
               Add Conversation to another Space
             </span>
@@ -336,25 +336,25 @@ function MoveToSpaceButton({ convoId }: MoveToSpaceButtonProps) {
   return (
     <>
       <Popover open={showSpaceList}>
-        <PopoverTrigger
-          asChild
-          onClick={() => setShowSpaceList(!showSpaceList)}>
-          <Tooltip>
-            <TooltipTrigger asChild>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <PopoverTrigger
+              asChild
+              onClick={() => setShowSpaceList(!showSpaceList)}>
               <Button
                 variant={'outline'}
                 size={'icon-sm'}
                 loading={isPending}>
                 <ArrowSquareOut className="size-4" />
               </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              Move Conversation to a different Space
-            </TooltipContent>
-          </Tooltip>
-        </PopoverTrigger>
+            </PopoverTrigger>
+          </TooltipTrigger>
+          <TooltipContent>
+            Move Conversation to a different Space
+          </TooltipContent>
+        </Tooltip>
         <PopoverContent onPointerDownOutside={() => setShowSpaceList(false)}>
-          <div className="flex w-full flex-col gap-4">
+          <div className="flex max-h-96 w-full flex-col gap-4 overflow-x-auto">
             <span className="text-base-11 text-sm font-semibold">
               Move Conversation to a different Space
             </span>
