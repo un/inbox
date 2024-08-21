@@ -1,7 +1,7 @@
 {
   "name": "@u22n/inbox-monorepo",
   "private": "true",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "email + chat communications platform",
   "scripts": {
     "format": "prettier . --write",

@@ -2,7 +2,7 @@
   "name": "@u22n/storage",
   "private": true,
   "type": "module",
-  "version": "0.9.0",
+  "version": "1.0.0",
   "scripts": {
     "dev": "tsx watch --clear-screen=false --import ./tracing.ts app.ts",
     "start": "node --import ./.output/tracing.js .output/app.js",
