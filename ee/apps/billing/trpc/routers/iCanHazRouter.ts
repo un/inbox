@@ -127,9 +127,9 @@ export const iCanHazRouter = router({
       });
       if (orgBillingResponse && orgBillingResponse.plan === 'pro') {
         allowedWorkflows = {
-          open: 1,
-          active: 1,
-          closed: 1
+          open: 5,
+          active: 8,
+          closed: 5
         };
       }
       return allowedWorkflows;
