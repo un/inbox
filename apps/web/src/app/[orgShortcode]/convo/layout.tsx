@@ -80,7 +80,7 @@ function ConvoNavHeader(
   }
 ) {
   const orgShortcode = useOrgShortcode();
-  const spaceShortcode = useSpaceShortcode();
+  const spaceShortcode = useSpaceShortcode(false);
   const { scopedUrl } = useOrgScopedRouter();
 
   // const { mutate: hideConvo } = platform.convos.hideConvo.useMutation({
@@ -92,7 +92,7 @@ function ConvoNavHeader(
   const spaceDisplayPropertiesQuery =
     platform.spaces.getSpaceDisplayProperties.useQuery({
       orgShortcode: orgShortcode,
-      spaceShortcode: spaceShortcode
+      spaceShortcode: spaceShortcode ?? 'all'
     });
 
   const {
