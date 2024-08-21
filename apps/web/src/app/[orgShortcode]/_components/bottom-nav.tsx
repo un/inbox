@@ -1,34 +1,53 @@
 'use client';
 
 import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle
+} from '@/src/components/shadcn-ui/drawer';
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger
 } from '@/src/components/shadcn-ui/dropdown-menu';
-import { useOrgScopedRouter, useOrgShortcode } from '@/src/hooks/use-params';
-import { ChatCircle, Plus, SpinnerGap } from '@phosphor-icons/react';
+import {
+  useCurrentConvoId,
+  useOrgScopedRouter,
+  useOrgShortcode
+} from '@/src/hooks/use-params';
+import {
+  ChatCircle,
+  ChatsCircle,
+  Plus,
+  SpinnerGap
+} from '@phosphor-icons/react';
+import { OrgMenuContent, SidebarContent } from './sidebar-content';
 import { Button } from '@/src/components/shadcn-ui/button';
-import { OrgMenuContent } from './sidebar-content';
 import { Avatar } from '@/src/components/avatar';
 import { usePathname } from 'next/navigation';
 import { platform } from '@/src/lib/trpc';
+import { useMemo, useState } from 'react';
 import { ms } from '@u22n/utils/ms';
-import { useMemo } from 'react';
 import Link from 'next/link';
 
 export function BottomNav() {
-  // const [showSpacesDrawer, setShowSpacesDrawer] = useState(false);
+  const [showSpacesDrawer, setShowSpacesDrawer] = useState(false);
 
   return (
     <>
       {/* Bottom Nav */}
       <div className="flex flex-col gap-0">
-        {/* <SpacesDrawer
+        <SpacesDrawer
           drawerOpen={showSpacesDrawer}
           setDrawerOpen={setShowSpacesDrawer}
-        /> */}
+        />
         <div className="bg-base-1 z-[1000] grid h-fit w-full grid-cols-3 content-end justify-items-center rounded-t-xl border border-b-0 px-4 pb-2 pt-3">
-          <ConvoSpacesButton />
+          <ConvoSpacesButton
+            showSpacesDrawer={showSpacesDrawer}
+            setShowSpacesDrawer={setShowSpacesDrawer}
+          />
           <NewConvoButton />
           <UserContextMenu />
         </div>
@@ -63,109 +82,105 @@ function NewConvoButton() {
   );
 }
 
-function ConvoSpacesButton() {
-  const { scopedUrl } = useOrgScopedRouter();
-  const pathname = usePathname();
-  const isActive = pathname.endsWith('/convo');
-
-  return (
-    <>
-      <Button
-        variant={'ghost'}
-        aria-current={isActive}
-        className="hover:bg-accent-2 hover:text-base-9 text-base-9 [&[aria-current=true]]:text-base-12 flex h-20 w-24 flex-col items-center justify-center gap-2 px-1 py-1"
-        asChild>
-        <Link href={scopedUrl('/convo', true)}>
-          <div className="p-1">
-            <ChatCircle
-              size={24}
-              className="size-6"
-            />
-          </div>
-          <span className="text-sm">Convos</span>
-        </Link>
-      </Button>
-    </>
-  );
-}
-
-//! Add back in when spaces are implemented
-// function ConvoSpacesButton(
-//   {
-//     showSpacesDrawer,
-//     setShowSpacesDrawer
-//   }: {
-//     showSpacesDrawer: boolean;
-//     setShowSpacesDrawer: (value: boolean) => void;
-//   }
-// ) {
-//   const orgShortcode = useGlobalStore((state) => state.currentOrg.shortcode);
-//   const params = useParams();
-//   const isInConvo = !!params.convoId;
+// function ConvoSpacesButton() {
+//   const { scopedUrl } = useOrgScopedRouter();
+//   const pathname = usePathname();
+//   const isActive = pathname.endsWith('/convo');
 
 //   return (
 //     <>
-//       Add back in when spaces are implemented
-//       {!isInConvo ? (
-//         <Button
-//           variant="ghost"
-//           className="hover:bg-accent-2 hover:text-base-9 text-base-9 flex h-20 w-24 flex-col items-center justify-center gap-2 px-1 py-1"
-//           onClick={() => setShowSpacesDrawer(!showSpacesDrawer)}>
-//           <ChatsCircle
-//             size={24}
-//             className="size-6"
-//           />
-//           <span className="text-sm">Spaces</span>
-//         </Button>
-//       ) : (
-//         <Button asChild>
-//           <Link href={`/${orgShortcode}/convo`}>
-//             <div className="hover:bg-accent-2 hover:text-base-9 text-base-9 flex w-24 flex-col items-center justify-center gap-2 px-1 py-1">
-//               <div className="p-2">
-//                 <ChatCircle
-//                   size={24}
-//                   className="size-6"
-//                 />
-//               </div>
-//               <span className="text-base-9 text-sm">
-//                 {isInConvo ? 'In Convo' : 'Not In Convo'}
-//               </span>
-//             </div>
-//           </Link>
-//         </Button>
-//       )}
+//       <Button
+//         variant={'ghost'}
+//         aria-current={isActive}
+//         className="hover:bg-accent-2 hover:text-base-9 text-base-9 [&[aria-current=true]]:text-base-12 flex h-20 w-24 flex-col items-center justify-center gap-2 px-1 py-1"
+//         asChild>
+//         <Link href={scopedUrl('/convo', true)}>
+//           <div className="p-1">
+//             <ChatCircle
+//               size={24}
+//               className="size-6"
+//             />
+//           </div>
+//           <span className="text-sm">Convos</span>
+//         </Link>
+//       </Button>
 //     </>
 //   );
 // }
 
-//! Add back in when spaces are implemented
-// export function SpacesDrawer({
-//   drawerOpen,
-//   setDrawerOpen
-// }: {
-//   drawerOpen: boolean;
-//   setDrawerOpen: (value: boolean) => void;
-// }) {
-//   return (
-//     <Drawer
-//       open={drawerOpen}
-//       modal={false}
-//       direction={'bottom'}
-//       onClose={() => setDrawerOpen(false)}>
-//       <DrawerContent className="-bottom-4 p-0">
-//         <DrawerHeader className="sr-only">
-//           <DrawerTitle>Spaces Sidebar</DrawerTitle>
-//           <DrawerDescription>
-//             Sidebar shows all your spaces you have access to
-//           </DrawerDescription>
-//         </DrawerHeader>
-//         <div className="mb-24">
-//           <SidebarContent />
-//         </div>
-//       </DrawerContent>
-//     </Drawer>
-//   );
-// }
+function ConvoSpacesButton({
+  showSpacesDrawer,
+  setShowSpacesDrawer
+}: {
+  showSpacesDrawer: boolean;
+  setShowSpacesDrawer: (value: boolean) => void;
+}) {
+  const orgShortcode = useOrgShortcode();
+  const convoId = useCurrentConvoId();
+
+  return (
+    <>
+      {!convoId ? (
+        <Button
+          variant="ghost"
+          className="hover:bg-accent-2 hover:text-base-9 text-base-9 flex h-20 w-24 flex-col items-center justify-center gap-2 px-1 py-1"
+          onClick={() => setShowSpacesDrawer(!showSpacesDrawer)}>
+          <ChatsCircle
+            size={24}
+            className="size-6"
+          />
+          <span className="text-sm">Spaces</span>
+        </Button>
+      ) : (
+        <Button asChild>
+          <Link href={`/${orgShortcode}/all/convo`}>
+            <div className="hover:bg-accent-2 hover:text-base-9 text-base-9 flex w-24 flex-col items-center justify-center gap-2 px-1 py-1">
+              <div className="p-2">
+                <ChatCircle
+                  size={24}
+                  className="size-6"
+                />
+              </div>
+              <span className="text-base-9 text-sm">
+                {convoId ? 'In Convo' : 'Not In Convo'}
+              </span>
+            </div>
+          </Link>
+        </Button>
+      )}
+    </>
+  );
+}
+
+export function SpacesDrawer({
+  drawerOpen,
+  setDrawerOpen
+}: {
+  drawerOpen: boolean;
+  setDrawerOpen: (value: boolean) => void;
+}) {
+  return (
+    <Drawer
+      open={drawerOpen}
+      modal={false}
+      direction={'bottom'}
+      noBodyStyles
+      shouldScaleBackground={false}
+      onClose={() => setDrawerOpen(false)}>
+      <DrawerContent className="-bottom-4 p-0">
+        <DrawerHeader className="sr-only">
+          <DrawerTitle>Spaces Sidebar</DrawerTitle>
+          <DrawerDescription>
+            Sidebar shows all your spaces you have access to
+          </DrawerDescription>
+        </DrawerHeader>
+        <div className="mb-24 max-h-96 overflow-x-scroll">
+          <SidebarContent />
+        </div>
+      </DrawerContent>
+    </Drawer>
+  );
+}
 
 function UserContextMenu() {
   const { data: orgData, isLoading } =
