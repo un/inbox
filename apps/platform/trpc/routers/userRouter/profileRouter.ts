@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
+
 import {
   orgMemberProfiles,
   orgs,
@@ -151,7 +153,7 @@ export const profileRouter = router({
           .set({
             name: `${firstName}'s Personal Space`,
             shortcode: validatedShortcode.shortcode,
-            description: `${firstName}${lastName.length ? ' ' + lastName.join(' ') : ''}'s Personal Space`
+            description: `${firstName}${lastName?.length > 0 ? ' ' + lastName.join(' ') : ''}'s Personal Space`
           })
           .where(
             eq(spaces.id, orgMemberProfileQuery.orgMember.personalSpaceId)
