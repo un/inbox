@@ -8,7 +8,7 @@ import {
   spaces,
   teams
 } from '@u22n/database/schema';
-import { eq, type InferInsertModel } from '@u22n/database/orm';
+import { eq, or, type InferInsertModel } from '@u22n/database/orm';
 import { typeIdGenerator } from '@u22n/utils/typeid';
 import { db } from '@u22n/database';
 import { logger } from './logger';
@@ -99,7 +99,8 @@ export async function runOrgMigration({
             id: true,
             firstName: true,
             lastName: true,
-            handle: true
+            handle: true,
+            publicId: true
           }
         }
       }
@@ -113,7 +114,9 @@ export async function runOrgMigration({
       );
       break;
     }
-    const userHandle = orgMemberProfileQueryResponse.profile.handle!;
+    const userHandle =
+      orgMemberProfileQueryResponse.profile.handle ??
+      orgMemberProfileQueryResponse.profile.publicId;
 
     const preShortcode = `${userHandle.toLocaleLowerCase()}-personal`;
 
@@ -199,24 +202,25 @@ export async function runOrgMigration({
       logger.log(
         `[Batch ${batchDistinctId}] 🚨 No routing rule destinations found for org member ${individualOrgMemberId}`
       );
-      break;
     }
 
     // set orgMember.defaultEmailIdentityId to first routingruleDestination.emailIdentityId
 
-    const routingRuleEmailIdentityId =
-      routingRuleDestinationsQueryResponse[0]?.rule.mailIdentities[0]?.id;
+    if (routingRuleDestinationsQueryResponse.length > 0) {
+      const routingRuleEmailIdentityId =
+        routingRuleDestinationsQueryResponse[0]?.rule.mailIdentities[0]?.id;
 
-    routingRuleEmailIdentityId &&
-      (await db
-        .update(orgMembers)
-        .set({
-          defaultEmailIdentityId: routingRuleEmailIdentityId
-        })
-        .where(eq(orgMembers.id, Number(individualOrgMemberId))));
-    logger.log(
-      `[Batch ${batchDistinctId}] 📧 updated org member ${individualOrgMemberId} default email identity`
-    );
+      routingRuleEmailIdentityId &&
+        (await db
+          .update(orgMembers)
+          .set({
+            defaultEmailIdentityId: routingRuleEmailIdentityId
+          })
+          .where(eq(orgMembers.id, Number(individualOrgMemberId))));
+      logger.log(
+        `[Batch ${batchDistinctId}] 📧 updated org member ${individualOrgMemberId} default email identity`
+      );
+    }
 
     // fetch all convos.id where user is participant.type === assigned | contributor
     const allConvoIds: number[] = [];
