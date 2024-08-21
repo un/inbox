@@ -24,9 +24,13 @@ import { db } from '.';
   }
 
   // Create an array of Promises for executing the truncate statements
-  const truncatePromises = tableNames.map(
-    async (tableName) => await db.execute(sql.raw(`drop table ${tableName}`))
-  );
+  const truncatePromises = tableNames.map(async (tableName) => {
+    try {
+      await db.execute(sql.raw(`drop table ${tableName}`));
+    } catch (e) {
+      console.error(e);
+    }
+  });
 
   // Execute all the truncate statements concurrently
   await Promise.all(truncatePromises);
