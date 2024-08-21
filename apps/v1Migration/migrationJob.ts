@@ -341,6 +341,13 @@ export async function runOrgMigration({
         columns: {
           id: true,
           name: true
+        },
+        with: {
+          members: {
+            columns: {
+              orgMemberId: true
+            }
+          }
         }
       });
 
@@ -370,27 +377,31 @@ export async function runOrgMigration({
         shortcode: validatedShortcode
       });
 
-      // Add the org member as the space member
-      await db.insert(spaceMembers).values({
-        orgId: orgId,
-        spaceId: Number(newSpaceResponse.insertId),
-        publicId: typeIdGenerator('spaceMembers'),
-        orgMemberId: orgOwnerMembershipId,
-        addedByOrgMemberId: orgOwnerMembershipId,
-        role: 'admin',
-        canCreate: true,
-        canRead: true,
-        canComment: true,
-        canReply: true,
-        canDelete: true,
-        canChangeWorkflow: true,
-        canSetWorkflowToClosed: true,
-        canAddTags: true,
-        canMoveToAnotherSpace: true,
-        canAddToAnotherSpace: true,
-        canMergeConvos: true,
-        canAddParticipants: true
-      });
+      // Add the each team member as the space member
+      if (teamQueryResponse.members && teamQueryResponse.members.length > 0) {
+        for (const teamMember of teamQueryResponse.members) {
+          await db.insert(spaceMembers).values({
+            orgId: orgId,
+            spaceId: Number(newSpaceResponse.insertId),
+            publicId: typeIdGenerator('spaceMembers'),
+            orgMemberId: teamMember.orgMemberId,
+            addedByOrgMemberId: orgOwnerMembershipId,
+            role: 'admin',
+            canCreate: true,
+            canRead: true,
+            canComment: true,
+            canReply: true,
+            canDelete: true,
+            canChangeWorkflow: true,
+            canSetWorkflowToClosed: true,
+            canAddTags: true,
+            canMoveToAnotherSpace: true,
+            canAddToAnotherSpace: true,
+            canMergeConvos: true,
+            canAddParticipants: true
+          });
+        }
+      }
 
       // set team.defaultSpaceId > spaceId
       await db
