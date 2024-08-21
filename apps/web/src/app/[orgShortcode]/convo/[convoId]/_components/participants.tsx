@@ -62,9 +62,9 @@ export const Participants = memo(function Participants({
       direction="right"
       noBodyStyles
       shouldScaleBackground={false}>
-      <DrawerTrigger asChild>
-        <Tooltip>
-          <TooltipTrigger asChild>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <DrawerTrigger asChild>
             <div
               className={
                 'hover:text-base-12 text-base-11 flex h-6 min-h-6 w-fit cursor-pointer flex-row items-center gap-0.5 p-0'
@@ -93,10 +93,10 @@ export const Participants = memo(function Participants({
                 </div>
               ))}
             </div>
-          </TooltipTrigger>
-          <TooltipContent>View Conversation Participants</TooltipContent>
-        </Tooltip>
-      </DrawerTrigger>
+          </DrawerTrigger>
+        </TooltipTrigger>
+        <TooltipContent>View Conversation Participants</TooltipContent>
+      </Tooltip>
 
       <DrawerContent className="max-w-[80%] focus-within:outline-none">
         <div className="h-full w-full max-w-sm">
