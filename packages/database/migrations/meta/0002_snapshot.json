@@ -1,8 +1,8 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "af9ab5c7-121f-4c72-9875-d5628e31b720",
-  "prevId": "24f67ddc-c57e-4fa8-bd3f-145bc4362f22",
+  "id": "fe079eab-6d85-46ff-9ff5-0feadc02b851",
+  "prevId": "6e186775-9d48-4ac1-b830-a271c08d3117",
   "tables": {
     "account_credentials": {
       "name": "account_credentials",
@@ -54,7 +54,9 @@
       "indexes": {
         "account_id_idx": {
           "name": "account_id_idx",
-          "columns": ["account_id"],
+          "columns": [
+            "account_id"
+          ],
           "isUnique": false
         }
       },
@@ -62,7 +64,9 @@
       "compositePrimaryKeys": {
         "account_credentials_id": {
           "name": "account_credentials_id",
-          "columns": ["id"]
+          "columns": [
+            "id"
+          ]
         }
       },
       "uniqueConstraints": {}
@@ -119,6 +123,20 @@
           "notNull": false,
           "autoincrement": false
         },
+        "recovery_email_hash": {
+          "name": "recovery_email_hash",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "recovery_email_verified_at": {
+          "name": "recovery_email_verified_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
         "two_factor_secret": {
           "name": "two_factor_secret",
           "type": "varchar(255)",
@@ -153,12 +171,16 @@
       "indexes": {
         "public_id_idx": {
           "name": "public_id_idx",
-          "columns": ["public_id"],
+          "columns": [
+            "public_id"
+          ],
           "isUnique": true
         },
         "username_idx": {
           "name": "username_idx",
-          "columns": ["username"],
+          "columns": [
+            "username"
+          ],
           "isUnique": true
         }
       },
@@ -166,7 +188,9 @@
       "compositePrimaryKeys": {
         "accounts_id": {
           "name": "accounts_id",
-          "columns": ["id"]
+          "columns": [
+            "id"
+          ]
         }
       },
       "uniqueConstraints": {}
@@ -218,7 +242,7 @@
         },
         "credential_public_key": {
           "name": "credential_public_key",
-          "type": "varchar(255)",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -260,14 +284,25 @@
         }
       },
       "indexes": {
+        "public_id_idx": {
+          "name": "public_id_idx",
+          "columns": [
+            "public_id"
+          ],
+          "isUnique": true
+        },
         "provider_account_id_idx": {
           "name": "provider_account_id_idx",
-          "columns": ["account_credential_id"],
+          "columns": [
+            "account_credential_id"
+          ],
           "isUnique": false
         },
         "credential_id_idx": {
           "name": "credential_id_idx",
-          "columns": ["credential_id"],
+          "columns": [
+            "credential_id"
+          ],
           "isUnique": true
         }
       },
@@ -275,7 +310,9 @@
       "compositePrimaryKeys": {
         "authenticators_id": {
           "name": "authenticators_id",
-          "columns": ["id"]
+          "columns": [
+            "id"
+          ]
         }
       },
       "uniqueConstraints": {}
@@ -356,7 +393,9 @@
       "indexes": {
         "email_address_idx": {
           "name": "email_address_idx",
-          "columns": ["email_address"],
+          "columns": [
+            "email_address"
+          ],
           "isUnique": true
         }
       },
@@ -364,7 +403,9 @@
       "compositePrimaryKeys": {
         "contact_global_reputations_id": {
           "name": "contact_global_reputations_id",
-          "columns": ["id"]
+          "columns": [
+            "id"
+          ]
         }
       },
       "uniqueConstraints": {}
@@ -379,6 +420,13 @@
           "notNull": true,
           "autoincrement": true
         },
+        "org_id": {
+          "name": "org_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
         "public_id": {
           "name": "public_id",
           "type": "char(28)",
@@ -391,13 +439,6 @@
           "type": "timestamp",
           "primaryKey": false,
           "notNull": false,
-          "autoincrement": false
-        },
-        "org_id": {
-          "name": "org_id",
-          "type": "bigint unsigned",
-          "primaryKey": false,
-          "notNull": true,
           "autoincrement": false
         },
         "reputation_id": {
@@ -474,22 +515,33 @@
       "indexes": {
         "public_id_idx": {
           "name": "public_id_idx",
-          "columns": ["public_id"],
+          "columns": [
+            "public_id"
+          ],
           "isUnique": true
         },
         "org_id_idx": {
           "name": "org_id_idx",
-          "columns": ["org_id"],
+          "columns": [
+            "org_id"
+          ],
           "isUnique": false
         },
         "email_idx": {
           "name": "email_idx",
-          "columns": ["email_username", "email_domain"],
+          "columns": [
+            "email_username",
+            "email_domain"
+          ],
           "isUnique": false
         },
         "email_org_unique_idx": {
           "name": "email_org_unique_idx",
-          "columns": ["email_username", "email_domain", "org_id"],
+          "columns": [
+            "email_username",
+            "email_domain",
+            "org_id"
+          ],
           "isUnique": true
         }
       },
@@ -497,7 +549,9 @@
       "compositePrimaryKeys": {
         "contacts_id": {
           "name": "contacts_id",
-          "columns": ["id"]
+          "columns": [
+            "id"
+          ]
         }
       },
       "uniqueConstraints": {}
@@ -595,22 +649,30 @@
       "indexes": {
         "org_id_idx": {
           "name": "org_id_idx",
-          "columns": ["org_id"],
+          "columns": [
+            "org_id"
+          ],
           "isUnique": false
         },
         "convo_id_idx": {
           "name": "convo_id_idx",
-          "columns": ["convo_id"],
+          "columns": [
+            "convo_id"
+          ],
           "isUnique": false
         },
         "convo_entry_id_idx": {
           "name": "convo_entry_id_idx",
-          "columns": ["convo_entry_id"],
+          "columns": [
+            "convo_entry_id"
+          ],
           "isUnique": false
         },
         "public_id_idx": {
           "name": "public_id_idx",
-          "columns": ["public_id"],
+          "columns": [
+            "public_id"
+          ],
           "isUnique": true
         }
       },
@@ -618,7 +680,9 @@
       "compositePrimaryKeys": {
         "convo_attachments_id": {
           "name": "convo_attachments_id",
-          "columns": ["id"]
+          "columns": [
+            "id"
+          ]
         }
       },
       "uniqueConstraints": {}
@@ -691,9 +755,16 @@
         },
         "body_plain_text": {
           "name": "body_plain_text",
-          "type": "text",
+          "type": "longtext",
           "primaryKey": false,
           "notNull": true,
+          "autoincrement": false
+        },
+        "body_cleaned_html": {
+          "name": "body_cleaned_html",
+          "type": "longtext",
+          "primaryKey": false,
+          "notNull": false,
           "autoincrement": false
         },
         "metadata": {
@@ -729,27 +800,65 @@
       "indexes": {
         "org_id_idx": {
           "name": "org_id_idx",
-          "columns": ["org_id"],
+          "columns": [
+            "org_id"
+          ],
           "isUnique": false
         },
         "convo_id_idx": {
           "name": "convo_id_idx",
-          "columns": ["convo_id"],
+          "columns": [
+            "convo_id"
+          ],
+          "isUnique": false
+        },
+        "subject_id_idx": {
+          "name": "subject_id_idx",
+          "columns": [
+            "subject_id"
+          ],
+          "isUnique": false
+        },
+        "author_idx": {
+          "name": "author_idx",
+          "columns": [
+            "author"
+          ],
           "isUnique": false
         },
         "public_id_idx": {
           "name": "public_id_idx",
-          "columns": ["public_id"],
+          "columns": [
+            "public_id"
+          ],
           "isUnique": true
         },
         "type_idx": {
           "name": "type_idx",
-          "columns": ["type"],
+          "columns": [
+            "type"
+          ],
           "isUnique": false
         },
         "reply_to_id_idx": {
           "name": "reply_to_id_idx",
-          "columns": ["reply_to_id"],
+          "columns": [
+            "reply_to_id"
+          ],
+          "isUnique": false
+        },
+        "created_at_idx": {
+          "name": "created_at_idx",
+          "columns": [
+            "created_at"
+          ],
+          "isUnique": false
+        },
+        "email_message_id_idx": {
+          "name": "email_message_id_idx",
+          "columns": [
+            "email_message_id"
+          ],
           "isUnique": false
         }
       },
@@ -757,7 +866,9 @@
       "compositePrimaryKeys": {
         "convo_entries_id": {
           "name": "convo_entries_id",
-          "columns": ["id"]
+          "columns": [
+            "id"
+          ]
         }
       },
       "uniqueConstraints": {}
@@ -802,9 +913,25 @@
         }
       },
       "indexes": {
+        "org_id_idx": {
+          "name": "org_id_idx",
+          "columns": [
+            "org_id"
+          ],
+          "isUnique": false
+        },
         "entry_id_idx": {
           "name": "entry_id_idx",
-          "columns": ["entry_id"],
+          "columns": [
+            "entry_id"
+          ],
+          "isUnique": false
+        },
+        "convo_member_id_idx": {
+          "name": "convo_member_id_idx",
+          "columns": [
+            "convo_member_id"
+          ],
           "isUnique": false
         }
       },
@@ -812,7 +939,9 @@
       "compositePrimaryKeys": {
         "convo_entry_private_visibility_participants_id": {
           "name": "convo_entry_private_visibility_participants_id",
-          "columns": ["id"]
+          "columns": [
+            "id"
+          ]
         }
       },
       "uniqueConstraints": {}
@@ -850,7 +979,7 @@
         },
         "html": {
           "name": "html",
-          "type": "text",
+          "type": "mediumtext",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -880,9 +1009,25 @@
         }
       },
       "indexes": {
+        "org_id_idx": {
+          "name": "org_id_idx",
+          "columns": [
+            "org_id"
+          ],
+          "isUnique": false
+        },
         "entry_id_idx": {
           "name": "entry_id_idx",
-          "columns": ["entry_id"],
+          "columns": [
+            "entry_id"
+          ],
+          "isUnique": false
+        },
+        "wipe_date_idx": {
+          "name": "wipe_date_idx",
+          "columns": [
+            "wipe_date"
+          ],
           "isUnique": false
         }
       },
@@ -890,7 +1035,9 @@
       "compositePrimaryKeys": {
         "convo_entry_raw_html_emails_id": {
           "name": "convo_entry_raw_html_emails_id",
-          "columns": ["id"]
+          "columns": [
+            "id"
+          ]
         }
       },
       "uniqueConstraints": {}
@@ -934,12 +1081,43 @@
           "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "org_id_idx": {
+          "name": "org_id_idx",
+          "columns": [
+            "org_id"
+          ],
+          "isUnique": false
+        },
+        "entry_source_id_idx": {
+          "name": "entry_source_id_idx",
+          "columns": [
+            "convo_message_source_id"
+          ],
+          "isUnique": false
+        },
+        "entry_reply_id_idx": {
+          "name": "entry_reply_id_idx",
+          "columns": [
+            "convo_message_reply_id"
+          ],
+          "isUnique": false
+        },
+        "created_at_idx": {
+          "name": "created_at_idx",
+          "columns": [
+            "created_at"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {},
       "compositePrimaryKeys": {
         "convo_entry_replies_id": {
           "name": "convo_entry_replies_id",
-          "columns": ["id"]
+          "columns": [
+            "id"
+          ]
         }
       },
       "uniqueConstraints": {}
@@ -986,12 +1164,23 @@
       "indexes": {
         "convo_entry_id_idx": {
           "name": "convo_entry_id_idx",
-          "columns": ["convo_entry_id"],
+          "columns": [
+            "convo_entry_id"
+          ],
+          "isUnique": false
+        },
+        "participant_id_idx": {
+          "name": "participant_id_idx",
+          "columns": [
+            "participant_id"
+          ],
           "isUnique": false
         },
         "seen_at_idx": {
           "name": "seen_at_idx",
-          "columns": ["seen_at"],
+          "columns": [
+            "seen_at"
+          ],
           "isUnique": false
         }
       },
@@ -999,13 +1188,17 @@
       "compositePrimaryKeys": {
         "id": {
           "name": "id",
-          "columns": ["convo_entry_id", "participant_id", "org_member_id"]
+          "columns": [
+            "convo_entry_id",
+            "participant_id",
+            "org_member_id"
+          ]
         }
       },
       "uniqueConstraints": {}
     },
-    "convo_participant_group_members": {
-      "name": "convo_participant_group_members",
+    "convo_participant_team_members": {
+      "name": "convo_participant_team_members",
       "columns": {
         "id": {
           "name": "id",
@@ -1028,8 +1221,8 @@
           "notNull": true,
           "autoincrement": false
         },
-        "group_id": {
-          "name": "group_id",
+        "team_id": {
+          "name": "team_id",
           "type": "bigint unsigned",
           "primaryKey": false,
           "notNull": true,
@@ -1039,20 +1232,26 @@
       "indexes": {
         "convo_participant_id_idx": {
           "name": "convo_participant_id_idx",
-          "columns": ["convo_participant_id"],
+          "columns": [
+            "convo_participant_id"
+          ],
           "isUnique": false
         },
-        "group_id_idx": {
-          "name": "group_id_idx",
-          "columns": ["group_id"],
+        "team_id_idx": {
+          "name": "team_id_idx",
+          "columns": [
+            "team_id"
+          ],
           "isUnique": false
         }
       },
       "foreignKeys": {},
       "compositePrimaryKeys": {
-        "convo_participant_group_members_id": {
-          "name": "convo_participant_group_members_id",
-          "columns": ["id"]
+        "convo_participant_team_members_id": {
+          "name": "convo_participant_team_members_id",
+          "columns": [
+            "id"
+          ]
         }
       },
       "uniqueConstraints": {}
@@ -1088,8 +1287,8 @@
           "notNull": false,
           "autoincrement": false
         },
-        "group_id": {
-          "name": "group_id",
+        "team_id": {
+          "name": "team_id",
           "type": "bigint unsigned",
           "primaryKey": false,
           "notNull": false,
@@ -1111,7 +1310,7 @@
         },
         "role": {
           "name": "role",
-          "type": "enum('assigned','contributor','commenter','watcher','groupMember','guest')",
+          "type": "enum('assigned','contributor','commenter','watcher','teamMember','guest')",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
@@ -1147,6 +1346,14 @@
           "autoincrement": false,
           "default": true
         },
+        "hidden": {
+          "name": "hidden",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp",
@@ -1158,32 +1365,46 @@
       "indexes": {
         "org_id_idx": {
           "name": "org_id_idx",
-          "columns": ["org_id"],
+          "columns": [
+            "org_id"
+          ],
           "isUnique": false
         },
         "public_id_idx": {
           "name": "public_id_idx",
-          "columns": ["public_id"],
+          "columns": [
+            "public_id"
+          ],
           "isUnique": true
         },
         "org_member_id_idx": {
           "name": "org_member_id_idx",
-          "columns": ["org_member_id"],
+          "columns": [
+            "org_member_id"
+          ],
           "isUnique": false
         },
         "convo_id_idx": {
           "name": "convo_id_idx",
-          "columns": ["convo_id"],
+          "columns": [
+            "convo_id"
+          ],
           "isUnique": false
         },
         "org_member_to_convo_idx": {
           "name": "org_member_to_convo_idx",
-          "columns": ["convo_id", "org_member_id"],
+          "columns": [
+            "convo_id",
+            "org_member_id"
+          ],
           "isUnique": true
         },
-        "group_to_convo_idx": {
-          "name": "group_to_convo_idx",
-          "columns": ["convo_id", "group_id"],
+        "team_to_convo_idx": {
+          "name": "team_to_convo_idx",
+          "columns": [
+            "convo_id",
+            "team_id"
+          ],
           "isUnique": true
         }
       },
@@ -1191,7 +1412,9 @@
       "compositePrimaryKeys": {
         "convo_participants_id": {
           "name": "convo_participants_id",
-          "columns": ["id"]
+          "columns": [
+            "id"
+          ]
         }
       },
       "uniqueConstraints": {}
@@ -1238,12 +1461,23 @@
       "indexes": {
         "convo_id_idx": {
           "name": "convo_id_idx",
-          "columns": ["convo_id"],
+          "columns": [
+            "convo_id"
+          ],
           "isUnique": false
         },
         "seen_at_idx": {
           "name": "seen_at_idx",
-          "columns": ["seen_at"],
+          "columns": [
+            "seen_at"
+          ],
+          "isUnique": false
+        },
+        "participant_id_idx": {
+          "name": "participant_id_idx",
+          "columns": [
+            "participant_id"
+          ],
           "isUnique": false
         }
       },
@@ -1251,7 +1485,11 @@
       "compositePrimaryKeys": {
         "id": {
           "name": "id",
-          "columns": ["convo_id", "participant_id", "org_member_id"]
+          "columns": [
+            "convo_id",
+            "participant_id",
+            "org_member_id"
+          ]
         }
       },
       "uniqueConstraints": {}
@@ -1305,17 +1543,23 @@
       "indexes": {
         "org_id_idx": {
           "name": "org_id_idx",
-          "columns": ["org_id"],
+          "columns": [
+            "org_id"
+          ],
           "isUnique": false
         },
         "public_id_idx": {
           "name": "public_id_idx",
-          "columns": ["public_id"],
+          "columns": [
+            "public_id"
+          ],
           "isUnique": true
         },
         "convo_id_idx": {
           "name": "convo_id_idx",
-          "columns": ["convo_id"],
+          "columns": [
+            "convo_id"
+          ],
           "isUnique": false
         }
       },
@@ -1323,7 +1567,333 @@
       "compositePrimaryKeys": {
         "convo_subjects_id": {
           "name": "convo_subjects_id",
-          "columns": ["id"]
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {}
+    },
+    "convo_tags": {
+      "name": "convo_tags",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "org_id": {
+          "name": "org_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "public_id": {
+          "name": "public_id",
+          "type": "char(30)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "convo_id": {
+          "name": "convo_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "space_id": {
+          "name": "space_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "convo_to_space_id": {
+          "name": "convo_to_space_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "tag_id": {
+          "name": "tag_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "added_by_org_member_id": {
+          "name": "added_by_org_member_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "added_at": {
+          "name": "added_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "org_id_idx": {
+          "name": "org_id_idx",
+          "columns": [
+            "org_id"
+          ],
+          "isUnique": false
+        },
+        "public_id_idx": {
+          "name": "public_id_idx",
+          "columns": [
+            "public_id"
+          ],
+          "isUnique": true
+        },
+        "convo_id_idx": {
+          "name": "convo_id_idx",
+          "columns": [
+            "convo_id"
+          ],
+          "isUnique": false
+        },
+        "space_id_idx": {
+          "name": "space_id_idx",
+          "columns": [
+            "space_id"
+          ],
+          "isUnique": false
+        },
+        "convo_to_spaces_id_idx": {
+          "name": "convo_to_spaces_id_idx",
+          "columns": [
+            "convo_to_space_id"
+          ],
+          "isUnique": false
+        },
+        "tag_idx": {
+          "name": "tag_idx",
+          "columns": [
+            "tag_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "convo_tags_id": {
+          "name": "convo_tags_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {}
+    },
+    "convo_to_spaces": {
+      "name": "convo_to_spaces",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "org_id": {
+          "name": "org_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "public_id": {
+          "name": "public_id",
+          "type": "char(30)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "convo_id": {
+          "name": "convo_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "space_id": {
+          "name": "space_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "org_id_idx": {
+          "name": "org_id_idx",
+          "columns": [
+            "org_id"
+          ],
+          "isUnique": false
+        },
+        "public_id_idx": {
+          "name": "public_id_idx",
+          "columns": [
+            "public_id"
+          ],
+          "isUnique": true
+        },
+        "convo_id_idx": {
+          "name": "convo_id_idx",
+          "columns": [
+            "convo_id"
+          ],
+          "isUnique": false
+        },
+        "space_id_idx": {
+          "name": "space_id_idx",
+          "columns": [
+            "space_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "convo_to_spaces_id": {
+          "name": "convo_to_spaces_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {}
+    },
+    "convo_workflows": {
+      "name": "convo_workflows",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "org_id": {
+          "name": "org_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "public_id": {
+          "name": "public_id",
+          "type": "char(29)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "convo_id": {
+          "name": "convo_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "space_id": {
+          "name": "space_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "convo_to_space_id": {
+          "name": "convo_to_space_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "workflow_id": {
+          "name": "workflow_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "by_org_member_id": {
+          "name": "by_org_member_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "org_id_idx": {
+          "name": "org_id_idx",
+          "columns": [
+            "org_id"
+          ],
+          "isUnique": false
+        },
+        "public_id_idx": {
+          "name": "public_id_idx",
+          "columns": [
+            "public_id"
+          ],
+          "isUnique": true
+        },
+        "convo_id_idx": {
+          "name": "convo_id_idx",
+          "columns": [
+            "convo_id"
+          ],
+          "isUnique": false
+        },
+        "space_id_idx": {
+          "name": "space_id_idx",
+          "columns": [
+            "space_id"
+          ],
+          "isUnique": false
+        },
+        "convo_to_spaces_id_idx": {
+          "name": "convo_to_spaces_id_idx",
+          "columns": [
+            "convo_to_space_id"
+          ],
+          "isUnique": false
+        },
+        "workflow_idx": {
+          "name": "workflow_idx",
+          "columns": [
+            "workflow_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "convo_workflows_id": {
+          "name": "convo_workflows_id",
+          "columns": [
+            "id"
+          ]
         }
       },
       "uniqueConstraints": {}
@@ -1370,20 +1940,33 @@
       "indexes": {
         "org_id_idx": {
           "name": "org_id_idx",
-          "columns": ["org_id"],
+          "columns": [
+            "org_id"
+          ],
           "isUnique": false
         },
         "public_id_idx": {
           "name": "public_id_idx",
-          "columns": ["public_id"],
+          "columns": [
+            "public_id"
+          ],
           "isUnique": true
+        },
+        "created_at_idx": {
+          "name": "created_at_idx",
+          "columns": [
+            "created_at"
+          ],
+          "isUnique": false
         }
       },
       "foreignKeys": {},
       "compositePrimaryKeys": {
         "convos_id": {
           "name": "convos_id",
-          "columns": ["id"]
+          "columns": [
+            "id"
+          ]
         }
       },
       "uniqueConstraints": {}
@@ -1398,16 +1981,24 @@
           "notNull": true,
           "autoincrement": true
         },
-        "public_id": {
-          "name": "public_id",
-          "type": "char(30)",
+        "org_id": {
+          "name": "org_id",
+          "type": "bigint unsigned",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "org_id": {
-          "name": "org_id",
-          "type": "bigint unsigned",
+        "disabled": {
+          "name": "disabled",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "public_id": {
+          "name": "public_id",
+          "type": "char(30)",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -1554,22 +2145,38 @@
       "indexes": {
         "public_id_idx": {
           "name": "public_id_idx",
-          "columns": ["public_id"],
+          "columns": [
+            "public_id"
+          ],
           "isUnique": true
         },
         "org_id_idx": {
           "name": "org_id_idx",
-          "columns": ["org_id"],
+          "columns": [
+            "org_id"
+          ],
           "isUnique": false
         },
-        "domain_idx": {
-          "name": "domain_idx",
-          "columns": ["domain"],
+        "domain_name_idx": {
+          "name": "domain_name_idx",
+          "columns": [
+            "domain"
+          ],
+          "isUnique": false
+        },
+        "domain_org_idx": {
+          "name": "domain_org_idx",
+          "columns": [
+            "domain",
+            "org_id"
+          ],
           "isUnique": true
         },
         "postal_id_idx": {
           "name": "postal_id_idx",
-          "columns": ["postal_id"],
+          "columns": [
+            "postal_id"
+          ],
           "isUnique": true
         }
       },
@@ -1577,7 +2184,9 @@
       "compositePrimaryKeys": {
         "domains_id": {
           "name": "domains_id",
-          "columns": ["id"]
+          "columns": [
+            "id"
+          ]
         }
       },
       "uniqueConstraints": {}
@@ -1592,16 +2201,16 @@
           "notNull": true,
           "autoincrement": true
         },
-        "public_id": {
-          "name": "public_id",
-          "type": "char(29)",
+        "org_id": {
+          "name": "org_id",
+          "type": "bigint unsigned",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "org_id": {
-          "name": "org_id",
-          "type": "bigint unsigned",
+        "public_id": {
+          "name": "public_id",
+          "type": "char(29)",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -1688,22 +2297,31 @@
       "indexes": {
         "public_id_idx": {
           "name": "public_id_idx",
-          "columns": ["public_id"],
+          "columns": [
+            "public_id"
+          ],
           "isUnique": true
         },
         "domain_id_idx": {
           "name": "domain_id_idx",
-          "columns": ["domain_name"],
+          "columns": [
+            "domain_name"
+          ],
           "isUnique": false
         },
         "org_id_idx": {
           "name": "org_id_idx",
-          "columns": ["org_id"],
+          "columns": [
+            "org_id"
+          ],
           "isUnique": false
         },
         "email_idx": {
           "name": "email_idx",
-          "columns": ["username", "domain_name"],
+          "columns": [
+            "username",
+            "domain_name"
+          ],
           "isUnique": true
         }
       },
@@ -1711,7 +2329,9 @@
       "compositePrimaryKeys": {
         "email_identities_id": {
           "name": "email_identities_id",
-          "columns": ["id"]
+          "columns": [
+            "id"
+          ]
         }
       },
       "uniqueConstraints": {}
@@ -1747,20 +2367,19 @@
           "notNull": false,
           "autoincrement": false
         },
-        "group_id": {
-          "name": "group_id",
+        "team_id": {
+          "name": "team_id",
           "type": "bigint unsigned",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
-        "default": {
-          "name": "default",
-          "type": "boolean",
+        "space_id": {
+          "name": "space_id",
+          "type": "bigint unsigned",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": false
+          "notNull": false,
+          "autoincrement": false
         },
         "added_by": {
           "name": "added_by",
@@ -1780,22 +2399,39 @@
       "indexes": {
         "org_id_idx": {
           "name": "org_id_idx",
-          "columns": ["org_id"],
+          "columns": [
+            "org_id"
+          ],
           "isUnique": false
         },
         "identity_id_idx": {
           "name": "identity_id_idx",
-          "columns": ["identity_id"],
+          "columns": [
+            "identity_id"
+          ],
+          "isUnique": false
+        },
+        "space_id_idx": {
+          "name": "space_id_idx",
+          "columns": [
+            "space_id"
+          ],
           "isUnique": false
         },
         "org_member_to_identity_idx": {
           "name": "org_member_to_identity_idx",
-          "columns": ["identity_id", "org_member_id"],
+          "columns": [
+            "identity_id",
+            "org_member_id"
+          ],
           "isUnique": true
         },
-        "group_to_identity_idx": {
-          "name": "group_to_identity_idx",
-          "columns": ["identity_id", "group_id"],
+        "team_to_identity_idx": {
+          "name": "team_to_identity_idx",
+          "columns": [
+            "identity_id",
+            "team_id"
+          ],
           "isUnique": true
         }
       },
@@ -1803,7 +2439,9 @@
       "compositePrimaryKeys": {
         "email_identities_authorized_org_members_id": {
           "name": "email_identities_authorized_org_members_id",
-          "columns": ["id"]
+          "columns": [
+            "id"
+          ]
         }
       },
       "uniqueConstraints": {}
@@ -1818,6 +2456,13 @@
           "notNull": true,
           "autoincrement": true
         },
+        "org_id": {
+          "name": "org_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
         "public_id": {
           "name": "public_id",
           "type": "char(30)",
@@ -1827,13 +2472,6 @@
         },
         "account_id": {
           "name": "account_id",
-          "type": "bigint unsigned",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "org_id": {
-          "name": "org_id",
           "type": "bigint unsigned",
           "primaryKey": false,
           "notNull": true,
@@ -1857,22 +2495,30 @@
       "indexes": {
         "public_id_idx": {
           "name": "public_id_idx",
-          "columns": ["public_id"],
+          "columns": [
+            "public_id"
+          ],
           "isUnique": true
         },
         "account_id_idx": {
           "name": "account_id_idx",
-          "columns": ["account_id"],
+          "columns": [
+            "account_id"
+          ],
           "isUnique": false
         },
         "org_id_idx": {
           "name": "org_id_idx",
-          "columns": ["org_id"],
+          "columns": [
+            "org_id"
+          ],
           "isUnique": false
         },
         "email_identity_id_idx": {
           "name": "email_identity_id_idx",
-          "columns": ["email_identity_id"],
+          "columns": [
+            "email_identity_id"
+          ],
           "isUnique": false
         }
       },
@@ -1880,7 +2526,9 @@
       "compositePrimaryKeys": {
         "email_identities_personal_id": {
           "name": "email_identities_personal_id",
-          "columns": ["id"]
+          "columns": [
+            "id"
+          ]
         }
       },
       "uniqueConstraints": {}
@@ -1895,16 +2543,16 @@
           "notNull": true,
           "autoincrement": true
         },
-        "public_id": {
-          "name": "public_id",
-          "type": "char(30)",
+        "org_id": {
+          "name": "org_id",
+          "type": "bigint unsigned",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "org_id": {
-          "name": "org_id",
-          "type": "bigint unsigned",
+        "public_id": {
+          "name": "public_id",
+          "type": "char(30)",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -1977,12 +2625,16 @@
       "indexes": {
         "public_id_idx": {
           "name": "public_id_idx",
-          "columns": ["public_id"],
+          "columns": [
+            "public_id"
+          ],
           "isUnique": true
         },
         "org_id_idx": {
           "name": "org_id_idx",
-          "columns": ["org_id"],
+          "columns": [
+            "org_id"
+          ],
           "isUnique": false
         }
       },
@@ -1990,7 +2642,96 @@
       "compositePrimaryKeys": {
         "email_identity_external_id": {
           "name": "email_identity_external_id",
-          "columns": ["id"]
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {}
+    },
+    "email_routing_rule_assignees": {
+      "name": "email_routing_rule_assignees",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "org_id": {
+          "name": "org_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "rule_destination_id": {
+          "name": "rule_destination_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "org_member_id": {
+          "name": "org_member_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "team_id": {
+          "name": "team_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "rule_destination_id_idx": {
+          "name": "rule_destination_id_idx",
+          "columns": [
+            "rule_destination_id"
+          ],
+          "isUnique": false
+        },
+        "org_id_idx": {
+          "name": "org_id_idx",
+          "columns": [
+            "org_id"
+          ],
+          "isUnique": false
+        },
+        "org_member_id_idx": {
+          "name": "org_member_id_idx",
+          "columns": [
+            "org_member_id"
+          ],
+          "isUnique": false
+        },
+        "team_id_idx": {
+          "name": "team_id_idx",
+          "columns": [
+            "team_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "email_routing_rule_assignees_id": {
+          "name": "email_routing_rule_assignees_id",
+          "columns": [
+            "id"
+          ]
         }
       },
       "uniqueConstraints": {}
@@ -2005,16 +2746,16 @@
           "notNull": true,
           "autoincrement": true
         },
-        "public_id": {
-          "name": "public_id",
-          "type": "char(29)",
+        "org_id": {
+          "name": "org_id",
+          "type": "bigint unsigned",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "org_id": {
-          "name": "org_id",
-          "type": "bigint unsigned",
+        "public_id": {
+          "name": "public_id",
+          "type": "char(29)",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -2051,12 +2792,16 @@
       "indexes": {
         "org_id_idx": {
           "name": "org_id_idx",
-          "columns": ["org_id"],
+          "columns": [
+            "org_id"
+          ],
           "isUnique": false
         },
         "public_id_idx": {
           "name": "public_id_idx",
-          "columns": ["public_id"],
+          "columns": [
+            "public_id"
+          ],
           "isUnique": true
         }
       },
@@ -2064,7 +2809,9 @@
       "compositePrimaryKeys": {
         "email_routing_rules_id": {
           "name": "email_routing_rules_id",
-          "columns": ["id"]
+          "columns": [
+            "id"
+          ]
         }
       },
       "uniqueConstraints": {}
@@ -2079,16 +2826,16 @@
           "notNull": true,
           "autoincrement": true
         },
-        "public_id": {
-          "name": "public_id",
-          "type": "char(30)",
+        "org_id": {
+          "name": "org_id",
+          "type": "bigint unsigned",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "org_id": {
-          "name": "org_id",
-          "type": "bigint unsigned",
+        "public_id": {
+          "name": "public_id",
+          "type": "char(30)",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -2100,8 +2847,8 @@
           "notNull": true,
           "autoincrement": false
         },
-        "group_id": {
-          "name": "group_id",
+        "team_id": {
+          "name": "team_id",
           "type": "bigint unsigned",
           "primaryKey": false,
           "notNull": false,
@@ -2109,6 +2856,13 @@
         },
         "org_member_id": {
           "name": "org_member_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "space_id": {
+          "name": "space_id",
           "type": "bigint unsigned",
           "primaryKey": false,
           "notNull": false,
@@ -2125,7 +2879,44 @@
       "indexes": {
         "org_id_idx": {
           "name": "org_id_idx",
-          "columns": ["org_id"],
+          "columns": [
+            "org_id"
+          ],
+          "isUnique": false
+        },
+        "public_id_idx": {
+          "name": "public_id_idx",
+          "columns": [
+            "public_id"
+          ],
+          "isUnique": true
+        },
+        "rule_id_idx": {
+          "name": "rule_id_idx",
+          "columns": [
+            "rule_id"
+          ],
+          "isUnique": false
+        },
+        "space_id_idx": {
+          "name": "space_id_idx",
+          "columns": [
+            "space_id"
+          ],
+          "isUnique": false
+        },
+        "team_id_idx": {
+          "name": "team_id_idx",
+          "columns": [
+            "team_id"
+          ],
+          "isUnique": false
+        },
+        "org_member_id_idx": {
+          "name": "org_member_id_idx",
+          "columns": [
+            "org_member_id"
+          ],
           "isUnique": false
         }
       },
@@ -2133,190 +2924,9 @@
       "compositePrimaryKeys": {
         "email_routing_rules_destinations_id": {
           "name": "email_routing_rules_destinations_id",
-          "columns": ["id"]
-        }
-      },
-      "uniqueConstraints": {}
-    },
-    "group_members": {
-      "name": "group_members",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": true
-        },
-        "org_id": {
-          "name": "org_id",
-          "type": "bigint unsigned",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "public_id": {
-          "name": "public_id",
-          "type": "char(29)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "group_id": {
-          "name": "group_id",
-          "type": "bigint unsigned",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "org_member_id": {
-          "name": "org_member_id",
-          "type": "bigint unsigned",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "org_member_profile_id": {
-          "name": "org_member_profile_id",
-          "type": "bigint unsigned",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "added_by": {
-          "name": "added_by",
-          "type": "bigint unsigned",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "role": {
-          "name": "role",
-          "type": "enum('member','admin')",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "'member'"
-        },
-        "notifications": {
-          "name": "notifications",
-          "type": "enum('active','muted','off')",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "'active'"
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        }
-      },
-      "indexes": {
-        "group_id_idx": {
-          "name": "group_id_idx",
-          "columns": ["group_id"],
-          "isUnique": false
-        },
-        "org_member_id_idx": {
-          "name": "org_member_id_idx",
-          "columns": ["org_member_id"],
-          "isUnique": false
-        },
-        "org_member_to_group_idx": {
-          "name": "org_member_to_group_idx",
-          "columns": ["group_id", "org_member_id"],
-          "isUnique": true
-        }
-      },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {
-        "group_members_id": {
-          "name": "group_members_id",
-          "columns": ["id"]
-        }
-      },
-      "uniqueConstraints": {}
-    },
-    "groups": {
-      "name": "groups",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": true
-        },
-        "public_id": {
-          "name": "public_id",
-          "type": "char(28)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "avatar_timestamp": {
-          "name": "avatar_timestamp",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "org_id": {
-          "name": "org_id",
-          "type": "bigint unsigned",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar(128)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "color": {
-          "name": "color",
-          "type": "enum('red','orange','amber','yellow','lime','green','emerald','teal','cyan','sky','blue','indigo','violet','purple','fuchsia','pink','rose')",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "description": {
-          "name": "description",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        }
-      },
-      "indexes": {
-        "public_id_idx": {
-          "name": "public_id_idx",
-          "columns": ["public_id"],
-          "isUnique": true
-        },
-        "org_id_idx": {
-          "name": "org_id_idx",
-          "columns": ["org_id"],
-          "isUnique": false
-        }
-      },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {
-        "groups_id": {
-          "name": "groups_id",
-          "columns": ["id"]
+          "columns": [
+            "id"
+          ]
         }
       },
       "uniqueConstraints": {}
@@ -2372,17 +2982,23 @@
       "indexes": {
         "org_id_idx": {
           "name": "org_id_idx",
-          "columns": ["org_id"],
+          "columns": [
+            "org_id"
+          ],
           "isUnique": false
         },
         "stripe_customer_id_idx": {
           "name": "stripe_customer_id_idx",
-          "columns": ["stripe_customer_id"],
+          "columns": [
+            "stripe_customer_id"
+          ],
           "isUnique": true
         },
         "stripe_subscription_id_idx": {
           "name": "stripe_subscription_id_idx",
-          "columns": ["stripe_subscription_id"],
+          "columns": [
+            "stripe_subscription_id"
+          ],
           "isUnique": true
         }
       },
@@ -2390,7 +3006,9 @@
       "compositePrimaryKeys": {
         "org_billing_id": {
           "name": "org_billing_id",
-          "columns": ["id"]
+          "columns": [
+            "id"
+          ]
         }
       },
       "uniqueConstraints": {}
@@ -2486,22 +3104,31 @@
       "indexes": {
         "public_id_idx": {
           "name": "public_id_idx",
-          "columns": ["public_id"],
+          "columns": [
+            "public_id"
+          ],
           "isUnique": true
         },
         "org_id_idx": {
           "name": "org_id_idx",
-          "columns": ["org_id"],
+          "columns": [
+            "org_id"
+          ],
           "isUnique": false
         },
         "org_member_id_idx": {
           "name": "org_member_id_idx",
-          "columns": ["org_member_id"],
+          "columns": [
+            "org_member_id"
+          ],
           "isUnique": true
         },
         "org_email_unique_idx": {
           "name": "org_email_unique_idx",
-          "columns": ["org_id", "email"],
+          "columns": [
+            "org_id",
+            "email"
+          ],
           "isUnique": true
         }
       },
@@ -2509,7 +3136,9 @@
       "compositePrimaryKeys": {
         "org_invitations_id": {
           "name": "org_invitations_id",
-          "columns": ["id"]
+          "columns": [
+            "id"
+          ]
         }
       },
       "uniqueConstraints": {}
@@ -2524,16 +3153,16 @@
           "notNull": true,
           "autoincrement": true
         },
-        "public_id": {
-          "name": "public_id",
-          "type": "char(30)",
+        "org_id": {
+          "name": "org_id",
+          "type": "bigint unsigned",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "org_id": {
-          "name": "org_id",
-          "type": "bigint unsigned",
+        "public_id": {
+          "name": "public_id",
+          "type": "char(30)",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -2598,12 +3227,16 @@
       "indexes": {
         "public_id_idx": {
           "name": "public_id_idx",
-          "columns": ["public_id"],
+          "columns": [
+            "public_id"
+          ],
           "isUnique": true
         },
         "account_id_idx": {
           "name": "account_id_idx",
-          "columns": ["account_id"],
+          "columns": [
+            "account_id"
+          ],
           "isUnique": false
         }
       },
@@ -2611,7 +3244,9 @@
       "compositePrimaryKeys": {
         "org_member_profiles_id": {
           "name": "org_member_profiles_id",
-          "columns": ["id"]
+          "columns": [
+            "id"
+          ]
         }
       },
       "uniqueConstraints": {}
@@ -2626,6 +3261,13 @@
           "notNull": true,
           "autoincrement": true
         },
+        "org_id": {
+          "name": "org_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
         "public_id": {
           "name": "public_id",
           "type": "char(29)",
@@ -2638,13 +3280,6 @@
           "type": "bigint unsigned",
           "primaryKey": false,
           "notNull": false,
-          "autoincrement": false
-        },
-        "org_id": {
-          "name": "org_id",
-          "type": "bigint unsigned",
-          "primaryKey": false,
-          "notNull": true,
           "autoincrement": false
         },
         "invited_by_org_member_id": {
@@ -2668,11 +3303,25 @@
           "notNull": true,
           "autoincrement": false
         },
+        "personal_space_id": {
+          "name": "personal_space_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
         "org_member_profile_id": {
           "name": "org_member_profile_id",
           "type": "bigint unsigned",
           "primaryKey": false,
           "notNull": true,
+          "autoincrement": false
+        },
+        "default_email_identity_id": {
+          "name": "default_email_identity_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": false,
           "autoincrement": false
         },
         "added_at": {
@@ -2693,22 +3342,31 @@
       "indexes": {
         "public_id_idx": {
           "name": "public_id_idx",
-          "columns": ["public_id"],
+          "columns": [
+            "public_id"
+          ],
           "isUnique": true
         },
         "account_id_idx": {
           "name": "account_id_idx",
-          "columns": ["account_id"],
+          "columns": [
+            "account_id"
+          ],
           "isUnique": false
         },
         "org_id_idx": {
           "name": "org_id_idx",
-          "columns": ["org_id"],
+          "columns": [
+            "org_id"
+          ],
           "isUnique": false
         },
         "org_account_idx": {
           "name": "org_account_idx",
-          "columns": ["org_id", "account_id"],
+          "columns": [
+            "org_id",
+            "account_id"
+          ],
           "isUnique": true
         }
       },
@@ -2716,7 +3374,9 @@
       "compositePrimaryKeys": {
         "org_members_id": {
           "name": "org_members_id",
-          "columns": ["id"]
+          "columns": [
+            "id"
+          ]
         }
       },
       "uniqueConstraints": {}
@@ -2778,12 +3438,17 @@
       "indexes": {
         "org_id_idx": {
           "name": "org_id_idx",
-          "columns": ["org_id"],
+          "columns": [
+            "org_id"
+          ],
           "isUnique": false
         },
         "org_module_idx": {
           "name": "org_module_idx",
-          "columns": ["org_id", "module"],
+          "columns": [
+            "org_id",
+            "module"
+          ],
           "isUnique": true
         }
       },
@@ -2791,7 +3456,9 @@
       "compositePrimaryKeys": {
         "org_modules_id": {
           "name": "org_modules_id",
-          "columns": ["id"]
+          "columns": [
+            "id"
+          ]
         }
       },
       "uniqueConstraints": {}
@@ -2838,7 +3505,9 @@
       "indexes": {
         "org_id_idx": {
           "name": "org_id_idx",
-          "columns": ["org_id"],
+          "columns": [
+            "org_id"
+          ],
           "isUnique": false
         }
       },
@@ -2846,7 +3515,9 @@
       "compositePrimaryKeys": {
         "org_postal_configs_id": {
           "name": "org_postal_configs_id",
-          "columns": ["id"]
+          "columns": [
+            "id"
+          ]
         }
       },
       "uniqueConstraints": {}
@@ -2904,6 +3575,14 @@
           "autoincrement": false,
           "default": "('{}')"
         },
+        "migrated_to_spaces": {
+          "name": "migrated_to_spaces",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp",
@@ -2915,12 +3594,16 @@
       "indexes": {
         "public_id_idx": {
           "name": "public_id_idx",
-          "columns": ["public_id"],
+          "columns": [
+            "public_id"
+          ],
           "isUnique": true
         },
         "shortcode_idx": {
           "name": "shortcode_idx",
-          "columns": ["shortcode"],
+          "columns": [
+            "shortcode"
+          ],
           "isUnique": true
         }
       },
@@ -2928,7 +3611,9 @@
       "compositePrimaryKeys": {
         "orgs_id": {
           "name": "orgs_id",
-          "columns": ["id"]
+          "columns": [
+            "id"
+          ]
         }
       },
       "uniqueConstraints": {}
@@ -2943,16 +3628,16 @@
           "notNull": true,
           "autoincrement": true
         },
-        "public_id": {
-          "name": "public_id",
-          "type": "char(29)",
+        "org_id": {
+          "name": "org_id",
+          "type": "bigint unsigned",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "org_id": {
-          "name": "org_id",
-          "type": "bigint unsigned",
+        "public_id": {
+          "name": "public_id",
+          "type": "char(29)",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -2982,12 +3667,16 @@
       "indexes": {
         "public_id_idx": {
           "name": "public_id_idx",
-          "columns": ["public_id"],
+          "columns": [
+            "public_id"
+          ],
           "isUnique": true
         },
         "org_id_idx": {
           "name": "org_id_idx",
-          "columns": ["org_id"],
+          "columns": [
+            "org_id"
+          ],
           "isUnique": false
         }
       },
@@ -2995,7 +3684,9 @@
       "compositePrimaryKeys": {
         "pending_attachments_id": {
           "name": "pending_attachments_id",
-          "columns": ["id"]
+          "columns": [
+            "id"
+          ]
         }
       },
       "uniqueConstraints": {}
@@ -3010,16 +3701,16 @@
           "notNull": true,
           "autoincrement": true
         },
-        "public_id": {
-          "name": "public_id",
-          "type": "char(29)",
+        "org_id": {
+          "name": "org_id",
+          "type": "bigint unsigned",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "org_id": {
-          "name": "org_id",
-          "type": "bigint unsigned",
+        "public_id": {
+          "name": "public_id",
+          "type": "char(29)",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -3056,12 +3747,16 @@
       "indexes": {
         "public_id_idx": {
           "name": "public_id_idx",
-          "columns": ["public_id"],
+          "columns": [
+            "public_id"
+          ],
           "isUnique": true
         },
         "org_id_idx": {
           "name": "org_id_idx",
-          "columns": ["org_id"],
+          "columns": [
+            "org_id"
+          ],
           "isUnique": false
         }
       },
@@ -3069,7 +3764,9 @@
       "compositePrimaryKeys": {
         "postal_servers_id": {
           "name": "postal_servers_id",
-          "columns": ["id"]
+          "columns": [
+            "id"
+          ]
         }
       },
       "uniqueConstraints": {}
@@ -3142,19 +3839,32 @@
         }
       },
       "indexes": {
+        "public_id_idx": {
+          "name": "public_id_idx",
+          "columns": [
+            "public_id"
+          ],
+          "isUnique": true
+        },
         "account_id_idx": {
           "name": "account_id_idx",
-          "columns": ["account_id"],
+          "columns": [
+            "account_id"
+          ],
           "isUnique": false
         },
         "session_token_idx": {
           "name": "session_token_idx",
-          "columns": ["session_token"],
+          "columns": [
+            "session_token"
+          ],
           "isUnique": true
         },
         "expires_at_idx": {
           "name": "expires_at_idx",
-          "columns": ["expires_at"],
+          "columns": [
+            "expires_at"
+          ],
           "isUnique": false
         }
       },
@@ -3162,16 +3872,862 @@
       "compositePrimaryKeys": {
         "sessions_id": {
           "name": "sessions_id",
-          "columns": ["id"]
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {}
+    },
+    "space_members": {
+      "name": "space_members",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "org_id": {
+          "name": "org_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "public_id": {
+          "name": "public_id",
+          "type": "char(29)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "space_id": {
+          "name": "space_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "org_member_id": {
+          "name": "org_member_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "team_id": {
+          "name": "team_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "role": {
+          "name": "role",
+          "type": "enum('member','admin')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'member'"
+        },
+        "notifications": {
+          "name": "notifications",
+          "type": "enum('active','muted','off')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'active'"
+        },
+        "added_by_org_member_id": {
+          "name": "added_by_org_member_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "added_at": {
+          "name": "added_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "removed_at": {
+          "name": "removed_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "can_create": {
+          "name": "can_create",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": true
+        },
+        "can_read": {
+          "name": "can_read",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": true
+        },
+        "can_comment": {
+          "name": "can_comment",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": true
+        },
+        "can_reply": {
+          "name": "can_reply",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": true
+        },
+        "can_delete": {
+          "name": "can_delete",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": true
+        },
+        "can_change_workflow": {
+          "name": "can_change_workflow",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": true
+        },
+        "can_set_workflow_to_closed": {
+          "name": "can_set_workflow_to_closed",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": true
+        },
+        "can_add_tags": {
+          "name": "can_add_tags",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": true
+        },
+        "can_move_to_another_space": {
+          "name": "can_move_to_another_space",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": true
+        },
+        "can_add_to_another_space": {
+          "name": "can_add_to_another_space",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": true
+        },
+        "can_merge": {
+          "name": "can_merge",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": true
+        },
+        "can_add_participants": {
+          "name": "can_add_participants",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": true
+        }
+      },
+      "indexes": {
+        "org_id_idx": {
+          "name": "org_id_idx",
+          "columns": [
+            "org_id"
+          ],
+          "isUnique": false
+        },
+        "space_id_idx": {
+          "name": "space_id_idx",
+          "columns": [
+            "space_id"
+          ],
+          "isUnique": false
+        },
+        "org_member_id_idx": {
+          "name": "org_member_id_idx",
+          "columns": [
+            "org_member_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "space_members_id": {
+          "name": "space_members_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {}
+    },
+    "space_tags": {
+      "name": "space_tags",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "org_id": {
+          "name": "org_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "public_id": {
+          "name": "public_id",
+          "type": "char(29)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "space_id": {
+          "name": "space_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "label": {
+          "name": "label",
+          "type": "varchar(32)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "color": {
+          "name": "color",
+          "type": "enum('bronze','gold','brown','orange','tomato','red','ruby','crimson','pink','plum','purple','violet','iris','indigo','blue','cyan','teal','jade','green','grass')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "icon": {
+          "name": "icon",
+          "type": "varchar(32)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'tag-simple'"
+        },
+        "created_by_org_member_id": {
+          "name": "created_by_org_member_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "disabled": {
+          "name": "disabled",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "public_id_idx": {
+          "name": "public_id_idx",
+          "columns": [
+            "public_id"
+          ],
+          "isUnique": true
+        },
+        "org_id_idx": {
+          "name": "org_id_idx",
+          "columns": [
+            "org_id"
+          ],
+          "isUnique": false
+        },
+        "space_id_idx": {
+          "name": "space_id_idx",
+          "columns": [
+            "space_id"
+          ],
+          "isUnique": false
+        },
+        "created_by_org_member_id_idx": {
+          "name": "created_by_org_member_id_idx",
+          "columns": [
+            "created_by_org_member_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "space_tags_id": {
+          "name": "space_tags_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {}
+    },
+    "space_workflows": {
+      "name": "space_workflows",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "org_id": {
+          "name": "org_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "public_id": {
+          "name": "public_id",
+          "type": "char(29)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "space_id": {
+          "name": "space_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "type": {
+          "name": "type",
+          "type": "enum('open','active','closed')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "order": {
+          "name": "order",
+          "type": "tinyint unsigned",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(32)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "color": {
+          "name": "color",
+          "type": "enum('bronze','gold','brown','orange','tomato','red','ruby','crimson','pink','plum','purple','violet','iris','indigo','blue','cyan','teal','jade','green','grass')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "icon": {
+          "name": "icon",
+          "type": "varchar(32)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'check'"
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "disabled": {
+          "name": "disabled",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "created_by_org_member_id": {
+          "name": "created_by_org_member_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "public_id_idx": {
+          "name": "public_id_idx",
+          "columns": [
+            "public_id"
+          ],
+          "isUnique": true
+        },
+        "org_id_idx": {
+          "name": "org_id_idx",
+          "columns": [
+            "org_id"
+          ],
+          "isUnique": false
+        },
+        "space_id_idx": {
+          "name": "space_id_idx",
+          "columns": [
+            "space_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "space_workflows_id": {
+          "name": "space_workflows_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {}
+    },
+    "spaces": {
+      "name": "spaces",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "org_id": {
+          "name": "org_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "parent_space_id": {
+          "name": "parent_space_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "public_id": {
+          "name": "public_id",
+          "type": "char(28)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "shortcode": {
+          "name": "shortcode",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "type": {
+          "name": "type",
+          "type": "enum('open','private')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "personal_space": {
+          "name": "personal_space",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "convo_prefix": {
+          "name": "convo_prefix",
+          "type": "varchar(8)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "inherit_parent_permissions": {
+          "name": "inherit_parent_permissions",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "icon": {
+          "name": "icon",
+          "type": "varchar(32)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'squares-four'"
+        },
+        "color": {
+          "name": "color",
+          "type": "enum('bronze','gold','brown','orange','tomato','red','ruby','crimson','pink','plum','purple','violet','iris','indigo','blue','cyan','teal','jade','green','grass')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "avatar_timestamp": {
+          "name": "avatar_timestamp",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_by_org_member_id": {
+          "name": "created_by_org_member_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "public_id_idx": {
+          "name": "public_id_idx",
+          "columns": [
+            "public_id"
+          ],
+          "isUnique": true
+        },
+        "shortcode_idx": {
+          "name": "shortcode_idx",
+          "columns": [
+            "shortcode"
+          ],
+          "isUnique": false
+        },
+        "shortcode_org_unique_idx": {
+          "name": "shortcode_org_unique_idx",
+          "columns": [
+            "shortcode",
+            "org_id"
+          ],
+          "isUnique": true
+        },
+        "org_id_idx": {
+          "name": "org_id_idx",
+          "columns": [
+            "org_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "spaces_id": {
+          "name": "spaces_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {}
+    },
+    "team_members": {
+      "name": "team_members",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "org_id": {
+          "name": "org_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "public_id": {
+          "name": "public_id",
+          "type": "char(29)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "team_id": {
+          "name": "team_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "org_member_id": {
+          "name": "org_member_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "org_member_profile_id": {
+          "name": "org_member_profile_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "added_by": {
+          "name": "added_by",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "role": {
+          "name": "role",
+          "type": "enum('member','admin')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'member'"
+        },
+        "notifications": {
+          "name": "notifications",
+          "type": "enum('active','muted','off')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'active'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "team_id_idx": {
+          "name": "team_id_idx",
+          "columns": [
+            "team_id"
+          ],
+          "isUnique": false
+        },
+        "org_member_id_idx": {
+          "name": "org_member_id_idx",
+          "columns": [
+            "org_member_id"
+          ],
+          "isUnique": false
+        },
+        "org_member_to_team_idx": {
+          "name": "org_member_to_team_idx",
+          "columns": [
+            "team_id",
+            "org_member_id"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "team_members_id": {
+          "name": "team_members_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {}
+    },
+    "teams": {
+      "name": "teams",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "org_id": {
+          "name": "org_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "public_id": {
+          "name": "public_id",
+          "type": "char(28)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "avatar_timestamp": {
+          "name": "avatar_timestamp",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "color": {
+          "name": "color",
+          "type": "enum('bronze','gold','brown','orange','tomato','red','ruby','crimson','pink','plum','purple','violet','iris','indigo','blue','cyan','teal','jade','green','grass')",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "default_email_identity_id": {
+          "name": "default_email_identity_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "default_space_id": {
+          "name": "default_space_id",
+          "type": "bigint unsigned",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "public_id_idx": {
+          "name": "public_id_idx",
+          "columns": [
+            "public_id"
+          ],
+          "isUnique": true
+        },
+        "org_id_idx": {
+          "name": "org_id_idx",
+          "columns": [
+            "org_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "teams_id": {
+          "name": "teams_id",
+          "columns": [
+            "id"
+          ]
         }
       },
       "uniqueConstraints": {}
     }
   },
-  "schemas": {},
   "_meta": {
     "schemas": {},
     "tables": {},
     "columns": {}
+  },
+  "internal": {
+    "tables": {},
+    "indexes": {}
   }
 }

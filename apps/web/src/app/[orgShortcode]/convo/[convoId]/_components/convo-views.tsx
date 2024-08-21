@@ -6,6 +6,7 @@ import { type VirtuosoHandle } from 'react-virtuoso';
 import { useCallback, useMemo, useRef } from 'react';
 import { formatParticipantData } from '../../utils';
 import { SpinnerGap } from '@phosphor-icons/react';
+import { useSearchParams } from 'next/navigation';
 import { type TypeId } from '@u22n/utils/typeid';
 import { MessagesPanel } from './messages-panel';
 import { platform } from '@/src/lib/trpc';
@@ -26,7 +27,7 @@ export function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
       convoPublicId: convoId
     },
     {
-      staleTime: ms('1 minute')
+      staleTime: ms('10 minutes')
     }
   );
 
@@ -47,15 +48,15 @@ export function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
   }, [convoData, orgShortcode]);
 
   const participantOwnPublicId = convoData?.ownParticipantPublicId;
-  const convoHidden = useMemo(
-    () =>
-      convoData
-        ? (convoData?.data.participants.find(
-            (p) => p.publicId === participantOwnPublicId
-          )?.hidden ?? false)
-        : null,
-    [convoData, participantOwnPublicId]
-  );
+  // const convoHidden = useMemo(
+  //   () =>
+  //     convoData
+  //       ? (convoData?.data.participants.find(
+  //           (p) => p.publicId === participantOwnPublicId
+  //         )?.hidden ?? false)
+  //       : null,
+  //   [convoData, participantOwnPublicId]
+  // );
 
   const formattedParticipants = useMemo(() => {
     const formattedParticipantsData: NonNullable<
@@ -90,12 +91,12 @@ export function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
       <TopBar
         isConvoLoading={convoDataLoading}
         convoId={convoId}
-        convoHidden={convoHidden}
+        // convoHidden={convoHidden}
         subjects={convoData?.data.subjects}
         participants={formattedParticipants}
         attachments={attachments}
       />
-      {convoDataLoading || !participantOwnPublicId ? (
+      {convoDataLoading ? (
         <div className="flex h-full w-full items-center justify-center gap-2 text-center font-bold">
           <SpinnerGap
             className="size-4 animate-spin"
@@ -110,7 +111,7 @@ export function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
               convoId={convoId}
               formattedParticipants={formattedParticipants}
               participantOwnPublicId={
-                participantOwnPublicId as TypeId<'convoParticipants'>
+                participantOwnPublicId as TypeId<'convoParticipants'> | null
               }
               ref={virtuosoRef}
             />
@@ -127,13 +128,20 @@ export function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
 }
 
 export function ConvoNotFound() {
-  usePageTitle('Convo Not Found');
+  const searchParams = useSearchParams();
+  const wasDeleted = searchParams.get('deleted') === 'true';
+
+  usePageTitle(wasDeleted ? 'Convo Deleted' : 'Convo Not Found');
 
   return (
     <div className="mx-auto flex h-full w-full flex-col items-center justify-center gap-3">
-      <div className="text-xl font-bold">Convo Not Found</div>
+      <div className="text-xl font-bold">
+        {wasDeleted ? 'Convo Deleted' : 'Convo Not Found'}
+      </div>
       <div className="text-base-11 text-balance text-center text-sm font-medium">
-        The convo you are looking for does not exist or has been deleted.
+        {wasDeleted
+          ? 'The convo you are looking for has been deleted.'
+          : 'The convo you are looking for does not exist.'}
       </div>
     </div>
   );

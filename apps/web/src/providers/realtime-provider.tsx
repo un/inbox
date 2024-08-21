@@ -21,7 +21,8 @@ export function RealtimeProvider({ children }: PropsWithChildren) {
         appKey: env.NEXT_PUBLIC_REALTIME_APP_KEY,
         host: env.NEXT_PUBLIC_REALTIME_HOST,
         port: env.NEXT_PUBLIC_REALTIME_PORT,
-        authEndpoint: `${env.NEXT_PUBLIC_PLATFORM_URL}/realtime/auth`
+        authEndpoint: `${env.NEXT_PUBLIC_PLATFORM_URL}/realtime/auth`,
+        channelAuthorizationEndpoint: `${env.NEXT_PUBLIC_PLATFORM_URL}/realtime/authorize`
       })
   );
 

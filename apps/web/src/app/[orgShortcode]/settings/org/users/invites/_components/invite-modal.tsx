@@ -396,12 +396,10 @@ export function InviteModal() {
                         />
                       ) : (
                         <Tooltip>
-                          <TooltipTrigger>
-                            <Switch
-                              disabled
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
+                          <TooltipTrigger asChild>
+                            <span className="mt-1.5">
+                              <Switch disabled />
+                            </span>
                           </TooltipTrigger>
                           <TooltipContent>
                             <p>{`You don't have any teams`}</p>

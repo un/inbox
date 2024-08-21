@@ -41,7 +41,7 @@ import { toast } from 'sonner';
 
 type MessagesPanelProps = {
   convoId: TypeId<'convos'>;
-  participantOwnPublicId: TypeId<'convoParticipants'>;
+  participantOwnPublicId: TypeId<'convoParticipants'> | null;
   formattedParticipants: NonNullable<
     ReturnType<typeof formatParticipantData>
   >[];
@@ -220,7 +220,7 @@ const MessageItem = memo(
     formattedParticipants
   }: {
     message: RouterOutputs['convos']['entries']['getConvoEntries']['entries'][number];
-    participantOwnPublicId: string;
+    participantOwnPublicId: string | null;
     formattedParticipants: NonNullable<
       ReturnType<typeof formatParticipantData>
     >[];

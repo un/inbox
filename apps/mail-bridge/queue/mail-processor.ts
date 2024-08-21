@@ -6,6 +6,7 @@ import {
   convoEntryReplies,
   convoParticipants,
   convoSubjects,
+  convoToSpaces,
   convos,
   emailIdentities,
   orgs,
@@ -22,12 +23,12 @@ import { createExtensionSet } from '@u22n/tiptap/extensions';
 import { sendRealtimeNotification } from '../utils/realtime';
 import { simpleParser, type EmailAddress } from 'mailparser';
 import { parseAddressIds } from '../utils/contactParsing';
+import { addConvoToSpace } from '../utils/spaceUtils';
 import { eq, and, inArray } from '@u22n/database/orm';
 import { tiptapCore, tiptapHtml } from '@u22n/tiptap';
 import { typeIdValidator } from '@u22n/utils/typeid';
 import { getTracer } from '@u22n/otel/helpers';
 import { parseMessage } from '@u22n/mailtools';
-import { discord } from '@u22n/utils/discord';
 import { logger } from '@u22n/otel/logger';
 import { sanitize } from '../utils/purify';
 import { db } from '@u22n/database';
@@ -106,6 +107,7 @@ async function resolveOrgAndMailserver({
     mailserverId !== 'fwd'
   ) {
     //verify the mailserver actually exists
+    console.error('test42 - inputs 🔥', { orgId, mailserverId });
     const mailServer = await db.query.postalServers.findFirst({
       where: eq(postalServers.publicId, mailserverId),
       columns: {
@@ -120,13 +122,17 @@ async function resolveOrgAndMailserver({
         }
       }
     });
-    if (!mailServer || mailServer.orgId !== orgId)
+    console.error('test42 db response 🔥', { mailServer });
+
+    if (!mailServer || mailServer.orgId !== orgId) {
+      console.error('test42 trow 🫡');
       throw new Error(
         `Mailserver not found or does not belong to the org ${JSON.stringify({
           orgId,
           mailserverId
         })}`
       );
+    }
 
     return {
       orgId: mailServer.orgId,
@@ -292,6 +298,7 @@ export const worker = createWorker<MailProcessorJobData>(
   (job) =>
     tracer.startActiveSpan('Mail Processor', async (span) => {
       try {
+        console.info('Starting mail processor job', { jobId: job.id });
         span?.setAttributes({
           'job.id': job.id,
           'job.data': JSON.stringify(job.data)
@@ -300,12 +307,18 @@ export const worker = createWorker<MailProcessorJobData>(
         const { rawMessage, params } = job.data;
         const { id, rcpt_to, message, base64 } = rawMessage;
 
+        console.info('Resolving org and mailserver', { rcpt_to, ...params });
         const { orgId, orgPublicId, forwardedEmailAddress } =
           await resolveOrgAndMailserver({
             rcpt_to,
             ...params
           });
 
+        console.info('Resolved org and mailserver', {
+          orgId,
+          orgPublicId,
+          forwardedEmailAddress
+        });
         span?.addEvent('mail-processor.resolved_org_mailserver', {
           orgId,
           orgPublicId,
@@ -345,6 +358,8 @@ export const worker = createWorker<MailProcessorJobData>(
             : parsedEmail.cc.value
           : [];
 
+        console.info(parsedEmail);
+
         const inReplyToEmailId = parsedEmail.inReplyTo
           ? (parsedEmail.inReplyTo
               .split(/\s+/g) // split by whitespace
@@ -383,7 +398,6 @@ export const worker = createWorker<MailProcessorJobData>(
           });
 
         if (alreadyProcessedMessageWithThisId) {
-          logger.warn('Message already processed');
           return;
         }
 
@@ -407,7 +421,11 @@ export const worker = createWorker<MailProcessorJobData>(
           cleanStyles: true
         });
 
-        //* get the contact and emailIdentityIds for the message
+        console.info('Parsing email addresses', {
+          messageFrom,
+          messageTo,
+          messageCc
+        });
         const [
           messageToPlatformObject,
           messageFromPlatformObject,
@@ -432,6 +450,12 @@ export const worker = createWorker<MailProcessorJobData>(
             : Promise.resolve([])
         ]);
 
+        console.info('Email addresses parsed', {
+          messageToPlatformObject,
+          messageFromPlatformObject,
+          messageCcPlatformObject
+        });
+
         if (!messageToPlatformObject?.[0] || !messageFromPlatformObject?.[0]) {
           span?.setAttributes({
             'message.toObject': JSON.stringify(messageToPlatformObject),
@@ -454,6 +478,7 @@ export const worker = createWorker<MailProcessorJobData>(
               signaturePlainText: true
             }
           });
+          // TODO: if contact has no avatar timestamp, or timestamp older than 28 days, fetch the avatar from UnAvatar
 
           if (!contact) {
             throw new Error('No contact found for from address');
@@ -522,8 +547,7 @@ export const worker = createWorker<MailProcessorJobData>(
               with: {
                 destinations: {
                   columns: {
-                    teamId: true,
-                    orgMemberId: true
+                    spaceId: true
                   }
                 }
               }
@@ -531,25 +555,19 @@ export const worker = createWorker<MailProcessorJobData>(
           }
         });
 
-        const { routingRuleOrgMemberIds, routingRuleTeamIds } =
-          emailIdentityResponse.reduce(
-            (values, { routingRules }) => {
-              for (const destination of routingRules.destinations) {
-                if (destination.teamId) {
-                  values.routingRuleTeamIds.push(destination.teamId);
-                } else if (destination.orgMemberId) {
-                  values.routingRuleOrgMemberIds.push(destination.orgMemberId);
-                }
+        const routingRuleSpaceIds = [] as number[];
+        emailIdentityResponse.map((ei) => {
+          if (ei.routingRules.destinations.length > 0) {
+            ei.routingRules.destinations.map((dr) => {
+              if (dr.spaceId) {
+                routingRuleSpaceIds.push(dr.spaceId);
               }
-              return values;
-            },
-            {
-              routingRuleTeamIds: [] as number[],
-              routingRuleOrgMemberIds: [] as number[]
-            }
-          );
+            });
+          }
+        });
 
         //* start to process the conversation
+        console.info('Processing conversation', { inReplyToEmailId });
         let hasReplyToButIsNewConvo: boolean | null = null;
         let convoId = -1;
         let replyToId: number | null = null;
@@ -572,6 +590,9 @@ export const worker = createWorker<MailProcessorJobData>(
         // - if no, then we assume this is a new convo and handle it at such
 
         if (inReplyToEmailId) {
+          console.info('Checking for existing message with inReplyToEmailId', {
+            inReplyToEmailId
+          });
           const existingMessage = await db.query.convoEntries.findFirst({
             where: and(
               eq(convoEntries.orgId, orgId),
@@ -591,9 +612,7 @@ export const worker = createWorker<MailProcessorJobData>(
                   participants: {
                     columns: {
                       id: true,
-                      contactId: true,
-                      teamId: true,
-                      orgMemberId: true
+                      contactId: true
                     }
                   }
                 }
@@ -606,6 +625,8 @@ export const worker = createWorker<MailProcessorJobData>(
               }
             }
           });
+
+          console.info('Existing message query result', { existingMessage });
 
           if (existingMessage) {
             hasReplyToButIsNewConvo = false;
@@ -648,16 +669,6 @@ export const worker = createWorker<MailProcessorJobData>(
             const missingContacts = contactIds.filter(
               (c) => !existingConvoParticipantsContactIds.includes(c)
             );
-            const existingConvoParticipantsOrgMemberIds =
-              existingMessage.convo.participants.map((p) => p.orgMemberId);
-            const missingOrgMembers = routingRuleOrgMemberIds.filter(
-              (c) => !existingConvoParticipantsOrgMemberIds.includes(c)
-            );
-            const existingConvoParticipantsTeamIds =
-              existingMessage.convo.participants.map((p) => p.teamId);
-            const missingUserTeams = routingRuleTeamIds.filter(
-              (c) => !existingConvoParticipantsTeamIds.includes(c)
-            );
 
             // - if not, then add them to the convo participants to add array
             if (missingContacts.length) {
@@ -671,33 +682,65 @@ export const worker = createWorker<MailProcessorJobData>(
                 }))
               );
             }
-            if (missingOrgMembers.length) {
-              convoParticipantsToAdd.push(
-                ...missingOrgMembers.map((orgMemberId) => ({
-                  convoId,
-                  orgMemberId,
-                  orgId,
-                  publicId: typeIdGenerator('convoParticipants'),
-                  role: 'contributor' as const
-                }))
-              );
-            }
-            if (missingUserTeams.length) {
-              convoParticipantsToAdd.push(
-                ...missingUserTeams.map((teamId) => ({
-                  convoId,
-                  teamId,
-                  orgId,
-                  publicId: typeIdGenerator('convoParticipants'),
-                  role: 'contributor' as const
-                }))
-              );
+
+            // check all the spaces the convo is meant to be in, and add it to missing spaces via the convoToSpaces table
+
+            const existingConvoToSpacesEntries =
+              await db.query.convoToSpaces.findMany({
+                where: and(
+                  eq(convoToSpaces.orgId, orgId),
+                  eq(convoToSpaces.convoId, Number(convoId))
+                ),
+                columns: {
+                  spaceId: true
+                }
+              });
+
+            const existingSpaceIds = existingConvoToSpacesEntries.map(
+              (entry) => entry.spaceId
+            );
+            // remove the existing spaceIds from the routingRuleSpaceIds
+            const missingSpaceIds = routingRuleSpaceIds.filter(
+              (spaceId) => !existingSpaceIds.includes(spaceId)
+            );
+
+            // add convo to the missing spaces
+            // type ConvoToSpaceInsertDbType = typeof convoToSpaces.$inferInsert;
+            // const convoToSpacesInsertValuesArray: ConvoToSpaceInsertDbType[] =
+            //   [];
+            // missingSpaceIds.forEach((spaceId) => {
+            //   convoToSpacesInsertValuesArray.push({
+            //     orgId: orgId,
+            //     convoId: Number(convoId),
+            //     spaceId: spaceId,
+            //     publicId: typeIdGenerator('convoToSpaces')
+            //   });
+            // });
+            // await db
+            //   .insert(convoToSpaces)
+            //   .values(convoToSpacesInsertValuesArray);
+
+            for (const spaceId of missingSpaceIds) {
+              await addConvoToSpace({
+                db,
+                orgId,
+                convoId: Number(convoId),
+                spaceId: spaceId
+              });
             }
           } else {
-            // if there is a reply to header but we cant find the conversation, we handle this like its a new convo
+            console.info(
+              'No existing message found, treating as new conversation'
+            );
             hasReplyToButIsNewConvo = true;
           }
         }
+
+        console.info('Creating new conversation or adding to existing', {
+          isNewConvo: !inReplyToEmailId || hasReplyToButIsNewConvo,
+          convoId,
+          subjectId
+        });
 
         // create a new convo with new participants
         if (!inReplyToEmailId || hasReplyToButIsNewConvo) {
@@ -730,28 +773,20 @@ export const worker = createWorker<MailProcessorJobData>(
               }))
             );
           }
-          if (routingRuleOrgMemberIds.length) {
-            convoParticipantsToAdd.push(
-              ...routingRuleOrgMemberIds.map((orgMemberId) => ({
-                convoId,
-                orgMemberId,
-                orgId,
-                publicId: typeIdGenerator('convoParticipants'),
-                role: 'contributor' as const
-              }))
-            );
-          }
-          if (routingRuleTeamIds.length) {
-            convoParticipantsToAdd.push(
-              ...routingRuleTeamIds.map((teamId) => ({
-                convoId: convoId,
-                teamId: teamId,
-                orgId: orgId,
-                publicId: typeIdGenerator('convoParticipants'),
-                role: 'contributor' as const
-              }))
-            );
-          }
+
+          type ConvoToSpaceInsertDbType = typeof convoToSpaces.$inferInsert;
+
+          const convoToSpacesInsertValuesArray: ConvoToSpaceInsertDbType[] = [];
+          routingRuleSpaceIds.forEach((spaceId) => {
+            convoToSpacesInsertValuesArray.push({
+              orgId: orgId,
+              convoId: Number(convoId),
+              spaceId: spaceId,
+              publicId: typeIdGenerator('convoToSpaces')
+            });
+          });
+
+          await db.insert(convoToSpaces).values(convoToSpacesInsertValuesArray);
         }
 
         //* start to handle creating the message in the convo
@@ -762,7 +797,12 @@ export const worker = createWorker<MailProcessorJobData>(
         }
 
         if (convoParticipantsToAdd.length) {
+          console.info('Inserting new convo participants', {
+            count: convoParticipantsToAdd.length
+          });
           await db.insert(convoParticipants).values(convoParticipantsToAdd);
+        } else {
+          console.info('No new convo participants to add');
         }
 
         if (!fromAddressParticipantId) {
@@ -781,67 +821,71 @@ export const worker = createWorker<MailProcessorJobData>(
             // @ts-expect-error we check and define earlier up
             fromAddressParticipantId = contactParticipant.id;
           } else if (fromAddressPlatformObject.type === 'emailIdentity') {
+            console.error(
+              '🚪 Adding participants from internal email identity with messages sent from external email services not supported yet'
+            );
+            //! TODO: How do we handle adding the participant to the convo if we only track spaces?
+            //! leave code below for ref and quick revert if needed
             // we need to get the first person/team in the routing rule and add them to the convo
-            const emailIdentityParticipant =
-              await db.query.emailIdentities.findFirst({
-                where: and(
-                  eq(emailIdentities.orgId, orgId),
-                  eq(emailIdentities.id, fromAddressPlatformObject?.id)
-                ),
-                columns: {
-                  id: true
-                },
-                with: {
-                  routingRules: {
-                    columns: {
-                      id: true
-                    },
-                    with: {
-                      destinations: {
-                        columns: {
-                          teamId: true,
-                          orgMemberId: true
-                        }
-                      }
-                    }
-                  }
-                }
-              });
-            const firstDestination =
-              // @ts-expect-error, taken form old code, will rewrite later
-              emailIdentityParticipant.routingRules.destinations[0]!;
-            let convoParticipantFromAddressIdentity;
-            if (firstDestination.orgMemberId) {
-              convoParticipantFromAddressIdentity =
-                await db.query.convoParticipants.findFirst({
-                  where: and(
-                    eq(convoParticipants.orgId, orgId),
-                    eq(convoParticipants.convoId, convoId),
+            // const emailIdentityParticipant =
+            //   await db.query.emailIdentities.findFirst({
+            //     where: and(
+            //       eq(emailIdentities.orgId, orgId),
+            //       eq(emailIdentities.id, fromAddressPlatformObject?.id)
+            //     ),
+            //     columns: {
+            //       id: true
+            //     },
+            //     with: {
+            //       routingRules: {
+            //         columns: {
+            //           id: true
+            //         },
+            //         with: {
+            //           destinations: {
+            //             columns: {
+            //               spaceId: true,
+            //             }
+            //           }
+            //         }
+            //       }
+            //     }
+            //   });
+            // const firstDestination =
+            //   // @ts-expect-error, taken form old code, will rewrite later
+            //   emailIdentityParticipant.routingRules.destinations[0]!;
+            // let convoParticipantFromAddressIdentity;
+            // if (firstDestination.orgMemberId) {
+            //   convoParticipantFromAddressIdentity =
+            //     await db.query.convoParticipants.findFirst({
+            //       where: and(
+            //         eq(convoParticipants.orgId, orgId),
+            //         eq(convoParticipants.convoId, convoId),
 
-                    eq(
-                      convoParticipants.orgMemberId,
-                      firstDestination.orgMemberId
-                    )
-                  ),
-                  columns: {
-                    id: true
-                  }
-                });
-            } else if (firstDestination.teamId) {
-              convoParticipantFromAddressIdentity =
-                await db.query.convoParticipants.findFirst({
-                  where: and(
-                    eq(convoParticipants.orgId, orgId),
-                    eq(convoParticipants.convoId, convoId || 0),
-                    eq(convoParticipants.teamId, firstDestination.teamId)
-                  ),
-                  columns: {
-                    id: true
-                  }
-                });
-            }
-            // @ts-expect-error, taken form old code, will rewrite later
-            fromAddressParticipantId = convoParticipantFromAddressIdentity.id;
+            //         eq(
+            //           convoParticipants.orgMemberId,
+            //           firstDestination.orgMemberId
+            //         )
+            //       ),
+            //       columns: {
+            //         id: true
+            //       }
+            //     });
+            // } else if (firstDestination.teamId) {
+            //   convoParticipantFromAddressIdentity =
+            //     await db.query.convoParticipants.findFirst({
+            //       where: and(
+            //         eq(convoParticipants.orgId, orgId),
+            //         eq(convoParticipants.convoId, convoId || 0),
+            //         eq(convoParticipants.teamId, firstDestination.teamId)
+            //       ),
+            //       columns: {
+            //         id: true
+            //       }
+            //     });
+            // }
+
+            // fromAddressParticipantId = convoParticipantFromAddressIdentity.id;
           }
         }
 
@@ -907,6 +951,19 @@ export const worker = createWorker<MailProcessorJobData>(
           tipTapExtensions
         );
 
+        // Before inserting a new convo entry, add a check to ensure we have valid data
+        console.info('Inserting new convo entry', {
+          orgId,
+          convoId,
+          fromAddressParticipantId,
+          replyToId,
+          subjectId
+        });
+
+        if (!fromAddressParticipantId) {
+          throw new Error('No from address participant id found');
+        }
+
         const insertNewConvoEntry = await db.insert(convoEntries).values({
           orgId,
           publicId: typeIdGenerator('convoEntries'),
@@ -914,12 +971,14 @@ export const worker = createWorker<MailProcessorJobData>(
           visibility: 'all_participants',
           type: 'message',
           metadata: convoEntryMetadata,
-          author: fromAddressParticipantId!,
+          author: fromAddressParticipantId,
           body: convoEntryBody,
           bodyPlainText: convoEntryBodyPlainText,
           replyToId,
           subjectId
         });
+
+        console.info('Inserted new convo entry', insertNewConvoEntry);
 
         await db
           .update(convos)
@@ -928,6 +987,7 @@ export const worker = createWorker<MailProcessorJobData>(
           })
           .where(eq(convos.id, convoId));
 
+        console.info('Uploading attachments');
         const uploadedAttachments = await Promise.allSettled(
           attachments.map((attachment) =>
             uploadAndAttachAttachment(
@@ -972,6 +1032,8 @@ export const worker = createWorker<MailProcessorJobData>(
             }[]
         );
 
+        console.info('Uploaded attachments', uploadedAttachments);
+
         const parsedEmailMessageHtmlWithAttachments = replaceCidWithUrl(
           strippedEmail.parsedMessageHtml,
           uploadedAttachments
@@ -1008,6 +1070,7 @@ export const worker = createWorker<MailProcessorJobData>(
           uploadedAttachments
         );
 
+        console.info('Inserting convo entry raw HTML email');
         await db.insert(convoEntryRawHtmlEmails).values({
           orgId: orgId,
           entryId: Number(insertNewConvoEntry.insertId),
@@ -1016,15 +1079,19 @@ export const worker = createWorker<MailProcessorJobData>(
           wipeDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 28) // 28 days
         });
 
+        console.info('Sending realtime notification');
         await sendRealtimeNotification({
           newConvo: (!inReplyToEmailId || hasReplyToButIsNewConvo) ?? false,
           convoId: convoId,
-          convoEntryId: +insertNewConvoEntry.insertId
+          convoEntryId: Number(insertNewConvoEntry.insertId)
         });
+
+        console.info('Mail processor job completed successfully');
       } catch (e) {
-        span?.recordException(e as Error);
         console.error('Error processing email', e);
-        await discord.info(`Mailbridge Queue Error\n${(e as Error).message}`);
+        span?.recordException(e as Error);
+        // Log the full error stack trace
+        console.error('Full error stack:', (e as Error).stack);
         // Throw the error to be caught by the worker, and moving to failed jobs
         throw e;
       }

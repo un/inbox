@@ -10,11 +10,8 @@ export default function Page() {
 
   return isMobile ? null : (
     <div className="flex flex-1 flex-col items-center justify-center gap-2 p-4 text-center">
-      <span className="text-pretty font-medium">
-        Select a Convo from Sidebar or Create a New One
-      </span>
       <Button asChild>
-        <Link href={scopedUrl(`/convo/new`)}>Create New Convo</Link>
+        <Link href={scopedUrl(`/convo/new`, true)}>New Conversation</Link>
       </Button>
     </div>
   );

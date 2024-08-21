@@ -6,9 +6,9 @@ import { type RouterOutputs, platform } from '@/src/lib/trpc';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { Input } from '@/src/components/shadcn-ui/input';
-import { useEffect, useMemo, useState } from 'react';
 import Stepper from '../../_components/stepper';
 import { User } from '@phosphor-icons/react';
+import { useMemo, useState } from 'react';
 import Image from 'next/image';
 import { toast } from 'sonner';
 
@@ -24,12 +24,19 @@ export function ProfileCard({ orgData, wasInvited }: ProfileCardProps) {
   const router = useRouter();
   const query = useSearchParams();
   const orgShortCode = query.get('org');
-  const { upload, uploadResponse, uploading, error, progress } =
-    useAvatarUploader();
+  const { upload, uploadResponse, uploading, progress } = useAvatarUploader({
+    onError(error) {
+      toast.error("Couldn't upload avatar", { description: error.message });
+    }
+  });
+  const utils = platform.useUtils();
 
   const { mutate: updateProfile, isPending } =
     platform.account.profile.updateOrgMemberProfile.useMutation({
-      onSuccess: () => router.push(`/${orgShortCode}`)
+      onSuccess: async () => {
+        await utils.account.profile.getOrgMemberProfile.invalidate();
+        router.push(`/${orgShortCode}`);
+      }
     });
 
   const avatarUrl = useMemo(() => {
@@ -46,12 +53,6 @@ export function ProfileCard({ orgData, wasInvited }: ProfileCardProps) {
     orgData.profile.publicId,
     uploadResponse
   ]);
-
-  useEffect(() => {
-    if (error) {
-      toast.error("Couldn't upload avatar", { description: error.message });
-    }
-  }, [error]);
 
   return (
     <div className="mx-auto flex w-full max-w-[416px] flex-col gap-5 p-2">
@@ -83,7 +84,6 @@ export function ProfileCard({ orgData, wasInvited }: ProfileCardProps) {
       <div className="flex gap-4">
         <div>
           {avatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={avatarUrl}
               alt={`${name}'s Profile`}

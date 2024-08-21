@@ -11,7 +11,8 @@ import {
 import {
   useCurrentConvoId,
   useOrgScopedRouter,
-  useOrgShortcode
+  useOrgShortcode,
+  useSpaceShortcode
 } from '@/src/hooks/use-params';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { useDeleteConvo$Cache } from '../utils';
@@ -31,12 +32,16 @@ export function DeleteMultipleConvosModal({
   const currentConvo = useCurrentConvoId();
   const { scopedNavigate } = useOrgScopedRouter();
   const [selections, setSelections] = useAtom(convoListSelection);
+  const spaceShortcode = useSpaceShortcode(false);
 
   const { mutate: deleteConvo, isPending: deletingConvos } =
     platform.convos.deleteConvo.useMutation({
       onSuccess: async () => {
         setOpen(false);
-        await deleteConvoCache(selections);
+        await deleteConvoCache({
+          convoPublicId: selections,
+          spaceShortcode: spaceShortcode ?? 'personal'
+        });
         setSelections([]);
       }
     });
@@ -73,7 +78,7 @@ export function DeleteMultipleConvosModal({
             loading={deletingConvos}
             onClick={() => {
               if (currentConvo && selections.includes(currentConvo)) {
-                scopedNavigate('/convo');
+                scopedNavigate('/convo', true);
               }
               deleteConvo({
                 orgShortcode,

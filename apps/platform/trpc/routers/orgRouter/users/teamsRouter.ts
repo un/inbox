@@ -1,7 +1,17 @@
+import {
+  teams,
+  spaces,
+  spaceMembers,
+  emailIdentities
+} from '@u22n/database/schema';
+import {
+  typeIdGenerator,
+  typeIdValidator,
+  type TypeId
+} from '@u22n/utils/typeid';
 import { router, orgProcedure, orgAdminProcedure } from '~platform/trpc/trpc';
-import { typeIdGenerator, typeIdValidator } from '@u22n/utils/typeid';
+import { validateSpaceShortCode } from '../../spaceRouter/utils';
 import { addOrgMemberToTeamHandler } from './teamsHandler';
-import { teams } from '@u22n/database/schema';
 import { uiColors } from '@u22n/utils/colors';
 import { eq, and } from '@u22n/database/orm';
 import { TRPCError } from '@trpc/server';
@@ -13,26 +23,73 @@ export const teamsRouter = router({
       z.object({
         teamName: z.string().min(2).max(50),
         teamDescription: z.string().min(0).max(500).optional(),
-        teamColor: z.enum(uiColors)
+        teamColor: z.enum(uiColors),
+        createSpace: z.boolean().default(false)
       })
     )
     .mutation(async ({ ctx, input }) => {
       const { db, org } = ctx;
 
       const orgId = org.id;
-      const { teamName, teamDescription, teamColor } = input;
-      const newPublicId = typeIdGenerator('teams');
+      const { teamName, teamDescription, teamColor, createSpace } = input;
+      const newTeamPublicId = typeIdGenerator('teams');
 
-      await db.insert(teams).values({
-        publicId: newPublicId,
+      // Create the new team
+      const newTeamResponse = await db.insert(teams).values({
+        publicId: newTeamPublicId,
         name: teamName,
         description: teamDescription,
         color: teamColor,
         orgId: orgId
       });
 
+      const newTeamId = newTeamResponse.insertId;
+
+      let newSpacePublicId: TypeId<'spaces'> | undefined;
+
+      if (createSpace) {
+        newSpacePublicId = typeIdGenerator('spaces');
+        const newSpaceMemberPublicId = typeIdGenerator('spaceMembers');
+
+        const spaceShortcode = await validateSpaceShortCode({
+          db: db,
+          shortcode: teamName,
+          orgId: orgId
+        });
+
+        // Create a space for the new team
+        const newSpaceResponse = await db.insert(spaces).values({
+          publicId: newSpacePublicId,
+          orgId: Number(orgId),
+          name: teamName,
+          color: teamColor,
+          createdByOrgMemberId: org.memberId,
+          shortcode: spaceShortcode.shortcode,
+          type: 'private',
+          icon: 'squares-four'
+        });
+
+        const newSpaceId = newSpaceResponse.insertId;
+
+        // Add the team to the space
+        await db.insert(spaceMembers).values({
+          publicId: newSpaceMemberPublicId,
+          orgId: orgId,
+          spaceId: Number(newSpaceId),
+          teamId: Number(newTeamId),
+          addedByOrgMemberId: org.memberId,
+          role: 'admin'
+        });
+
+        await db
+          .update(teams)
+          .set({ defaultSpaceId: Number(newSpaceId) })
+          .where(eq(teams.id, Number(newTeamId)));
+      }
+
       return {
-        newTeamPublicId: newPublicId
+        newTeamPublicId: newTeamPublicId,
+        newSpacePublicId: newSpacePublicId
       };
     }),
   getOrgTeams: orgProcedure.query(async ({ ctx }) => {
@@ -130,23 +187,19 @@ export const teamsRouter = router({
               }
             }
           },
-          authorizedEmailIdentities: {
-            columns: {},
-            with: {
-              emailIdentity: {
-                columns: {
-                  username: true,
-                  sendName: true,
-                  domainName: true
-                }
-              }
+          defaultEmailIdentity: {
+            columns: {
+              username: true,
+              domainName: true,
+              sendName: true
             }
           }
         }
       });
 
       return {
-        team: teamQuery
+        team: teamQuery,
+        defaultEmailIdentity: teamQuery?.defaultEmailIdentity
       };
     }),
   addOrgMemberToTeam: orgAdminProcedure
@@ -218,5 +271,66 @@ export const teamsRouter = router({
         code: 'NOT_IMPLEMENTED',
         message: 'Not implemented'
       });
+    }),
+  setTeamDefaultEmailIdentity: orgAdminProcedure
+    .input(
+      z.object({
+        teamPublicId: typeIdValidator('teams'),
+        emailIdentityPublicId: typeIdValidator('emailIdentities')
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { db, org } = ctx;
+
+      const orgId = org.id;
+      const { teamPublicId, emailIdentityPublicId } = input;
+
+      // get then email identity id
+      const emailIdentityQueryResponse =
+        await db.query.emailIdentities.findFirst({
+          where: and(
+            eq(emailIdentities.publicId, emailIdentityPublicId),
+            eq(emailIdentities.orgId, orgId)
+          ),
+          columns: {
+            id: true
+          }
+        });
+
+      if (!emailIdentityQueryResponse) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Email identity not found'
+        });
+      }
+
+      // get team to verify it exists
+      const teamQueryResponse = await db.query.teams.findFirst({
+        where: and(eq(teams.publicId, teamPublicId), eq(teams.orgId, orgId)),
+        columns: {
+          id: true
+        }
+      });
+
+      if (!teamQueryResponse) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Team not found'
+        });
+      }
+
+      await db
+        .update(teams)
+        .set({ defaultEmailIdentityId: Number(emailIdentityQueryResponse.id) })
+        .where(
+          and(
+            eq(teams.orgId, orgId),
+            eq(teams.id, Number(teamQueryResponse.id))
+          )
+        );
+
+      return {
+        success: true
+      };
     })
 });

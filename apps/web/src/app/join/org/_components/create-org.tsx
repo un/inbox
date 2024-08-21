@@ -60,8 +60,8 @@ export function CreateOrg() {
       }
     );
 
-  const generateOrgShortcodeUtils =
-    platform.useUtils().org.crud.generateOrgShortcode;
+  const utils = platform.useUtils();
+  const generateOrgShortcodeUtils = utils.org.crud.generateOrgShortcode;
 
   // Update the shortcode if the org name changes
   useEffect(() => {
@@ -94,7 +94,11 @@ export function CreateOrg() {
 
   const { mutate: createOrg, isPending } =
     platform.org.crud.createNewOrg.useMutation({
-      onSuccess: () => router.push(`/join/profile?org=${orgShortcode}`)
+      onSuccess: async () => {
+        await utils.org.crud.getAccountOrgs.invalidate();
+        await utils.account.profile.getOrgMemberProfile.invalidate();
+        router.push(`/join/profile?org=${orgShortcode}`);
+      }
     });
 
   return (

@@ -29,8 +29,9 @@ import {
   Palette,
   Monitor,
   Question,
-  User,
-  SpinnerGap
+  SpinnerGap,
+  SquaresFour,
+  DotsThree
 } from '@phosphor-icons/react';
 import {
   Tooltip,
@@ -42,12 +43,16 @@ import {
   ToggleGroupItem
 } from '@/src/components/shadcn-ui/toggle-group';
 import { useOrgScopedRouter, useOrgShortcode } from '@/src/hooks/use-params';
+import { type InferQueryLikeData } from '@trpc/react-query/shared';
+import { Separator } from '@/src/components/shadcn-ui/separator';
+import { Button } from '@/src/components/shadcn-ui/button';
+import { logoutCleanup, platform } from '@/src/lib/trpc';
 import { useIsMobile } from '@/src/hooks/use-is-mobile';
 import { useMutation } from '@tanstack/react-query';
+import { NewSpaceModal } from './new-space-modal';
 import { Avatar } from '@/src/components/avatar';
 import { sidebarSubmenuOpenAtom } from './atoms';
 import { useRouter } from 'next/navigation';
-import { platform } from '@/src/lib/trpc';
 import { useTheme } from 'next-themes';
 import { cn } from '@/src/lib/utils';
 import { ms } from '@u22n/utils/ms';
@@ -58,6 +63,7 @@ import Link from 'next/link';
 
 export function SidebarContent() {
   const isMobile = useIsMobile();
+
   return (
     <div
       className={cn(
@@ -67,6 +73,95 @@ export function SidebarContent() {
       {!isMobile && <OrgMenu />}
       <SpacesNav />
       <NavAppVersion />
+    </div>
+  );
+}
+
+type SingleSpaceResponse = InferQueryLikeData<
+  typeof platform.spaces.getOrgMemberSpaces
+>['spaces'][number];
+
+function SpaceItem({
+  space: spaceData,
+  isPersonal
+}: {
+  space: SingleSpaceResponse;
+  isPersonal: boolean;
+}) {
+  const { scopedUrl } = useOrgScopedRouter();
+  const router = useRouter();
+  const orgShortCode = useOrgShortcode();
+
+  const SpaceIcon = () => {
+    return (
+      <SquaresFour
+        className="h-4 w-4"
+        weight="bold"
+      />
+    );
+  };
+
+  return (
+    <div className="hover:bg-slate-1 group flex w-full max-w-full flex-row items-center gap-2 truncate rounded-lg p-0.5">
+      <Link
+        className="flex w-full max-w-full flex-row items-center gap-4 truncate p-1"
+        href={
+          isPersonal
+            ? scopedUrl('/personal/convo')
+            : scopedUrl(`/${spaceData.shortcode}/convo`)
+        }>
+        <div
+          className="flex h-6 min-h-6 w-6 min-w-6 items-center justify-center rounded-sm"
+          style={{
+            backgroundColor: `var(--${spaceData.color}4)`,
+            color: `var(--${spaceData.color}9)`
+          }}>
+          <SpaceIcon />
+        </div>
+        <span className="text-slate-12 h-full truncate font-medium">
+          {isPersonal ? 'My Personal Space' : spaceData.name || 'Unnamed Space'}
+        </span>
+      </Link>
+      <div className="w-0 overflow-hidden transition-all group-hover:w-8">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              size="icon-sm"
+              variant="ghost">
+              <DotsThree />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            {/* TODO: Add in with the notifications
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>Notifications</DropdownMenuSubTrigger>
+              <DropdownMenuPortal>
+                <DropdownMenuSubContent>
+                  <DropdownMenuRadioGroup>
+                    <DropdownMenuRadioItem value="top">
+                      Top
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="bottom">
+                      Bottom
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="right">
+                      Right
+                    </DropdownMenuRadioItem>
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuSubContent>
+              </DropdownMenuPortal>
+            </DropdownMenuSub> 
+            <DropdownMenuSeparator />
+            */}
+            <DropdownMenuItem
+              onSelect={() => {
+                router.push(`/${orgShortCode}/${spaceData.shortcode}/settings`);
+              }}>
+              Space Settings
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     </div>
   );
 }
@@ -106,15 +201,15 @@ function OrgMenu() {
             'bg-base-1 border-base-5 hover:bg-base-2 flex w-full flex-row items-center justify-between gap-2 rounded-lg border p-3 shadow-sm'
           }>
           <div className={'flex w-full flex-row items-center gap-2'}>
-            {isLoading || !currentOrg ? (
-              <div className="flex size-8 items-center justify-center rounded-full border">
-                <SpinnerGap
-                  className="size-6 animate-spin"
-                  size={24}
-                />
-              </div>
-            ) : (
-              <div>
+            <div>
+              {isLoading || !currentOrg ? (
+                <div className="flex size-8 items-center justify-center rounded-full border">
+                  <SpinnerGap
+                    className="size-6 animate-spin"
+                    size={24}
+                  />
+                </div>
+              ) : (
                 <Avatar
                   avatarProfilePublicId={currentOrg.publicId}
                   avatarTimestamp={currentOrg.avatarTimestamp}
@@ -122,8 +217,8 @@ function OrgMenu() {
                   size="lg"
                   hideTooltip
                 />
-              </div>
-            )}
+              )}
+            </div>
             <div
               className={
                 'flex w-full flex-col items-start justify-start gap-1 overflow-hidden'
@@ -188,7 +283,7 @@ export function OrgMenuContent() {
         method: 'POST',
         credentials: 'include'
       });
-      window.location.replace('/');
+      logoutCleanup();
     }
   });
 
@@ -254,7 +349,7 @@ export function OrgMenuContent() {
             asChild>
             <div
               onClick={() => {
-                router.push(`/${org.shortcode}/convo`);
+                router.push(`/${org.shortcode}/personal/convo`);
               }}
               className={
                 'flex w-full cursor-pointer flex-row items-center justify-between gap-2'
@@ -460,6 +555,23 @@ export function OrgMenuContent() {
 
 export function SpacesNav() {
   const { scopedUrl } = useOrgScopedRouter();
+  const orgShortcode = useOrgShortcode();
+
+  const { data: unsortedSpaceData } =
+    platform.spaces.getOrgMemberSpaces.useQuery({
+      orgShortcode
+    });
+
+  // sort the spaceData to have the personal space at the top
+  const spaceData = unsortedSpaceData?.spaces.sort((a, b) => {
+    if (a.publicId === unsortedSpaceData.personalSpaceId) {
+      return -1;
+    }
+    if (b.publicId === unsortedSpaceData.personalSpaceId) {
+      return 1;
+    }
+    return 0;
+  });
 
   return (
     <div
@@ -467,20 +579,58 @@ export function SpacesNav() {
         'flex w-full grow flex-col items-start justify-start gap-4 p-0'
       )}>
       <div className="flex w-full flex-col gap-0 p-0">
-        <span className="text-base-10 p-1 text-[10px] font-semibold uppercase">
+        <span className="text-slate-10 p-1 text-xs font-semibold uppercase">
           Spaces
         </span>
-        <Link
-          className="hover:bg-base-1 flex w-full max-w-full flex-row items-center gap-2 truncate rounded-lg p-1.5"
-          href={scopedUrl('/convo')}>
-          <div className="bg-blue-4 text-blue-9 flex h-6 w-6 items-center justify-center rounded-sm">
-            <User
-              weight="bold"
-              className={'h-4 w-4'}
-            />
+
+        {spaceData && spaceData?.length > 1 && (
+          <div className="hover:bg-slate-1 group flex w-full max-w-full flex-row items-center gap-2 truncate rounded-lg p-0.5">
+            <Link
+              className="flex w-full max-w-full flex-row items-center gap-4 truncate p-1"
+              href={scopedUrl('/all/convo')}>
+              <div className="bg-accent-4 text-accent-9 flex h-6 min-h-6 w-6 min-w-6 items-center justify-center rounded-sm">
+                <SquaresFour
+                  className="h-4 w-4"
+                  weight="bold"
+                />
+              </div>
+              <span className="text-slate-12 h-full truncate font-medium">
+                All Conversations
+              </span>
+            </Link>
           </div>
-          <span className="text-base-12 font-medium">My personal space</span>
-        </Link>
+        )}
+
+        {spaceData
+          ?.filter(
+            (space) => space.publicId === unsortedSpaceData?.personalSpaceId
+          )
+          .map((space) => (
+            <SpaceItem
+              space={space}
+              key={space.publicId}
+              isPersonal={true}
+            />
+          ))}
+        <Separator className="my-4" />
+
+        <span className="text-slate-10 p-1 text-[10px] font-semibold uppercase">
+          Shared Spaces
+        </span>
+
+        {spaceData
+          ?.filter(
+            (space) => space.publicId !== unsortedSpaceData?.personalSpaceId
+          )
+          .map((space) => (
+            <SpaceItem
+              space={space}
+              key={space.publicId}
+              isPersonal={false}
+            />
+          ))}
+
+        <NewSpaceModal />
       </div>
     </div>
   );

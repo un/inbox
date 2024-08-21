@@ -41,6 +41,11 @@ import {
   HoverCardTrigger
 } from '@/src/components/shadcn-ui/hover-card';
 import {
+  useOrgScopedRouter,
+  useOrgShortcode,
+  useSpaceShortcode
+} from '@/src/hooks/use-params';
+import {
   Popover,
   PopoverTrigger,
   PopoverContent
@@ -54,7 +59,6 @@ import {
   type JSONContent,
   type EditorFunctions
 } from '@u22n/tiptap/components';
-import { useOrgScopedRouter, useOrgShortcode } from '@/src/hooks/use-params';
 import { useAttachmentUploader } from '@/src/components/shared/attachments';
 import { useComposingDraft } from '@/src/stores/draft-store';
 import { Avatar, AvatarIcon } from '@/src/components/avatar';
@@ -124,22 +128,15 @@ export default function CreateConvoForm({
 }: {
   initialEmails?: string[];
   initialSubject?: string;
+  initialSpaceShortcode?: string | null;
 }) {
   const orgShortcode = useOrgShortcode();
   const { scopedNavigate } = useOrgScopedRouter();
+  const spaceShortcode = useSpaceShortcode(false);
   const lastOrg = usePrevious(orgShortcode);
   const { draft, setDraft, resetDraft } = useComposingDraft();
   const isMobile = useIsMobile();
 
-  const { data: userEmailIdentities, isLoading: emailIdentitiesLoading } =
-    platform.org.mail.emailIdentities.getUserEmailIdentities.useQuery(
-      {
-        orgShortcode
-      },
-      {
-        staleTime: ms('1 hour')
-      }
-    );
   const { data: orgMemberList, isLoading: orgMemberListLoading } =
     platform.org.users.members.getOrgMembersList.useQuery({ orgShortcode });
   const { data: orgTeamsData, isLoading: orgTeamsLoading } =
@@ -219,6 +216,29 @@ export default function CreateConvoForm({
         setEditorText(emptyTiptapEditorContent);
       }
     });
+
+  const [selectedSpace, setSelectedSpace] = useState<string | null>(
+    ['all', 'personal', null].includes(spaceShortcode) ? null : spaceShortcode
+  );
+  const { data: userEmailIdentities, isLoading: emailIdentitiesLoading } =
+    platform.org.mail.emailIdentities.getUserEmailIdentities.useQuery(
+      {
+        orgShortcode,
+        spaceShortcode: selectedSpace
+      },
+      {
+        staleTime: ms('1 hour')
+      }
+    );
+
+  const { data: spacesResponse } = platform.spaces.getOrgMemberSpaces.useQuery({
+    orgShortcode
+  });
+  const spaces = spacesResponse?.spaces;
+
+  useEffect(() => {
+    if (!spaceShortcode) setSelectedSpace(spaces?.[0]?.shortcode ?? null);
+  }, [spaceShortcode, spaces]);
 
   // Set default email identity on load
   useEffect(() => {
@@ -419,7 +439,8 @@ export default function CreateConvoForm({
       (hasExternalParticipants ? selectedEmailIdentity !== null : true) &&
       isTextPresent &&
       topic.length > 0 &&
-      selectedParticipants.length > 0
+      selectedParticipants.length > 0 &&
+      selectedSpace !== null
     )
       return true;
     return false;
@@ -428,7 +449,8 @@ export default function CreateConvoForm({
     selectedEmailIdentity,
     isTextPresent,
     topic.length,
-    selectedParticipants.length
+    selectedParticipants.length,
+    selectedSpace
   ]);
 
   const canClearDraft = useMemo(
@@ -465,6 +487,10 @@ export default function CreateConvoForm({
             publicId: firstParticipant.publicId
           };
 
+    if (!selectedSpace) {
+      throw new Error('Please select a space for the conversation.');
+    }
+
     return createConvoFn({
       firstMessageType: type,
       topic,
@@ -476,7 +502,8 @@ export default function CreateConvoForm({
       participantsEmails,
       message: editorText,
       attachments: getTrpcUploadFormat(),
-      orgShortcode
+      orgShortcode,
+      spaceShortcode: selectedSpace
     });
   }
 
@@ -496,14 +523,15 @@ export default function CreateConvoForm({
       }
       return startConvoCreation(type);
     },
-    onSuccess: (data) => {
-      toast.success('Convo created, redirecting you to your conversion');
-
-      void addConvo(data.publicId).then(() => {
-        resetDraft();
-        setNewPanelOpen(false);
-        scopedNavigate(`/convo/${data.publicId}`);
+    onSuccess: async (data) => {
+      await addConvo({
+        convoPublicId: data.publicId,
+        spaceShortcode: spaceShortcode ?? 'personal'
       });
+      resetDraft();
+      setNewPanelOpen(false);
+      toast.success('Convo created, redirecting you to your conversion');
+      scopedNavigate(`/convo/${data.publicId}`, true);
     }
   });
 
@@ -649,6 +677,27 @@ export default function CreateConvoForm({
             </Button>
           </div>
         </div>
+      </div>
+
+      <div className="flex w-full flex-col gap-2 text-sm">
+        <Select
+          value={selectedSpace ?? undefined}
+          onValueChange={(space) => {
+            setSelectedSpace(space);
+          }}>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select a space" />
+          </SelectTrigger>
+          <SelectContent>
+            {spaces?.map((space) => (
+              <SelectItem
+                key={space.shortcode}
+                value={space.shortcode}>
+                {space.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
     </div>
   );

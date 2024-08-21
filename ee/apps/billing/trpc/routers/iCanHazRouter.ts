@@ -1,4 +1,5 @@
 import { domains, orgBilling, orgs } from '@u22n/database/schema';
+import type { SpaceWorkflowType } from '@u22n/utils/spaces';
 import { router, protectedProcedure } from '../trpc';
 import { and, eq } from '@u22n/database/orm';
 import { TRPCError } from '@trpc/server';
@@ -81,5 +82,80 @@ export const iCanHazRouter = router({
         return true;
       }
       return false;
+    }),
+  space: protectedProcedure
+    .input(z.object({ orgId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const { db } = ctx;
+
+      const orgId = input.orgId;
+
+      const orgBillingResponse = await db.query.orgBilling.findFirst({
+        where: eq(orgBilling.orgId, orgId),
+        columns: {
+          plan: true
+        }
+      });
+      if (orgBillingResponse && orgBillingResponse.plan === 'pro') {
+        return {
+          open: true,
+          private: true
+        };
+      }
+      return {
+        open: true,
+        private: false
+      };
+    }),
+  spaceWorkflow: protectedProcedure
+    .input(z.object({ orgId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const { db } = ctx;
+      const orgId = input.orgId;
+
+      let allowedWorkflows: Record<SpaceWorkflowType, number> = {
+        open: 1,
+        active: 1,
+        closed: 1
+      };
+
+      const orgBillingResponse = await db.query.orgBilling.findFirst({
+        where: eq(orgBilling.orgId, orgId),
+        columns: {
+          plan: true
+        }
+      });
+      if (orgBillingResponse && orgBillingResponse.plan === 'pro') {
+        allowedWorkflows = {
+          open: 1,
+          active: 1,
+          closed: 1
+        };
+      }
+      return allowedWorkflows;
+    }),
+  spaceTag: protectedProcedure
+    .input(z.object({ orgId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const { db } = ctx;
+
+      const orgId = input.orgId;
+
+      const orgBillingResponse = await db.query.orgBilling.findFirst({
+        where: eq(orgBilling.orgId, orgId),
+        columns: {
+          plan: true
+        }
+      });
+      if (orgBillingResponse && orgBillingResponse.plan === 'pro') {
+        return {
+          open: true,
+          private: true
+        };
+      }
+      return {
+        open: true,
+        private: false
+      };
     })
 });

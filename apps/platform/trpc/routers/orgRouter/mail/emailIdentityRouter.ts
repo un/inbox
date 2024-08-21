@@ -6,7 +6,9 @@ import {
   emailRoutingRulesDestinations,
   emailIdentities,
   teamMembers,
-  emailIdentitiesAuthorizedOrgMembers
+  spaces,
+  emailIdentitiesAuthorizedSenders,
+  convos
 } from '@u22n/database/schema';
 import {
   and,
@@ -21,6 +23,7 @@ import {
   type TypeId
 } from '@u22n/utils/typeid';
 import { router, orgProcedure, orgAdminProcedure } from '~platform/trpc/trpc';
+import { spaceMembers } from './../../../../../../packages/database/schema';
 import { emailIdentityExternalRouter } from './emailIdentityExternalRouter';
 import { nanoIdToken } from '@u22n/utils/zodSchemas';
 import { TRPCError } from '@trpc/server';
@@ -99,10 +102,12 @@ export const emailIdentityRouter = router({
         domainPublicId: typeIdValidator('domains'),
         sendName: z.string().min(2).max(255),
         catchAll: z.boolean().optional().default(false),
-        routeToOrgMemberPublicIds: z
-          .array(typeIdValidator('orgMembers'))
-          .optional(),
-        routeToTeamsPublicIds: z.array(typeIdValidator('teams')).optional()
+        routeToSpacesPublicIds: z.array(typeIdValidator('spaces')),
+        canSend: z.object({
+          anyone: z.boolean(),
+          users: z.array(typeIdValidator('orgMembers')).optional(),
+          teams: z.array(typeIdValidator('teams')).optional()
+        })
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -112,16 +117,18 @@ export const emailIdentityRouter = router({
         domainPublicId,
         sendName,
         catchAll,
-        routeToOrgMemberPublicIds,
-        routeToTeamsPublicIds
+        routeToSpacesPublicIds,
+        canSend
       } = input;
 
       const emailUsername = input.emailUsername.toLowerCase();
 
-      if (!routeToOrgMemberPublicIds && !routeToTeamsPublicIds) {
+      // pre-checks
+
+      if (canSend.anyone && !canSend.users && !canSend.teams) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
-          message: 'Must route to at least one user or team'
+          message: 'At least one user or team must be allowed to send'
         });
       }
 
@@ -149,57 +156,24 @@ export const emailIdentityRouter = router({
         });
       }
 
-      const orgMemberObjects: { id: number; hasDefault: boolean }[] = [];
-      const orgMemberIdsResponse =
-        routeToOrgMemberPublicIds && routeToOrgMemberPublicIds.length > 0
-          ? await db.query.orgMembers.findMany({
-              where: inArray(orgMembers.publicId, routeToOrgMemberPublicIds),
-              columns: {
-                id: true
-              },
-              with: {
-                authorizedEmailIdentities: {
-                  columns: {
-                    default: true
-                  }
-                }
-              }
-            })
-          : [];
-      orgMemberIdsResponse.forEach((orgMember) => {
-        orgMemberObjects.push({
-          id: orgMember.id,
-          hasDefault: orgMember.authorizedEmailIdentities.some(
-            (identity) => identity.default
-          )
-        });
+      // verify email address is not already used
+      const emailIdentityResponse = await db.query.emailIdentities.findFirst({
+        where: and(
+          eq(emailIdentities.username, emailUsername),
+          eq(emailIdentities.domainId, domainResponse.id),
+          eq(emailIdentities.orgId, orgId)
+        ),
+        columns: {
+          id: true
+        }
       });
 
-      const userTeamObjects: { id: number; hasDefault: boolean }[] = [];
-      const userTeamIdsResponse =
-        routeToTeamsPublicIds && routeToTeamsPublicIds.length > 0
-          ? await db.query.teams.findMany({
-              where: inArray(teams.publicId, routeToTeamsPublicIds),
-              columns: {
-                id: true
-              },
-              with: {
-                authorizedEmailIdentities: {
-                  columns: {
-                    default: true
-                  }
-                }
-              }
-            })
-          : [];
-      userTeamIdsResponse.forEach((userTeam) => {
-        userTeamObjects.push({
-          id: userTeam.id,
-          hasDefault: userTeam.authorizedEmailIdentities.some(
-            (identity) => identity.default
-          )
+      if (emailIdentityResponse) {
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: `Email address ${emailUsername + '@' + domainResponse.domain} already exists`
         });
-      });
+      }
 
       // create email routing rule
       const newRoutingRulePublicId = typeIdGenerator('emailRoutingRules');
@@ -211,43 +185,7 @@ export const emailIdentityRouter = router({
         description: `Email routing rule for ${emailUsername}@${domainResponse.domain}`
       });
 
-      type InsertRoutingRuleDestination = InferInsertModel<
-        typeof emailRoutingRulesDestinations
-      >;
-      // create email routing rule destinations
-      const routingRuleInsertValues: InsertRoutingRuleDestination[] = [];
-      if (orgMemberObjects.length > 0) {
-        orgMemberObjects.forEach((orgMemberObject) => {
-          const newRoutingRuleDestinationPublicId = typeIdGenerator(
-            'emailRoutingRuleDestinations'
-          );
-          routingRuleInsertValues.push({
-            publicId: newRoutingRuleDestinationPublicId,
-            orgId: orgId,
-            ruleId: +insertEmailRoutingRule.insertId,
-            orgMemberId: orgMemberObject.id
-          });
-        });
-      }
-      if (userTeamObjects.length > 0) {
-        userTeamObjects.forEach((userTeamObject) => {
-          const newRoutingRuleDestinationPublicId = typeIdGenerator(
-            'emailRoutingRuleDestinations'
-          );
-          routingRuleInsertValues.push({
-            publicId: newRoutingRuleDestinationPublicId,
-            orgId: orgId,
-            ruleId: +insertEmailRoutingRule.insertId,
-            teamId: userTeamObject.id
-          });
-        });
-      }
-
-      await db
-        .insert(emailRoutingRulesDestinations)
-        .values(routingRuleInsertValues);
-
-      // create address
+      // create email identity
       const emailIdentityPublicId = typeIdGenerator('emailIdentities');
       const mailDomains = env.MAIL_DOMAINS;
       const fwdDomain = mailDomains.fwd[0];
@@ -267,40 +205,116 @@ export const emailIdentityRouter = router({
           isCatchAll: catchAll
         });
 
-      type InsertEmailIdentityAuthorizedOrgMembers = InferInsertModel<
-        typeof emailIdentitiesAuthorizedOrgMembers
+      // create email routing rule destinations
+      type InsertRoutingRuleDestination = InferInsertModel<
+        typeof emailRoutingRulesDestinations
       >;
-      const emailIdentityAuthorizedOrgMembersObjects: InsertEmailIdentityAuthorizedOrgMembers[] =
+      const routingRuleInsertValues: InsertRoutingRuleDestination[] = [];
+
+      const destinationSpaceIdsResponse = await db.query.spaces.findMany({
+        where: inArray(spaces.publicId, routeToSpacesPublicIds),
+        columns: {
+          id: true
+        }
+      });
+
+      destinationSpaceIdsResponse.forEach((space) => {
+        const newRoutingRuleDestinationPublicId = typeIdGenerator(
+          'emailRoutingRuleDestinations'
+        );
+        routingRuleInsertValues.push({
+          publicId: newRoutingRuleDestinationPublicId,
+          orgId: orgId,
+          ruleId: +insertEmailRoutingRule.insertId,
+          spaceId: space.id
+        });
+      });
+      await db
+        .insert(emailRoutingRulesDestinations)
+        .values(routingRuleInsertValues);
+
+      // create email Authorizations
+      type InsertEmailIdentityAuthorizedInsert = InferInsertModel<
+        typeof emailIdentitiesAuthorizedSenders
+      >;
+      const emailIdentityAuthorizedInsertObjects: InsertEmailIdentityAuthorizedInsert[] =
         [];
 
-      if (orgMemberObjects.length > 0) {
-        orgMemberObjects.forEach((orgMemberObject) => {
-          emailIdentityAuthorizedOrgMembersObjects.push({
+      if (canSend.anyone) {
+        destinationSpaceIdsResponse.forEach((space) => {
+          emailIdentityAuthorizedInsertObjects.push({
             orgId: orgId,
             identityId: +insertEmailIdentityResponse.insertId,
             addedBy: org.memberId,
-            orgMemberId: orgMemberObject.id,
-            default: !orgMemberObject.hasDefault
+            spaceId: space.id
           });
         });
-      }
+      } else {
+        const orgMemberIdsResponse =
+          canSend.users && canSend.users.length > 0
+            ? await db.query.orgMembers.findMany({
+                where: inArray(orgMembers.publicId, canSend.users),
+                columns: {
+                  id: true,
+                  defaultEmailIdentityId: true
+                }
+              })
+            : [];
 
-      if (userTeamObjects.length > 0) {
-        userTeamObjects.forEach((userTeamObject) => {
-          emailIdentityAuthorizedOrgMembersObjects.push({
+        orgMemberIdsResponse.forEach((orgMember) => {
+          emailIdentityAuthorizedInsertObjects.push({
             orgId: orgId,
             identityId: +insertEmailIdentityResponse.insertId,
             addedBy: org.memberId,
-            teamId: userTeamObject.id,
-            default: !userTeamObject.hasDefault
+            orgMemberId: orgMember.id
           });
+          if (!orgMember.defaultEmailIdentityId) {
+            void db
+              .update(orgMembers)
+              .set({
+                defaultEmailIdentityId: Number(
+                  insertEmailIdentityResponse.insertId
+                )
+              })
+              .where(eq(orgMembers.id, orgMember.id));
+          }
+        });
+
+        const teamIdsResponse =
+          canSend.teams && canSend.teams.length > 0
+            ? await db.query.teams.findMany({
+                where: inArray(teams.publicId, canSend.teams),
+                columns: {
+                  id: true,
+                  defaultEmailIdentityId: true
+                }
+              })
+            : [];
+
+        teamIdsResponse.forEach((team) => {
+          emailIdentityAuthorizedInsertObjects.push({
+            orgId: orgId,
+            identityId: +insertEmailIdentityResponse.insertId,
+            addedBy: org.memberId,
+            teamId: team.id
+          });
+          if (!team.defaultEmailIdentityId) {
+            void db
+              .update(teams)
+              .set({
+                defaultEmailIdentityId: Number(
+                  insertEmailIdentityResponse.insertId
+                )
+              })
+              .where(eq(teams.id, team.id));
+          }
         });
       }
 
-      if (emailIdentityAuthorizedOrgMembersObjects.length > 0) {
+      if (emailIdentityAuthorizedInsertObjects.length > 0) {
         await db
-          .insert(emailIdentitiesAuthorizedOrgMembers)
-          .values(emailIdentityAuthorizedOrgMembersObjects);
+          .insert(emailIdentitiesAuthorizedSenders)
+          .values(emailIdentityAuthorizedInsertObjects);
       }
 
       if (catchAll) {
@@ -316,7 +330,6 @@ export const emailIdentityRouter = router({
         emailIdentity: emailIdentityPublicId
       };
     }),
-
   getEmailIdentity: orgProcedure
     .input(
       z.object({
@@ -354,11 +367,11 @@ export const emailIdentityRouter = router({
                 domainStatus: true
               }
             },
-            authorizedOrgMembers: {
+            authorizedSenders: {
               columns: {
                 orgMemberId: true,
                 teamId: true,
-                default: true
+                spaceId: true
               },
               with: {
                 orgMember: {
@@ -382,6 +395,14 @@ export const emailIdentityRouter = router({
                     description: true,
                     color: true
                   }
+                },
+                space: {
+                  columns: {
+                    publicId: true,
+                    name: true,
+                    description: true,
+                    color: true
+                  }
                 }
               }
             },
@@ -394,6 +415,15 @@ export const emailIdentityRouter = router({
               with: {
                 destinations: {
                   with: {
+                    space: {
+                      columns: {
+                        publicId: true,
+                        avatarTimestamp: true,
+                        name: true,
+                        description: true,
+                        color: true
+                      }
+                    },
                     team: {
                       columns: {
                         publicId: true,
@@ -458,6 +488,15 @@ export const emailIdentityRouter = router({
           with: {
             destinations: {
               with: {
+                space: {
+                  columns: {
+                    publicId: true,
+                    avatarTimestamp: true,
+                    name: true,
+                    description: true,
+                    color: true
+                  }
+                },
                 team: {
                   columns: {
                     publicId: true,
@@ -490,181 +529,210 @@ export const emailIdentityRouter = router({
       emailIdentityData: emailIdentityResponse
     };
   }),
-  getUserEmailIdentities: orgProcedure.query(async ({ ctx }) => {
-    const { db, org } = ctx;
-    const orgId = org.id;
-    const orgMemberId = org?.memberId || 0;
-    // search for user org team memberships, get id of org team
+  getUserEmailIdentities: orgProcedure
+    .input(
+      z.object({
+        spaceShortcode: z.string().min(1).max(64).nullable().optional(),
+        convoPublicId: typeIdValidator('convos').optional()
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const { db, org } = ctx;
+      const orgId = org.id;
+      const orgMemberId = org?.memberId || 0;
+      const authorizedSpaceIds: number[] = [];
 
-    const userOrgTeamMembershipQuery = await db.query.teamMembers.findMany({
-      where: eq(teamMembers.orgMemberId, orgMemberId),
-      columns: {
-        teamId: true
-      },
-      with: {
-        team: {
+      if (input.spaceShortcode) {
+        const spaceQueryResponse = await db.query.spaces.findFirst({
+          where: and(
+            eq(spaces.orgId, orgId),
+            eq(spaces.shortcode, input.spaceShortcode)
+          ),
           columns: {
-            id: true,
-            orgId: true
+            id: true
           }
+        });
+        if (spaceQueryResponse?.id) {
+          authorizedSpaceIds.push(spaceQueryResponse.id);
         }
       }
-    });
 
-    const orgTeamIds = userOrgTeamMembershipQuery.filter(
-      (userOrgTeamMembership) => userOrgTeamMembership.team.orgId === orgId
-    );
+      if (input.convoPublicId) {
+        const convoQueryResponse = await db.query.convos.findFirst({
+          where: and(
+            eq(convos.publicId, input.convoPublicId),
+            eq(convos.orgId, orgId)
+          ),
+          columns: {
+            id: true
+          },
+          with: {
+            spaces: {
+              columns: {
+                id: true,
+                spaceId: true
+              }
+            }
+          }
+        });
 
-    const userTeamIds = orgTeamIds.map((orgTeamIds) => orgTeamIds.team.id);
-    const uniqueUserTeamIds = [...new Set(userTeamIds)];
+        if (convoQueryResponse?.spaces) {
+          convoQueryResponse.spaces.map((space) => {
+            authorizedSpaceIds.push(space.id);
+          });
+        }
+      }
 
-    if (!uniqueUserTeamIds.length) {
-      uniqueUserTeamIds.push(0);
-    }
+      // get all space memberships for the orgMember
+      if (!input.spaceShortcode) {
+        const spaceMemberships = await db.query.spaceMembers.findMany({
+          where: eq(spaceMembers.orgMemberId, orgMemberId),
+          columns: {
+            spaceId: true
+          }
+        });
+        const orgOpenSpaces = await db.query.spaces.findMany({
+          where: and(eq(spaces.orgId, orgId), eq(spaces.type, 'open')),
+          columns: {
+            id: true
+          }
+        });
 
-    // search email routingRulesDestinations for orgMemberId or orgTeamId
+        // create an array with unique spaceIds
+        const allUniqueSpaceIds = Array.from(
+          new Set(
+            spaceMemberships
+              .map((spaceMembership) => spaceMembership.spaceId)
+              .concat(orgOpenSpaces.map((space) => space.id))
+          )
+        );
+        authorizedSpaceIds.push(...allUniqueSpaceIds);
+      }
 
-    const authorizedEmailIdentities =
-      await db.query.emailIdentitiesAuthorizedOrgMembers.findMany({
-        where: or(
-          eq(emailIdentitiesAuthorizedOrgMembers.orgMemberId, orgMemberId),
-          inArray(emailIdentitiesAuthorizedOrgMembers.teamId, uniqueUserTeamIds)
+      // search for user org team memberships, get id of org team
+
+      const userOrgTeamMembershipQuery = await db.query.teamMembers.findMany({
+        where: and(
+          eq(teamMembers.orgId, orgId),
+          eq(teamMembers.orgMemberId, orgMemberId)
         ),
         columns: {
-          orgMemberId: true,
-          teamId: true,
-          default: true
+          teamId: true
         },
         with: {
-          emailIdentity: {
+          team: {
             columns: {
-              publicId: true,
-              username: true,
-              domainName: true,
-              sendName: true
-            },
-            with: {
-              domain: {
-                columns: {
-                  domainStatus: true,
-                  sendingMode: true
+              id: true,
+              orgId: true
+            }
+          }
+        }
+      });
+
+      const orgTeamIds = userOrgTeamMembershipQuery.filter(
+        (userOrgTeamMembership) => userOrgTeamMembership.team.orgId === orgId
+      );
+
+      const userTeamIds = orgTeamIds.map((orgTeamIds) => orgTeamIds.team.id);
+      const uniqueUserTeamIds = [...new Set(userTeamIds)];
+
+      if (!uniqueUserTeamIds.length) {
+        uniqueUserTeamIds.push(0);
+      }
+
+      // search email routingRulesDestinations for spaceId or orgMemberId or orgTeamId
+
+      const authorizedEmailIdentities =
+        await db.query.emailIdentitiesAuthorizedSenders.findMany({
+          where: or(
+            authorizedSpaceIds.length && authorizedSpaceIds.length > 0
+              ? inArray(
+                  emailIdentitiesAuthorizedSenders.spaceId,
+                  authorizedSpaceIds
+                )
+              : undefined,
+            eq(emailIdentitiesAuthorizedSenders.orgMemberId, orgMemberId),
+            inArray(emailIdentitiesAuthorizedSenders.teamId, uniqueUserTeamIds)
+          ),
+          columns: {
+            orgMemberId: true,
+            teamId: true,
+            spaceId: true
+          },
+          with: {
+            emailIdentity: {
+              columns: {
+                id: true,
+                publicId: true,
+                username: true,
+                domainName: true,
+                sendName: true
+              },
+              with: {
+                domain: {
+                  columns: {
+                    domainStatus: true,
+                    sendingMode: true
+                  }
                 }
               }
             }
           }
-        }
-      });
+        });
 
-    if (!authorizedEmailIdentities.length) {
-      return {
-        emailIdentities: [],
-        defaultEmailIdentity: undefined
-      };
-    }
-    const defaultEmailIdentityPublicId: TypeId<'emailIdentities'> | undefined =
-      authorizedEmailIdentities.find((emailIdentityAuthorization) =>
-        emailIdentityAuthorization.default &&
-        emailIdentityAuthorization.emailIdentity?.publicId &&
-        emailIdentityAuthorization.emailIdentity.domain
-          ? emailIdentityAuthorization.emailIdentity.domain.domainStatus ===
-              'active' &&
-            emailIdentityAuthorization.emailIdentity.domain.sendingMode !==
-              'disabled'
-          : true
-      )?.emailIdentity.publicId;
-
-    const emailIdentities = authorizedEmailIdentities
-      .map((emailIdentityAuthorization) => {
-        const emailIdentity = emailIdentityAuthorization.emailIdentity;
-        const sendingEnabled = emailIdentity?.domain
-          ? emailIdentity.domain.domainStatus === 'active' &&
-            emailIdentity.domain.sendingMode !== 'disabled'
-          : true;
+      if (!authorizedEmailIdentities.length) {
         return {
-          publicId: emailIdentity.publicId,
-          username: emailIdentity.username,
-          domainName: emailIdentity.domainName,
-          sendName: emailIdentity.sendName,
-          sendingEnabled
+          emailIdentities: [],
+          defaultEmailIdentity: undefined
         };
-      })
-      .filter(
-        (identity, index, self) =>
-          index === self.findIndex((t) => t.publicId === identity.publicId)
-      );
-
-    return {
-      emailIdentities: emailIdentities,
-      defaultEmailIdentity: defaultEmailIdentityPublicId
-    };
-  }),
-  userHasEmailIdentities: orgProcedure.query(async ({ ctx }) => {
-    const { db, org } = ctx;
-    const orgId = org.id;
-    const orgMemberId = org?.memberId || 0;
-    // search for user org team memberships, get id of org team
-
-    const userOrgTeamMembershipQuery = await db.query.teamMembers.findMany({
-      where: eq(teamMembers.orgMemberId, orgMemberId),
-      columns: {
-        teamId: true
-      },
-      with: {
-        team: {
-          columns: {
-            id: true,
-            orgId: true
-          }
-        }
       }
-    });
 
-    const orgTeamIds = userOrgTeamMembershipQuery.filter(
-      (userOrgTeamMembership) => userOrgTeamMembership.team.orgId === orgId
-    );
-
-    const userTeamIds = orgTeamIds.map((orgTeamIds) => orgTeamIds.team.id);
-    const uniqueUserTeamIds = [...new Set(userTeamIds)];
-
-    if (!uniqueUserTeamIds.length) {
-      uniqueUserTeamIds.push(0);
-    }
-
-    // search email routingRulesDestinations for orgMemberId or orgTeamId
-
-    const authorizedEmailIdentities =
-      await db.query.emailIdentitiesAuthorizedOrgMembers.findMany({
-        where: or(
-          eq(emailIdentitiesAuthorizedOrgMembers.orgMemberId, orgMemberId),
-          inArray(
-            emailIdentitiesAuthorizedOrgMembers.teamId,
-            uniqueUserTeamIds || [0]
-          )
-        ),
+      const orgMemberQueryResponse = await db.query.orgMembers.findFirst({
+        where: eq(orgMembers.id, orgMemberId),
         columns: {
-          orgMemberId: true,
-          teamId: true,
-          default: true
-        },
-        with: {
-          emailIdentity: {
-            columns: {
-              publicId: true,
-              username: true,
-              domainName: true,
-              sendName: true
-            }
-          }
+          defaultEmailIdentityId: true
         }
       });
 
-    if (!authorizedEmailIdentities.length) {
+      let defaultEmailIdentityPublicId: TypeId<'emailIdentities'> | undefined;
+      if (
+        orgMemberQueryResponse &&
+        orgMemberQueryResponse.defaultEmailIdentityId !== undefined
+      ) {
+        defaultEmailIdentityPublicId =
+          authorizedEmailIdentities.find(
+            (emailIdentityAuthorization) =>
+              emailIdentityAuthorization.emailIdentity.id ===
+              orgMemberQueryResponse.defaultEmailIdentityId
+          )?.emailIdentity.publicId ?? undefined;
+      } else {
+        defaultEmailIdentityPublicId = undefined;
+      }
+
+      const emailIdentities = authorizedEmailIdentities
+        .map((emailIdentityAuthorization) => {
+          const emailIdentity = emailIdentityAuthorization.emailIdentity;
+          const sendingEnabled = emailIdentity?.domain
+            ? emailIdentity.domain.domainStatus === 'active' &&
+              emailIdentity.domain.sendingMode !== 'disabled'
+            : true;
+
+          return {
+            publicId: emailIdentity.publicId,
+            username: emailIdentity.username,
+            domainName: emailIdentity.domainName,
+            sendName: emailIdentity.sendName,
+            sendingEnabled
+          };
+        })
+        .filter(
+          (identity, index, self) =>
+            index === self.findIndex((t) => t.publicId === identity.publicId)
+        );
+
       return {
-        hasIdentity: false
+        emailIdentities: emailIdentities,
+        defaultEmailIdentity: defaultEmailIdentityPublicId
       };
-    }
-    return {
-      hasIdentity: true
-    };
-  })
+    })
 });

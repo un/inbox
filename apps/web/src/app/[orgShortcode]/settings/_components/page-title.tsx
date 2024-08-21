@@ -1,7 +1,7 @@
 'use client';
 
-import { useOrgScopedRouter } from '@/src/hooks/use-params';
 import { Button } from '@/src/components/shadcn-ui/button';
+import { useOrgShortcode } from '@/src/hooks/use-params';
 import { useIsMobile } from '@/src/hooks/use-is-mobile';
 import { ArrowLeft } from '@phosphor-icons/react';
 import Link from 'next/link';
@@ -10,9 +10,15 @@ type PageTitleProps = {
   title: string;
   description?: string;
   children?: React.ReactNode;
+  backButtonLink?: string;
 };
-export function PageTitle({ title, description, children }: PageTitleProps) {
-  const { scopedUrl } = useOrgScopedRouter();
+export function PageTitle({
+  title,
+  description,
+  children,
+  backButtonLink
+}: PageTitleProps) {
+  const orgShortcode = useOrgShortcode();
   const isMobile = useIsMobile();
 
   return (
@@ -23,7 +29,7 @@ export function PageTitle({ title, description, children }: PageTitleProps) {
             variant="outline"
             size="icon-sm"
             asChild>
-            <Link href={scopedUrl('/settings')}>
+            <Link href={backButtonLink ?? `/${orgShortcode}/settings`}>
               <ArrowLeft className="size-4" />
             </Link>
           </Button>

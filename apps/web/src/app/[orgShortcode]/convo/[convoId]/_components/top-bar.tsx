@@ -1,8 +1,8 @@
 'use client';
 
 import {
-  EyeSlash,
-  Eye,
+  // EyeSlash,
+  // Eye,
   Trash,
   FilePdf,
   FileDoc,
@@ -13,7 +13,13 @@ import {
   FileZip,
   FileTxt,
   File,
-  ArrowLeft
+  ArrowLeft,
+  SquaresFour,
+  CaretRight,
+  Circle,
+  Check,
+  ArrowSquareOut,
+  ArrowSquareIn
 } from '@phosphor-icons/react';
 import {
   Dialog,
@@ -25,26 +31,40 @@ import {
   DialogTitle
 } from '@/src/components/shadcn-ui/dialog';
 import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbList,
+  BreadcrumbSeparator
+} from '@/src/components/shadcn-ui/breadcrumb';
+import {
   useCurrentConvoId,
   useOrgScopedRouter,
-  useOrgShortcode
+  useOrgShortcode,
+  useSpaceShortcode
 } from '@/src/hooks/use-params';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger
 } from '@/src/components/shadcn-ui/tooltip';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from '@/src/components/shadcn-ui/popover';
 import { useDeleteConvo$Cache, type formatParticipantData } from '../../utils';
 import { useModifierKeys } from '@/src/components/modifier-class-provider';
 import { type VariantProps, cva } from 'class-variance-authority';
 import { type RouterOutputs, platform } from '@/src/lib/trpc';
+import { type SpaceWorkflowType } from '@u22n/utils/spaces';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { useIsMobile } from '@/src/hooks/use-is-mobile';
 import { memo, useCallback, useState } from 'react';
+import { type UiColor } from '@u22n/utils/colors';
 import { type TypeId } from '@u22n/utils/typeid';
 import { Participants } from './participants';
 import { cn } from '@/src/lib/utils';
-import { toast } from 'sonner';
+// import { toast } from 'sonner';
 import Link from 'next/link';
 
 type TopBarProps = {
@@ -57,22 +77,22 @@ type TopBarProps = {
   }[];
   isConvoLoading: boolean;
   convoId: TypeId<'convos'>;
-  convoHidden: boolean | null;
+  // convoHidden: boolean | null;
   subjects?: RouterOutputs['convos']['getConvo']['data']['subjects'];
 };
 
 export default function TopBar({
   isConvoLoading,
   convoId,
-  convoHidden,
+  // convoHidden,
   subjects,
   participants,
   attachments
 }: TopBarProps) {
-  const orgShortcode = useOrgShortcode();
+  // const orgShortcode = useOrgShortcode();
   const isMobile = useIsMobile();
-  const { mutate: hideConvo, isPending: hidingConvo } =
-    platform.convos.hideConvo.useMutation();
+  // const { mutate: hideConvo, isPending: hidingConvo } =
+  //   platform.convos.hideConvo.useMutation();
 
   return (
     <div className="border-base-5 bg-base-1 flex w-full flex-col items-center justify-between border-b p-0">
@@ -98,11 +118,13 @@ export default function TopBar({
         </div>
         <div className="flex flex-row gap-2">
           <Participants participants={participants} />
+          <AddToSpaceButton convoId={convoId} />
+          <MoveToSpaceButton convoId={convoId} />
           <DeleteButton
             convoId={convoId}
-            hidden={convoHidden}
+            // hidden={convoHidden}
           />
-          <Tooltip>
+          {/* <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 variant={'outline'}
@@ -121,43 +143,302 @@ export default function TopBar({
             <TooltipContent>
               {convoHidden ? 'Unhide Convo' : 'Hide Convo'}
             </TooltipContent>
-          </Tooltip>
+          </Tooltip> */}
         </div>
       </div>
-      <div
-        className={cn(
-          'flex w-full flex-row flex-wrap items-center justify-end gap-2 transition-all',
-          isConvoLoading ? 'max-h-0 p-0' : 'max-h-52 p-4'
-        )}>
+      <div className="flex w-full max-w-full items-center justify-between gap-2 sm:flex-col md:flex-row">
+        <SpaceWorkflowBlock />
         <div
           className={cn(
-            'justify-ends flex flex-wrap items-center justify-end gap-2 transition-all',
-            isConvoLoading ? 'max-h-0' : 'max-h-52'
+            'flex w-full flex-row flex-wrap items-center justify-end gap-2 transition-all',
+            isConvoLoading ? 'max-h-0 p-0' : 'max-h-52 p-4'
           )}>
-          {attachments.length > 0 ? (
-            attachments.map((attachment) => (
-              <AttachmentBlock
-                key={attachment.publicId}
-                {...attachment}
-              />
-            ))
-          ) : (
-            <span className="text-xs">No Attachments</span>
-          )}
+          <div
+            className={cn(
+              'justify-ends flex flex-wrap items-center justify-end gap-2 transition-all',
+              isConvoLoading ? 'max-h-0' : 'max-h-52'
+            )}>
+            {attachments.length > 0 ? (
+              attachments.map((attachment) => (
+                <AttachmentBlock
+                  key={attachment.publicId}
+                  {...attachment}
+                />
+              ))
+            ) : (
+              <span className="text-xs">No Attachments</span>
+            )}
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
+type AddToSpaceButtonProps = {
+  convoId: TypeId<'convos'>;
+};
+
+function AddToSpaceButton({ convoId }: AddToSpaceButtonProps) {
+  const [showSpaceList, setShowSpaceList] = useState(false);
+  const orgShortcode = useOrgShortcode();
+
+  const convoSpaceQuery = platform.useUtils().convos.getConvoSpaceWorkflows;
+
+  const { data: spaces, isLoading: spacesLoading } =
+    platform.spaces.getAllOrgSpacesWithPersonalSeparately.useQuery({
+      orgShortcode
+    });
+
+  const { mutateAsync: addConvoToSpace, isPending } =
+    platform.convos.addConvoToSpace.useMutation({
+      onSuccess: () => {
+        void convoSpaceQuery.invalidate();
+      }
+    });
+
+  async function handleAddToSpace(spacePublicId: TypeId<'spaces'>) {
+    await addConvoToSpace({
+      orgShortcode: orgShortcode,
+      convoPublicId: convoId,
+      spacePublicId: spacePublicId
+    });
+    setShowSpaceList(false);
+  }
+
+  return (
+    <>
+      <Popover open={showSpaceList}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <PopoverTrigger
+              asChild
+              onClick={() => setShowSpaceList(!showSpaceList)}>
+              <Button
+                variant={'outline'}
+                size={'icon-sm'}
+                loading={isPending}>
+                <ArrowSquareIn className="size-4" />
+              </Button>
+            </PopoverTrigger>
+          </TooltipTrigger>
+          <TooltipContent>Add Conversation to another Space</TooltipContent>
+        </Tooltip>
+        <PopoverContent onPointerDownOutside={() => setShowSpaceList(false)}>
+          <div className="flex max-h-96 w-full flex-col gap-4 overflow-x-auto">
+            <span className="text-base-11 text-sm font-semibold">
+              Add Conversation to another Space
+            </span>
+            {!spacesLoading &&
+              spaces?.personalSpaces &&
+              spaces?.personalSpaces?.length > 0 && (
+                <div className="flex w-full flex-col gap-2">
+                  <span className="text-base-10 text-xs font-semibold">
+                    Personal Spaces
+                  </span>
+                  {spaces?.personalSpaces.map((space) => (
+                    <Button
+                      variant={'ghost'}
+                      onClick={() => handleAddToSpace(space.publicId)}
+                      className="hover:bg-slate-1 group flex w-full max-w-full flex-row items-center gap-2 truncate rounded-lg p-0.5"
+                      key={space.publicId}>
+                      <div className="flex w-full max-w-full flex-row items-center gap-4 truncate p-1">
+                        <div
+                          className="flex h-6 min-h-6 w-6 min-w-6 items-center justify-center rounded-sm"
+                          style={{
+                            backgroundColor: `var(--${space.color}4)`,
+                            color: `var(--${space.color}9)`
+                          }}>
+                          <SquaresFour
+                            className="h-4 w-4"
+                            weight="bold"
+                          />
+                        </div>
+                        <span className="text-slate-12 h-full truncate font-medium">
+                          {space.name || 'Unnamed Space'}
+                        </span>
+                      </div>
+                    </Button>
+                  ))}
+                </div>
+              )}
+            {!spacesLoading &&
+              spaces?.orgSpaces &&
+              spaces?.orgSpaces?.length > 0 && (
+                <div className="flex w-full flex-col gap-2">
+                  <span className="text-base-10 text-xs font-semibold">
+                    Shared Spaces
+                  </span>
+                  {spaces?.orgSpaces.map((space) => (
+                    <Button
+                      variant={'ghost'}
+                      onClick={() => handleAddToSpace(space.publicId)}
+                      className="hover:bg-slate-1 group flex w-full max-w-full flex-row items-center gap-2 truncate rounded-lg p-0.5"
+                      key={space.publicId}>
+                      <div className="flex w-full max-w-full flex-row items-center gap-4 truncate p-1">
+                        <div
+                          className="flex h-6 min-h-6 w-6 min-w-6 items-center justify-center rounded-sm"
+                          style={{
+                            backgroundColor: `var(--${space.color}4)`,
+                            color: `var(--${space.color}9)`
+                          }}>
+                          <SquaresFour
+                            className="h-4 w-4"
+                            weight="bold"
+                          />
+                        </div>
+                        <span className="text-slate-12 h-full truncate font-medium">
+                          {space.name || 'Unnamed Space'}
+                        </span>
+                      </div>
+                    </Button>
+                  ))}
+                </div>
+              )}
+          </div>
+        </PopoverContent>
+      </Popover>
+    </>
+  );
+}
+
+type MoveToSpaceButtonProps = {
+  convoId: TypeId<'convos'>;
+};
+
+function MoveToSpaceButton({ convoId }: MoveToSpaceButtonProps) {
+  const [showSpaceList, setShowSpaceList] = useState(false);
+  const orgShortcode = useOrgShortcode();
+
+  const convoSpaceQuery = platform.useUtils().convos.getConvoSpaceWorkflows;
+
+  const { data: spaces, isLoading: spacesLoading } =
+    platform.spaces.getAllOrgSpacesWithPersonalSeparately.useQuery({
+      orgShortcode
+    });
+
+  const { mutateAsync: moveConvoToSpace, isPending } =
+    platform.convos.moveConvoToSpace.useMutation({
+      onSuccess: () => {
+        void convoSpaceQuery.invalidate();
+      }
+    });
+
+  async function handleMoveToSpace(spacePublicId: TypeId<'spaces'>) {
+    await moveConvoToSpace({
+      orgShortcode: orgShortcode,
+      convoPublicId: convoId,
+      spacePublicId: spacePublicId
+    });
+    setShowSpaceList(false);
+  }
+
+  return (
+    <>
+      <Popover open={showSpaceList}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <PopoverTrigger
+              asChild
+              onClick={() => setShowSpaceList(!showSpaceList)}>
+              <Button
+                variant={'outline'}
+                size={'icon-sm'}
+                loading={isPending}>
+                <ArrowSquareOut className="size-4" />
+              </Button>
+            </PopoverTrigger>
+          </TooltipTrigger>
+          <TooltipContent>
+            Move Conversation to a different Space
+          </TooltipContent>
+        </Tooltip>
+        <PopoverContent onPointerDownOutside={() => setShowSpaceList(false)}>
+          <div className="flex max-h-96 w-full flex-col gap-4 overflow-x-auto">
+            <span className="text-base-11 text-sm font-semibold">
+              Move Conversation to a different Space
+            </span>
+            {!spacesLoading &&
+              spaces?.personalSpaces &&
+              spaces?.personalSpaces?.length > 0 && (
+                <div className="flex w-full flex-col gap-2">
+                  <span className="text-base-10 text-xs font-semibold">
+                    Personal Spaces
+                  </span>
+                  {spaces?.personalSpaces.map((space) => (
+                    <Button
+                      variant={'ghost'}
+                      onClick={() => handleMoveToSpace(space.publicId)}
+                      className="hover:bg-slate-1 group flex w-full max-w-full flex-row items-center gap-2 truncate rounded-lg p-0.5"
+                      key={space.publicId}>
+                      <div className="flex w-full max-w-full flex-row items-center gap-4 truncate p-1">
+                        <div
+                          className="flex h-6 min-h-6 w-6 min-w-6 items-center justify-center rounded-sm"
+                          style={{
+                            backgroundColor: `var(--${space.color}4)`,
+                            color: `var(--${space.color}9)`
+                          }}>
+                          <SquaresFour
+                            className="h-4 w-4"
+                            weight="bold"
+                          />
+                        </div>
+                        <span className="text-slate-12 h-full truncate font-medium">
+                          {space.name || 'Unnamed Space'}
+                        </span>
+                      </div>
+                    </Button>
+                  ))}
+                </div>
+              )}
+            {!spacesLoading &&
+              spaces?.orgSpaces &&
+              spaces?.orgSpaces?.length > 0 && (
+                <div className="flex w-full flex-col gap-2">
+                  <span className="text-base-10 text-xs font-semibold">
+                    Shared Spaces
+                  </span>
+                  {spaces?.orgSpaces.map((space) => (
+                    <Button
+                      variant={'ghost'}
+                      onClick={() => handleMoveToSpace(space.publicId)}
+                      className="hover:bg-slate-1 group flex w-full max-w-full flex-row items-center gap-2 truncate rounded-lg p-0.5"
+                      key={space.publicId}>
+                      <div className="flex w-full max-w-full flex-row items-center gap-4 truncate p-1">
+                        <div
+                          className="flex h-6 min-h-6 w-6 min-w-6 items-center justify-center rounded-sm"
+                          style={{
+                            backgroundColor: `var(--${space.color}4)`,
+                            color: `var(--${space.color}9)`
+                          }}>
+                          <SquaresFour
+                            className="h-4 w-4"
+                            weight="bold"
+                          />
+                        </div>
+                        <span className="text-slate-12 h-full truncate font-medium">
+                          {space.name || 'Unnamed Space'}
+                        </span>
+                      </div>
+                    </Button>
+                  ))}
+                </div>
+              )}
+          </div>
+        </PopoverContent>
+      </Popover>
+    </>
+  );
+}
+
 type DeleteButtonProps = {
   convoId: TypeId<'convos'>;
-  hidden: boolean | null;
+  // hidden: boolean | null;
 };
 
 const DeleteButton = memo(function DeleteButton({
-  convoId,
-  hidden
+  convoId
+  // hidden
 }: DeleteButtonProps) {
   const { shiftKey } = useModifierKeys();
   const orgShortcode = useOrgShortcode();
@@ -165,12 +446,15 @@ const DeleteButton = memo(function DeleteButton({
   const removeConvoFromList = useDeleteConvo$Cache();
   const { scopedNavigate } = useOrgScopedRouter();
   const currentConvo = useCurrentConvoId();
+  const spaceShortcode = useSpaceShortcode(false);
 
   const { mutate: deleteConvo, isPending: deletingConvo } =
     platform.convos.deleteConvo.useMutation({
-      onSuccess: () => {
-        void removeConvoFromList(convoId);
-      }
+      onSuccess: () =>
+        removeConvoFromList({
+          convoPublicId: convoId,
+          spaceShortcode: spaceShortcode ?? 'personal'
+        })
     });
 
   const onDelete = useCallback(
@@ -178,7 +462,7 @@ const DeleteButton = memo(function DeleteButton({
       e.preventDefault();
       if (e.shiftKey) {
         if (currentConvo === convoId) {
-          scopedNavigate('/convo');
+          scopedNavigate('/convo', true);
         }
         return deleteConvo({
           convoPublicId: convoId,
@@ -215,7 +499,7 @@ const DeleteButton = memo(function DeleteButton({
           open={deleteModalOpen}
           setOpen={setDeleteModalOpen}
           convoId={convoId}
-          convoHidden={hidden}
+          // convoHidden={hidden}
         />
       )}
     </>
@@ -226,38 +510,45 @@ type DeleteModalProps = {
   open: boolean;
   setOpen: (open: boolean) => void;
   convoId: TypeId<'convos'>;
-  convoHidden: boolean | null;
+  // convoHidden: boolean | null;
 };
 
 function DeleteModal({
   open,
   convoId,
-  convoHidden,
+  // convoHidden,
   setOpen
 }: DeleteModalProps) {
   const orgShortcode = useOrgShortcode();
   const { scopedNavigate } = useOrgScopedRouter();
   const currentConvo = useCurrentConvoId();
+  const spaceShortcode = useSpaceShortcode(false);
   const removeConvoFromList = useDeleteConvo$Cache();
 
-  const { mutate: hideConvo, isPending: hidingConvo } =
-    platform.convos.hideConvo.useMutation({
-      onSuccess: () => {
-        void removeConvoFromList(convoId);
-        setOpen(false);
-      },
-      onError: (error) => {
-        toast.error('Something went wrong while hiding the convo', {
-          description: error.message
-        });
-        setOpen(false);
-      }
-    });
+  // const { mutate: hideConvo, isPending: hidingConvo } =
+  //   platform.convos.hideConvo.useMutation({
+  //     onSuccess: async () => {
+  //       await removeConvoFromList({
+  //         convoPublicId: convoId,
+  //         spaceShortcode: spaceShortcode ?? 'personal'
+  //       });
+  //       setOpen(false);
+  //     },
+  //     onError: (error) => {
+  //       toast.error('Something went wrong while hiding the convo', {
+  //         description: error.message
+  //       });
+  //       setOpen(false);
+  //     }
+  //   });
 
   const { mutate: deleteConvo, isPending: deletingConvo } =
     platform.convos.deleteConvo.useMutation({
-      onSuccess: () => {
-        void removeConvoFromList(convoId);
+      onSuccess: async () => {
+        await removeConvoFromList({
+          convoPublicId: convoId,
+          spaceShortcode: spaceShortcode ?? 'personal'
+        });
         setOpen(false);
       }
     });
@@ -266,7 +557,7 @@ function DeleteModal({
     <Dialog
       open={open}
       onOpenChange={() => {
-        if (deletingConvo || hidingConvo) return;
+        if (deletingConvo) return;
         setOpen(false);
       }}>
       <DialogContent>
@@ -278,11 +569,11 @@ function DeleteModal({
               all the participants.
             </span>
             <span>Are you sure you want to delete this conversation?</span>
-            {!convoHidden && (
+            {/* {!convoHidden && (
               <span className="py-2">
                 You can also choose to hide this Convo
               </span>
-            )}
+            )} */}
             <span className="py-3 text-xs font-semibold">
               ProTip: Hold{' '}
               <kbd className="bg-base-2 rounded-md border p-1">Shift</kbd> next
@@ -296,11 +587,11 @@ function DeleteModal({
             <Button
               variant="secondary"
               className="flex-1"
-              disabled={hidingConvo || deletingConvo}>
+              disabled={deletingConvo}>
               Cancel
             </Button>
           </DialogClose>
-          {convoHidden ? null : (
+          {/* {convoHidden ? null : (
             <Button
               variant="secondary"
               className="flex-1"
@@ -314,15 +605,15 @@ function DeleteModal({
               }>
               Hide Instead
             </Button>
-          )}
+          )} */}
           <Button
             variant="destructive"
             className="flex-1"
-            disabled={hidingConvo}
+            // disabled={hidingConvo}
             loading={deletingConvo}
             onClick={() => {
               if (currentConvo === convoId) {
-                scopedNavigate('/convo');
+                scopedNavigate('/convo', true);
               }
               deleteConvo({
                 convoPublicId: convoId,
@@ -425,5 +716,268 @@ function AttachmentBlock({ name, url, type, publicId }: AttachmentBlockProps) {
         <span className="text-xs font-medium">{name}</span>
       </TooltipContent>
     </Tooltip>
+  );
+}
+
+function SpaceWorkflowBlock() {
+  const orgShortcode = useOrgShortcode();
+  const currentConvo = useCurrentConvoId();
+
+  const { data: convoSpaceWorkflows } =
+    platform.convos.getConvoSpaceWorkflows.useQuery({
+      orgShortcode: orgShortcode,
+      convoPublicId: currentConvo!
+    });
+
+  return (
+    <div className="flex w-full max-w-full flex-col items-center justify-between gap-2 overflow-clip p-2">
+      {convoSpaceWorkflows?.map((spaceWorkflow) => (
+        <div
+          key={spaceWorkflow.space.publicId}
+          className="flex w-full max-w-full flex-row items-center justify-between gap-2 overflow-clip">
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                {
+                  <div className="flex w-full max-w-full flex-row items-center gap-2 truncate p-1">
+                    <div
+                      className="flex h-6 min-h-6 w-6 min-w-6 items-center justify-center rounded-sm"
+                      style={{
+                        backgroundColor: `var(--${spaceWorkflow?.space?.color ?? 'base'}4)`,
+                        color: `var(--${spaceWorkflow?.space?.color ?? 'base'}9)`
+                      }}>
+                      <SquaresFour
+                        className="h-4 w-4"
+                        weight="bold"
+                      />
+                    </div>
+                    <span className="text-slate-11 h-full truncate">
+                      {spaceWorkflow?.space?.name ?? 'Unnamed Space'}
+                    </span>
+                  </div>
+                }
+              </BreadcrumbItem>
+              {spaceWorkflow.spaceWorkflows.open.length > 0 ||
+              spaceWorkflow.spaceWorkflows.active.length > 0 ||
+              spaceWorkflow.spaceWorkflows.closed.length > 0 ? (
+                <>
+                  <BreadcrumbSeparator>
+                    <CaretRight />
+                  </BreadcrumbSeparator>
+                  <BreadcrumbItem>
+                    <SpaceWorkflowBlockWorkflowList
+                      currentWorkflow={spaceWorkflow.currentWorkflow}
+                      spaceWorkflows={spaceWorkflow.spaceWorkflows}
+                      spacePublicId={spaceWorkflow.space.publicId}
+                    />
+                  </BreadcrumbItem>
+                </>
+              ) : null}
+            </BreadcrumbList>
+          </Breadcrumb>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+type SpaceWorkflowData = {
+  publicId: TypeId<'spaceWorkflows'>;
+  name: string;
+  color: UiColor;
+  icon: string;
+  description: string | null;
+  type: SpaceWorkflowType;
+  order: number;
+  disabled: boolean;
+};
+
+type SpaceWorkflowBlockWorkflowList = {
+  spacePublicId: TypeId<'spaces'>;
+  currentWorkflow: {
+    publicId: TypeId<'spaceWorkflows'> | null;
+  };
+  spaceWorkflows: {
+    open: SpaceWorkflowData[];
+    active: SpaceWorkflowData[];
+    closed: SpaceWorkflowData[];
+  };
+};
+
+function SpaceWorkflowBlockWorkflowList({
+  currentWorkflow,
+  spaceWorkflows,
+  spacePublicId
+}: SpaceWorkflowBlockWorkflowList) {
+  const convoId = useCurrentConvoId();
+  const orgShortcode = useOrgShortcode();
+  const [showWorkflowList, setShowWorkflowList] = useState(false);
+
+  const findWorkflow = (
+    workflows: SpaceWorkflowData[]
+  ): SpaceWorkflowData | undefined =>
+    workflows.find(
+      (spaceWorkflow: SpaceWorkflowData) =>
+        spaceWorkflow.publicId === currentWorkflow?.publicId
+    );
+
+  const currentWorkflowItem =
+    findWorkflow(spaceWorkflows.open) ??
+    findWorkflow(spaceWorkflows.active) ??
+    findWorkflow(spaceWorkflows.closed);
+
+  const convoSpaceWorkflowCache =
+    platform.useUtils().convos.getConvoSpaceWorkflows;
+
+  const { mutateAsync: setConvoWorkflow } =
+    platform.convos.setConvoSpaceWorkflow.useMutation({
+      onSuccess: () => {
+        void convoSpaceWorkflowCache.invalidate();
+        setShowWorkflowList(false);
+      }
+    });
+
+  async function handleSetConvoWorkflow(
+    spaceWorkflowPublicId: TypeId<'spaceWorkflows'>
+  ) {
+    if (!convoId) return;
+    await setConvoWorkflow({
+      orgShortcode: orgShortcode,
+      convoPublicId: convoId,
+      spacePublicId: spacePublicId,
+      workflowPublicId: spaceWorkflowPublicId
+    });
+  }
+
+  return (
+    <>
+      <Popover open={showWorkflowList}>
+        <PopoverTrigger
+          asChild
+          onClick={() => setShowWorkflowList(!showWorkflowList)}>
+          <Button
+            variant={'ghost'}
+            className="pl-2"
+            asChild>
+            <div
+              className={cn(
+                'bg-base-1 flex w-full cursor-pointer flex-row items-center justify-between gap-8 border'
+              )}>
+              <div className="flex w-full flex-row items-center gap-4">
+                <div
+                  className={
+                    'flex size-6 min-h-6 min-w-6 items-center justify-center rounded-sm'
+                  }
+                  style={{
+                    backgroundColor: `var(--${currentWorkflowItem?.color ?? 'slate'}4)`
+                  }}>
+                  <Circle
+                    className={'size-4'}
+                    weight="regular"
+                    style={{
+                      color: `var(--${currentWorkflowItem?.color ?? 'slate'}9)`
+                    }}
+                  />
+                </div>
+                <span className="text-base-11 text-sm font-medium">
+                  {currentWorkflowItem?.name ?? 'No Workflow Status'}
+                </span>
+              </div>
+            </div>
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent onPointerDownOutside={() => setShowWorkflowList(false)}>
+          <div className="flex w-full flex-col gap-4">
+            <div className="flex w-full flex-col gap-2">
+              <span className="text-base-10 text-xs font-semibold">Open</span>
+              {spaceWorkflows.open.map((spaceWorkflow: SpaceWorkflowData) => (
+                <WorkflowItem
+                  key={spaceWorkflow.publicId}
+                  workflow={spaceWorkflow}
+                  activeWorkflowPublicId={currentWorkflow?.publicId}
+                  handler={() => handleSetConvoWorkflow(spaceWorkflow.publicId)}
+                />
+              ))}
+            </div>
+            <div className="flex w-full flex-col gap-2">
+              <span className="text-base-10 text-xs font-semibold">Active</span>
+              {spaceWorkflows.active.map((spaceWorkflow: SpaceWorkflowData) => (
+                <WorkflowItem
+                  key={spaceWorkflow.publicId}
+                  workflow={spaceWorkflow}
+                  activeWorkflowPublicId={currentWorkflow?.publicId}
+                  handler={() => handleSetConvoWorkflow(spaceWorkflow.publicId)}
+                />
+              ))}
+            </div>
+            <div className="flex w-full flex-col gap-2">
+              <span className="text-base-10 text-xs font-semibold">Closed</span>
+              {spaceWorkflows.closed.map((spaceWorkflow: SpaceWorkflowData) => (
+                <WorkflowItem
+                  key={spaceWorkflow.publicId}
+                  workflow={spaceWorkflow}
+                  activeWorkflowPublicId={currentWorkflow?.publicId}
+                  handler={() => handleSetConvoWorkflow(spaceWorkflow.publicId)}
+                />
+              ))}
+            </div>
+          </div>
+        </PopoverContent>
+      </Popover>
+    </>
+  );
+}
+
+function WorkflowItem({
+  workflow,
+  activeWorkflowPublicId,
+  handler
+}: {
+  workflow: SpaceWorkflowData;
+  activeWorkflowPublicId: TypeId<'spaceWorkflows'> | null;
+  handler: () => void;
+}) {
+  return (
+    <Button
+      variant={'ghost'}
+      className="pl-2"
+      asChild
+      onClick={handler}>
+      <div
+        className={cn(
+          'bg-base-1 flex w-full cursor-pointer flex-row items-center justify-between gap-8 border',
+          workflow.disabled ? 'opacity-70' : null
+        )}>
+        <div className="flex w-full flex-row items-center gap-4">
+          <div
+            className={
+              'flex size-6 min-h-6 min-w-6 items-center justify-center rounded-sm'
+            }
+            style={{
+              backgroundColor: `var(--${workflow.color}4)`
+            }}>
+            <Circle
+              className={'size-4'}
+              weight="regular"
+              style={{
+                color: `var(--${workflow.color}9)`
+              }}
+            />
+          </div>
+          <span className="text-base-11 text-sm font-medium">
+            {workflow.name}
+          </span>
+        </div>
+        {activeWorkflowPublicId === workflow.publicId && (
+          <Check
+            className={'size-4'}
+            weight="regular"
+            style={{
+              color: `var(--${workflow.color}9)`
+            }}
+          />
+        )}
+      </div>
+    </Button>
   );
 }

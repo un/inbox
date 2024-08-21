@@ -16,7 +16,11 @@ import {
   convoParticipantTeamMembers,
   emailIdentities,
   convoEntryPrivateVisibilityParticipants,
-  convoEntryRawHtmlEmails
+  convoEntryRawHtmlEmails,
+  spaces,
+  convoToSpaces,
+  spaceWorkflows,
+  convoWorkflows
 } from '@u22n/database/schema';
 import {
   type InferInsertModel,
@@ -24,8 +28,7 @@ import {
   eq,
   inArray,
   desc,
-  or,
-  lt
+  or
 } from '@u22n/database/orm';
 import {
   tryParseInlineProxyUrl,
@@ -36,20 +39,21 @@ import {
   type TypeId,
   typeIdGenerator
 } from '@u22n/utils/typeid';
+import { addConvoToSpace, isOrgMemberSpaceMember } from '../spaceRouter/utils';
 import { realtime, sendRealtimeNotification } from '~platform/utils/realtime';
 import { mailBridgeTrpcClient } from '~platform/utils/tRPCServerClients';
 import { createExtensionSet } from '@u22n/tiptap/extensions';
+import type { SpaceWorkflowType } from '@u22n/utils/spaces';
 import { router, orgProcedure } from '~platform/trpc/trpc';
 import { type JSONContent } from '@u22n/tiptap/react';
+import type { UiColor } from '@u22n/utils/colors';
 import { convoEntryRouter } from './entryRouter';
 import { tiptapCore } from '@u22n/tiptap';
 import { TRPCError } from '@trpc/server';
 import { env } from '~platform/env';
 import { z } from 'zod';
 
-const tipTapExtensions = createExtensionSet({
-  storageUrl: env.STORAGE_URL
-});
+const tipTapExtensions = createExtensionSet({ storageUrl: env.STORAGE_URL });
 
 type Attachment = {
   orgPublicId: TypeId<'org'>;
@@ -95,7 +99,8 @@ export const convoRouter = router({
             type: z.string()
           })
         ),
-        hide: z.boolean().default(false)
+        // hide: z.boolean().default(false),
+        spaceShortcode: z.string()
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -111,10 +116,71 @@ export const convoRouter = router({
         participantsContactsPublicIds,
         topic,
         to: convoMessageTo,
-        firstMessageType
+        firstMessageType,
+        spaceShortcode
       } = input;
 
       const message = input.message as JSONContent;
+
+      // if there is a send as email identity, check if that email identity is enabled
+      if (sendAsEmailIdentityPublicId) {
+        const emailIdentityResponse = await db.query.emailIdentities.findFirst({
+          where: and(
+            eq(emailIdentities.orgId, orgId),
+            eq(emailIdentities.publicId, sendAsEmailIdentityPublicId)
+          ),
+          columns: {},
+          with: {
+            domain: {
+              columns: {
+                domainStatus: true,
+                sendingMode: true
+              }
+            }
+          }
+        });
+
+        if (!emailIdentityResponse) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Send as email identity not found'
+          });
+        }
+
+        if (emailIdentityResponse.domain) {
+          if (
+            emailIdentityResponse.domain.domainStatus !== 'active' ||
+            emailIdentityResponse.domain.sendingMode === 'disabled'
+          ) {
+            throw new TRPCError({
+              code: 'UNPROCESSABLE_CONTENT',
+              message:
+                'You cant send from that email address due to a configuration issue. Please contact your administrator or select a different email identity.'
+            });
+          }
+        }
+      }
+
+      const spaceMembershipResponse = await isOrgMemberSpaceMember({
+        db,
+        orgId,
+        spaceShortcode: input.spaceShortcode,
+        orgMemberId: org.memberId
+      });
+
+      if (
+        spaceMembershipResponse.type !== 'open' &&
+        spaceMembershipResponse.role === null
+      ) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'You are not allowed to send a message in this space'
+        });
+      }
+      const spacesToAddConvoTo: number[] = [];
+
+      spacesToAddConvoTo.push(spaceMembershipResponse.spaceId);
+
       let convoParticipantToPublicId: TypeId<'convoParticipants'>;
       let convoMessageToNewContactPublicId: TypeId<'contacts'>;
 
@@ -158,40 +224,42 @@ export const convoRouter = router({
           ),
           columns: {
             id: true,
-            publicId: true
-          },
-          with: {
-            authorizedEmailIdentities: {
-              columns: {
-                id: true,
-                default: true
-              },
-              with: {
-                emailIdentity: {
-                  columns: {
-                    id: true
-                  }
-                }
-              }
-            }
+            publicId: true,
+            defaultEmailIdentityId: true
           }
         });
 
-        for (const orgMember of orgMemberResponses) {
-          let emailIdentityId = orgMember.authorizedEmailIdentities.find(
-            (emailIdentity) => emailIdentity.default
-          )?.emailIdentity.id;
+        for (const orgMemberParticipant of orgMemberResponses) {
+          orgMemberIds.push({
+            id: orgMemberParticipant.id,
+            publicId: orgMemberParticipant.publicId,
+            emailIdentityId: orgMemberParticipant.defaultEmailIdentityId ?? null
+          });
 
-          if (!emailIdentityId) {
-            emailIdentityId =
-              orgMember.authorizedEmailIdentities[0]?.emailIdentity.id;
+          const canUserAccessSpace = await isOrgMemberSpaceMember({
+            db,
+            orgId,
+            spaceShortcode: input.spaceShortcode,
+            orgMemberId: orgMemberParticipant.id
+          });
+
+          if (
+            canUserAccessSpace.role === null &&
+            canUserAccessSpace.type !== 'open'
+          ) {
+            const orgMemberQueryResponse = await db.query.orgMembers.findFirst({
+              where: and(
+                eq(orgMembers.orgId, orgId),
+                eq(orgMembers.id, orgMemberParticipant.id)
+              ),
+              columns: {
+                personalSpaceId: true
+              }
+            });
+
+            orgMemberQueryResponse?.personalSpaceId &&
+              spacesToAddConvoTo.push(orgMemberQueryResponse.personalSpaceId);
           }
-          const orgMemberIdObject: IdPairOrgMembers = {
-            id: orgMember.id,
-            publicId: orgMember.publicId,
-            emailIdentityId: emailIdentityId ?? null
-          };
-          orgMemberIds.push(orgMemberIdObject);
         }
 
         if (orgMemberIds.length !== participantsOrgMembersPublicIds.length) {
@@ -211,40 +279,62 @@ export const convoRouter = router({
           ),
           columns: {
             id: true,
-            publicId: true
-          },
-          with: {
-            authorizedEmailIdentities: {
-              columns: {
-                id: true,
-                default: true
-              },
-              with: {
-                emailIdentity: {
-                  columns: {
-                    id: true
-                  }
-                }
-              }
-            }
+            publicId: true,
+            defaultEmailIdentityId: true,
+            defaultSpaceId: true
           }
         });
 
-        for (const team of teamResponses) {
-          let emailIdentityId = team.authorizedEmailIdentities.find(
-            (emailIdentity) => emailIdentity.default
-          )?.emailIdentity.id;
+        for (const teamParticipant of teamResponses) {
+          orgTeamIds.push({
+            id: teamParticipant.id,
+            publicId: teamParticipant.publicId,
+            emailIdentityId: teamParticipant.defaultEmailIdentityId ?? null
+          });
 
-          if (!emailIdentityId) {
-            emailIdentityId =
-              team.authorizedEmailIdentities[0]?.emailIdentity.id;
+          // Check if the team already has access to the space the convo was created in, if yes, don't add the convo to their default space, else, add convo to their default space
+          const spaceQueryResponse = await db.query.spaces.findFirst({
+            where: and(
+              eq(spaces.orgId, orgId),
+              eq(spaces.shortcode, spaceShortcode)
+            ),
+            columns: {
+              id: true,
+              publicId: true,
+              type: true
+            },
+            with: {
+              members: {
+                columns: {
+                  teamId: true
+                }
+              }
+            }
+          });
+
+          if (!spaceQueryResponse) break;
+
+          const spaceMembersWhoAreTeams = spaceQueryResponse?.members.filter(
+            (spaceMember) => spaceMember.teamId !== null
+          );
+
+          if (
+            spaceMembersWhoAreTeams.length === 0 &&
+            spaceQueryResponse?.type !== 'open'
+          ) {
+            const teamQueryResponse = await db.query.teams.findFirst({
+              where: and(
+                eq(teams.orgId, orgId),
+                eq(teams.id, teamParticipant.id)
+              ),
+              columns: {
+                defaultSpaceId: true
+              }
+            });
+
+            teamQueryResponse?.defaultSpaceId &&
+              spacesToAddConvoTo.push(teamQueryResponse.defaultSpaceId);
           }
-          const teamObject: IdPair = {
-            id: team.id,
-            publicId: team.publicId,
-            emailIdentityId: emailIdentityId ?? null
-          };
-          orgTeamIds.push(teamObject);
         }
 
         if (orgTeamIds.length !== participantsTeamsPublicIds.length) {
@@ -452,6 +542,17 @@ export const convoRouter = router({
         lastUpdatedAt: newConvoTimestamp
       });
 
+      // add the conversation to the space(s)
+
+      for (const spaceToAdd of spacesToAddConvoTo) {
+        await addConvoToSpace({
+          db,
+          orgId,
+          convoId: Number(insertConvoResponse.insertId),
+          spaceId: spaceToAdd
+        });
+      }
+
       // create conversationSubject entry
       const newConvoSubjectPublicId = typeIdGenerator('convoSubjects');
       const insertConvoSubjectResponse = await db.insert(convoSubjects).values({
@@ -635,7 +736,8 @@ export const convoRouter = router({
           publicId: authorConvoParticipantPublicId,
           orgMemberId: accountOrgMemberId,
           emailIdentityId: authorEmailIdentityId,
-          hidden: input.hide,
+          // hidden: input.hide,
+          hidden: false,
           role: 'assigned'
         });
 
@@ -779,10 +881,10 @@ export const convoRouter = router({
         });
       }
 
-      await realtime.emit({
-        orgMemberPublicIds: orgMemberPublicIdsForNotifications,
-        event: 'convo:new',
-        data: { publicId: newConvoPublicId }
+      await sendRealtimeNotification({
+        newConvo: true,
+        convoId: Number(insertConvoResponse.insertId),
+        convoEntryId: -1
       });
 
       return {
@@ -808,8 +910,8 @@ export const convoRouter = router({
             inline: z.boolean().default(false)
           })
         ),
-        messageType: z.enum(['message', 'draft', 'comment']),
-        hide: z.boolean().default(false)
+        messageType: z.enum(['message', 'draft', 'comment'])
+        // hide: z.boolean().default(false)
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -842,6 +944,18 @@ export const convoRouter = router({
                 publicId: true
               },
               with: {
+                spaces: {
+                  columns: {
+                    id: true
+                  },
+                  with: {
+                    space: {
+                      columns: {
+                        id: true
+                      }
+                    }
+                  }
+                },
                 participants: {
                   columns: {
                     id: true,
@@ -872,8 +986,43 @@ export const convoRouter = router({
         });
       }
 
+      const allSpaceIdsWhereConvoAlreadyExists =
+        convoEntryToReplyToQueryResponse.convo.spaces.map(
+          (space) => space.space.id
+        );
+
       // get the email identity the user wants to email from
       let emailIdentityId: number | null = null;
+
+      if (sendAsEmailIdentityPublicId) {
+        const sendAsEmailIdentityResponse =
+          await db.query.emailIdentities.findFirst({
+            where: and(
+              eq(emailIdentities.orgId, orgId),
+              eq(emailIdentities.publicId, sendAsEmailIdentityPublicId)
+            ),
+            columns: {
+              id: true
+            }
+          });
+
+        //! fix user authorization via spaceId
+        // const userIsAuthorized =
+        //   sendAsEmailIdentityResponse?.authorizedSenders.some(
+        //     (authorizedOrgMember) =>
+        //       authorizedOrgMember.orgMemberId === accountOrgMemberId ||
+        //       authorizedOrgMember.team?.members.some(
+        //         (teamMember) => teamMember.orgMemberId === accountOrgMemberId
+        //       )
+        //   );
+        // if (!userIsAuthorized) {
+        //   throw new TRPCError({
+        //     code: 'UNAUTHORIZED',
+        //     message: 'User is not authorized to send as this email identity'
+        //   });
+        // }
+        emailIdentityId = sendAsEmailIdentityResponse?.id ?? null;
+      }
 
       let authorConvoParticipantId: number | undefined;
       let authorConvoParticipantPublicId:
@@ -938,10 +1087,11 @@ export const convoRouter = router({
               id: true
             },
             with: {
-              authorizedOrgMembers: {
+              authorizedSenders: {
                 columns: {
                   orgMemberId: true,
-                  teamId: true
+                  teamId: true,
+                  spaceId: true
                 },
                 with: {
                   team: {
@@ -961,15 +1111,36 @@ export const convoRouter = router({
             }
           });
 
-        const userIsAuthorized =
-          sendAsEmailIdentityResponse?.authorizedOrgMembers.some(
-            (authorizedOrgMember) =>
-              authorizedOrgMember.orgMemberId === accountOrgMemberId ||
-              authorizedOrgMember.team?.members.some(
-                (teamMember) => teamMember.orgMemberId === accountOrgMemberId
-              )
+        const authedOrgMemberIds =
+          sendAsEmailIdentityResponse?.authorizedSenders?.map(
+            (authorizedOrgMember) => authorizedOrgMember.orgMemberId
+          ) ?? [];
+        const authedTeamMemberIds: number[] = [];
+        sendAsEmailIdentityResponse?.authorizedSenders?.map(
+          (authorizedSender) =>
+            authorizedSender.team?.members.map((teamMember) =>
+              authedTeamMemberIds.push(teamMember.orgMemberId)
+            )
+        );
+        const authedSpacedIds =
+          sendAsEmailIdentityResponse?.authorizedSenders?.map(
+            (authorizedOrgMember) => authorizedOrgMember.spaceId
+          ) ?? [];
+
+        const orgMemberIsAuthorizedToUseEmailIdentity =
+          authedOrgMemberIds.some(
+            (authedOrgMemberId) => authedOrgMemberId === accountOrgMemberId
+          ) ||
+          authedTeamMemberIds?.some(
+            (authedTeamMemberId) => authedTeamMemberId === accountOrgMemberId
+          ) ||
+          authedSpacedIds.some(
+            (authedSpacedId) =>
+              authedSpacedId &&
+              allSpaceIdsWhereConvoAlreadyExists.includes(authedSpacedId)
           );
-        if (!userIsAuthorized) {
+
+        if (!orgMemberIsAuthorizedToUseEmailIdentity) {
           throw new TRPCError({
             code: 'UNAUTHORIZED',
             message: 'User is not authorized to send as this email identity'
@@ -1135,14 +1306,14 @@ export const convoRouter = router({
         })
         .onDuplicateKeyUpdate({ set: { seenAt: new Date() } });
 
-      if (input.hide) {
-        await db
-          .update(convoParticipants)
-          .set({
-            hidden: true
-          })
-          .where(eq(convoParticipants.id, authorConvoParticipantId));
-      }
+      // if (input.hide) {
+      //   await db
+      //     .update(convoParticipants)
+      //     .set({
+      //       hidden: true
+      //     })
+      //     .where(eq(convoParticipants.id, authorConvoParticipantId));
+      // }
 
       //* send notifications
       await sendRealtimeNotification({
@@ -1166,55 +1337,12 @@ export const convoRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      const { db, account, org } = ctx;
-      const accountId = account.id;
+      const { db, org } = ctx;
       const orgId = org.id;
       const accountOrgMemberId = org.memberId;
       const { convoPublicId } = input;
 
-      // check if the conversation belongs to the same org, early return if not before multiple db selects
-      const convoResponse = await db.query.convos.findFirst({
-        where: eq(convos.publicId, convoPublicId),
-        columns: {
-          id: true,
-          orgId: true
-        }
-      });
-      if (!convoResponse) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Conversation not found'
-        });
-      }
-      if (Number(convoResponse.orgId) !== orgId) {
-        const convoOrgOwnerMembersIds = await db.query.orgMembers.findMany({
-          where: eq(orgMembers.orgId, convoResponse.orgId),
-          columns: {
-            accountId: true
-          },
-          with: {
-            org: {
-              columns: {
-                name: true
-              }
-            }
-          }
-        });
-        const convoOrgOwnerUserIds = convoOrgOwnerMembersIds.map((member) =>
-          Number(member?.accountId ?? 0)
-        );
-        if (!convoOrgOwnerUserIds.includes(accountId)) {
-          throw new TRPCError({
-            code: 'NOT_FOUND',
-            message: 'Conversation not found'
-          });
-        }
-        throw new TRPCError({
-          code: 'UNAUTHORIZED',
-          message: `Conversation is not owned by your organization.`
-        });
-      }
-
+      // initial low column select to verify convo exists
       // TODO: Add filtering for org based on input.filterOrgPublicId
       const convoDetails = await db.query.convos.findFirst({
         columns: {
@@ -1222,7 +1350,7 @@ export const convoRouter = router({
           lastUpdatedAt: true,
           createdAt: true
         },
-        where: eq(convos.id, convoResponse.id),
+        where: and(eq(convos.orgId, orgId), eq(convos.publicId, convoPublicId)),
         with: {
           subjects: {
             columns: {
@@ -1306,6 +1434,18 @@ export const convoRouter = router({
               inline: true,
               createdAt: true
             }
+          },
+          spaces: {
+            columns: {
+              publicId: true
+            },
+            with: {
+              space: {
+                columns: {
+                  shortcode: true
+                }
+              }
+            }
           }
         }
       });
@@ -1316,32 +1456,52 @@ export const convoRouter = router({
         });
       }
 
+      const allSpacesShortcodes = convoDetails.spaces.map(
+        (space) => space.space.shortcode
+      );
+      const orgMemberIsSpaceMember = allSpacesShortcodes.some(
+        async (spaceShortcode) => {
+          const spaceMembershipResponse = await isOrgMemberSpaceMember({
+            db,
+            orgId,
+            spaceShortcode: spaceShortcode,
+            orgMemberId: org.memberId
+          });
+          if (
+            spaceMembershipResponse.type !== 'open' &&
+            spaceMembershipResponse.role === null
+          ) {
+            return false;
+          }
+          return true;
+        }
+      );
+
+      if (!orgMemberIsSpaceMember) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'You do not have permission to access this conversation'
+        });
+      }
+
       // Find the participant.publicId for the accountOrgMemberId
-      let participantPublicId: string | undefined;
+      let ownParticipantPublicId: string | undefined;
 
       // Check if the user's orgMemberId is in the conversation participants
       convoDetails?.participants.forEach((participant) => {
         if (participant.orgMember?.id === accountOrgMemberId) {
-          participantPublicId = participant.publicId;
+          ownParticipantPublicId = participant.publicId;
         }
       });
 
       // If not found, check if the user's orgMemberId is in any participant's team members
-      if (!participantPublicId) {
+      if (!ownParticipantPublicId) {
         convoDetails?.participants.forEach((participant) => {
           participant.team?.members.forEach((teamMember) => {
             if (teamMember.orgMemberId === accountOrgMemberId) {
-              participantPublicId = participant.publicId;
+              ownParticipantPublicId = participant.publicId;
             }
           });
-        });
-      }
-
-      // If participantPublicId is still not found, the user is not a participant of this conversation
-      if (!participantPublicId) {
-        throw new TRPCError({
-          code: 'UNAUTHORIZED',
-          message: 'You are not a participant of this conversation'
         });
       }
 
@@ -1354,217 +1514,26 @@ export const convoRouter = router({
       });
 
       // updates the lastReadAt of the participant
-      await db
-        .update(convoParticipants)
-        .set({
-          lastReadAt: new Date()
-        })
-        .where(
-          eq(convoParticipants.publicId, participantPublicId as `cp_${string}`)
-        );
+      if (ownParticipantPublicId) {
+        await db
+          .update(convoParticipants)
+          .set({
+            lastReadAt: new Date()
+          })
+          .where(
+            eq(
+              convoParticipants.publicId,
+              ownParticipantPublicId as `cp_${string}`
+            )
+          );
+      }
 
       return {
         data: convoDetails,
-        ownParticipantPublicId: participantPublicId
+        ownParticipantPublicId: ownParticipantPublicId ?? null
       };
     }),
 
-  getOrgMemberConvos: orgProcedure
-    .input(
-      z.object({
-        includeHidden: z.boolean().default(false),
-        cursor: z
-          .object({
-            lastUpdatedAt: z.date().optional(),
-            lastPublicId: typeIdValidator('convos').optional()
-          })
-          .default({})
-      })
-    )
-    .query(async ({ ctx, input }) => {
-      const { db, org } = ctx;
-      const { cursor } = input;
-      const orgId = org.id;
-
-      const orgMemberId = org.memberId;
-      const LIMIT = 15;
-
-      const inputLastUpdatedAt = cursor.lastUpdatedAt
-        ? new Date(cursor.lastUpdatedAt)
-        : new Date();
-
-      const inputLastPublicId = cursor.lastPublicId ?? 'c_';
-
-      const convoQuery = await db.query.convos.findMany({
-        orderBy: [desc(convos.lastUpdatedAt), desc(convos.publicId)],
-        limit: LIMIT + 1,
-        columns: {
-          publicId: true,
-          lastUpdatedAt: true
-        },
-        where: and(
-          or(
-            and(
-              eq(convos.orgId, orgId),
-              eq(convos.lastUpdatedAt, inputLastUpdatedAt),
-              lt(convos.publicId, inputLastPublicId)
-            ),
-            and(
-              eq(convos.orgId, orgId),
-              lt(convos.lastUpdatedAt, inputLastUpdatedAt)
-            )
-          ),
-          inArray(
-            convos.id,
-            db
-              .select({ id: convoParticipants.convoId })
-              .from(convoParticipants)
-              .where(
-                and(
-                  eq(convoParticipants.hidden, input.includeHidden),
-                  or(
-                    eq(convoParticipants.orgMemberId, orgMemberId),
-                    inArray(
-                      convoParticipants.teamId,
-                      db
-                        .select({ id: teamMembers.teamId })
-                        .from(teamMembers)
-                        .where(eq(teamMembers.orgMemberId, orgMemberId))
-                    )
-                  )
-                )
-              )
-          )
-        ),
-        with: {
-          subjects: {
-            columns: {
-              subject: true
-            }
-          },
-          participants: {
-            columns: {
-              role: true,
-              publicId: true,
-              hidden: true,
-              notifications: true
-            },
-            with: {
-              orgMember: {
-                columns: { publicId: true },
-                with: {
-                  profile: {
-                    columns: {
-                      publicId: true,
-                      firstName: true,
-                      lastName: true,
-                      avatarTimestamp: true,
-                      handle: true
-                    }
-                  }
-                }
-              },
-              team: {
-                columns: {
-                  publicId: true,
-                  name: true,
-                  color: true,
-                  avatarTimestamp: true
-                }
-              },
-              contact: {
-                columns: {
-                  publicId: true,
-                  name: true,
-                  avatarTimestamp: true,
-                  setName: true,
-                  emailUsername: true,
-                  emailDomain: true,
-                  type: true,
-                  signaturePlainText: true,
-                  signatureHtml: true
-                }
-              }
-            }
-          },
-          entries: {
-            orderBy: [desc(convoEntries.createdAt)],
-            limit: 1,
-            columns: {
-              bodyPlainText: true,
-              type: true
-            },
-            with: {
-              author: {
-                columns: {
-                  publicId: true
-                },
-                with: {
-                  orgMember: {
-                    columns: {
-                      publicId: true
-                    },
-                    with: {
-                      profile: {
-                        columns: {
-                          publicId: true,
-                          firstName: true,
-                          lastName: true,
-                          avatarTimestamp: true,
-                          handle: true
-                        }
-                      }
-                    }
-                  },
-                  team: {
-                    columns: {
-                      publicId: true,
-                      name: true,
-                      color: true,
-                      avatarTimestamp: true
-                    }
-                  },
-                  contact: {
-                    columns: {
-                      publicId: true,
-                      name: true,
-                      avatarTimestamp: true,
-                      setName: true,
-                      emailUsername: true,
-                      emailDomain: true,
-                      type: true
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      });
-
-      // As we fetch ${LIMIT + 1} convos at a time, if the length is <= ${LIMIT}, we know we've reached the end
-      if (convoQuery.length <= LIMIT) {
-        return {
-          data: convoQuery,
-          cursor: null
-        };
-      }
-
-      // If we have ${LIMIT + 1} convos, we pop the last one as we return ${LIMIT} convos
-      convoQuery.pop();
-
-      const newCursorLastUpdatedAt =
-        convoQuery[convoQuery.length - 1]!.lastUpdatedAt;
-      const newCursorLastPublicId = convoQuery[convoQuery.length - 1]!.publicId;
-
-      return {
-        data: convoQuery,
-        cursor: {
-          lastUpdatedAt: newCursorLastUpdatedAt,
-          lastPublicId: newCursorLastPublicId
-        }
-      };
-    }),
   // used for data store
   getOrgMemberSpecificConvo: orgProcedure
     .input(
@@ -1649,7 +1618,9 @@ export const convoRouter = router({
             },
             with: {
               author: {
-                columns: {},
+                columns: {
+                  publicId: true
+                },
                 with: {
                   orgMember: {
                     columns: {
@@ -1702,107 +1673,131 @@ export const convoRouter = router({
       });
 
       // If participant is still not found, the user is not a participant of this conversation
-      if (!participant) {
-        throw new TRPCError({
-          code: 'UNAUTHORIZED',
-          message: 'You are not a participant of this conversation'
-        });
-      }
+      // if (!participant) {
+      //   throw new TRPCError({
+      //     code: 'UNAUTHORIZED',
+      //     message: 'You are not a participant of this conversation'
+      //   });
+      // }
 
       // updates the lastReadAt of the participant
-      await db
-        .update(convoParticipants)
-        .set({
-          lastReadAt: new Date()
-        })
-        .where(eq(convoParticipants.publicId, participant.publicId));
+      if (participant) {
+        await db
+          .update(convoParticipants)
+          .set({
+            lastReadAt: new Date()
+          })
+          .where(eq(convoParticipants.publicId, participant.publicId));
+      }
 
       return convoQuery;
     }),
-  hideConvo: orgProcedure
-    .input(
-      z.object({
-        convoPublicId: z
-          .array(typeIdValidator('convos'))
-          .or(typeIdValidator('convos')),
-        unhide: z.boolean().default(false)
-      })
-    )
-    .mutation(async ({ ctx, input }) => {
-      const { db, org } = ctx;
-      const { convoPublicId } = input;
-      const orgMemberId = org.memberId;
-      const convoPublicIds = Array.isArray(convoPublicId)
-        ? convoPublicId
-        : [convoPublicId];
+  // hideConvo: orgProcedure
+  //   .input(
+  //     z.object({
+  //       convoPublicId: z
+  //         .array(typeIdValidator('convos'))
+  //         .or(typeIdValidator('convos')),
+  //       unhide: z.boolean().default(false)
+  //     })
+  //   )
+  //   .mutation(async ({ ctx, input }) => {
+  //     const { db, org } = ctx;
+  //     const { convoPublicId } = input;
+  //     const orgMemberId = org.memberId;
+  //     const convoPublicIds = Array.isArray(convoPublicId)
+  //       ? convoPublicId
+  //       : [convoPublicId];
 
-      const convosQuery = await db.query.convos.findMany({
-        columns: {
-          id: true
-        },
-        where: and(
-          inArray(convos.publicId, convoPublicIds),
-          eq(convos.orgId, org.id)
-        ),
-        with: {
-          participants: {
-            columns: {
-              id: true
-            },
-            where: eq(convoParticipants.orgMemberId, orgMemberId),
-            with: {
-              orgMember: {
-                columns: {
-                  publicId: true
-                }
-              }
-            }
-          }
-        }
-      });
+  //     const convosQuery = await db.query.convos.findMany({
+  //       columns: {
+  //         id: true
+  //       },
+  //       where: and(
+  //         inArray(convos.publicId, convoPublicIds),
+  //         eq(convos.orgId, org.id)
+  //       ),
+  //       with: {
+  //         participants: {
+  //           columns: {
+  //             id: true
+  //           },
+  //           where: eq(convoParticipants.orgMemberId, orgMemberId),
+  //           with: {
+  //             orgMember: {
+  //               columns: {
+  //                 publicId: true
+  //               }
+  //             }
+  //           }
+  //         }
+  //       }
+  //     });
 
-      if (convosQuery.length !== convoPublicIds.length) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'One or more conversations not found'
-        });
-      }
+  //     if (convosQuery.length !== convoPublicIds.length) {
+  //       throw new TRPCError({
+  //         code: 'NOT_FOUND',
+  //         message: 'One or more conversations not found'
+  //       });
+  //     }
 
-      const orgMemberConvoParticipants = convosQuery
-        .map((convo) => convo.participants[0])
-        .filter((participant) => typeof participant !== 'undefined');
+  //     const orgMemberConvoParticipants = convosQuery
+  //       .map((convo) => convo.participants[0])
+  //       .filter((participant) => typeof participant !== 'undefined');
 
-      if (orgMemberConvoParticipants.length !== convoPublicIds.length) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'One or more conversations not found'
-        });
-      }
+  //     if (orgMemberConvoParticipants.length !== convoPublicIds.length) {
+  //       throw new TRPCError({
+  //         code: 'NOT_FOUND',
+  //         message: 'One or more conversations not found'
+  //       });
+  //     }
 
-      await db
-        .update(convoParticipants)
-        .set({
-          hidden: !input.unhide
-        })
-        .where(
-          inArray(
-            convoParticipants.id,
-            orgMemberConvoParticipants.map((p) => p.id)
-          )
-        );
+  //     await db
+  //       .update(convoParticipants)
+  //       .set({
+  //         hidden: !input.unhide
+  //       })
+  //       .where(
+  //         inArray(
+  //           convoParticipants.id,
+  //           orgMemberConvoParticipants.map((p) => p.id)
+  //         )
+  //       );
 
-      const orgMemberPublicIdsForNotifications = Array.from(
-        new Set(orgMemberConvoParticipants.map((p) => p.orgMember!.publicId))
-      );
+  //     const orgMemberPublicIdsForNotifications = Array.from(
+  //       new Set(orgMemberConvoParticipants.map((p) => p.orgMember!.publicId))
+  //     );
 
-      await realtime.emit({
-        orgMemberPublicIds: orgMemberPublicIdsForNotifications,
-        event: 'convo:hidden',
-        data: { publicId: convoPublicIds, hidden: !input.unhide }
-      });
+  //     const spaceShortCodes = await db.query.convoToSpaces
+  //       .findMany({
+  //         where: inArray(
+  //           convoToSpaces.convoId,
+  //           convosQuery.map((convo) => convo.id)
+  //         ),
+  //         columns: {
+  //           id: true
+  //         },
+  //         with: {
+  //           space: {
+  //             columns: {
+  //               shortcode: true
+  //             }
+  //           }
+  //         }
+  //       })
+  //       .then((spaces) => spaces.map((space) => space.space.shortcode));
 
-      return { success: true };
-    }),
+  //     await realtime.emit({
+  //       orgMemberPublicIds: orgMemberPublicIdsForNotifications,
+  //       event: 'convo:hidden',
+  //       data: {
+  //         publicId: convoPublicIds,
+  //         hidden: !input.unhide
+  //       }
+  //     });
+
+  //     return { success: true };
+  //   }),
   deleteConvo: orgProcedure
     .input(
       z.object({
@@ -1828,7 +1823,8 @@ export const convoRouter = router({
         ),
         columns: {
           id: true,
-          orgId: true
+          orgId: true,
+          publicId: true
         },
         with: {
           participants: {
@@ -1859,6 +1855,25 @@ export const convoRouter = router({
             columns: {
               id: true
             }
+          },
+          spaces: {
+            columns: {},
+            with: {
+              space: {
+                columns: {
+                  publicId: true,
+                  shortcode: true,
+                  type: true
+                },
+                with: {
+                  members: {
+                    columns: {
+                      orgMemberId: true
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       });
@@ -1873,14 +1888,23 @@ export const convoRouter = router({
       }
 
       // Check if the user is a direct participant or a team member of the convo and create a boolean array
-      const userInConvos = convoQueryResponses.map((convo) =>
-        convo.participants.some(
-          (participant) =>
-            participant.orgMemberId === accountOrgMemberId ||
-            participant.team?.members.some(
-              (teamMember) => teamMember.orgMemberId === accountOrgMemberId
-            )
-        )
+      //! TODO: Add support for permission based on space
+      const userInConvos = convoQueryResponses.map(
+        (convo) =>
+          convo.participants.some(
+            (participant) =>
+              participant.orgMemberId === accountOrgMemberId ||
+              participant.team?.members.some(
+                (teamMember) => teamMember.orgMemberId === accountOrgMemberId
+              )
+          ) ||
+          convo.spaces.every(
+            (space) =>
+              space.space.type === 'open' ||
+              space.space.members.some(
+                (member) => member.orgMemberId === accountOrgMemberId
+              )
+          )
       );
 
       // If not all convos are owned by the user, throw an error
@@ -2028,7 +2052,6 @@ export const convoRouter = router({
         } catch (error) {
           console.error('🔥 Failed to delete convo', error);
           // Rollback throws error for some reason, we need to return the trpc error not the rollback error
-
           try {
             db.rollback();
           } catch {}
@@ -2040,28 +2063,561 @@ export const convoRouter = router({
         }
       });
 
-      const orgMemberPublicIdsForNotifications = Array.from(
-        new Set(
-          convoQueryResponses
-            .flatMap((convo) =>
-              convo.participants.map(
-                (participant) => participant.orgMember?.publicId
-              )
-            )
-            .filter(Boolean) as TypeId<'orgMembers'>[]
-        )
-      );
+      const spaces: Record<TypeId<'spaces'>, TypeId<'convos'>[]> = {};
 
-      if (orgMemberPublicIdsForNotifications.length > 0) {
-        await realtime.emit({
-          orgMemberPublicIds: orgMemberPublicIdsForNotifications,
-          event: 'convo:deleted',
-          data: { publicId: convoPublicId }
+      convoQueryResponses.forEach((convo) => {
+        convo.spaces.forEach((space) => {
+          if (!spaces[space.space.publicId]) {
+            spaces[space.space.publicId] = [];
+          }
+          spaces[space.space.publicId]?.push(convo.publicId);
         });
-      }
+      });
+
+      await Promise.allSettled(
+        Object.entries(spaces).map(async ([spacePublicId, convos]) => {
+          await realtime.emitOnChannels({
+            channel: `private-space-${spacePublicId}`,
+            event: 'convo:deleted',
+            data: {
+              publicId: convos
+            }
+          });
+        })
+      );
 
       return {
         success: true
       };
+    }),
+  getConvoSpaceWorkflows: orgProcedure
+    .input(
+      z.object({
+        convoPublicId: typeIdValidator('convos')
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const { db, org } = ctx;
+      const { convoPublicId } = input;
+
+      const convosQuery = await db.query.convos.findFirst({
+        where: eq(convos.publicId, convoPublicId),
+        columns: {
+          id: true
+        }
+      });
+      if (!convosQuery) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Conversation not found'
+        });
+      }
+
+      const convoSpacesQuery = await db.query.convoToSpaces.findMany({
+        where: and(
+          eq(convoToSpaces.convoId, convosQuery.id),
+          eq(convoToSpaces.orgId, org.id)
+        ),
+        columns: {
+          spaceId: true
+        },
+        with: {
+          space: {
+            columns: {
+              publicId: true,
+              name: true,
+              color: true,
+              icon: true,
+              avatarTimestamp: true
+            },
+            with: {
+              workflows: {
+                columns: {
+                  publicId: true,
+                  name: true,
+                  color: true,
+                  icon: true,
+                  description: true,
+                  type: true,
+                  order: true,
+                  disabled: true
+                }
+              }
+            }
+          },
+          workflows: {
+            columns: {
+              spaceId: true,
+              createdAt: true
+            },
+            orderBy: [desc(spaceWorkflows.createdAt)],
+            with: {
+              workflow: {
+                columns: {
+                  publicId: true
+                }
+              },
+              space: {
+                columns: {
+                  publicId: true
+                }
+              }
+            }
+          }
+        }
+      });
+
+      if (!convoSpacesQuery) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message:
+            'Error: This Conversation is not in any Spaces, please contact support'
+        });
+      }
+
+      type ReturnSpaceData = {
+        space: {
+          publicId: TypeId<'spaces'>;
+          name: string;
+          color: UiColor;
+          icon: string;
+          avatarTimestamp: Date | null;
+        };
+        currentWorkflow: {
+          publicId: TypeId<'spaceWorkflows'> | null;
+        };
+        spaceWorkflows: {
+          open: {
+            publicId: TypeId<'spaceWorkflows'>;
+            name: string;
+            color: UiColor;
+            icon: string;
+            description: string | null;
+            type: SpaceWorkflowType;
+            order: number;
+            disabled: boolean;
+          }[];
+          active: {
+            publicId: TypeId<'spaceWorkflows'>;
+            name: string;
+            color: UiColor;
+            icon: string;
+            description: string | null;
+            type: SpaceWorkflowType;
+            order: number;
+            disabled: boolean;
+          }[];
+          closed: {
+            publicId: TypeId<'spaceWorkflows'>;
+            name: string;
+            color: UiColor;
+            icon: string;
+            description: string | null;
+            type: SpaceWorkflowType;
+            order: number;
+            disabled: boolean;
+          }[];
+        };
+      };
+
+      const returnData: ReturnSpaceData[] = convoSpacesQuery.map(
+        (convoSpace) => {
+          // Extract space data
+          const spaceData = {
+            publicId: convoSpace.space.publicId,
+            name: convoSpace.space.name,
+            color: convoSpace.space.color,
+            icon: convoSpace.space.icon,
+            avatarTimestamp: convoSpace.space.avatarTimestamp
+          };
+
+          // Extract current workflow data
+          const currentWorkflowData = {
+            publicId:
+              convoSpace.workflows?.find(
+                (workflow) => workflow.spaceId === convoSpace.spaceId
+              )?.workflow?.publicId ?? null
+          };
+
+          // Extract space workflows data
+          const spaceWorkflowsData = {
+            open: convoSpace.space.workflows
+              .filter((workflow) => workflow.type === 'open')
+              .sort((a, b) => a.order - b.order)
+              .map((workflow) => ({
+                publicId: workflow.publicId,
+                name: workflow.name,
+                color: workflow.color,
+                icon: workflow.icon,
+                description: workflow.description,
+                type: workflow.type,
+                order: workflow.order,
+                disabled: workflow.disabled
+              })),
+            active: convoSpace.space.workflows
+              .filter((workflow) => workflow.type === 'active')
+              .sort((a, b) => a.order - b.order)
+              .map((workflow) => ({
+                publicId: workflow.publicId,
+                name: workflow.name,
+                color: workflow.color,
+                icon: workflow.icon,
+                description: workflow.description,
+                type: workflow.type,
+                order: workflow.order,
+                disabled: workflow.disabled
+              })),
+            closed: convoSpace.space.workflows
+              .filter((workflow) => workflow.type === 'closed')
+              .sort((a, b) => a.order - b.order)
+              .map((workflow) => ({
+                publicId: workflow.publicId,
+                name: workflow.name,
+                color: workflow.color,
+                icon: workflow.icon,
+                description: workflow.description,
+                type: workflow.type,
+                order: workflow.order,
+                disabled: workflow.disabled
+              }))
+          };
+
+          // Combine the data into the ReturnSpaceData format
+          const returnSpaceData: ReturnSpaceData = {
+            space: spaceData,
+            currentWorkflow: currentWorkflowData,
+            spaceWorkflows: spaceWorkflowsData
+          };
+
+          return returnSpaceData;
+        }
+      );
+
+      return returnData;
+    }),
+  setConvoSpaceWorkflow: orgProcedure
+    .input(
+      z.object({
+        convoPublicId: typeIdValidator('convos'),
+        spacePublicId: typeIdValidator('spaces'),
+        workflowPublicId: typeIdValidator('spaceWorkflows')
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { db, org } = ctx;
+      const { convoPublicId, spacePublicId, workflowPublicId } = input;
+
+      const spaceQueryResponse = await db.query.spaces.findFirst({
+        where: and(
+          eq(spaces.orgId, org.id),
+          eq(spaces.publicId, spacePublicId)
+        ),
+        columns: {
+          shortcode: true
+        }
+      });
+      if (!spaceQueryResponse) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Space not found'
+        });
+      }
+
+      const orgMemberSpacePermissions = await isOrgMemberSpaceMember({
+        db,
+        orgId: org.id,
+        spaceShortcode: spaceQueryResponse?.shortcode,
+        orgMemberId: org.memberId
+      });
+
+      if (!orgMemberSpacePermissions.permissions.canChangeWorkflow) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'You are not allowed to change the workflow of this space'
+        });
+      }
+
+      const convoQueryResponse = await db.query.convos.findFirst({
+        where: and(
+          eq(convos.orgId, org.id),
+          eq(convos.publicId, convoPublicId)
+        ),
+        columns: {
+          id: true
+        }
+      });
+      if (!convoQueryResponse) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Conversation not found'
+        });
+      }
+
+      const convoToSpacesQueryResponse = await db.query.convoToSpaces.findFirst(
+        {
+          where: and(
+            eq(convoToSpaces.orgId, org.id),
+            eq(convoToSpaces.convoId, convoQueryResponse.id),
+            eq(convoToSpaces.spaceId, orgMemberSpacePermissions.spaceId)
+          ),
+          columns: {
+            id: true
+          }
+        }
+      );
+      if (!convoToSpacesQueryResponse) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Conversation is not in this space'
+        });
+      }
+
+      const workflowQueryResponse = await db.query.spaceWorkflows.findFirst({
+        where: and(
+          eq(spaceWorkflows.orgId, org.id),
+          eq(spaceWorkflows.publicId, workflowPublicId)
+        ),
+        columns: {
+          id: true
+        }
+      });
+      if (!workflowQueryResponse) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Workflow not found'
+        });
+      }
+
+      await db.insert(convoWorkflows).values({
+        publicId: typeIdGenerator('convoWorkflows'),
+        orgId: org.id,
+        convoId: convoQueryResponse.id,
+        convoToSpaceId: convoToSpacesQueryResponse.id,
+        spaceId: orgMemberSpacePermissions.spaceId,
+        workflow: workflowQueryResponse.id,
+        byOrgMemberId: org.memberId
+      });
+
+      return {};
+    }),
+  addConvoToSpace: orgProcedure
+    .input(
+      z.object({
+        convoPublicId: typeIdValidator('convos'),
+        spacePublicId: typeIdValidator('spaces')
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { db, org } = ctx;
+      const { convoPublicId, spacePublicId } = input;
+
+      const spaceQueryResponse = await db.query.spaces.findFirst({
+        where: and(
+          eq(spaces.orgId, org.id),
+          eq(spaces.publicId, spacePublicId)
+        ),
+        columns: {
+          id: true
+        }
+      });
+      if (!spaceQueryResponse) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Space not found'
+        });
+      }
+
+      const convoQueryResponse = await db.query.convos.findFirst({
+        where: and(
+          eq(convos.orgId, org.id),
+          eq(convos.publicId, convoPublicId)
+        ),
+        columns: {
+          id: true
+        }
+      });
+      if (!convoQueryResponse) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Conversation not found'
+        });
+      }
+
+      // get array of all spaces shortcodes the convo is currently in to see if user has permission to add to another space
+      const convoToSpacesQueryResponse = await db.query.convoToSpaces.findMany({
+        where: and(
+          eq(convoToSpaces.orgId, org.id),
+          eq(convoToSpaces.convoId, convoQueryResponse.id)
+        ),
+        columns: {
+          spaceId: true
+        },
+        with: {
+          space: {
+            columns: {
+              shortcode: true
+            }
+          }
+        }
+      });
+
+      if (
+        !convoToSpacesQueryResponse ||
+        convoToSpacesQueryResponse.length === 0
+      ) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message:
+            'Conversation exists but is not in any Spaces, please contact support'
+        });
+      }
+
+      const existingSpaceShortcodes = convoToSpacesQueryResponse.map(
+        (space) => space.space.shortcode
+      );
+
+      const orgMemberCanAddConvoToOtherSpace = existingSpaceShortcodes.some(
+        async (spaceShortcode) => {
+          const spaceMembershipResponse = await isOrgMemberSpaceMember({
+            db,
+            orgId: org.id,
+            spaceShortcode: spaceShortcode,
+            orgMemberId: org.memberId
+          });
+
+          return spaceMembershipResponse.permissions.canAddToAnotherSpace;
+        }
+      );
+
+      if (!orgMemberCanAddConvoToOtherSpace) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message:
+            'You are not allowed to add this Conversation to another Space'
+        });
+      }
+
+      await addConvoToSpace({
+        db,
+        orgId: org.id,
+        convoId: convoQueryResponse.id,
+        spaceId: spaceQueryResponse.id
+      });
+
+      return;
+    }),
+  moveConvoToSpace: orgProcedure
+    .input(
+      z.object({
+        convoPublicId: typeIdValidator('convos'),
+        spacePublicId: typeIdValidator('spaces')
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { db, org } = ctx;
+      const { convoPublicId, spacePublicId } = input;
+
+      const spaceQueryResponse = await db.query.spaces.findFirst({
+        where: and(
+          eq(spaces.orgId, org.id),
+          eq(spaces.publicId, spacePublicId)
+        ),
+        columns: {
+          id: true
+        }
+      });
+      if (!spaceQueryResponse) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Space not found'
+        });
+      }
+
+      const convoQueryResponse = await db.query.convos.findFirst({
+        where: and(
+          eq(convos.orgId, org.id),
+          eq(convos.publicId, convoPublicId)
+        ),
+        columns: {
+          id: true
+        }
+      });
+      if (!convoQueryResponse) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Conversation not found'
+        });
+      }
+
+      // get array of all spaces shortcodes the convo is currently in to see if user has permission to add to another space
+      const convoToSpacesQueryResponse = await db.query.convoToSpaces.findMany({
+        where: and(
+          eq(convoToSpaces.orgId, org.id),
+          eq(convoToSpaces.convoId, convoQueryResponse.id)
+        ),
+        columns: {
+          spaceId: true
+        },
+        with: {
+          space: {
+            columns: {
+              shortcode: true
+            }
+          }
+        }
+      });
+
+      if (
+        !convoToSpacesQueryResponse ||
+        convoToSpacesQueryResponse.length === 0
+      ) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message:
+            'Conversation exists but is not in any Spaces, please contact support'
+        });
+      }
+
+      const existingSpaceShortcodes = convoToSpacesQueryResponse.map(
+        (space) => space.space.shortcode
+      );
+
+      const orgMemberCanMoveConvoToOtherSpace = existingSpaceShortcodes.some(
+        async (spaceShortcode) => {
+          const spaceMembershipResponse = await isOrgMemberSpaceMember({
+            db,
+            orgId: org.id,
+            spaceShortcode: spaceShortcode,
+            orgMemberId: org.memberId
+          });
+
+          return spaceMembershipResponse.permissions.canMoveToAnotherSpace;
+        }
+      );
+      if (!orgMemberCanMoveConvoToOtherSpace) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message:
+            'You are not allowed to move this Conversation to another Space'
+        });
+      }
+
+      await db
+        .delete(convoToSpaces)
+        .where(
+          and(
+            eq(convoToSpaces.orgId, org.id),
+            eq(convoToSpaces.convoId, convoQueryResponse.id)
+          )
+        );
+
+      await addConvoToSpace({
+        db,
+        orgId: org.id,
+        convoId: convoQueryResponse.id,
+        spaceId: spaceQueryResponse.id
+      });
+
+      return;
     })
 });

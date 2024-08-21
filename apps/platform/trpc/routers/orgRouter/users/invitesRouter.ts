@@ -3,11 +3,13 @@ import {
   emailIdentities,
   emailRoutingRules,
   emailRoutingRulesDestinations,
-  emailIdentitiesAuthorizedOrgMembers,
+  emailIdentitiesAuthorizedSenders,
   orgInvitations,
   orgMembers,
   orgMemberProfiles,
-  accounts
+  accounts,
+  spaces,
+  spaceMembers
 } from '@u22n/database/schema';
 import {
   router,
@@ -20,6 +22,7 @@ import { refreshOrgShortcodeCache } from '~platform/utils/orgShortcode';
 import { billingTrpcClient } from '~platform/utils/tRPCServerClients';
 import { typeIdGenerator, typeIdValidator } from '@u22n/utils/typeid';
 import { sendInviteEmail } from '~platform/utils/mail/transactional';
+import { validateSpaceShortCode } from '../../spaceRouter/utils';
 import { nanoIdToken, zodSchemas } from '@u22n/utils/zodSchemas';
 import { addOrgMemberToTeamHandler } from './teamsHandler';
 import { ratelimiter } from '~platform/trpc/ratelimit';
@@ -81,9 +84,9 @@ export const invitesRouter = router({
         const orgMemberProfileId = +orgMemberProfileResponse.insertId;
 
         // Insert orgMember - save ID
-        const orgMemberPublicId = typeIdGenerator('orgMembers');
-        const orgMemberResponse = await db.insert(orgMembers).values({
-          publicId: orgMemberPublicId,
+        const newOrgMemberPublicId = typeIdGenerator('orgMembers');
+        const newOrgMemberResponse = await db.insert(orgMembers).values({
+          publicId: newOrgMemberPublicId,
           orgId: orgId,
           invitedByOrgMemberId: orgMemberId,
           status: 'invited',
@@ -91,13 +94,59 @@ export const invitesRouter = router({
           orgMemberProfileId: orgMemberProfileId
         });
 
+        const spaceShortcode = await validateSpaceShortCode({
+          db: db,
+          shortcode: `${newOrgMember.firstName}${newOrgMember.lastName ? '-' + newOrgMember.lastName : ''}`,
+          orgId: orgId
+        });
+
+        const newSpaceResponse = await db.insert(spaces).values({
+          orgId: orgId,
+          publicId: typeIdGenerator('spaces'),
+          name: 'Personal',
+          type: 'private',
+          personalSpace: true,
+          color: 'cyan',
+          icon: 'house',
+          createdByOrgMemberId: Number(newOrgMemberResponse.insertId),
+          shortcode: spaceShortcode.shortcode
+        });
+
+        await db.insert(spaceMembers).values({
+          orgId: orgId,
+          spaceId: Number(newSpaceResponse.insertId),
+          publicId: typeIdGenerator('spaceMembers'),
+          orgMemberId: Number(newOrgMemberResponse.insertId),
+          addedByOrgMemberId: Number(newOrgMemberResponse.insertId),
+          role: 'admin',
+          canCreate: true,
+          canRead: true,
+          canComment: true,
+          canReply: true,
+          canDelete: true,
+          canChangeWorkflow: true,
+          canSetWorkflowToClosed: true,
+          canAddTags: true,
+          canMoveToAnotherSpace: true,
+          canAddToAnotherSpace: true,
+          canMergeConvos: true,
+          canAddParticipants: true
+        });
+
+        await db
+          .update(orgMembers)
+          .set({
+            personalSpaceId: Number(newSpaceResponse.insertId)
+          })
+          .where(eq(orgMembers.id, Number(newOrgMemberResponse.insertId)));
+
         // Insert teamMemberships - save ID
         if (teamsInput) {
           for (const teamPublicId of teamsInput.teamsPublicIds) {
             await addOrgMemberToTeamHandler(db, {
               orgId: org.id,
               teamPublicId: teamPublicId,
-              orgMemberPublicId: orgMemberPublicId,
+              orgMemberPublicId: newOrgMemberPublicId,
               orgMemberId: org.memberId
             });
           }
@@ -136,7 +185,7 @@ export const invitesRouter = router({
             publicId: newRoutingRuleDestinationPublicId,
             orgId: orgId,
             ruleId: +emailRoutingRulesResponse.insertId,
-            orgMemberId: +orgMemberResponse.insertId
+            spaceId: Number(newSpaceResponse.insertId)
           });
 
           const emailIdentityPublicId = typeIdGenerator('emailIdentities');
@@ -158,13 +207,19 @@ export const invitesRouter = router({
               sendName: email.sendName
             });
 
-          await db.insert(emailIdentitiesAuthorizedOrgMembers).values({
+          await db.insert(emailIdentitiesAuthorizedSenders).values({
             orgId: orgId,
-            identityId: +emailIdentityResponse.insertId,
-            default: true,
+            identityId: Number(emailIdentityResponse.insertId),
             addedBy: orgMemberId,
-            orgMemberId: +orgMemberResponse.insertId
+            spaceId: Number(newSpaceResponse.insertId)
           });
+
+          await db
+            .update(orgMembers)
+            .set({
+              personalSpaceId: Number(newSpaceResponse.insertId)
+            })
+            .where(eq(orgMembers.id, Number(newOrgMemberResponse.insertId)));
         }
 
         // Insert orgInvitations - save ID
@@ -176,7 +231,7 @@ export const invitesRouter = router({
           publicId: newInvitePublicId,
           orgId: orgId,
           invitedByOrgMemberId: orgMemberId,
-          orgMemberId: +orgMemberResponse.insertId,
+          orgMemberId: +newOrgMemberResponse.insertId,
           role: newOrgMember.role,
           email: notification?.notificationEmailAddress ?? null,
           inviteToken: newInviteToken,

@@ -134,11 +134,6 @@ export const accountRouter = router({
                   publicId: true,
                   shortcode: true
                 }
-              },
-              authorizedEmailIdentities: {
-                with: {
-                  emailIdentity: true
-                }
               }
             }
           },

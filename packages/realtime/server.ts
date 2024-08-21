@@ -58,12 +58,35 @@ export default class RealtimeServer {
     }
   }
 
-  public authenticate(
+  public async emitOnChannels<const T extends keyof EventDataMap>({
+    channel,
+    event,
+    data
+  }: {
+    channel: string;
+    event: T;
+    data: z.infer<EventDataMap[T]>;
+  }) {
+    const parsed = eventDataMaps[event].parse(data);
+    return this.pusher.trigger(channel, event, parsed);
+  }
+
+  public authenticateOrgMember(
     socketId: string,
     orgMemberPublicId: TypeId<'orgMembers'>
   ) {
     return this.pusher.authenticateUser(socketId, {
       id: orgMemberPublicId
     });
+  }
+
+  public authorizeSpaceChannel(
+    socketId: string,
+    spacePublicId: TypeId<'spaces'>
+  ) {
+    return this.pusher.authorizeChannel(
+      socketId,
+      `private-space-${spacePublicId}`
+    );
   }
 }

@@ -49,7 +49,7 @@ function NewConvoButton() {
         aria-current={isActive}
         className="hover:bg-accent-2 hover:text-base-9 text-base-9 [&[aria-current=true]]:text-base-12 group flex h-20 w-24 flex-col items-center justify-center gap-2 px-1 py-1"
         asChild>
-        <Link href={scopedUrl('/convo/new')}>
+        <Link href={scopedUrl('/convo/new', true)}>
           <div className="bg-accent-9 text-base-1 group-[&[aria-current=true]]:bg-accent-10 rounded-lg p-2">
             <Plus
               size={16}
@@ -75,7 +75,7 @@ function ConvoSpacesButton() {
         aria-current={isActive}
         className="hover:bg-accent-2 hover:text-base-9 text-base-9 [&[aria-current=true]]:text-base-12 flex h-20 w-24 flex-col items-center justify-center gap-2 px-1 py-1"
         asChild>
-        <Link href={scopedUrl('/convo')}>
+        <Link href={scopedUrl('/convo', true)}>
           <div className="p-1">
             <ChatCircle
               size={24}

@@ -7,19 +7,23 @@ import {
   ContextMenuTrigger,
   ContextMenuItem
 } from '@/src/components/shadcn-ui/context-menu';
-import { useOrgScopedRouter, useOrgShortcode } from '@/src/hooks/use-params';
-import { formatParticipantData, useDeleteConvo$Cache } from '../utils';
-import { Eye, EyeSlash, Trash } from '@phosphor-icons/react/dist/ssr';
+import {
+  type Convo,
+  formatParticipantData,
+  useDeleteConvo$Cache
+} from '../utils';
+import { useOrgShortcode, useSpaceShortcode } from '@/src/hooks/use-params';
 import { Checkbox } from '@/src/components/shadcn-ui/checkbox';
-import { platform, type RouterOutputs } from '@/src/lib/trpc';
 import { AvatarPlus } from '@/src/components/avatar-plus';
 import { useIsMobile } from '@/src/hooks/use-is-mobile';
+import { Trash } from '@phosphor-icons/react/dist/ssr';
 import { useTimeAgo } from '@/src/hooks/use-time-ago';
 import { useLongPress } from '@uidotdev/usehooks';
 import { Avatar } from '@/src/components/avatar';
 import { type TypeId } from '@u22n/utils/typeid';
 import { usePathname } from 'next/navigation';
 import { convoListSelecting } from '../atoms';
+import { platform } from '@/src/lib/trpc';
 import { memo, useMemo } from 'react';
 import { cn } from '@/src/lib/utils';
 import { useAtomValue } from 'jotai';
@@ -29,24 +33,29 @@ export const ConvoItem = memo(function ConvoItem({
   convo,
   selected,
   onSelect,
-  hidden
+  // hidden,
+  linkBase
 }: {
-  convo: RouterOutputs['convos']['getOrgMemberConvos']['data'][number];
+  convo: Convo;
   selected: boolean;
+  // hidden: boolean;
+  linkBase: string;
   onSelect: (shiftKey: boolean) => void;
-  hidden: boolean;
 }) {
   const orgShortcode = useOrgShortcode();
-  const { scopedUrl } = useOrgScopedRouter();
+  const spaceShortcode = useSpaceShortcode(false);
   const selecting = useAtomValue(convoListSelecting);
   const isMobile = useIsMobile();
 
   const deleteConvoFromCache = useDeleteConvo$Cache();
   const { mutate: deleteConvo } = platform.convos.deleteConvo.useMutation({
     onSuccess: (_, { convoPublicId }) =>
-      deleteConvoFromCache(convoPublicId as TypeId<'convos'>)
+      deleteConvoFromCache({
+        convoPublicId: convoPublicId as TypeId<'convos'>,
+        spaceShortcode: spaceShortcode ?? 'personal'
+      })
   });
-  const { mutate: hideConvo } = platform.convos.hideConvo.useMutation();
+  // const { mutate: hideConvo } = platform.convos.hideConvo.useMutation();
 
   const timeAgo = useTimeAgo(convo.lastUpdatedAt);
 
@@ -85,9 +94,7 @@ export const ConvoItem = memo(function ConvoItem({
   }, [participantData]);
 
   const currentPath = usePathname();
-  const link = scopedUrl(`/convo/${convo.publicId}`);
-
-  const isActive = currentPath === link;
+  const isActive = currentPath === `${linkBase}/${convo.publicId}`;
 
   const longPressHandlers = useLongPress(
     (e) => {
@@ -113,7 +120,7 @@ export const ConvoItem = memo(function ConvoItem({
             : undefined
         }>
         <Link
-          href={link}
+          href={`${linkBase}/${convo.publicId}`}
           className={cn(
             'flex h-full flex-row gap-2 overflow-visible rounded-xl border-2 px-2 py-3',
             isActive
@@ -190,7 +197,7 @@ export const ConvoItem = memo(function ConvoItem({
       </ContextMenuTrigger>
       <ContextMenuContent>
         <ContextMenuGroup>
-          <ContextMenuItem
+          {/* <ContextMenuItem
             className="gap-2"
             onClick={() =>
               hideConvo({
@@ -208,7 +215,7 @@ export const ConvoItem = memo(function ConvoItem({
                 <EyeSlash /> Hide
               </>
             )}
-          </ContextMenuItem>
+          </ContextMenuItem> */}
           <ContextMenuItem
             className="gap-2"
             onClick={async () =>

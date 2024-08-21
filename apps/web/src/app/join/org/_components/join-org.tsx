@@ -46,13 +46,18 @@ export function JoinOrg({
       enabled: inviteCode.length === 32
     }
   );
+
+  const utils = platform.useUtils();
+
   const {
     mutate: joinOrg,
     error: joinError,
     isPending: isJoining
   } = platform.org.users.invites.redeemInvite.useMutation({
-    onSuccess: ({ success }) => {
+    onSuccess: async ({ success }) => {
       if (success) {
+        await utils.org.crud.getAccountOrgs.invalidate();
+        await utils.account.profile.getOrgMemberProfile.invalidate();
         toast.success(`You have joined ${inviteData?.orgName}!`);
         router.push(`/join/profile?org=${inviteData?.orgShortcode}`);
         setModalOpen(false);

@@ -11,21 +11,22 @@ import Link from 'next/link';
 type ClaimAddressModalProps = {
   address: string;
   setOpen: (open: boolean) => void;
-  onSuccess: () => void;
 };
 
 export function ClaimAddressModal({
   setOpen,
-  address,
-  onSuccess
+  address
 }: ClaimAddressModalProps) {
   const orgShortcode = useOrgShortcode();
+  const utils = platform.useUtils();
 
   const { mutate: claimAddressConfirm, isPending: isClaiming } =
     platform.account.addresses.claimPersonalAddress.useMutation({
-      onSuccess: () => {
+      onSuccess: async () => {
+        await utils.account.addresses.getPersonalAddresses.invalidate();
+        await utils.org.mail.emailIdentities.getOrgEmailIdentities.invalidate();
+        await utils.org.mail.emailIdentities.getUserEmailIdentities.invalidate();
         setOpen(false);
-        onSuccess();
       }
     });
 

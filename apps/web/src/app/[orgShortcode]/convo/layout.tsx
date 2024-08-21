@@ -1,37 +1,37 @@
 'use client';
 import {
   Breadcrumb,
-  BreadcrumbEllipsis,
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbSeparator
 } from '@/src/components/shadcn-ui/breadcrumb';
 import {
-  useAddSingleConvo$Cache,
-  useDeleteConvo$Cache,
-  useToggleConvoHidden$Cache,
-  useUpdateConvoMessageList$Cache
-} from './utils';
-import {
   CaretRight,
   ChatCircle,
-  Eye,
-  EyeSlash,
+  // Eye,
+  // EyeSlash,
   Minus,
-  Trash,
-  User
+  SpinnerGap,
+  SquaresFour,
+  Trash
 } from '@phosphor-icons/react';
+import {
+  useCurrentConvoId,
+  useOrgScopedRouter,
+  useOrgShortcode,
+  useSpaceShortcode
+} from '@/src/hooks/use-params';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger
 } from '@/src/components/shadcn-ui/tooltip';
 import {
-  type Dispatch,
+  // type Dispatch,
   type ReactNode,
-  type SetStateAction,
-  useEffect
+  // type SetStateAction,
+  useMemo
 } from 'react';
 import {
   convoListSelecting,
@@ -39,18 +39,15 @@ import {
   showNewConvoPanel
 } from './atoms';
 import { DeleteMultipleConvosModal } from './_components/delete-convos-modal';
-import { useOrgScopedRouter, useOrgShortcode } from '@/src/hooks/use-params';
-import { useRealtime } from '@/src/providers/realtime-provider';
 import { OrgIssueAlerts } from './_components/org-issue-alerts';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { useParams, usePathname } from 'next/navigation';
 import { useIsMobile } from '@/src/hooks/use-is-mobile';
 import { ConvoList } from './_components/convo-list';
+import { usePathname } from 'next/navigation';
 import { platform } from '@/src/lib/trpc';
 import { cn } from '@/src/lib/utils';
 import { ms } from '@u22n/utils/ms';
-import { useState } from 'react';
 import Link from 'next/link';
 
 function ChildrenWithOrgIssues({ children }: { children: ReactNode }) {
@@ -73,64 +70,41 @@ function ChildrenWithOrgIssues({ children }: { children: ReactNode }) {
   );
 }
 
-function ConvoNavHeader({
-  showHidden,
-  setShowHidden
-}: {
-  showHidden: boolean;
-  setShowHidden: Dispatch<SetStateAction<boolean>>;
-}) {
+function ConvoNavHeader(
+  {
+    // showHidden,
+    // setShowHidden
+  }: {
+    // showHidden: boolean;
+    // setShowHidden: Dispatch<SetStateAction<boolean>>;
+  }
+) {
   const orgShortcode = useOrgShortcode();
+  const spaceShortcode = useSpaceShortcode();
   const { scopedUrl } = useOrgScopedRouter();
 
-  const { mutate: hideConvo } = platform.convos.hideConvo.useMutation({
-    onSettled: () => {
-      setSelection([]);
-    }
-  });
+  // const { mutate: hideConvo } = platform.convos.hideConvo.useMutation({
+  //   onSettled: () => {
+  //     setSelection([]);
+  //   }
+  // });
 
-  const adminIssuesCache = platform.useUtils().org.store.getOrgIssues;
+  const spaceDisplayPropertiesQuery =
+    platform.spaces.getSpaceDisplayProperties.useQuery({
+      orgShortcode: orgShortcode,
+      spaceShortcode: spaceShortcode
+    });
 
-  const addConvo = useAddSingleConvo$Cache();
-  const toggleConvoHidden = useToggleConvoHidden$Cache();
-  const deleteConvo = useDeleteConvo$Cache();
-  const updateConvoMessageList = useUpdateConvoMessageList$Cache();
-  const client = useRealtime();
+  const {
+    data: spaceDisplayProperties,
+    isLoading: spaceDisplayPropertiesLoading,
+    error: spaceDisplayPropertiesError
+  } = spaceDisplayPropertiesQuery;
 
   const pathname = usePathname();
   const setNewPanelOpen = useSetAtom(showNewConvoPanel);
   const selectingMode = useAtomValue(convoListSelecting);
   const [selection, setSelection] = useAtom(convoListSelection);
-
-  useEffect(() => {
-    client.on('convo:new', ({ publicId }) => addConvo(publicId));
-    client.on('convo:hidden', ({ publicId, hidden }) =>
-      toggleConvoHidden(publicId, hidden)
-    );
-    client.on('convo:deleted', ({ publicId }) => deleteConvo(publicId));
-    client.on('convo:entry:new', ({ convoPublicId, convoEntryPublicId }) =>
-      updateConvoMessageList(convoPublicId, convoEntryPublicId)
-    );
-    client.on(
-      'admin:issue:refresh',
-      async () => void adminIssuesCache.refetch()
-    );
-
-    return () => {
-      client.off('convo:new');
-      client.off('convo:hidden');
-      client.off('convo:deleted');
-      client.off('convo:entry:new');
-      client.off('admin:issue:refresh');
-    };
-  }, [
-    client,
-    addConvo,
-    toggleConvoHidden,
-    deleteConvo,
-    updateConvoMessageList,
-    adminIssuesCache
-  ]);
 
   const isInConvo =
     !pathname.endsWith('/convo') && !pathname.endsWith('/convo/new');
@@ -172,7 +146,7 @@ function ConvoNavHeader({
                 </Tooltip>
               </Button>
             </DeleteMultipleConvosModal>
-            <Button
+            {/* <Button
               variant="outline"
               size="icon-sm"
               onClick={() =>
@@ -190,7 +164,7 @@ function ConvoNavHeader({
                   {!showHidden ? 'Hide all selected' : 'Unhide all selected'}
                 </TooltipContent>
               </Tooltip>
-            </Button>
+            </Button> */}
           </div>
         </div>
       ) : (
@@ -202,13 +176,31 @@ function ConvoNavHeader({
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem>
-                  <div className="bg-blue-5 text-blue-9 flex h-6 w-6 items-center justify-center rounded-sm">
-                    <User
-                      weight="bold"
-                      className="h-4 w-4"
+                  {spaceDisplayPropertiesLoading ? (
+                    <SpinnerGap
+                      className="size-4 animate-spin"
+                      size={16}
                     />
-                  </div>
-                  <BreadcrumbEllipsis />
+                  ) : spaceDisplayPropertiesError ? (
+                    <span>Unnamed Space</span>
+                  ) : (
+                    <div className="flex w-full max-w-full flex-row items-center gap-2 truncate p-1">
+                      <div
+                        className="flex h-6 min-h-6 w-6 min-w-6 items-center justify-center rounded-sm"
+                        style={{
+                          backgroundColor: `var(--${spaceDisplayProperties?.space?.color ?? 'base'}4)`,
+                          color: `var(--${spaceDisplayProperties?.space?.color ?? 'base'}9)`
+                        }}>
+                        <SquaresFour
+                          className="h-4 w-4"
+                          weight="bold"
+                        />
+                      </div>
+                      <span className="text-slate-11 h-full truncate">
+                        {spaceDisplayProperties?.space?.name ?? 'Unnamed Space'}
+                      </span>
+                    </div>
+                  )}
                 </BreadcrumbItem>
                 <BreadcrumbSeparator>
                   <CaretRight />
@@ -221,8 +213,9 @@ function ConvoNavHeader({
                     />
                   </div>
                   <BreadcrumbLink asChild>
-                    <Link href={scopedUrl('/convo')}>
-                      {showHidden ? 'Hidden Conversations' : 'Conversations'}
+                    <Link href={scopedUrl('/convo', true)}>
+                      Conversations
+                      {/* {showHidden ? 'Hidden Conversations' : 'Conversations'} */}
                     </Link>
                   </BreadcrumbLink>
                 </BreadcrumbItem>
@@ -230,18 +223,18 @@ function ConvoNavHeader({
             </Breadcrumb>
           </div>
           <div className={'flex w-fit flex-row gap-2'}>
-            <Button
+            {/* <Button
               variant="outline"
               size="icon"
               onClick={() => setShowHidden(!showHidden)}>
               {showHidden ? <EyeSlash /> : <Eye />}
-            </Button>
+            </Button> */}
             {!isInConvo ? (
               <Button
                 variant="default"
                 asChild
                 size="xs">
-                <Link href={scopedUrl('/convo/new')}>New</Link>
+                <Link href={scopedUrl('/convo/new', true)}>New</Link>
               </Button>
             ) : (
               <Button
@@ -258,34 +251,40 @@ function ConvoNavHeader({
   );
 }
 
-function ConvoNav({
-  showHidden,
-  setShowHidden
+// function ConvoNav({
+//   showHidden,
+//   setShowHidden
+// }: {
+//   showHidden: boolean;
+//   setShowHidden: Dispatch<SetStateAction<boolean>>;
+// }) {
+//   return (
+//     <div className="flex h-full w-full min-w-96 flex-col gap-2 p-2 pt-3 xl:col-span-1 xl:min-w-80">
+//       <ConvoNavHeader
+//         showHidden={showHidden}
+//         setShowHidden={setShowHidden}
+//       />
+//       <OrgConvoList hidden={showHidden} />
+//     </div>
+//   );
+// }
+
+function ConvoLayoutWrapper({
+  children,
+  convoList
+  // showHidden,
+  // setShowHidden
 }: {
-  showHidden: boolean;
-  setShowHidden: Dispatch<SetStateAction<boolean>>;
+  children: React.ReactNode;
+  convoList: React.ReactNode;
+  // showHidden: boolean;
+  // setShowHidden: Dispatch<SetStateAction<boolean>>;
 }) {
-  return (
-    <div className="flex h-full w-full min-w-96 flex-col gap-2 p-2 pt-3 xl:col-span-1 xl:min-w-80">
-      <ConvoNavHeader
-        showHidden={showHidden}
-        setShowHidden={setShowHidden}
-      />
-      <ConvoList hidden={showHidden} />
-    </div>
-  );
-}
-
-export default function Layout({
-  children
-}: Readonly<{ children: React.ReactNode }>) {
   const isMobile = useIsMobile();
-
-  const params = useParams();
+  const convoId = useCurrentConvoId();
   const pathname = usePathname();
-  const [showHidden, setShowHidden] = useState(false);
 
-  const isInConvo = !!params.convoId;
+  const isInConvo = Boolean(convoId);
   const isNewPage = pathname.endsWith('/convo/new');
 
   return (
@@ -295,23 +294,52 @@ export default function Layout({
       )}>
       {!isMobile && (
         <>
-          <ConvoNav
-            setShowHidden={setShowHidden}
-            showHidden={showHidden}
-          />
+          <div className="flex h-full w-full min-w-96 flex-col gap-2 p-2 pt-3 xl:col-span-1 xl:min-w-80">
+            <ConvoNavHeader
+            // showHidden={showHidden}
+            // setShowHidden={setShowHidden}
+            />
+            {convoList}
+          </div>
           <ChildrenWithOrgIssues>{children}</ChildrenWithOrgIssues>
         </>
       )}
 
       {isMobile &&
         (!isInConvo && !isNewPage ? (
-          <ConvoNav
-            setShowHidden={setShowHidden}
-            showHidden={showHidden}
-          />
+          <div className="flex h-full w-full min-w-96 flex-col gap-2 p-2 pt-3 xl:col-span-1 xl:min-w-80">
+            <ConvoNavHeader
+            // showHidden={showHidden}
+            // setShowHidden={setShowHidden}
+            />
+            {convoList}
+          </div>
         ) : (
           <ChildrenWithOrgIssues>{children}</ChildrenWithOrgIssues>
         ))}
     </div>
+  );
+}
+
+export default function Layout({ children }: { children: React.ReactNode }) {
+  // const [showHidden, setShowHidden] = useState(false);
+  const convoList = useMemo(
+    () => (
+      <ConvoList
+      //  hidden={showHidden}
+      />
+    ),
+    // [showHidden]
+    []
+  );
+
+  return (
+    <ConvoLayoutWrapper
+      convoList={convoList}
+      // showHidden={showHidden}
+      // setShowHidden={setShowHidden}
+    >
+      {children}
+    </ConvoLayoutWrapper>
   );
 }

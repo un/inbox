@@ -121,6 +121,54 @@ export const orgAdminProcedure = orgProcedure.use(async ({ ctx, next }) => {
   return next();
 });
 
+// export const spaceProcedure = orgProcedure
+//   .input(z.object({ spaceShortcode: z.string() }))
+//   .use(({ input, ctx, next }) =>
+//     ctx.event
+//       .get('otel')
+//       .tracer.startActiveSpan(`Validate orgShortCode`, async (span) => {
+//         const { orgShortCode } = input;
+//         span.setAttribute('org.shortCode', orgShortCode);
+//         const orgData = await validateOrgShortCode(orgShortCode);
+
+//         if (!orgData) {
+//           span.setAttributes({ 'org.found': false });
+//           span.end();
+//           throw new TRPCError({
+//             code: 'NOT_FOUND',
+//             message: 'Organization not found'
+//           });
+//         }
+
+//         const accountId = ctx.account.id;
+//         const orgMembership = orgData.members.find(
+//           (member) => member.accountId === accountId
+//         );
+
+//         if (!accountId || !orgMembership) {
+//           span.setAttributes({ 'org.is_member': false });
+//           span.end();
+//           ctx.event.header('Location', '/');
+//           throw new TRPCError({
+//             code: 'UNAUTHORIZED',
+//             message: 'You are not a member of this organization, redirecting...'
+//           });
+//         }
+//         span.setAttributes({
+//           'org.found': true,
+//           'org.is_member': true,
+//           'org.member_id': orgMembership.id
+//         });
+//         span.end();
+//         return next({
+//           ctx: {
+//             ...ctx,
+//             org: { ...orgData, memberId: orgMembership.id }
+//           }
+//         });
+//       })
+//   );
+
 export const turnstileProcedure = publicProcedure
   .input(z.object({ turnstileToken: z.string().optional() }))
   .use(async ({ input, ctx, next }) => {

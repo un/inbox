@@ -2,10 +2,8 @@ import { typeIdValidator } from '@u22n/utils/typeid';
 import { z } from 'zod';
 
 export const eventDataMaps = {
-  'platform:update': z.string(),
-  'convo:new': z.object({
-    publicId: typeIdValidator('convos')
-  }),
+  'platform:update': z.object({ version: z.string() }),
+  'convo:new': z.object({ publicId: typeIdValidator('convos') }),
   'convo:hidden': z.object({
     publicId: z.array(typeIdValidator('convos')).or(typeIdValidator('convos')),
     hidden: z.boolean()
@@ -17,8 +15,7 @@ export const eventDataMaps = {
     convoPublicId: typeIdValidator('convos'),
     convoEntryPublicId: typeIdValidator('convoEntries')
   }),
-  'convo:updated': z.null(),
-  'admin:issue:refresh': z.null()
+  'admin:issue:refresh': z.object({})
 } as const;
 
 export type EventDataMap = typeof eventDataMaps;

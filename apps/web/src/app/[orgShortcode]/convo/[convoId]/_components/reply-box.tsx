@@ -27,10 +27,10 @@ import {
   type EditorFunctions
 } from '@u22n/tiptap/components';
 import { useAttachmentUploader } from '@/src/components/shared/attachments';
+import { useOrgShortcode, useSpaceShortcode } from '@/src/hooks/use-params';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { emailIdentityAtom, replyToMessageAtom } from '../atoms';
 import { Button } from '@/src/components/shadcn-ui/button';
-import { useOrgShortcode } from '@/src/hooks/use-params';
 import { useIsMobile } from '@/src/hooks/use-is-mobile';
 import { emptyTiptapEditorContent } from '@u22n/tiptap';
 import { useDraft } from '@/src/stores/draft-store';
@@ -57,6 +57,7 @@ export function ReplyBox({
   const { draft, setDraft, resetDraft } = useDraft(convoId);
   const [editorText, setEditorText] = useState(draft.content);
   const orgShortcode = useOrgShortcode();
+  const spaceShortcode = useSpaceShortcode(false);
   const replyTo = useAtomValue(replyToMessageAtom);
   const addConvoToCache = useUpdateConvoMessageList$Cache();
   const updateConvoData = useUpdateConvoData$Cache();
@@ -96,12 +97,15 @@ export function ReplyBox({
   const { data: emailIdentities, isLoading: emailIdentitiesLoading } =
     platform.org.mail.emailIdentities.getUserEmailIdentities.useQuery(
       {
-        orgShortcode
+        orgShortcode,
+        spaceShortcode,
+        convoPublicId: convoId
       },
       {
         staleTime: ms('1 hour')
       }
     );
+
   const { data: isAdmin } =
     platform.org.users.members.isOrgMemberAdmin.useQuery(
       {
@@ -158,21 +162,29 @@ export function ReplyBox({
         messageType: type,
         sendAsEmailIdentityPublicId: emailIdentity ?? undefined
       });
-      await addConvoToCache(convoId, publicId);
-      await updateConvoData(convoId, (oldData) => {
-        const author = oldData.participants.find(
-          (participant) =>
-            participant.publicId === oldData.entries[0]?.author.publicId
-        );
-        if (!author) return oldData;
-        const newEntry: (typeof oldData.entries)[0] = {
-          author: structuredClone(author),
-          bodyPlainText,
-          type
-        };
-        oldData.lastUpdatedAt = new Date();
-        oldData.entries.unshift(newEntry);
-        return oldData;
+      await addConvoToCache({
+        convoId,
+        convoEntryPublicId: publicId,
+        spaceShortcode: spaceShortcode ?? 'personal'
+      });
+      await updateConvoData({
+        convoId,
+        dataUpdater: (oldData) => {
+          const author = oldData.participants.find(
+            (participant) =>
+              participant.publicId === oldData.entries[0]?.author.publicId
+          );
+          if (!author) return oldData;
+          const newEntry: (typeof oldData.entries)[0] = {
+            author: structuredClone(author),
+            bodyPlainText,
+            type
+          };
+          oldData.lastUpdatedAt = new Date();
+          oldData.entries.unshift(newEntry);
+          return oldData;
+        },
+        spaceShortcode: spaceShortcode ?? 'personal'
       });
 
       onReply();
@@ -188,6 +200,7 @@ export function ReplyBox({
       orgShortcode,
       replyTo,
       replyToConvo,
+      spaceShortcode,
       updateConvoData
     ]
   );

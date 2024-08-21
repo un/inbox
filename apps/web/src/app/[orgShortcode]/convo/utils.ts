@@ -2,10 +2,20 @@ import { platform, type RouterOutputs } from '@/src/lib/trpc';
 import { type InfiniteData } from '@tanstack/react-query';
 import { useOrgShortcode } from '@/src/hooks/use-params';
 import { type TypeId } from '@u22n/utils/typeid';
+import { ms } from '@u22n/utils/ms';
 import { useCallback } from 'react';
+import { produce } from 'immer';
+
+type GetSpacesConvo = RouterOutputs['spaces']['getSpaceConvos'];
+export type Convo = GetSpacesConvo['data'][number];
+
+type InfiniteConvoListUpdater = InfiniteData<
+  GetSpacesConvo,
+  { lastUpdatedAt?: Date; lastPublicId?: string } | null
+>;
 
 export function formatParticipantData(
-  participant: RouterOutputs['convos']['getOrgMemberConvos']['data'][number]['participants'][number]
+  participant: Convo['participants'][number]
 ) {
   const typePublicId =
     participant.orgMember?.publicId ??
@@ -66,53 +76,73 @@ export function useAddSingleConvo$Cache() {
   const utils = platform.useUtils();
 
   return useCallback(
-    async (convoId: TypeId<'convos'>) => {
-      const convo = await utils.convos.getOrgMemberSpecificConvo.ensureData({
-        convoPublicId: convoId,
-        orgShortcode
-      });
-      utils.convos.getOrgMemberConvos.setInfiniteData(
-        { orgShortcode },
-        (updater) => {
+    async ({
+      convoPublicId,
+      spaceShortcode
+    }: {
+      convoPublicId: TypeId<'convos'>;
+      spaceShortcode: string;
+    }) => {
+      const convo = await utils.convos.getOrgMemberSpecificConvo.ensureData(
+        {
+          convoPublicId,
+          orgShortcode
+        },
+        { staleTime: ms('1 minute') }
+      );
+      const targets = [spaceShortcode, 'all'].map((spaceShortcode) => ({
+        orgShortcode,
+        spaceShortcode
+      }));
+      // Update the target space and all conversations
+      for (const target of targets) {
+        utils.spaces.getSpaceConvos.setInfiniteData(target, (updater) => {
           if (!updater || !convo) return;
           // If convo already exists in the cache, don't add it again
           if (
             updater.pages.some((page) =>
-              page.data.some((c) => c.publicId === convoId)
+              page.data.some((c) => c.publicId === convoPublicId)
             )
           )
             return;
-          const clonedUpdater = structuredClone(updater);
-          const clonedConvo = structuredClone(convo);
-          clonedUpdater.pages.at(0)?.data.unshift(clonedConvo);
-          return clonedUpdater;
-        }
-      );
+          return produce(updater, (draft) => {
+            const targetPage = draft.pages[0];
+            if (targetPage) targetPage.data.unshift(structuredClone(convo));
+          });
+        });
+      }
     },
     [
       orgShortcode,
-      utils.convos.getOrgMemberConvos,
-      utils.convos.getOrgMemberSpecificConvo
+      utils.convos.getOrgMemberSpecificConvo,
+      utils.spaces.getSpaceConvos
     ]
   );
 }
 
 const deleteConvoFromInfiniteData = (
   convoId: TypeId<'convos'>,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  updater?: InfiniteData<RouterOutputs['convos']['getOrgMemberConvos'], any>
+  updater?: InfiniteConvoListUpdater
 ) => {
   if (!updater) return;
-  const clonedUpdater = structuredClone(updater);
-  for (const page of clonedUpdater.pages) {
-    const convoIndex = page.data.findIndex(
-      (convo) => convo.publicId === convoId
-    );
-    if (convoIndex === -1) continue;
-    page.data.splice(convoIndex, 1);
-    break;
-  }
-  return clonedUpdater;
+  // If convo is not in the cache, don't delete it
+  if (
+    !updater.pages.some((page) =>
+      page.data.some((convo) => convo.publicId === convoId)
+    )
+  )
+    return;
+
+  return produce(updater, (draft) => {
+    draft.pages = draft.pages.map((page) => {
+      const convoIndex = page.data.findIndex(
+        (convo) => convo.publicId === convoId
+      );
+      if (convoIndex === -1) return page;
+      page.data.splice(convoIndex, 1);
+      return page;
+    });
+  });
 };
 
 export function useDeleteConvo$Cache() {
@@ -120,183 +150,59 @@ export function useDeleteConvo$Cache() {
   const utils = platform.useUtils();
 
   return useCallback(
-    async (convoId: TypeId<'convos'> | TypeId<'convos'>[]) => {
-      const convos = Array.isArray(convoId) ? convoId : [convoId];
-      await utils.convos.getOrgMemberConvos.cancel({ orgShortcode });
-      await utils.convos.getOrgMemberConvos.cancel({
-        orgShortcode,
-        includeHidden: true
-      });
+    async ({
+      convoPublicId,
+      spaceShortcode
+    }: {
+      convoPublicId: TypeId<'convos'> | TypeId<'convos'>[];
+      spaceShortcode: string;
+    }) => {
+      const convos = Array.isArray(convoPublicId)
+        ? convoPublicId
+        : [convoPublicId];
 
-      await Promise.allSettled(
-        convos.map(async (convoId) => {
-          await utils.convos.getConvo.invalidate({
-            convoPublicId: convoId,
-            orgShortcode
-          });
-          await utils.convos.getOrgMemberSpecificConvo.invalidate({
-            convoPublicId: convoId,
-            orgShortcode
-          });
-          await utils.convos.entries.getConvoEntries.invalidate({
-            convoPublicId: convoId,
-            orgShortcode
-          });
-          utils.convos.getOrgMemberConvos.setInfiniteData(
-            { orgShortcode },
-            (updater) => deleteConvoFromInfiniteData(convoId, updater)
-          );
-
-          utils.convos.getOrgMemberConvos.setInfiniteData(
-            { orgShortcode, includeHidden: true },
-            (updater) => deleteConvoFromInfiniteData(convoId, updater)
-          );
-        })
-      );
-    },
-    [
-      orgShortcode,
-      utils.convos.getConvo,
-      utils.convos.getOrgMemberConvos,
-      utils.convos.entries.getConvoEntries,
-      utils.convos.getOrgMemberSpecificConvo
-    ]
-  );
-}
-
-const infiniteConvoListUpdater = (
-  hideFromList: boolean,
-  convoToAdd: RouterOutputs['convos']['getOrgMemberSpecificConvo'] | null,
-  convoToRemove: TypeId<'convos'> | null,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  updater?: InfiniteData<RouterOutputs['convos']['getOrgMemberConvos'], any>
-) => {
-  if (!updater) return;
-  const clonedUpdater = structuredClone(updater);
-
-  if (hideFromList) {
-    for (const page of clonedUpdater.pages) {
-      const convoIndex = page.data.findIndex(
-        (convo) => convo.publicId === convoToRemove
-      );
-      if (convoIndex === -1) continue;
-      page.data.splice(convoIndex, 1);
-      break;
-    }
-  } else {
-    if (!convoToAdd)
-      throw new Error(
-        'Trying to unhide from convo list without providing the convo to add'
-      );
-    const clonedConvo = structuredClone(convoToAdd);
-    let convoAlreadyAdded = false;
-    for (const page of clonedUpdater.pages) {
-      const insertIndex = page.data.findIndex(
-        (convo) => convo.lastUpdatedAt < clonedConvo.lastUpdatedAt
-      );
-      if (insertIndex === -1) {
-        continue;
-      } else {
-        page.data.splice(insertIndex, 0, clonedConvo);
+      // Find if any of the convos are open and add the deleted query param
+      if (
+        convos.some((convoPublicId) =>
+          window.location.pathname.includes(convoPublicId)
+        )
+      ) {
+        window.history.replaceState(
+          {},
+          document.title,
+          `${window.location.pathname}?deleted=true`
+        );
       }
-      convoAlreadyAdded = true;
-      break;
-    }
 
-    // If convo is the oldest, add it to the last page as the last item
-    if (!convoAlreadyAdded) {
-      clonedUpdater.pages.at(-1)?.data.push(clonedConvo);
-    }
-  }
-  return clonedUpdater;
-};
-
-// TODO: Simplify this function later, its too complex
-export function useToggleConvoHidden$Cache() {
-  const orgShortcode = useOrgShortcode();
-  const utils = platform.useUtils();
-
-  return useCallback(
-    async (convoId: TypeId<'convos'> | TypeId<'convos'>[], hide = false) => {
-      const convos = Array.isArray(convoId) ? convoId : [convoId];
       await Promise.allSettled(
-        convos.map(async (convoId) => {
-          await utils.convos.getConvo.cancel({
-            convoPublicId: convoId,
-            orgShortcode
-          });
-          utils.convos.getConvo.setData(
-            { convoPublicId: convoId, orgShortcode },
-            (updater) => {
-              if (!updater) return;
-              const clonedUpdater = structuredClone(updater);
-              const participantIndex =
-                clonedUpdater.data.participants.findIndex(
-                  (participant) =>
-                    participant.publicId === updater.ownParticipantPublicId
-                );
-              if (participantIndex === -1) return;
-              clonedUpdater.data.participants[participantIndex]!.hidden = hide;
-              return clonedUpdater;
-            }
-          );
+        convos.map(async (convoPublicId) => {
+          void utils.convos.getConvo
+            .fetch(
+              { convoPublicId, orgShortcode },
+              { meta: { noGlobalError: true } }
+            )
+            .catch(() => void 0);
+          void utils.convos.getOrgMemberSpecificConvo
+            .fetch(
+              { convoPublicId, orgShortcode },
+              { meta: { noGlobalError: true } }
+            )
+            .catch(() => void 0);
+          void utils.convos.entries.getConvoEntries
+            .fetch(
+              { convoPublicId, orgShortcode },
+              { meta: { noGlobalError: true } }
+            )
+            .catch(() => void 0);
 
-          const convoToAdd =
-            await utils.convos.getOrgMemberSpecificConvo.ensureData({
-              convoPublicId: convoId,
-              orgShortcode
-            });
-
-          // Update both hidden and non-hidden convo lists
-          await utils.convos.getOrgMemberConvos.cancel({
+          const targets = [spaceShortcode, 'all'].map((spaceShortcode) => ({
             orgShortcode,
-            includeHidden: true
-          });
-          await utils.convos.getOrgMemberConvos.cancel({ orgShortcode });
+            spaceShortcode
+          }));
 
-          // if we are hiding a convo, we need to remove it from the non-hidden list and add to hidden list
-          if (hide) {
-            utils.convos.getOrgMemberConvos.setInfiniteData(
-              { orgShortcode },
-              (updater) =>
-                infiniteConvoListUpdater(
-                  /* hide from non-hidden */ true,
-                  null,
-                  convoId,
-                  updater
-                )
-            );
-            utils.convos.getOrgMemberConvos.setInfiniteData(
-              { orgShortcode, includeHidden: true },
-              (updater) =>
-                infiniteConvoListUpdater(
-                  /* add from hidden */ false,
-                  convoToAdd,
-                  null,
-                  updater
-                )
-            );
-          } else {
-            // if we are un-hiding a convo, we need to remove it from the hidden list and add to non-hidden list
-            utils.convos.getOrgMemberConvos.setInfiniteData(
-              { orgShortcode },
-              (updater) =>
-                infiniteConvoListUpdater(
-                  /* add to non-hidden */ false,
-                  convoToAdd,
-                  null,
-                  updater
-                )
-            );
-            utils.convos.getOrgMemberConvos.setInfiniteData(
-              { orgShortcode, includeHidden: true },
-              (updater) =>
-                infiniteConvoListUpdater(
-                  /* hide from hidden */ true,
-                  null,
-                  convoId,
-                  updater
-                )
+          for (const target of targets) {
+            utils.spaces.getSpaceConvos.setInfiniteData(target, (updater) =>
+              deleteConvoFromInfiniteData(convoPublicId, updater)
             );
           }
         })
@@ -305,11 +211,145 @@ export function useToggleConvoHidden$Cache() {
     [
       orgShortcode,
       utils.convos.getConvo,
-      utils.convos.getOrgMemberConvos,
-      utils.convos.getOrgMemberSpecificConvo
+      utils.spaces.getSpaceConvos,
+      utils.convos.getOrgMemberSpecificConvo,
+      utils.convos.entries.getConvoEntries
     ]
   );
 }
+
+// const infiniteConvoListUpdater = (
+//   hideFromList: boolean,
+//   convoToAdd: Convo | null,
+//   convoToRemove: TypeId<'convos'> | null,
+//   updater?: InfiniteConvoListUpdater
+// ) => {
+//   if (!updater) return;
+//   const clonedUpdater = structuredClone(updater);
+
+//   if (hideFromList) {
+//     for (const page of clonedUpdater.pages) {
+//       const convoIndex = page.data.findIndex(
+//         (convo) => convo.publicId === convoToRemove
+//       );
+//       if (convoIndex === -1) continue;
+//       page.data.splice(convoIndex, 1);
+//       break;
+//     }
+//   } else {
+//     if (!convoToAdd)
+//       throw new Error(
+//         'Trying to unhide from convo list without providing the convo to add'
+//       );
+//     const clonedConvo = structuredClone(convoToAdd);
+//     let convoAlreadyAdded = false;
+//     for (const page of clonedUpdater.pages) {
+//       const insertIndex = page.data.findIndex(
+//         (convo) => convo.lastUpdatedAt < clonedConvo.lastUpdatedAt
+//       );
+//       if (insertIndex === -1) {
+//         continue;
+//       } else {
+//         page.data.splice(insertIndex, 0, clonedConvo);
+//       }
+//       convoAlreadyAdded = true;
+//       break;
+//     }
+
+//     // If convo is the oldest, add it to the last page as the last item
+//     if (!convoAlreadyAdded) {
+//       clonedUpdater.pages.at(-1)?.data.push(clonedConvo);
+//     }
+//   }
+//   return clonedUpdater;
+// };
+
+// TODO: Simplify this function later, its too complex
+// export function useToggleConvoHidden$Cache() {
+//   const orgShortcode = useOrgShortcode();
+//   const utils = platform.useUtils();
+
+//   return useCallback(
+//     async ({
+//       convoId,
+//       spaceShortcode,
+//       hide = false
+//     }: {
+//       convoId: TypeId<'convos'> | TypeId<'convos'>[];
+//       spaceShortcode: string;
+//       hide: boolean;
+//     }) => {
+//       const convos = Array.isArray(convoId) ? convoId : [convoId];
+
+//       await Promise.allSettled(
+//         convos.map(async (convoId) => {
+//           utils.convos.getConvo.setData(
+//             { convoPublicId: convoId, orgShortcode },
+//             (updater) => {
+//               if (!updater) return;
+//               const clonedUpdater = structuredClone(updater);
+//               const participantIndex =
+//                 clonedUpdater.data.participants.findIndex(
+//                   (participant) =>
+//                     participant.publicId === updater.ownParticipantPublicId
+//                 );
+//               if (participantIndex === -1) return;
+//               clonedUpdater.data.participants[participantIndex]!.hidden = hide;
+//               return clonedUpdater;
+//             }
+//           );
+
+//           const convoToAdd =
+//             await utils.convos.getOrgMemberSpecificConvo.ensureData(
+//               {
+//                 convoPublicId: convoId,
+//                 orgShortcode
+//               },
+//               { staleTime: ms('1 minute') }
+//             );
+
+//           const targets = [spaceShortcode, 'all']
+//             .map((spaceShortcode) =>
+//               [true, false].map((includeHidden) => ({
+//                 orgShortcode,
+//                 spaceShortcode,
+//                 includeHidden
+//               }))
+//             )
+//             .flat();
+
+//           for (const target of targets) {
+//             if (hide) {
+//               utils.spaces.getSpaceConvos.setInfiniteData(target, (updater) =>
+//                 infiniteConvoListUpdater(
+//                   /* hide from non-hidden */ true,
+//                   null,
+//                   convoId,
+//                   updater
+//                 )
+//               );
+//             } else {
+//               utils.spaces.getSpaceConvos.setInfiniteData(target, (updater) =>
+//                 infiniteConvoListUpdater(
+//                   /* add from hidden */ false,
+//                   convoToAdd,
+//                   null,
+//                   updater
+//                 )
+//               );
+//             }
+//           }
+//         })
+//       );
+//     },
+//     [
+//       orgShortcode,
+//       utils.convos.getConvo,
+//       utils.spaces.getSpaceConvos,
+//       utils.convos.getOrgMemberSpecificConvo
+//     ]
+//   );
+// }
 
 export function useUpdateConvoMessageList$Cache() {
   const orgShortcode = useOrgShortcode();
@@ -318,39 +358,55 @@ export function useUpdateConvoMessageList$Cache() {
 
   // TODO: make the reply mutation return the new convo entry, to save one API call
   return useCallback(
-    async (
-      convoId: TypeId<'convos'>,
-      convoEntryPublicId: TypeId<'convoEntries'>
-    ) => {
+    async ({
+      convoEntryPublicId,
+      spaceShortcode,
+      convoId
+    }: {
+      convoId: TypeId<'convos'>;
+      convoEntryPublicId: TypeId<'convoEntries'>;
+      spaceShortcode: string;
+    }) => {
       await utils.convos.entries.getConvoEntries.cancel({
         convoPublicId: convoId,
         orgShortcode
       });
       const convoEntry =
-        await utils.convos.entries.getConvoSingleEntry.ensureData({
-          convoPublicId: convoId,
-          convoEntryPublicId,
-          orgShortcode
-        });
-
-      await updateConvoData(convoId, (oldData) => {
-        const author = oldData.participants.find(
-          (participant) =>
-            participant.publicId === convoEntry.entry.author.publicId
+        await utils.convos.entries.getConvoSingleEntry.ensureData(
+          {
+            convoPublicId: convoId,
+            convoEntryPublicId,
+            orgShortcode
+          },
+          { staleTime: ms('1 minute') }
         );
 
-        if (!author) return oldData;
+      const targets = [spaceShortcode, 'all'];
 
-        const newEntry: (typeof oldData.entries)[0] = {
-          author: structuredClone(author),
-          bodyPlainText: convoEntry.entry.bodyPlainText,
-          type: convoEntry.entry.type
-        };
+      for (const target of targets) {
+        await updateConvoData({
+          convoId,
+          dataUpdater: (oldData) => {
+            const author = oldData.participants.find(
+              (participant) =>
+                participant.publicId === convoEntry.entry.author.publicId
+            );
 
-        oldData.lastUpdatedAt = new Date();
-        oldData.entries.unshift(newEntry);
-        return oldData;
-      });
+            if (!author) return oldData;
+
+            const newEntry: (typeof oldData.entries)[0] = {
+              author: structuredClone(author),
+              bodyPlainText: convoEntry.entry.bodyPlainText,
+              type: convoEntry.entry.type
+            };
+
+            oldData.lastUpdatedAt = new Date();
+            oldData.entries.unshift(newEntry);
+            return oldData;
+          },
+          spaceShortcode: target
+        });
+      }
 
       utils.convos.entries.getConvoEntries.setInfiniteData(
         { convoPublicId: convoId, orgShortcode },
@@ -378,31 +434,36 @@ export function useUpdateConvoMessageList$Cache() {
       });
     },
     [
-      orgShortcode,
-      updateConvoData,
-      utils.convos.getConvo,
       utils.convos.entries.getConvoEntries,
-      utils.convos.entries.getConvoSingleEntry
+      utils.convos.entries.getConvoSingleEntry,
+      utils.convos.getConvo,
+      orgShortcode,
+      updateConvoData
     ]
   );
 }
-
-type ConvoUpdater =
-  RouterOutputs['convos']['getOrgMemberConvos']['data'][number];
 
 export function useUpdateConvoData$Cache() {
   const orgShortcode = useOrgShortcode();
   const utils = platform.useUtils();
 
   return useCallback(
-    async (
-      convoId: TypeId<'convos'>,
-      dataUpdater: (oldData: ConvoUpdater) => ConvoUpdater
-    ) => {
-      await utils.convos.getOrgMemberConvos.cancel({ orgShortcode });
-      utils.convos.getOrgMemberConvos.setInfiniteData(
-        { orgShortcode },
-        (updater) => {
+    async ({
+      convoId,
+      dataUpdater,
+      spaceShortcode
+    }: {
+      convoId: TypeId<'convos'>;
+      dataUpdater: (oldData: Convo) => Convo;
+      spaceShortcode: string;
+    }) => {
+      const targets = [spaceShortcode, 'all'].map((spaceShortcode) => ({
+        orgShortcode,
+        spaceShortcode
+      }));
+
+      for (const target of targets) {
+        utils.spaces.getSpaceConvos.setInfiniteData(target, (updater) => {
           if (!updater) return;
           const clonedUpdater = structuredClone(updater);
 
@@ -431,9 +492,9 @@ export function useUpdateConvoData$Cache() {
           clonedUpdater.pages[0]?.data.unshift(updatedConvo);
 
           return clonedUpdater;
-        }
-      );
+        });
+      }
     },
-    [orgShortcode, utils.convos.getOrgMemberConvos]
+    [orgShortcode, utils.spaces.getSpaceConvos]
   );
 }

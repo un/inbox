@@ -50,7 +50,7 @@ export function NewConvoSheet() {
             size={'icon'}
             variant={'ghost'}
             onClick={() => {
-              scopedNavigate('/convo/new');
+              scopedNavigate('/convo/new', true);
               setOpen(false);
             }}>
             <ArrowsOutSimple

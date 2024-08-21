@@ -1,8 +1,8 @@
 'use client';
 
-import { LoadingSpinner } from '@/src/components/shared/loading-spinner';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { ProfileCard } from './_components/profile-card';
+import { SpinnerGap } from '@phosphor-icons/react';
 import { useCookies } from 'next-client-cookies';
 import { platform } from '@/src/lib/trpc';
 import Link from 'next/link';
@@ -64,7 +64,15 @@ export default function Page({
 
   const wasInvited = Boolean(cookies.get('un-invite-code'));
   if (isLoading || !orgData) {
-    return <LoadingSpinner spinnerSize={32} />;
+    return (
+      <div className="flex w-full flex-col items-center justify-center gap-2">
+        <SpinnerGap
+          className="size-6 animate-spin"
+          size={24}
+        />
+        <div className="text-sm">Loading your profile...</div>
+      </div>
+    );
   }
 
   return (
