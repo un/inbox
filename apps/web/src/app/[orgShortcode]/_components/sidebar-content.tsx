@@ -576,7 +576,7 @@ export function SpacesNav() {
   return (
     <div
       className={cn(
-        'flex w-full grow flex-col items-start justify-start gap-4 p-0'
+        'flex w-full grow flex-col items-start justify-start gap-4 overflow-y-auto overflow-x-hidden p-0'
       )}>
       <div className="flex w-full flex-col gap-0 p-0">
         <span className="text-slate-10 p-1 text-xs font-semibold uppercase">
@@ -614,21 +614,23 @@ export function SpacesNav() {
           ))}
         <Separator className="my-4" />
 
-        <span className="text-slate-10 p-1 text-[10px] font-semibold uppercase">
-          Shared Spaces
-        </span>
+        <div className="flex w-full flex-col gap-0 p-0">
+          <span className="text-slate-10 p-1 text-[10px] font-semibold uppercase">
+            Shared Spaces
+          </span>
 
-        {spaceData
-          ?.filter(
-            (space) => space.publicId !== unsortedSpaceData?.personalSpaceId
-          )
-          .map((space) => (
-            <SpaceItem
-              space={space}
-              key={space.publicId}
-              isPersonal={false}
-            />
-          ))}
+          {spaceData
+            ?.filter(
+              (space) => space.publicId !== unsortedSpaceData?.personalSpaceId
+            )
+            .map((space) => (
+              <SpaceItem
+                space={space}
+                key={space.publicId}
+                isPersonal={false}
+              />
+            ))}
+        </div>
 
         <NewSpaceModal />
       </div>
