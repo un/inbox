@@ -153,7 +153,7 @@ export const profileRouter = router({
           .set({
             name: `${firstName}'s Personal Space`,
             shortcode: validatedShortcode.shortcode,
-            description: `${firstName}${lastName?.length > 0 ? ' ' + lastName.join(' ') : ''}'s Personal Space`
+            description: `${firstName}${lastName?.length > 0 ? ' ' + lastName : ''}'s Personal Space`
           })
           .where(
             eq(spaces.id, orgMemberProfileQuery.orgMember.personalSpaceId)
