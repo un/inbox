@@ -1,6 +1,6 @@
 {
   "name": "@u22n/tiptap",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "type": "module",
   "exports": {
     ".": "./index.ts",
