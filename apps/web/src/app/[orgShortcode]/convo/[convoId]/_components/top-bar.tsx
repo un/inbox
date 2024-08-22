@@ -826,13 +826,9 @@ function SpaceWorkflowBlockWorkflowList({
     findWorkflow(spaceWorkflows.active) ??
     findWorkflow(spaceWorkflows.closed);
 
-  const convoSpaceWorkflowCache =
-    platform.useUtils().convos.getConvoSpaceWorkflows;
-
   const { mutateAsync: setConvoWorkflow } =
     platform.convos.setConvoSpaceWorkflow.useMutation({
       onSuccess: () => {
-        void convoSpaceWorkflowCache.invalidate();
         setShowWorkflowList(false);
       }
     });

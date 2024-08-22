@@ -2398,7 +2398,14 @@ export const convoRouter = router({
         byOrgMemberId: org.memberId
       });
 
-      return {};
+      await realtime.emitOnChannels({
+        channel: `private-space-${spacePublicId}`,
+        event: 'convo:workflow:update',
+        data: {
+          convoPublicId,
+          orgShortcode: input.orgShortcode
+        }
+      });
     }),
   addConvoToSpace: orgProcedure
     .input(
@@ -2504,7 +2511,13 @@ export const convoRouter = router({
         spaceId: spaceQueryResponse.id
       });
 
-      return;
+      await realtime.emitOnChannels({
+        channel: `private-space-${spacePublicId}`,
+        event: 'convo:new',
+        data: {
+          publicId: convoPublicId
+        }
+      });
     }),
   moveConvoToSpace: orgProcedure
     .input(
@@ -2561,7 +2574,8 @@ export const convoRouter = router({
         with: {
           space: {
             columns: {
-              shortcode: true
+              shortcode: true,
+              publicId: true
             }
           }
         }
@@ -2618,6 +2632,26 @@ export const convoRouter = router({
         spaceId: spaceQueryResponse.id
       });
 
-      return;
+      // Add convo in new space
+      await realtime.emitOnChannels({
+        channel: `private-space-${spacePublicId}`,
+        event: 'convo:new',
+        data: {
+          publicId: convoPublicId
+        }
+      });
+
+      // remove convo from old spaces
+      await Promise.allSettled(
+        convoToSpacesQueryResponse.map(async ({ space }) => {
+          await realtime.emitOnChannels({
+            channel: `private-space-${space.publicId}`,
+            event: 'convo:deleted',
+            data: {
+              publicId: convoPublicId
+            }
+          });
+        })
+      );
     })
 });
