@@ -15,6 +15,10 @@ export const eventDataMaps = {
     convoPublicId: typeIdValidator('convos'),
     convoEntryPublicId: typeIdValidator('convoEntries')
   }),
+  'convo:workflow:update': z.object({
+    convoPublicId: typeIdValidator('convos'),
+    orgShortcode: z.string()
+  }),
   'admin:issue:refresh': z.object({})
 } as const;
 

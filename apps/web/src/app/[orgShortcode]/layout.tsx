@@ -100,7 +100,9 @@ const RealtimeHandlers = memo(function RealtimeHandler() {
   // const toggleConvoHidden = useToggleConvoHidden$Cache();
   const deleteConvo = useDeleteConvo$Cache();
   const updateConvoMessageList = useUpdateConvoMessageList$Cache();
-  const adminIssuesCache = platform.useUtils().org.store.getOrgIssues;
+  const utils = platform.useUtils();
+  const adminIssuesCache = utils.org.store.getOrgIssues;
+  const getConvoSpaceWorkflows = utils.convos.getConvoSpaceWorkflows;
 
   const { data: spacesData } = platform.spaces.getOrgMemberSpaces.useQuery(
     {
@@ -147,15 +149,19 @@ const RealtimeHandlers = memo(function RealtimeHandler() {
           spaceShortcode
         })
       );
+
+      listen('convo:workflow:update', ({ convoPublicId, orgShortcode }) =>
+        getConvoSpaceWorkflows.invalidate({ convoPublicId, orgShortcode })
+      );
       return unsubscribe;
     });
   }, [
     addConvo,
     client,
     deleteConvo,
+    getConvoSpaceWorkflows,
     previousSpaces,
     spacesData?.spaces,
-    // toggleConvoHidden,
     updateConvoMessageList
   ]);
 

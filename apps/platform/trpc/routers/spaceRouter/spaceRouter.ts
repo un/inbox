@@ -292,7 +292,7 @@ export const spaceRouter = router({
       if (input.spaceShortcode === 'all') {
         return {
           space: {
-            publicId: 'lala',
+            publicId: 'all_convos',
             name: 'All Conversations',
             avatarTimestamp: null,
             color: 'cyan',
