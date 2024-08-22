@@ -119,7 +119,9 @@ function SpaceItem({
           <SpaceIcon />
         </div>
         <span className="text-slate-12 h-full truncate font-medium">
-          {isPersonal ? 'My Personal Space' : spaceData.name || 'Unnamed Space'}
+          {isPersonal && spaceData.name === 'Personal'
+            ? 'My Personal Space'
+            : spaceData.name || 'Unnamed Space'}
         </span>
       </Link>
       <div className="w-0 overflow-hidden transition-all group-hover:w-8">
