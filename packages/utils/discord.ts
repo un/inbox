@@ -14,10 +14,11 @@ const logToDiscord = async (
   embed: EmbedBuilder,
   content: string | null = null
 ) => {
-  if (!shouldLogToDiscord) {
+  if (!webhookUrl || !shouldLogToDiscord) {
     console.info(`[DISCORD LOG] `, JSON.stringify(embed.data));
+    return;
   }
-  await fetch(webhookUrl!, {
+  await fetch(webhookUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'

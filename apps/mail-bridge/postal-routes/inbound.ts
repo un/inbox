@@ -6,12 +6,6 @@ import type { Ctx } from '../ctx';
 
 export const inboundApi = createHonoApp<Ctx>();
 
-// Add logging middleware
-inboundApi.use('*', async (c, next) => {
-  console.info(`Incoming request: ${c.req.method} ${c.req.url}`);
-  await next();
-});
-
 inboundApi.post(
   '/mail/inbound/:orgId/:mailserverId',
   zValidator('json', postalMessageSchema),
