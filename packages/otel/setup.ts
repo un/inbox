@@ -32,7 +32,8 @@ export const setupOpentelemetry = ({
   traceProvider.addSpanProcessor(
     new BatchSpanProcessor(
       new OTLPTraceExporter({
-        url: env.OTEL_EXPORTER_TRACES_ENDPOINT
+        url: env.OTEL_EXPORTER_TRACES_ENDPOINT,
+        headers: env.OTEL_EXPORTER_TRACES_HEADERS
       })
     )
   );
@@ -42,7 +43,8 @@ export const setupOpentelemetry = ({
   loggerProvider.addLogRecordProcessor(
     new BatchLogRecordProcessor(
       new OTLPLogExporter({
-        url: env.OTEL_EXPORTER_LOGS_ENDPOINT
+        url: env.OTEL_EXPORTER_LOGS_ENDPOINT,
+        headers: env.OTEL_EXPORTER_LOGS_HEADERS
       })
     )
   );
