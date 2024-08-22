@@ -330,29 +330,52 @@ export function InviteModal() {
                           name="email.domain"
                           render={({ field }) => (
                             <FormItem>
-                              <Select
-                                name={field.name}
-                                value={field.value}
-                                onValueChange={(e: TypeId<'domains'>) =>
-                                  field.onChange(e)
-                                }>
-                                <FormControl>
-                                  <SelectTrigger className="w-full flex-1">
-                                    <SelectValue placeholder="Select domain" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  <SelectGroup>
-                                    {orgDomains.domainData.map((domain) => (
-                                      <SelectItem
-                                        key={domain.publicId}
-                                        value={domain.publicId}>
-                                        {domain.domain}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectGroup>
-                                </SelectContent>
-                              </Select>
+                              {orgDomains.domainData &&
+                              orgDomains.domainData.length > 0 ? (
+                                <Select
+                                  name={field.name}
+                                  value={field.value}
+                                  onValueChange={(e: TypeId<'domains'>) =>
+                                    field.onChange(e)
+                                  }>
+                                  <FormControl>
+                                    <SelectTrigger className="w-full flex-1">
+                                      <SelectValue placeholder="Select domain" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectGroup>
+                                      {orgDomains.domainData.map((domain) => (
+                                        <SelectItem
+                                          key={domain.publicId}
+                                          value={domain.publicId}>
+                                          {domain.domain}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectGroup>
+                                  </SelectContent>
+                                </Select>
+                              ) : (
+                                <Select
+                                  disabled
+                                  name={field.name}
+                                  value={field.value}>
+                                  <FormControl>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <SelectTrigger className="w-full flex-1">
+                                          <SelectValue placeholder="Select domain" />
+                                        </SelectTrigger>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        {
+                                          "You don't have any domains to create an email address"
+                                        }
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </FormControl>
+                                </Select>
+                              )}
                               <FormMessage />
                             </FormItem>
                           )}
