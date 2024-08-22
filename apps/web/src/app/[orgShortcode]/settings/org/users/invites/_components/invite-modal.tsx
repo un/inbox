@@ -356,27 +356,25 @@ export function InviteModal() {
                                   </SelectContent>
                                 </Select>
                               ) : (
-                                <Tooltip>
-                                  <TooltipTrigger className="w-full">
-                                    <Select
-                                      disabled
-                                      name={field.name}
-                                      value={field.value}
-                                      onValueChange={(e: TypeId<'domains'>) =>
-                                        field.onChange(e)
-                                      }>
-                                      <FormControl>
+                                <Select
+                                  disabled
+                                  name={field.name}
+                                  value={field.value}>
+                                  <FormControl>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
                                         <SelectTrigger className="w-full flex-1">
                                           <SelectValue placeholder="Select domain" />
                                         </SelectTrigger>
-                                      </FormControl>
-                                    </Select>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    You dont have any domains to create an email
-                                    address for
-                                  </TooltipContent>
-                                </Tooltip>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        {
+                                          "You don't have any domains to create an email address"
+                                        }
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </FormControl>
+                                </Select>
                               )}
                               <FormMessage />
                             </FormItem>
