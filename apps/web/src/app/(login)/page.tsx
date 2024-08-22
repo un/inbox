@@ -158,7 +158,6 @@ export default function Page() {
           className="mb-5 rounded-xl"
         />
         <h1 className="mb-2 text-2xl font-medium">Login to your UnInbox</h1>
-        <h2 className="text-base-10 text-sm">Enter your details to login.</h2>
         <div className="py-6">
           <div className="flex flex-col gap-2">
             <Button
@@ -179,6 +178,7 @@ export default function Page() {
             </Badge>
             <Separator className="bg-base-5 w-28" />
           </div>
+          <h2 className="text-base-10 text-sm">Enter your details to login.</h2>
           <div className="flex flex-col items-center justify-center gap-4 py-2">
             <Form {...form}>
               <form
@@ -249,7 +249,6 @@ export default function Page() {
             <Link
               href="/join"
               className="text-accent-9 pl-1 font-medium underline underline-offset-2">
-              {' '}
               Join instead
             </Link>
           </p>
