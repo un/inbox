@@ -1,6 +1,7 @@
 import { createQueue, createWorker } from '../utils/queue-helpers';
 import { checkDns } from '../functions/check-dns';
 import type { TypeId } from '@u22n/utils/typeid';
+import { discord } from '@u22n/utils/discord';
 import { db } from '@u22n/database';
 import { CronJob } from 'cron';
 
@@ -14,8 +15,10 @@ const dnsCheckQueue = createQueue<DnsCheckJobData>(QUEUE_NAME, {
   defaultJobOptions: { removeOnComplete: true, attempts: 3 }
 });
 
-export const dnsCheckWorker = createWorker<DnsCheckJobData>(QUEUE_NAME, (job) =>
-  checkDns(job.data.domainPublicId)
+export const dnsCheckWorker = createWorker<DnsCheckJobData>(
+  QUEUE_NAME,
+  (job) => checkDns(job.data.domainPublicId),
+  { autorun: false }
 );
 
 export async function addImmediateDnsCheckJob(
@@ -28,6 +31,7 @@ export async function addImmediateDnsCheckJob(
 
 // This CronJob will add a job for every domain in the database at 6,14,22 UTC hours
 export const masterCronJob = new CronJob('0 6,14,22 * * *', async () => {
+  await discord.info('Running Daily DNS Cron Job');
   const activeDomains = await db.query.domains.findMany({
     columns: { publicId: true }
   });
