@@ -31,6 +31,7 @@ export function ConvoListBase({
   fetchNextPage,
   linkBase
 }: ConvoListBaseProps) {
+  const orgShortcode = useOrgShortcode();
   const spaceShortcode = useSpaceShortcode(false);
   const [selections, setSelections] = useAtom(convoListSelection);
   const [lastSelected, setLastSelected] = useAtom(lastSelectedConvo);
@@ -113,8 +114,6 @@ export function ConvoListBase({
   }, [isFetchingNextPage]);
 
   const EmptyPlaceholder = useCallback(() => {
-    const orgShortcode = useOrgShortcode();
-    const spaceShortcode = useSpaceShortcode(false);
     const welcomeLink = `/${orgShortcode}/${spaceShortcode ?? 'personal'}/convo/welcome`;
 
     return isLoading ? (
@@ -161,8 +160,8 @@ export function ConvoListBase({
                   </span>
                 </div>
                 <span className="line-clamp-2 overflow-clip break-words">
-                  Welcome to Uninbox! Here you'll see your conversations. Start
-                  by connecting your email or creating a new conversation.
+                  Welcome to Uninbox! Here you&apos;ll see your conversations.
+                  Start by connecting your email or creating a new conversation.
                 </span>
               </div>
             </div>
@@ -170,7 +169,7 @@ export function ConvoListBase({
         </Link>
       </div>
     );
-  }, [isLoading]);
+  }, [isLoading, orgShortcode, spaceShortcode]);
 
   const computeItemKey = useCallback(
     (_: number, data: Convo) => data.publicId,

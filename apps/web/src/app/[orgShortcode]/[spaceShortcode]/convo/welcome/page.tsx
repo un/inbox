@@ -1,14 +1,23 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-// import { useOrgShortcode } from '@/src/hooks/use-org-shortcode';
 import { Avatar } from '@radix-ui/react-avatar';
 import Link from 'next/link';
 
 import { useOrgShortcode } from '@/src/hooks/use-params';
 import { TopBar } from './_components/top-bar';
 
-function WelcomeMessage({ message }) {
+interface Author {
+  name: string;
+  avatarUrl: string;
+}
+
+interface Message {
+  content: React.ReactNode;
+  author: Author;
+}
+
+function WelcomeMessage({ message }: { message: Message }) {
   return (
     <div className="py-4">
       <div className="group relative mr-auto flex w-fit gap-2">
@@ -41,13 +50,15 @@ function WelcomeMessage({ message }) {
 
 export default function WelcomePage() {
   const orgShortcode = useOrgShortcode();
-  const [displayedMessages, setDisplayedMessages] = useState([]);
+  const [displayedMessages, setDisplayedMessages] = useState<React.ReactNode[]>(
+    []
+  );
 
   useEffect(() => {
     const messages = [
       <p key="welcome">Hey Welcome to Uninbox!</p>,
       <p key="tryout">
-        If you're just trying this out, you can claim your uninbox.me email
+        If you&apos;re just trying this out, you can claim your uninbox.me email
         address in{' '}
         <Link
           href={`/${orgShortcode}/settings/user/addresses`}
