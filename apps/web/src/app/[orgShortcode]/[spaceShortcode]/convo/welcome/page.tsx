@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Avatar } from '@radix-ui/react-avatar';
 import Link from 'next/link';
 
 import { useOrgShortcode } from '@/src/hooks/use-params';
@@ -23,12 +22,6 @@ function WelcomeMessage({ message }: { message: Message }) {
       <div className="group relative mr-auto flex w-fit gap-2">
         <div className="flex w-fit max-w-prose flex-col items-start gap-2 overflow-x-hidden">
           <div className="flex w-full flex-row items-center gap-2">
-            <Avatar
-              avatarProfilePublicId={message.author.avatarUrl}
-              name={message.author.name}
-              color="accent"
-              size="xl"
-            />
             <div className="flex flex-row items-end gap-2">
               <div className="flex flex-col items-start gap-1">
                 <span className="text-base font-medium leading-none">
@@ -110,7 +103,6 @@ export default function WelcomePage() {
   return (
     <div className="flex h-full w-full min-w-0 flex-col rounded-2xl">
       <TopBar
-        isConvoLoading={false}
         convoId={'welcome'}
         subjects={[{ subject: 'Welcome to UnInbox' }]}
         participants={[]}
