@@ -333,7 +333,7 @@ function DescriptionField({
       {showEditDescriptionField ? (
         <div className="flex w-full flex-row items-center gap-2">
           <Input
-            label="Space Name"
+            label="Space Description"
             value={editDescription}
             onChange={(e) => setEditDescription(e.target.value)}
           />
