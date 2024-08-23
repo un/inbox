@@ -7,7 +7,8 @@
     "dev": "tsx watch --clear-screen=false --import ./tracing.ts app.ts",
     "start": "node --import ./.output/tracing.js .output/app.js",
     "build": "tsup",
-    "check": "tsc --noEmit"
+    "check": "tsc --noEmit",
+    "mock:incoming-mail": "tsx ./scripts/mock-incoming.ts"
   },
   "exports": {
     "./trpc": {
@@ -41,6 +42,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@clack/prompts": "^0.7.0",
     "@types/dompurify": "^3.0.5",
     "@types/jsdom": "^21.1.7",
     "@types/mailparser": "^3.4.4",

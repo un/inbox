@@ -53,6 +53,7 @@
     "ee:dev:r": "infisical run --env=remote -- turbo run ee:dev",
     "ee:check": "infisical run --env=remote -- turbo run ee:check",
     "ee:build:all": "dotenv -e .env.local -- turbo run ee:build --cache-dir=.turbo",
+    "mock:incoming-mail": "dotenv -e .env.local -- pnpm --dir apps/mail-bridge mock:incoming-mail",
     "prepare": "husky"
   },
   "keywords": [],
