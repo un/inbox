@@ -119,9 +119,16 @@ export default function ProfileComponent() {
 
         <Button
           loading={updatingOrgProfile}
-          onClick={() =>
-            updateOrgProfile({ orgName: orgNameValue, orgShortcode })
-          }>
+          onClick={() => {
+            updateOrgProfile(
+              { orgName: orgNameValue, orgShortcode },
+              {
+                onSuccess: () => {
+                  void utils.org.crud.getAccountOrgs.refetch();
+                }
+              }
+            );
+          }}>
           <FloppyDisk size={20} />
           Save
         </Button>
