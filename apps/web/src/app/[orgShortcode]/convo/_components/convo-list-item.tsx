@@ -188,7 +188,7 @@ export const ConvoItem = memo(function ConvoItem({
                 )}
               </div>
 
-              <span className="line-clamp-2 overflow-clip break-words">
+              <span className="ph-no-capture line-clamp-2 overflow-clip break-words">
                 {convo.entries[0]?.bodyPlainText.trim() ?? ''}
               </span>
             </div>
