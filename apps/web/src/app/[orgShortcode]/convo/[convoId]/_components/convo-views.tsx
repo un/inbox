@@ -83,7 +83,7 @@ export function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
     virtuosoRef.current?.scrollToIndex({ index: 'LAST' });
     // Refresh the convo data if own public Id is not available
     if (!participantOwnPublicId) {
-      await utils.convos.getConvo.refetch({
+      await utils.convos.getConvo.invalidate({
         convoPublicId: convoId,
         orgShortcode
       });
