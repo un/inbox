@@ -102,11 +102,7 @@ export default function WelcomePage() {
 
   return (
     <div className="flex h-full w-full min-w-0 flex-col rounded-2xl">
-      <TopBar
-        subjects={[{ subject: 'Welcome to UnInbox' }]}
-        participants={[]}
-        attachments={[]}
-      />
+      <TopBar />
       <div className="flex w-full flex-1 flex-col overflow-y-auto p-4">
         {displayedMessages.map((message, index) => (
           <WelcomeMessage
