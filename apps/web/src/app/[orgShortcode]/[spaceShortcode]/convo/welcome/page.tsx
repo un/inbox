@@ -103,7 +103,6 @@ export default function WelcomePage() {
   return (
     <div className="flex h-full w-full min-w-0 flex-col rounded-2xl">
       <TopBar
-        convoId={'welcome'}
         subjects={[{ subject: 'Welcome to UnInbox' }]}
         participants={[]}
         attachments={[]}
