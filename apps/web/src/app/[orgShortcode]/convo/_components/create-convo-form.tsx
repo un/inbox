@@ -751,6 +751,14 @@ export default function CreateConvoForm({
   );
 }
 
+const showDisabledMessage = (disabled: boolean) => {
+  if (disabled) {
+    toast.warning(
+      'You cannot add participants to conversation until you have an email identity associated.'
+    );
+  }
+};
+
 type ParticipantsComboboxPopoverProps = {
   participants: NewConvoParticipant[];
   loading: boolean;
@@ -802,26 +810,15 @@ function ParticipantsComboboxPopover({
     );
   };
 
-  const handleDisabledClick = () => {
-    if (disabled) {
-      toast.warning(
-        'You cannot add participants to conversation until you have an email identity associated.'
-      );
-    }
-  };
-
   return (
-    <div
-      onClick={() => handleDisabledClick()}
-      className="flex w-full items-center space-x-4">
+    <div className="flex w-full items-center space-x-4">
       <Popover
         open={open}
         onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
             variant="outline"
-            className="h-fit w-full justify-between"
-            disabled={disabled}>
+            className="h-fit w-full justify-between">
             {selectedParticipants.length > 0 ? (
               <div className="flex flex-wrap gap-2 overflow-hidden">
                 {selectedParticipants.map((participant, i) => {
@@ -929,7 +926,6 @@ function ParticipantsComboboxPopover({
                   }
                 }}
                 onFocus={() => setCurrentSelectValue('')}
-                disabled={disabled}
               />
             </CommandInput>
             <CommandList className="max-h-[calc(var(--radix-popover-content-available-height)*0.9)] overflow-x-clip overflow-y-scroll">
@@ -939,6 +935,7 @@ function ParticipantsComboboxPopover({
                   <EmptyStateHandler
                     addSelectedParticipant={setSelectedParticipants}
                     setEmailParticipants={setNewEmailParticipants}
+                    disabled={disabled}
                   />
                 )}
                 {participants.map((participant) => (
@@ -947,7 +944,7 @@ function ParticipantsComboboxPopover({
                     value={participant.publicId}
                     keywords={participant.keywords}
                     onSelect={(value) => {
-                      if (disabled || participant.own) return;
+                      if (participant.own) return;
                       setSelectedParticipants((prev) =>
                         prev.find((p) => p.publicId === value)
                           ? prev.filter((p) => p.publicId !== value)
@@ -966,9 +963,8 @@ function ParticipantsComboboxPopover({
                             : 'text-base-11'
                         )}
                         disabled={
-                          disabled ||
-                          (participant.type === 'orgMember' &&
-                            participant.disabled)
+                          participant.type === 'orgMember' &&
+                          participant.disabled
                         }
                         onFocus={() =>
                           setCurrentSelectValue(participant.publicId)
@@ -1052,11 +1048,13 @@ function ParticipantsComboboxPopover({
 type EmptyStateHandlerProps = {
   setEmailParticipants: Dispatch<SetStateAction<string[]>>;
   addSelectedParticipant: Dispatch<SetStateAction<NewConvoParticipant[]>>;
+  disabled?: boolean;
 };
 
 function EmptyStateHandler({
   setEmailParticipants,
-  addSelectedParticipant
+  addSelectedParticipant,
+  disabled = false
 }: EmptyStateHandlerProps) {
   const isEmpty = useCommandState((state) => state.filtered.count === 0);
   const email = useCommandState((state) => state.search);
@@ -1066,6 +1064,11 @@ function EmptyStateHandler({
   );
 
   const addEmailParticipant = (email: string) => {
+    if (disabled) {
+      showDisabledMessage(disabled);
+      return;
+    }
+
     setEmailParticipants((prev) =>
       prev.includes(email) ? prev : prev.concat(email)
     );
@@ -1090,6 +1093,7 @@ function EmptyStateHandler({
     <CommandItem
       key={email}
       value={email}
+      disabled={disabled}
       forceMount
       onKeyDown={(e) => {
         // Submit email on Enter key
@@ -1097,16 +1101,19 @@ function EmptyStateHandler({
           addEmailParticipant(email);
         }
       }}>
-      <Button
-        variant={'ghost'}
-        className="my-1 w-full justify-start px-1"
-        color="gray"
-        onClick={() => {
-          addEmailParticipant(email);
-        }}>
-        <At className="mr-2 h-4 w-4" />
-        <p className="text-sm">Add {email}</p>
-      </Button>
+      <div onClick={() => disabled && showDisabledMessage(disabled)}>
+        <Button
+          variant={'ghost'}
+          disabled={disabled}
+          className="my-1 w-full justify-start px-1"
+          color="gray"
+          onClick={() => {
+            addEmailParticipant(email);
+          }}>
+          <At className="mr-2 h-4 w-4" />
+          <p className="text-sm">Add {email}</p>
+        </Button>
+      </div>
     </CommandItem>
   ) : (
     <CommandEmpty className="px-2 text-sm font-bold">
