@@ -429,7 +429,9 @@ const MessageItem = memo(
       </div>
     );
   },
-  (prev, curr) => prev.message.publicId === curr.message.publicId
+  (prev, curr) =>
+    prev.message.publicId === curr.message.publicId &&
+    prev.participantOwnPublicId === curr.participantOwnPublicId
 );
 
 const emptyMessage = `<span class="text-base-11 text-sm">THIS MESSAGE CONTAINS NO VALID TEXT CONTENT</span>`;

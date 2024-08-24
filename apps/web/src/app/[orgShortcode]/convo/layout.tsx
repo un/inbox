@@ -283,8 +283,9 @@ function ConvoLayoutWrapper({
   const isMobile = useIsMobile();
   const convoId = useCurrentConvoId();
   const pathname = usePathname();
+  const isWelcomeMessage = pathname.endsWith('/convo/welcome');
 
-  const isInConvo = Boolean(convoId);
+  const isInConvo = Boolean(convoId) || isWelcomeMessage;
   const isNewPage = pathname.endsWith('/convo/new');
 
   return (
