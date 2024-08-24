@@ -150,7 +150,7 @@ function SpaceItem({
                   </DropdownMenuRadioGroup>
                 </DropdownMenuSubContent>
               </DropdownMenuPortal>
-            </DropdownMenuSub> 
+            </DropdownMenuSub>
             <DropdownMenuSeparator />
             */}
             <DropdownMenuItem

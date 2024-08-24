@@ -26,7 +26,7 @@ export default function ProfileComponent() {
 
   const utils = platform.useUtils();
 
-  const { data: orgData, refetch } =
+  const { data: orgData, refetch: revalidateOrgProfile } =
     platform.org.setup.profile.getOrgProfile.useQuery({
       orgShortcode
     });
@@ -35,7 +35,12 @@ export default function ProfileComponent() {
       orgShortcode
     });
   const { mutate: updateOrgProfile, isPending: updatingOrgProfile } =
-    platform.org.setup.profile.setOrgProfile.useMutation();
+    platform.org.setup.profile.setOrgProfile.useMutation({
+      onSuccess: async () => {
+        toast.success('Organization profile updated');
+        revalidateOrgProfile();
+      }
+    });
 
   const [orgNameValue, setOrgNameValue] = useState<string>('');
   const [file, setFile] = useState<File | null>(null);
@@ -57,7 +62,7 @@ export default function ProfileComponent() {
     },
     onUploaded: () => {
       void utils.org.crud.getAccountOrgs.refetch();
-      void refetch();
+      void revalidateOrgProfile();
     }
   });
 
@@ -70,6 +75,10 @@ export default function ProfileComponent() {
   if (!adminLoading && !isAdmin) {
     scopedRedirect('/settings');
   }
+
+  useEffect(() => {
+    utils.org.crud.getAccountOrgs.invalidate();
+  }, [orgData?.orgProfile.name]);
 
   return (
     <div className="flex h-full w-full flex-col items-start gap-4 overflow-y-auto p-4">
