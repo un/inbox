@@ -27,6 +27,21 @@ export const AvatarPlus = memo(function AvatarPlus({
   if (!primary) {
     return null;
   }
+
+  if (rest.length === 0) {
+    return (
+      <div className="relative h-fit w-fit scale-100 overflow-visible">
+        <Avatar
+          avatarProfilePublicId={primary.avatarProfilePublicId}
+          avatarTimestamp={primary.avatarTimestamp}
+          name={primary.name}
+          size={size}
+          hideTooltip={true}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="relative h-fit w-fit scale-100 overflow-visible">
       <HoverCard>
