@@ -5,8 +5,13 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/src/components/shadcn-ui/dialog';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger
+} from '@/src/components/shadcn-ui/accordion';
 import { ScrollArea } from '@/src/components/shadcn-ui/scroll-area';
-import { Separator } from '@/src/components/shadcn-ui/separator';
 import { useOrgShortcode } from '@/src/hooks/use-params';
 import { SpinnerGap } from '@phosphor-icons/react';
 import { type TypeId } from '@u22n/utils/typeid';
@@ -63,26 +68,41 @@ export function OriginalMessageView({
                   <span className="font-bold">Wipe Date: </span>
                   <span>{data.rawEmailData.wipeDate.toLocaleString()}</span>
                 </div>
-                <span className="font-bold">Email Headers</span>
-                <div className="flex flex-col gap-1">
-                  {Object.entries(
-                    data.rawEmailData.headers as Record<string, unknown>
-                  ).map(([key, value]) => (
-                    <div
-                      key={key}
-                      className="flex w-full gap-2 border-b font-mono">
-                      <div className="w-fit min-w-[10ch] border-r px-1 text-right font-bold">
-                        {key}
+                <Accordion
+                  type="multiple"
+                  defaultValue={['original']}>
+                  <AccordionItem value="headers">
+                    <AccordionTrigger>
+                      <span className="font-bold">Email Headers</span>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="flex flex-col gap-1">
+                        {Object.entries(
+                          data.rawEmailData.headers as Record<string, unknown>
+                        ).map(([key, value]) => (
+                          <div
+                            key={key}
+                            className="flex w-full gap-2 border-b font-mono">
+                            <div className="w-fit min-w-[10ch] border-r px-1 text-right font-bold">
+                              {key}
+                            </div>
+                            <div className="w-fit break-all">
+                              {JSON.stringify(value)}
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                      <div className="w-fit break-all">
-                        {JSON.stringify(value)}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <Separator className="my-4 w-full" />
-                <span className="font-bold">Original Email</span>
-                <OriginalMessageIframe html={data.rawEmailData.html} />
+                    </AccordionContent>
+                  </AccordionItem>
+                  <AccordionItem value="original">
+                    <AccordionTrigger>
+                      <span className="font-bold">Original Email</span>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <OriginalMessageIframe html={data.rawEmailData.html} />
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
               </div>
             </ScrollArea>
           )}
@@ -95,7 +115,7 @@ export function OriginalMessageView({
 const OriginalMessageIframe = memo(
   function OriginalMessageIframe({ html }: { html: string }) {
     const frameRef = useRef<HTMLIFrameElement | null>(null);
-    const [height, setHeight] = useState('300px');
+    const [height, setHeight] = useState('800px');
 
     const onLoad = () => {
       if (!frameRef.current) return;
