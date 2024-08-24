@@ -2,8 +2,10 @@ import { platform, type RouterOutputs } from '@/src/lib/trpc';
 import { type InfiniteData } from '@tanstack/react-query';
 import { useOrgShortcode } from '@/src/hooks/use-params';
 import { type TypeId } from '@u22n/utils/typeid';
+import { convoListSelection } from './atoms';
 import { ms } from '@u22n/utils/ms';
 import { useCallback } from 'react';
+import { useSetAtom } from 'jotai';
 import { produce } from 'immer';
 
 type GetSpacesConvo = RouterOutputs['spaces']['getSpaceConvos'];
@@ -148,6 +150,7 @@ const deleteConvoFromInfiniteData = (
 export function useDeleteConvo$Cache() {
   const orgShortcode = useOrgShortcode();
   const utils = platform.useUtils();
+  const setSelection = useSetAtom(convoListSelection);
 
   return useCallback(
     async ({
@@ -207,13 +210,16 @@ export function useDeleteConvo$Cache() {
           }
         })
       );
+
+      setSelection((prev) => prev.filter((convo) => !convos.includes(convo)));
     },
     [
-      orgShortcode,
+      setSelection,
       utils.convos.getConvo,
-      utils.spaces.getSpaceConvos,
       utils.convos.getOrgMemberSpecificConvo,
-      utils.convos.entries.getConvoEntries
+      utils.convos.entries.getConvoEntries,
+      utils.spaces.getSpaceConvos,
+      orgShortcode
     ]
   );
 }
