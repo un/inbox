@@ -108,8 +108,27 @@ export function useAddSingleConvo$Cache() {
           )
             return;
           return produce(updater, (draft) => {
-            const targetPage = draft.pages[0];
-            if (targetPage) targetPage.data.unshift(structuredClone(convo));
+            const allConvos = draft.pages.flatMap((page) => page.data);
+            allConvos.push(structuredClone(convo));
+            allConvos.sort(
+              (a, b) => b.lastUpdatedAt.getTime() - a.lastUpdatedAt.getTime()
+            );
+
+            const pages: InfiniteConvoListUpdater['pages'] = [];
+            for (let i = 0; i <= allConvos.length; i += 15) {
+              const target = allConvos[Math.min(i + 15, allConvos.length - 1)];
+              if (!target) break;
+              const convoSlice = allConvos.slice(i, i + 15);
+              if (convoSlice.length === 0) break;
+              pages.push({
+                data: convoSlice,
+                cursor: {
+                  lastUpdatedAt: target.lastUpdatedAt,
+                  lastPublicId: target.publicId
+                }
+              });
+            }
+            draft.pages = pages;
           });
         });
       }
@@ -163,19 +182,6 @@ export function useDeleteConvo$Cache() {
       const convos = Array.isArray(convoPublicId)
         ? convoPublicId
         : [convoPublicId];
-
-      // Find if any of the convos are open and add the deleted query param
-      if (
-        convos.some((convoPublicId) =>
-          window.location.pathname.includes(convoPublicId)
-        )
-      ) {
-        window.history.replaceState(
-          {},
-          document.title,
-          `${window.location.pathname}?deleted=true`
-        );
-      }
 
       await Promise.allSettled(
         convos.map(async (convoPublicId) => {
