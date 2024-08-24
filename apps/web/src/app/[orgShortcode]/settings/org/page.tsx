@@ -36,9 +36,8 @@ export default function ProfileComponent() {
     });
   const { mutate: updateOrgProfile, isPending: updatingOrgProfile } =
     platform.org.setup.profile.setOrgProfile.useMutation({
-      onSuccess: async () => {
+      onSuccess: () => {
         toast.success('Organization profile updated');
-        revalidateOrgProfile();
       }
     });
 
