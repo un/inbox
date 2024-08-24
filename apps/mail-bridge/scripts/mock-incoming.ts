@@ -1,9 +1,20 @@
 import { cancel, group, intro, outro, text } from '@clack/prompts';
 import { mailProcessorQueue } from '../queue/mail-processor';
 import { typeIdValidator } from '@u22n/utils/typeid';
+import { existsSync, readFileSync } from 'node:fs';
 import { testEmail } from './email-templates';
 import { nanoid } from 'nanoid';
 import { z } from 'zod';
+
+const fixWrappingQuotes = (str: string) => {
+  if (
+    (str.startsWith("'") && str.endsWith("'")) ||
+    (str.startsWith('"') && str.endsWith('"'))
+  ) {
+    return str.slice(1, -1);
+  }
+  return str;
+};
 
 intro('Mock Incoming Mail');
 
@@ -64,9 +75,18 @@ const message = await group(
           }
         }
       }),
-    rawMessage: () =>
+    messagePath: () =>
       text({
-        message: 'Enter raw email in RFC822 format',
+        message: 'Path to raw email file (drop file into terminal)',
+        validate: (value) => {
+          if (value.length === 0) return;
+          const fileExists = existsSync(fixWrappingQuotes(value))
+            ? true
+            : false;
+          if (!fileExists) {
+            return `File at path ${fixWrappingQuotes(value)} does not exist`;
+          }
+        },
         placeholder: '(Skip to use test email)',
         initialValue: ''
       })
@@ -80,11 +100,12 @@ const message = await group(
 );
 
 const encodedEmail = Buffer.from(
-  message.rawMessage ||
-    testEmail({
-      from: message.from,
-      to: message.rcpt_to
-    })
+  message.messagePath
+    ? readFileSync(fixWrappingQuotes(message.messagePath), 'utf8')
+    : testEmail({
+        from: message.from,
+        to: message.rcpt_to
+      })
 ).toString('base64');
 
 await mailProcessorQueue.add(`mock incoming mail ${nanoid(6)}`, {

@@ -1031,8 +1031,8 @@ export const worker = createWorker<MailProcessorJobData>(
         console.error(e);
         void discord.info(
           e instanceof Error
-            ? `${e.message} \n${e.stack}`
-            : 'Unknown Error, Check Logs'
+            ? e.message
+            : 'Unknown Error in Mail Processor, Check Logs'
         );
         span?.recordException(e as Error);
         // Throw the error to be caught by the worker, and moving to failed jobs
