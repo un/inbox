@@ -16,7 +16,6 @@ import {
   varchar,
   text,
   mediumtext,
-  customType,
   longtext
 } from 'drizzle-orm/mysql-core';
 import {
@@ -26,25 +25,15 @@ import {
 } from '@u22n/utils/spaces';
 import { typeIdDataType as publicId } from '@u22n/utils/typeid';
 import { uiColors } from '@u22n/utils/colors';
-import { relations } from 'drizzle-orm';
+import { relations, sql } from 'drizzle-orm';
 
-// import { stripeBillingPeriods, stripePlanNames } from '../../ee/apps/billing';
 const stripeBillingPeriods = ['monthly', 'yearly'] as const;
 const stripePlanNames = ['starter', 'pro'] as const;
 
 //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit
 
-// These custom types support incompatibilities with drizzle-orm or types that must remain in sync across db
-
-// Foreign Key type as drizzle does not support unsigned bigint
-const foreignKey = customType<{ data: number }>({
-  dataType() {
-    return 'bigint unsigned';
-  },
-  fromDriver(value: unknown): number {
-    return Number(value);
-  }
-});
+const foreignKey = (name: string) =>
+  bigint(name, { unsigned: true, mode: 'number' });
 
 //******************* */
 //* Account tables
@@ -1542,7 +1531,7 @@ export const convoParticipants = mysqlTable(
     publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
     orgMemberIdIndex: index('org_member_id_idx').on(table.orgMemberId),
     convoIdIndex: index('convo_id_idx').on(table.convoId),
-    orgMemberToConvoIndex: uniqueIndex('org_member_to_convo_idx').on(
+    orgMemberToConvoIndex: index('org_member_to_convo_idx').on(
       table.convoId,
       table.orgMemberId
     ),
@@ -1731,12 +1720,6 @@ export type ConvoEntryMetadata = {
   email?: ConvoEntryMetadataEmail;
 };
 
-const messageIdCustomType = customType<{ data: string }>({
-  dataType() {
-    //return "varchar(255) AS (JSON_UNQUOTE(metadata-> '$.email.messageId')) STORED";
-    return 'varchar(255)';
-  }
-});
 export const convoEntries = mysqlTable(
   'convo_entries',
   {
@@ -1752,7 +1735,11 @@ export const convoEntries = mysqlTable(
     bodyPlainText: longtext('body_plain_text').notNull(),
     bodyCleanedHtml: longtext('body_cleaned_html'),
     metadata: json('metadata').$type<ConvoEntryMetadata>().default({}),
-    emailMessageId: messageIdCustomType('email_message_id'),
+    emailMessageId: varchar('email_message_id', {
+      length: 255
+    }).generatedAlwaysAs(sql`JSON_UNQUOTE(metadata-> '$.email.messageId')`, {
+      mode: 'stored'
+    }),
     visibility: mysqlEnum('visibility', [
       'private',
       'internal_participants',
