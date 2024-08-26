@@ -95,6 +95,17 @@ export async function updateDnsRecords(
     });
 
   if ('error' in currentDNSRecords) {
+    if (currentDNSRecords.errorCode === 3) {
+      // Domain does not exist, disable the domain
+      await db
+        .update(domains)
+        .set({
+          disabled: true,
+          disabledAt: new Date(),
+          lastDnsCheckAt: new Date()
+        })
+        .where(eq(domains.id, domainResponse.id));
+    }
     throw new TRPCError({
       code: 'INTERNAL_SERVER_ERROR',
       message: currentDNSRecords.error
