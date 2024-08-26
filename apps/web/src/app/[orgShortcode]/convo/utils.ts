@@ -128,6 +128,10 @@ export function useAddSingleConvo$Cache() {
                 }
               });
             }
+            // If the last page was empty, remove the cursor
+            if (draft.pages.at(-1)?.cursor === null && pages.at(-1)?.cursor) {
+              pages.at(-1)!.cursor = null;
+            }
             draft.pages = pages;
           });
         });
