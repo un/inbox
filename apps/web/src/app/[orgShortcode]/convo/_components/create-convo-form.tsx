@@ -539,7 +539,7 @@ export default function CreateConvoForm({
     onSuccess: async (data) => {
       await addConvo({
         convoPublicId: data.publicId,
-        spaceShortcode: spaceShortcode ?? 'personal'
+        spaceShortcode: selectedSpace ?? 'personal'
       });
       resetDraft();
       setNewPanelOpen(false);
