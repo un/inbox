@@ -218,7 +218,7 @@ export default function CreateConvoForm({
     });
 
   const [selectedSpace, setSelectedSpace] = useState<string | null>(
-    ['all', 'personal', null].includes(spaceShortcode) ? null : spaceShortcode
+    ['all', null].includes(spaceShortcode) ? null : spaceShortcode
   );
   const { data: userEmailIdentities, isLoading: emailIdentitiesLoading } =
     platform.org.mail.emailIdentities.getUserEmailIdentities.useQuery(
@@ -491,6 +491,19 @@ export default function CreateConvoForm({
       throw new Error('Please select a space for the conversation.');
     }
 
+    const resolvedSpaceShortcode =
+      selectedSpace === 'personal'
+        ? spaces?.find(
+            (space) => space.publicId === spacesResponse?.personalSpaceId
+          )?.shortcode
+        : selectedSpace;
+
+    if (!resolvedSpaceShortcode) {
+      throw new Error(
+        'Failed to resolve space shortcode. Contact support if this persists.'
+      );
+    }
+
     return createConvoFn({
       firstMessageType: type,
       topic,
@@ -503,7 +516,7 @@ export default function CreateConvoForm({
       message: editorText,
       attachments: getTrpcUploadFormat(),
       orgShortcode,
-      spaceShortcode: selectedSpace
+      spaceShortcode: resolvedSpaceShortcode
     });
   }
 
@@ -692,7 +705,11 @@ export default function CreateConvoForm({
             {spaces?.map((space) => (
               <SelectItem
                 key={space.shortcode}
-                value={space.shortcode}>
+                value={
+                  space.publicId === spacesResponse?.personalSpaceId
+                    ? 'personal'
+                    : space.shortcode
+                }>
                 {space.name}
               </SelectItem>
             ))}
