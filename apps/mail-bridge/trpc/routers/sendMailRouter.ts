@@ -537,6 +537,9 @@ export const sendMailRouter = router({
         postalServerUrl = `https://${config.MAILBRIDGE_POSTAL_SERVER_PERSONAL_CREDENTIALS.apiUrl}/api/v1/send/raw`;
         postalServerAPIKey =
           config.MAILBRIDGE_POSTAL_SERVER_PERSONAL_CREDENTIALS.apiKey;
+      } else if (sendAsEmailIdentity.externalCredentials) {
+        postalServerUrl = '';
+        postalServerAPIKey = '';
       } else {
         const orgPostalServerResponse = await db.query.postalServers.findFirst({
           where: and(
@@ -726,16 +729,19 @@ export const sendMailRouter = router({
             to: [`${convoToAddress}`, ...convoCcAddressesFiltered],
             from: `${sendAsEmailIdentity.sendName} <${convoSenderEmailAddress}>`,
             headers: emailHeaders,
-            raw: Buffer.from(rawEmail.asRaw()).toString('base64')
+            raw: rawEmail.asRaw()
           }
-        }).catch((e) => {
-          console.error('🚨 error sending email as external identity', e);
-          return {
-            success: false
-          };
-        });
+        })
+          .then((res) => ({ success: true, ...res }))
+          .catch((e) => {
+            console.error('🚨 error sending email as external identity', e);
+            return {
+              success: false,
+              messageId: null
+            };
+          });
 
-        if ('success' in sentEmail && sentEmail.success === false) {
+        if (sentEmail.success === false) {
           console.error(
             '🚨 error sending email as external identity',
             `send convoEntryId: ${entryId} from convoId: ${convoId}`
@@ -743,7 +749,7 @@ export const sendMailRouter = router({
           return {
             success: false
           };
-        } else if (!('success' in sentEmail) && sentEmail.messageId) {
+        } else if (sentEmail.messageId) {
           const entryMetadata: ConvoEntryMetadata = {
             email: {
               to: [convoMetadataToAddress],
@@ -767,7 +773,7 @@ export const sendMailRouter = router({
           };
         } else {
           console.error(
-            '🚨 error sending email as external identity, no idea what went wrong. didnt get success or fail',
+            "🚨 error sending email as external identity, no idea what went wrong. didn't get success or fail",
             `send convoEntryId: ${entryId} from convoId: ${convoId}`
           );
           return {
