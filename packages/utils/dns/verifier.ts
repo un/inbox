@@ -21,7 +21,7 @@ type ExpectedDnsRecords = {
     priority: number;
   };
   spf: {
-    includes: string;
+    includes: string[];
   };
   dkim: {
     key: string | null;
@@ -72,7 +72,8 @@ export async function dnsVerifier({ rootDomain, expected }: DnsVerifierInput) {
       spfTxtRecords.data.find((_) => _.startsWith('v=spf1')) ?? ''
     );
     results.spf.valid =
-      !!spfRecords && spfRecords.includes.includes(expected.spf.includes);
+      !!spfRecords &&
+      expected.spf.includes.some((_) => spfRecords.includes.includes(_));
     results.spf.current = spfRecords;
   }
 
