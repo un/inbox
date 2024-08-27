@@ -167,7 +167,7 @@ export type GetDomainDNSRecordsOutput =
         acceptable: string;
       };
     }
-  | { error: string };
+  | { error: string; errorCode: number };
 
 export async function getDomainDNSRecords(
   domainId: string,
@@ -179,7 +179,7 @@ export async function getDomainDNSRecords(
   });
 
   if (!domainInfo) {
-    return { error: 'Domain not found, Contact Support' };
+    return { error: 'Domain not found, Contact Support', errorCode: 3 };
   }
 
   const records: GetDomainDNSRecordsOutput = {
@@ -222,7 +222,8 @@ export async function getDomainDNSRecords(
 
   if (txtRecords.success === false && txtRecords.code !== 0) {
     return {
-      error: `${txtRecords.error} Please retry after sometime, if the problem persists contact Support`
+      error: `${txtRecords.error} Please retry after sometime, if the problem persists contact Support`,
+      errorCode: txtRecords.code
     };
   }
 
