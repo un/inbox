@@ -608,7 +608,11 @@ const externalAddressFormSchema = z.object({
   sendName: z.string().min(1, 'You must enter a send name').max(64),
   smtp: z.object({
     host: z.string().min(3).includes('.'),
-    port: z.number().min(1).max(65535),
+    port: z.coerce
+      .number({ invalid_type_error: 'Port Must be a number' })
+      .int()
+      .min(1)
+      .max(65535),
     username: z.string().min(1),
     password: z.string().min(1),
     encryption: z.enum(['none', 'ssl', 'tls', 'starttls']),
@@ -797,6 +801,7 @@ function AddExternalEmail() {
                     <FormControl>
                       <Input
                         fullWidth
+                        inputMode="numeric"
                         label="SMTP Port"
                         {...field}
                       />

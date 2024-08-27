@@ -29,6 +29,7 @@ import { tiptapCore, tiptapHtml } from '@u22n/tiptap';
 import { typeIdValidator } from '@u22n/utils/typeid';
 import { getTracer } from '@u22n/otel/helpers';
 import { parseMessage } from '@u22n/mailtools';
+import { discord } from '@u22n/utils/discord';
 import { logger } from '@u22n/otel/logger';
 import { sanitize } from '../utils/purify';
 import { db } from '@u22n/database';
@@ -106,8 +107,6 @@ async function resolveOrgAndMailserver({
     mailserverId !== 'root' &&
     mailserverId !== 'fwd'
   ) {
-    //verify the mailserver actually exists
-    console.error('test42 - inputs 🔥', { orgId, mailserverId });
     const mailServer = await db.query.postalServers.findFirst({
       where: eq(postalServers.publicId, mailserverId),
       columns: {
@@ -122,10 +121,8 @@ async function resolveOrgAndMailserver({
         }
       }
     });
-    console.error('test42 db response 🔥', { mailServer });
 
     if (!mailServer || mailServer.orgId !== orgId) {
-      console.error('test42 trow 🫡');
       throw new Error(
         `Mailserver not found or does not belong to the org ${JSON.stringify({
           orgId,
@@ -203,7 +200,6 @@ async function uploadAndAttachAttachment(
       }
     });
   } catch (error) {
-    console.error('Error uploading file to presigned URL:', error);
     throw error; // Rethrow to handle it in the outer catch block
   }
 
@@ -298,7 +294,6 @@ export const worker = createWorker<MailProcessorJobData>(
   (job) =>
     tracer.startActiveSpan('Mail Processor', async (span) => {
       try {
-        console.info('Starting mail processor job', { jobId: job.id });
         span?.setAttributes({
           'job.id': job.id,
           'job.data': JSON.stringify(job.data)
@@ -307,18 +302,12 @@ export const worker = createWorker<MailProcessorJobData>(
         const { rawMessage, params } = job.data;
         const { id, rcpt_to, message, base64 } = rawMessage;
 
-        console.info('Resolving org and mailserver', { rcpt_to, ...params });
         const { orgId, orgPublicId, forwardedEmailAddress } =
           await resolveOrgAndMailserver({
             rcpt_to,
             ...params
           });
 
-        console.info('Resolved org and mailserver', {
-          orgId,
-          orgPublicId,
-          forwardedEmailAddress
-        });
         span?.addEvent('mail-processor.resolved_org_mailserver', {
           orgId,
           orgPublicId,
@@ -357,8 +346,6 @@ export const worker = createWorker<MailProcessorJobData>(
             ? parsedEmail.cc.map((a) => a.value).flat()
             : parsedEmail.cc.value
           : [];
-
-        console.info(parsedEmail);
 
         const inReplyToEmailId = parsedEmail.inReplyTo
           ? (parsedEmail.inReplyTo
@@ -421,11 +408,6 @@ export const worker = createWorker<MailProcessorJobData>(
           cleanStyles: true
         });
 
-        console.info('Parsing email addresses', {
-          messageFrom,
-          messageTo,
-          messageCc
-        });
         const [
           messageToPlatformObject,
           messageFromPlatformObject,
@@ -449,12 +431,6 @@ export const worker = createWorker<MailProcessorJobData>(
               })
             : Promise.resolve([])
         ]);
-
-        console.info('Email addresses parsed', {
-          messageToPlatformObject,
-          messageFromPlatformObject,
-          messageCcPlatformObject
-        });
 
         if (!messageToPlatformObject?.[0] || !messageFromPlatformObject?.[0]) {
           span?.setAttributes({
@@ -567,7 +543,7 @@ export const worker = createWorker<MailProcessorJobData>(
         });
 
         //* start to process the conversation
-        console.info('Processing conversation', { inReplyToEmailId });
+
         let hasReplyToButIsNewConvo: boolean | null = null;
         let convoId = -1;
         let replyToId: number | null = null;
@@ -590,9 +566,6 @@ export const worker = createWorker<MailProcessorJobData>(
         // - if no, then we assume this is a new convo and handle it at such
 
         if (inReplyToEmailId) {
-          console.info('Checking for existing message with inReplyToEmailId', {
-            inReplyToEmailId
-          });
           const existingMessage = await db.query.convoEntries.findFirst({
             where: and(
               eq(convoEntries.orgId, orgId),
@@ -625,8 +598,6 @@ export const worker = createWorker<MailProcessorJobData>(
               }
             }
           });
-
-          console.info('Existing message query result', { existingMessage });
 
           if (existingMessage) {
             hasReplyToButIsNewConvo = false;
@@ -729,18 +700,9 @@ export const worker = createWorker<MailProcessorJobData>(
               });
             }
           } else {
-            console.info(
-              'No existing message found, treating as new conversation'
-            );
             hasReplyToButIsNewConvo = true;
           }
         }
-
-        console.info('Creating new conversation or adding to existing', {
-          isNewConvo: !inReplyToEmailId || hasReplyToButIsNewConvo,
-          convoId,
-          subjectId
-        });
 
         // create a new convo with new participants
         if (!inReplyToEmailId || hasReplyToButIsNewConvo) {
@@ -797,12 +759,7 @@ export const worker = createWorker<MailProcessorJobData>(
         }
 
         if (convoParticipantsToAdd.length) {
-          console.info('Inserting new convo participants', {
-            count: convoParticipantsToAdd.length
-          });
           await db.insert(convoParticipants).values(convoParticipantsToAdd);
-        } else {
-          console.info('No new convo participants to add');
         }
 
         if (!fromAddressParticipantId) {
@@ -821,8 +778,8 @@ export const worker = createWorker<MailProcessorJobData>(
             // @ts-expect-error we check and define earlier up
             fromAddressParticipantId = contactParticipant.id;
           } else if (fromAddressPlatformObject.type === 'emailIdentity') {
-            console.error(
-              '🚪 Adding participants from internal email identity with messages sent from external email services not supported yet'
+            await discord.info(
+              `🚪 Adding participants from internal email identity with messages sent from external email services not supported yet, convoId: ${convoId}, fromAddressParticipantId: ${fromAddressParticipantId}`
             );
             //! TODO: How do we handle adding the participant to the convo if we only track spaces?
             //! leave code below for ref and quick revert if needed
@@ -951,15 +908,6 @@ export const worker = createWorker<MailProcessorJobData>(
           tipTapExtensions
         );
 
-        // Before inserting a new convo entry, add a check to ensure we have valid data
-        console.info('Inserting new convo entry', {
-          orgId,
-          convoId,
-          fromAddressParticipantId,
-          replyToId,
-          subjectId
-        });
-
         if (!fromAddressParticipantId) {
           throw new Error('No from address participant id found');
         }
@@ -978,8 +926,6 @@ export const worker = createWorker<MailProcessorJobData>(
           subjectId
         });
 
-        console.info('Inserted new convo entry', insertNewConvoEntry);
-
         await db
           .update(convos)
           .set({
@@ -987,7 +933,6 @@ export const worker = createWorker<MailProcessorJobData>(
           })
           .where(eq(convos.id, convoId));
 
-        console.info('Uploading attachments');
         const uploadedAttachments = await Promise.allSettled(
           attachments.map((attachment) =>
             uploadAndAttachAttachment(
@@ -1032,8 +977,6 @@ export const worker = createWorker<MailProcessorJobData>(
             }[]
         );
 
-        console.info('Uploaded attachments', uploadedAttachments);
-
         const parsedEmailMessageHtmlWithAttachments = replaceCidWithUrl(
           strippedEmail.parsedMessageHtml,
           uploadedAttachments
@@ -1070,7 +1013,6 @@ export const worker = createWorker<MailProcessorJobData>(
           uploadedAttachments
         );
 
-        console.info('Inserting convo entry raw HTML email');
         await db.insert(convoEntryRawHtmlEmails).values({
           orgId: orgId,
           entryId: Number(insertNewConvoEntry.insertId),
@@ -1079,19 +1021,20 @@ export const worker = createWorker<MailProcessorJobData>(
           wipeDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 28) // 28 days
         });
 
-        console.info('Sending realtime notification');
         await sendRealtimeNotification({
           newConvo: (!inReplyToEmailId || hasReplyToButIsNewConvo) ?? false,
           convoId: convoId,
           convoEntryId: Number(insertNewConvoEntry.insertId)
         });
-
-        console.info('Mail processor job completed successfully');
       } catch (e) {
-        console.error('Error processing email', e);
+        console.error('Error processing email');
+        console.error(e);
+        void discord.info(
+          e instanceof Error
+            ? e.message
+            : 'Unknown Error in Mail Processor, Check Logs'
+        );
         span?.recordException(e as Error);
-        // Log the full error stack trace
-        console.error('Full error stack:', (e as Error).stack);
         // Throw the error to be caught by the worker, and moving to failed jobs
         throw e;
       }

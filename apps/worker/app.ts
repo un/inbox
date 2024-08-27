@@ -28,6 +28,12 @@ app.use('*', commandControlAuthMiddleware);
 setupTrpcHandler(app, jobsRouter);
 const cleanup = setupHonoListener(app, { port: env.PORT });
 
+void dnsCheckWorker.run();
+masterCronJob.start();
+sessionCleanupCronJob.start();
+
+console.info('Worker Jobs are running');
+
 setupRuntime([
   cleanup,
   () => dnsCheckWorker.close(),

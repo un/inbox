@@ -48,6 +48,8 @@ export function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
   }, [convoData, orgShortcode]);
 
   const participantOwnPublicId = convoData?.ownParticipantPublicId;
+  const utils = platform.useUtils();
+
   // const convoHidden = useMemo(
   //   () =>
   //     convoData
@@ -77,10 +79,16 @@ export function ConvoView({ convoId }: { convoId: TypeId<'convos'> }) {
     [formattedParticipants]
   );
 
-  const onReply = useCallback(
-    () => virtuosoRef.current?.scrollToIndex({ index: 'LAST' }),
-    []
-  );
+  const onReply = useCallback(async () => {
+    virtuosoRef.current?.scrollToIndex({ index: 'LAST' });
+    // Refresh the convo data if own public Id is not available
+    if (!participantOwnPublicId) {
+      await utils.convos.getConvo.invalidate({
+        convoPublicId: convoId,
+        orgShortcode
+      });
+    }
+  }, [convoId, orgShortcode, participantOwnPublicId, utils.convos.getConvo]);
 
   if (convoError && convoError.data?.code === 'NOT_FOUND') {
     return <ConvoNotFound />;

@@ -543,17 +543,29 @@ export const emailIdentityRouter = router({
       const authorizedSpaceIds: number[] = [];
 
       if (input.spaceShortcode) {
-        const spaceQueryResponse = await db.query.spaces.findFirst({
-          where: and(
-            eq(spaces.orgId, orgId),
-            eq(spaces.shortcode, input.spaceShortcode)
-          ),
-          columns: {
-            id: true
+        if (input.spaceShortcode === 'personal') {
+          const personalSpace = await db.query.orgMembers.findFirst({
+            where: eq(orgMembers.id, orgMemberId),
+            columns: {
+              personalSpaceId: true
+            }
+          });
+          if (personalSpace?.personalSpaceId) {
+            authorizedSpaceIds.push(personalSpace.personalSpaceId);
           }
-        });
-        if (spaceQueryResponse?.id) {
-          authorizedSpaceIds.push(spaceQueryResponse.id);
+        } else {
+          const spaceQueryResponse = await db.query.spaces.findFirst({
+            where: and(
+              eq(spaces.orgId, orgId),
+              eq(spaces.shortcode, input.spaceShortcode)
+            ),
+            columns: {
+              id: true
+            }
+          });
+          if (spaceQueryResponse?.id) {
+            authorizedSpaceIds.push(spaceQueryResponse.id);
+          }
         }
       }
 

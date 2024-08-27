@@ -2,8 +2,10 @@ import { platform, type RouterOutputs } from '@/src/lib/trpc';
 import { type InfiniteData } from '@tanstack/react-query';
 import { useOrgShortcode } from '@/src/hooks/use-params';
 import { type TypeId } from '@u22n/utils/typeid';
+import { convoListSelection } from './atoms';
 import { ms } from '@u22n/utils/ms';
 import { useCallback } from 'react';
+import { useSetAtom } from 'jotai';
 import { produce } from 'immer';
 
 type GetSpacesConvo = RouterOutputs['spaces']['getSpaceConvos'];
@@ -106,8 +108,31 @@ export function useAddSingleConvo$Cache() {
           )
             return;
           return produce(updater, (draft) => {
-            const targetPage = draft.pages[0];
-            if (targetPage) targetPage.data.unshift(structuredClone(convo));
+            const allConvos = draft.pages.flatMap((page) => page.data);
+            allConvos.push(structuredClone(convo));
+            allConvos.sort(
+              (a, b) => b.lastUpdatedAt.getTime() - a.lastUpdatedAt.getTime()
+            );
+
+            const pages: InfiniteConvoListUpdater['pages'] = [];
+            for (let i = 0; i <= allConvos.length; i += 15) {
+              const target = allConvos[Math.min(i + 15, allConvos.length - 1)];
+              if (!target) break;
+              const convoSlice = allConvos.slice(i, i + 15);
+              if (convoSlice.length === 0) break;
+              pages.push({
+                data: convoSlice,
+                cursor: {
+                  lastUpdatedAt: target.lastUpdatedAt,
+                  lastPublicId: target.publicId
+                }
+              });
+            }
+            // If the last page was empty, remove the cursor
+            if (draft.pages.at(-1)?.cursor === null && pages.at(-1)?.cursor) {
+              pages.at(-1)!.cursor = null;
+            }
+            draft.pages = pages;
           });
         });
       }
@@ -148,6 +173,7 @@ const deleteConvoFromInfiniteData = (
 export function useDeleteConvo$Cache() {
   const orgShortcode = useOrgShortcode();
   const utils = platform.useUtils();
+  const setSelection = useSetAtom(convoListSelection);
 
   return useCallback(
     async ({
@@ -160,19 +186,6 @@ export function useDeleteConvo$Cache() {
       const convos = Array.isArray(convoPublicId)
         ? convoPublicId
         : [convoPublicId];
-
-      // Find if any of the convos are open and add the deleted query param
-      if (
-        convos.some((convoPublicId) =>
-          window.location.pathname.includes(convoPublicId)
-        )
-      ) {
-        window.history.replaceState(
-          {},
-          document.title,
-          `${window.location.pathname}?deleted=true`
-        );
-      }
 
       await Promise.allSettled(
         convos.map(async (convoPublicId) => {
@@ -207,13 +220,16 @@ export function useDeleteConvo$Cache() {
           }
         })
       );
+
+      setSelection((prev) => prev.filter((convo) => !convos.includes(convo)));
     },
     [
-      orgShortcode,
+      setSelection,
       utils.convos.getConvo,
-      utils.spaces.getSpaceConvos,
       utils.convos.getOrgMemberSpecificConvo,
-      utils.convos.entries.getConvoEntries
+      utils.convos.entries.getConvoEntries,
+      utils.spaces.getSpaceConvos,
+      orgShortcode
     ]
   );
 }

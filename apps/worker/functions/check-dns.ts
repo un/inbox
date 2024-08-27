@@ -23,7 +23,7 @@ export async function checkDns(publicId: TypeId<'domains'>) {
         value: domainInfo.verificationToken
       },
       spf: {
-        includes: `_spf.${domainInfo.postalHost}`
+        includes: [`_spf.${env.PRIMARY_DOMAIN}`]
       },
       dkim: {
         key: domainInfo.dkimKey,
