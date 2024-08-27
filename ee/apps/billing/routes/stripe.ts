@@ -1,9 +1,9 @@
 import { orgBilling } from '@u22n/database/schema';
 import { createHonoApp } from '@u22n/hono';
 import { eq } from '@u22n/database/orm';
+import { stripeData } from '../stripe';
 import { db } from '@u22n/database';
 import type { Ctx } from '../ctx';
-import type Stripe from 'stripe';
 
 export const stripeApi = createHonoApp<Ctx>();
 
@@ -12,69 +12,105 @@ stripeApi.post('/webhooks', async (c) => {
   if (!stripeEvent) {
     return c.json({ error: 'Missing stripe event' }, 400);
   }
-  if (stripeEvent.type === 'customer.subscription.updated') {
-    await handleCustomerSubscriptionUpdated(stripeEvent);
-  } else {
-    console.info('Unhandled stripe event', {
-      event: stripeEvent.type
-    });
+  switch (stripeEvent.type) {
+    case 'customer.subscription.created':
+    case 'customer.subscription.updated':
+    case 'customer.subscription.deleted':
+      {
+        const { orgId } = validateMetadata(stripeEvent.data.object.metadata);
+        const priceId = stripeEvent.data.object.items.data[0]?.price.id;
+        if (!priceId) {
+          console.info('No price id found', {
+            event: stripeEvent.type,
+            data: stripeEvent.data.object
+          });
+          return c.json(null, 200);
+        }
+        const price = resolvePriceItem(priceId);
+        await createOrUpdateBillingRecords({
+          orgId,
+          price,
+          active: stripeEvent.data.object.status === 'active',
+          stripeCustomerId: stripeEvent.data.object.customer as string,
+          stripeSubscriptionId: stripeEvent.data.object.id
+        });
+      }
+      break;
+
+    default:
+      console.info('Unhandled stripe event', {
+        event: stripeEvent.type
+      });
+      break;
   }
+
   return c.json(null, 200);
 });
 
-const handleCustomerSubscriptionUpdated = async (stripeEvent: Stripe.Event) => {
-  const data = stripeEvent.data.object as Stripe.Subscription;
-  const orgsId = Number(data.metadata.orgId);
-  const subId = data.id;
-  const customerId = data.customer as string;
-  const status = data.status;
-  const plan = data.metadata.plan as 'starter' | 'pro';
-  const period = data.metadata.period as 'monthly' | 'yearly';
-
-  if (status !== 'active') {
-    console.error('❌', 'Subscription not active - manual check', {
-      status,
-      subId
-    });
-    return;
+export const resolvePriceItem = (id: string) => {
+  switch (id) {
+    case stripeData.plans.pro.monthly:
+      return ['pro', 'monthly'] as const;
+    case stripeData.plans.pro.yearly:
+      return ['pro', 'yearly'] as const;
+    default:
+      throw new Error(`Unknown plan ${id}`);
   }
+};
 
-  if (!orgsId || !subId || !customerId || !plan || !period) {
-    console.error('❌', 'Missing data', {
-      orgsId,
-      subId,
-      customerId,
-      plan,
-      period
-    });
-    return;
+export const validateMetadata = (
+  metadata: Record<string, string | undefined>
+) => {
+  const { orgId, totalUsers } = metadata;
+  if (!orgId || isNaN(Number(orgId))) {
+    throw new Error('Invalid orgId');
   }
+  if (!totalUsers || isNaN(Number(totalUsers))) {
+    throw new Error('Invalid totalUsers');
+  }
+  return { orgId: Number(orgId), totalUsers: Number(totalUsers) };
+};
 
-  const existingOrgBilling = await db.query.orgBilling.findFirst({
-    where: eq(orgBilling.orgId, orgsId),
-    columns: {
-      id: true
-    }
+type BillingRecordParams = {
+  orgId: number;
+  price: ReturnType<typeof resolvePriceItem>;
+  stripeCustomerId: string;
+  stripeSubscriptionId: string;
+  active: boolean;
+};
+
+export const createOrUpdateBillingRecords = async ({
+  active,
+  stripeCustomerId,
+  orgId,
+  price,
+  stripeSubscriptionId
+}: BillingRecordParams) => {
+  const existingRecord = await db.query.orgBilling.findFirst({
+    where: eq(orgBilling.orgId, orgId),
+    columns: { id: true }
   });
 
-  if (existingOrgBilling) {
+  // If the subscription is canceled, we need to delete the orgBilling record
+  if (!active) {
+    await db.delete(orgBilling).where(eq(orgBilling.orgId, orgId));
+    return;
+  }
+
+  const [plan, period] = price;
+  const values = {
+    orgId,
+    period,
+    stripeCustomerId,
+    stripeSubscriptionId,
+    plan
+  } as const;
+  if (existingRecord) {
     await db
       .update(orgBilling)
-      .set({
-        orgId: orgsId,
-        stripeCustomerId: customerId,
-        stripeSubscriptionId: subId,
-        plan: plan,
-        period: period
-      })
-      .where(eq(orgBilling.id, existingOrgBilling.id));
+      .set(values)
+      .where(eq(orgBilling.id, existingRecord.id));
   } else {
-    await db.insert(orgBilling).values({
-      orgId: orgsId,
-      stripeCustomerId: customerId,
-      stripeSubscriptionId: subId,
-      plan: plan,
-      period: period
-    });
+    await db.insert(orgBilling).values(values);
   }
 };
