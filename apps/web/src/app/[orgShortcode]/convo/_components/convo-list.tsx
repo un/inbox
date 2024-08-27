@@ -10,11 +10,11 @@ import { useEffect, useMemo } from 'react';
 import { platform } from '@/src/lib/trpc';
 import { ms } from '@u22n/utils/ms';
 
-type Props = {
-  // hidden: boolean;
-};
+// type Props = {
+// hidden: boolean;
+// };
 
-export function ConvoList({} /*hidden*/ : Props) {
+export function ConvoList(/*{hidden} : Props*/) {
   const orgShortcode = useOrgShortcode();
   const spaceShortcode = useSpaceShortcode(false);
   const { scopedRedirect, scopedUrl } = useOrgScopedRouter();

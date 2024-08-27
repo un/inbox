@@ -18,7 +18,8 @@ export function getTracer(name: string) {
       return tracer.startActiveSpan(name, (span) => {
         const result = fn(span);
         if (result instanceof Promise) {
-          return result.finally(() => span.end());
+          void result.finally(() => span.end());
+          return result;
         } else {
           span.end();
           return result;

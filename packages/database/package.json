@@ -26,17 +26,15 @@
     "db:clean:r": "infisical run --env=remote -- tsx dbClean.ts"
   },
   "dependencies": {
-    "@planetscale/database": "^1.18.0",
+    "@planetscale/database": "^1.19.0",
     "@t3-oss/env-core": "^0.11.0",
     "@u22n/otel": "workspace:^",
-    "@u22n/tsconfig": "^0.0.2",
     "@u22n/utils": "workspace:*",
-    "drizzle-orm": "^0.32.1",
+    "drizzle-orm": "^0.33.0",
     "mysql2": "^3.11.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "drizzle-kit": "0.23.1",
-    "tsx": "^4.16.3"
+    "drizzle-kit": "0.24.1"
   }
 }

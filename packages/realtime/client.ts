@@ -108,7 +108,7 @@ export default class RealtimeClient {
       client.bind('pusher:error', (e: unknown) => {
         this.client = null;
         if (this.#connectionTimeout) clearTimeout(this.#connectionTimeout);
-        reject(e);
+        reject(e as Error);
       });
     });
   }
