@@ -15,23 +15,19 @@
     }
   },
   "dependencies": {
-    "@t3-oss/env-core": "^0.10.1",
-    "@trpc/client": "11.0.0-rc.467",
-    "@trpc/server": "11.0.0-rc.467",
+    "@t3-oss/env-core": "^0.11.0",
+    "@trpc/client": "11.0.0-rc.485",
+    "@trpc/server": "11.0.0-rc.485",
     "@u22n/database": "workspace:^",
     "@u22n/hono": "workspace:^",
     "@u22n/otel": "workspace:^",
     "@u22n/utils": "workspace:^",
-    "bullmq": "^5.8.7",
+    "bullmq": "^5.12.10",
     "cron": "^3.1.7",
     "superjson": "^2.2.1",
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@types/node": "^20.14.10",
-    "@u22n/tsconfig": "^0.0.2",
-    "tsup": "^8.1.2",
-    "tsx": "^4.16.2",
-    "typescript": "^5.5.3"
+    "tsup": "^8.2.4"
   }
 }

@@ -70,15 +70,7 @@ function ChildrenWithOrgIssues({ children }: { children: ReactNode }) {
   );
 }
 
-function ConvoNavHeader(
-  {
-    // showHidden,
-    // setShowHidden
-  }: {
-    // showHidden: boolean;
-    // setShowHidden: Dispatch<SetStateAction<boolean>>;
-  }
-) {
+function ConvoNavHeader() {
   const orgShortcode = useOrgShortcode();
   const spaceShortcode = useSpaceShortcode(false);
   const { scopedUrl } = useOrgScopedRouter();

@@ -10,22 +10,18 @@
     "check": "tsc --noEmit"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.614.0",
-    "@aws-sdk/s3-request-presigner": "^3.614.0",
+    "@aws-sdk/client-s3": "^3.637.0",
+    "@aws-sdk/s3-request-presigner": "^3.637.0",
     "@t3-oss/env-core": "^0.11.0",
     "@u22n/database": "workspace:*",
     "@u22n/hono": "workspace:^",
     "@u22n/otel": "workspace:^",
-    "@u22n/tsconfig": "^0.0.2",
     "@u22n/utils": "workspace:*",
-    "sharp": "^0.33.4",
+    "sharp": "^0.33.5",
     "unstorage": "^1.10.2",
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@types/node": "^20.14.10",
-    "tsup": "^8.1.2",
-    "tsx": "^4.16.2",
-    "typescript": "5.5.3"
+    "tsup": "^8.2.4"
   }
 }
