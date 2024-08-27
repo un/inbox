@@ -5,9 +5,9 @@ import { Button } from '@/src/components/shadcn-ui/button';
 import { CopyButton } from '@/src/components/copy-button';
 import { Badge } from '@/src/components/shadcn-ui/badge';
 import { useOrgShortcode } from '@/src/hooks/use-params';
+import React, { useCallback, useEffect } from 'react';
 import type { RouterOutputs } from '@/src/lib/trpc';
 import { Avatar } from '@/src/components/avatar';
-import { useCallback, useEffect } from 'react';
 import { Trash } from '@phosphor-icons/react';
 import { platform } from '@/src/lib/trpc';
 import { format } from 'date-fns';
@@ -140,46 +140,46 @@ export const columns: ColumnDef<Member>[] = [
     id: 'delete',
     header: '',
 
-    cell: ({ row }) => {
-      const orgShortcode = useOrgShortcode();
-      const utils = platform.useUtils();
-
-      const {
-        mutate: deleteInvite,
-        error: inviteError,
-        isPending: isSubmitting
-      } = platform.org.users.invites.deleteInvite.useMutation({
-        onSuccess: () => {
-          toast.success('Invitation deleted');
-          void utils.org.users.invites.viewInvites.refetch();
-        },
-        onError: (error) => {
-          toast.error('Something went wrong. Please try again later.');
-          console.error(error);
-        }
-      });
-
-      return (
-        <div className="flex h-full w-full items-center">
-          <Button
-            onClick={() => {
-              const invitePublicId = row.original.publicId as string;
-              const orgMemberPublicId = row.original.orgMember
-                ?.publicId as string;
-
-              deleteInvite({
-                orgShortcode,
-                invitePublicId,
-                orgMemberPublicId
-              });
-            }}
-            variant={'ghost'}
-            size="icon"
-            className="bg-red-4 hover:bg-red-5 m-1 uppercase">
-            <Trash className="fill-white" />
-          </Button>
-        </div>
-      );
-    }
+    cell: ({ row }) => <DeleteInviteCell row={row.original} />
   })
 ];
+
+const DeleteInviteCell: React.FC<{ row: Member }> = ({ row }) => {
+  const orgShortcode = useOrgShortcode();
+  const utils = platform.useUtils();
+
+  const { mutate: deleteInvite } =
+    platform.org.users.invites.deleteInvite.useMutation({
+      onSuccess: () => {
+        toast.success('Invitation deleted');
+        void utils.org.users.invites.viewInvites.refetch();
+      },
+      onError: (error) => {
+        toast.error('Something went wrong. Please try again later.');
+        console.error(error);
+      }
+    });
+
+  const handleDelete = () => {
+    const invitePublicId = row.publicId as string;
+    const orgMemberPublicId = row.orgMember?.publicId as string;
+
+    deleteInvite({
+      orgShortcode,
+      invitePublicId,
+      orgMemberPublicId
+    });
+  };
+
+  return (
+    <div className="flex h-full w-full items-center">
+      <Button
+        onClick={handleDelete}
+        variant={'ghost'}
+        size="icon"
+        className="bg-red-4 hover:bg-red-5 m-1 uppercase">
+        <Trash className="fill-white" />
+      </Button>
+    </div>
+  );
+};
