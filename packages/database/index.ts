@@ -19,7 +19,9 @@ if (opentelemetryEnabled) {
         if (Array.isArray(args)) {
           span.setAttribute(
             'database.values',
-            args.map((v: string) => v.toString())
+            args.map(
+              (v: string | null | number) => v?.toString?.() ?? 'Unknown'
+            )
           );
         }
       }
