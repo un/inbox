@@ -317,6 +317,94 @@ export const invitesRouter = router({
     };
   }),
 
+  deleteInvite: orgAdminProcedure
+    .input(
+      z.object({
+        invitePublicId: typeIdValidator('orgInvitations'),
+        orgMemberPublicId: typeIdValidator('orgMembers'),
+        emailIdentitiesPublicId: typeIdValidator('emailIdentities').optional()
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { db, org } = ctx;
+      const { orgMemberPublicId } = input;
+
+      return db.transaction(async (db) => {
+        //find that org member
+        const orgMember = await db.query.orgMembers.findFirst({
+          where: eq(orgMembers.publicId, orgMemberPublicId),
+          columns: {
+            id: true,
+            orgMemberProfileId: true,
+            personalSpaceId: true
+          }
+        });
+
+        if (!orgMember) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Org Member not found'
+          });
+        }
+
+        const {
+          id: orgMemberId,
+          orgMemberProfileId,
+          personalSpaceId
+        } = orgMember;
+
+        //delte the email identity
+        if (input.emailIdentitiesPublicId) {
+          await db
+            .delete(emailIdentities)
+            .where(eq(emailIdentities.publicId, input.emailIdentitiesPublicId));
+        }
+
+        //delete personal space
+        if (personalSpaceId) {
+          await db
+            .delete(spaceMembers)
+            .where(eq(spaceMembers.spaceId, personalSpaceId));
+          await db.delete(spaces).where(eq(spaces.id, personalSpaceId));
+        }
+
+        // dlete the organization member profile
+        await db
+          .delete(orgMemberProfiles)
+          .where(eq(orgMemberProfiles.id, orgMemberProfileId));
+
+        // delete the organization member record
+        await db.delete(orgMembers).where(eq(orgMembers.id, orgMemberId));
+
+        const orgInvitesResponse = await db.query.orgInvitations.findFirst({
+          where: eq(orgInvitations.orgMemberId, orgMemberId),
+          columns: {
+            id: true
+          }
+        });
+
+        if (!orgInvitesResponse) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Invitation not found'
+          });
+        }
+
+        //dlete the invitation for the org member
+        if (orgInvitesResponse) {
+          await db
+            .delete(orgInvitations)
+            .where(eq(orgInvitations.id, orgInvitesResponse.id));
+        }
+
+        return {
+          success: true,
+          message:
+            'Organization invitation and all related records successfully deleted.'
+        };
+      });
+    }),
+
   validateInvite: publicProcedure
     .use(ratelimiter({ limit: 10, namespace: 'invite.validate' }))
     .input(
