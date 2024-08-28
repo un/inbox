@@ -5,7 +5,6 @@ import { Button } from '@/src/components/shadcn-ui/button';
 import { CopyButton } from '@/src/components/copy-button';
 import { Badge } from '@/src/components/shadcn-ui/badge';
 import { useOrgShortcode } from '@/src/hooks/use-params';
-import React, { useCallback, useEffect } from 'react';
 import type { RouterOutputs } from '@/src/lib/trpc';
 import { Avatar } from '@/src/components/avatar';
 import { Trash } from '@phosphor-icons/react';
@@ -154,10 +153,6 @@ const DeleteInviteCell: React.FC<{ row: Member }> = ({ row }) => {
       onSuccess: () => {
         toast.success('Invitation deleted');
         void utils.org.users.invites.viewInvites.refetch();
-      },
-      onError: (error) => {
-        toast.error('Something went wrong. Please try again later.');
-        console.error(error);
       }
     });
 
