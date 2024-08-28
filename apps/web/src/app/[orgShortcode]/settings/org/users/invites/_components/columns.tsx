@@ -10,6 +10,7 @@ import type { RouterOutputs } from '@/src/lib/trpc';
 import { Avatar } from '@/src/components/avatar';
 import { Trash } from '@phosphor-icons/react';
 import { platform } from '@/src/lib/trpc';
+import { cn } from '@/src/lib/utils';
 import { format } from 'date-fns';
 import { env } from '@/src/env';
 import { toast } from 'sonner';
@@ -177,7 +178,10 @@ const DeleteInviteCell: React.FC<{ row: Member }> = ({ row }) => {
         onClick={handleDelete}
         variant={'ghost'}
         size="icon"
-        className="bg-red-4 hover:bg-red-5 m-1 uppercase">
+        className={cn(
+          'bg-red-4 hover:bg-red-5 m-1 uppercase',
+          row.acceptedAt ? 'hidden' : 'flex'
+        )}>
         <Trash className="fill-white" />
       </Button>
     </div>
