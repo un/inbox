@@ -317,6 +317,90 @@ export const invitesRouter = router({
     };
   }),
 
+  deleteInvite: orgAdminProcedure
+    .input(
+      z.object({
+        invitePublicId: typeIdValidator('orgInvitations'),
+        orgMemberPublicId: typeIdValidator('orgMembers'),
+        emailIdentitiesPublicId: typeIdValidator('emailIdentities').optional()
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { db } = ctx;
+      const { orgMemberPublicId } = input;
+
+      const orgMember = await db.query.orgMembers.findFirst({
+        where: eq(orgMembers.publicId, orgMemberPublicId),
+        columns: {
+          id: true,
+          orgMemberProfileId: true,
+          personalSpaceId: true
+        }
+      });
+
+      if (!orgMember) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Org Member not found'
+        });
+      }
+
+      const orgInvitesResponse = await db.query.orgInvitations.findFirst({
+        where: eq(orgInvitations.orgMemberId, orgMember.id),
+        columns: {
+          id: true,
+          acceptedAt: true
+        }
+      });
+
+      if (!orgInvitesResponse) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Invitation not found'
+        });
+      }
+
+      if (orgInvitesResponse.acceptedAt) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Used invitation cannot be deleted'
+        });
+      }
+
+      const {
+        id: orgMemberId,
+        orgMemberProfileId,
+        personalSpaceId
+      } = orgMember;
+
+      await db.transaction(async (db) => {
+        if (input.emailIdentitiesPublicId) {
+          await db
+            .delete(emailIdentities)
+            .where(eq(emailIdentities.publicId, input.emailIdentitiesPublicId));
+        }
+
+        if (personalSpaceId) {
+          await db
+            .delete(spaceMembers)
+            .where(eq(spaceMembers.spaceId, personalSpaceId));
+          await db.delete(spaces).where(eq(spaces.id, personalSpaceId));
+        }
+
+        await db
+          .delete(orgMemberProfiles)
+          .where(eq(orgMemberProfiles.id, orgMemberProfileId));
+
+        await db.delete(orgMembers).where(eq(orgMembers.id, orgMemberId));
+
+        if (orgInvitesResponse) {
+          await db
+            .delete(orgInvitations)
+            .where(eq(orgInvitations.id, orgInvitesResponse.id));
+        }
+      });
+    }),
+
   validateInvite: publicProcedure
     .use(ratelimiter({ limit: 10, namespace: 'invite.validate' }))
     .input(

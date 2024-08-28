@@ -1,12 +1,18 @@
 'use client';
 
 import { createColumnHelper, type ColumnDef } from '@tanstack/react-table';
+import { Button } from '@/src/components/shadcn-ui/button';
 import { CopyButton } from '@/src/components/copy-button';
 import { Badge } from '@/src/components/shadcn-ui/badge';
+import { useOrgShortcode } from '@/src/hooks/use-params';
 import type { RouterOutputs } from '@/src/lib/trpc';
 import { Avatar } from '@/src/components/avatar';
+import { Trash } from '@phosphor-icons/react';
+import { platform } from '@/src/lib/trpc';
+import { cn } from '@/src/lib/utils';
 import { format } from 'date-fns';
 import { env } from '@/src/env';
+import { toast } from 'sonner';
 
 type Member =
   RouterOutputs['org']['users']['invites']['viewInvites']['invites'][number];
@@ -129,5 +135,50 @@ export const columns: ColumnDef<Member>[] = [
         </div>
       ) : null;
     }
+  }),
+  columnHelper.display({
+    id: 'delete',
+    header: '',
+
+    cell: ({ row }) => <DeleteInviteCell row={row.original} />
   })
 ];
+
+const DeleteInviteCell: React.FC<{ row: Member }> = ({ row }) => {
+  const orgShortcode = useOrgShortcode();
+  const utils = platform.useUtils();
+
+  const { mutate: deleteInvite } =
+    platform.org.users.invites.deleteInvite.useMutation({
+      onSuccess: () => {
+        toast.success('Invitation deleted');
+        void utils.org.users.invites.viewInvites.refetch();
+      }
+    });
+
+  const handleDelete = () => {
+    const invitePublicId = row.publicId as string;
+    const orgMemberPublicId = row.orgMember?.publicId as string;
+
+    deleteInvite({
+      orgShortcode,
+      invitePublicId,
+      orgMemberPublicId
+    });
+  };
+
+  return (
+    <div className="flex h-full w-full items-center">
+      <Button
+        onClick={handleDelete}
+        variant={'ghost'}
+        size="icon"
+        className={cn(
+          'bg-red-4 hover:bg-red-5 m-1 uppercase',
+          row.acceptedAt ? 'hidden' : 'flex'
+        )}>
+        <Trash className="fill-white" />
+      </Button>
+    </div>
+  );
+};
