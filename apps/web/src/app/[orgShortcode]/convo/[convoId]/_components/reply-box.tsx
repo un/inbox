@@ -37,10 +37,10 @@ import { useDraft } from '@/src/stores/draft-store';
 import { Editor } from '@/src/components/editor';
 import { type TypeId } from '@u22n/utils/typeid';
 import { useDebounce } from '@uidotdev/usehooks';
-import { useAtom, useAtomValue } from 'jotai';
 import { platform } from '@/src/lib/trpc';
 import { cn } from '@/src/lib/utils';
 import { ms } from '@u22n/utils/ms';
+import { useAtom } from 'jotai';
 import { toast } from 'sonner';
 
 type ReplyBoxProps = {
@@ -58,7 +58,8 @@ export function ReplyBox({
   const [editorText, setEditorText] = useState(draft.content);
   const orgShortcode = useOrgShortcode();
   const spaceShortcode = useSpaceShortcode(false);
-  const replyTo = useAtomValue(replyToMessageAtom);
+  const [replyTo] = useAtom(replyToMessageAtom);
+  const [emailIdentity, setEmailIdentity] = useAtom(emailIdentityAtom);
   const addConvoToCache = useUpdateConvoMessageList$Cache();
   const updateConvoData = useUpdateConvoData$Cache();
   const editorRef = useRef<EditorFunctions>(null);
@@ -116,8 +117,6 @@ export function ReplyBox({
       }
     );
 
-  const [emailIdentity, setEmailIdentity] = useAtom(emailIdentityAtom);
-
   const {
     attachments,
     openFilePicker,
@@ -148,7 +147,11 @@ export function ReplyBox({
 
   const handleReply = useCallback(
     async (type: 'comment' | 'message') => {
-      if (!replyTo) return;
+      const currentReplyTo = replyTo;
+      if (!currentReplyTo) {
+        console.error('ReplyBox: replyTo is null');
+        return;
+      }
       if (hasExternalParticipants && emailIdentity === null) {
         toast.error('Please select an email identity to send the message as.');
         return;
@@ -158,7 +161,7 @@ export function ReplyBox({
         attachments: getTrpcUploadFormat(),
         orgShortcode,
         message: editorText,
-        replyToMessagePublicId: replyTo,
+        replyToMessagePublicId: currentReplyTo,
         messageType: type,
         sendAsEmailIdentityPublicId: emailIdentity ?? undefined
       });
@@ -190,6 +193,7 @@ export function ReplyBox({
       onReply();
     },
     [
+      replyTo,
       addConvoToCache,
       convoId,
       editorText,
@@ -198,12 +202,44 @@ export function ReplyBox({
       hasExternalParticipants,
       onReply,
       orgShortcode,
-      replyTo,
       replyToConvo,
       spaceShortcode,
       updateConvoData
     ]
   );
+
+  const handleSendMessage = useCallback(() => {
+    if (
+      !replyTo ||
+      isEditorEmpty ||
+      (hasExternalParticipants && !emailIdentity) ||
+      replyToConvoLoading
+    ) {
+      return;
+    }
+    return handleReply('message');
+  }, [
+    replyTo,
+    isEditorEmpty,
+    hasExternalParticipants,
+    emailIdentity,
+    replyToConvoLoading,
+    handleReply
+  ]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
+        event.preventDefault();
+        void handleSendMessage();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleSendMessage]);
 
   return (
     <div className="flex min-h-32 flex-col p-4">
@@ -328,10 +364,7 @@ export function ReplyBox({
                 replyToConvoLoading
               }
               size={isMobile ? 'icon' : 'sm'}
-              onPointerDown={(e) => {
-                e.preventDefault();
-                return handleReply('message');
-              }}>
+              onClick={handleSendMessage}>
               {isMobile ? <PaperPlaneTilt size={16} /> : <span>Send</span>}
             </Button>
           </div>

@@ -6,25 +6,18 @@ const { trace } = opentelemetryEnabled
   ? await import('@opentelemetry/api')
   : { trace: undefined };
 
+const { wrapTracer } = opentelemetryEnabled
+  ? await import('@opentelemetry/api/experimental')
+  : { wrapTracer: undefined };
+
 export function getTracer(name: string) {
-  if (!trace)
+  if (!trace || !wrapTracer)
     return {
       startActiveSpan: <Fn>(name: string, fn: (span?: Span) => Fn) => fn()
     };
-
-  const tracer = trace.getTracer(name);
+  const tracer = wrapTracer(trace.getTracer(name));
   return {
-    startActiveSpan<Fn>(name: string, fn: (span?: Span) => Fn) {
-      return tracer.startActiveSpan(name, (span) => {
-        const result = fn(span);
-        if (result instanceof Promise) {
-          return result.finally(() => span.end());
-        } else {
-          span.end();
-          return result;
-        }
-      });
-    }
+    startActiveSpan: tracer.withActiveSpan.bind(tracer)
   };
 }
 

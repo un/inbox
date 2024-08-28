@@ -3,7 +3,6 @@
 import { useLayoutEffect, useState } from 'react';
 
 function useMaxWidth(maxWidth: number) {
-  if (typeof window === 'undefined') false;
   const [isHittingMaxWidth, setIsHittingMaxWidth] = useState(false);
 
   useLayoutEffect(() => {
@@ -18,6 +17,7 @@ function useMaxWidth(maxWidth: number) {
     return () => window.removeEventListener('resize', handleSize);
   });
 
+  if (typeof window === 'undefined') return false;
   return isHittingMaxWidth;
 }
 

@@ -19,7 +19,6 @@ import { useIsMobile } from '@/src/hooks/use-is-mobile';
 import { Trash } from '@phosphor-icons/react/dist/ssr';
 import { useTimeAgo } from '@/src/hooks/use-time-ago';
 import { useLongPress } from '@uidotdev/usehooks';
-import { Avatar } from '@/src/components/avatar';
 import { type TypeId } from '@u22n/utils/typeid';
 import { usePathname } from 'next/navigation';
 import { convoListSelecting } from '../atoms';
@@ -160,35 +159,22 @@ export const ConvoItem = memo(function ConvoItem({
           )}
           <div className="flex w-[90%] flex-1 flex-col">
             <div className="flex flex-row items-end justify-between gap-1">
-              <span className="truncate text-sm font-medium">
-                {participantNames.join(', ')}
+              <span className="truncate break-all text-left font-medium">
+                {convo.subjects[0]?.subject}
               </span>
               <span className="text-base-11 min-w-fit text-right text-xs">
                 {timeAgo}
               </span>
             </div>
-
-            <span className="truncate break-all text-left text-xs font-medium">
-              {convo.subjects[0]?.subject}
+            <span className="truncate text-xs font-medium">
+              {participantNames.join(', ')}
             </span>
 
             <div className="flex flex-row items-start justify-start gap-1 text-left text-sm">
-              <div className="px-0.5">
-                {authorAvatarData && (
-                  <Avatar
-                    avatarProfilePublicId={
-                      authorAvatarData.avatarProfilePublicId
-                    }
-                    avatarTimestamp={authorAvatarData.avatarTimestamp}
-                    name={authorAvatarData.name}
-                    size={'sm'}
-                    color={authorAvatarData.color}
-                    key={authorAvatarData.participantPublicId}
-                  />
-                )}
-              </div>
-
               <span className="ph-no-capture line-clamp-2 overflow-clip break-words">
+                <span className="font-semibold">
+                  {authorAvatarData?.name + ':' ?? ''}
+                </span>
                 {convo.entries[0]?.bodyPlainText.trim() ?? ''}
               </span>
             </div>

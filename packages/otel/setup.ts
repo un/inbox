@@ -23,6 +23,7 @@ export const setupOpentelemetry = ({
   name: string;
   version: string;
 }) => {
+  console.info(`Setting up OpenTelemetry for ${name}@${version}`);
   const resource = new Resource({
     'service.name': name,
     'service.version': version
@@ -32,7 +33,8 @@ export const setupOpentelemetry = ({
   traceProvider.addSpanProcessor(
     new BatchSpanProcessor(
       new OTLPTraceExporter({
-        url: env.OTEL_EXPORTER_TRACES_ENDPOINT
+        url: env.OTEL_EXPORTER_TRACES_ENDPOINT,
+        headers: env.OTEL_EXPORTER_TRACES_HEADERS
       })
     )
   );
@@ -42,7 +44,8 @@ export const setupOpentelemetry = ({
   loggerProvider.addLogRecordProcessor(
     new BatchLogRecordProcessor(
       new OTLPLogExporter({
-        url: env.OTEL_EXPORTER_LOGS_ENDPOINT
+        url: env.OTEL_EXPORTER_LOGS_ENDPOINT,
+        headers: env.OTEL_EXPORTER_LOGS_HEADERS
       })
     )
   );
@@ -50,8 +53,8 @@ export const setupOpentelemetry = ({
 
   registerInstrumentations({
     instrumentations: [
-      new UndiciInstrumentation(),
       new HttpInstrumentation(),
+      new UndiciInstrumentation(),
       new WinstonInstrumentation()
     ]
   });

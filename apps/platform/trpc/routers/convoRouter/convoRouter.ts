@@ -1223,8 +1223,7 @@ export const convoRouter = router({
             fileName: attachment.fileName,
             type: attachment.type,
             size: attachment.size,
-            createdAt: newConvoEntryTimestamp,
-            inline: true
+            createdAt: newConvoEntryTimestamp
           });
 
           pendingAttachmentsToRemoveFromPending.push(
