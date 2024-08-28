@@ -173,7 +173,7 @@ export const ConvoItem = memo(function ConvoItem({
             <div className="flex flex-row items-start justify-start gap-1 text-left text-sm">
               <span className="ph-no-capture line-clamp-2 overflow-clip break-words">
                 <span className="font-semibold">
-                  {authorAvatarData?.name + ':' ?? ''}
+                  {authorAvatarData?.name.trim() + ': ' ?? ''}
                 </span>
                 {convo.entries[0]?.bodyPlainText.trim() ?? ''}
               </span>
