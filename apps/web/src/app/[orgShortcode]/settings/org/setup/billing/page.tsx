@@ -8,6 +8,8 @@ import { useOrgShortcode } from '@/src/hooks/use-params';
 import { useEffect, useState } from 'react';
 import CalEmbed from '@calcom/embed-react';
 import { platform } from '@/src/lib/trpc';
+import { cn } from '@/src/lib/utils';
+import Link from 'next/link';
 
 export default function Page() {
   const orgShortcode = useOrgShortcode();
@@ -16,8 +18,13 @@ export default function Page() {
       orgShortcode
     });
 
-  const { mutateAsync: createPortalLink, isPending: isLoadingPortalLink } =
-    platform.org.setup.billing.getOrgStripePortalLink.useMutation();
+  const { data: portalLink } =
+    platform.org.setup.billing.getOrgStripePortalLink.useQuery(
+      { orgShortcode },
+      {
+        enabled: data?.currentPlan === 'pro'
+      }
+    );
 
   const [showPlan, setShowPlans] = useState(false);
 
@@ -71,47 +78,18 @@ export default function Page() {
           )}
           {showPlan && <PricingTable />}
           {data.currentPlan === 'pro' && (
-            <div className="flex flex-col gap-2">
-              <Button
-                className="w-fit"
-                loading={isLoadingPortalLink}
-                onClick={async () => {
-                  const { portalLink } = await createPortalLink({
-                    orgShortcode
-                  });
-                  window.open(portalLink, '_blank');
-                }}>
+            <Button
+              className={cn(
+                'w-fit',
+                !portalLink && 'pointer-events-none opacity-75'
+              )}
+              asChild>
+              <Link
+                href={portalLink?.portalLink ?? '#'}
+                target="_blank">
                 Manage Your Subscription
-              </Button>
-
-              <div className="flex flex-col gap-2 py-2">
-                {data.dates?.start_date ? (
-                  <div>
-                    <span>Subscription started on </span>
-                    <span className="font-semibold">
-                      {new Date(
-                        data.dates.start_date * 1000
-                      ).toLocaleDateString()}
-                    </span>
-                  </div>
-                ) : null}
-
-                <div>
-                  {data.dates?.cancel_at_period_end ? (
-                    <span>Pending cancelation on </span>
-                  ) : (
-                    <span>Subscription renews on </span>
-                  )}
-                  <span className="font-semibold">
-                    {data.dates?.current_period_end
-                      ? new Date(
-                          data.dates?.current_period_end * 1000
-                        ).toLocaleDateString()
-                      : 'End of Current billing cycle'}
-                  </span>
-                </div>
-              </div>
-            </div>
+              </Link>
+            </Button>
           )}
           {data.currentPlan === 'pro' && (
             <div className="my-4 flex w-full flex-1 flex-col gap-2">

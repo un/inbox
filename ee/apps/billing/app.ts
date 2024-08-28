@@ -5,8 +5,7 @@ import {
   setupHealthReporting,
   setupHonoListener,
   setupRuntime,
-  setupTrpcHandler,
-  setupRouteLogger
+  setupTrpcHandler
 } from '@u22n/hono';
 import { stripeWebhookMiddleware } from './middlewares';
 import { validateLicense } from './validateLicenseKey';
@@ -20,7 +19,6 @@ import { env } from './env';
 await validateLicense();
 
 const app = createHonoApp<Ctx>();
-setupRouteLogger(app, env.NODE_ENV === 'development');
 setupCors(app, { origin: env.WEBAPP_URL });
 setupHealthReporting(app, { service: 'Billing' });
 setupErrorHandlers(app);

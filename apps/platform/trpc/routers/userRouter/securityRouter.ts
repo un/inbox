@@ -1230,7 +1230,6 @@ export const securityRouter = router({
 
       await Promise.allSettled(
         orgIdsArray.map(async (orgId) => {
-          // Update org user count
           await refreshOrgShortcodeCache(orgId);
         })
       );
@@ -1243,16 +1242,6 @@ export const securityRouter = router({
           status: 'removed'
         })
         .where(inArray(orgMembers.id, orgMemberIdsArray));
-
-      if (!ctx.selfHosted) {
-        await Promise.allSettled(
-          orgIdsArray.map(async (orgId) => {
-            await billingTrpcClient.stripe.subscriptions.updateOrgUserCount.mutate(
-              { orgId }
-            );
-          })
-        );
-      }
     }
 
     // delete orgs
@@ -1395,7 +1384,7 @@ export const securityRouter = router({
 
       // Delete Billing
 
-      if (!ctx.selfHosted) {
+      if (env.EE_LICENSE_KEY) {
         await Promise.all(
           orgIdsArray.map(async (orgId) => {
             await billingTrpcClient.stripe.subscriptions.cancelOrgSubscription.mutate(

@@ -30,22 +30,34 @@ export const billingRouter = router({
           and(eq(orgMembers.orgId, orgId), eq(orgMembers.status, 'active'))
         );
 
-      const dates = orgBillingQuery
-        ? await billingTrpcClient.stripe.subscriptions.getSubscriptionDates.query(
-            {
-              orgId
-            }
-          )
-        : null;
-
       return {
         totalUsers: activeOrgMembersCount[0]?.count,
         currentPlan: orgPlan,
-        currentPeriod: orgPeriod,
-        dates
+        currentPeriod: orgPeriod
       };
     }),
-  createCheckoutSession: eeProcedure
+  getOrgStripePortalLink: eeProcedure
+    .unstable_concat(orgAdminProcedure)
+    .query(async ({ ctx }) => {
+      const { org } = ctx;
+      const orgId = org.id;
+
+      const orgPortalLink =
+        await billingTrpcClient.stripe.links.getPortalLink.query({
+          orgId: orgId
+        });
+
+      if (!orgPortalLink.link) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Org not subscribed to a plan'
+        });
+      }
+      return {
+        portalLink: orgPortalLink.link
+      };
+    }),
+  getOrgSubscriptionPaymentLink: eeProcedure
     .unstable_concat(orgAdminProcedure)
     .input(
       z.object({
@@ -64,7 +76,6 @@ export const billingRouter = router({
           id: true
         }
       });
-
       if (orgSubscriptionQuery?.id) {
         throw new TRPCError({
           code: 'FORBIDDEN',
@@ -82,38 +93,24 @@ export const billingRouter = router({
       const activeOrgMembersCount = Number(
         activeOrgMembersCountResponse[0]?.count ?? '0'
       );
-      const checkoutSession =
-        await billingTrpcClient.stripe.links.createCheckoutSession.mutate({
-          orgId: orgId,
-          plan: plan,
-          period: period,
-          totalOrgUsers: activeOrgMembersCount
-        });
+      const orgSubLink =
+        await billingTrpcClient.stripe.links.createSubscriptionPaymentLink.mutate(
+          {
+            orgId: orgId,
+            plan: plan,
+            period: period,
+            totalOrgUsers: activeOrgMembersCount
+          }
+        );
 
-      return {
-        checkoutSessionId: checkoutSession.id,
-        checkoutSessionClientSecret: checkoutSession.clientSecret
-      };
-    }),
-  getOrgStripePortalLink: eeProcedure
-    .unstable_concat(orgAdminProcedure)
-    .mutation(async ({ ctx }) => {
-      const { org } = ctx;
-      const orgId = org.id;
-
-      const orgPortalLink =
-        await billingTrpcClient.stripe.links.getPortalLink.query({
-          orgId: orgId
-        });
-
-      if (!orgPortalLink.link) {
+      if (!orgSubLink.link) {
         throw new TRPCError({
           code: 'FORBIDDEN',
           message: 'Org not subscribed to a plan'
         });
       }
       return {
-        portalLink: orgPortalLink.link
+        subLink: orgSubLink.link
       };
     }),
   isPro: eeProcedure.query(async ({ ctx }) => {
