@@ -166,6 +166,23 @@ export type GetDomainDNSRecordsOutput =
         optimal: string;
         acceptable: string;
       };
+      mtaSts: {
+        dns: {
+          valid: boolean;
+          name: string;
+          value: string;
+        };
+        tls: {
+          valid: boolean;
+          name: string;
+          value: string;
+        };
+        policy: {
+          valid: boolean;
+          name: string;
+          value: string;
+        };
+      };
     }
   | { error: string; errorCode: number };
 
@@ -215,6 +232,23 @@ export async function getDomainDNSRecords(
       name: '',
       optimal: '',
       acceptable: ''
+    },
+    mtaSts: {
+      dns: {
+        valid: false,
+        name: '',
+        value: ''
+      },
+      tls: {
+        valid: false,
+        name: '',
+        value: ''
+      },
+      policy: {
+        valid: false,
+        name: '',
+        value: ''
+      }
     }
   };
 
@@ -361,7 +395,7 @@ export async function getDomainDNSRecords(
   }
   records.mx.name = domainInfo.name;
   records.mx.priority = 1;
-  records.mx.value = `mx.${postalServerUrl}`;
+  records.mx.value = `${postalServerUrl}`;
   records.mx.valid = true;
 
   if (domainInfo.mxStatus !== 'OK' || forceReverify) {
@@ -404,6 +438,40 @@ export async function getDomainDNSRecords(
   records.dmarc.name = '_dmarc';
   records.dmarc.optimal = buildDmarcRecord({ p: 'reject' });
   records.dmarc.acceptable = buildDmarcRecord({ p: 'quarantine' });
+
+  const mtaStsDnsRecord = await lookupTXT(`_mta-sts.${domainInfo.name}`);
+  records.mtaSts.dns.name = '_mta-sts';
+  records.mtaSts.dns.value = `v=STSv1; id=${Date.now()}`;
+  if (mtaStsDnsRecord.success && mtaStsDnsRecord.data.length > 0) {
+    records.mtaSts.dns.valid =
+      mtaStsDnsRecord.data.filter(
+        (_) => _.startsWith('v=STSv1;') && _.includes('id=')
+      ).length === 1;
+  }
+
+  const mtaStsTlsRecord = await lookupTXT(`_smtp._tls.${domainInfo.name}`);
+  records.mtaSts.tls.name = '_smtp._tls';
+  records.mtaSts.tls.value = `v=TLSRPTv1; rua=mailto:tlsrpt@reports.uninbox.com`;
+  if (mtaStsTlsRecord.success && mtaStsTlsRecord.data.length > 0) {
+    records.mtaSts.tls.valid =
+      mtaStsTlsRecord.data.filter(
+        (_) =>
+          _.startsWith('v=TLSRPTv1;') &&
+          _.includes('rua=') &&
+          _.includes('mailto:tlsrpt@reports.uninbox.com')
+      ).length === 1;
+  }
+
+  const mtaStsPolicyRecord = await lookupCNAME(`mta-sts.${domainInfo.name}`);
+  records.mtaSts.policy.name = 'mta-sts';
+  records.mtaSts.policy.value = `mta-sts.${postalServerUrl}`;
+  if (
+    mtaStsPolicyRecord.success &&
+    mtaStsPolicyRecord.data.includes(records.mtaSts.policy.value)
+  ) {
+    records.mtaSts.policy.valid = true;
+  }
+
   return records;
 }
 

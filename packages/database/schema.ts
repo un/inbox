@@ -808,6 +808,9 @@ export const domains = mysqlTable(
     returnPathDnsValid: boolean('return_path_dns_valid')
       .notNull()
       .default(false),
+    mtaStsDnsValid: boolean('mta_sts_dns_valid').notNull().default(false),
+    mtaStsTlsValid: boolean('mta_sts_tls_valid').notNull().default(false),
+    mtaStsPolicyValid: boolean('mta_sts_policy_valid').notNull().default(false),
     lastDnsCheckAt: timestamp('last_dns_check_at'),
     disabledAt: timestamp('disabled_at'),
     verifiedAt: timestamp('verified_at'),

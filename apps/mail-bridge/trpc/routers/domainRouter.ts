@@ -178,6 +178,23 @@ export const domainRouter = router({
             name: 'localhost',
             acceptable: 'v=DMARC1; p=quarantine;',
             optimal: 'v=DMARC1; p=reject;'
+          },
+          mtaSts: {
+            dns: {
+              valid: true,
+              name: 'localhost',
+              value: 'v=STSv1; id=123456789'
+            },
+            tls: {
+              valid: true,
+              name: 'localhost',
+              value: 'v=TLSRPTv1; rua=mailto:tlsrpt@localhost'
+            },
+            policy: {
+              valid: true,
+              name: 'localhost',
+              value: 'mta-sts.localhost'
+            }
           }
         } satisfies GetDomainDNSRecordsOutput;
       }
