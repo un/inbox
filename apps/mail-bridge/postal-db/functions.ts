@@ -27,7 +27,9 @@ import {
 } from './generators';
 import { connection as rawMySqlConnection, postalDB } from '.';
 import type { TypeId } from '@u22n/utils/typeid';
+import { getTracer } from '@u22n/otel/helpers';
 import { discord } from '@u22n/utils/discord';
+import { flatten } from '@u22n/otel/exports';
 import { and, eq, sql } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 import { env } from '../env';
@@ -169,242 +171,255 @@ export type GetDomainDNSRecordsOutput =
     }
   | { error: string; errorCode: number };
 
+const tracer = getTracer('mail-bridge/dns-fetcher');
+
 export async function getDomainDNSRecords(
   domainId: string,
   postalServerUrl: string,
   forceReverify = false
 ): Promise<GetDomainDNSRecordsOutput> {
-  const domainInfo = await postalDB.query.domains.findFirst({
-    where: eq(domains.uuid, domainId)
-  });
+  return tracer.startActiveSpan('Get Domain DNS Records', async (span) => {
+    const domainInfo = await postalDB.query.domains.findFirst({
+      where: eq(domains.uuid, domainId)
+    });
 
-  if (!domainInfo) {
-    return { error: 'Domain not found, Contact Support', errorCode: 3 };
-  }
-
-  const records: GetDomainDNSRecordsOutput = {
-    verification: {
-      valid: false,
-      name: '',
-      value: ''
-    },
-    mx: {
-      valid: false,
-      name: '',
-      priority: 0,
-      value: ''
-    },
-    spf: {
-      valid: false,
-      name: '',
-      value: '',
-      extraSenders: false
-    },
-    dkim: {
-      valid: false,
-      name: '',
-      value: ''
-    },
-    returnPath: {
-      valid: false,
-      name: '',
-      value: ''
-    },
-    dmarc: {
-      policy: null,
-      name: '',
-      optimal: '',
-      acceptable: ''
+    if (!domainInfo) {
+      return { error: 'Domain not found, Contact Support', errorCode: 3 };
     }
-  };
 
-  const txtRecords = await lookupTXT(domainInfo.name);
+    span?.setAttributes(flatten({ 'domain.info': domainInfo }));
 
-  if (txtRecords.success === false && txtRecords.code !== 0) {
-    return {
-      error: `${txtRecords.error} Please retry after sometime, if the problem persists contact Support`,
-      errorCode: txtRecords.code
+    const records: GetDomainDNSRecordsOutput = {
+      verification: {
+        valid: false,
+        name: '',
+        value: ''
+      },
+      mx: {
+        valid: false,
+        name: '',
+        priority: 0,
+        value: ''
+      },
+      spf: {
+        valid: false,
+        name: '',
+        value: '',
+        extraSenders: false
+      },
+      dkim: {
+        valid: false,
+        name: '',
+        value: ''
+      },
+      returnPath: {
+        valid: false,
+        name: '',
+        value: ''
+      },
+      dmarc: {
+        policy: null,
+        name: '',
+        optimal: '',
+        acceptable: ''
+      }
     };
-  }
 
-  const verificationRecordValue = `${domainInfo.verificationToken}`;
-  const verificationTxtRecordName = await lookupTXT(
-    `_unplatform-challenge.${domainInfo.name}`
-  );
-  const verified = verificationTxtRecordName.success
-    ? verificationTxtRecordName.data.includes(verificationRecordValue)
-    : false;
+    const txtRecords = await lookupTXT(domainInfo.name);
 
-  records.verification = {
-    valid: verified,
-    name: `_unplatform-challenge`,
-    value: verificationRecordValue
-  };
+    if (txtRecords.success === false && txtRecords.code !== 0) {
+      span?.setAttributes(flatten({ 'dns.error': txtRecords.error }));
+      return {
+        error: `${txtRecords.error} Please retry after sometime, if the problem persists contact Support`,
+        errorCode: txtRecords.code
+      };
+    }
 
-  if (!verified || !domainInfo.verifiedAt || forceReverify) {
-    await postalDB
-      .update(domains)
-      .set({
-        verifiedAt: verified ? sql`CURRENT_TIMESTAMP` : sql`NULL`
-      })
-      .where(eq(domains.uuid, domainId));
-  }
-
-  const spfDomains = txtRecords.success
-    ? parseSpfIncludes(
-        txtRecords.data.find((_) => _.startsWith('v=spf1')) ?? ''
-      )
-    : null;
-  records.spf.name = '@';
-  records.spf.extraSenders =
-    (spfDomains &&
-      spfDomains.includes.filter((x) => x !== `_spf.${dnsRootUrl}`).length >
-        0) ??
-    false;
-
-  // We need to resolve duplicate entries incase the spf record is already included, so that we don't have duplicate entries
-  const allSenders = Array.from(
-    new Set([
-      `_spf.${dnsRootUrl}`,
-      ...(records.spf.extraSenders ? (spfDomains?.includes ?? []) : [])
-    ]).values()
-  );
-
-  records.spf.value = buildSpfRecord(allSenders, '~all');
-  records.spf.valid =
-    spfDomains?.includes.includes(`_spf.${dnsRootUrl}`) ?? false;
-
-  if (!records.spf.valid || domainInfo.spfStatus !== 'OK' || forceReverify) {
-    await postalDB
-      .update(domains)
-      .set(
-        !spfDomains
-          ? { spfStatus: 'Missing', spfError: 'SPF record not found' }
-          : !spfDomains.includes.includes(`_spf.${dnsRootUrl}`)
-            ? { spfStatus: 'Invalid', spfError: 'SPF record Invalid' }
-            : { spfStatus: 'OK', spfError: null }
-      )
-      .where(eq(domains.uuid, domainId));
-  }
-
-  const publicKey = generatePublicKey(domainInfo.dkimPrivateKey);
-  records.dkim.name = `unplatform-${domainInfo.dkimIdentifierString}._domainkey`;
-  records.dkim.value = buildDkimRecord({
-    t: 's',
-    h: 'sha256',
-    p: publicKey
-  });
-  //  We assume these are valid already, if the db says they are not or forceReverify is used, valid gets updated
-  records.dkim.valid = true;
-
-  if (domainInfo.dkimStatus !== 'OK' || forceReverify) {
-    const domainKeyRecords = await lookupTXT(
-      `unplatform-${domainInfo.dkimIdentifierString}._domainkey.${domainInfo.name}`
+    const verificationRecordValue = `${domainInfo.verificationToken}`;
+    const verificationTxtRecordName = await lookupTXT(
+      `_unplatform-challenge.${domainInfo.name}`
     );
+    const verified = verificationTxtRecordName.success
+      ? verificationTxtRecordName.data.includes(verificationRecordValue)
+      : false;
 
-    if (!domainKeyRecords.success) {
-      records.dkim.valid = false;
+    records.verification = {
+      valid: verified,
+      name: `_unplatform-challenge`,
+      value: verificationRecordValue
+    };
+
+    if (!verified || !domainInfo.verifiedAt || forceReverify) {
       await postalDB
         .update(domains)
-        .set({ dkimStatus: 'Missing', dkimError: 'DKIM record not found' })
+        .set({
+          verifiedAt: verified ? sql`CURRENT_TIMESTAMP` : sql`NULL`
+        })
         .where(eq(domains.uuid, domainId));
-    } else {
-      const domainKey = parseDkim(
-        domainKeyRecords.data.find((_) => _.startsWith('v=DKIM1')) ?? ''
+    }
+
+    const spfDomains = txtRecords.success
+      ? parseSpfIncludes(
+          txtRecords.data.find((_) => _.startsWith('v=spf1')) ?? ''
+        )
+      : null;
+    records.spf.name = '@';
+    records.spf.extraSenders =
+      (spfDomains &&
+        spfDomains.includes.filter((x) => x !== `_spf.${dnsRootUrl}`).length >
+          0) ??
+      false;
+
+    // We need to resolve duplicate entries incase the spf record is already included, so that we don't have duplicate entries
+    const allSenders = Array.from(
+      new Set([
+        `_spf.${dnsRootUrl}`,
+        ...(records.spf.extraSenders ? (spfDomains?.includes ?? []) : [])
+      ]).values()
+    );
+
+    records.spf.value = buildSpfRecord(allSenders, '~all');
+    records.spf.valid =
+      spfDomains?.includes.includes(`_spf.${dnsRootUrl}`) ?? false;
+
+    if (!records.spf.valid || domainInfo.spfStatus !== 'OK' || forceReverify) {
+      await postalDB
+        .update(domains)
+        .set(
+          !spfDomains
+            ? { spfStatus: 'Missing', spfError: 'SPF record not found' }
+            : !spfDomains.includes.includes(`_spf.${dnsRootUrl}`)
+              ? { spfStatus: 'Invalid', spfError: 'SPF record Invalid' }
+              : { spfStatus: 'OK', spfError: null }
+        )
+        .where(eq(domains.uuid, domainId));
+    }
+
+    const publicKey = generatePublicKey(domainInfo.dkimPrivateKey);
+    records.dkim.name = `unplatform-${domainInfo.dkimIdentifierString}._domainkey`;
+    records.dkim.value = buildDkimRecord({
+      t: 's',
+      h: 'sha256',
+      p: publicKey
+    });
+    //  We assume these are valid already, if the db says they are not or forceReverify is used, valid gets updated
+    records.dkim.valid = true;
+
+    if (domainInfo.dkimStatus !== 'OK' || forceReverify) {
+      const domainKeyRecords = await lookupTXT(
+        `unplatform-${domainInfo.dkimIdentifierString}._domainkey.${domainInfo.name}`
       );
-      if (!domainKey || domainKey.h !== 'sha256' || domainKey.p !== publicKey) {
+
+      if (!domainKeyRecords.success) {
         records.dkim.valid = false;
         await postalDB
           .update(domains)
-          .set({ dkimStatus: 'Invalid', dkimError: 'DKIM record Invalid' })
+          .set({ dkimStatus: 'Missing', dkimError: 'DKIM record not found' })
           .where(eq(domains.uuid, domainId));
       } else {
-        records.dkim.valid = true;
+        const domainKey = parseDkim(
+          domainKeyRecords.data.find((_) => _.startsWith('v=DKIM1')) ?? ''
+        );
+        if (
+          !domainKey ||
+          domainKey.h !== 'sha256' ||
+          domainKey.p !== publicKey
+        ) {
+          records.dkim.valid = false;
+          await postalDB
+            .update(domains)
+            .set({ dkimStatus: 'Invalid', dkimError: 'DKIM record Invalid' })
+            .where(eq(domains.uuid, domainId));
+        } else {
+          records.dkim.valid = true;
+          await postalDB
+            .update(domains)
+            .set({ dkimStatus: 'OK', dkimError: null })
+            .where(eq(domains.uuid, domainId));
+        }
+      }
+    }
+
+    records.returnPath.name = `unrp`;
+    records.returnPath.value = `rp.${postalServerUrl}`;
+    records.returnPath.valid = true;
+
+    if (domainInfo.returnPathStatus !== 'OK' || forceReverify) {
+      const returnPathCname = await lookupCNAME(`unrp.${domainInfo.name}`);
+      if (!returnPathCname.success) {
+        records.returnPath.valid = false;
         await postalDB
           .update(domains)
-          .set({ dkimStatus: 'OK', dkimError: null })
+          .set({
+            returnPathStatus: 'Missing',
+            returnPathError: 'Return-Path CNAME record not found'
+          })
+          .where(eq(domains.uuid, domainId));
+      } else if (!returnPathCname.data.includes(records.returnPath.value)) {
+        records.returnPath.valid = false;
+        await postalDB
+          .update(domains)
+          .set({
+            returnPathStatus: 'Invalid',
+            returnPathError: null
+          })
+          .where(eq(domains.uuid, domainId));
+      } else {
+        await postalDB
+          .update(domains)
+          .set({ returnPathStatus: 'OK', returnPathError: null })
           .where(eq(domains.uuid, domainId));
       }
     }
-  }
+    records.mx.name = domainInfo.name;
+    records.mx.priority = 1;
+    records.mx.value = `mx.${postalServerUrl}`;
+    records.mx.valid = true;
 
-  records.returnPath.name = `unrp`;
-  records.returnPath.value = `rp.${postalServerUrl}`;
-  records.returnPath.valid = true;
-
-  if (domainInfo.returnPathStatus !== 'OK' || forceReverify) {
-    const returnPathCname = await lookupCNAME(`unrp.${domainInfo.name}`);
-    if (!returnPathCname.success) {
-      records.returnPath.valid = false;
-      await postalDB
-        .update(domains)
-        .set({
-          returnPathStatus: 'Missing',
-          returnPathError: 'Return-Path CNAME record not found'
-        })
-        .where(eq(domains.uuid, domainId));
-    } else if (!returnPathCname.data.includes(records.returnPath.value)) {
-      records.returnPath.valid = false;
-      await postalDB
-        .update(domains)
-        .set({
-          returnPathStatus: 'Invalid',
-          returnPathError: null
-        })
-        .where(eq(domains.uuid, domainId));
-    } else {
-      await postalDB
-        .update(domains)
-        .set({ returnPathStatus: 'OK', returnPathError: null })
-        .where(eq(domains.uuid, domainId));
+    if (domainInfo.mxStatus !== 'OK' || forceReverify) {
+      const mxRecords = await lookupMX(domainInfo.name);
+      if (!mxRecords.success) {
+        records.mx.valid = false;
+        await postalDB
+          .update(domains)
+          .set({ mxStatus: 'Missing', mxError: 'MX record not found' })
+          .where(eq(domains.uuid, domainId));
+      } else if (
+        mxRecords.data.length > 1 ||
+        !mxRecords.data.find(
+          (x) => x.exchange === records.mx.value && x.priority === 1
+        )
+      ) {
+        records.mx.valid = false;
+        await postalDB
+          .update(domains)
+          .set({ mxStatus: 'Invalid', mxError: 'MX record Invalid' })
+          .where(eq(domains.uuid, domainId));
+      } else {
+        await postalDB
+          .update(domains)
+          .set({ mxStatus: 'OK', mxError: null })
+          .where(eq(domains.uuid, domainId));
+      }
     }
-  }
-  records.mx.name = domainInfo.name;
-  records.mx.priority = 1;
-  records.mx.value = `mx.${postalServerUrl}`;
-  records.mx.valid = true;
 
-  if (domainInfo.mxStatus !== 'OK' || forceReverify) {
-    const mxRecords = await lookupMX(domainInfo.name);
-    if (!mxRecords.success) {
-      records.mx.valid = false;
-      await postalDB
-        .update(domains)
-        .set({ mxStatus: 'Missing', mxError: 'MX record not found' })
-        .where(eq(domains.uuid, domainId));
-    } else if (
-      mxRecords.data.length > 1 ||
-      !mxRecords.data.find(
-        (x) => x.exchange === records.mx.value && x.priority === 1
-      )
-    ) {
-      records.mx.valid = false;
-      await postalDB
-        .update(domains)
-        .set({ mxStatus: 'Invalid', mxError: 'MX record Invalid' })
-        .where(eq(domains.uuid, domainId));
-    } else {
-      await postalDB
-        .update(domains)
-        .set({ mxStatus: 'OK', mxError: null })
-        .where(eq(domains.uuid, domainId));
+    const dmarcRecord = await lookupTXT(`_dmarc.${domainInfo.name}`);
+    if (dmarcRecord.success && dmarcRecord.data.length > 0) {
+      const dmarcValues = parseDmarc(
+        dmarcRecord.data.find((_) => _.startsWith('v=DMARC1')) ?? ''
+      );
+      if (dmarcValues) {
+        records.dmarc.policy =
+          (dmarcValues.p as 'reject' | 'quarantine' | 'none') || null;
+      }
     }
-  }
+    records.dmarc.name = '_dmarc';
+    records.dmarc.optimal = buildDmarcRecord({ p: 'reject' });
+    records.dmarc.acceptable = buildDmarcRecord({ p: 'quarantine' });
 
-  const dmarcRecord = await lookupTXT(`_dmarc.${domainInfo.name}`);
-  if (dmarcRecord.success && dmarcRecord.data.length > 0) {
-    const dmarcValues = parseDmarc(
-      dmarcRecord.data.find((_) => _.startsWith('v=DMARC1')) ?? ''
-    );
-    if (dmarcValues) {
-      records.dmarc.policy =
-        (dmarcValues.p as 'reject' | 'quarantine' | 'none') || null;
-    }
-  }
-  records.dmarc.name = '_dmarc';
-  records.dmarc.optimal = buildDmarcRecord({ p: 'reject' });
-  records.dmarc.acceptable = buildDmarcRecord({ p: 'quarantine' });
-  return records;
+    span?.setAttributes(flatten({ 'dns.records': records }));
+    return records;
+  });
 }
 
 export type SetMailServerKeyInput = {
