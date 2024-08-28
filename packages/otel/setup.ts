@@ -23,6 +23,7 @@ export const setupOpentelemetry = ({
   name: string;
   version: string;
 }) => {
+  console.info(`Setting up OpenTelemetry for ${name}@${version}`);
   const resource = new Resource({
     'service.name': name,
     'service.version': version
@@ -52,8 +53,8 @@ export const setupOpentelemetry = ({
 
   registerInstrumentations({
     instrumentations: [
-      new UndiciInstrumentation(),
       new HttpInstrumentation(),
+      new UndiciInstrumentation(),
       new WinstonInstrumentation()
     ]
   });
