@@ -44,7 +44,7 @@ export const attachmentProxy = createHonoApp<Ctx>().get(
 
     if (
       !attachmentQueryResponse ||
-      attachmentQueryResponse.fileName !== filename ||
+      decodeURIComponent(attachmentQueryResponse.fileName) !== filename ||
       attachmentQueryResponse.org.shortcode !== orgShortcode
     ) {
       return c.json(
