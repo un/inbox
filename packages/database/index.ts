@@ -51,10 +51,5 @@ const client = new Client({
   }
 });
 
-const connectionOptions = {
-  logger: false,
-  schema
-};
-
-export const db = drizzle(client, connectionOptions);
+export const db = drizzle(client, { schema });
 export type DBType = typeof db;
