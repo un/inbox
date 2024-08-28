@@ -27,7 +27,8 @@ if (!IS_BROWSER) {
     'EE_ENABLED',
     'POSTHOG_KEY',
     'POSTHOG_ENABLED',
-    'APP_VERSION'
+    'APP_VERSION',
+    'BILLING_STRIPE_PUBLISHABLE_KEY'
   ];
 
   PUBLIC_ENV_LIST.forEach((key) => {
@@ -48,6 +49,7 @@ export const env = createEnv({
     NEXT_PUBLIC_REALTIME_PORT: z.coerce.number().optional(),
     NEXT_PUBLIC_TURNSTILE_SITE_KEY: z.string().optional(),
     NEXT_PUBLIC_EE_ENABLED: z.enum(['true', 'false']),
+    NEXT_PUBLIC_BILLING_STRIPE_PUBLISHABLE_KEY: z.string().optional(),
     NEXT_PUBLIC_APP_VERSION: z.string().default('development'),
     NEXT_PUBLIC_POSTHOG_ENABLED: z.enum(['true', 'false']).default('false'),
     NEXT_PUBLIC_POSTHOG_KEY: IS_POSTHOG_ENABLED
