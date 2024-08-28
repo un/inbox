@@ -548,6 +548,26 @@ export default function CreateConvoForm({
     }
   });
 
+  const handleSendMessage = useCallback(() => {
+    if (isFormValid && !isCreating) {
+      createConvo('message');
+    }
+  }, [isFormValid, isCreating, createConvo]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
+        event.preventDefault();
+        handleSendMessage();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleSendMessage]);
+
   return (
     <div className="flex h-full w-full min-w-0 flex-col gap-3 p-3">
       <div className="flex w-full flex-col gap-2 text-sm">
@@ -685,7 +705,7 @@ export default function CreateConvoForm({
               size={'sm'}
               loading={isCreating && messageType === 'message'}
               disabled={!isFormValid || isCreating}
-              onClick={() => createConvo('message')}>
+              onClick={handleSendMessage}>
               {isMobile ? <PaperPlaneTilt size={16} /> : <span>Send</span>}
             </Button>
           </div>
