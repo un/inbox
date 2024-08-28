@@ -19,7 +19,6 @@ import { useIsMobile } from '@/src/hooks/use-is-mobile';
 import { Trash } from '@phosphor-icons/react/dist/ssr';
 import { useTimeAgo } from '@/src/hooks/use-time-ago';
 import { useLongPress } from '@uidotdev/usehooks';
-import { Avatar } from '@/src/components/avatar';
 import { type TypeId } from '@u22n/utils/typeid';
 import { usePathname } from 'next/navigation';
 import { convoListSelecting } from '../atoms';
@@ -172,10 +171,10 @@ export const ConvoItem = memo(function ConvoItem({
             </span>
 
             <div className="flex flex-row items-start justify-start gap-1 text-left text-sm">
-              <span className="ph-no-capture font-semibold">
-                {authorAvatarData?.name + ':' ?? ''}
-              </span>
               <span className="ph-no-capture line-clamp-2 overflow-clip break-words">
+                <span className="font-semibold">
+                  {authorAvatarData?.name + ':' ?? ''}
+                </span>
                 {convo.entries[0]?.bodyPlainText.trim() ?? ''}
               </span>
             </div>
