@@ -2,9 +2,50 @@ import { orgBilling, orgMembers } from '@u22n/database/schema';
 import { router, protectedProcedure } from '../trpc';
 import { and, eq, sql } from '@u22n/database/orm';
 import { stripeSdk } from '../../stripe';
+import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 
 export const subscriptionsRouter = router({
+  getSubscriptionDates: protectedProcedure
+    .input(
+      z.object({
+        orgId: z.number().min(1)
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const { db } = ctx;
+      const { orgId } = input;
+
+      const orgSubscriptionQuery = await db.query.orgBilling.findFirst({
+        where: eq(orgBilling.orgId, orgId),
+        columns: {
+          id: true,
+          orgId: true,
+          stripeSubscriptionId: true,
+          stripeCustomerId: true,
+          plan: true,
+          period: true
+        }
+      });
+
+      if (!orgSubscriptionQuery?.stripeSubscriptionId) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Org is not subscribed to a plan'
+        });
+      }
+
+      const { start_date, cancel_at_period_end, current_period_end } =
+        await stripeSdk.subscriptions.retrieve(
+          orgSubscriptionQuery.stripeSubscriptionId
+        );
+
+      return {
+        start_date,
+        cancel_at_period_end,
+        current_period_end
+      };
+    }),
   updateOrgUserCount: protectedProcedure
     .input(
       z.object({
@@ -48,7 +89,8 @@ export const subscriptionsRouter = router({
 
         if (
           stripeGetSubscriptionResult &&
-          stripeGetSubscriptionResult.items?.data
+          stripeGetSubscriptionResult.items?.data &&
+          stripeGetSubscriptionResult.status === 'active'
         ) {
           await stripeSdk.subscriptions.update(
             orgSubscriptionQuery.stripeSubscriptionId,
@@ -63,10 +105,6 @@ export const subscriptionsRouter = router({
               proration_behavior: 'always_invoice',
               metadata: {
                 orgId,
-                product: 'subscription',
-                plan: stripeGetSubscriptionResult.metadata.plan ?? 'starter',
-                period:
-                  stripeGetSubscriptionResult.metadata.period ?? 'monthly',
                 totalUsers: totalOrgUsers
               }
             }
