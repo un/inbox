@@ -295,8 +295,7 @@ export const worker = createWorker<MailProcessorJobData>(
     tracer.startActiveSpan('Mail Processor', async (span) => {
       try {
         span?.setAttributes({
-          'job.id': job.id,
-          'job.data': JSON.stringify(job.data)
+          'job.id': job.id
         });
 
         const { rawMessage, params } = job.data;
@@ -1034,7 +1033,6 @@ export const worker = createWorker<MailProcessorJobData>(
             ? e.message
             : 'Unknown Error in Mail Processor, Check Logs'
         );
-        span?.recordException(e as Error);
         // Throw the error to be caught by the worker, and moving to failed jobs
         throw e;
       }

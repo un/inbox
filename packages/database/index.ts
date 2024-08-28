@@ -12,25 +12,25 @@ if (opentelemetryEnabled) {
   const originalExecute = Connection.prototype.execute;
 
   Connection.prototype.execute = async function (query, args, options) {
-    return databaseTracer.startActiveSpan(`Database Query`, async (span) => {
+    return databaseTracer.startActiveSpan(`Database Call`, async (span) => {
       if (span) {
-        span.addEvent('database.query.start');
-        span.setAttribute('database.statement', query);
+        span.addEvent('db.call.start');
+        span.setAttribute('db.statement', query);
         if (Array.isArray(args)) {
           span.setAttribute(
-            'database.values',
-            args.map((v: string) => v.toString())
+            'db.values',
+            args.map((v: string | null | number) => {
+              if (v === null) return 'null';
+              if (typeof v === 'undefined') return 'undefined';
+              return v?.toString?.() ?? 'Unknown';
+            })
           );
         }
       }
       const result = await originalExecute
         // @ts-expect-error, don't care about types here
-        .call(this, query, args, options)
-        .catch((err: Error) => {
-          span?.recordException(err);
-          throw err;
-        });
-      span?.addEvent('database.query.end');
+        .call(this, query, args, options);
+      span?.addEvent('db.call.end');
       return result;
     });
   };
