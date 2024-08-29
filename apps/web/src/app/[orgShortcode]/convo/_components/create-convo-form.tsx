@@ -751,12 +751,10 @@ export default function CreateConvoForm({
   );
 }
 
-const showDisabledMessage = (disabled: boolean) => {
-  if (disabled) {
-    toast.warning(
-      'You cannot add participants to conversation until you have an email identity associated.'
-    );
-  }
+const showDisabledMessage = () => {
+  toast.warning(
+    'You cannot add participants to conversation until you have an email identity associated.'
+  );
 };
 
 type ParticipantsComboboxPopoverProps = {
@@ -822,23 +820,6 @@ function ParticipantsComboboxPopover({
             {selectedParticipants.length > 0 ? (
               <div className="flex flex-wrap gap-2 overflow-hidden">
                 {selectedParticipants.map((participant, i) => {
-                  let info = '';
-                  switch (participant.type) {
-                    case 'orgMember':
-                      info = participant.name;
-                      break;
-                    case 'team':
-                      info = participant.name;
-                      break;
-                    case 'contact':
-                      info = participant.name
-                        ? `${participant.name} (${participant.address!})`
-                        : participant.address!;
-                      break;
-                    case 'email':
-                      info = participant.address!;
-                      break;
-                  }
                   return (
                     <div
                       key={participant.publicId}
@@ -918,6 +899,7 @@ function ParticipantsComboboxPopover({
                     e.stopPropagation();
                   }
                   if (e.key === 'Enter') {
+                    if (disabled) return showDisabledMessage();
                     if (z.string().email().safeParse(search).success) {
                       addEmailParticipant(search);
                       setCurrentSelectValue('');
@@ -1064,11 +1046,7 @@ function EmptyStateHandler({
   );
 
   const addEmailParticipant = (email: string) => {
-    if (disabled) {
-      showDisabledMessage(disabled);
-      return;
-    }
-
+    if (disabled) return;
     setEmailParticipants((prev) =>
       prev.includes(email) ? prev : prev.concat(email)
     );
@@ -1098,22 +1076,21 @@ function EmptyStateHandler({
       onKeyDown={(e) => {
         // Submit email on Enter key
         if (e.key === 'Enter') {
+          if (disabled) return showDisabledMessage();
           addEmailParticipant(email);
         }
       }}>
-      <div onClick={() => disabled && showDisabledMessage(disabled)}>
-        <Button
-          variant={'ghost'}
-          disabled={disabled}
-          className="my-1 w-full justify-start px-1"
-          color="gray"
-          onClick={() => {
-            addEmailParticipant(email);
-          }}>
-          <At className="mr-2 h-4 w-4" />
-          <p className="text-sm">Add {email}</p>
-        </Button>
-      </div>
+      <Button
+        variant={'ghost'}
+        className="my-1 w-full justify-start px-1"
+        color="gray"
+        onClick={() => {
+          if (disabled) return showDisabledMessage();
+          addEmailParticipant(email);
+        }}>
+        <At className="mr-2 h-4 w-4" />
+        <p className="text-sm">Add {email}</p>
+      </Button>
     </CommandItem>
   ) : (
     <CommandEmpty className="px-2 text-sm font-bold">
