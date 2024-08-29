@@ -146,6 +146,7 @@ export async function updateDnsRecords(
           await db
             .update(domains)
             .set({
+              disabled: true,
               domainStatus: 'disabled',
               receivingMode: 'disabled',
               sendingMode: 'disabled',
@@ -169,6 +170,7 @@ export async function updateDnsRecords(
           await db
             .update(domains)
             .set({
+              disabled: true,
               domainStatus: 'disabled',
               receivingMode: 'disabled',
               sendingMode: 'disabled',
