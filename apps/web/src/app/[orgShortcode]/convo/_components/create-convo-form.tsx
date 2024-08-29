@@ -927,6 +927,16 @@ function ParticipantsComboboxPopover({
                     keywords={participant.keywords}
                     onSelect={(value) => {
                       if (participant.own) return;
+                      if (
+                        disabled &&
+                        // Allow un-selecting if already selected somehow
+                        !selectedParticipants.find(
+                          (_) => _.publicId === participant.publicId
+                        ) &&
+                        (participant.type === 'contact' ||
+                          participant.type === 'email')
+                      )
+                        return showDisabledMessage();
                       setSelectedParticipants((prev) =>
                         prev.find((p) => p.publicId === value)
                           ? prev.filter((p) => p.publicId !== value)
