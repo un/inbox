@@ -593,7 +593,7 @@ export default function CreateConvoForm({
 
       <div
         className={cn(
-          'border-base-5 group relative mt-3 flex max-h-[250px] w-full flex-col gap-1 rounded-md border px-2 py-1',
+          'border-base-5 group relative mt-3 flex max-h-[75vh] w-full flex-col gap-1 rounded-md border px-2 py-1',
           canClearDraft && 'hover:rounded-tr-none'
         )}>
         {canClearDraft && (
