@@ -17,12 +17,12 @@ import {
   walkAndReplaceImages
 } from '../../utils/tiptap-utils';
 import { createExtensionSet } from '@u22n/tiptap/extensions';
+import MailComposer from 'nodemailer/lib/mail-composer';
 import { and, eq, inArray } from '@u22n/database/orm';
 import { type JSONContent } from '@u22n/tiptap/react';
 import { typeIdValidator } from '@u22n/utils/typeid';
 import { router, protectedProcedure } from '../trpc';
 import { sendEmail } from '../../smtp/sendEmail';
-import { createMimeMessage } from 'mimetext';
 import { tiptapHtml } from '@u22n/tiptap';
 import { z } from 'zod';
 
@@ -666,13 +666,6 @@ export const sendMailRouter = router({
       const replyToEmailId =
         convoEntryResponse.replyTo?.convoMessageSource.emailMessageId ?? null;
 
-      const emailHeaders: Record<string, string> = replyToEmailId
-        ? {
-            'In-Reply-To': `<${replyToEmailId}>`,
-            References: `<${replyToEmailId}>`
-          }
-        : {};
-
       // remove duplicates in the CC metadata if they exist in the TO metadata or from metadata
       const convoMetadataCcAddressesFiltered = convoMetadataCcAddresses.filter(
         (ccAddress) => {
@@ -683,41 +676,33 @@ export const sendMailRouter = router({
         }
       );
 
-      const rawEmail = createMimeMessage();
-      rawEmail.setTo(convoToAddress);
-      if (convoCcAddressesFiltered.length > 0) {
-        rawEmail.setCc(convoCcAddressesFiltered);
-      }
-      rawEmail.setSender({
-        name: sendAsEmailIdentity.sendName ?? undefined,
-        addr: convoSenderEmailAddress
-      });
-      rawEmail.setSubject(convoEntryResponse.subject?.subject ?? 'No Subject');
-      rawEmail.addMessage({
-        contentType: 'text/plain',
-        data: emailBodyPlainText
-      });
-      rawEmail.addMessage({
-        contentType: 'text/html',
-        data: emailBodyHTML
-      });
-      for (const attachment of postalAttachments) {
-        rawEmail.addAttachment({
-          contentType: attachment.content_type,
-          data: attachment.data,
+      const mail = new MailComposer({
+        to: convoToAddress,
+        cc:
+          convoCcAddressesFiltered.length > 0
+            ? convoCcAddressesFiltered
+            : undefined,
+        from: sendAsEmailIdentity.sendName
+          ? {
+              name: sendAsEmailIdentity.sendName,
+              address: convoSenderEmailAddress
+            }
+          : convoSenderEmailAddress,
+        subject: convoEntryResponse.subject?.subject ?? 'No Subject',
+        text: emailBodyPlainText,
+        html: emailBodyHTML,
+        attachments: postalAttachments.map((attachment) => ({
+          content: attachment.data,
           filename: attachment.name,
-          inline: attachment.inline,
-          headers: {
-            'Content-ID': attachment.content_id,
-            'Content-Type': attachment.content_type
-          }
-        });
-      }
-      rawEmail.setHeaders(emailHeaders);
-      rawEmail.setHeader(
-        'Message-ID',
-        `<${convoEntryResponse.publicId.substring(3)}_${convoResponse.publicId.substring(2)}@${sendAsEmailIdentity.domainName}>`
-      );
+          contentType: attachment.content_type,
+          cid: attachment.inline ? attachment.content_id : undefined
+        })),
+        inReplyTo: replyToEmailId ?? undefined,
+        references: replyToEmailId ? [replyToEmailId] : undefined,
+        messageId: `${convoEntryResponse.publicId.substring(3)}_${convoResponse.publicId.substring(2)}@${sendAsEmailIdentity.domainName}`
+      });
+
+      const rawEmail = await mail.compile().build();
 
       // If there is external email credentials then the identity is external, use their smtp server instead of postal's
       if (sendAsEmailIdentity.externalCredentials) {
@@ -727,9 +712,10 @@ export const sendMailRouter = router({
           auth,
           email: {
             to: [`${convoToAddress}`, ...convoCcAddressesFiltered],
-            from: `${sendAsEmailIdentity.sendName} <${convoSenderEmailAddress}>`,
-            headers: emailHeaders,
-            raw: rawEmail.asRaw()
+            from: sendAsEmailIdentity.sendName
+              ? `${sendAsEmailIdentity.sendName} <${convoSenderEmailAddress}>`
+              : convoSenderEmailAddress,
+            raw: rawEmail.toString('utf-8')
           }
         })
           .then((res) => ({ success: true, ...res }))
@@ -817,7 +803,7 @@ export const sendMailRouter = router({
         body: JSON.stringify({
           mail_from: convoSenderEmailAddress,
           rcpt_to: [`${convoToAddress}`, ...convoCcAddressesFiltered],
-          data: Buffer.from(rawEmail.asRaw()).toString('base64')
+          data: rawEmail.toString('base64')
         })
       })
         .then((res) => res.json())
