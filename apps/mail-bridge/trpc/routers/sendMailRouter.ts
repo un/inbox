@@ -695,7 +695,8 @@ export const sendMailRouter = router({
           content: attachment.data,
           filename: attachment.name,
           contentType: attachment.content_type,
-          cid: attachment.inline ? attachment.content_id : undefined
+          cid: attachment.inline ? attachment.content_id : undefined,
+          encoding: attachment.base64 ? 'base64' : 'binary'
         })),
         inReplyTo: replyToEmailId ?? undefined,
         references: replyToEmailId ? [replyToEmailId] : undefined,
