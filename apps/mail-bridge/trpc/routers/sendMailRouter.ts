@@ -16,8 +16,8 @@ import {
   tryParseInlineAttachmentUrl,
   walkAndReplaceImages
 } from '../../utils/tiptap-utils';
+import MailComposer from 'nodemailer/lib/mail-composer/index.js';
 import { createExtensionSet } from '@u22n/tiptap/extensions';
-import MailComposer from 'nodemailer/lib/mail-composer';
 import { and, eq, inArray } from '@u22n/database/orm';
 import { type JSONContent } from '@u22n/tiptap/react';
 import { typeIdValidator } from '@u22n/utils/typeid';
