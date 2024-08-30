@@ -70,6 +70,26 @@ export const invitesRouter = router({
 
       // Insert account profile - save ID
       return db.transaction(async (db) => {
+        //check existing email invite
+        await db.query.orgInvitations
+          .findFirst({
+            where: eq(
+              orgInvitations.email,
+              notification?.notificationEmailAddress as string
+            ),
+            columns: {
+              id: true
+            }
+          })
+          .then((res: any) => {
+            if (res) {
+              throw new TRPCError({
+                code: 'UNPROCESSABLE_CONTENT',
+                message: 'Email already invited'
+              });
+            }
+          });
+
         const orgMemberProfilePublicId = typeIdGenerator('orgMemberProfile');
         const orgMemberProfileResponse = await db
           .insert(orgMemberProfiles)
@@ -227,17 +247,25 @@ export const invitesRouter = router({
         const newInvitePublicId = typeIdGenerator('orgInvitations');
         const newInviteToken = nanoIdToken();
 
-        await db.insert(orgInvitations).values({
-          publicId: newInvitePublicId,
-          orgId: orgId,
-          invitedByOrgMemberId: orgMemberId,
-          orgMemberId: +newOrgMemberResponse.insertId,
-          role: newOrgMember.role,
-          email: notification?.notificationEmailAddress ?? null,
-          inviteToken: newInviteToken,
-          invitedOrgMemberProfileId: orgMemberProfileId,
-          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 Days from now
-        });
+        await db
+          .insert(orgInvitations)
+          .values({
+            publicId: newInvitePublicId,
+            orgId: orgId,
+            invitedByOrgMemberId: orgMemberId,
+            orgMemberId: +newOrgMemberResponse.insertId,
+            role: newOrgMember.role,
+            email: notification?.notificationEmailAddress ?? null,
+            inviteToken: newInviteToken,
+            invitedOrgMemberProfileId: orgMemberProfileId,
+            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 Days from now
+          })
+          .catch((err) => {
+            throw new TRPCError({
+              code: 'INTERNAL_SERVER_ERROR',
+              message: 'Failed to create invite'
+            });
+          });
 
         if (notification?.notificationEmailAddress) {
           const res = await sendInviteEmail({

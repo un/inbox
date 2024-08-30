@@ -83,6 +83,9 @@ export function InviteModal() {
       form.reset();
       void invalidateInvites.invalidate();
       setOpen(false);
+    },
+    onError: (error) => {
+      console.error('Error creating invite', error.message);
     }
   });
 
