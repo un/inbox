@@ -12,7 +12,6 @@ import _ExtensionLink from '@tiptap/extension-link';
 import { type AnyExtension } from '@tiptap/react';
 
 type CreateExtensionSetOptions = {
-  storageUrl?: string;
   className?: {
     link?: string;
     image?: string;
@@ -21,7 +20,6 @@ type CreateExtensionSetOptions = {
 };
 
 export const createExtensionSet = ({
-  storageUrl,
   className
 }: CreateExtensionSetOptions = {}) => {
   const ExtensionImage = ExtensionImageResize.extend({
@@ -35,22 +33,6 @@ export const createExtensionSet = ({
           default: null
         }
       };
-    },
-    renderHTML: ({ HTMLAttributes, node }) => {
-      const isInternalImage =
-        storageUrl &&
-        typeof node.attrs.src === 'string' &&
-        node.attrs.src.startsWith(storageUrl);
-      return [
-        'img',
-        isInternalImage
-          ? {
-              ...node.attrs,
-              ...HTMLAttributes,
-              crossorigin: 'use-credentials'
-            }
-          : { ...node.attrs, ...HTMLAttributes }
-      ];
     },
     addProseMirrorPlugins: () => {
       return [

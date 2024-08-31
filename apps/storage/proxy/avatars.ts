@@ -9,10 +9,15 @@ export const avatarProxy = createHonoApp<Ctx>().get(
     const proxy = c.req.param('proxy');
     const res = await fetch(
       `${env.STORAGE_S3_ENDPOINT}/${env.STORAGE_S3_BUCKET_AVATARS}/${proxy}`
-    ).then((res) => c.body(res.body, res));
+    );
     if (res.status === 404) {
       return c.json({ error: 'Not Found' }, 404);
     }
-    return res;
+    // Avatars are immutable so we can cache them for a long time
+    c.header(
+      'Cache-Control',
+      'public, immutable, max-age=86400, stale-while-revalidate=604800'
+    );
+    return c.body(res.body, res);
   }
 );

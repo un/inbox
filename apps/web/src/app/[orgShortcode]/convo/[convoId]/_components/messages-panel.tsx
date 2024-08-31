@@ -35,7 +35,6 @@ import { type TypeId } from '@u22n/utils/typeid';
 import { cva } from 'class-variance-authority';
 import { cn } from '@/src/lib/utils';
 import { ms } from '@u22n/utils/ms';
-import { env } from '@/src/env';
 import { useAtom } from 'jotai';
 import { toast } from 'sonner';
 
@@ -209,9 +208,7 @@ export const MessagesPanel = memo(
 
 MessagesPanel.displayName = 'MessagesPanel';
 
-const tipTapExtensions = createExtensionSet({
-  storageUrl: env.NEXT_PUBLIC_STORAGE_URL
-});
+const tipTapExtensions = createExtensionSet();
 
 const MessageItem = memo(
   function MessageItem({
