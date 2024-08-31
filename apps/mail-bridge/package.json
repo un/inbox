@@ -8,7 +8,8 @@
     "start": "node --import ./.output/tracing.js .output/app.js",
     "build": "tsup",
     "check": "tsc --noEmit",
-    "mock:incoming-mail": "tsx ./scripts/mock-incoming.ts"
+    "mock:incoming-mail": "tsx ./scripts/mock-incoming.ts",
+    "stress:email": "tsx ./scripts/email-stress-test.ts"
   },
   "exports": {
     "./trpc": {
