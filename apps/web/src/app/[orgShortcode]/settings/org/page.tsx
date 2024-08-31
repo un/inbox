@@ -2,22 +2,30 @@
 
 import {
   AlertDialog,
+  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
+  AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle
 } from '@/src/components/shadcn-ui/alert-dialog';
+import {
+  useState,
+  useMemo,
+  useEffect,
+  type Dispatch,
+  type SetStateAction
+} from 'react';
 import { useOrgScopedRouter, useOrgShortcode } from '@/src/hooks/use-params';
 import { cn, generateAvatarUrl, openFilePicker } from '@/src/lib/utils';
 import { useAvatarUploader } from '@/src/hooks/use-avatar-uploader';
+import { Camera, FloppyDisk, Trash } from '@phosphor-icons/react';
 import { Skeleton } from '@/src/components/shadcn-ui/skeleton';
+import { platform, type RouterOutputs } from '@/src/lib/trpc';
 import { Button } from '@/src/components/shadcn-ui/button';
-import { Camera, FloppyDisk } from '@phosphor-icons/react';
 import { Input } from '@/src/components/shadcn-ui/input';
 import AvatarCrop from '@/src/components/avatar-crop';
 import { PageTitle } from '../_components/page-title';
-import { useState, useMemo, useEffect } from 'react';
-import { platform } from '@/src/lib/trpc';
 import { toast } from 'sonner';
 
 export default function ProfileComponent() {
@@ -70,6 +78,8 @@ export default function ProfileComponent() {
   if (!adminLoading && !isAdmin) {
     scopedRedirect('/settings');
   }
+
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
   return (
     <div className="flex h-full w-full flex-col items-start gap-4 overflow-y-auto p-4">
@@ -133,6 +143,20 @@ export default function ProfileComponent() {
           Save
         </Button>
       </div>
+      {orgData?.isOwner && (
+        <div className="flex flex-col gap-2">
+          <span className="font-display font-semibold text-white">
+            Danger Zone
+          </span>
+          <Button
+            variant="destructive"
+            className="gap-2"
+            onClick={() => setDeleteModalOpen(true)}>
+            <Trash size={20} />
+            Delete Organization
+          </Button>
+        </div>
+      )}
       {file && orgData && (
         <AlertDialog
           open={file !== null}
@@ -163,6 +187,82 @@ export default function ProfileComponent() {
           </AlertDialogContent>
         </AlertDialog>
       )}
+      {deleteModalOpen && orgData && (
+        <DeleteOrganizationModal
+          open={deleteModalOpen}
+          setOpen={setDeleteModalOpen}
+          orgProfile={orgData.orgProfile}
+        />
+      )}
     </div>
+  );
+}
+
+function DeleteOrganizationModal({
+  open,
+  setOpen,
+  orgProfile
+}: {
+  open: boolean;
+  setOpen: Dispatch<SetStateAction<boolean>>;
+  orgProfile: RouterOutputs['org']['setup']['profile']['getOrgProfile']['orgProfile'];
+}) {
+  const [confirm, setConfirm] = useState('');
+  const orgShortcode = useOrgShortcode();
+
+  const { mutate: deleteOrg, isPending } =
+    platform.org.crud.deleteOrg.useMutation({
+      onSuccess: () => {
+        // Redirect to home page to clear out cache and redirect to next available org or create new org
+        window.location.replace('/');
+      }
+    });
+
+  return (
+    <AlertDialog
+      open={open}
+      onOpenChange={() => {
+        if (isPending) return;
+        setOpen(!open);
+      }}>
+      <AlertDialogContent>
+        <AlertDialogTitle>Delete Organization</AlertDialogTitle>
+        <AlertDialogDescription className="flex flex-col gap-2">
+          <span>Are you sure you want to delete this organization?</span>
+          <span className="text-red-10 font-semibold">
+            This action is irreversible. All data associated with this
+            organization would be deleted along with all members.
+          </span>
+          <span>All active subscriptions will also be cancelled.</span>
+          <span>
+            {`To confirm deletion of ${orgProfile.name} - type it's name below.`}
+          </span>
+        </AlertDialogDescription>
+        <Input
+          label={`Type "${orgProfile.name}" to confirm`}
+          inputSize="lg"
+          value={confirm}
+          onChange={(e) => setConfirm(e.target.value)}
+        />
+        <AlertDialogFooter className="flex gap-2">
+          <AlertDialogCancel asChild>
+            <Button
+              variant="secondary"
+              className="flex-1"
+              disabled={isPending}>
+              Cancel
+            </Button>
+          </AlertDialogCancel>
+          <Button
+            variant="destructive"
+            className="flex-1"
+            disabled={confirm !== orgProfile.name}
+            loading={isPending}
+            onClick={() => deleteOrg({ orgShortcode })}>
+            Confirm Delete
+          </Button>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

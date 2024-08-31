@@ -30,7 +30,11 @@ import {
   postalServers,
   sessions,
   teamMembers,
-  teams
+  teams,
+  spaces,
+  spaceMembers,
+  spaceWorkflows,
+  spaceTags
 } from '@u22n/database/schema';
 import {
   generateAuthenticationOptions,
@@ -1272,82 +1276,116 @@ export const securityRouter = router({
     if (orgsQuery.length > 0) {
       const orgIdsArray = orgsQuery.map((org) => org.id);
 
-      await Promise.all([
-        db.delete(orgs).where(inArray(orgs.id, orgIdsArray)),
-        db
-          .delete(orgInvitations)
-          .where(inArray(orgInvitations.orgId, orgIdsArray)),
-        db.delete(orgModules).where(inArray(orgModules.orgId, orgIdsArray)),
-        db
-          .delete(orgPostalConfigs)
-          .where(inArray(orgPostalConfigs.orgId, orgIdsArray)),
-        db
-          .delete(orgPostalConfigs)
-          .where(inArray(orgPostalConfigs.orgId, orgIdsArray)),
-        db.delete(orgMembers).where(inArray(orgMembers.orgId, orgIdsArray)),
-        db
-          .delete(orgMemberProfiles)
-          .where(inArray(orgMemberProfiles.orgId, orgIdsArray)),
-        db.delete(teams).where(inArray(teams.orgId, orgIdsArray)),
-        db.delete(teamMembers).where(inArray(teamMembers.orgId, orgIdsArray)),
-        db.delete(domains).where(inArray(domains.orgId, orgIdsArray)),
-        db
-          .delete(postalServers)
-          .where(inArray(postalServers.orgId, orgIdsArray)),
-        db.delete(contacts).where(inArray(contacts.orgId, orgIdsArray)),
-        db
-          .delete(emailRoutingRules)
-          .where(inArray(emailRoutingRules.orgId, orgIdsArray)),
-        db
-          .delete(emailRoutingRulesDestinations)
-          .where(inArray(emailRoutingRulesDestinations.orgId, orgIdsArray)),
-        db
-          .delete(emailIdentities)
-          .where(inArray(emailIdentities.orgId, orgIdsArray)),
-        db
-          .delete(emailIdentitiesAuthorizedSenders)
-          .where(inArray(emailIdentitiesAuthorizedSenders.orgId, orgIdsArray)),
-        db
-          .delete(emailIdentitiesPersonal)
-          .where(inArray(emailIdentitiesPersonal.orgId, orgIdsArray)),
-        db
-          .delete(emailIdentityExternal)
-          .where(inArray(emailIdentityExternal.orgId, orgIdsArray)),
-        db.delete(convos).where(inArray(convos.orgId, orgIdsArray)),
-        db
-          .delete(convoSubjects)
-          .where(inArray(convoSubjects.orgId, orgIdsArray)),
-        db
-          .delete(convoParticipants)
-          .where(inArray(convoParticipants.orgId, orgIdsArray)),
-        db
-          .delete(convoParticipantTeamMembers)
-          .where(inArray(convoParticipantTeamMembers.orgId, orgIdsArray)),
-        db
-          .delete(convoAttachments)
-          .where(inArray(convoAttachments.orgId, orgIdsArray)),
-        db
-          .delete(pendingAttachments)
-          .where(inArray(pendingAttachments.orgId, orgIdsArray)),
-        db.delete(convoEntries).where(inArray(convoEntries.orgId, orgIdsArray)),
-        db
-          .delete(convoEntryReplies)
-          .where(inArray(convoEntryReplies.orgId, orgIdsArray)),
-        db
-          .delete(convoEntryPrivateVisibilityParticipants)
-          .where(
-            inArray(convoEntryPrivateVisibilityParticipants.orgId, orgIdsArray)
-          ),
-        db
-          .delete(convoEntryRawHtmlEmails)
-          .where(inArray(convoEntryRawHtmlEmails.orgId, orgIdsArray)),
-        db
-          .delete(convoSeenTimestamps)
-          .where(inArray(convoSeenTimestamps.orgId, orgIdsArray)),
-        db
-          .delete(convoEntrySeenTimestamps)
-          .where(inArray(convoEntrySeenTimestamps.orgId, orgIdsArray))
-      ]);
+      await db
+        .transaction(async (db) => {
+          try {
+            await db.delete(orgs).where(inArray(orgs.id, orgIdsArray));
+            await db
+              .delete(orgInvitations)
+              .where(inArray(orgInvitations.orgId, orgIdsArray));
+            await db
+              .delete(orgModules)
+              .where(inArray(orgModules.orgId, orgIdsArray));
+            await db
+              .delete(orgPostalConfigs)
+              .where(inArray(orgPostalConfigs.orgId, orgIdsArray));
+            await db
+              .delete(orgMembers)
+              .where(inArray(orgMembers.orgId, orgIdsArray));
+            await db
+              .delete(orgMemberProfiles)
+              .where(inArray(orgMemberProfiles.orgId, orgIdsArray));
+            await db.delete(teams).where(inArray(teams.orgId, orgIdsArray));
+            await db
+              .delete(teamMembers)
+              .where(inArray(teamMembers.orgId, orgIdsArray));
+            await db.delete(domains).where(inArray(domains.orgId, orgIdsArray));
+            await db
+              .delete(postalServers)
+              .where(inArray(postalServers.orgId, orgIdsArray));
+            await db
+              .delete(contacts)
+              .where(inArray(contacts.orgId, orgIdsArray));
+            await db
+              .delete(emailRoutingRules)
+              .where(inArray(emailRoutingRules.orgId, orgIdsArray));
+            await db
+              .delete(emailRoutingRulesDestinations)
+              .where(inArray(emailRoutingRulesDestinations.orgId, orgIdsArray)),
+              await db
+                .delete(emailIdentities)
+                .where(inArray(emailIdentities.orgId, orgIdsArray));
+            await db
+              .delete(emailIdentitiesAuthorizedSenders)
+              .where(
+                inArray(emailIdentitiesAuthorizedSenders.orgId, orgIdsArray)
+              );
+            await db
+              .delete(emailIdentitiesPersonal)
+              .where(inArray(emailIdentitiesPersonal.orgId, orgIdsArray));
+            await db
+              .delete(emailIdentityExternal)
+              .where(inArray(emailIdentityExternal.orgId, orgIdsArray));
+            await db.delete(convos).where(inArray(convos.orgId, orgIdsArray));
+            await db
+              .delete(convoSubjects)
+              .where(inArray(convoSubjects.orgId, orgIdsArray));
+            await db
+              .delete(convoParticipants)
+              .where(inArray(convoParticipants.orgId, orgIdsArray));
+            await db
+              .delete(convoParticipantTeamMembers)
+              .where(inArray(convoParticipantTeamMembers.orgId, orgIdsArray));
+            await db
+              .delete(convoAttachments)
+              .where(inArray(convoAttachments.orgId, orgIdsArray));
+            await db
+              .delete(pendingAttachments)
+              .where(inArray(pendingAttachments.orgId, orgIdsArray));
+            await db
+              .delete(convoEntries)
+              .where(inArray(convoEntries.orgId, orgIdsArray));
+            await db
+              .delete(convoEntryReplies)
+              .where(inArray(convoEntryReplies.orgId, orgIdsArray));
+            await db
+              .delete(convoEntryPrivateVisibilityParticipants)
+              .where(
+                inArray(
+                  convoEntryPrivateVisibilityParticipants.orgId,
+                  orgIdsArray
+                )
+              );
+            await db
+              .delete(convoEntryRawHtmlEmails)
+              .where(inArray(convoEntryRawHtmlEmails.orgId, orgIdsArray));
+            await db
+              .delete(convoSeenTimestamps)
+              .where(inArray(convoSeenTimestamps.orgId, orgIdsArray));
+            await db
+              .delete(convoEntrySeenTimestamps)
+              .where(inArray(convoEntrySeenTimestamps.orgId, orgIdsArray));
+            await db.delete(spaces).where(inArray(spaces.orgId, orgIdsArray));
+            await db
+              .delete(spaceMembers)
+              .where(inArray(spaceMembers.orgId, orgIdsArray));
+            await db.delete(domains).where(inArray(domains.orgId, orgIdsArray));
+            await db
+              .delete(spaceWorkflows)
+              .where(inArray(spaceWorkflows.orgId, orgIdsArray));
+            await db
+              .delete(spaceTags)
+              .where(inArray(spaceTags.orgId, orgIdsArray));
+          } catch (e) {
+            console.error(e);
+          }
+        })
+        .catch(() => {
+          console.error(
+            'Failed to delete some data, still continuing with deletion',
+            orgsQuery.map((org) => org.id)
+          );
+        });
 
       const orgPublicIdsArray = orgsQuery.map((org) => org.publicId);
 
@@ -1394,7 +1432,6 @@ export const securityRouter = router({
       }
 
       // Delete Billing
-
       if (!ctx.selfHosted) {
         await Promise.all(
           orgIdsArray.map(async (orgId) => {
