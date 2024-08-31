@@ -2,6 +2,13 @@ import { router, orgProcedure, createCallerFactory } from '~platform/trpc/trpc';
 import { billingTrpcClient } from '~platform/utils/tRPCServerClients';
 
 export const iCanHazRouter = router({
+  billing: orgProcedure.query(async ({ ctx }) => {
+    const { selfHosted } = ctx;
+    if (selfHosted) {
+      return false;
+    }
+    return await billingTrpcClient.iCanHaz.billing.query();
+  }),
   domain: orgProcedure.query(async ({ ctx }) => {
     const { org, selfHosted } = ctx;
     if (selfHosted) {
