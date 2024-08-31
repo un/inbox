@@ -1,12 +1,5 @@
 'use client';
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle
-} from '@/src/components/shadcn-ui/alert-dialog';
+
 import {
   Card,
   CardContent,
@@ -15,14 +8,29 @@ import {
   CardHeader,
   CardTitle
 } from '@/src/components/shadcn-ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle
+} from '@/src/components/shadcn-ui/dialog';
+import {
+  EmbeddedCheckoutProvider,
+  EmbeddedCheckout
+} from '@stripe/react-stripe-js';
+import {
+  loadStripe,
+  type StripeEmbeddedCheckoutOptions
+} from '@stripe/stripe-js';
 import { Tabs, TabsList, TabsTrigger } from '@/src/components/shadcn-ui/tabs';
 import { Button } from '@/src/components/shadcn-ui/button';
-import { Check, SpinnerGap } from '@phosphor-icons/react';
 import { useOrgShortcode } from '@/src/hooks/use-params';
-import { useEffect, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
+import { Check } from '@phosphor-icons/react';
 import { platform } from '@/src/lib/trpc';
 import { cn } from '@/src/lib/utils';
-import { ms } from '@u22n/utils/ms';
+import { env } from '@/src/env';
 
 type PricingSwitchProps = {
   onSwitch: (value: string) => void;
@@ -294,104 +302,60 @@ type StripeModalProps = {
 };
 
 function StripeModal({ open, isYearly, plan, setOpen }: StripeModalProps) {
+  if (!env.NEXT_PUBLIC_BILLING_STRIPE_PUBLISHABLE_KEY) {
+    throw new Error(
+      'Stripe publishable key not set, cannot render Stripe modal'
+    );
+  }
   const orgShortcode = useOrgShortcode();
   const utils = platform.useUtils();
-
-  const {
-    data: paymentLink,
-    isLoading: paymentLinkLoading,
-    error: paymentLinkError
-  } = platform.org.setup.billing.getOrgSubscriptionPaymentLink.useQuery(
-    {
-      orgShortcode,
-      plan,
-      period: isYearly ? 'yearly' : 'monthly'
-    },
-    {
-      enabled: open
-    }
+  const stripePromise = useRef(
+    loadStripe(env.NEXT_PUBLIC_BILLING_STRIPE_PUBLISHABLE_KEY)
   );
 
-  const { data: overview } =
-    platform.org.setup.billing.getOrgBillingOverview.useQuery(
-      { orgShortcode },
-      {
-        enabled: open && paymentLink && !paymentLinkLoading,
-        refetchOnWindowFocus: true,
-        refetchInterval: ms('15 seconds')
-      }
-    );
+  const fetchClientSecret = useCallback(
+    () =>
+      utils.org.setup.billing.createCheckoutSession
+        .fetch({
+          orgShortcode,
+          plan,
+          period: isYearly ? 'yearly' : 'monthly'
+        })
+        .then((res) => res.checkoutSessionClientSecret),
+    [
+      isYearly,
+      orgShortcode,
+      plan,
+      utils.org.setup.billing.createCheckoutSession
+    ]
+  );
+  const onComplete = useCallback(() => {
+    setOpen(false);
+    setTimeout(() => void utils.org.setup.billing.invalidate(), 1000);
+  }, [setOpen, utils.org.setup.billing]);
 
-  // Open payment link once payment link is generated
-  useEffect(() => {
-    if (!open || paymentLinkLoading || !paymentLink) return;
-    window.open(paymentLink.subLink, '_blank');
-  }, [open, paymentLink, paymentLinkLoading]);
-
-  // handle payment info update
-  useEffect(() => {
-    if (overview?.currentPlan === 'pro') {
-      void utils.org.setup.billing.getOrgBillingOverview.invalidate({
-        orgShortcode
-      });
-      setOpen(false);
-    }
-  }, [
-    orgShortcode,
-    overview,
-    setOpen,
-    utils.org.setup.billing.getOrgBillingOverview
-  ]);
+  const options = {
+    fetchClientSecret,
+    onComplete
+  } satisfies StripeEmbeddedCheckoutOptions;
 
   return (
-    <AlertDialog open={open}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Upgrade to Pro</AlertDialogTitle>
-          <AlertDialogDescription className="space-y-2 p-2">
-            {paymentLinkLoading ? (
-              <span className="flex items-center gap-2">
-                <SpinnerGap className="size-4 animate-spin" />
-                Generating Payment Link
-              </span>
-            ) : paymentLink ? (
-              'Waiting for Payment (This may take a few seconds)'
-            ) : (
-              <span className="text-red-9">{paymentLinkError?.message}</span>
-            )}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <div className="flex flex-col gap-2 p-2">
-          <span>
-            We are waiting for your payment to be processed. It may take a few
-            seconds for the payment to reflect in app.
-          </span>
-          {paymentLink && (
-            <span>
-              If a new tab was not opened,{' '}
-              <a
-                target="_blank"
-                href={paymentLink.subLink}
-                className="underline">
-                open it manually.
-              </a>
-            </span>
-          )}
-          <span>
-            {`If your payment hasn't been detected correctly, please try refreshing
-            the page.`}
-          </span>
-          <span>If the issue persists, please contact support.</span>
-        </div>
-
-        <AlertDialogFooter>
-          <Button
-            onClick={() => setOpen(false)}
-            className="w-full">
-            Close
-          </Button>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <Dialog
+      open={open}
+      onOpenChange={setOpen}>
+      <DialogContent className="w-[90vw] max-w-screen-lg p-0">
+        <DialogHeader className="sr-only">
+          <DialogTitle>Stripe Checkout</DialogTitle>
+          <DialogDescription>Checkout with Stripe</DialogDescription>
+        </DialogHeader>
+        {open && (
+          <EmbeddedCheckoutProvider
+            options={options}
+            stripe={stripePromise.current}>
+            <EmbeddedCheckout className="*:rounded-lg" />
+          </EmbeddedCheckoutProvider>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -4,13 +4,12 @@ import type { AuthOptions } from './auth';
 export type SendEmailOptions = {
   to: string[];
   from: string;
-  headers: Record<string, string>;
   raw: string;
 };
 
 export async function sendEmail({
   auth: { host, port, username, password, encryption, authMethod },
-  email: { to, from, headers, raw }
+  email: { to, from, raw }
 }: {
   auth: AuthOptions;
   email: SendEmailOptions;
@@ -27,7 +26,6 @@ export async function sendEmail({
   });
   const res = await transport.sendMail({
     envelope: { to, from },
-    headers,
     raw
   });
   return res;

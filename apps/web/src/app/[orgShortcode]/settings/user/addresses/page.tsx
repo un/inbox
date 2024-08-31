@@ -16,9 +16,19 @@ export default function Page() {
     null
   );
 
-  const { data: proStatus } = platform.org.setup.billing.isPro.useQuery({
+  const { data: hasBilling } = platform.org.iCanHaz.billing.useQuery({
     orgShortcode
   });
+
+  const { data: proStatus } = platform.org.setup.billing.isPro.useQuery(
+    {
+      orgShortcode
+    },
+    {
+      enabled: hasBilling === true
+    }
+  );
+
   const { data: orgMember } =
     platform.account.profile.getOrgMemberProfile.useQuery({
       orgShortcode
@@ -85,7 +95,16 @@ export default function Page() {
                 {orgMember?.account?.username}@{domain}
               </span>
               <Button
-                disabled={!proStatus?.isPro || !personalAddresses.hasUninBonus}>
+                onClick={() =>
+                  setClaimAddressValue(
+                    `${orgMember?.account?.username}@${domain}`
+                  )
+                }
+                disabled={
+                  hasBilling === true
+                    ? !proStatus?.isPro && !personalAddresses.hasUninBonus
+                    : false
+                }>
                 Claim
               </Button>
             </div>

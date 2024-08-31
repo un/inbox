@@ -113,9 +113,6 @@ importers:
       mime:
         specifier: ^4.0.4
         version: 4.0.4
-      mimetext:
-        specifier: ^3.0.24
-        version: 3.0.24
       mysql2:
         specifier: ^3.11.0
         version: 3.11.0
@@ -255,25 +252,6 @@ importers:
         specifier: ^8.2.4
         version: 8.2.4(jiti@1.21.6)(postcss@8.4.41)(tsx@4.18.0)(typescript@5.5.4)(yaml@2.5.0)
 
-  apps/v1Migration:
-    dependencies:
-      '@t3-oss/env-core':
-        specifier: ^0.11.0
-        version: 0.11.0(typescript@5.5.4)(zod@3.23.8)
-      '@u22n/database':
-        specifier: workspace:*
-        version: link:../../packages/database
-      '@u22n/utils':
-        specifier: workspace:*
-        version: link:../../packages/utils
-      zod:
-        specifier: ^3.23.8
-        version: 3.23.8
-    devDependencies:
-      tsup:
-        specifier: ^8.2.4
-        version: 8.2.4(jiti@1.21.6)(postcss@8.4.41)(tsx@4.18.0)(typescript@5.5.4)(yaml@2.5.0)
-
   apps/web:
     dependencies:
       '@calcom/embed-react':
@@ -366,6 +344,12 @@ importers:
       '@simplewebauthn/browser':
         specifier: ^10.0.0
         version: 10.0.0
+      '@stripe/react-stripe-js':
+        specifier: ^2.8.0
+        version: 2.8.0(@stripe/stripe-js@4.3.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@stripe/stripe-js':
+        specifier: ^4.3.0
+        version: 4.3.0
       '@t3-oss/env-core':
         specifier: ^0.11.0
         version: 0.11.0(typescript@5.5.4)(zod@3.23.8)
@@ -1067,10 +1051,6 @@ packages:
   '@aws-sdk/xml-builder@3.609.0':
     resolution: {integrity: sha512-l9XxNcA4HX98rwCC2/KoiWcmEiRfZe4G+mYwDbCFT87JIMj6GBhLDkAzr/W8KAaA2IDr8Vc6J8fZPgVulxxfMA==}
     engines: {node: '>=16.0.0'}
-
-  '@babel/runtime-corejs3@7.25.0':
-    resolution: {integrity: sha512-BOehWE7MgQ8W8Qn0CQnMtg2tHPHPulcS/5AVpFvs2KCK1ET+0WqZqPvnpRpFN81gYoFopdIEJX9Sgjw3ZBccPg==}
-    engines: {node: '>=6.9.0'}
 
   '@babel/runtime@7.24.5':
     resolution: {integrity: sha512-Nms86NXrsaeU9vbBJKni6gXiEXZ4CVpYVzEjDH9Sb8vmZ3UljyA1GSOJl/6LGPO8EHLuSF9H+IxNXHPX8QHJ4g==}
@@ -3378,6 +3358,17 @@ packages:
     resolution: {integrity: sha512-4pP0EV3iTsexDx+8PPGAKCQpd/6hsQBaQhqWzU4hqKPHN5epPsxKbvUTIiYIHTxaKt6/kEaqPBpu/ufvfbrRzw==}
     engines: {node: '>=16.0.0'}
 
+  '@stripe/react-stripe-js@2.8.0':
+    resolution: {integrity: sha512-Vf1gNEuBxA9EtxiLghm2ZWmgbADNMJw4HW6eolUu0DON/6mZvWZgk0KHolN0sozNJwYp0i/8hBsDBcBUWcvnbw==}
+    peerDependencies:
+      '@stripe/stripe-js': ^1.44.1 || ^2.0.0 || ^3.0.0 || ^4.0.0
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0
+      react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0
+
+  '@stripe/stripe-js@4.3.0':
+    resolution: {integrity: sha512-bf8MxzzgD3dybtyIJUQSDMqxjEkJfsmj9IdRqDv609Zw08R41O7eoIy0f8KY41u8MbaFOYsn+XGJZtg1xwR2wQ==}
+    engines: {node: '>=12.16'}
+
   '@swc/counter@0.1.3':
     resolution: {integrity: sha512-e2BR4lsJkkRlKZ/qCHPw9ZaSxc0MVUd7gtbtaB7aMvHeJVYe8sOB8DBZkP2DtISHGSku9sCK6T6cnY0CtXrOCQ==}
 
@@ -4126,9 +4117,6 @@ packages:
   copy-anything@3.0.5:
     resolution: {integrity: sha512-yCEafptTtb4bk7GLEQoM8KVJpxAfdBJYaXyzQEgQQQgYrZiDp8SJmGKlYza6CYjEDNstAdNdKA3UuoULlEbS6w==}
     engines: {node: '>=12.13'}
-
-  core-js-pure@3.38.0:
-    resolution: {integrity: sha512-8balb/HAXo06aHP58mZMtXgD8vcnXz9tUDePgqBgJgKdmTlMt+jw3ujqniuBDQXMvTzxnMpxHFeuSM3g1jWQuQ==}
 
   crelt@1.0.6:
     resolution: {integrity: sha512-VQ2MBenTq1fWZUH9DJNGti7kKv6EeAuYr3cLwxUWhIu1baTaXh4Ib5W2CqHVqib4/MqbYGJqiL3Zb8GJZr3l4g==}
@@ -5156,9 +5144,6 @@ packages:
     resolution: {integrity: sha512-34wB/Y7MW7bzjKRjUKTa46I2Z7eV62Rkhva+KkopW7Qvv/OSWBqvkSY7vusOPrNuZcUG3tApvdVgNB8POj3SPw==}
     engines: {node: '>=10'}
 
-  js-base64@3.7.7:
-    resolution: {integrity: sha512-7rCnleh0z2CkXhH67J8K1Ytz0b2Y+yxTPL+/KOJoa20hfnVQ/3/T6W/KflYI4bRHRagNeXeU2bkNGI3v1oS/lw==}
-
   js-cookie@3.0.5:
     resolution: {integrity: sha512-cEiJEAEoIbWfCZYKWhVwFuvPX1gETRYPw6LlaTKoxD3s2AkXzkCjnp6h0V77ozyqj0jakteJ4YqDJT830+lVGw==}
     engines: {node: '>=14'}
@@ -5385,9 +5370,6 @@ packages:
     resolution: {integrity: sha512-v8yqInVjhXyqP6+Kw4fV3ZzeMRqEW6FotRsKXjRS5VMTNIuXsdRoAvklpoRgSqXm6o9VNH4/C0mgedko9DdLsQ==}
     engines: {node: '>=16'}
     hasBin: true
-
-  mimetext@3.0.24:
-    resolution: {integrity: sha512-UdG1KVfcxeEfo6el91lzFG2WLLTm8DxSK/rosxx5H2Pjla50+DSsjTgr9BRAfAkbQWaxvzcaTO+bHK5ZrdKdfA==}
 
   mimic-fn@2.1.0:
     resolution: {integrity: sha512-OqbOk5oEQeAZ8WXWydlu9HJjz9WVdEIvamMCcXmuqUYjTknH/sqsWvhQ3vgwKFRR1HpjvNBKQ37nbJgYzGqGcg==}
@@ -7379,11 +7361,6 @@ snapshots:
     dependencies:
       '@smithy/types': 3.3.0
       tslib: 2.7.0
-
-  '@babel/runtime-corejs3@7.25.0':
-    dependencies:
-      core-js-pure: 3.38.0
-      regenerator-runtime: 0.14.1
 
   '@babel/runtime@7.24.5':
     dependencies:
@@ -9528,6 +9505,15 @@ snapshots:
       '@smithy/types': 3.3.0
       tslib: 2.7.0
 
+  '@stripe/react-stripe-js@2.8.0(@stripe/stripe-js@4.3.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      '@stripe/stripe-js': 4.3.0
+      prop-types: 15.8.1
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+
+  '@stripe/stripe-js@4.3.0': {}
+
   '@swc/counter@0.1.3': {}
 
   '@swc/helpers@0.5.5':
@@ -10375,8 +10361,6 @@ snapshots:
   copy-anything@3.0.5:
     dependencies:
       is-what: 4.1.16
-
-  core-js-pure@3.38.0: {}
 
   crelt@1.0.6: {}
 
@@ -11556,8 +11540,6 @@ snapshots:
 
   joycon@3.1.1: {}
 
-  js-base64@3.7.7: {}
-
   js-cookie@3.0.5: {}
 
   js-tokens@4.0.0: {}
@@ -11841,13 +11823,6 @@ snapshots:
   mime@3.0.0: {}
 
   mime@4.0.4: {}
-
-  mimetext@3.0.24:
-    dependencies:
-      '@babel/runtime': 7.24.5
-      '@babel/runtime-corejs3': 7.25.0
-      js-base64: 3.7.7
-      mime-types: 2.1.35
 
   mimic-fn@2.1.0: {}
 
