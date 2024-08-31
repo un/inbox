@@ -346,12 +346,25 @@ export const worker = createWorker<MailProcessorJobData>(
             : parsedEmail.cc.value
           : [];
 
-        const inReplyToEmailId = parsedEmail.inReplyTo
-          ? (parsedEmail.inReplyTo
+        const inReplyToEmailIds = parsedEmail.inReplyTo
+          ? parsedEmail.inReplyTo
               .split(/\s+/g) // split by whitespace
               .map((part) => part.replace(/^<|>$/g, '')) // remove < and > from the start and end of the string
-              .filter((part) => !!part)[0] ?? null) // remove empty strings and get the first element or null
-          : null;
+              .filter((part) => !!part) // remove empty strings
+          : [];
+
+        const relatedEmailIds = Array.from(
+          new Set(
+            inReplyToEmailIds.concat(
+              (parsedEmail.references
+                ? Array.isArray(parsedEmail.references)
+                  ? parsedEmail.references
+                  : [parsedEmail.references]
+                : []
+              ).map((ref) => ref.replace(/^<|>$/g, ''))
+            )
+          )
+        );
 
         const subject =
           parsedEmail.subject?.replace(/^(RE:|FW:)\s*/i, '').trim() || '';
@@ -564,11 +577,11 @@ export const worker = createWorker<MailProcessorJobData>(
         // - if yes, then we append the message to that existing convo
         // - if no, then we assume this is a new convo and handle it at such
 
-        if (inReplyToEmailId) {
+        if (relatedEmailIds.length > 0) {
           const existingMessage = await db.query.convoEntries.findFirst({
             where: and(
               eq(convoEntries.orgId, orgId),
-              eq(convoEntries.emailMessageId, inReplyToEmailId)
+              inArray(convoEntries.emailMessageId, relatedEmailIds)
             ),
             columns: {
               id: true,
@@ -704,7 +717,7 @@ export const worker = createWorker<MailProcessorJobData>(
         }
 
         // create a new convo with new participants
-        if (!inReplyToEmailId || hasReplyToButIsNewConvo) {
+        if (!relatedEmailIds.length || hasReplyToButIsNewConvo) {
           const newConvoInsert = await db.insert(convos).values({
             orgId: orgId,
             publicId: typeIdGenerator('convos'),
@@ -1021,7 +1034,8 @@ export const worker = createWorker<MailProcessorJobData>(
         });
 
         await sendRealtimeNotification({
-          newConvo: (!inReplyToEmailId || hasReplyToButIsNewConvo) ?? false,
+          newConvo:
+            (!relatedEmailIds.length || hasReplyToButIsNewConvo) ?? false,
           convoId: convoId,
           convoEntryId: Number(insertNewConvoEntry.insertId)
         });
