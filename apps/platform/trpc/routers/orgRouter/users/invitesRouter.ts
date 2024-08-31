@@ -70,6 +70,24 @@ export const invitesRouter = router({
 
       // Insert account profile - save ID
       return db.transaction(async (db) => {
+        //check existing email invite
+        const sentInviteEmails = await db.query.orgInvitations.findFirst({
+          where: eq(
+            orgInvitations.email,
+            notification?.notificationEmailAddress ?? ''
+          ),
+          columns: {
+            id: true
+          }
+        });
+
+        if (sentInviteEmails) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'Email already invited'
+          });
+        }
+
         const orgMemberProfilePublicId = typeIdGenerator('orgMemberProfile');
         const orgMemberProfileResponse = await db
           .insert(orgMemberProfiles)
