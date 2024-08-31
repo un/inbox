@@ -27,6 +27,9 @@ type NavLinks = {
 
 export default function SettingsSidebarContent() {
   const orgShortcode = useOrgShortcode();
+  const { data: hasBilling } = platform.org.iCanHaz.billing.useQuery({
+    orgShortcode
+  });
 
   const { data: isAdmin } =
     platform.org.users.members.isOrgMemberAdmin.useQuery({
@@ -56,11 +59,15 @@ export default function SettingsSidebarContent() {
       to: `/${orgShortcode}/settings/org`,
       icon: <Buildings />
     },
-    {
-      label: 'Billing',
-      to: `/${orgShortcode}/settings/org/setup/billing`,
-      icon: <CreditCard />
-    }
+    ...(hasBilling
+      ? [
+          {
+            label: 'Billing',
+            to: `/${orgShortcode}/settings/org/setup/billing`,
+            icon: <CreditCard />
+          }
+        ]
+      : [])
   ];
 
   const orgUserLinks: NavLinks[] = [
