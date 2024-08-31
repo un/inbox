@@ -26,7 +26,6 @@ export const accountRouter = router({
           username: true,
           createdAt: true,
           metadata: true,
-          preAccount: true,
           recoveryCode: true,
           lastLoginAt: true
         }
@@ -116,7 +115,6 @@ export const accountRouter = router({
           username: true,
           createdAt: true,
           metadata: true,
-          preAccount: true,
           recoveryCode: true,
           lastLoginAt: true
         },
