@@ -83,7 +83,8 @@ export function InviteModal() {
       form.reset();
       void invalidateInvites.invalidate();
       setOpen(false);
-    }
+    },
+    onError: () => void 0
   });
 
   const form = useForm<z.infer<typeof inviteFormSchema>>({
