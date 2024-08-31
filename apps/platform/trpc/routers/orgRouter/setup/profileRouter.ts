@@ -14,7 +14,7 @@ export const orgProfileRouter = router({
       })
     )
     .query(async ({ ctx, input }) => {
-      const { db, org } = ctx;
+      const { db, org, account } = ctx;
       const orgId = org.id;
       const { orgPublicId } = input;
 
@@ -22,7 +22,8 @@ export const orgProfileRouter = router({
         columns: {
           publicId: true,
           avatarTimestamp: true,
-          name: true
+          name: true,
+          ownerId: true
         },
         where: orgPublicId ? eq(orgs.publicId, orgPublicId) : eq(orgs.id, orgId)
       });
@@ -35,7 +36,8 @@ export const orgProfileRouter = router({
       }
 
       return {
-        orgProfile: orgProfileQuery
+        orgProfile: orgProfileQuery,
+        isOwner: orgProfileQuery.ownerId === account.id
       };
     }),
 

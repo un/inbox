@@ -4,15 +4,49 @@ import {
   orgMemberProfiles,
   accounts,
   spaces,
-  spaceMembers
+  spaceMembers,
+  orgInvitations,
+  orgModules,
+  orgPostalConfigs,
+  teams,
+  teamMembers,
+  domains,
+  postalServers,
+  contacts,
+  emailRoutingRules,
+  emailRoutingRulesDestinations,
+  emailIdentities,
+  emailIdentitiesAuthorizedSenders,
+  emailIdentitiesPersonal,
+  emailIdentityExternal,
+  convos,
+  convoSubjects,
+  convoParticipants,
+  convoParticipantTeamMembers,
+  convoAttachments,
+  pendingAttachments,
+  convoEntries,
+  convoEntryReplies,
+  convoEntryPrivateVisibilityParticipants,
+  convoEntryRawHtmlEmails,
+  convoSeenTimestamps,
+  convoEntrySeenTimestamps,
+  spaceWorkflows,
+  spaceTags
 } from '@u22n/database/schema';
+import {
+  billingTrpcClient,
+  mailBridgeTrpcClient
+} from '~platform/utils/tRPCServerClients';
 import { blockedUsernames, reservedUsernames } from '~platform/utils/signup';
-import { router, accountProcedure } from '~platform/trpc/trpc';
+import { router, accountProcedure, orgProcedure } from '~platform/trpc/trpc';
 import { validateSpaceShortCode } from '../spaceRouter/utils';
 import { typeIdGenerator } from '@u22n/utils/typeid';
 import { eq, and, like } from '@u22n/database/orm';
 import type { DBType } from '@u22n/database';
+import { storage } from '~platform/storage';
 import { TRPCError } from '@trpc/server';
+import { env } from '~platform/env';
 import { z } from 'zod';
 
 async function validateOrgShortcode(
@@ -281,5 +315,170 @@ export const crudRouter = router({
         userOrgs: orgMembersQuery,
         adminOrgShortcodes: adminOrgShortcodes
       };
-    })
+    }),
+  deleteOrg: orgProcedure.mutation(async ({ ctx }) => {
+    const { db, account, org } = ctx;
+
+    const orgQuery = await db.query.orgs.findFirst({
+      where: eq(orgs.id, org.id),
+      columns: {
+        id: true,
+        publicId: true,
+        shortcode: true,
+        ownerId: true
+      },
+      with: {
+        postalConfig: true
+      }
+    });
+
+    if (orgQuery?.ownerId !== account.id) {
+      throw new TRPCError({
+        code: 'UNAUTHORIZED',
+        message: 'You are not authorized to delete this organization'
+      });
+    }
+
+    await db
+      .transaction(async (db) => {
+        try {
+          await db.delete(orgs).where(eq(orgs.id, orgQuery.id));
+          await db
+            .delete(orgInvitations)
+            .where(eq(orgInvitations.orgId, orgQuery.id));
+          await db.delete(orgModules).where(eq(orgModules.orgId, orgQuery.id));
+          await db
+            .delete(orgPostalConfigs)
+            .where(eq(orgPostalConfigs.orgId, orgQuery.id));
+          await db.delete(orgMembers).where(eq(orgMembers.orgId, orgQuery.id));
+          await db
+            .delete(orgMemberProfiles)
+            .where(eq(orgMemberProfiles.orgId, orgQuery.id));
+          await db.delete(teams).where(eq(teams.orgId, orgQuery.id));
+          await db
+            .delete(teamMembers)
+            .where(eq(teamMembers.orgId, orgQuery.id));
+          await db.delete(domains).where(eq(domains.orgId, orgQuery.id));
+          await db
+            .delete(postalServers)
+            .where(eq(postalServers.orgId, orgQuery.id));
+          await db.delete(contacts).where(eq(contacts.orgId, orgQuery.id));
+          await db
+            .delete(emailRoutingRules)
+            .where(eq(emailRoutingRules.orgId, orgQuery.id));
+          await db
+            .delete(emailRoutingRulesDestinations)
+            .where(eq(emailRoutingRulesDestinations.orgId, orgQuery.id));
+          await db
+            .delete(emailIdentities)
+            .where(eq(emailIdentities.orgId, orgQuery.id));
+          await db
+            .delete(emailIdentitiesAuthorizedSenders)
+            .where(eq(emailIdentitiesAuthorizedSenders.orgId, orgQuery.id));
+          await db
+            .delete(emailIdentitiesPersonal)
+            .where(eq(emailIdentitiesPersonal.orgId, orgQuery.id));
+          await db
+            .delete(emailIdentityExternal)
+            .where(eq(emailIdentityExternal.orgId, orgQuery.id));
+          await db.delete(convos).where(eq(convos.orgId, orgQuery.id));
+          await db
+            .delete(convoSubjects)
+            .where(eq(convoSubjects.orgId, orgQuery.id));
+          await db
+            .delete(convoParticipants)
+            .where(eq(convoParticipants.orgId, orgQuery.id));
+          await db
+            .delete(convoParticipantTeamMembers)
+            .where(eq(convoParticipantTeamMembers.orgId, orgQuery.id));
+          await db
+            .delete(convoAttachments)
+            .where(eq(convoAttachments.orgId, orgQuery.id));
+          await db
+            .delete(pendingAttachments)
+            .where(eq(pendingAttachments.orgId, orgQuery.id));
+          await db
+            .delete(convoEntries)
+            .where(eq(convoEntries.orgId, orgQuery.id));
+          await db
+            .delete(convoEntryReplies)
+            .where(eq(convoEntryReplies.orgId, orgQuery.id));
+          await db
+            .delete(convoEntryPrivateVisibilityParticipants)
+            .where(
+              eq(convoEntryPrivateVisibilityParticipants.orgId, orgQuery.id)
+            );
+          await db
+            .delete(convoEntryRawHtmlEmails)
+            .where(eq(convoEntryRawHtmlEmails.orgId, orgQuery.id));
+          await db
+            .delete(convoSeenTimestamps)
+            .where(eq(convoSeenTimestamps.orgId, orgQuery.id));
+          await db
+            .delete(convoEntrySeenTimestamps)
+            .where(eq(convoEntrySeenTimestamps.orgId, orgQuery.id));
+          await db.delete(domains).where(eq(domains.orgId, orgQuery.id));
+          await db.delete(spaces).where(eq(spaces.orgId, orgQuery.id));
+          await db
+            .delete(spaceMembers)
+            .where(eq(spaceMembers.orgId, orgQuery.id));
+          await db
+            .delete(spaceWorkflows)
+            .where(eq(spaceWorkflows.orgId, orgQuery.id));
+          await db.delete(spaceTags).where(eq(spaceTags.orgId, orgQuery.id));
+        } catch (e) {
+          console.error('Failed to delete org', orgQuery.id);
+          console.error(e);
+          db.rollback();
+        }
+      })
+      .catch(() => {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to delete org'
+        });
+      });
+
+    // Delete org from Postal DB
+    if (orgQuery.postalConfig) {
+      await mailBridgeTrpcClient.postal.org.deletePostalOrg.mutate({
+        orgPublicId: orgQuery.publicId
+      });
+    }
+
+    // Delete orgShortcode Cache
+    await storage.orgContext.removeItem(orgQuery.shortcode);
+
+    // Delete attachments
+
+    const deleteStorageResponse = (await fetch(
+      `${env.STORAGE_URL}/api/orgs/delete`,
+      {
+        method: 'post',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: env.STORAGE_KEY
+        },
+        body: JSON.stringify({
+          orgPublicIds: [orgQuery.publicId]
+        })
+      }
+    ).then((res) => res.json())) as unknown;
+
+    if (!deleteStorageResponse) {
+      console.error(
+        '🔥 Failed to delete attachments from storage',
+        orgQuery.publicId
+      );
+    }
+
+    // Delete Billing
+    if (!ctx.selfHosted) {
+      await billingTrpcClient.stripe.subscriptions.cancelOrgSubscription.mutate(
+        {
+          orgId: orgQuery.id
+        }
+      );
+    }
+  })
 });
