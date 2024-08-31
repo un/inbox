@@ -84,9 +84,7 @@ export function InviteModal() {
       void invalidateInvites.invalidate();
       setOpen(false);
     },
-    onError: (error) => {
-      console.error('Error creating invite', error.message);
-    }
+    onError: () => void 0
   });
 
   const form = useForm<z.infer<typeof inviteFormSchema>>({
