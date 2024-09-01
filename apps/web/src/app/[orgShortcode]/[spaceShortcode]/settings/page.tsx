@@ -76,7 +76,7 @@ import { z } from 'zod';
 
 export default function SettingsPage() {
   const orgShortcode = useOrgShortcode();
-  const spaceShortcode = useSpaceShortcode();
+  const spaceShortcode = useSpaceShortcode(true);
 
   const [showSaved, setShowSaved] = useState(false);
 
@@ -100,9 +100,15 @@ export default function SettingsPage() {
     <div className="flex w-full flex-col items-center overflow-y-auto">
       <div className="flex max-w-screen-md flex-col gap-8 p-4">
         {isLoading ? (
-          <div>Loading...</div>
+          <div className="flex items-center justify-center gap-2 text-center font-bold">
+            <SpinnerGap
+              className="size-4 animate-spin"
+              size={16}
+            />
+            <span>Loading...</span>
+          </div>
         ) : !spaceSettings?.settings ? (
-          <div>Space Not Found</div>
+          <div>{`You don't have access to settings for this space`}</div>
         ) : (
           <div className="flex w-full flex-col gap-8 p-0">
             <div className="border-base-5 flex w-full flex-row items-center justify-between gap-4 border-b pb-2">
@@ -121,16 +127,12 @@ export default function SettingsPage() {
 
                   <div className="flex flex-col gap-1">
                     <NameField
-                      orgShortcode={orgShortcode}
-                      spaceShortcode={spaceShortcode}
                       initialValue={spaceSettings?.settings?.name}
                       showSaved={setShowSaved}
                       isSpaceAdmin={isSpaceAdmin}
                     />
 
                     <DescriptionField
-                      orgShortcode={orgShortcode}
-                      spaceShortcode={spaceShortcode}
                       initialValue={spaceSettings?.settings?.description ?? ''}
                       showSaved={setShowSaved}
                       isSpaceAdmin={isSpaceAdmin}
@@ -164,22 +166,16 @@ export default function SettingsPage() {
               </div>
             </div>
             <ColorField
-              orgShortcode={orgShortcode}
-              spaceShortcode={spaceShortcode}
               initialValue={spaceSettings?.settings?.color}
               showSaved={setShowSaved}
               isSpaceAdmin={isSpaceAdmin}
             />
             <VisibilityField
-              orgShortcode={orgShortcode}
-              spaceShortcode={spaceShortcode}
               initialValue={spaceSettings?.settings?.type}
               showSaved={setShowSaved}
               isSpaceAdmin={isSpaceAdmin}
             />
             <Workflows
-              orgShortcode={orgShortcode}
-              spaceShortcode={spaceShortcode}
               showSaved={setShowSaved}
               isSpaceAdmin={isSpaceAdmin}
             />
@@ -196,18 +192,16 @@ export default function SettingsPage() {
 }
 
 function NameField({
-  orgShortcode,
-  spaceShortcode,
   initialValue,
   showSaved,
   isSpaceAdmin
 }: {
-  orgShortcode: string;
-  spaceShortcode: string;
   initialValue: string;
   isSpaceAdmin: boolean;
   showSaved: (value: boolean) => void;
 }) {
+  const orgShortcode = useOrgShortcode();
+  const spaceShortcode = useSpaceShortcode(true);
   const { mutateAsync: setSpaceName, isSuccess: setSpaceNameSuccess } =
     platform.spaces.settings.setSpaceName.useMutation();
   const [editName, setEditName] = useState(initialValue);
@@ -254,11 +248,14 @@ function NameField({
             label="Space Name"
             value={editName}
             onChange={(e) => setEditName(e.target.value)}
+            onBlur={() => setShowEditNameField(false)}
           />
         </div>
       ) : (
         <div className="flex flex-row items-center gap-2">
-          <span className="font-display text-lg">{initialValue}</span>
+          <span className="font-display text-lg">
+            {editName ?? initialValue}
+          </span>
           <Button
             variant={'ghost'}
             size={'icon-sm'}
@@ -275,18 +272,16 @@ function NameField({
 }
 
 function DescriptionField({
-  orgShortcode,
-  spaceShortcode,
   initialValue,
   showSaved,
   isSpaceAdmin
 }: {
-  orgShortcode: string;
-  spaceShortcode: string;
   initialValue: string;
   isSpaceAdmin: boolean;
   showSaved: (value: boolean) => void;
 }) {
+  const orgShortcode = useOrgShortcode();
+  const spaceShortcode = useSpaceShortcode(true);
   const {
     mutateAsync: setSpaceDescription,
     isSuccess: setSpaceDescriptionSuccess
@@ -336,6 +331,7 @@ function DescriptionField({
             label="Description"
             value={editDescription}
             onChange={(e) => setEditDescription(e.target.value)}
+            onBlur={() => setShowEditDescriptionField(false)}
           />
         </div>
       ) : (
@@ -343,7 +339,7 @@ function DescriptionField({
           {initialValue === '' ? (
             <span className="text-base-10 text-xs">Description</span>
           ) : (
-            <span className="">{initialValue}</span>
+            <span>{editDescription ?? initialValue}</span>
           )}
           <Button
             variant={'ghost'}
@@ -361,18 +357,17 @@ function DescriptionField({
 }
 
 function ColorField({
-  orgShortcode,
-  spaceShortcode,
   initialValue,
   showSaved,
   isSpaceAdmin
 }: {
-  orgShortcode: string;
-  spaceShortcode: string;
   initialValue: string;
   isSpaceAdmin: boolean;
   showSaved: (value: boolean) => void;
 }) {
+  const orgShortcode = useOrgShortcode();
+  const spaceShortcode = useSpaceShortcode(true);
+
   const { mutateAsync: setSpaceColor } =
     platform.spaces.settings.setSpaceColor.useMutation();
   const [activeColor, setActiveColor] = useState(initialValue);
@@ -436,18 +431,17 @@ function ColorField({
 }
 
 function VisibilityField({
-  orgShortcode,
-  spaceShortcode,
   initialValue,
   showSaved,
   isSpaceAdmin
 }: {
-  orgShortcode: string;
-  spaceShortcode: string;
   initialValue: string;
   isSpaceAdmin: boolean;
   showSaved: (value: boolean) => void;
 }) {
+  const orgShortcode = useOrgShortcode();
+  const spaceShortcode = useSpaceShortcode(true);
+
   const { data: canAddSpace } = platform.org.iCanHaz.space.useQuery(
     {
       orgShortcode: orgShortcode
@@ -554,16 +548,15 @@ function VisibilityField({
 }
 
 function Workflows({
-  orgShortcode,
-  spaceShortcode,
   showSaved,
   isSpaceAdmin
 }: {
-  orgShortcode: string;
-  spaceShortcode: string;
   isSpaceAdmin: boolean;
   showSaved: (value: boolean) => void;
 }) {
+  const orgShortcode = useOrgShortcode();
+  const spaceShortcode = useSpaceShortcode(true);
+
   const { data: spaceWorkflows, isLoading: workflowsLoading } =
     platform.spaces.workflows.getSpacesWorkflows.useQuery({
       orgShortcode: orgShortcode,
@@ -1586,6 +1579,7 @@ function DeleteWorkflowModal({
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function Tags({
   orgShortcode,
   spaceShortcode

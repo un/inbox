@@ -19,7 +19,7 @@ export function useCurrentConvoId() {
 // Sometimes we don't want to throw an error if the spaceShortcode is not present
 export function useSpaceShortcode(throwIfNotDefined?: true): string;
 export function useSpaceShortcode(throwIfNotDefined?: false): string | null;
-export function useSpaceShortcode(throwIfNotDefined = true) {
+export function useSpaceShortcode(throwIfNotDefined = false) {
   const params = useParams();
   if (throwIfNotDefined && typeof params.spaceShortcode !== 'string') {
     throw new Error(
@@ -45,7 +45,7 @@ export function useSpaceShortcode(throwIfNotDefined = true) {
  */
 export function useOrgScopedRouter() {
   const orgShortcode = useOrgShortcode();
-  const spaceShortcode = useSpaceShortcode(false);
+  const spaceShortcode = useSpaceShortcode();
   const router = useRouter();
 
   const scopedNavigate = useCallback(

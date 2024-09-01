@@ -32,7 +32,7 @@ export function ConvoListBase({
   linkBase
 }: ConvoListBaseProps) {
   const orgShortcode = useOrgShortcode();
-  const spaceShortcode = useSpaceShortcode(false);
+  const spaceShortcode = useSpaceShortcode();
   const [selections, setSelections] = useAtom(convoListSelection);
   const [lastSelected, setLastSelected] = useAtom(lastSelectedConvo);
 

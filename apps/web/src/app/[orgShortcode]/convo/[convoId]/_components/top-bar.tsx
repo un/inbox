@@ -446,7 +446,7 @@ const DeleteButton = memo(function DeleteButton({
   const removeConvoFromList = useDeleteConvo$Cache();
   const { scopedNavigate } = useOrgScopedRouter();
   const currentConvo = useCurrentConvoId();
-  const spaceShortcode = useSpaceShortcode(false);
+  const spaceShortcode = useSpaceShortcode();
 
   const { mutate: deleteConvo, isPending: deletingConvo } =
     platform.convos.deleteConvo.useMutation({
@@ -522,7 +522,7 @@ function DeleteModal({
   const orgShortcode = useOrgShortcode();
   const { scopedNavigate } = useOrgScopedRouter();
   const currentConvo = useCurrentConvoId();
-  const spaceShortcode = useSpaceShortcode(false);
+  const spaceShortcode = useSpaceShortcode();
   const removeConvoFromList = useDeleteConvo$Cache();
 
   // const { mutate: hideConvo, isPending: hidingConvo } =

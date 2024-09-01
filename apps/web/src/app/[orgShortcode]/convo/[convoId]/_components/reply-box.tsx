@@ -57,7 +57,7 @@ export function ReplyBox({
   const { draft, setDraft, resetDraft } = useDraft(convoId);
   const [editorText, setEditorText] = useState(draft.content);
   const orgShortcode = useOrgShortcode();
-  const spaceShortcode = useSpaceShortcode(false);
+  const spaceShortcode = useSpaceShortcode();
   const [replyTo] = useAtom(replyToMessageAtom);
   const [emailIdentity, setEmailIdentity] = useAtom(emailIdentityAtom);
   const addConvoToCache = useUpdateConvoMessageList$Cache();

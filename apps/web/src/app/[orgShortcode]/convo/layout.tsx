@@ -72,7 +72,7 @@ function ChildrenWithOrgIssues({ children }: { children: ReactNode }) {
 
 function ConvoNavHeader() {
   const orgShortcode = useOrgShortcode();
-  const spaceShortcode = useSpaceShortcode(false);
+  const spaceShortcode = useSpaceShortcode();
   const { scopedUrl } = useOrgScopedRouter();
 
   // const { mutate: hideConvo } = platform.convos.hideConvo.useMutation({
