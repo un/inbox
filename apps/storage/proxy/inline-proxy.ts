@@ -69,13 +69,15 @@ export const inlineProxy = createHonoApp<Ctx>()
         Key: `${attachmentQueryResponse.org.publicId}/${attachmentId}/${filename}`
       });
       const url = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
-      const res = await fetch(url).then((res) => c.body(res.body, res));
+      const res = await fetch(url);
       if (!res.ok) {
         return c.json(
           { error: 'Error while fetching attachment' },
           { status: 500 }
         );
       }
-      return res;
+      // Cache for 1 hour
+      c.header('Cache-Control', 'private, max-age=3600');
+      return c.body(res.body, res);
     }
   );

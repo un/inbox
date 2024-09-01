@@ -27,10 +27,8 @@ import { slashCommand, suggestionItems } from './slash-commands';
 import { createExtensionSet } from '@u22n/tiptap/extensions';
 import { useIsMobile } from '@/src/hooks/use-is-mobile';
 import { forwardRef, memo, useState } from 'react';
-import { env } from '@/src/env';
 
 const tipTapExtensions = createExtensionSet({
-  storageUrl: env.NEXT_PUBLIC_STORAGE_URL,
   className: {
     placeholderImage: 'rounded-md border opacity-50'
   }

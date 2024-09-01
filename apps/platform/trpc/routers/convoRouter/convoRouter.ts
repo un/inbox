@@ -53,7 +53,7 @@ import { TRPCError } from '@trpc/server';
 import { env } from '~platform/env';
 import { z } from 'zod';
 
-const tipTapExtensions = createExtensionSet({ storageUrl: env.STORAGE_URL });
+const tipTapExtensions = createExtensionSet();
 
 type Attachment = {
   orgPublicId: TypeId<'org'>;
