@@ -131,7 +131,7 @@ export default function CreateConvoForm({
 }) {
   const orgShortcode = useOrgShortcode();
   const { scopedNavigate } = useOrgScopedRouter();
-  const spaceShortcode = useSpaceShortcode(false);
+  const spaceShortcode = useSpaceShortcode();
   const { draft, setDraft, resetDraft } = useComposingDraft();
   const isMobile = useIsMobile();
 

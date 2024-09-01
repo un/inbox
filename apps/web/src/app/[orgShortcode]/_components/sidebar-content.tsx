@@ -122,17 +122,21 @@ function SpaceItem({
           {spaceData.name ?? 'Unnamed Space'}
         </span>
       </Link>
-      <div className="w-0 overflow-hidden transition-all group-hover:w-8">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              size="icon-sm"
-              variant="ghost">
-              <DotsThree />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            {/* TODO: Add in with the notifications
+      {spaceData.canSeeSettings && (
+        <div className="w-0 overflow-hidden transition-all group-hover:w-8">
+          {/* <DropdownMenu>
+          <DropdownMenuTrigger asChild> */}
+          <Button
+            size="icon-sm"
+            variant="ghost"
+            onClick={() =>
+              router.push(`/${orgShortCode}/${spaceData.shortcode}/settings`)
+            }>
+            <DotsThree />
+          </Button>
+          {/* </DropdownMenuTrigger>
+          <DropdownMenuContent> 
+           TODO: Add in with the notifications
             <DropdownMenuSub>
               <DropdownMenuSubTrigger>Notifications</DropdownMenuSubTrigger>
               <DropdownMenuPortal>
@@ -152,16 +156,16 @@ function SpaceItem({
               </DropdownMenuPortal>
             </DropdownMenuSub> 
             <DropdownMenuSeparator />
-            */}
-            <DropdownMenuItem
+             <DropdownMenuItem
               onSelect={() => {
                 router.push(`/${orgShortCode}/${spaceData.shortcode}/settings`);
               }}>
               Space Settings
             </DropdownMenuItem>
           </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+        </DropdownMenu> */}
+        </div>
+      )}
     </div>
   );
 }

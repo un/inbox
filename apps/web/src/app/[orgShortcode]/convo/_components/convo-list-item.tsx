@@ -41,7 +41,7 @@ export const ConvoItem = memo(function ConvoItem({
   onSelect: (shiftKey: boolean) => void;
 }) {
   const orgShortcode = useOrgShortcode();
-  const spaceShortcode = useSpaceShortcode(false);
+  const spaceShortcode = useSpaceShortcode();
   const selecting = useAtomValue(convoListSelecting);
   const isMobile = useIsMobile();
   const router = useRouter();

@@ -32,7 +32,7 @@ export function DeleteMultipleConvosModal({
   const currentConvo = useCurrentConvoId();
   const { scopedNavigate } = useOrgScopedRouter();
   const [selections, setSelections] = useAtom(convoListSelection);
-  const spaceShortcode = useSpaceShortcode(false);
+  const spaceShortcode = useSpaceShortcode();
 
   const { mutate: deleteConvo, isPending: deletingConvos } =
     platform.convos.deleteConvo.useMutation({

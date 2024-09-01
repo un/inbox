@@ -16,7 +16,7 @@ import { ms } from '@u22n/utils/ms';
 
 export function ConvoList(/*{hidden} : Props*/) {
   const orgShortcode = useOrgShortcode();
-  const spaceShortcode = useSpaceShortcode(false);
+  const spaceShortcode = useSpaceShortcode();
   const { scopedRedirect, scopedUrl } = useOrgScopedRouter();
 
   const {

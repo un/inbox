@@ -29,7 +29,7 @@ export const spaceSettingsRouter = router({
       if (!spaceMembershipResponse.role) {
         throw new TRPCError({
           code: 'FORBIDDEN',
-          message: 'You are not a member of this Space'
+          message: "You don't have access to settings for this space"
         });
       }
 

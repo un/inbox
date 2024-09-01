@@ -166,37 +166,53 @@ export const spaceRouter = router({
 
     const spaceIdsDedupe = Array.from(new Set([...memberSpaceIds]));
 
-    const orgMemberSpaces = await db.query.spaces.findMany({
-      where: and(
-        eq(spaces.orgId, org.id),
-        or(eq(spaces.type, 'open'), inArray(spaces.id, spaceIdsDedupe))
-      ),
-      columns: {
-        publicId: true,
-        shortcode: true,
-        name: true,
-        description: true,
-        type: true,
-        avatarTimestamp: true,
-        convoPrefix: true,
-        inheritParentPermissions: true,
-        color: true,
-        icon: true,
-        personalSpace: true
-      },
-      with: {
-        parentSpace: {
-          columns: {
-            publicId: true
-          }
+    const orgMemberSpaces = await db.query.spaces
+      .findMany({
+        where: and(
+          eq(spaces.orgId, org.id),
+          or(eq(spaces.type, 'open'), inArray(spaces.id, spaceIdsDedupe))
+        ),
+        columns: {
+          id: true,
+          publicId: true,
+          shortcode: true,
+          name: true,
+          description: true,
+          type: true,
+          avatarTimestamp: true,
+          convoPrefix: true,
+          inheritParentPermissions: true,
+          color: true,
+          icon: true,
+          personalSpace: true
         },
-        subSpaces: {
-          columns: {
-            publicId: true
+        with: {
+          parentSpace: {
+            columns: {
+              publicId: true
+            }
+          },
+          subSpaces: {
+            columns: {
+              publicId: true
+            }
           }
         }
-      }
-    });
+      })
+      .then((spaces) =>
+        spaces.map((space) => {
+          // if the space is private, or the space id is in the array, then they can see Settings
+          if (
+            space.type === 'private' ||
+            (space.type === 'open' && spaceIdsDedupe.includes(space.id))
+          ) {
+            return { ...space, canSeeSettings: true };
+          } else {
+            // otherwise, they can't see Settings
+            return { ...space, canSeeSettings: false };
+          }
+        })
+      );
 
     const orgMemberPersonalSpaceQuery = await db.query.orgMembers.findFirst({
       where: eq(orgMembers.id, org.memberId),
