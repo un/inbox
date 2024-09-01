@@ -74,3 +74,6 @@ export const openFilePicker = (
   };
   input.click();
 };
+
+export const copyToClipboard = (text: string) =>
+  navigator.clipboard.writeText(text);

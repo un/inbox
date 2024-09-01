@@ -68,11 +68,10 @@ import { Badge } from '@/src/components/shadcn-ui/badge';
 import { useIsMobile } from '@/src/hooks/use-is-mobile';
 import { emptyTiptapEditorContent } from '@u22n/tiptap';
 import { useMutation } from '@tanstack/react-query';
+import { useDebouncedCallback } from 'use-debounce';
 import { useAddSingleConvo$Cache } from '../utils';
 import { Editor } from '@/src/components/editor';
 import { type TypeId } from '@u22n/utils/typeid';
-import { useDebounce } from '@uidotdev/usehooks';
-import { usePrevious } from '@uidotdev/usehooks';
 import { showNewConvoPanel } from '../atoms';
 import { platform } from '@/src/lib/trpc';
 import { cn } from '@/src/lib/utils';
@@ -133,7 +132,6 @@ export default function CreateConvoForm({
   const orgShortcode = useOrgShortcode();
   const { scopedNavigate } = useOrgScopedRouter();
   const spaceShortcode = useSpaceShortcode(false);
-  const lastOrg = usePrevious(orgShortcode);
   const { draft, setDraft, resetDraft } = useComposingDraft();
   const isMobile = useIsMobile();
 
@@ -395,27 +393,15 @@ export default function CreateConvoForm({
   const [editorText, setEditorText] = useState(draft.content);
   const editorRef = useRef<EditorFunctions>(null);
 
-  // Autosave draft
-  const debouncedEditorText = useDebounce(editorText, 500);
-  useEffect(() => {
-    if (lastOrg && lastOrg !== orgShortcode) return; // Don't autosave if org changes
+  const saveDraft = useDebouncedCallback(() => {
     setDraft({
-      content: debouncedEditorText,
+      content: editorText,
       attachments,
       participants: selectedParticipants,
       topic: topic,
       from: selectedEmailIdentity ?? null
     });
-  }, [
-    debouncedEditorText,
-    setDraft,
-    attachments,
-    selectedParticipants,
-    topic,
-    selectedEmailIdentity,
-    lastOrg,
-    orgShortcode
-  ]);
+  }, 500);
 
   const emptyEditorChecker = useCallback((editorText: JSONContent) => {
     const contentArray = editorText?.content;
@@ -558,6 +544,7 @@ export default function CreateConvoForm({
     const handleKeyDown = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
         event.preventDefault();
+        event.stopPropagation();
         handleSendMessage();
       }
     };
@@ -616,7 +603,10 @@ export default function CreateConvoForm({
 
         <Editor
           initialValue={editorText}
-          onChange={setEditorText}
+          onChange={(value) => {
+            setEditorText(value);
+            saveDraft();
+          }}
           canUpload={canUpload}
           ref={editorRef}
         />

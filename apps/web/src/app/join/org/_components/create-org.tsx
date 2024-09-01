@@ -10,8 +10,8 @@ import { Button } from '@/src/components/shadcn-ui/button';
 import { IdentificationCard } from '@phosphor-icons/react';
 import { Input } from '@/src/components/shadcn-ui/input';
 import { useEffect, useMemo, useState } from 'react';
-import { useDebounce } from '@uidotdev/usehooks';
 import { useRouter } from 'next/navigation';
+import { useDebounce } from 'use-debounce';
 import { platform } from '@/src/lib/trpc';
 import { cn } from '@/src/lib/utils';
 import { env } from '@/src/env';
@@ -23,7 +23,7 @@ export function CreateOrg() {
   const [orgShortcode, setOrgShortcode] = useState('');
   const [customShortcode, setCustomShortcode] = useState(false);
   const router = useRouter();
-  const debouncedOrgName = useDebounce(orgName, 750);
+  const [debouncedOrgName] = useDebounce(orgName, 750);
 
   const [shortcodeValid, shortcodeError] = useMemo(() => {
     const { success, error } = z

@@ -8,9 +8,9 @@ import { Label } from '@/src/components/shadcn-ui/label';
 import { useEffect, useMemo, useState } from 'react';
 import { zodSchemas } from '@u22n/utils/zodSchemas';
 import { useCookies } from 'next-client-cookies';
-import { useDebounce } from '@uidotdev/usehooks';
 import Stepper from './_components/stepper';
 import { useRouter } from 'next/navigation';
+import { useDebounce } from 'use-debounce';
 import { platform } from '@/src/lib/trpc';
 import { datePlus } from '@u22n/utils/ms';
 import Image from 'next/image';
@@ -19,7 +19,7 @@ export default function Page() {
   const [username, setUsername] = useState<string>('');
   const [agree, setAgree] = useState(false);
   const router = useRouter();
-  const debouncedUsername = useDebounce(username, 1000);
+  const [debouncedUsername] = useDebounce(username, 1000);
   const cookies = useCookies();
 
   const [validUsername, usernameError] = useMemo(() => {

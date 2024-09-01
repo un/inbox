@@ -54,7 +54,6 @@
     "@u22n/realtime": "workspace:^",
     "@u22n/tiptap": "workspace:^",
     "@u22n/utils": "workspace:^",
-    "@uidotdev/usehooks": "^2.4.1",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
@@ -80,8 +79,8 @@
     "superjson": "^2.2.1",
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
-    "tunnel-rat": "^0.1.2",
     "use-debounce": "^10.0.3",
+    "use-long-press": "^3.2.0",
     "vaul": "^0.9.1",
     "zod": "^3.23.8",
     "zustand": "^4.5.5"
