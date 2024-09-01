@@ -67,8 +67,7 @@ export const accounts = mysqlTable(
     recoveryEmailVerifiedAt: timestamp('recovery_email_verified_at'),
     twoFactorSecret: varchar('two_factor_secret', { length: 255 }),
     twoFactorEnabled: boolean('two_factor_enabled').notNull().default(false),
-    recoveryCode: varchar('recovery_code', { length: 256 }),
-    preAccount: boolean('pre_account').notNull().default(true)
+    recoveryCode: varchar('recovery_code', { length: 256 })
   },
   (table) => ({
     publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
@@ -76,45 +75,13 @@ export const accounts = mysqlTable(
   })
 );
 
-export const accountsRelations = relations(accounts, ({ one, many }) => ({
+export const accountsRelations = relations(accounts, ({ many }) => ({
   authenticators: many(authenticators),
-  accountCredential: one(accountCredentials, {
-    fields: [accounts.id],
-    references: [accountCredentials.accountId]
-  }),
   sessions: many(sessions),
   orgMemberships: many(orgMembers),
   orgMemberProfiles: many(orgMemberProfiles),
   personalEmailIdentities: many(emailIdentitiesPersonal)
 }));
-
-//* Auth tables
-export const accountCredentials = mysqlTable(
-  'account_credentials',
-  // eslint-disable-next-line @u22n/custom/table-needs-org-id
-  {
-    id: serial('id').primaryKey(),
-    accountId: foreignKey('account_id').notNull(),
-    passwordHash: varchar('password_hash', { length: 255 }),
-    twoFactorSecret: varchar('two_factor_secret', { length: 255 }),
-    twoFactorEnabled: boolean('two_factor_enabled').notNull().default(false),
-    recoveryCode: varchar('recovery_code', { length: 256 })
-  },
-  (accountAuth) => ({
-    accountIdIndex: index('account_id_idx').on(accountAuth.accountId)
-  })
-);
-
-export const accountAuthRelationships = relations(
-  accountCredentials,
-  ({ one, many }) => ({
-    account: one(accounts, {
-      fields: [accountCredentials.accountId],
-      references: [accounts.id]
-    }),
-    authenticators: many(authenticators)
-  })
-);
 
 // transports type comes from @simplewebauthn/types AuthenticatorTransportFuture
 export const authenticators = mysqlTable(
@@ -123,7 +90,6 @@ export const authenticators = mysqlTable(
   {
     id: serial('id').primaryKey(),
     publicId: publicId('accountPasskey', 'public_id').notNull(),
-    accountCredentialId: foreignKey('account_credential_id').notNull(),
     accountId: foreignKey('account_id').notNull(),
     nickname: varchar('nickname', { length: 64 }).notNull(),
     credentialID: varchar('credential_id', { length: 255 }).notNull(), //Uint8Array
@@ -151,9 +117,6 @@ export const authenticators = mysqlTable(
   },
   (table) => ({
     publicIdIndex: uniqueIndex('public_id_idx').on(table.publicId),
-    accountCredentialIdIndex: index('provider_account_id_idx').on(
-      table.accountCredentialId
-    ),
     credentialIDIndex: uniqueIndex('credential_id_idx').on(table.credentialID)
   })
 );
@@ -164,10 +127,6 @@ export const authenticatorRelationships = relations(
     account: one(accounts, {
       fields: [authenticators.accountId],
       references: [accounts.id]
-    }),
-    accountCredentials: one(accountCredentials, {
-      fields: [authenticators.accountCredentialId],
-      references: [accountCredentials.id]
     })
   })
 );

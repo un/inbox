@@ -44,9 +44,6 @@ export async function createAuthenticator(
   await passkeyDb.insert(authenticators).values({
     publicId: passkeyPublicId,
     accountId: authenticator.accountId,
-    // TODO: remove once table has been migrated
-    // Just keeping for data parity
-    accountCredentialId: authenticator.accountId,
     nickname: nickname,
     credentialID: b64ID,
     credentialPublicKey: b64PK,
@@ -93,8 +90,6 @@ export async function getAuthenticator(credentialId: string) {
       id: true,
       publicId: true,
       accountId: true,
-      // TODO: remove once table has been migrated
-      accountCredentialId: true,
       nickname: true,
       credentialID: true,
       credentialPublicKey: true,
@@ -128,8 +123,6 @@ export async function listAuthenticatorsByAccountCredentialId(
       id: true,
       publicId: true,
       accountId: true,
-      // TODO: remove once table has been migrated
-      accountCredentialId: true,
       nickname: true,
       credentialID: true,
       credentialPublicKey: true,
@@ -155,8 +148,6 @@ export async function listAuthenticatorsByAccountId(accountId: number) {
           id: true,
           publicId: true,
           nickname: true,
-          // TODO: remove once table has been migrated
-          accountCredentialId: true,
           accountId: true,
           credentialID: true,
           credentialPublicKey: true,
