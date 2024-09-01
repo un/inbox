@@ -2,9 +2,9 @@
 
 import { Button, type ButtonProps } from '@/src/components/shadcn-ui/button';
 import { type ElementRef, forwardRef, useState } from 'react';
-import { useCopyToClipboard } from '@uidotdev/usehooks';
 import { Check, Copy } from '@phosphor-icons/react';
-import { cn } from '../lib/utils';
+import { cn, copyToClipboard } from '../lib/utils';
+import { toast } from 'sonner';
 
 export const CopyButton = forwardRef<
   ElementRef<'button'>,
@@ -15,7 +15,6 @@ export const CopyButton = forwardRef<
   }
 >(({ text, onCopy, iconSize = 15, ...props }, ref) => {
   const [hasCopied, setHasCopied] = useState(false);
-  const [, copyToClipboard] = useCopyToClipboard();
 
   return (
     <Button
@@ -23,9 +22,12 @@ export const CopyButton = forwardRef<
       size="icon-sm"
       {...props}
       ref={ref}
-      onClick={() => {
+      onClick={async () => {
         setHasCopied(true);
-        void copyToClipboard(text);
+        await copyToClipboard(text).catch(() => {
+          toast.error('Failed to copy to clipboard');
+          setHasCopied(false);
+        });
         onCopy?.(text);
         setTimeout(() => setHasCopied(false), 1500);
       }}

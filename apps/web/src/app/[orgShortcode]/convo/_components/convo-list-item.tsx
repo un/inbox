@@ -13,20 +13,19 @@ import {
   useDeleteConvo$Cache
 } from '../utils';
 import { useOrgShortcode, useSpaceShortcode } from '@/src/hooks/use-params';
+import { LongPressEventType, useLongPress } from 'use-long-press';
 import { Checkbox } from '@/src/components/shadcn-ui/checkbox';
 import { AvatarPlus } from '@/src/components/avatar-plus';
+import { usePathname, useRouter } from 'next/navigation';
 import { useIsMobile } from '@/src/hooks/use-is-mobile';
 import { Trash } from '@phosphor-icons/react/dist/ssr';
 import { useTimeAgo } from '@/src/hooks/use-time-ago';
-import { useLongPress } from '@uidotdev/usehooks';
 import { type TypeId } from '@u22n/utils/typeid';
-import { usePathname } from 'next/navigation';
 import { convoListSelecting } from '../atoms';
 import { platform } from '@/src/lib/trpc';
 import { memo, useMemo } from 'react';
 import { cn } from '@/src/lib/utils';
 import { useAtomValue } from 'jotai';
-import Link from 'next/link';
 
 export const ConvoItem = memo(function ConvoItem({
   convo,
@@ -45,6 +44,7 @@ export const ConvoItem = memo(function ConvoItem({
   const spaceShortcode = useSpaceShortcode(false);
   const selecting = useAtomValue(convoListSelecting);
   const isMobile = useIsMobile();
+  const router = useRouter();
 
   const deleteConvoFromCache = useDeleteConvo$Cache();
   const { mutate: deleteConvo } = platform.convos.deleteConvo.useMutation({
@@ -96,20 +96,20 @@ export const ConvoItem = memo(function ConvoItem({
   const isActive = currentPath === `${linkBase}/${convo.publicId}`;
 
   const longPressHandlers = useLongPress(
-    (e) => {
-      if (selecting) return;
-      e.preventDefault();
-      e.stopPropagation();
-      onSelect(false);
+    () => {
+      if (!selecting) onSelect(false);
     },
     {
-      threshold: 750
+      threshold: 750,
+      detect: LongPressEventType.Touch,
+      cancelOnMovement: 15
     }
   );
 
   return (
     <ContextMenu>
       <ContextMenuTrigger
+        asChild
         onContextMenu={
           isMobile
             ? (e) => {
@@ -118,17 +118,17 @@ export const ConvoItem = memo(function ConvoItem({
               }
             : undefined
         }>
-        <Link
-          href={`${linkBase}/${convo.publicId}`}
+        <div
+          onClick={() => router.push(`${linkBase}/${convo.publicId}`)}
           className={cn(
-            'flex h-full flex-row gap-2 overflow-visible rounded-xl border-2 px-2 py-3',
+            'flex h-full cursor-pointer flex-row gap-2 overflow-visible rounded-xl border-2 px-2 py-3',
             isActive
               ? 'border-accent-8'
               : 'hover:border-base-6 border-transparent',
             selected && 'bg-accent-3',
             !selecting && 'group'
           )}
-          {...(isMobile ? longPressHandlers : {})}>
+          {...longPressHandlers()}>
           {selecting ? (
             <Checkbox
               className="size-6 rounded-lg"
@@ -179,7 +179,7 @@ export const ConvoItem = memo(function ConvoItem({
               </span>
             </div>
           </div>
-        </Link>
+        </div>
       </ContextMenuTrigger>
       <ContextMenuContent>
         <ContextMenuGroup>

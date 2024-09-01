@@ -28,12 +28,11 @@ import { type RouterOutputs, platform } from '@/src/lib/trpc';
 import { createExtensionSet } from '@u22n/tiptap/extensions';
 import { useOrgShortcode } from '@/src/hooks/use-params';
 import { type formatParticipantData } from '../../utils';
-import { useCopyToClipboard } from '@uidotdev/usehooks';
 import { useTimeAgo } from '@/src/hooks/use-time-ago';
+import { cn, copyToClipboard } from '@/src/lib/utils';
 import { Avatar } from '@/src/components/avatar';
 import { type TypeId } from '@u22n/utils/typeid';
 import { cva } from 'class-variance-authority';
-import { cn } from '@/src/lib/utils';
 import { ms } from '@u22n/utils/ms';
 import { useAtom } from 'jotai';
 import { toast } from 'sonner';
@@ -235,7 +234,6 @@ const MessageItem = memo(
       [formattedParticipants, message.author.publicId]
     );
     const [replyTo, setReplyTo] = useAtom(replyToMessageAtom);
-    const [, copyToClipboard] = useCopyToClipboard();
     const [viewingOriginalMessage, setViewingOriginalMessage] = useState(false);
 
     // if the message timestamp is less than a day ago, show the date instead of the time

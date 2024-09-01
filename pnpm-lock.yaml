@@ -386,9 +386,6 @@ importers:
       '@u22n/utils':
         specifier: workspace:^
         version: link:../../packages/utils
-      '@uidotdev/usehooks':
-        specifier: ^2.4.1
-        version: 2.4.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       class-variance-authority:
         specifier: ^0.7.0
         version: 0.7.0
@@ -464,12 +461,12 @@ importers:
       tailwindcss-animate:
         specifier: ^1.0.7
         version: 1.0.7(tailwindcss@3.4.10)
-      tunnel-rat:
-        specifier: ^0.1.2
-        version: 0.1.2(@types/react@18.3.4)(immer@10.1.1)(react@18.3.1)
       use-debounce:
         specifier: ^10.0.3
         version: 10.0.3(react@18.3.1)
+      use-long-press:
+        specifier: ^3.2.0
+        version: 3.2.0(react@18.3.1)
       vaul:
         specifier: ^0.9.1
         version: 0.9.1(@types/react-dom@18.3.0)(@types/react@18.3.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -3773,13 +3770,6 @@ packages:
   '@u22n/tsconfig@0.0.2':
     resolution: {integrity: sha512-eVeYfm60jijkEXPAZM0FaOAqYzs/7DHxutt1df45Euko8vwlKwXq2cTF+ydon3fs4doWpIFX5Hd721eGYR32/A==}
 
-  '@uidotdev/usehooks@2.4.1':
-    resolution: {integrity: sha512-1I+RwWyS+kdv3Mv0Vmc+p0dPYH0DTRAo04HLyXReYBL9AeseDWUJyi4THuksBJcu9F0Pih69Ak150VDnqbVnXg==}
-    engines: {node: '>=16'}
-    peerDependencies:
-      react: '>=18.0.0'
-      react-dom: '>=18.0.0'
-
   '@ungap/structured-clone@1.2.0':
     resolution: {integrity: sha512-zuVdFrMJiuCDQUMCzQaD6KL28MjnqqN8XnAqiEq9PNm/hCPTSGfrXCOfwj1ow4LFb/tNymJPwsNbVePc1xFqrQ==}
 
@@ -6662,6 +6652,11 @@ packages:
     engines: {node: '>= 16.0.0'}
     peerDependencies:
       react: '*'
+
+  use-long-press@3.2.0:
+    resolution: {integrity: sha512-uq5o2qFR1VRjHn8Of7Fl344/AGvgk7C5Mcb4aSb1ZRVp6PkgdXJJLdRrlSTJQVkkQcDuqFbFc3mDX4COg7mRTA==}
+    peerDependencies:
+      react: '>=16.8.0'
 
   use-sidecar@1.1.2:
     resolution: {integrity: sha512-epTbsLuzZ7lPClpz2TyryBfztm7m+28DlEv2ZCQ3MDr5ssiwyOwGH/e5F9CkfWjJ1t4clvI58yF822/GUkjjhw==}
@@ -9969,11 +9964,6 @@ snapshots:
 
   '@u22n/tsconfig@0.0.2': {}
 
-  '@uidotdev/usehooks@2.4.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
-    dependencies:
-      react: 18.3.1
-      react-dom: 18.3.1(react@18.3.1)
-
   '@ungap/structured-clone@1.2.0': {}
 
   '@unkey/api@0.26.0':
@@ -13151,6 +13141,10 @@ snapshots:
       '@types/react': 18.3.4
 
   use-debounce@10.0.3(react@18.3.1):
+    dependencies:
+      react: 18.3.1
+
+  use-long-press@3.2.0(react@18.3.1):
     dependencies:
       react: 18.3.1
 

@@ -17,7 +17,7 @@ import {
 import { PasswordInput } from '@/src/components/password-input';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useDebounce } from '@uidotdev/usehooks';
+import { useDebounce } from 'use-debounce';
 import { useForm } from 'react-hook-form';
 import { platform } from '@/src/lib/trpc';
 import { useEffect } from 'react';
@@ -137,7 +137,7 @@ export function EnableOrChangePasswordModal({
   const confirmPassword = form.watch('confirmPassword');
   const validated = form.watch('validated');
 
-  const debouncedPassword = useDebounce(password, 1000);
+  const [debouncedPassword] = useDebounce(password, 1000);
 
   // zod validation when length < 8
   useEffect(() => {

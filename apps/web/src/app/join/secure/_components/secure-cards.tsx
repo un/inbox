@@ -8,7 +8,7 @@ import { StrengthMeter } from '@/src/components/shared/strength-meter';
 import { Fingerprint, Lock, Password } from '@phosphor-icons/react';
 import { PasswordInput } from '@/src/components/password-input';
 import { type UseFormReturn } from 'react-hook-form';
-import { useDebounce } from '@uidotdev/usehooks';
+import { useDebounce } from 'use-debounce';
 import { platform } from '@/src/lib/trpc';
 import { cn } from '@/src/lib/utils';
 import { useEffect } from 'react';
@@ -79,7 +79,7 @@ export function PasswordCard({
   const active = selected === 'password';
   const password = form.watch('password');
   const confirmPassword = form.watch('confirmPassword');
-  const debouncedPassword = useDebounce(password, 1000);
+  const [debouncedPassword] = useDebounce(password, 1000);
   const passwordMatch =
     password.length >= 8 && confirmPassword.length >= 8
       ? password === confirmPassword

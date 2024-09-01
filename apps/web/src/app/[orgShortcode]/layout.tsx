@@ -15,7 +15,6 @@ import { Button } from '@/src/components/shadcn-ui/button';
 import { useIsMobile } from '@/src/hooks/use-is-mobile';
 import { BottomNav } from './_components/bottom-nav';
 import { SpinnerGap } from '@phosphor-icons/react';
-import { usePrevious } from '@uidotdev/usehooks';
 import { memo, useEffect, useMemo } from 'react';
 import Sidebar from './_components/sidebar';
 import { platform } from '@/src/lib/trpc';
@@ -112,7 +111,6 @@ const RealtimeHandlers = memo(function RealtimeHandler() {
       staleTime: ms('1 hour')
     }
   );
-  const previousSpaces = usePrevious(spacesData?.spaces);
 
   // Root subscribers
   useEffect(() => {
@@ -160,7 +158,7 @@ const RealtimeHandlers = memo(function RealtimeHandler() {
     client,
     deleteConvo,
     getConvoSpaceWorkflows,
-    previousSpaces,
+
     spacesData?.spaces,
     updateConvoMessageList
   ]);

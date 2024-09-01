@@ -11,8 +11,8 @@ import { PasswordInput } from '@/src/components/password-input';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/src/components/shadcn-ui/button';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useDebounce } from '@uidotdev/usehooks';
 import { Lock } from '@phosphor-icons/react';
+import { useDebounce } from 'use-debounce';
 import { useForm } from 'react-hook-form';
 import { platform } from '@/src/lib/trpc';
 import { useEffect } from 'react';
@@ -60,7 +60,7 @@ export default function ResetPasswordPage() {
 
   const password = form.watch('password');
   const confirmPassword = form.watch('confirmPassword');
-  const debouncedPassword = useDebounce(password, 1000);
+  const [debouncedPassword] = useDebounce(password, 1000);
   const passwordMatch =
     password.length >= 8 && confirmPassword.length >= 8
       ? password === confirmPassword

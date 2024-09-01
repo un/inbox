@@ -34,9 +34,9 @@ import { Button } from '@/src/components/shadcn-ui/button';
 import { useIsMobile } from '@/src/hooks/use-is-mobile';
 import { emptyTiptapEditorContent } from '@u22n/tiptap';
 import { useDraft } from '@/src/stores/draft-store';
+import { useDebouncedCallback } from 'use-debounce';
 import { Editor } from '@/src/components/editor';
 import { type TypeId } from '@u22n/utils/typeid';
-import { useDebounce } from '@uidotdev/usehooks';
 import { platform } from '@/src/lib/trpc';
 import { cn } from '@/src/lib/utils';
 import { ms } from '@u22n/utils/ms';
@@ -126,24 +126,16 @@ export function ReplyBox({
     canUpload
   } = useAttachmentUploader(draft.attachments);
 
-  // Autosave draft
-  const debouncedEditorText = useDebounce(editorText, 500);
-  useEffect(() => {
-    if (emptyEditorChecker(debouncedEditorText) && attachments.length === 0) {
+  const saveDraft = useDebouncedCallback(() => {
+    if (emptyEditorChecker(editorText) && attachments.length === 0) {
       resetDraft();
     } else {
       setDraft({
-        content: debouncedEditorText,
+        content: editorText,
         attachments
       });
     }
-  }, [
-    debouncedEditorText,
-    setDraft,
-    attachments,
-    emptyEditorChecker,
-    resetDraft
-  ]);
+  }, 500);
 
   const handleReply = useCallback(
     async (type: 'comment' | 'message') => {
@@ -231,6 +223,7 @@ export function ReplyBox({
     const handleKeyDown = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
         event.preventDefault();
+        event.stopPropagation();
         void handleSendMessage();
       }
     };
@@ -264,7 +257,10 @@ export function ReplyBox({
         )}
         <Editor
           initialValue={editorText}
-          onChange={setEditorText}
+          onChange={(value) => {
+            setEditorText(value);
+            saveDraft();
+          }}
           canUpload={canUpload}
           ref={editorRef}
         />
