@@ -1,5 +1,6 @@
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { pendingAttachments } from '@u22n/database/schema';
+import { sanitizeFilename } from '@u22n/utils/sanitizers';
 import { GetObjectCommand } from '@aws-sdk/client-s3';
 import { typeIdValidator } from '@u22n/utils/typeid';
 import { zValidator } from '@u22n/hono/helpers';
@@ -19,7 +20,7 @@ export const inlineProxy = createHonoApp<Ctx>()
     zValidator(
       'param',
       z.object({
-        filename: z.string().transform((f) => decodeURIComponent(f)),
+        filename: z.string().transform(decodeURIComponent),
         attachmentId: typeIdValidator('convoAttachments'),
         orgShortcode: z.string()
       })
@@ -52,7 +53,8 @@ export const inlineProxy = createHonoApp<Ctx>()
 
       if (
         !attachmentQueryResponse ||
-        attachmentQueryResponse.filename !== filename ||
+        sanitizeFilename(attachmentQueryResponse.filename) !==
+          sanitizeFilename(filename) ||
         attachmentQueryResponse.org.shortcode !== orgShortcode ||
         !attachmentQueryResponse.org.members.find(
           (member) => member.accountId === c.get('account')?.id
@@ -66,7 +68,7 @@ export const inlineProxy = createHonoApp<Ctx>()
 
       const command = new GetObjectCommand({
         Bucket: env.STORAGE_S3_BUCKET_ATTACHMENTS,
-        Key: `${attachmentQueryResponse.org.publicId}/${attachmentId}/${filename}`
+        Key: `${attachmentQueryResponse.org.publicId}/${attachmentId}/${attachmentQueryResponse.filename}`
       });
       const url = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
       const res = await fetch(url);

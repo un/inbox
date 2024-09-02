@@ -1,5 +1,6 @@
 import { convoAttachments, orgMembers } from '@u22n/database/schema';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { sanitizeFilename } from '@u22n/utils/sanitizers';
 import { GetObjectCommand } from '@aws-sdk/client-s3';
 import { typeIdValidator } from '@u22n/utils/typeid';
 import { zValidator } from '@u22n/hono/helpers';
@@ -16,7 +17,7 @@ export const attachmentProxy = createHonoApp<Ctx>().get(
   zValidator(
     'param',
     z.object({
-      filename: z.string().transform((f) => decodeURIComponent(f)),
+      filename: z.string().transform(decodeURIComponent),
       attachmentId: typeIdValidator('convoAttachments'),
       orgShortcode: z.string()
     })
@@ -44,7 +45,8 @@ export const attachmentProxy = createHonoApp<Ctx>().get(
 
     if (
       !attachmentQueryResponse ||
-      decodeURIComponent(attachmentQueryResponse.fileName) !== filename ||
+      sanitizeFilename(attachmentQueryResponse.fileName) !==
+        sanitizeFilename(filename) ||
       attachmentQueryResponse.org.shortcode !== orgShortcode
     ) {
       return c.json(
@@ -72,7 +74,7 @@ export const attachmentProxy = createHonoApp<Ctx>().get(
 
     const command = new GetObjectCommand({
       Bucket: env.STORAGE_S3_BUCKET_ATTACHMENTS,
-      Key: `${attachmentQueryResponse.org.publicId}/${attachmentId}/${filename}`
+      Key: `${attachmentQueryResponse.org.publicId}/${attachmentId}/${attachmentQueryResponse.fileName}`
     });
     const url = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
     const res = await fetch(url);
@@ -84,6 +86,6 @@ export const attachmentProxy = createHonoApp<Ctx>().get(
     }
     // Cache for 1 hour
     c.header('Cache-Control', 'private, max-age=3600');
-    return c.body(res.body);
+    return c.body(res.body, res);
   }
 );

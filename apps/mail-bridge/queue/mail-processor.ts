@@ -23,6 +23,7 @@ import { createExtensionSet } from '@u22n/tiptap/extensions';
 import { sendRealtimeNotification } from '../utils/realtime';
 import { simpleParser, type EmailAddress } from 'mailparser';
 import { parseAddressIds } from '../utils/contactParsing';
+import { sanitizeFilename } from '@u22n/utils/sanitizers';
 import { addConvoToSpace } from '../utils/spaceUtils';
 import { eq, and, inArray } from '@u22n/database/orm';
 import { tiptapCore, tiptapHtml } from '@u22n/tiptap';
@@ -244,9 +245,11 @@ type GenerationContext = {
 function generateFileName({ identifier, fileType }: GenerationContext) {
   switch (fileType) {
     case 'text/calendar':
-      return `${identifier} Calender Invite.ics`;
+      return sanitizeFilename(`${identifier} Calender Invite.ics`);
     default:
-      return `Attachment (${identifier}) ${new Date().toDateString()}.${mime.getExtension(fileType) ?? 'bin'}`;
+      return sanitizeFilename(
+        `Attachment ${identifier} ${new Date().toDateString()}.${mime.getExtension(fileType) ?? 'bin'}`
+      );
   }
 }
 
@@ -374,7 +377,11 @@ export const worker = createWorker<MailProcessorJobData>(
           : parsedEmail.textAsHtml
             ? parsedEmail.textAsHtml.replace(/\n/g, '')
             : '';
-        const attachments = parsedEmail.attachments || [];
+        const attachments =
+          parsedEmail.attachments.map((f) => ({
+            ...f,
+            filename: f.filename ? sanitizeFilename(f.filename) : undefined
+          })) || [];
 
         if (forwardedEmailAddress) {
           const forwardingAddressObject: EmailAddress = {

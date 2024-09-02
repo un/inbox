@@ -12,6 +12,7 @@ import {
 } from '@phosphor-icons/react';
 import { type VariantProps, cva } from 'class-variance-authority';
 import { memo, useCallback, useMemo, useState } from 'react';
+import { sanitizeFilename } from '@u22n/utils/sanitizers';
 import { useOrgShortcode } from '@/src/hooks/use-params';
 import { cn, prettyBytes } from '../../lib/utils';
 import { type TypeId } from '@u22n/utils/typeid';
@@ -70,7 +71,7 @@ export function useAttachmentUploader(defaultList?: Attachment[]) {
     async (file: File) => {
       setPrefetching(true);
       const preSignedData = (await fetch(
-        `${env.NEXT_PUBLIC_STORAGE_URL}/api/attachments/presign?orgShortcode=${orgShortcode}&filename=${file.name}`,
+        `${env.NEXT_PUBLIC_STORAGE_URL}/api/attachments/presign?orgShortcode=${orgShortcode}&filename=${sanitizeFilename(file.name)}`,
         {
           method: 'GET',
           credentials: 'include'
@@ -83,7 +84,7 @@ export function useAttachmentUploader(defaultList?: Attachment[]) {
 
       setAttachments((prev) =>
         prev.concat({
-          filename: file.name,
+          filename: sanitizeFilename(file.name),
           size: file.size,
           type: file.type,
           publicId: preSignedData.publicId,
