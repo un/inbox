@@ -44,8 +44,18 @@ export const attachmentProxy = createHonoApp<Ctx>().get(
 
     if (
       !attachmentQueryResponse ||
-      decodeURIComponent(attachmentQueryResponse.fileName) !== filename ||
       attachmentQueryResponse.org.shortcode !== orgShortcode
+    ) {
+      return c.json(
+        { error: `Attachment ${filename} not found` },
+        { status: 404 }
+      );
+    }
+
+    // Check if the filename is the same as the one in the database both encoded and decoded
+    if (
+      filename !== attachmentQueryResponse.fileName &&
+      filename !== decodeURIComponent(attachmentQueryResponse.fileName)
     ) {
       return c.json(
         { error: `Attachment ${filename} not found` },
