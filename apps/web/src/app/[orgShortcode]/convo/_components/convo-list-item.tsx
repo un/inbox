@@ -84,7 +84,8 @@ export const ConvoItem = memo(function ConvoItem({
     const author = allParticipants.find(
       (participant) =>
         participant.participantPublicId === authorAsParticipant?.publicId
-    )!;
+    );
+    if (!author) return participantsWithoutAuthor;
     return [author].concat(participantsWithoutAuthor);
   }, [convo.participants, authorAsParticipant]);
 

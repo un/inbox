@@ -19,6 +19,7 @@ type InfiniteConvoListUpdater = InfiniteData<
 export function formatParticipantData(
   participant: Convo['participants'][number]
 ) {
+  if (!participant) return null;
   const typePublicId =
     participant.orgMember?.publicId ??
     participant.team?.publicId ??
