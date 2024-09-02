@@ -31,7 +31,7 @@ function WelcomeMessage({ message }: { message: Message }) {
             </div>
           </div>
           <div className="bg-base-3 flex w-fit max-w-full flex-row overflow-hidden rounded-2xl rounded-tl-sm px-3 py-2">
-            <div className="prose dark:prose-invert prose-a:decoration-blue-9 text-base-12 w-fit min-w-min overflow-ellipsis text-pretty [overflow-wrap:anywhere]">
+            <div className="prose-invert prose-a:decoration-blue-9 text-base-12 w-fit min-w-min overflow-ellipsis text-pretty [overflow-wrap:anywhere]">
               {message.content}
             </div>
           </div>

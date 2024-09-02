@@ -42,11 +42,14 @@ const config = {
           css: {
             'blockquote p:first-of-type::before': false,
             'blockquote p:first-of-type::after': false
+          },
+          prose: {
+            color: 'inherit'
           }
         }
       },
       colors: {
-        accent: colors.alias('cyan'),
+        accent: colors.alias('blue'),
         base: colors.alias('slate'),
         border: 'var(--slate6)',
         input: 'hsl(var(--input))',

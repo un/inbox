@@ -257,7 +257,7 @@ const MessageItem = memo(
         {
           type: 'message',
           author: true,
-          class: 'bg-accent-3 rounded-tr-sm'
+          class: 'bg-accent-9 text-accent-1 dark:text-white rounded-tr-sm'
         },
         {
           type: 'message',
@@ -267,7 +267,8 @@ const MessageItem = memo(
         {
           type: 'comment',
           author: true,
-          class: 'bg-amber-3 border-amber-5 border-r-2 rounded-l-md'
+          class:
+            'bg-amber-9 text-amber-1 border-amber-5 border-r-2 rounded-l-md'
         },
         {
           type: 'comment',
@@ -451,7 +452,7 @@ const HTMLMessage = memo(
       <div
         data-html-email-message
         dangerouslySetInnerHTML={{ __html }}
-        className="prose dark:prose-invert prose-a:decoration-blue-9 text-base-12 w-fit min-w-min overflow-ellipsis text-pretty [overflow-wrap:anywhere]"
+        className="prose-invert prose-a:decoration-blue-9 w-fit min-w-min overflow-ellipsis text-pretty [overflow-wrap:anywhere]"
       />
     );
   },
