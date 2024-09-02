@@ -14,7 +14,8 @@
     "./colors": "./uiColors.ts",
     "./zodSchemas": "./zodSchemas.ts",
     "./discord": "./discord.ts",
-    "./spaces": "./spaces.ts"
+    "./spaces": "./spaces.ts",
+    "./sanitizers": "./sanitizers.ts"
   },
   "keywords": [],
   "author": "",

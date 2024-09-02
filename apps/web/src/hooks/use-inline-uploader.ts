@@ -1,4 +1,5 @@
 import { createImageUpload } from '@u22n/tiptap/extensions/image-uploader';
+import { sanitizeFilename } from '@u22n/utils/sanitizers';
 import { type TypeId } from '@u22n/utils/typeid';
 import { useOrgShortcode } from './use-params';
 import uploadTracker from '../lib/upload';
@@ -27,7 +28,7 @@ export function useInlineUploader(sizeValidate?: (file: File) => boolean) {
         },
         onUpload: async (file) => {
           const presignedData = (await fetch(
-            `${env.NEXT_PUBLIC_STORAGE_URL}/api/attachments/presign?orgShortcode=${orgShortcode}&filename=${file.name}`,
+            `${env.NEXT_PUBLIC_STORAGE_URL}/api/attachments/presign?orgShortcode=${orgShortcode}&filename=${sanitizeFilename(file.name)}`,
             {
               method: 'GET',
               credentials: 'include'
@@ -48,7 +49,7 @@ export function useInlineUploader(sizeValidate?: (file: File) => boolean) {
                 includeCredentials: false
               }).then(() => {
                 const image = new Image();
-                image.src = `${env.NEXT_PUBLIC_STORAGE_URL}/inline-proxy/${orgShortcode}/${presignedData.publicId}/${file.name}?type=${encodeURIComponent(file.type)}&size=${file.size}`;
+                image.src = `${env.NEXT_PUBLIC_STORAGE_URL}/inline-proxy/${orgShortcode}/${presignedData.publicId}/${sanitizeFilename(file.name)}?type=${encodeURIComponent(file.type)}&size=${file.size}`;
                 image.onload = () => {
                   resolve(image.src);
                 };
