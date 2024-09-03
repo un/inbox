@@ -31,6 +31,7 @@ stripeApi.post('/webhooks', async (c) => {
           orgId,
           price,
           active: stripeEvent.data.object.status === 'active',
+          deleteEvent: stripeEvent.type === 'customer.subscription.deleted',
           stripeCustomerId: stripeEvent.data.object.customer as string,
           stripeSubscriptionId: stripeEvent.data.object.id
         });
@@ -77,25 +78,29 @@ type BillingRecordParams = {
   stripeCustomerId: string;
   stripeSubscriptionId: string;
   active: boolean;
+  deleteEvent: boolean;
 };
 
 export const createOrUpdateBillingRecords = async ({
   active,
+  deleteEvent,
   stripeCustomerId,
   orgId,
   price,
   stripeSubscriptionId
 }: BillingRecordParams) => {
+  // If the subscription is canceled and the event is a delete event, we need to delete the orgBilling record
+  if (!active) {
+    if (deleteEvent) {
+      await db.delete(orgBilling).where(eq(orgBilling.orgId, orgId));
+    }
+    return;
+  }
+
   const existingRecord = await db.query.orgBilling.findFirst({
     where: eq(orgBilling.orgId, orgId),
     columns: { id: true }
   });
-
-  // If the subscription is canceled, we need to delete the orgBilling record
-  if (!active) {
-    await db.delete(orgBilling).where(eq(orgBilling.orgId, orgId));
-    return;
-  }
 
   const [plan, period] = price;
   const values = {
