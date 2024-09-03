@@ -116,7 +116,8 @@ for (const entry of orgBillingEntries) {
       price,
       stripeCustomerId: subscription.customer as string,
       stripeSubscriptionId: subscription.id,
-      active: subscription.status === 'active'
+      active: subscription.status === 'active',
+      deleteEvent: false
     });
   }
 }
