@@ -110,7 +110,7 @@ export const Avatar = React.memo(function Avatar(props: AvatarProps) {
         </AvatarShad>
       </TooltipTrigger>
       <TooltipContent className="flex flex-col gap-1">
-        {altText}
+        {props.tooltipOverride ?? altText}
         <AvatarIcon
           avatarProfilePublicId={props.avatarProfilePublicId}
           size="xs"

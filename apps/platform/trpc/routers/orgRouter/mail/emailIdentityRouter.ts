@@ -8,8 +8,15 @@ import {
   teamMembers,
   spaces,
   emailIdentitiesAuthorizedSenders,
-  convos
+  convos,
+  spaceMembers
 } from '@u22n/database/schema';
+import {
+  inferTypeId,
+  typeIdGenerator,
+  typeIdValidator,
+  type TypeId
+} from '@u22n/utils/typeid';
 import {
   and,
   eq,
@@ -17,16 +24,11 @@ import {
   or,
   type InferInsertModel
 } from '@u22n/database/orm';
-import {
-  typeIdGenerator,
-  typeIdValidator,
-  type TypeId
-} from '@u22n/utils/typeid';
 import { router, orgProcedure, orgAdminProcedure } from '~platform/trpc/trpc';
-import { spaceMembers } from './../../../../../../packages/database/schema';
 import { emailIdentityExternalRouter } from './emailIdentityExternalRouter';
 import { nanoIdToken } from '@u22n/utils/zodSchemas';
 import { TRPCError } from '@trpc/server';
+import { db } from '@u22n/database';
 import { env } from '~platform/env';
 import { z } from 'zod';
 
@@ -333,8 +335,7 @@ export const emailIdentityRouter = router({
   getEmailIdentity: orgProcedure
     .input(
       z.object({
-        emailIdentityPublicId: typeIdValidator('emailIdentities'),
-        newEmailIdentity: z.boolean().optional()
+        emailIdentityPublicId: typeIdValidator('emailIdentities')
       })
     )
     .query(async ({ ctx, input }) => {
@@ -369,6 +370,8 @@ export const emailIdentityRouter = router({
             },
             authorizedSenders: {
               columns: {
+                // we need the id as there is no other way to key the authorizedSenders
+                id: true,
                 orgMemberId: true,
                 teamId: true,
                 spaceId: true
@@ -401,7 +404,10 @@ export const emailIdentityRouter = router({
                     publicId: true,
                     name: true,
                     description: true,
-                    color: true
+                    color: true,
+                    icon: true,
+                    type: true,
+                    personalSpace: true
                   }
                 }
               }
@@ -421,7 +427,17 @@ export const emailIdentityRouter = router({
                         avatarTimestamp: true,
                         name: true,
                         description: true,
-                        color: true
+                        color: true,
+                        icon: true,
+                        type: true
+                      },
+                      with: {
+                        personalSpaceOwner: {
+                          columns: {},
+                          with: {
+                            profile: true
+                          }
+                        }
                       }
                     },
                     team: {
@@ -746,5 +762,492 @@ export const emailIdentityRouter = router({
         emailIdentities: emailIdentities,
         defaultEmailIdentity: defaultEmailIdentityPublicId
       };
+    }),
+  setSendName: orgAdminProcedure
+    .input(
+      z.object({
+        emailIdentityPublicId: typeIdValidator('emailIdentities'),
+        sendName: z
+          .string()
+          .min(3, 'Send name must be at least 3 characters')
+          .max(64, 'Send name must be at most 64 characters')
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const emailIdentityResponse =
+        await ctx.db.query.emailIdentities.findFirst({
+          where: and(
+            eq(emailIdentities.publicId, input.emailIdentityPublicId),
+            eq(emailIdentities.orgId, ctx.org.id)
+          ),
+          columns: { id: true }
+        });
+
+      if (!emailIdentityResponse) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Email identity not found'
+        });
+      }
+
+      await db
+        .update(emailIdentities)
+        .set({
+          sendName: input.sendName
+        })
+        .where(eq(emailIdentities.id, emailIdentityResponse.id));
+    }),
+  addSender: orgAdminProcedure
+    .input(
+      z.object({
+        emailIdentityPublicId: typeIdValidator('emailIdentities'),
+        sender: z.union([
+          typeIdValidator('orgMembers'),
+          typeIdValidator('teams'),
+          typeIdValidator('spaces')
+        ])
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { db, org } = ctx;
+
+      const emailIdentityResponse = await db.query.emailIdentities.findFirst({
+        where: and(
+          eq(emailIdentities.publicId, input.emailIdentityPublicId),
+          eq(emailIdentities.orgId, org.id)
+        ),
+        columns: { id: true },
+        with: {
+          authorizedSenders: {
+            columns: {
+              id: true
+            },
+            with: {
+              orgMember: true,
+              team: true,
+              space: true
+            }
+          }
+        }
+      });
+
+      if (!emailIdentityResponse) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Email identity not found'
+        });
+      }
+
+      switch (inferTypeId(input.sender)) {
+        case 'orgMembers':
+          if (
+            emailIdentityResponse.authorizedSenders.some(
+              (sender) => sender.orgMember?.publicId === input.sender
+            )
+          ) {
+            throw new TRPCError({
+              code: 'CONFLICT',
+              message: 'Org member already has access'
+            });
+          }
+
+          const senderOrgMember = await db.query.orgMembers.findFirst({
+            where: eq(
+              orgMembers.publicId,
+              input.sender as TypeId<'orgMembers'>
+            ),
+            columns: {
+              id: true
+            }
+          });
+          if (!senderOrgMember) {
+            throw new TRPCError({
+              code: 'NOT_FOUND',
+              message: 'Org member not found'
+            });
+          }
+
+          await db.insert(emailIdentitiesAuthorizedSenders).values({
+            orgId: org.id,
+            identityId: emailIdentityResponse.id,
+            addedBy: org.memberId,
+            orgMemberId: senderOrgMember.id
+          });
+          return;
+        case 'teams':
+          if (
+            emailIdentityResponse.authorizedSenders.some(
+              (sender) => sender.team?.publicId === input.sender
+            )
+          ) {
+            throw new TRPCError({
+              code: 'CONFLICT',
+              message: 'Team already has access'
+            });
+          }
+          const senderTeam = await db.query.teams.findFirst({
+            where: eq(teams.publicId, input.sender as TypeId<'teams'>),
+            columns: {
+              id: true
+            }
+          });
+          if (!senderTeam) {
+            throw new TRPCError({
+              code: 'NOT_FOUND',
+              message: 'Team not found'
+            });
+          }
+          await db.insert(emailIdentitiesAuthorizedSenders).values({
+            orgId: org.id,
+            identityId: emailIdentityResponse.id,
+            addedBy: org.memberId,
+            teamId: senderTeam.id
+          });
+          return;
+        case 'spaces':
+          if (
+            emailIdentityResponse.authorizedSenders.some(
+              (sender) => sender.space?.publicId === input.sender
+            )
+          ) {
+            throw new TRPCError({
+              code: 'CONFLICT',
+              message: 'Space already has access'
+            });
+          }
+          const senderSpace = await db.query.spaces.findFirst({
+            where: eq(spaces.publicId, input.sender as TypeId<'spaces'>),
+            columns: {
+              id: true
+            }
+          });
+          if (!senderSpace) {
+            throw new TRPCError({
+              code: 'NOT_FOUND',
+              message: 'Space not found'
+            });
+          }
+          await db.insert(emailIdentitiesAuthorizedSenders).values({
+            orgId: org.id,
+            identityId: emailIdentityResponse.id,
+            addedBy: org.memberId,
+            spaceId: senderSpace.id
+          });
+          return;
+      }
+    }),
+  removeSender: orgAdminProcedure
+    .input(
+      z.object({
+        emailIdentityPublicId: typeIdValidator('emailIdentities'),
+        sender: z.union([
+          typeIdValidator('orgMembers'),
+          typeIdValidator('teams'),
+          typeIdValidator('spaces')
+        ])
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { db, org } = ctx;
+
+      const emailIdentityResponse = await db.query.emailIdentities.findFirst({
+        where: and(
+          eq(emailIdentities.publicId, input.emailIdentityPublicId),
+          eq(emailIdentities.orgId, org.id)
+        ),
+        columns: { id: true },
+        with: {
+          authorizedSenders: {
+            columns: {
+              id: true
+            },
+            with: {
+              orgMember: true,
+              team: true,
+              space: true
+            }
+          }
+        }
+      });
+
+      if (!emailIdentityResponse) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Email identity not found'
+        });
+      }
+
+      switch (inferTypeId(input.sender)) {
+        case 'orgMembers':
+          if (
+            !emailIdentityResponse.authorizedSenders.some(
+              (sender) => sender.orgMember?.publicId === input.sender
+            )
+          ) {
+            throw new TRPCError({
+              code: 'NOT_FOUND',
+              message: 'Org member does not have access'
+            });
+          }
+          const senderOrgMember = await db.query.orgMembers.findFirst({
+            where: eq(
+              orgMembers.publicId,
+              input.sender as TypeId<'orgMembers'>
+            ),
+            columns: {
+              id: true
+            }
+          });
+          if (!senderOrgMember) {
+            throw new TRPCError({
+              code: 'NOT_FOUND',
+              message: 'Org member not found'
+            });
+          }
+          await db
+            .delete(emailIdentitiesAuthorizedSenders)
+            .where(
+              and(
+                eq(emailIdentitiesAuthorizedSenders.orgId, org.id),
+                eq(
+                  emailIdentitiesAuthorizedSenders.identityId,
+                  emailIdentityResponse.id
+                ),
+                eq(
+                  emailIdentitiesAuthorizedSenders.orgMemberId,
+                  senderOrgMember.id
+                )
+              )
+            );
+          return;
+        case 'teams':
+          if (
+            !emailIdentityResponse.authorizedSenders.some(
+              (sender) => sender.team?.publicId === input.sender
+            )
+          ) {
+            throw new TRPCError({
+              code: 'NOT_FOUND',
+              message: 'Team does not have access'
+            });
+          }
+          const senderTeam = await db.query.teams.findFirst({
+            where: eq(teams.publicId, input.sender as TypeId<'teams'>),
+            columns: {
+              id: true
+            }
+          });
+          if (!senderTeam) {
+            throw new TRPCError({
+              code: 'NOT_FOUND',
+              message: 'Team not found'
+            });
+          }
+          await db
+            .delete(emailIdentitiesAuthorizedSenders)
+            .where(
+              and(
+                eq(emailIdentitiesAuthorizedSenders.orgId, org.id),
+                eq(
+                  emailIdentitiesAuthorizedSenders.identityId,
+                  emailIdentityResponse.id
+                ),
+                eq(emailIdentitiesAuthorizedSenders.teamId, senderTeam.id)
+              )
+            );
+          return;
+        case 'spaces':
+          if (
+            !emailIdentityResponse.authorizedSenders.some(
+              (sender) => sender.space?.publicId === input.sender
+            )
+          ) {
+            throw new TRPCError({
+              code: 'NOT_FOUND',
+              message: 'Space does not have access'
+            });
+          }
+          const senderSpace = await db.query.spaces.findFirst({
+            where: eq(spaces.publicId, input.sender as TypeId<'spaces'>),
+            columns: {
+              id: true
+            }
+          });
+          if (!senderSpace) {
+            throw new TRPCError({
+              code: 'NOT_FOUND',
+              message: 'Space not found'
+            });
+          }
+          await db
+            .delete(emailIdentitiesAuthorizedSenders)
+            .where(
+              and(
+                eq(emailIdentitiesAuthorizedSenders.orgId, org.id),
+                eq(
+                  emailIdentitiesAuthorizedSenders.identityId,
+                  emailIdentityResponse.id
+                ),
+                eq(emailIdentitiesAuthorizedSenders.spaceId, senderSpace.id)
+              )
+            );
+          return;
+      }
+    }),
+  addDestination: orgAdminProcedure
+    .input(
+      z.object({
+        emailIdentityPublicId: typeIdValidator('emailIdentities'),
+        destination: typeIdValidator('spaces')
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { db, org } = ctx;
+
+      const emailIdentityResponse = await db.query.emailIdentities.findFirst({
+        where: and(
+          eq(emailIdentities.publicId, input.emailIdentityPublicId),
+          eq(emailIdentities.orgId, org.id)
+        ),
+        columns: { id: true },
+        with: {
+          routingRules: {
+            columns: { id: true },
+            with: {
+              destinations: {
+                columns: {
+                  publicId: true
+                },
+                with: {
+                  space: true
+                }
+              }
+            }
+          }
+        }
+      });
+
+      if (!emailIdentityResponse) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Email identity not found'
+        });
+      }
+
+      if (
+        emailIdentityResponse.routingRules.destinations.some(
+          (dest) => dest.space?.publicId === input.destination
+        )
+      ) {
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: 'Space is already a destination'
+        });
+      }
+
+      const spaceQuery = await db.query.spaces.findFirst({
+        where: eq(spaces.publicId, input.destination),
+        columns: {
+          id: true
+        }
+      });
+
+      if (!spaceQuery) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Space not found'
+        });
+      }
+
+      await db.insert(emailRoutingRulesDestinations).values({
+        orgId: org.id,
+        ruleId: emailIdentityResponse.routingRules.id,
+        spaceId: spaceQuery.id,
+        publicId: typeIdGenerator('emailRoutingRuleDestinations')
+      });
+    }),
+  removeDestination: orgAdminProcedure
+    .input(
+      z.object({
+        emailIdentityPublicId: typeIdValidator('emailIdentities'),
+        destination: typeIdValidator('spaces')
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { db, org } = ctx;
+
+      const emailIdentityResponse = await db.query.emailIdentities.findFirst({
+        where: and(
+          eq(emailIdentities.publicId, input.emailIdentityPublicId),
+          eq(emailIdentities.orgId, org.id)
+        ),
+        columns: { id: true },
+        with: {
+          routingRules: {
+            columns: { id: true },
+            with: {
+              destinations: {
+                columns: {
+                  publicId: true
+                },
+                with: {
+                  space: true
+                }
+              }
+            }
+          }
+        }
+      });
+
+      if (!emailIdentityResponse) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Email identity not found'
+        });
+      }
+
+      if (
+        !emailIdentityResponse.routingRules.destinations.some(
+          (dest) => dest.space?.publicId === input.destination
+        )
+      ) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Space is not a destination'
+        });
+      }
+
+      if (emailIdentityResponse.routingRules.destinations.length === 1) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Cannot remove last destination'
+        });
+      }
+
+      const spaceQuery = await db.query.spaces.findFirst({
+        where: eq(spaces.publicId, input.destination),
+        columns: {
+          id: true
+        }
+      });
+
+      if (!spaceQuery) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Space not found'
+        });
+      }
+      await db
+        .delete(emailRoutingRulesDestinations)
+        .where(
+          and(
+            eq(emailRoutingRulesDestinations.orgId, org.id),
+            eq(
+              emailRoutingRulesDestinations.ruleId,
+              emailIdentityResponse.routingRules.id
+            ),
+            eq(emailRoutingRulesDestinations.spaceId, spaceQuery.id)
+          )
+        );
     })
 });
