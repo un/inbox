@@ -9,7 +9,8 @@ import {
   setupTrpcHandler
 } from '@u22n/hono';
 import { authMiddleware, serviceMiddleware } from './middlewares';
-import { publicWidgetApi } from './routes/publicWidget'; // Add this line
+import { publicWidgetApi } from './routes/publicWidget';
+
 import { realtimeApi } from './routes/realtime';
 import { servicesApi } from './routes/services';
 import { opentelemetry } from '@u22n/otel/hono';
@@ -24,8 +25,10 @@ const app = createHonoApp<Ctx>();
 app.use(opentelemetry('platform/hono'));
 
 setupRouteLogger(app, env.NODE_ENV === 'development');
+app.route('/public-widget', publicWidgetApi);
 setupCors(app, { origin: [env.WEBAPP_URL], exposeHeaders: ['Location'] });
 setupHealthReporting(app, { service: 'Platform' });
+
 setupErrorHandlers(app);
 
 // Auth middleware
@@ -51,7 +54,6 @@ app.route('/realtime', realtimeApi);
 app.use('/services/*', serviceMiddleware);
 app.route('/services', servicesApi);
 // Public Widget Endpoint
-app.route('/public-widget', publicWidgetApi); // Add this line
 
 const cleanup = setupHonoListener(app, { port: env.PORT });
 setupRuntime([cleanup]);

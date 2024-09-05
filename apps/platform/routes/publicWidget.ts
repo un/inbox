@@ -14,9 +14,23 @@ import { createHonoApp } from '@u22n/hono';
 import type { Ctx } from '~platform/ctx';
 import { eq } from '@u22n/database/orm';
 import { db } from '@u22n/database';
+import { cors } from 'hono/cors';
 import { z } from 'zod';
 
 export const publicWidgetApi = createHonoApp<Ctx>();
+
+// Configure CORS with specific options
+publicWidgetApi.use(
+  '*',
+  cors({
+    origin: '*', // Allow all origins, or specify allowed origins
+    allowMethods: ['POST', 'GET', 'OPTIONS'], // Specify allowed methods
+    allowHeaders: ['Content-Type', 'Origin'], // Specify allowed headers
+    exposeHeaders: ['Content-Length'],
+    maxAge: 600
+    // credentials: true, // Allow credentials
+  })
+);
 
 const tipTapExtensions = createExtensionSet();
 

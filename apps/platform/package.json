@@ -26,6 +26,7 @@
     "@u22n/tiptap": "workspace:^",
     "@u22n/utils": "workspace:^",
     "@unkey/ratelimit": "^0.4.3",
+    "hono": "^4.5.8",
     "lucia": "^3.2.0",
     "oslo": "^1.2.1",
     "superjson": "^2.2.1",

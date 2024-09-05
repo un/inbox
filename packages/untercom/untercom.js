@@ -1,5 +1,5 @@
 (function () {
-  let url, publicId, chatWindow;
+  let url, publicId;
 
   function createUntercomWidget(widgetUrl, widgetPublicId) {
     url = widgetUrl;
@@ -25,83 +25,94 @@
       </svg>
     `;
 
-    widget.addEventListener('click', openChat);
+    widget.addEventListener('click', toggleChat);
 
     document.body.appendChild(widget);
+    createChatWidget();
   }
 
-  function openChat() {
-    if (chatWindow && !chatWindow.closed) {
-      chatWindow.focus();
-    } else {
-      chatWindow = window.open('', 'untercom-chat', 'width=400,height=600');
-      chatWindow.document.write(`
-        <html>
-          <head>
-            <title>Untercom Chat</title>
-            <style>
-              body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
-              #messages { height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
-              #messageForm { display: flex; }
-              #messageInput { flex-grow: 1; margin-right: 10px; }
-            </style>
-          </head>
-          <body>
-            <div id="messages"></div>
-            <form id="messageForm">
-              <input type="text" id="messageInput" placeholder="Type your message...">
-              <button type="submit">Send</button>
-            </form>
-            <script>
-              const form = document.getElementById('messageForm');
-              const input = document.getElementById('messageInput');
-              const messages = document.getElementById('messages');
+  function createChatWidget() {
+    const chatWidget = document.createElement('div');
+    chatWidget.id = 'untercom-chat-widget';
+    chatWidget.style.cssText = `
+      position: fixed;
+      bottom: 100px;
+      right: 20px;
+      width: 300px;
+      height: 400px;
+      background-color: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+    `;
 
-              form.addEventListener('submit', (e) => {
-                e.preventDefault();
-                if (input.value) {
-                  window.opener.untercom.sendMessage(input.value);
-                  input.value = '';
-                }
-              });
+    chatWidget.innerHTML = `
+      <div id="messages" style="flex-grow: 1; overflow-y: auto; padding: 10px;"></div>
+      <form id="messageForm" style="display: flex; padding: 10px;">
+        <input type="text" id="messageInput" placeholder="Type your message..." style="flex-grow: 1; margin-right: 10px;">
+        <button type="submit">Send</button>
+      </form>
+    `;
 
-              window.addMessage = (message) => {
-                const messageElement = document.createElement('p');
-                messageElement.textContent = message;
-                messages.appendChild(messageElement);
-                messages.scrollTop = messages.scrollHeight;
-              };
-            </script>
-          </body>
-        </html>
-      `);
-    }
+    document.body.appendChild(chatWidget);
+
+    const form = chatWidget.querySelector('#messageForm');
+    const input = chatWidget.querySelector('#messageInput');
+    const messages = chatWidget.querySelector('#messages');
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (input.value) {
+        sendMessage(input.value);
+        input.value = '';
+      }
+    });
+
+    window.addMessage = (message) => {
+      const messageElement = document.createElement('p');
+      messageElement.textContent = message;
+      messages.appendChild(messageElement);
+      messages.scrollTop = messages.scrollHeight;
+    };
+  }
+
+  function toggleChat() {
+    const chatWidget = document.getElementById('untercom-chat-widget');
+    chatWidget.style.display =
+      chatWidget.style.display === 'none' ? 'flex' : 'none';
   }
 
   async function sendMessage(message) {
     try {
-      const response = await fetch(`${url}/message/${publicId}`, {
+      const response = await fetch(`${url}/public-widget/message/${publicId}`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          Origin: 'https://app.untercom.com'
         },
         body: JSON.stringify({
           message: message,
-          name: 'Website Visitor', // You might want to prompt for this
-          email: 'visitor@example.com' // You might want to prompt for this
+          name: 'Website Visitor',
+          email: 'visitor@example.com'
         })
       });
 
       if (!response.ok) {
-        throw new Error('Failed to send message');
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
+      console.log('Response:', response);
 
       const result = await response.json();
       if (result.success) {
-        chatWindow.addMessage(`You: ${message}`);
+        addMessage(`You: ${message}`);
+      } else {
+        throw new Error('Message not sent successfully');
       }
     } catch (error) {
       console.error('Error sending message:', error);
+      addMessage(`Error: ${error.message}`);
     }
   }
 
