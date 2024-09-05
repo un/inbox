@@ -29,10 +29,13 @@ import { relations, sql } from 'drizzle-orm';
 
 const stripeBillingPeriods = ['monthly', 'yearly'] as const;
 const stripePlanNames = ['starter', 'pro'] as const;
+import { publicWidgets } from './untercom';
+
+export { publicWidgets };
 
 //TODO: add support for Check constraints when implemented in drizzle-orm & drizzle-kit
 
-const foreignKey = (name: string) =>
+export const foreignKey = (name: string) =>
   bigint(name, { unsigned: true, mode: 'number' });
 
 //******************* */

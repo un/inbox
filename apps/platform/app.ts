@@ -9,6 +9,7 @@ import {
   setupTrpcHandler
 } from '@u22n/hono';
 import { authMiddleware, serviceMiddleware } from './middlewares';
+import { publicWidgetApi } from './routes/publicWidget'; // Add this line
 import { realtimeApi } from './routes/realtime';
 import { servicesApi } from './routes/services';
 import { opentelemetry } from '@u22n/otel/hono';
@@ -49,6 +50,8 @@ app.route('/realtime', realtimeApi);
 // Service Endpoints
 app.use('/services/*', serviceMiddleware);
 app.route('/services', servicesApi);
+// Public Widget Endpoint
+app.route('/public-widget', publicWidgetApi); // Add this line
 
 const cleanup = setupHonoListener(app, { port: env.PORT });
 setupRuntime([cleanup]);

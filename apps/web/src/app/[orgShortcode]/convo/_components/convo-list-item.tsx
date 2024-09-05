@@ -106,6 +106,7 @@ export const ConvoItem = memo(function ConvoItem({
       cancelOnMovement: 15
     }
   );
+  const isUnread = true;
 
   return (
     <ContextMenu>
@@ -122,7 +123,7 @@ export const ConvoItem = memo(function ConvoItem({
         <div
           onClick={() => router.push(`${linkBase}/${convo.publicId}`)}
           className={cn(
-            'flex h-full cursor-pointer flex-row gap-2 overflow-visible rounded-xl border-2 px-2 py-3',
+            'flex h-full cursor-pointer flex-row gap-2 overflow-visible rounded-xl border px-2 py-3',
             isActive
               ? 'border-accent-8'
               : 'hover:border-base-6 border-transparent',

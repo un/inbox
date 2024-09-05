@@ -46,6 +46,7 @@ import { useOrgScopedRouter, useOrgShortcode } from '@/src/hooks/use-params';
 import { type InferQueryLikeData } from '@trpc/react-query/shared';
 import { Separator } from '@/src/components/shadcn-ui/separator';
 import { Button } from '@/src/components/shadcn-ui/button';
+import { Badge } from '@/src/components/shadcn-ui/badge';
 import { logoutCleanup, platform } from '@/src/lib/trpc';
 import { useIsMobile } from '@/src/hooks/use-is-mobile';
 import { useMutation } from '@tanstack/react-query';
@@ -102,7 +103,14 @@ function SpaceItem({
   };
 
   return (
-    <div className="hover:bg-slate-1 group flex w-full max-w-full flex-row items-center gap-2 truncate rounded-lg p-0.5">
+    <div className="hover:bg-slate-1 group relative flex w-full max-w-full flex-row items-center gap-2 truncate rounded-lg p-0.5">
+      <div className="absolute right-2 top-2">
+        <Badge
+          // variant="secondary"
+          className="text-xs">
+          0
+        </Badge>
+      </div>
       <Link
         className="flex w-full max-w-full flex-row items-center gap-4 truncate p-1"
         href={

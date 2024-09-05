@@ -15,6 +15,13 @@
       "when": 1725123674507,
       "tag": "0001_flimsy_mercury",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1725530352245,
+      "tag": "0002_certain_sunfire",
+      "breakpoints": true
     }
   ]
 }
