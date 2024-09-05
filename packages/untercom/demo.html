@@ -6,11 +6,15 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0" />
     <title>Untercom Demo</title>
+    <!-- Remove React and ReactDOM imports as they're bundled in the UMD version -->
   </head>
   <body>
     <h1>Untercom Widget Demo</h1>
 
-    <script src="untercom.js"></script>
+    <!-- Change to the UMD version and use type="text/javascript" -->
+    <script
+      src="./dist/index.umd.js"
+      type="text/javascript"></script>
     <script>
       window.untercom.init('http://localhost:3300', 'hello');
     </script>
