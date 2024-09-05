@@ -2,9 +2,11 @@ import typescript from '@rollup/plugin-typescript';
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import { terser } from 'rollup-plugin-terser';
+import postcss from 'rollup-plugin-postcss';
+import autoprefixer from 'autoprefixer';
+import tailwindcss from 'tailwindcss';
 
 export default [
-  // ESM and CJS builds (external React)
   {
     input: 'src/index.tsx',
     output: [
@@ -14,24 +16,31 @@ export default [
       },
       {
         file: 'dist/index.esm.js',
-        format: 'es'
+        format: 'esm'
+      },
+      {
+        file: 'dist/index.umd.js',
+        format: 'umd',
+        name: 'Untercom',
+        globals: {
+          react: 'React',
+          'react-dom': 'ReactDOM'
+        }
       }
     ],
     external: ['react', 'react-dom'],
-    plugins: [typescript(), resolve(), commonjs(), terser()]
-  },
-  // UMD build (bundled React)
-  {
-    input: 'src/index.tsx',
-    output: {
-      file: 'dist/index.umd.js',
-      format: 'umd',
-      name: 'YourLibraryName',
-      globals: {
-        react: 'React',
-        'react-dom': 'ReactDOM'
-      }
-    },
-    plugins: [typescript(), resolve(), commonjs(), terser()]
+    plugins: [
+      typescript(),
+      resolve(),
+      commonjs(),
+      postcss({
+        plugins: [tailwindcss, autoprefixer],
+        extract: false,
+        modules: false,
+        inject: true,
+        minimize: true
+      }),
+      terser()
+    ]
   }
 ];

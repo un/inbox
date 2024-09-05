@@ -9,6 +9,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { MessageCircle, Send, X } from 'lucide-react';
 import { Button } from './components/button';
 import { Input } from './components/input';
+
 interface UntercomWidgetProps {
   widgetUrl: string;
   widgetPublicId: string;
@@ -83,8 +84,7 @@ export const UntercomWidget: React.FC<UntercomWidgetProps> = ({
       console.error('Error sending message:', error);
       setMessages((prev) => [
         ...prev,
-        // @ts-ignore
-        { text: `Error: ${error.message}`, sender: 'system' }
+        { text: `Error: ${(error as Error).message}`, sender: 'system' }
       ]);
     }
   };
@@ -105,24 +105,23 @@ export const UntercomWidget: React.FC<UntercomWidgetProps> = ({
   };
 
   return (
-    <>
+    <div className="untercom-widget">
+      helo
       <Button
         onClick={toggleChat}
         className="fixed bottom-5 right-5 h-14 w-14 rounded-full shadow-lg"
-        variant="default">
-        <MessageCircle size={24} />
+        size="icon">
+        <MessageCircle className="h-6 w-6" />
       </Button>
       {isChatOpen && (
         <Card className="fixed bottom-20 right-5 flex h-[500px] w-80 flex-col shadow-xl">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Untercom Cha2x
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Untercom Chas</CardTitle>
             <Button
               variant="ghost"
               size="sm"
               onClick={toggleChat}>
-              <X size={18} />
+              <X className="h-4 w-4" />
             </Button>
           </CardHeader>
           <CardContent className="flex-grow overflow-auto p-4">
@@ -131,22 +130,36 @@ export const UntercomWidget: React.FC<UntercomWidgetProps> = ({
                 <form
                   onSubmit={handleInitialInfoSubmit}
                   className="space-y-4">
-                  <Input
-                    label="Email"
-                    type="email"
-                    placeholder="What's your email?"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                  <Input
-                    label="Name"
-                    type="text"
-                    placeholder="What is your name?"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required
-                  />
+                  <div className="space-y-2">
+                    <label
+                      htmlFor="email"
+                      className="text-sm font-medium">
+                      Email
+                    </label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="What's your email?"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label
+                      htmlFor="name"
+                      className="text-sm font-medium">
+                      Name
+                    </label>
+                    <Input
+                      id="name"
+                      type="text"
+                      placeholder="What is your name?"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      required
+                    />
+                  </div>
                   <Button
                     type="submit"
                     className="w-full">
@@ -174,7 +187,6 @@ export const UntercomWidget: React.FC<UntercomWidgetProps> = ({
                 onSubmit={handleSubmit}
                 className="flex w-full space-x-2">
                 <Input
-                  label="Message"
                   ref={inputRef}
                   type="text"
                   placeholder="Type your message..."
@@ -183,13 +195,13 @@ export const UntercomWidget: React.FC<UntercomWidgetProps> = ({
                 <Button
                   type="submit"
                   size="icon">
-                  <Send size={18} />
+                  <Send className="h-4 w-4" />
                 </Button>
               </form>
             </CardFooter>
           )}
         </Card>
       )}
-    </>
+    </div>
   );
 };
