@@ -1,0 +1,16 @@
+{
+  "name": "@u22n/untercom",
+  "version": "0.1.0",
+  "description": "Simple chat widget for websites",
+  "main": "untercom.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "chat",
+    "widget",
+    "untercom"
+  ],
+  "author": "Your Name",
+  "license": "ISC"
+}
