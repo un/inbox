@@ -16,17 +16,12 @@ const modifierPlugin = plugin((_) => {
 
 const config = {
   darkMode: ['class'],
-  content: [
-    './pages/**/*.{ts,tsx,mdx}',
-    './components/**/*.{ts,tsx,mdx}',
-    './app/**/*.{ts,tsx,mdx}',
-    './src/**/*.{ts,tsx,mdx}'
-  ],
+  content: ['./app/**/*.{ts,tsx}'],
   prefix: '',
   theme: {
     fontFamily: {
-      sans: ['var(--font-inter)', ...fontFamily.sans],
-      display: ['var(--font-cal-sans)', ...fontFamily.sans],
+      sans: ['Inter Variable', ...fontFamily.sans],
+      display: ['Cal Sans', ...fontFamily.sans],
       mono: [...fontFamily.mono]
     },
     container: {

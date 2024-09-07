@@ -1,6 +1,3 @@
-/**
- * @type {import('eslint').Linter.Config}
- */
 module.exports = {
   root: true,
   parser: '@typescript-eslint/parser',
@@ -36,10 +33,19 @@ module.exports = {
     },
     {
       files: ['./apps/web/**/*'],
-      extends: ['next/core-web-vitals'],
+      plugins: ['react'],
+      extends: [
+        'plugin:react/recommended',
+        'plugin:react/jsx-runtime',
+        'plugin:react-hooks/recommended'
+      ],
+      settings: {
+        react: {
+          version: 'detect'
+        }
+      },
       rules: {
-        'react/no-children-prop': ['warn', { allowFunctions: true }],
-        '@next/next/no-img-element': 'off'
+        'react/prop-types': 'off'
       }
     }
   ]

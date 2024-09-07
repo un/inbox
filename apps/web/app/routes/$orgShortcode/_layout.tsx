@@ -1,0 +1,180 @@
+import {
+  useAddSingleConvo$Cache,
+  useDeleteConvo$Cache,
+  // useToggleConvoHidden$Cache,
+  useUpdateConvoMessageList$Cache
+} from './convo/utils';
+import { useCurrentConvoId, useOrgShortcode } from '@/hooks/use-params';
+import { NewConvoSheet } from './convo/_components/new-convo-sheet';
+// import { ClaimEmailIdentity } from './_components/claim-email-identity';
+import { RealtimeProvider } from '@/providers/realtime-provider';
+import { useRealtime } from '@/providers/realtime-provider';
+import { Button } from '@/components/shadcn-ui/button';
+import { BottomNav } from './_components/bottom-nav';
+import { useIsMobile } from '@/hooks/use-is-mobile';
+import { SpinnerGap } from '@phosphor-icons/react';
+import { memo, useEffect, useMemo } from 'react';
+import { Outlet, Link } from '@remix-run/react';
+import Sidebar from './_components/sidebar';
+import { platform } from '@/lib/trpc';
+import { ms } from '@u22n/utils/ms';
+import { cn } from '@/lib/utils';
+
+function UnWrappedLayout({ children }: { children: React.ReactNode }) {
+  const orgShortcode = useOrgShortcode();
+  const convoId = useCurrentConvoId();
+  const isMobile = useIsMobile();
+
+  const { data: access, isLoading: accessLoading } =
+    platform.org.store.hasAccessToOrg.useQuery(
+      {
+        orgShortcode
+      },
+      {
+        staleTime: ms('1 hour'),
+        refetchOnWindowFocus: true
+      }
+    );
+
+  //! TODO: enable this later
+  // const { data: hasEmailIdentity } =
+  //   platform.org.mail.emailIdentities.userHasEmailIdentities.useQuery(
+  //     {
+  //       orgShortcode
+  //     },
+  //     {
+  //       staleTime: ms('1 hour'),
+  //       enabled: !!access?.hasAccess
+  //     }
+  //   );
+
+  if (accessLoading) {
+    return (
+      <div className="flex h-full w-full flex-col items-center justify-center gap-2">
+        <SpinnerGap className="text-base-11 h-20 w-20 animate-spin" />
+        <span className="text-slate-11 font-bold">
+          <span className="font-display text-slate-12 text-bold">UnInbox</span>{' '}
+          is Loading...
+        </span>
+      </div>
+    );
+  }
+
+  if (!access?.hasAccess) {
+    return (
+      <div className="mx-auto flex h-full w-full max-w-[500px] flex-col items-center justify-center gap-4 p-4">
+        <h1 className="text-2xl font-bold">Not Found!</h1>
+        <span className="text-base-10 text-balance text-center text-sm font-bold">
+          The org you are trying to access does not exist or you do not have
+          access to it.
+        </span>
+        <Button asChild>
+          <Link
+            to="/"
+            reloadDocument>
+            Take me home
+          </Link>
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className={cn('bg-base-1 flex h-full gap-0', isMobile && 'flex-col')}>
+      {!isMobile && <Sidebar />}
+      <div className="min-w-0 flex-1 grow overflow-x-auto">{children}</div>
+      {isMobile && !convoId && <BottomNav />}
+      {!isMobile && <NewConvoSheet />}
+      {/* {hasEmailIdentity && !hasEmailIdentity.hasIdentity && (
+          <ClaimEmailIdentity />
+        )} */}
+    </div>
+  );
+}
+
+const RealtimeHandlers = memo(function RealtimeHandler() {
+  const client = useRealtime();
+  const orgShortcode = useOrgShortcode();
+  const addConvo = useAddSingleConvo$Cache();
+  // const toggleConvoHidden = useToggleConvoHidden$Cache();
+  const deleteConvo = useDeleteConvo$Cache();
+  const updateConvoMessageList = useUpdateConvoMessageList$Cache();
+  const utils = platform.useUtils();
+  const adminIssuesCache = utils.org.store.getOrgIssues;
+  const getConvoSpaceWorkflows = utils.convos.getConvoSpaceWorkflows;
+
+  const { data: spacesData } = platform.spaces.getOrgMemberSpaces.useQuery(
+    {
+      orgShortcode
+    },
+    {
+      staleTime: ms('1 hour')
+    }
+  );
+
+  // Root subscribers
+  useEffect(() => {
+    const unsubscribe = client.subscribe('admin:issue:refresh', () =>
+      adminIssuesCache.refetch()
+    );
+    return () => unsubscribe();
+  }, [client, adminIssuesCache]);
+
+  // Spaces subscribers
+  useEffect(() => {
+    if (!spacesData?.spaces) return;
+
+    const unsubscribes = spacesData.spaces.map((space) => {
+      const { listen, unsubscribe } = client.subscribeChannel(
+        `private-space-${space.publicId}`
+      );
+
+      const spaceShortcode = space.personalSpace ? 'personal' : space.shortcode;
+
+      listen('convo:new', ({ publicId }) => {
+        return addConvo({ convoPublicId: publicId, spaceShortcode });
+      });
+      // listen('convo:hidden', ({ publicId, hidden }) =>
+      //   toggleConvoHidden({ convoId: publicId, spaceShortcode, hide: hidden })
+      // );
+      listen('convo:deleted', ({ publicId }) =>
+        deleteConvo({ convoPublicId: publicId, spaceShortcode })
+      );
+      listen('convo:entry:new', ({ convoPublicId, convoEntryPublicId }) =>
+        updateConvoMessageList({
+          convoId: convoPublicId,
+          convoEntryPublicId,
+          spaceShortcode
+        })
+      );
+
+      listen('convo:workflow:update', ({ convoPublicId, orgShortcode }) =>
+        getConvoSpaceWorkflows.invalidate({ convoPublicId, orgShortcode })
+      );
+      return unsubscribe;
+    });
+
+    return () => unsubscribes.forEach((unsubscribe) => unsubscribe());
+  }, [
+    addConvo,
+    client,
+    deleteConvo,
+    getConvoSpaceWorkflows,
+    spacesData?.spaces,
+    updateConvoMessageList
+  ]);
+
+  return null;
+});
+
+export default function Layout() {
+  const realtime = useMemo(() => <RealtimeHandlers />, []);
+  return (
+    <RealtimeProvider>
+      {realtime}
+      <UnWrappedLayout>
+        <Outlet />
+      </UnWrappedLayout>
+    </RealtimeProvider>
+  );
+}

@@ -175,9 +175,7 @@ export default class RealtimeClient {
     const channelsToSubscribe = Array.from(
       this.#channelSubscriptions.keys()
     ).filter((channel) => !all.includes(channel));
-    const channelsToUnsubscribe = all.filter(
-      (channel) => !this.#channelSubscriptions.has(channel)
-    );
+
     channelsToSubscribe.forEach((channel) => {
       this.client
         ?.subscribe(channel)
@@ -193,9 +191,6 @@ export default class RealtimeClient {
             }
           }
         });
-    });
-    channelsToUnsubscribe.forEach((channel) => {
-      this.client?.unsubscribe(channel);
     });
   }
 

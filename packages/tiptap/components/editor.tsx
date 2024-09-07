@@ -1,4 +1,3 @@
-'use client';
 import type { EditorProviderProps, JSONContent } from '@tiptap/react';
 import { EditorProvider, useCurrentEditor } from '@tiptap/react';
 import { useRef, forwardRef, useImperativeHandle } from 'react';

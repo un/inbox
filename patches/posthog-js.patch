@@ -1,0 +1,57 @@
+diff --git a/package.json b/package.json
+index 0283efa3b963a0eee6d23be3473f234815c35bf6..c33f9404687f3c5cf02eafcfd0e66294f036885f 100644
+--- a/package.json
++++ b/package.json
+@@ -5,6 +5,7 @@
+     "repository": "https://github.com/PostHog/posthog-js",
+     "author": "hey@posthog.com",
+     "license": "MIT",
++    "type": "module",
+     "scripts": {
+         "start": "pnpm build-react && pnpm build-rollup -w",
+         "build": "pnpm build-rollup && pnpm build-react",
+@@ -28,6 +29,18 @@
+     "main": "dist/main.js",
+     "module": "dist/module.js",
+     "types": "dist/module.d.ts",
++    "exports": {
++        ".": {
++            "types": "./dist/module.d.ts",
++            "import": "./dist/module.js",
++            "require": "./dist/main.js"
++        },
++        "./react": {
++            "types": "./react/dist/types/index.d.ts",
++            "import": "./react/dist/esm/index.js",
++            "require": "./react/dist/umd/index.js"
++        }
++    },
+     "files": [
+         "lib/*",
+         "dist/*",
+diff --git a/react/package.json b/react/package.json
+index 5c2d9042056b3055c961cac920602c15fc3512f3..58db1cfeff6dd4282848d694fb173caf3b79b608 100644
+--- a/react/package.json
++++ b/react/package.json
+@@ -2,6 +2,7 @@
+     "name": "posthog-js-react",
+     "version": "1.0.0",
+     "private": false,
++    "type": "module",
+     "description": "Provides components and hooks for React integrations of PostHog. It is not published to NPM, but is used in the main posthog-js package.",
+     "repository": {
+         "type": "git",
+@@ -22,6 +23,13 @@
+     "main": "dist/umd/index.js",
+     "module": "dist/esm/index.js",
+     "types": "dist/types",
++    "exports":{
++        ".": {
++            "import":"./dist/esm/index.js",
++            "require": "./dist/umd/index.js",
++            "types":"./dist/types/index.d.ts"
++        }
++    },
+     "files": [
+         "dist/*",
+         "README.md"
