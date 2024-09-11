@@ -800,6 +800,7 @@ export const worker = createWorker<MailProcessorJobData>(
             // @ts-expect-error we check and define earlier up
             fromAddressParticipantId = contactParticipant.id;
           } else if (fromAddressPlatformObject.type === 'emailIdentity') {
+            console.info('fromAddressPlatformObject is emailIdentity');
             const emailIdentity = await db.query.emailIdentities.findFirst({
               where: and(
                 eq(emailIdentities.orgId, orgId),
@@ -831,6 +832,9 @@ export const worker = createWorker<MailProcessorJobData>(
             });
 
             if (ownerMember) {
+              console.info(
+                `fromAddressPlatformObject = orgMember ${ownerMember.id}`
+              );
               fromAddressParticipantId = ownerMember.id;
             } else {
               const ownerTeam = await db.query.teams.findFirst({
@@ -841,6 +845,9 @@ export const worker = createWorker<MailProcessorJobData>(
               });
 
               if (ownerTeam) {
+                console.info(
+                  `fromAddressPlatformObject = team ${ownerTeam.id}`
+                );
                 fromAddressParticipantId = ownerTeam.id;
               }
             }
@@ -868,7 +875,13 @@ export const worker = createWorker<MailProcessorJobData>(
                   });
                   if (spaceMember?.team) {
                     fromAddressParticipantId = spaceMember.team.id;
+                    console.info(
+                      `fromAddressPlatformObject = space Team Member ${spaceMember.team.id}`
+                    );
                   } else if (spaceMember?.orgMember) {
+                    console.info(
+                      `fromAddressPlatformObject = space Org Member ${spaceMember.orgMember.id}`
+                    );
                     fromAddressParticipantId = spaceMember.orgMember.id;
                   }
                 }
