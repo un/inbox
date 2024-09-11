@@ -166,14 +166,15 @@ export default function SettingsPage() {
               </div>
             </div>
             <ColorField
-              initialValue={spaceSettings?.settings?.color}
+              initialValue={spaceSettings.settings.color}
               showSaved={setShowSaved}
               isSpaceAdmin={isSpaceAdmin}
             />
             <VisibilityField
-              initialValue={spaceSettings?.settings?.type}
+              initialValue={spaceSettings.settings.type}
               showSaved={setShowSaved}
               isSpaceAdmin={isSpaceAdmin}
+              personalSpace={spaceSettings.settings.personalSpace}
             />
             <Workflows
               showSaved={setShowSaved}
@@ -433,10 +434,12 @@ function ColorField({
 function VisibilityField({
   initialValue,
   showSaved,
+  personalSpace,
   isSpaceAdmin
 }: {
   initialValue: string;
   isSpaceAdmin: boolean;
+  personalSpace: boolean;
   showSaved: (value: boolean) => void;
 }) {
   const orgShortcode = useOrgShortcode();
@@ -483,7 +486,9 @@ function VisibilityField({
           <SelectContent>
             <SelectItem
               value="open"
-              className="hover:bg-base-3 w-full rounded-sm">
+              className="hover:bg-base-3 w-full rounded-sm"
+              // Don't allow changing the visibility of a personal space to open
+              disabled={personalSpace === true}>
               <div className="flex flex-row items-center justify-start gap-4 rounded-md p-1">
                 <Globe className="h-6 w-6" />
                 <div className="flex grow flex-col justify-start gap-2 text-left">
@@ -494,7 +499,7 @@ function VisibilityField({
                 </div>
               </div>
             </SelectItem>
-            {canAddSpace?.private ? (
+            {personalSpace === true || canAddSpace?.private ? (
               <SelectItem
                 value="private"
                 className="hover:bg-base-3 w-full rounded-sm">
