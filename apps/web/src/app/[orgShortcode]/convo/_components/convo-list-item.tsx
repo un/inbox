@@ -18,9 +18,9 @@ import { Checkbox } from '@/src/components/shadcn-ui/checkbox';
 import { AvatarPlus } from '@/src/components/avatar-plus';
 import { usePathname, useRouter } from 'next/navigation';
 import { useIsMobile } from '@/src/hooks/use-is-mobile';
-import { Trash } from '@phosphor-icons/react/dist/ssr';
 import { useTimeAgo } from '@/src/hooks/use-time-ago';
 import { type TypeId } from '@u22n/utils/typeid';
+import { Trash } from '@phosphor-icons/react';
 import { convoListSelecting } from '../atoms';
 import { platform } from '@/src/lib/trpc';
 import { memo, useMemo } from 'react';
@@ -174,7 +174,7 @@ export const ConvoItem = memo(function ConvoItem({
             <div className="flex flex-row items-start justify-start gap-1 text-left text-sm">
               <span className="ph-no-capture line-clamp-2 overflow-clip break-words">
                 <span className="font-semibold">
-                  {authorAvatarData?.name.trim() + ': ' ?? ''}
+                  {authorAvatarData?.name.trim() ?? ' ' + ': '}
                 </span>
                 {convo.entries[0]?.bodyPlainText.trim() ?? ''}
               </span>

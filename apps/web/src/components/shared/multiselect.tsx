@@ -76,7 +76,7 @@ export function MultiSelect<T extends Record<string, unknown>>({
       <PopoverContent className="w-[200px] p-0">
         <Command
           filter={(value, search, keywords) => {
-            const extendedValue = value + ' ' + keywords?.join(' ') ?? '';
+            const extendedValue = value + ' ' + (keywords?.join(' ') ?? '');
             return extendedValue.toLowerCase().includes(search.toLowerCase())
               ? 1
               : 0;
