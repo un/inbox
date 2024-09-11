@@ -125,6 +125,7 @@ type IsOrgMemberSpaceMemberResponse = {
   role: SpaceMemberRole | null;
   spaceId: number;
   type: SpaceType;
+  isPersonalSpace: boolean;
   permissions: {
     canCreate: boolean;
     canRead: boolean;
@@ -157,7 +158,8 @@ export async function isOrgMemberSpaceMember({
     columns: {
       id: true,
       publicId: true,
-      type: true
+      type: true,
+      personalSpace: true
     },
     with: {
       members: {
@@ -231,6 +233,7 @@ export async function isOrgMemberSpaceMember({
     role: null,
     spaceId: spaceQueryResponse.id,
     type: spaceQueryResponse.type,
+    isPersonalSpace: spaceQueryResponse.personalSpace,
     permissions: {
       canCreate: false,
       canRead: false,
