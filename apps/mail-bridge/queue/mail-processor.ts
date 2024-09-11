@@ -9,8 +9,11 @@ import {
   convoToSpaces,
   convos,
   emailIdentities,
+  orgMembers,
   orgs,
   postalServers,
+  spaceMembers,
+  teams,
   type ConvoEntryMetadata
 } from '@u22n/database/schema';
 import {
@@ -797,71 +800,90 @@ export const worker = createWorker<MailProcessorJobData>(
             // @ts-expect-error we check and define earlier up
             fromAddressParticipantId = contactParticipant.id;
           } else if (fromAddressPlatformObject.type === 'emailIdentity') {
-            await discord.info(
-              `🚪 Adding participants from internal email identity with messages sent from external email services not supported yet, convoId: ${convoId}, fromAddressParticipantId: ${fromAddressParticipantId}`
-            );
-            //! TODO: How do we handle adding the participant to the convo if we only track spaces?
-            //! leave code below for ref and quick revert if needed
-            // we need to get the first person/team in the routing rule and add them to the convo
-            // const emailIdentityParticipant =
-            //   await db.query.emailIdentities.findFirst({
-            //     where: and(
-            //       eq(emailIdentities.orgId, orgId),
-            //       eq(emailIdentities.id, fromAddressPlatformObject?.id)
-            //     ),
-            //     columns: {
-            //       id: true
-            //     },
-            //     with: {
-            //       routingRules: {
-            //         columns: {
-            //           id: true
-            //         },
-            //         with: {
-            //           destinations: {
-            //             columns: {
-            //               spaceId: true,
-            //             }
-            //           }
-            //         }
-            //       }
-            //     }
-            //   });
-            // const firstDestination =
-            //   // @ts-expect-error, taken form old code, will rewrite later
-            //   emailIdentityParticipant.routingRules.destinations[0]!;
-            // let convoParticipantFromAddressIdentity;
-            // if (firstDestination.orgMemberId) {
-            //   convoParticipantFromAddressIdentity =
-            //     await db.query.convoParticipants.findFirst({
-            //       where: and(
-            //         eq(convoParticipants.orgId, orgId),
-            //         eq(convoParticipants.convoId, convoId),
+            const emailIdentity = await db.query.emailIdentities.findFirst({
+              where: and(
+                eq(emailIdentities.orgId, orgId),
+                eq(emailIdentities.id, fromAddressPlatformObject?.id)
+              ),
+              columns: {
+                id: true
+              },
+              with: {
+                authorizedSenders: {
+                  with: {
+                    orgMember: true,
+                    team: true,
+                    space: true
+                  }
+                }
+              }
+            });
 
-            //         eq(
-            //           convoParticipants.orgMemberId,
-            //           firstDestination.orgMemberId
-            //         )
-            //       ),
-            //       columns: {
-            //         id: true
-            //       }
-            //     });
-            // } else if (firstDestination.teamId) {
-            //   convoParticipantFromAddressIdentity =
-            //     await db.query.convoParticipants.findFirst({
-            //       where: and(
-            //         eq(convoParticipants.orgId, orgId),
-            //         eq(convoParticipants.convoId, convoId || 0),
-            //         eq(convoParticipants.teamId, firstDestination.teamId)
-            //       ),
-            //       columns: {
-            //         id: true
-            //       }
-            //     });
-            // }
+            if (!emailIdentity) {
+              throw new Error('No email identity participant found');
+            }
 
-            // fromAddressParticipantId = convoParticipantFromAddressIdentity.id;
+            const ownerMember = await db.query.orgMembers.findFirst({
+              where: and(
+                eq(orgMembers.orgId, orgId),
+                eq(orgMembers.defaultEmailIdentityId, emailIdentity.id)
+              )
+            });
+
+            if (ownerMember) {
+              fromAddressParticipantId = ownerMember.id;
+            } else {
+              const ownerTeam = await db.query.teams.findFirst({
+                where: and(
+                  eq(teams.orgId, orgId),
+                  eq(teams.defaultEmailIdentityId, emailIdentity.id)
+                )
+              });
+
+              if (ownerTeam) {
+                fromAddressParticipantId = ownerTeam.id;
+              }
+            }
+
+            // if we still don't have a participant, then we need to find the first person/team in the authorized senders or first member of the first space
+            if (!fromAddressParticipantId) {
+              if (emailIdentity.authorizedSenders.length) {
+                const firstAuthorizedSender =
+                  emailIdentity.authorizedSenders[0];
+                if (firstAuthorizedSender?.orgMember) {
+                  fromAddressParticipantId = firstAuthorizedSender.orgMember.id;
+                }
+                if (firstAuthorizedSender?.team) {
+                  fromAddressParticipantId = firstAuthorizedSender.team.id;
+                }
+                if (firstAuthorizedSender?.space) {
+                  const spaceMember = await db.query.spaceMembers.findFirst({
+                    where: and(
+                      eq(spaceMembers.spaceId, firstAuthorizedSender.space.id)
+                    ),
+                    with: {
+                      orgMember: true,
+                      team: true
+                    }
+                  });
+                  if (spaceMember?.team) {
+                    fromAddressParticipantId = spaceMember.team.id;
+                  } else if (spaceMember?.orgMember) {
+                    fromAddressParticipantId = spaceMember.orgMember.id;
+                  }
+                }
+              } else {
+                throw new Error(
+                  'No authorized senders found for email identity'
+                );
+              }
+            }
+
+            if (!fromAddressParticipantId) {
+              throw new Error(
+                `Failed to find a from address participant for email identity ${fromAddressPlatformObject?.email}`
+              );
+            }
           }
         }
 
