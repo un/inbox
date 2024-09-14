@@ -14,11 +14,11 @@ import {
 } from '../utils';
 import { useOrgShortcode, useSpaceShortcode } from '@/src/hooks/use-params';
 import { LongPressEventType, useLongPress } from 'use-long-press';
+import { SmartDateTime } from '@/src/components/smart-date-time';
 import { Checkbox } from '@/src/components/shadcn-ui/checkbox';
 import { AvatarPlus } from '@/src/components/avatar-plus';
 import { usePathname, useRouter } from 'next/navigation';
 import { useIsMobile } from '@/src/hooks/use-is-mobile';
-import { useTimeAgo } from '@/src/hooks/use-time-ago';
 import { type TypeId } from '@u22n/utils/typeid';
 import { Trash } from '@phosphor-icons/react';
 import { convoListSelecting } from '../atoms';
@@ -55,8 +55,6 @@ export const ConvoItem = memo(function ConvoItem({
       })
   });
   // const { mutate: hideConvo } = platform.convos.hideConvo.useMutation();
-
-  const timeAgo = useTimeAgo(convo.lastUpdatedAt);
 
   const authorAsParticipant = useMemo(() => {
     return (
@@ -164,7 +162,7 @@ export const ConvoItem = memo(function ConvoItem({
                 {convo.subjects[0]?.subject}
               </span>
               <span className="text-base-11 min-w-fit text-right text-xs">
-                {timeAgo}
+                <SmartDateTime date={convo.lastUpdatedAt} />
               </span>
             </div>
             <span className="truncate text-xs font-medium">
@@ -174,7 +172,7 @@ export const ConvoItem = memo(function ConvoItem({
             <div className="flex flex-row items-start justify-start gap-1 text-left text-sm">
               <span className="ph-no-capture line-clamp-2 overflow-clip break-words">
                 <span className="font-semibold">
-                  {authorAvatarData?.name.trim() ?? ' ' + ': '}
+                  {(authorAvatarData?.name.trim() ?? '') + ': '}
                 </span>
                 {convo.entries[0]?.bodyPlainText.trim() ?? ''}
               </span>

@@ -21,6 +21,7 @@ import {
   TooltipContent
 } from '@/src/components/shadcn-ui/tooltip';
 import { type JSONContent, generateHTML } from '@u22n/tiptap/react';
+import { SmartDateTime } from '@/src/components/smart-date-time';
 import { emailIdentityAtom, replyToMessageAtom } from '../atoms';
 import { Virtuoso, type VirtuosoHandle } from 'react-virtuoso';
 import { OriginalMessageView } from './original-message-view';
@@ -28,7 +29,6 @@ import { type RouterOutputs, platform } from '@/src/lib/trpc';
 import { createExtensionSet } from '@u22n/tiptap/extensions';
 import { useOrgShortcode } from '@/src/hooks/use-params';
 import { type formatParticipantData } from '../../utils';
-import { useTimeAgo } from '@/src/hooks/use-time-ago';
 import { cn, copyToClipboard } from '@/src/lib/utils';
 import { Avatar } from '@/src/components/avatar';
 import { type TypeId } from '@u22n/utils/typeid';
@@ -239,7 +239,6 @@ const MessageItem = memo(
     // if the message timestamp is less than a day ago, show the date instead of the time
     const isRecent =
       new Date().getTime() - message.createdAt.getTime() < ms('1 day');
-    const timeAgo = useTimeAgo(message.createdAt);
 
     const viaAddress = message.metadata?.email?.from?.[0]?.email;
 
@@ -328,7 +327,7 @@ const MessageItem = memo(
             <div className={cn(isUserAuthor ? 'mr-4' : 'ml-4')}>
               {isRecent ? (
                 <span className="text-base-11 text-xs leading-none">
-                  {timeAgo}
+                  <SmartDateTime date={message.createdAt} />
                 </span>
               ) : (
                 <div
