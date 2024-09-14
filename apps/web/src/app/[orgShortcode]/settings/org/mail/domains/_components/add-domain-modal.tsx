@@ -32,14 +32,9 @@ export function AddDomainModal() {
   });
 
   const { data: canAddDomain, isLoading } =
-    platform.org.iCanHaz.domain.useQuery(
-      {
-        orgShortcode: orgShortcode
-      },
-      {
-        staleTime: 1000
-      }
-    );
+    platform.org.iCanHaz.domain.useQuery({
+      orgShortcode: orgShortcode
+    });
 
   const [open, setOpen] = useState(false);
   const [domain, setDomain] = useState('');
