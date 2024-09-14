@@ -3,6 +3,7 @@ import { router, protectedProcedure } from '../trpc';
 import { orgBilling } from '@u22n/database/schema';
 import { TRPCError } from '@trpc/server';
 import { eq } from '@u22n/database/orm';
+import { env } from '../../env';
 import { z } from 'zod';
 
 export const stripeLinksRouter = router({
@@ -70,7 +71,8 @@ export const stripeLinksRouter = router({
         throw new Error('No stripe customer id');
 
       const portalLink = await stripeSdk.billingPortal.sessions.create({
-        customer: orgBillingQuery.stripeCustomerId
+        customer: orgBillingQuery.stripeCustomerId,
+        return_url: `${env.WEBAPP_URL}`
       });
 
       return {
