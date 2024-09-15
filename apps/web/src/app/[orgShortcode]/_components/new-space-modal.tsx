@@ -98,7 +98,11 @@ export function NewSpaceModal() {
       spaceDescription: values.description,
       spaceColor: values.color ?? 'cyan',
       spaceType: values.type
-    }).catch(() => null);
+    })
+      .then(() => {
+        platform.useUtils().spaces.getOrgMemberSpaces.invalidate();
+      })
+      .catch(() => null);
     form.reset();
   };
 
