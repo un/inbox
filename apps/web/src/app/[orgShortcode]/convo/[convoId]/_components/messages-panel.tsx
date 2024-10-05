@@ -451,7 +451,7 @@ const HTMLMessage = memo(
       <div
         data-html-email-message
         dangerouslySetInnerHTML={{ __html }}
-        className="prose-invert prose-a:decoration-blue-9 w-fit min-w-min overflow-ellipsis text-pretty [overflow-wrap:anywhere]"
+        className="convo-html-msg prose-invert prose-a:decoration-blue-9 w-fit min-w-min overflow-ellipsis text-pretty [overflow-wrap:anywhere]"
       />
     );
   },
