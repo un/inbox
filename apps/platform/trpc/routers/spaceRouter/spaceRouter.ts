@@ -165,13 +165,19 @@ export const spaceRouter = router({
     }
 
     const spaceIdsDedupe = Array.from(new Set([...memberSpaceIds]));
+    const spaceIdsSet = new Set(spaceIdsDedupe);
+
+    const orgMemberSpacesWhere =
+      spaceIdsDedupe.length === 0
+        ? and(eq(spaces.orgId, org.id), eq(spaces.type, 'open'))
+        : and(
+            eq(spaces.orgId, org.id),
+            or(eq(spaces.type, 'open'), inArray(spaces.id, spaceIdsDedupe))
+          );
 
     const orgMemberSpaces = await db.query.spaces
       .findMany({
-        where: and(
-          eq(spaces.orgId, org.id),
-          or(eq(spaces.type, 'open'), inArray(spaces.id, spaceIdsDedupe))
-        ),
+        where: orgMemberSpacesWhere,
         columns: {
           id: true,
           publicId: true,
@@ -200,11 +206,11 @@ export const spaceRouter = router({
         }
       })
       .then((spaces) =>
-        spaces.map((space) => {
+        spaces.map(({ id, ...space }) => {
           // if the space is private, or the space id is in the array, then they can see Settings
           if (
             space.type === 'private' ||
-            (space.type === 'open' && spaceIdsDedupe.includes(space.id))
+            (space.type === 'open' && spaceIdsSet.has(id))
           ) {
             return { ...space, canSeeSettings: true };
           } else {
