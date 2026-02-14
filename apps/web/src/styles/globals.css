@@ -93,3 +93,13 @@
 div[data-html-email-message] *[style*='color: transparent'] {
   @apply hidden;
 }
+
+.convo-html-msg a {
+  color: var(--bronze7);
+  text-decoration: underline;
+  font-weight: bold;
+}
+
+.convo-html-msg a:hover {
+  color: var(--bronze4);
+}
