@@ -135,7 +135,7 @@ function SpaceItem({
             <DotsThree />
           </Button>
           {/* </DropdownMenuTrigger>
-          <DropdownMenuContent> 
+          <DropdownMenuContent>
            TODO: Add in with the notifications
             <DropdownMenuSub>
               <DropdownMenuSubTrigger>Notifications</DropdownMenuSubTrigger>
@@ -154,7 +154,7 @@ function SpaceItem({
                   </DropdownMenuRadioGroup>
                 </DropdownMenuSubContent>
               </DropdownMenuPortal>
-            </DropdownMenuSub> 
+            </DropdownMenuSub>
             <DropdownMenuSeparator />
              <DropdownMenuItem
               onSelect={() => {
