@@ -2,7 +2,7 @@ import type { Context } from '@u22n/hono/helpers';
 import type { TypeId } from '@u22n/utils/typeid';
 import type { HonoContext } from '@u22n/hono';
 import type { DBType } from '@u22n/database';
-import type { DatabaseSession } from 'lucia';
+import type { AppSession } from './utils/auth/session-manager';
 
 export type Ctx = HonoContext<{
   account: AccountContext;
@@ -24,7 +24,7 @@ export type OrgContext = {
 
 export type AccountContext = {
   id: number;
-  session: DatabaseSession;
+  session: AppSession;
 } | null;
 
 export type TrpcContext = {

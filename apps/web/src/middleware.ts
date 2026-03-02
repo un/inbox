@@ -9,11 +9,9 @@ const publicRoutes = [
   '/',
   '/join',
   '/join/secure',
-  '/recovery/reset-password/request',
-  '/recovery/reset-password/reset',
-  '/recovery/reset-password/verify'
+  '/oauth/callback'
 ];
-const publicDynamicRoutes = ['/join/invite'];
+const publicDynamicRoutes = ['/join/invite', '/oauth'];
 
 export default async function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname;

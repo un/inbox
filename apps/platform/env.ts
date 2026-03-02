@@ -52,7 +52,17 @@ export const env = createEnv({
     BILLING_KEY: z.string().nullable().default(null),
     BILLING_URL: z.string().url().nullable().default(null),
     PORT: z.coerce.number().int().min(1).max(65535).default(3300),
-    NODE_ENV: z.enum(['development', 'production']).default('development')
+    NODE_ENV: z.enum(['development', 'production']).default('development'),
+    // AT Protocol OAuth
+    ATPROTO_CLIENT_ID: z.string().url(),
+    ATPROTO_REDIRECT_URI: z.string().url(),
+    // PDS (custodial accounts)
+    PDS_URL: z.string().url(),
+    PDS_ADMIN_PASSWORD: z.string().min(1),
+    PDS_INVITE_CODE: z.string().optional(),
+    ATPROTO_HANDLE_DOMAIN: z.string().min(1),
+    // 32-byte hex key for AES-256-GCM encryption of custodial passwords
+    ATPROTO_ENCRYPTION_KEY: z.string().length(64)
   },
   runtimeEnv: process.env,
   emptyStringAsUndefined: true

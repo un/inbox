@@ -75,12 +75,16 @@ export const accounts = mysqlTable(
   })
 );
 
-export const accountsRelations = relations(accounts, ({ many }) => ({
+export const accountsRelations = relations(accounts, ({ many, one }) => ({
   authenticators: many(authenticators),
   sessions: many(sessions),
   orgMemberships: many(orgMembers),
   orgMemberProfiles: many(orgMemberProfiles),
-  personalEmailIdentities: many(emailIdentitiesPersonal)
+  personalEmailIdentities: many(emailIdentitiesPersonal),
+  atprotoIdentity: one(atprotoIdentities, {
+    fields: [accounts.id],
+    references: [atprotoIdentities.accountId]
+  })
 }));
 
 // transports type comes from @simplewebauthn/types AuthenticatorTransportFuture
@@ -160,6 +164,43 @@ export const sessionRelationships = relations(sessions, ({ one }) => ({
     references: [accounts.id]
   })
 }));
+
+export const atprotoIdentities = mysqlTable(
+  'atproto_identities',
+  // eslint-disable-next-line @u22n/custom/table-needs-org-id
+  {
+    id: serial('id').primaryKey(),
+    accountId: foreignKey('account_id').notNull(),
+    did: varchar('did', { length: 255 }).notNull(),
+    handle: varchar('handle', { length: 255 }).notNull(),
+    pdsUrl: varchar('pds_url', { length: 512 }).notNull(),
+    isCustodial: boolean('is_custodial').notNull().default(false),
+    encryptedAppPassword: text('encrypted_app_password'),
+    oauthSession: json('oauth_session'),
+    createdAt: timestamp('created_at')
+      .notNull()
+      .$defaultFn(() => new Date()),
+    updatedAt: timestamp('updated_at')
+      .notNull()
+      .$defaultFn(() => new Date())
+      .$onUpdateFn(() => new Date())
+  },
+  (table) => ({
+    accountIdIndex: uniqueIndex('account_id_idx').on(table.accountId),
+    didIndex: uniqueIndex('did_idx').on(table.did),
+    handleIndex: uniqueIndex('handle_idx').on(table.handle)
+  })
+);
+
+export const atprotoIdentitiesRelations = relations(
+  atprotoIdentities,
+  ({ one }) => ({
+    account: one(accounts, {
+      fields: [atprotoIdentities.accountId],
+      references: [accounts.id]
+    })
+  })
+);
 
 //******************* */
 //* ORG DATA

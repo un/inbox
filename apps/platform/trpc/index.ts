@@ -7,27 +7,19 @@ import { invitesRouter } from './routers/orgRouter/users/invitesRouter';
 import { billingRouter } from './routers/orgRouter/setup/billingRouter';
 import { domainsRouter } from './routers/orgRouter/mail/domainsRouter';
 import { contactsRouter } from './routers/contactRouter/contactRouter';
-import { twoFactorRouter } from './routers/authRouter/twoFactorRouter';
-import { passwordRouter } from './routers/authRouter/passwordRouter';
-import { recoveryRouter } from './routers/authRouter/recoveryRouter';
+import { atprotoRouter } from './routers/authRouter/atprotoRouter';
 import { securityRouter } from './routers/userRouter/securityRouter';
 import { teamsRouter } from './routers/orgRouter/users/teamsRouter';
-import { passkeyRouter } from './routers/authRouter/passkeyRouter';
 import { profileRouter } from './routers/userRouter/profileRouter';
 import { addressRouter } from './routers/userRouter/addressRouter';
 import { storeRouter } from './routers/orgRouter/orgStoreRouter';
-import { signupRouter } from './routers/authRouter/signupRouter';
 import { convoRouter } from './routers/convoRouter/convoRouter';
 import { spaceRouter } from './routers/spaceRouter/spaceRouter';
 import { crudRouter } from './routers/orgRouter/orgCrudRouter';
 import { router } from './trpc';
 
 const trpcPlatformAuthRouter = router({
-  signup: signupRouter,
-  passkey: passkeyRouter,
-  password: passwordRouter,
-  twoFactorAuthentication: twoFactorRouter,
-  recovery: recoveryRouter
+  atproto: atprotoRouter
 });
 
 const trpcPlatformAccountRouter = router({

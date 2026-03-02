@@ -1,6 +1,6 @@
 import { accounts } from '@u22n/database/schema';
 import { setCookie } from '@u22n/hono/helpers';
-import { lucia } from '~platform/utils/auth';
+import { sessionManager } from '~platform/utils/auth';
 import { createHonoApp } from '@u22n/hono';
 import type { Ctx } from '~platform/ctx';
 import { eq } from '@u22n/database/orm';
@@ -56,8 +56,8 @@ authApi.post('/logout', async (c) => {
     return c.json({ ok: true });
   }
   const sessionId = account.session.id;
-  await lucia.invalidateSession(sessionId);
-  const cookie = lucia.createBlankSessionCookie();
+  await sessionManager.invalidateSession(sessionId);
+  const cookie = sessionManager.createBlankSessionCookie();
   setCookie(c, cookie.name, cookie.value, cookie.attributes);
   return c.json({ ok: true });
 });
