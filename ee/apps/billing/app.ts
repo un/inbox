@@ -15,7 +15,18 @@ import { trpcBillingRouter } from './trpc';
 import { stripeData } from './stripe';
 import { db } from '@u22n/database';
 import { type Ctx } from './ctx';
+import { timingSafeEqual, createHash } from 'crypto';
 import { env } from './env';
+
+function safeEqual(a: string, b: string): boolean {
+  try {
+    const hashA = createHash('sha256').update(a).digest();
+    const hashB = createHash('sha256').update(b).digest();
+    return timingSafeEqual(hashA, hashB);
+  } catch {
+    return false;
+  }
+}
 
 await validateLicense();
 
@@ -28,7 +39,7 @@ setupErrorHandlers(app);
 setupTrpcHandler(app, trpcBillingRouter, (_, c) => {
   const authToken = c.req.header('Authorization');
   return {
-    auth: authToken === env.BILLING_KEY,
+    auth: authToken ? safeEqual(authToken, env.BILLING_KEY) : false,
     stripe: stripeData,
     db
   };

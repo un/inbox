@@ -15,7 +15,18 @@ import { opentelemetry } from '@u22n/otel/hono';
 import { trpcMailBridgeRouter } from './trpc';
 import type { Ctx, TRPCContext } from './ctx';
 import { db } from '@u22n/database';
+import { timingSafeEqual, createHash } from 'crypto';
 import { env } from './env';
+
+function safeEqual(a: string, b: string): boolean {
+  try {
+    const hashA = createHash('sha256').update(a).digest();
+    const hashB = createHash('sha256').update(b).digest();
+    return timingSafeEqual(hashA, hashB);
+  } catch {
+    return false;
+  }
+}
 
 const processCleanup: Array<() => Promise<void>> = [];
 
@@ -31,7 +42,7 @@ if (env.MAILBRIDGE_MODE === 'dual' || env.MAILBRIDGE_MODE === 'handler') {
 
   setupTrpcHandler(app, trpcMailBridgeRouter, (_, c) => {
     const authToken = c.req.header('Authorization');
-    const isServiceAuthenticated = authToken === env.MAILBRIDGE_KEY;
+    const isServiceAuthenticated = authToken ? safeEqual(authToken, env.MAILBRIDGE_KEY) : false;
     return {
       auth: isServiceAuthenticated,
       db,
