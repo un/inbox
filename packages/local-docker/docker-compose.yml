@@ -51,7 +51,7 @@ services:
   # Local S3 Strorage
   minio:
     container_name: minio-storage
-    image: 'bitnami/minio:latest'
+    image: 'soldevelo/minio:latest'
     restart: always
     ports:
       - '3902:3902'
